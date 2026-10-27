@@ -13,8 +13,10 @@ const expand = tpl => {
   if (out.includes('<!--@include')) throw new Error('include marker left after expanding (nested or malformed)');
   return out;
 };
+// Test files bundled into the system-check page: helpers first, then the topic files, then mechanics.js (it joins them into TESTS).
+const TESTS = ['tests/helpers.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/mechanics.js'];
 const pages = [
-  ['check.template.html', 'system-check.html', [...CORE, 'tests/mechanics.js']],
+  ['check.template.html', 'system-check.html', [...CORE, ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'game/view.js', 'game/labels.js']],
   ['game/run.template.html', 'game.html', [...CORE, 'game/view.js', 'game/labels.js']],
 ];
