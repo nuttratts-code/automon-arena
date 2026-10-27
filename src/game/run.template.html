@@ -157,6 +157,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .speed button { padding: 8px 7px; font-family: var(--f-mono); }
 button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 @media (max-width: 520px) { .slot { min-height: 96px; } .cell { min-height: 78px; } .shape { width: 28px; height: 28px; } }
+@media (max-width: 520px) { .heads, .arena { min-width: 296px; grid-template-columns: 1fr 8px 1fr; gap: 4px; } .side { gap: 4px; } } /* B1: battle board fits 390px (was min 360px in a 340px stage → enemy back column cut off) */
 .tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-right: 6px; vertical-align: 1px; }
 .tag { font: 600 .66rem var(--f-body); padding: 0 6px; border-radius: 999px; white-space: nowrap; border: 1px solid currentColor; }
 .tag.k-start { color: var(--tg-start); } .tag.k-ongoing { color: var(--tg-ongoing); } .tag.k-once { color: var(--tg-once); } .tag.k-down { color: var(--tg-down); } .tag.k-shop { color: var(--tg-shop); }

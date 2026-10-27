@@ -40,14 +40,14 @@ export async function charRanking(chars, rules, { n = 1500, seed = 101, level = 
   const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0 }]));
   const tribe = Object.fromEntries(TRIBES.map(t => [t, { teams: 0, winTeams: 0 }]));
   let decided = 0, totalTime = 0, aborted = 0, abortSample = null; // aborted = แมตช์ที่ตัวตัดนิรภัยหยุด (ชุด 17)
-  const TOP = 10, top = []; // ชุด 38: แมตช์ต้องสงสัย (ดาเมจรวมเทียบ HP ศัตรูรวม) เก็บ 10 อันดับ
+  const TOP = 10, top = []; // ชุด 38: แมตช์ต้องสงสัย (ดาเมจรวมสองฝั่ง ÷ HP สูงสุดรวมทุกตัวสองฝั่ง · A6) เก็บ 10 อันดับ
   for (let i = 0; i < n; i++) {
     const A = randomTeam(rng, chars, level), B = randomTeam(rng, chars, level);
     const r = simulate(buildTeam(A, map, rules), buildTeam(B, map, rules), { rules, log: false });
     totalTime += r.timeMs;
     { // ชุด 38: เก็บเฉพาะแมตช์ที่ดาเมจพุ่งผิดปกติ (ไม่มี log/detail · ต้นทุน O(1) ต่อแมตช์)
-      const dA = r.units.filter(u => u.side === 0).reduce((s, u) => s + u.dealt, 0);
-      const dB = r.units.filter(u => u.side === 1).reduce((s, u) => s + u.dealt, 0);
+      const dA = Math.round(r.units.filter(u => u.side === 0).reduce((s, u) => s + u.dealt, 0)); // A7: dealt has burn shares (fractions)
+      const dB = Math.round(r.units.filter(u => u.side === 1).reduce((s, u) => s + u.dealt, 0));
       const hpT = r.units.reduce((s, u) => s + (u.maxHp || 0), 0);
       const dmgTotal = dA + dB;
       const rec = {
@@ -57,7 +57,7 @@ export async function charRanking(chars, rules, { n = 1500, seed = 101, level = 
         dps: +(dmgTotal / Math.max(1, r.timeMs / 1000)).toFixed(1),
         sideRatio: +(Math.max(dA, dB) / Math.max(1, dmgTotal)).toFixed(2),
         survivors: [r.units.filter(u => u.side === 0 && !u.down).length, r.units.filter(u => u.side === 1 && !u.down).length],
-        perUnit: r.units.map(u => ({ id: u.id, side: u.side, dealt: u.dealt, taken: u.taken, hp: u.hp })),
+        perUnit: r.units.map(u => ({ id: u.id, side: u.side, dealt: Math.round(u.dealt), taken: u.taken, hp: u.hp })),
         teamA: A.map(e => ({ id: e.id, level: e.level, row: e.row, lane: e.lane })),
         teamB: B.map(e => ({ id: e.id, level: e.level, row: e.row, lane: e.lane })),
         aborted: r.aborted || null,

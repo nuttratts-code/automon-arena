@@ -196,7 +196,7 @@ export const TESTS_COMBAT = [
       const r0 = simulate(buildTeam(A, m), buildTeam(B, m), { seed: i + 1 }), r1 = simulate(buildTeam(A, m), buildTeam(B, m), { seed: i + 1, detail: true });
       // ชุด 37: เหตุการณ์ผลอื่นๆ ที่มี d จะมี from เพิ่มด้วย (เฉพาะเมื่อเดิมไม่มี from) → ตัด d และ from ที่เพิ่ม แล้วต้องเหมือนเดิมทุกตัวอักษร
       // ชุด 37: เหตุการณ์ dx (จดเพิ่มเพื่อแสดงสเตตัส) และ ini/fin ของตัวละครมีเฉพาะตอนเปิด detail → ตัดออกก่อนเทียบ
-      eq(JSON.stringify({ ...r1, events: r1.events.filter(e => !e.dx).map((e, k) => { const { d, ...x } = e; if (d && !('from' in r0.events[k])) delete x.from; return x; }), units: r1.units.map(({ ini, fin, ...x }) => x) }), JSON.stringify(r0), `แมตช์ ${i} ผลต้องเหมือนเดิม`);
+      eq(JSON.stringify({ ...r1, events: r1.events.filter(e => !e.dx).map((e, k) => { const { d, ...x } = e; if (d && !('from' in r0.events[k])) delete x.from; if (x.k === 'heal' && !('why' in r0.events[k])) delete x.why; return x; }), units: r1.units.map(({ ini, fin, ...x }) => x) }), JSON.stringify(r0), `แมตช์ ${i} ผลต้องเหมือนเดิม`);
       for (const e of ev(r1, 'dmg')) {
         ok(e.d && typeof e.d === 'object', `แมตช์ ${i} ดาเมจไม่มีรายละเอียด`);
         if (e.why === 'hit') ok(Number.isFinite(e.d.atk) && e.d.n >= 1, 'ฮิตต้องมีพลังโจมตีและจำนวนเป้า');

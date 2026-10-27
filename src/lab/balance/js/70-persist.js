@@ -9,7 +9,7 @@ async function saveResults() {
     tribes: Object.fromEntries(TRIBES.map(t => [t, Object.fromEntries(RULES.tribeSteps.map(s => [s, { uplift: +fmt(now.tr[t][s].uplift), vsMixed: +fmt(now.tr[t][s].vsMixed) }]))])),
     avgTime: now.avgTime,
     aborted: now.aborted || {}, // ชุด 17: แมตช์ที่ตัวตัดนิรภัยหยุด
-    // ชุด 38: แมตช์ต้องสงสัย 10 อันดับ (ดาเมจรวม ÷ HP ศัตรูรวม) ให้ Claude ตรวจต่อได้
+    // ชุด 38: แมตช์ต้องสงสัย 10 อันดับ (ดาเมจรวม ÷ HP รวมสองฝั่ง) ให้ Claude ตรวจต่อได้
     suspicious: (now.top || []).map(t => ({ level: t.level, i: t.i, winner: t.winner, timeMs: t.timeMs, dmgTotal: t.dmgTotal,
       dmgA: t.dmgA, dmgB: t.dmgB, hpTotal: t.hpTotal, dmgPerHp: t.dmgPerHp, sideRatio: t.sideRatio, survivors: t.survivors,
       teamA: t.teamA, teamB: t.teamB, perUnit: t.perUnit, aborted: t.aborted || null })),

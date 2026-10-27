@@ -1,6 +1,7 @@
 import { RULES } from './rules.js';
 import { allUnits, chargeOwner } from './shop.js';
 import { isInt, validateTeam } from './validate.js';
+import { burnShares } from './battle.js';
 // เซฟกลางทาง + สถิติ run + ประวัติ run (ชุด 22 · ผู้ใช้เลือก 24 ต.ค.) · ข้อมูลล้วน ไม่แตะหน้าจอ (ย้ายไปเซิร์ฟเวอร์ได้)
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
@@ -82,12 +83,18 @@ export function addMatchStats(stats, result) {
   const w = result.winner;
   stats.matches++; stats.timeMs += Math.max(0, Math.floor(result.timeMs || 0));
   if (w === 1) { stats.l++; stats.streak = 0; } else { if (w === 0) stats.w++; else stats.d++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
-  const owner = new Map(); // uid → ID ของฝั่งผู้เล่น (รวมตัวที่ถูกเรียก)
+  const owner = new Map(), add = new Map(), bs = burnShares(); // uid → ID ของฝั่งผู้เล่น (รวมตัวที่ถูกเรียก) · A7: ไฟนับให้ผู้ทำให้ติดตามสัดส่วน
+  const credit = (uid, v) => { if (owner.has(uid) && v > 0) { const id = owner.get(uid); add.set(id, (add.get(id) || 0) + v); } };
   for (const e of result.events || []) {
     if (e.k === 'start') for (const u of e.units) { if (u.side === 0) owner.set(u.uid, u.id); }
     else if (e.k === 'summon' && e.unit && e.unit.side === 0) owner.set(e.unit.uid, e.unit.id);
-    else if (e.k === 'dmg' && owner.has(e.from) && e.amount > 0) { const id = owner.get(e.from); stats.dmg[id] = (stats.dmg[id] || 0) + Math.floor(e.amount); }
+    else if (e.k === 'burn' || e.k === 'cleanse' || e.k === 'down') bs.see(e.k, e);
+    else if (e.k === 'dmg' && e.amount > 0) {
+      if (e.why === 'burn') { for (const [s, f] of bs.split(e.to)) credit(s, e.amount * f); }
+      else credit(e.from, Math.floor(e.amount));
+    }
   }
+  for (const [id, v] of add) stats.dmg[id] = (stats.dmg[id] || 0) + Math.floor(v + 1e-9);
   return stats;
 }
 export function topDamage(stats) {

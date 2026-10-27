@@ -13,6 +13,31 @@ export const ARMOR_PCT = { dmgPctArmor: 1, burnPctArmor: 1 };
 // สกิลที่คิดจากเกราะตัวเอง ต้องจดเกราะก่อนฮิตของ tick (แบบเดิม + แบบ % ของ เกราะ ของตัวเอง ชุด 7)
 export const armorSnapSkill = s => !!(ARMOR_PCT[s.do] || (s.of && s.of.stat === 'armor' && s.of.who === 'self'));
 
+// A7 (28 Oct): burn damage is credited to whoever applied the burn, split by share. One tracker shared by the battle
+// (u.dealt), the match tab (mxRecords) and the game's run stats (addMatchStats) so all three agree. Fed with events
+// (k + data): burn adds the applier's part after scaling old parts to the burn left before it (decay/partial cleanse
+// keep shares); full cleanse / down clear it. split(uid) = [[from uid or -1 (no source), fraction], ...].
+export function burnShares() {
+  const share = new Map();
+  return {
+    see(k, d) {
+      if (k === 'burn') {
+        let m = share.get(d.to); if (!m) share.set(d.to, m = new Map());
+        const before = d.total - d.amount; let tot = 0; for (const v of m.values()) tot += v;
+        if (tot > 0) for (const [s, v] of m) m.set(s, before > 0 ? v * before / tot : 0);
+        const key = d.from != null ? d.from : -1; m.set(key, (m.get(key) || 0) + d.amount);
+      } else if (k === 'cleanse' && d.what !== 'pct') share.delete(d.to);
+      else if (k === 'down') share.delete(d.who);
+    },
+    split(uid) {
+      const m = share.get(uid); let tot = 0; if (m) for (const v of m.values()) tot += v;
+      if (!(tot > 0)) return [[-1, 1]];
+      const out = []; for (const [s, v] of m) if (v > 0) out.push([s, v / tot]);
+      return out;
+    },
+  };
+}
+
 export function simulate(teamA, teamB, opts = {}) {
   const R = opts.rules || RULES;
   const logOn = opts.log !== false;
@@ -20,7 +45,9 @@ export function simulate(teamA, teamB, opts = {}) {
   let t = 0;
   // ชุด 37 (แท็บรายตัว): เมื่อเปิด detail เหตุการณ์ผลอื่นๆ (เกราะ/ฟื้น/บัฟ/ถาวร/ล้างผล/ขโมยช็อต ฯลฯ) จดที่มา from (uid ผู้ใช้สกิล) + d {si, what, src} · ปิด detail = เหตุการณ์เหมือนเดิมทุกประการ
   const SRC_KINDS = new Set(['armor', 'heal', 'buff', 'atkUp', 'perm', 'maxhp', 'cleanse', 'steal', 'cdCut', 'cdPct', 'reflectDebuff', 'revive']);
+  const bShare = burnShares(); // A7: burn credit by share (runs with log off too)
   const log = (k, d) => {
+    if (k === 'burn' || k === 'cleanse' || k === 'down') bShare.see(k, d);
     if (!logOn) return;
     if (detailOn && dCur && SRC_KINDS.has(k) && !('d' in d)) events.push({ t, k, ...d, ...('from' in d ? {} : { from: dFrom }), d: { ...dCur } });
     else events.push({ t, k, ...d });
@@ -272,12 +299,12 @@ export function simulate(teamA, teamB, opts = {}) {
     }
   }
   function cutCd(f, ms) { if (up(f)) { ms = Math.floor(ms * (1 + f.cdAmp / 100)); f.cdLeft = Math.max(0, f.cdLeft - ms); log('cdCut', { to: f.uid, ms }); } }
-  function heal(f, v, src) {
+  function heal(f, v, src, why) {
     v = Math.floor(v * amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
     if (!up(f) || v <= 0) return; // ฟื้น HP ไม่ช่วยตัวที่ HP ถึง 0 แล้ว (ต้องใช้สกิลลุกกลับมา)
     const h = Math.min(v, f.maxHp - f.hp);
     if (h > 0) {
-      f.hp += h; log('heal', { to: f.uid, amount: h });
+      f.hp += h; log('heal', detailOn && why ? { to: f.uid, amount: h, why } : { to: f.uid, amount: h }); // A1: why (e.g. healHit) only with detail on
       // ฟื้นเป็นพลัง (PT-4): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
       if (src && src.healToAtk > 0 && up(src)) { const a = Math.floor(h * src.healToAtk / 100); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
     }
@@ -330,7 +357,7 @@ export function simulate(teamA, teamB, opts = {}) {
     switch (s.do) {
       case 'armor': for (const x of T()) { addArmor(x, v, why); permRec(u, s, x, v); } break;
       case 'armorPct': for (const x of T()) { addArmor(x, x.maxHp * v / 100, why); permRec(u, s, x, x.maxHp * v / 100); } break;
-      case 'heal': for (const x of T()) { heal(x, v, u); permRec(u, s, x, v); } break;
+      case 'heal': for (const x of T()) { heal(x, v, u, why); permRec(u, s, x, v); } break;
       case 'healPct': for (const x of T()) { heal(x, x.maxHp * v / 100, u); permRec(u, s, x, x.maxHp * v / 100); } break;
       case 'lifesteal': if (ctx.dealt > 0) { heal(u, ctx.dealt * v / 100, u); permRec(u, s, u, ctx.dealt * v / 100); } break;
       case 'dmgPctArmor': for (const x of T()) hurt(x, (ctx.armorSnap ?? u.armor) * v / 100, u, false, dwhy); break;
@@ -549,7 +576,9 @@ export function simulate(teamA, teamB, opts = {}) {
     // ไฟและพายุทรายทำดาเมจก่อนฮิตใน tick นั้น
     stage = 'damage';
     if (t % R.burnIntervalMs === 0) for (const f of F.filter(f => up(f) && f.burn > 0)) {
-      hurt(f, f.burn * amp(f.burnTaken + burnDmgOn[f.side]), null, false, 'burn', detailOn ? { burn: f.burn, takenAmp: f.burnTaken, tribeAmp: burnDmgOn[f.side] } : null); // โดนไฟแรงขึ้น (ชุด 6) · ชุด 32 โบนัสเพลิงเผา ดาเมจไฟ +%
+      const bAmt = Math.floor(f.burn * amp(f.burnTaken + burnDmgOn[f.side])); // A7: credit burn to its appliers by share (metric only)
+      if (bAmt > 0) for (const [s, fr] of bShare.split(f.uid)) if (s >= 0) F[s].dealt += bAmt * fr;
+      hurt(f, bAmt, null, false, 'burn', detailOn ? { burn: f.burn, takenAmp: f.burnTaken, tribeAmp: burnDmgOn[f.side] } : null); // โดนไฟแรงขึ้น (ชุด 6) · ชุด 32 โบนัสเพลิงเผา ดาเมจไฟ +%
       if (f.noDecayPerm) continue;
       if (f.noDecay > 0) f.noDecay--; else { f.burn = Math.max(0, f.burn - R.burnDecay); log('burnLeft', { to: f.uid, total: f.burn }); } // ให้หน้าจอรู้ว่าไฟลดลงแล้ว
     }
