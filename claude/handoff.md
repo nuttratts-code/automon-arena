@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **this chat (27 Oct)** · open WIP branch: `claude/damage-anomaly` (all tested: 129/129, ui_smoke FAILS [] ERRORS []; merge to main when user agrees) · last done: anomaly cause found + set 39 (match code button, 'อื่นๆ' card counts giver) published balance room v104 · next step: ask user to merge, then Next 2/3 · open decisions: none (SF-6 loop = keep, C · overkill metric = leave for now) · publish pending: check page (129 tests) only if user wants · publish access: writer on all 3 artifacts
+- Account active now: **this chat (27 Oct)** · open WIP branch: none (work from main) · last done: `claude/damage-anomaly` MERGED into main (user agreed 27 Oct 21:42; 129/129, ui_smoke FAILS [] ERRORS []; user may delete the branch) · next step: Next 1 (review, Opus) · open decisions: none · publish pending: check page (129 tests) only if user wants · publish access: writer on all 3 artifacts
 
 ## State
 - **Set 39 (match code, user chose A):** try-fight tab button "คัดลอกรหัสแมตช์" copies `AMATCH1 {json}` (seed 0 = seed from teams, both teams, tribe-off switches, edited values diff, result, base fingerprint). User pastes it in chat → save to a file → `cd src && node lab/replay.mjs --code <file> [--fx]` (prints MATCHES/DIFFERS vs page result; --fx lists heal/armor events with source). Code: src/lab/matchcode.js (validated parse, diff only on existing fields). WY-4 heal question answered: PT-7 lane heal (not a bug); led to card fix (match-tabs-spec V1.3).
@@ -22,7 +22,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 
 ## Next
 0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
-1. Anomaly: closed (user kept SF-6 rule; overkill metric left as is — can revisit). Match code tool ready for future bug reports.
+1. **Review (user asked 27 Oct, Opus): REPORT FIRST, change nothing until user picks.** (a) Code review: look for mismatches like the 'อื่นๆ' card bug (labels vs what is counted, received vs given, overkill counting, stale/aggregate numbers in Balance Room tabs `src/lab/balance/js/5*.js`, `61-analyze.js`; game page `src/game/`). (b) UX/UI review of game + Balance Room (odd spots, confusing labels, mobile 390px; sticky topbar ~148px already noted). Use ui_smoke screenshots, never read whole built HTML. Output: Thai list, each item = where + why odd + suggested fix + size; user decides. Done before: anomaly closed (SF-6 loop kept = C; overkill metric left as is).
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
