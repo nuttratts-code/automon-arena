@@ -21,7 +21,8 @@
 .mx-erow { display: grid; gap: 4px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); padding: 6px 8px; font-size: .82rem; min-width: 0; }
 @media (max-width: 560px) {
   .mx-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 4), 40px); gap: 5px; font-size: .74rem; }
-  .mx-row.h { display: none; }
+  .mx-row.h { align-items: end; } /* B6: keep column names on phones (was hidden → bare numbers) */
+  .mx-row.h > span { white-space: normal; font-size: .62rem; line-height: 1.15; overflow-wrap: anywhere; }
 }
 .mx-erow .top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
 .mx-erow .top .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }

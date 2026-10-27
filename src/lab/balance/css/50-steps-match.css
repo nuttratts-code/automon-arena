@@ -99,7 +99,13 @@ details.mxu[open] > summary::after, details.mxs[open] > summary::after { content
 .mx-name { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: .86rem; font-weight: 600; grid-column: 1; grid-row: 1; }
 .mx-name > span.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .mx-name .pill { margin-left: 2px; }
+.mx-head > * + *::before { content: '·'; margin-right: 14px; color: var(--mute); }
+.mx-num { display: grid; gap: 4px; min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; font: 500 .82rem var(--f-mono); font-variant-numeric: tabular-nums; }
+/* แท่งกราฟอยู่บรรทัดที่ 2 กินเต็มความกว้างแถว: ตัวมากสุด = 100% ถึงขอบขวา */
+details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 2; }
+/* B7: mobile rules must come AFTER the base .mx-num / .mx-bar rules, or the base grid-column wins (number overlapped ▸) */
 @media (max-width: 560px) {
+  details.mxu > summary::after { grid-column: 2; grid-row: 1 / 3; }
   details.mxu > summary { display: grid; grid-template-columns: minmax(0, 1fr) 14px; grid-template-rows: auto auto auto; gap: 2px 8px; padding: 8px 8px; }
   .mx-name { grid-column: 1; grid-row: 1; min-width: 0; }
   .mx-name > span.nm { font-size: .8rem; }
@@ -107,10 +113,6 @@ details.mxu[open] > summary::after, details.mxs[open] > summary::after { content
   details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 3; }
   .mx-line > .mx-sep, .mx-line > .mx-sub { display: none; }
 }
-.mx-head > * + *::before { content: '·'; margin-right: 14px; color: var(--mute); }
-.mx-num { display: grid; gap: 4px; min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; font: 500 .82rem var(--f-mono); font-variant-numeric: tabular-nums; }
-/* แท่งกราฟอยู่บรรทัดที่ 2 กินเต็มความกว้างแถว: ตัวมากสุด = 100% ถึงขอบขวา */
-details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 2; }
 /* บรรทัดเดียว: ทำ 141 | 47 ฮิต · ไฟ 0 · ช็อต 0 */
 .mx-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
 .mx-line > small { flex: none; font: 400 .7rem var(--f-body); color: var(--mute); }
