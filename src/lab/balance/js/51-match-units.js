@@ -191,13 +191,13 @@ function mxMetric(uid) {
     const who = new Set(P.in.map(rr => rr.from ?? 'n')).size;
     return put('รับ', nf(ti), P.in.length ? `จาก ${nf(who)} ตัว · ${nfc(P.in.reduce((s0, rr) => s0 + rr.f, 0))} ครั้ง` : 'ไม่ได้รับดาเมจ', mxBar(by, ti, sc.in));
   }
-  if (mxTabSel === 2) { // อื่นๆ: ผลที่ไม่ใช่ดาเมจ — "ทำ X | ติดเกราะ … · ติดชุบ …"
+  if (mxTabSel === 2) { // อื่นๆ: ผลที่ไม่ใช่ดาเมจ — "ทำ X | ให้เกราะ … · ให้ฮิล …"
     const f = fxTot.get(uid) || { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0 };
     const tot = f.heal + f.armor;                              // armor + heal given (units)
     const parts = [];
-    if (f.heals > 0) parts.push(`ติดฮิล ${nf(f.heals)}`);
-    if (f.armors > 0) parts.push(`ติดเกราะ ${nf(f.armors)}`);
-    if (f.skills > 0) parts.push(`ติดสกิล ${nf(f.skills)}`);
+    if (f.heals > 0) parts.push(`ให้ฮิล ${nf(f.heals)}`);
+    if (f.armors > 0) parts.push(`ให้เกราะ ${nf(f.armors)}`);
+    if (f.skills > 0) parts.push(`ใช้สกิล ${nf(f.skills)}`);
     return put('ทำ', nf(tot), parts.join(' · '),
       mxBarSegs(tot / sc.fx * 100, [[f.heal, 'var(--n-heal)', `ฮิล ${nf(f.heal)}`, tot], [f.armor, 'var(--n-armor)', `เกราะ ${nf(f.armor)}`, tot]]));
   }
@@ -228,11 +228,11 @@ function mxFxGiven(r) { // uid → [{ key, name, color, si, list: [{ e, ei }] }]
     if (e.k === 'heal' || e.k === 'armor') {
       const g = e.from ?? e.to, A = e.k === 'armor', c = A ? 'var(--n-armor)' : 'var(--n-heal)';
       if (g == null) return;
-      if (mxIsHit(e)) put(g, e.k + ':hit', () => ({ name: A ? 'ติดเกราะ (ฮิต)' : 'ฟื้น/ฮิต', color: c }), x);
+      if (mxIsHit(e)) put(g, e.k + ':hit', () => ({ name: A ? 'ให้เกราะ (ฮิต)' : 'ฟื้น/ฮิต', color: c }), x);
       else if (A && e.why === 'share') put(g, 'share', () => ({ name: 'แบ่งเกราะ', color: c }), x);
       else if (e.why === 'tribe' || (e.d && e.d.src === 'tribe')) put(g, e.k + ':tribe', () => ({ name: (A ? 'เกราะ' : 'ฮิล') + ' (โบนัสเผ่า)', color: c }), x);
       else if (si != null) put(g, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
-      else put(g, e.k + ':etc', () => ({ name: A ? 'ติดเกราะ (อื่นๆ)' : 'ติดฮิล (อื่นๆ)', color: c }), x);
+      else put(g, e.k + ':etc', () => ({ name: A ? 'ให้เกราะ (อื่นๆ)' : 'ให้ฮิล (อื่นๆ)', color: c }), x);
     } else if (si != null && e.k !== 'dmg' && e.from != null) put(e.from, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
   });
   return out;

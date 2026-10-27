@@ -9,6 +9,7 @@ function showTab(which) {
   if (step === 'pick') lastPick = which;
   if (step === 'edit') lastEdit = which;
   for (const st of ['pick', 'edit', 'result']) $('step-' + st).setAttribute('aria-current', st === step ? 'step' : 'false');
+  document.querySelector('.tabs.main').classList.toggle('off', step !== 'edit'); // B5: the edit sub-tabs only belong to step 2 (steps 1 and 3 already have their own nav)
   $('view-pick').hidden = step !== 'pick'; $('editor').hidden = step !== 'edit';
   $('view-result').hidden = step !== 'result';
   $('tab-grid').setAttribute('aria-pressed', String(which === 'grid')); $('tab-list').setAttribute('aria-pressed', String(which === 'list'));

@@ -303,7 +303,7 @@ with sync_playwright() as p:
         chk(mu[0]==mu[1] and mu[2] and mu[3],'one collapsed row per unit '+str(mu))
         pg.click('#mxUnits details.mxu >> nth=0 >> summary')
         head=pg.inner_text('#mxUnits details.mxu >> nth=0 >> .mx-row.h')
-        chk(all(x in head for x in ['ที่มา','ครั้ง','รวม','เกราะกัน','HP หาย']),'unit pane table header '+head[:60])
+        chk(all(x in head for x in ['ที่มา','ครั้ง','รวม','เกราะกัน','HP หายจริง']),'unit pane table header '+head[:60])
         chk(pg.locator('#mxUnits details.mxu >> nth=0 >> .mx-lk').count()>0,'unit pane has log link')
         # ดาเมจที่ทำรวมทุกตัว = ดาเมจรวมในสรุปรายตัว (วิธีนับเดียวกัน)
         cmp=pg.evaluate("""(()=>{const a=[...document.querySelectorAll('#mxUnits details.mxu')].map(d=>+d.querySelector('.mx-num .mx-val').textContent.replace(/,/g,'')); const b=[...document.querySelectorAll('#simUnits tr')].map(tr=>+tr.children[7].textContent); return [a,b];})()""")

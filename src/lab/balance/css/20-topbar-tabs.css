@@ -97,3 +97,12 @@ table.list .skline + .skline { margin-top: 4px; }
 table.list tr.grp th { background: var(--soft); color: var(--ink); font-size: .85rem; padding-top: 10px; }
 #listFilter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 #listEditBtn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+/* B5: edit sub-tabs hidden outside step 2 */
+.tabs.main.off { display: none; }
+/* B10: slimmer sticky top bar on wide screens (phones keep their own layout: steps = bottom bar) */
+@media (min-width: 701px) {
+  .topbar { gap: 4px; padding-bottom: 4px; }
+  .steps { padding: 4px; gap: 4px; }
+  .steps button { padding: 5px 6px; }
+  .tabs.main button { padding: 6px 12px; }
+}
