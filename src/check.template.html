@@ -1,0 +1,124 @@
+<title>ตรวจระบบ Automon</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* แผงเครื่องวัดบนโต๊ะแล็บ: สรุปผลบนสุด → เทียบเป้าหมาย → รายการทดสอบ · สีเขียว/แดงเป็นสถานะ ไม่ใช่สีหลัก */
+:root {
+  --bg: #f3f4f1; --panel: #ffffff; --ink: #1d2320; --mute: #5f6a64; --line: #d9ddd6;
+  --accent: #2f5d8a; --pass: #1f7a4a; --pass-bg: #e3f2e8; --fail: #b3261e; --fail-bg: #fbe4e2; --warn: #8a5a00; --warn-bg: #fbf0d6;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141816; --panel: #1c211e; --ink: #e6ebe7; --mute: #9aa59e; --line: #2e3531;
+  --accent: #8db8e2; --pass: #6fd49b; --pass-bg: #17301f; --fail: #ff8f86; --fail-bg: #3a1a18; --warn: #f0c46a; --warn-bg: #352b14; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141816; --panel: #1c211e; --ink: #e6ebe7; --mute: #9aa59e; --line: #2e3531;
+  --accent: #8db8e2; --pass: #6fd49b; --pass-bg: #17301f; --fail: #ff8f86; --fail-bg: #3a1a18; --warn: #f0c46a; --warn-bg: #352b14; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+h1 { font-size: 1.5rem; margin: 0; text-wrap: balance; }
+h2 { font-size: 1rem; margin: 0 0 10px; }
+.sub { color: var(--mute); margin: 4px 0 0; font-size: .9rem; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+button { font: 600 .95rem var(--f-body); background: var(--accent); color: var(--bg); border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+button:disabled { opacity: .6; cursor: wait; }
+.summary { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.big { font: 500 2rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.pill { font-size: .8rem; font-weight: 600; padding: 2px 10px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { color: var(--pass); background: var(--pass-bg); }
+.pill.bad { color: var(--fail); background: var(--fail-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--mute); font-weight: 600; font-size: .8rem; }
+td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+ol { margin: 0; padding: 0; list-style: none; display: grid; }
+ol li { display: grid; grid-template-columns: 2.2em 1fr auto; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: start; }
+ol li:last-child { border-bottom: 0; }
+.idx { font: 500 .8rem var(--f-mono); color: var(--mute); padding-top: 2px; }
+.msg { display: block; color: var(--fail); font-size: .85rem; margin-top: 2px; }
+.note { font-size: .88rem; color: var(--mute); margin: 8px 0 0; }
+ul.plain { margin: 0; padding-left: 1.1em; font-size: .9rem; display: grid; gap: 4px; }
+code { font-family: var(--f-mono); font-size: .85em; }
+@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s; } button:hover { filter: brightness(1.1); } }
+[hidden] { display: none !important; } /* ซ่อนจริงเสมอ แม้ CSS ตั้ง display ไว้ */
+</style>
+ 
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>ตรวจระบบ Automon</h1>
+      <p class="sub">แกนกลางขั้น 1 · ตัวคำนวณการต่อสู้ตาม combat-rules V1.1</p>
+    </div>
+    <button id="run" type="button">ตรวจอีกครั้ง</button>
+  </div>
+ 
+  <div class="summary" id="summary"><span class="big">…</span><span>กำลังตรวจ</span></div>
+ 
+  <section>
+    <h2>ความยาวแมตช์เทียบเป้าหมาย</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>ทีมสุ่ม 6 ตัว · 1,000 แมตช์</th><th>ค่ากลาง</th><th>10–90%</th><th>ถึง 180 วิ</th><th>เสมอ</th></tr></thead>
+      <tbody id="stats"></tbody>
+    </table></div>
+    <p class="note">เป้าในเอกสาร: ค่ากลาง 20–40 วิ · แมตช์ที่ถึง 180 วิ ต่ำกว่า 5% · ทีมสุ่มไม่ได้คิดเรื่องตำแหน่ง ตัวเลขจริงตอนผู้เล่นจัดทีมจะต่างไป</p>
+  </section>
+ 
+  <section>
+    <h2>ชุดทดสอบกลไก</h2>
+    <ol id="tests"></ol>
+  </section>
+ 
+  <section>
+    <h2>ค่าเสนอที่ใช้อยู่ (เอกสารยังไม่กำหนด)</h2>
+    <ul class="plain" id="proposed"></ul>
+  </section>
+</div>
+ 
+<script>
+/*__CORE__*/const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+ 
+function render() {
+  const btn = $('run'); btn.disabled = true;
+  setTimeout(() => {
+    const cfg = validateConfig(buildCharacterList());
+    const res = runTests();
+    const pass = res.filter(r => r.ok).length;
+    const all = pass === res.length && cfg.ok;
+    $('summary').innerHTML = `<span class="big">${pass}/${res.length}</span>
+      <span class="pill ${all ? 'ok' : 'bad'}">${all ? 'ผ่านทุกข้อ' : 'มีข้อไม่ผ่าน'}</span>
+      <span class="sub">ตัวละคร ${buildCharacterList().length} ตัว · config ${cfg.ok ? 'ถูกต้อง' : 'มีปัญหา ' + cfg.errors.length + ' จุด'}</span>`;
+    $('tests').innerHTML = res.map((r, i) => `<li><span class="idx">${String(i + 1).padStart(2, '0')}</span>
+      <span>${esc(r.name)}${r.ok ? '' : `<span class="msg">${esc(r.msg)}</span>`}</span>
+      <span class="pill ${r.ok ? 'ok' : 'bad'}">${r.ok ? 'ผ่าน' : 'ไม่ผ่าน'}</span></li>`).join('');
+    $('stats').innerHTML = [1, 2, 3].map(lv => {
+      const s = matchStats(1000, 1, lv);
+      const okMid = s.median >= 20 && s.median <= 40, okStorm = s.stormPct < 5;
+      return `<tr><td>เลเวล ${lv}</td>
+        <td class="n">${s.median.toFixed(1)} วิ <span class="pill ${okMid ? 'ok' : 'warn'}">${okMid ? 'ในเป้า' : 'นอกเป้า'}</span></td>
+        <td class="n">${s.p10.toFixed(0)}–${s.p90.toFixed(0)} วิ</td>
+        <td class="n">${s.stormPct.toFixed(1)}% <span class="pill ${okStorm ? 'ok' : 'warn'}">${okStorm ? 'ในเป้า' : 'เกิน'}</span></td>
+        <td class="n">${s.drawPct.toFixed(1)}%</td></tr>`;
+    }).join('');
+    const R = RULES;
+    $('proposed').innerHTML = [
+      `คูลดาวน์ต่ำสุด <code>${R.minCooldownMs / 1000} วิ</code> (ค่าชั่วคราว)`,
+      `ไฟ: ทำดาเมจเท่าจำนวนไฟทุก <code>${R.burnIntervalMs / 1000} วิ</code> แล้วลดลง <code>${R.burnDecay}</code>`,
+      `พายุทราย: หลัง ${R.stormStartMs / 1000} วิ ทำดาเมจ <code>${R.stormDmgStart}</code> ทุกตัวทุกวิ แรงขึ้น <code>×${R.stormDmgMult}</code> ทุกครั้ง ${R.stormPierce ? 'ทะลุเกราะ' : 'เกราะกันได้'}`,
+      `โบนัสเผ่า 2/4/6: นับได้แล้ว แต่ยังไม่มีผล (ตัวเลขพักไว้ตามเอกสาร)`,
+    ].map(x => `<li>${x}</li>`).join('');
+    btn.disabled = false;
+  }, 30);
+}
+$('run').addEventListener('click', render);
+// เริ่มทดสอบหลังหน้าโหลดเสร็จ (ชุดทดสอบใช้เวลานาน ไม่ให้หน้าค้างตอนเปิด)
+if (document.readyState === 'complete') render(); else addEventListener('load', () => setTimeout(render, 0));
+</script>
