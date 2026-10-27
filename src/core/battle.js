@@ -299,12 +299,12 @@ export function simulate(teamA, teamB, opts = {}) {
     }
   }
   function cutCd(f, ms) { if (up(f)) { ms = Math.floor(ms * (1 + f.cdAmp / 100)); f.cdLeft = Math.max(0, f.cdLeft - ms); log('cdCut', { to: f.uid, ms }); } }
-  function heal(f, v, src) {
+  function heal(f, v, src, why) {
     v = Math.floor(v * amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
     if (!up(f) || v <= 0) return; // ฟื้น HP ไม่ช่วยตัวที่ HP ถึง 0 แล้ว (ต้องใช้สกิลลุกกลับมา)
     const h = Math.min(v, f.maxHp - f.hp);
     if (h > 0) {
-      f.hp += h; log('heal', { to: f.uid, amount: h });
+      f.hp += h; log('heal', detailOn && why ? { to: f.uid, amount: h, why } : { to: f.uid, amount: h }); // A1: why (e.g. healHit) only with detail on
       // ฟื้นเป็นพลัง (PT-4): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
       if (src && src.healToAtk > 0 && up(src)) { const a = Math.floor(h * src.healToAtk / 100); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
     }
@@ -357,7 +357,7 @@ export function simulate(teamA, teamB, opts = {}) {
     switch (s.do) {
       case 'armor': for (const x of T()) { addArmor(x, v, why); permRec(u, s, x, v); } break;
       case 'armorPct': for (const x of T()) { addArmor(x, x.maxHp * v / 100, why); permRec(u, s, x, x.maxHp * v / 100); } break;
-      case 'heal': for (const x of T()) { heal(x, v, u); permRec(u, s, x, v); } break;
+      case 'heal': for (const x of T()) { heal(x, v, u, why); permRec(u, s, x, v); } break;
       case 'healPct': for (const x of T()) { heal(x, x.maxHp * v / 100, u); permRec(u, s, x, x.maxHp * v / 100); } break;
       case 'lifesteal': if (ctx.dealt > 0) { heal(u, ctx.dealt * v / 100, u); permRec(u, s, u, ctx.dealt * v / 100); } break;
       case 'dmgPctArmor': for (const x of T()) hurt(x, (ctx.armorSnap ?? u.armor) * v / 100, u, false, dwhy); break;
