@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** · open WIP branch: `claude/set-d-docs-tests-split` (set D done, pushed, NOT merged · waiting for ui_smoke result + user agreement) · last done: set D (a)+(b) · next step: user agrees → check Action green → merge to main (fast-forward) → then Next 1 (anomaly, Opus) · open decisions: merge set D? · publish pending: system-check page changed (embeds new test files) — republish check only if user wants; game/balance room byte-identical, nothing to republish · publish access: writer on all 3 artifacts
+- Account active now: **account 2** · open WIP branch: none (work from main) · last done: set D (a)+(b) MERGED into main (fast-forward, user agreed 27 Oct; Action green run 40512454097, local tests 128/128, ui_smoke FAILS [] ERRORS []; branch `claude/set-d-docs-tests-split` can be deleted by user) · next step: Next 1 (anomaly, Opus) · open decisions: none · publish pending: system-check page changed (embeds new test files) — republish check only if user wants; game/balance room byte-identical, nothing to republish · publish access: writer on all 3 artifacts
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
@@ -17,7 +17,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - In git, archive/ and instructions.md are NOT copied (stay in the Project). Project docs are now a stale copy — git is the source of truth; do not sync both.
 
 ## Next
-0. **Set D: DONE on branch `claude/set-d-docs-tests-split`, awaiting merge.** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
+0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
 1. Investigate suspicious-damage anomaly (Opus): reproduce one match from seed/index, find cause with evidence, report to user before any fix. If a bug is fixed, re-measure needed.
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
