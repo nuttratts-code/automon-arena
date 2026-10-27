@@ -50,6 +50,7 @@ Two Claude accounts take turns on this repo: when one hits its usage limit, the 
 - 1 task set = decide → edit → test → publish once. End of set (or long chat) → update claude/handoff.md (≤ 1 screen; older content → claude/archive/) + say "ควรเปิดแชทใหม่ได้แล้ว" + list what the user must do first, recommended model (Sonnet routine / Opus deep design or hard bugs / Haiku trivial) with a 1-line reason, and a message to paste.
 - Tiny fix but heavy search → log in handoff "งานรอรวม". Do pending items when 3 are queued / the same file is already open / user says so. Warn if pending > 2 task sets.
 - Read only what's needed, never re-read, never read whole built HTML. Test output: failures only. Subagents only with the user's approval.
+- **Proactive token alert (any time):** when the current work starts using many tokens (large files/outputs, repeated searches, long debugging, growing chat) and Claude sees a cheaper way (narrower read/grep, splitting the task, smaller model, new chat, batching, skipping a step), tell the user immediately in 1–2 Thai lines: what is costly + the cheaper option + trade-off. Don't wait for the end of the set; keep working unless the switch needs the user's decision.
 
 ## New chat
 Read claude/handoff.md (index + pending) → open only needed files/sections → check the Balance Room only when the user says they saved → propose the next task set + pending items that can ride along.
