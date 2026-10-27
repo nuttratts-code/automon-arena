@@ -24,7 +24,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 ## Next
 0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
 1. **Review: ALL items fixed and published (sets 40 + 41).** Details: claude/review-2026-10-27.md. Old text: Original ask: REPORT FIRST, change nothing until user picks.** (a) Code review: look for mismatches like the 'อื่นๆ' card bug (labels vs what is counted, received vs given, overkill counting, stale/aggregate numbers in Balance Room tabs `src/lab/balance/js/5*.js`, `61-analyze.js`; game page `src/game/`). (b) UX/UI review of game + Balance Room (odd spots, confusing labels, mobile 390px; sticky topbar ~148px already noted). Use ui_smoke screenshots, never read whole built HTML. Output: Thai list, each item = where + why odd + suggested fix + size; user decides. Done before: anomaly closed (SF-6 loop kept = C; overkill metric left as is).
-2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
+2. ~~Jules~~ **cancelled by user (28 Oct)** — do not propose Jules work; GEMINI.md kept as is.
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
 ## Pending bundle ("งานรอรวม")
