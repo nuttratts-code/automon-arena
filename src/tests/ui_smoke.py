@@ -1,0 +1,403 @@
+# ทดสอบหน้าเว็บจริงด้วย Chromium (Playwright): python3 -I tests/ui_smoke.py <โฟลเดอร์ที่มีไฟล์ .html> <โฟลเดอร์รูป>
+import sys, json
+from playwright.sync_api import sync_playwright
+D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
+def chk(c,msg):
+    if not c: fails.append(msg)
+with sync_playwright() as p:
+    b=p.chromium.launch()
+    for w,h in [(1100,900),(390,844)]:
+        ctx=b.new_context(viewport={'width':w,'height':h})
+        pg=ctx.new_page()
+        pg.route('**/*', lambda r: r.abort() if not r.request.url.startswith('file:') else r.continue_())
+        pg.on('pageerror', lambda e: errs.append((w,'pageerror',str(e))))
+        pg.on('console', lambda m: errs.append((w,'console',m.text)) if m.type=='error' and 'net::' not in m.text else None)
+        # 1 system check (ทุกข้อต้องผ่าน: ตัวเลขหน้า / หลังต้องเท่ากัน)
+        pg.goto(f'file://{D}/system-check.html'); pg.wait_for_function("document.querySelector('#summary .big').textContent.includes('/')", timeout=240000)
+        t=pg.inner_text('#summary'); print(w,'check',t.split('\n')[0])
+        import re
+        mm=re.search(r'(\d+)\s*/\s*(\d+)', t); chk(mm and mm.group(1)==mm.group(2), 'check page')
+        # 2 game: play 12 rounds buying stuff
+        pg.goto(f'file://{D}/game.html')
+        res=[]; maxBoard=0
+        for rnd in range(14):
+            if pg.evaluate('P.over'): break
+            pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
+            # ย้ายจากม้านั่งลงช่องว่างบนบอร์ด: เรียก act() ผ่านเส้นทางเดียวกับการแตะ (เกมรับ pointer events ไม่รับ .click())
+            pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
+            maxBoard=max(maxBoard,pg.evaluate('teamEntries(P).length'))
+            pg.click('#fight');
+            if pg.is_visible('#fightHint') and 'ยืนยัน' in pg.inner_text('#fightHint'): pg.click('#fight')
+            pg.click('#skip'); res.append(pg.inner_text('#resultTitle').split('\n')[0])
+            pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน (แมตช์ยาวขึ้น เครื่องช้าอาจยังไม่ขึ้น)
+            pg.click('#next')
+        print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
+        chk(len(res)>=3,'game rounds')
+        # ชุด 23: ทีมบอทเตรียมไว้ผ่านตัวตรวจ และหัวแมตช์บอกขั้น/ระดับคู่แข่ง
+        chk(pg.evaluate('BOT_OK') and 'คู่แข่ง: ทีมขั้นชนะ' in pg.text_content('#battleTitle'),'preset bot teams active')
+        chk(maxBoard>=3,'units moved from bench to board')
+        # ชุด 24: ปุ่มความเร็ว 8× 16× · ร้านไฮไลต์ตัวที่มีแล้ว · คำอธิบายสกิลครบ 3 เลเวล
+        chk(pg.eval_on_selector_all('[data-speed]','e=>e.map(b=>b.dataset.speed)')==['1','2','4','8','16'],'speed buttons 1-16')
+        if not pg.evaluate('P.over'):
+            own=pg.evaluate("""(()=>{const ids=new Set(allUnits(P).map(x=>x.u.id)); const want=P.shop.filter(s=>s.id&&ids.has(s.id)).length; return [want, document.querySelectorAll('#shop .slot.owned').length];})()""")
+            chk(own[0]==own[1],'shop owned highlight '+str(own))
+            lv=pg.evaluate("""(()=>{const x=allUnits(P).find(x=>CM[x.u.id].skills.some(s=>!s.lv&&new Set(s.v).size>1)); if(!x) return 'none'; sel=x.ref; render(); const b=document.querySelector('#info .lv-now'); return b?b.textContent:'missing';})()""")
+            chk(lv!='missing','skill current level highlighted '+str(lv))
+            # ชุด 26: ปุ่มสลับ Lv1/2/3 ในแผงรายละเอียด · ค่าพลังเปลี่ยนตามเลเวลที่เลือก · แสดงทุกค่า
+            tg=pg.evaluate("""(()=>{const x=allUnits(P)[0]; if(!x) return 'none'; sel=x.ref; render(); const c=CM[x.u.id];
+              const bs=[...document.querySelectorAll('#info .lvtabs button')]; if(bs.length!==3) return 'buttons '+bs.length;
+              bs[2].click(); const t=document.querySelector('#info .stats2').textContent;
+              return [t.includes('HP '+c.hp[2]), t.includes('เกราะ/ฮิต'), t.includes('ฟื้น/ฮิต'), document.querySelector('#info .lvtabs [aria-pressed="true"]').dataset.lv];})()""")
+            chk(tg!='none' and tg[:3]==[True,True,True] and tg[3]=='3','level toggle in info panel '+str(tg))
+        # ชุด 25: รูปตัวละครรายตัว (ลวดลาย + ขอบความหายาก) · รีเพลย์ทุกแมตช์ · บันทึกการต่อสู้ละเอียด
+        mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon svg.pat g > *').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat'))]")
+        chk(mon[0]>0 and mon[1] and mon[2],'unit shapes have patterns '+str(mon))
+        chk(pg.evaluate('replays.length')==len(res) and pg.evaluate("readReplays(localStorage.getItem('automon-run-replays-v1'),CM,RULES,DATA_HASH,P.seed).status")=='ok','replays stored per match '+str(pg.evaluate('replays.length')))
+        back='#runEnd' if pg.evaluate('P.over') else '#prep'
+        rnd0=pg.evaluate('P.round')
+        if back=='#prep': pg.evaluate("document.querySelector('#replayPanel details').open=true")
+        pg.click((('#endReplays' if back=='#runEnd' else '#replayList'))+' li button >> nth=0')
+        chk(pg.is_visible('#battle') and 'รีเพลย์' in pg.text_content('#battleTitle'),'replay opens battle screen')
+        pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)
+        chk(pg.inner_text('#next')=='กลับ' and 'รีเพลย์' in pg.inner_text('#resultTitle'),'replay result screen')
+        pg.evaluate("document.getElementById('logBox').open=true"); pg.wait_for_timeout(100)
+        nlog=pg.eval_on_selector_all('#logList li','e=>e.length'); chk(nlog>3 and 'เริ่มแมตช์' in pg.inner_text('#logList'),'battle log lines '+str(nlog))
+        pg.check('#logProc'); chk(pg.eval_on_selector_all('#logList li','e=>e.length')<=nlog,'log filter')
+        pg.click('#next'); chk(pg.is_visible(back) and pg.evaluate('P.round')==rnd0,'replay returns without changing run')
+        pg.screenshot(path=f'{O}/full-game-{w}.png')
+        # ชุด 22: run จบจริงในลูป → หน้าจบ run + ประวัติจริง → เริ่ม run ใหม่จากหน้านั้น
+        if pg.evaluate('P.over'):
+            chk(pg.is_visible('#runEnd') and pg.evaluate("JSON.parse(localStorage.getItem('automon-run-history-v1')||'[]').length")>=1 and pg.evaluate("localStorage.getItem('automon-run-save-v1')") is None,'real run end: end screen + history + save removed')
+            pg.click('#endNew')
+            # ซื้อและวางตัวลงบอร์ดอีกครั้ง (เหมือนในลูป) ให้ทดสอบสกิลถาวรต่อได้
+            pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
+            pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
+        # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว
+        if not pg.evaluate('P.over'):
+            got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'set',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
+              const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
+            # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
+            if pg.is_hidden('#battle'):
+                fails.append('perm test: battle did not start · '+pg.evaluate('JSON.stringify(msgs)')+' · '+pg.evaluate('JSON.stringify(teamEntries(P).map(e=>[e.id,e.level,e.perm]))'))
+            else:
+                pg.click('#skip')
+            after=pg.evaluate("(()=>{const x=teamEntries(P)[0]; return x && x.perm ? (x.perm.atk||0) : 0;})()")
+            print(w,'perm atk before/after',got,after); chk(isinstance(got,int) and after>got,'battle perm skill applied after match')
+            chk('จากสกิลระหว่างสู้' in pg.inner_text('#endMsgs'),'battle perm message')
+            pg.click('#next') if pg.is_visible('#next') else None
+            nowrow=pg.evaluate("(()=>{if(P.over) return 'over'; const x=allUnits(P).find(x=>Object.values(x.u.perm).some(v=>v)); if(!x) return 'noperm'; sel=x.ref; render(); return !!document.querySelector('#info .stats2.now');})()")
+            chk(nowrow in (True,'over'),'perm now row in info panel '+str(nowrow))
+        # 2c ชุด 22: เซฟกลางทาง · เล่นต่อ · เซฟเสียหาย · หน้าจบ run + ประวัติ
+        over=pg.evaluate('P.over'); saved=pg.evaluate("localStorage.getItem('automon-run-save-v1')")
+        chk(over or saved is not None,'save written after fight')
+        if not over:
+            rnd=pg.evaluate('JSON.parse(localStorage.getItem("automon-run-save-v1")).P.round')
+            pg.reload(); chk(pg.is_visible('#resume') and pg.is_hidden('#prep'),'resume prompt shown')
+            pg.click('#resumeGo'); chk(pg.is_visible('#prep') and pg.evaluate('P.round')==rnd+1,'resume continues same run')
+            chk(pg.evaluate('replays.length')>=1,'replays kept after resume')
+            pg.evaluate("localStorage.setItem('automon-run-replays-v1','{bad')"); pg.reload(); pg.click('#resumeGo')
+            chk('รีเพลย์' in pg.inner_text('#notice') and pg.evaluate('replays.length')==0 and pg.is_hidden('#replayPanel'),'bad replay data cleared + notice')
+        pg.evaluate("localStorage.setItem('automon-run-save-v1','{bad')"); pg.reload()
+        chk(pg.is_visible('#prep') and 'เสียหาย' in pg.inner_text('#notice') and pg.evaluate("localStorage.getItem('automon-run-save-v1')") is not None,'bad save cleared + notice + new save')
+        pg.evaluate("(()=>{const H=JSON.parse(localStorage.getItem('automon-run-save-v1'));H.data='00000000';localStorage.setItem('automon-run-save-v1',JSON.stringify(H));})()"); pg.reload()
+        chk('อัปเดต' in pg.inner_text('#notice'),'data change clears save')
+        pg.evaluate("localStorage.setItem('automon-run-history-v1',JSON.stringify([{at:1,won:false,wins:2,hearts:0,rounds:12,matches:12,team:[{id:'HL-1',level:2}],top:'HL-1',topDmg:50},{at:2,won:true,wins:99}]))")
+        pg.evaluate("P.wins=3;P.hearts=0;P.over=true;renderRunEnd();showScreen('runEnd')")
+        hist=pg.eval_on_selector_all('#endHistory li','e=>e.map(x=>x.textContent)')
+        chk(pg.is_visible('#runEnd') and 'หัวใจหมด' in pg.inner_text('#endTitle') and len(hist)==1 and 'HL-1' in hist[0],'run end screen + filtered history '+str(hist))
+        pg.click('#endNew'); chk(pg.is_visible('#prep') and pg.evaluate('P.round')==1 and not pg.evaluate('P.over'),'new run from end screen')
+        print(w,'save/resume/end ok')
+        pg.evaluate("localStorage.clear()")
+        # 3 balance
+        pg.goto(f'file://{D}/balance.html')
+        chk(pg.is_hidden('#errs'),'balance errs shown')
+        # ชุด 29/30: 3 ขั้น เลือกตัว → แก้ (บันทึกท้ายหน้า) → ดูผล · หน้าแรก = ตารางเผ่า 6 × ความหายาก 5 · มือถือใช้แถบล่าง
+        chk(pg.is_visible('#tgrid') and pg.get_attribute('#step-pick','aria-current')=='step','grid is first page')
+        g=pg.evaluate("[document.querySelectorAll('#tgrid .tg-row').length, document.querySelectorAll('#tgrid .tg-cell').length, document.querySelectorAll('#tgrid .tg-chip').length, chars.length]")
+        chk(g[0]==6 and g[1]==30 and g[2]==g[3],'grid 6x5 holds every char '+str(g))
+        chk(not pg.evaluate('document.documentElement.scrollWidth > innerWidth + 1'),'grid no horizontal scroll')
+        if w<700: chk(pg.evaluate("getComputedStyle(document.getElementById('steps')).position")=='fixed','mobile bottom step bar')
+        pg.click('#tab-list'); chk(pg.is_visible('#pane-list') and pg.is_hidden('#tgrid'),'grid/list toggle'); pg.click('#tab-grid')
+        pg.click('#tgrid .tg-tribe >> nth=1')
+        chk(pg.is_visible('#pane-tribes') and pg.eval_on_selector_all('#tform .grid3:not([hidden])','e=>e.map(x=>x.dataset.tribe)')==[pg.evaluate('TRIBES[1]')],'tribe header opens that tribe bonus')
+        # ชุด 32: ช่องโบนัสเผ่าใหม่ (ค่าเริ่ม 0)
+        tf=pg.text_content('#tform'); chk(all(x in tf for x in ['HP สูงสุด +%','ศัตรูทุกตัวติดไฟ','ดาเมจไฟ +%','ศัตรูทุกตัวติดช็อต','ดาเมจช็อต +%','ดาเมจตีปกติ +%','ทั้งทีมปล่อยทันที']),'new tribe bonus fields')
+        pg.click('#step-pick'); pg.click('#tgrid .tg-chip[data-id="PL-4"]')
+        chk(pg.is_visible('#pane-chars') and pg.evaluate('current')=='PL-4' and pg.inner_text('#sbEdit')=='PL-4','chip opens editor')
+        pg.click('#tab-sim'); pg.click('#step-result'); chk(pg.is_visible('#pane-analysis') and pg.is_hidden('#pane-sim'),'result step')
+        # ชุด 30: 3 ขั้น · ส่วนบันทึก + ไอเดีย + คลังสกิล (พับไว้) อยู่ท้ายขั้นแก้ (ใต้แก้ตัวละคร/โบนัสเผ่า ไม่อยู่ในลองสู้) · ไอเดียตามตัวที่แก้
+        chk(pg.locator('#step-save').count()==0 and pg.eval_on_selector_all('#steps button[id^=step-]','e=>e.length')==3 and pg.is_visible('#steps #save'),'3 steps + save button on top bar')
+        pg.click('#step-edit'); pg.click('#tab-chars')
+        chk(pg.is_visible('#saveBox') and pg.is_visible('#ideaBox') and pg.is_visible('#save') and not pg.evaluate("document.getElementById('catalog').open") and pg.locator('#ideaChar').count()==0,'save + ideas under char editor, catalog folded, no duplicate picker')
+        pg.click('#tab-sim'); chk(pg.is_hidden('#saveBox'),'save box hidden in sim tab'); pg.click('#tab-chars')
+        pg.evaluate("setCurrent('PL-4')"); chk('PL-4' in pg.inner_text('#ideaFor'),'idea follows current')
+        pg.check('#ideaGeneral'); chk(pg.evaluate('ideaPick.value()')=='' and 'ทั่วไป' in pg.inner_text('#ideaFor'),'idea general option'); pg.uncheck('#ideaGeneral')
+        # ชุด 30.1: ปุ่มบันทึกกดได้ทุกหน้า · ไม่มีฐานข้อมูล (ไฟล์ในเครื่อง) = แจ้ง ไม่พัง
+        pg.click('#step-result'); pg.click('#save'); chk(pg.is_visible('#saveMsg') and 'บันทึก' in pg.inner_text('#saveMsg'),'save from result step shows message')
+        # ชุด 30.1: แป้นตัวเลขมือถือ
+        pg.click('#step-edit'); pg.click('#tab-chars')
+        chk(pg.get_attribute('#f-hp-0','inputmode')=='numeric' and pg.get_attribute('#f-cdMs-0','inputmode')=='decimal' and pg.get_attribute('#simSeed','inputmode')=='numeric','numeric keypad modes')
+        # ชุด 30.1: หน้าลองสู้ แตะตัวก่อนสู้ = แผงรายละเอียดแบบหน้าเกม (Lv1/2/3) + ตัวที่แก้เปลี่ยนตาม
+        pg.click('#tab-sim'); pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; simLast=null; renderSimTeams()")
+        pg.click('#simArena [data-key="0:0:0"]')
+        info=pg.inner_text('#simInfo')
+        chk(pg.evaluate('current')=='PL-3' and 'PL-3' in info and pg.eval_on_selector_all('#simInfo .lvtabs button','e=>e.length')==3 and pg.get_attribute('#simInfo .lvtabs [aria-pressed="true"]','data-lv')=='2','sim tap before battle shows info + sets current')
+        # ชุด 30.2: ม้านั่งอยู่เหนือสนาม · ปิดโบนัสเผ่าเป็นค่าเริ่ม · ทีมที่เซฟเลือกฝั่งตามตัวที่แตะ · ค่าที่แก้อยู่ล่างสุด (หลังไอเดีย/คลังสกิล)
+        chk(pg.evaluate("!!(document.getElementById('simBench').compareDocumentPosition(document.querySelector('#simStageBox .stage')) & Node.DOCUMENT_POSITION_FOLLOWING)"),'bench above arena')
+        chk(pg.is_checked('#simOffL') and pg.is_checked('#simOffR'),'tribe bonus off by default')
+        chk(pg.evaluate("document.getElementById('simRun').nextElementSibling.id")=='simPlay','sim run button before play')
+        chk(pg.evaluate("[...document.querySelectorAll('#saveBox > .subsec, #saveBox > details')].map(x=>x.id).join(',')")=='ideaBox,catalog,editedBox','edited values last')
+        chk(pg.input_value('#presetSide')=='0','preset side follows left tap')
+        pg.click('#simArena [data-key="1:0:0"]'); chk(pg.input_value('#presetSide')=='1' and pg.evaluate('current')=='WY-3','preset side follows right tap')
+        pg.click('#simArena [data-key="0:0:0"]')
+        pg.click('#simInfo .lvtabs [data-lv="3"]'); hp3=pg.evaluate("String(chars.find(c=>c.id==='PL-3').hp[2])")
+        chk(('HP '+hp3) in pg.inner_text('#simInfo .stats2'),'sim info level toggle')
+        # ชุด 30.1: ทีมที่เซฟ (ไม่มีฐานข้อมูล = เก็บในเครื่อง) · ใส่ฝั่งอื่นได้ · สูงสุด 10
+        pg.evaluate("document.getElementById('presetBox').open=true; localStorage.removeItem('automon-balance-teams'); presets=[]; renderPresets()")
+        pg.select_option('#presetSide','0'); pg.fill('#presetName','<b>ทีมลอง</b>'); pg.click('#presetSave')
+        chk(pg.eval_on_selector_all('#presetList li','e=>e.length')==1 and '<' not in pg.inner_text('#presetList'),'preset saved + name sanitized')
+        pg.click('#presetList li >> nth=0 >> [data-load="1"]')
+        chk(pg.evaluate("JSON.stringify(simTeam[1])==JSON.stringify(simTeam[0])"),'preset loads into right side')
+        for i in range(9): pg.click('#presetSave')
+        chk(pg.eval_on_selector_all('#presetList li','e=>e.length')==10 and pg.is_disabled('#presetSave'),'preset max 10')
+        pg.evaluate("localStorage.setItem('automon-balance-teams','[{\"id\":\"x\",\"units\":[{\"row\":9,\"lane\":0,\"id\":\"PL-3\",\"level\":1}]},{\"id\":\"y\",\"name\":\"ok\",\"units\":[{\"row\":0,\"lane\":1,\"id\":\"PL-3\",\"level\":3}]}]'); presets=presetLocal(); renderPresets()")
+        chk(pg.eval_on_selector_all('#presetList li','e=>e.length')==1,'bad preset data dropped')
+        pg.click('#presetList li >> nth=0 >> button.danger'); pg.click('#presetList li >> nth=0 >> button.danger')
+        chk('ยังไม่มีทีม' in pg.inner_text('#presetList'),'preset delete with confirm')
+        pg.click('#tab-chars')
+        # ชุด 30: โหมดแก้ค่าในหน้ารายการ (ยกเว้นสกิล) · แก้แล้วค่าเปลี่ยนจริง ป้ายจำนวนจุดขึ้น ตารางไม่วาดใหม่
+        pg.click('#step-pick'); pg.click('#tab-list'); pg.click('#listEditBtn')
+        chk(pg.is_visible('#l-HL-1-hp-0') and pg.is_visible('#l-HL-1-healHit-2'),'list edit mode shows inputs')
+        hp0=pg.evaluate("chars.find(c=>c.id==='HL-1').hp[0]")
+        pg.fill('#l-HL-1-hp-0',str(hp0+7)); pg.press('#l-HL-1-hp-0','Tab')
+        chk(pg.evaluate("chars.find(c=>c.id==='HL-1').hp[0]")==hp0+7 and pg.inner_text('#sbSave')!='' and pg.evaluate("document.activeElement && document.activeElement.id")=='l-HL-1-hp-1','list edit changes value, keeps focus')
+        pg.fill('#l-HL-1-cdMs-0','-3'); pg.press('#l-HL-1-cdMs-0','Tab')
+        chk(pg.evaluate("chars.find(c=>c.id==='HL-1').cdMs[0]")==pg.evaluate("BASE_CHARS.find(c=>c.id==='HL-1').cdMs[0]"),'list edit rejects negative')
+        nm=pg.locator('#listBody input[type=text] >> nth=0'); nm.fill('<b>x</b>ab'); nm.press('Tab')
+        chk('<' not in nm.input_value(),'list name sanitize')
+        rr=pg.evaluate("RARITIES[RARITIES.length-1]"); pg.select_option('#l-HL-1-rarity',rr)
+        chk(pg.evaluate("chars.find(c=>c.id==='HL-1').rarity")==rr,'list edit rarity')
+        chk(pg.evaluate("document.querySelector('table.list').offsetWidth <= document.getElementById('pane-list').clientWidth + 1 || innerWidth < 700"),'list edit table hugs content')
+        pg.click('#listBody .lskbtn >> nth=0'); chk(pg.is_visible('#pane-chars'),'list skill button opens editor')
+        pg.evaluate("chars=clone(BASE_CHARS); renderCharForm(); refreshDirty(); listEdit=false")
+        pg.click('#step-pick'); pg.click('#tab-grid')
+        chk(pg.eval_on_selector_all('#mN option','e=>e.map(o=>o.value)')==['12000','24000'],'analysis match count options')
+        pg.click('#step-edit'); pg.click('#tab-chars')
+        # edit flow: HL-2 add skill lv3 only, change values, check sentence
+        pg.evaluate("current='HL-2'; renderCharForm()")
+        # ชุด 11: แถวแนะนำติ๊กได้หลายแถว · ครบ 3 = ที่ไหนก็ได้ · เหลือ 1 แถวเอาออกไม่ได้
+        rh0=pg.evaluate("chars.find(c=>c.id===current).rowHint")
+        for i in range(3):
+            if pg.is_checked(f'#f-row-{i}'): pg.click(f'#f-row-{i}')
+        chk(sum(pg.is_checked(f'#f-row-{i}') for i in range(3))==1,'row hint keeps at least one')
+        for i in range(3):
+            if not pg.is_checked(f'#f-row-{i}'): pg.check(f'#f-row-{i}')
+        chk(pg.evaluate("chars.find(c=>c.id===current).rowHint")=='ที่ไหนก็ได้','all rows = anywhere')
+        pg.uncheck('#f-row-0'); chk(pg.evaluate("chars.find(c=>c.id===current).rowHint")=='กลาง+หลัง','mid+back hint')
+        # ชุด 13: ปุ่มตั้ง Lv2/3 จาก Lv1 · ค่าพลัง ×2/×4 · คูลดาวน์/มัลติฮิต = Lv1
+        pg.click('#x24'); v=pg.evaluate("(()=>{const c=chars.find(x=>x.id===current);return [c.hp,c.atk,c.burn,c.shock,c.armorHit,c.cdMs,c.multi].map(a=>[a[1]/Math.max(1,a[0]),a[2]/Math.max(1,a[0]),a[0]===a[1]&&a[1]===a[2]])})()")
+        chk(all(x[0]==2 and x[1]==4 for x in v[:2]) and v[5][2] and v[6][2],'x24 scales stats, keeps cooldown/multi')
+        print(w,'rowhint ok', rh0)
+        # ชุด 18: ค่าพลังฟื้น/ฮิต แก้ได้ทุกเผ่า (HL-2 เผ่าเหล็กกล้า)
+        pg.fill('#f-healHit-0','3'); pg.press('#f-healHit-0','Tab')
+        chk(pg.evaluate("chars.find(c=>c.id==='HL-2').healHit[0]")==3 and pg.is_hidden('#errs'),'healHit field editable, no error')
+        # ชุด 20: แถวค่ากลางใต้ HP/พลังโจมตี (เหล็กกล้า ธรรมดา = HP 210 · พลังโจมตี 4) · ต่ำกว่า 50% ขึ้นเตือน
+        mids=pg.eval_on_selector_all('.grid3 .mid:not(.cdrange)','e=>e.map(x=>x.textContent)')
+        # ชุด 21: แถวช่วงคูลดาวน์ของเผ่า (ตัวจาง ไม่เตือน) ใต้ช่องคูลดาวน์
+        cdr=pg.eval_on_selector_all('.grid3 .mid.cdrange','e=>e.map(x=>x.textContent)')
+        chk(len(cdr)==1 and 'เหล็กกล้า' in cdr[0] and 'วิ' in cdr[0],'tribe cooldown range row '+str(cdr))
+        chk(len(mids)==6 and mids[0].startswith('210') and mids[3].startswith('4'),'mid-value rows '+str(mids))
+        pg.fill('#f-hp-0','50'); pg.press('#f-hp-0','Tab')
+        chk(pg.evaluate("document.querySelector('.grid3 .mid').classList.contains('low')"),'mid warns under 50%')
+        pg.click('#x24')
+        n0=pg.eval_on_selector_all('#skillList .skcard','e=>e.length')
+        pg.click('#addBattle'); n1=pg.eval_on_selector_all('#skillList .skcard','e=>e.length'); chk(n1==n0+1,'add skill')
+        k=n1-1
+        pg.select_option(f'#s{k}-when','hitTaken'); pg.select_option(f'#s{k}-do','reflect');
+        chk(not pg.evaluate(f"document.getElementById('s{k}-more').open"),'extra settings collapsed by default')
+        pg.click(f'#s{k}-more summary')
+        pg.uncheck(f'#s{k}-lv1'); pg.uncheck(f'#s{k}-lv2')
+        pg.fill(f'#s{k}-cd','2.5'); pg.press(f'#s{k}-cd','Tab')
+        txt=pg.inner_text(f'#skillList .skcard >> nth={k}'); print(w,'new skill:',txt.split('\n')[:4])
+        chk('เฉพาะ Lv3' in txt and 'คูลดาวน์สกิล 2.5' in txt, 'skill lv/cd sentence')
+        # ชุด 17: คูลดาวน์สกิลยาวขึ้น % ทุกครั้งที่ใช้ (ช่องโผล่เมื่อมีคูลดาวน์สกิล)
+        pg.fill(f'#s{k}-cdgrow','20'); pg.press(f'#s{k}-cdgrow','Tab')
+        chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].cdGrow")==20 and 'ยาวขึ้น 20%' in pg.inner_text(f'#skillList .skcard >> nth={k}'),'cdGrow editor + sentence')
+        # last checkbox can't be removed
+        pg.click(f'#s{k}-lv3'); chk(pg.is_checked(f'#s{k}-lv3'),'cannot uncheck last level')
+        # ตัวแก้สกิลแบบรวม (ชุด 6): เมื่อ รวมทุกเงื่อนไข · ทำ รวมผลร้านค้า/ระหว่างสู้ · ระยะเวลาเป็นปุ่ม
+        whens=pg.eval_on_selector_all(f'#s{k}-when option','e=>e.map(o=>o.value)')
+        chk('matchWin' in whens and 'selfDown' in whens and 'hitTaken' in whens,'when list has all triggers')
+        pg.select_option(f'#s{k}-when','selfDown'); pg.select_option(f'#s{k}-do','armor')
+        chk(not pg.is_disabled(f'#s{k}-dur-perm') and pg.is_disabled(f'#s{k}-dur-match'),'armor: now+perm enabled, match disabled')
+        # ชุด 12: ผู้รับใหม่ เพื่อนข้างหลังเลนเดียวกัน
+        tos=pg.eval_on_selector_all(f'#s{k}-to option','e=>e.map(o=>o.value)'); chk('backLaneAlly' in tos,'new target backLaneAlly listed')
+        pg.click(f'#s{k}-dur-perm')
+        txt=pg.inner_text(f'#skillList .skcard >> nth={k}'); print(w,'perm skill:',txt.split('\n')[0])
+        chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].perm===true") and 'เกราะสะสม' in txt,'perm flag + sentence')
+        pg.click(f'#s{k}-dur-now')
+        chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].perm===undefined"),'perm cleared when now')
+        # ชุด 14: เพื่อนตามตำแหน่ง + เฉพาะเผ่าเดียวกัน
+        pg.select_option(f'#s{k}-to','allyAt'); pg.select_option(f'#s{k}-atrow','mid'); pg.select_option(f'#s{k}-atlane','other'); pg.check(f'#s{k}-same')
+        sk=pg.evaluate(f"JSON.stringify(chars.find(c=>c.id==='HL-2').skills[{k}])"); txt=pg.inner_text(f'#skillList .skcard >> nth={k}')
+        chk('"at":{"row":"mid","lane":"other"}' in sk and '"sameTribe":true' in sk and 'แถวกลาง อีกเลน' in txt and 'เฉพาะเผ่าเดียวกัน' in txt,'allyAt + sameTribe editor')
+        # ชุด 17: ไม่ให้ผลกับตัวอื่นที่ ID เดียวกัน
+        pg.check(f'#s{k}-skipid')
+        chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].skipSameId")==True and 'ชนิดเดียวกับตัวนี้' in pg.inner_text(f'#skillList .skcard >> nth={k}'),'skipSameId editor + sentence')
+        pg.select_option(f'#s{k}-to','self'); sk=pg.evaluate(f"JSON.stringify(chars.find(c=>c.id==='HL-2').skills[{k}])")
+        chk('"at"' not in sk and 'sameTribe' not in sk and 'skipSameId' not in sk and pg.locator(f'#s{k}-same').count()==0 and pg.locator(f'#s{k}-skipid').count()==0,'self clears at/sameTribe/skipSameId')
+        pg.select_option(f'#s{k}-do','atkUp'); pg.click(f'#s{k}-dur-perm'); pg.select_option(f'#s{k}-when','matchEnd')
+        sk=pg.evaluate(f"JSON.stringify(chars.find(c=>c.id==='HL-2').skills[{k}])"); print(w,'shop skill:',sk)
+        chk('"permAtk"' in sk and pg.is_disabled(f'#s{k}-dur-now') and pg.get_attribute(f'#s{k}-dur-perm','aria-pressed')=='true','shop when keeps family + locked perm')
+        chk('cdGrow' not in sk,'shop when clears cdGrow')
+        pg.select_option(f'#s{k}-when','set')
+        sk=pg.evaluate(f"JSON.stringify(chars.find(c=>c.id==='HL-2').skills[{k}])")
+        chk('"atkUp"' in sk and '"perm":true' in sk,'back to battle keeps perm')
+        dos=pg.eval_on_selector_all(f'#s{k}-do option','e=>e.map(o=>o.value)')
+        chk('burnTakenUp' in dos and 'hitAmp' in dos and 'armorHitUp' in dos and not any(d.startswith('perm') for d in dos),'new effects listed, no raw shop effects')
+        # ชุด 16: คูลดาวน์ช้าลง % (ใส่ศัตรูหรือตัวเอง) · ตัวเอง down ทันที (เฉพาะเริ่มแมตช์)
+        chk('cdSlowPct' in dos and 'selfKo' not in dos,'cdSlowPct listed, selfKo only on match start')
+        pg.click(f'#s{k}-dur-match')
+        # ชุด 7: ผลแบบ % ของ มีช่องคิดจากค่า/ของใคร · ไม่มีผลแบบเดิมที่ฝังค่าในชื่อ
+        chk('dmgPctArmor' not in dos and 'dmgOf' in dos,'percent-of family replaces legacy')
+        pg.select_option(f'#s{k}-do','dmgOf'); pg.select_option(f'#s{k}-ofstat','maxHp'); pg.select_option(f'#s{k}-ofwho','ctx')
+        sk=pg.evaluate(f"JSON.stringify(chars.find(c=>c.id==='HL-2').skills[{k}].of)"); chk(sk=='{"stat":"maxHp","who":"ctx"}','of selectors work')
+        # ชุด 12: ของใคร เลน/แถวเดียวกัน
+        pg.select_option(f'#s{k}-ofwho','rowEnemies')
+        chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].of.who")=='rowEnemies','of who row enemies')
+        # ชุด 16: เริ่มแมตช์ → ตัวเอง down ทันที · ใส่ใครล็อกเป็นตัวเอง
+        pg.select_option(f'#s{k}-when','matchStart'); pg.select_option(f'#s{k}-do','selfKo')
+        chk(pg.is_disabled(f'#s{k}-to') and 'ตัวเอง down ทันที' in pg.inner_text(f'#skillList .skcard >> nth={k}'),'selfKo editor')
+        pg.select_option(f'#s{k}-when','hitTaken'); pg.select_option(f'#s{k}-do','reflect')
+        # ชุด 12: สะท้อนแบบ % ของ อยู่ในรายการเมื่อโดนตี
+        dos2=pg.eval_on_selector_all(f'#s{k}-do option','e=>e.map(o=>o.value)'); chk('reflectOf' in dos2,'reflectOf listed on hitTaken')
+        # ชุด 20: ผลใหม่ พาเพื่อนไปตี / ล้าง % (ตีโดน) · สะท้อนดีบัฟ (ติดตัว)
+        pg.select_option(f'#s{k}-when','hit'); dos3=pg.eval_on_selector_all(f'#s{k}-do option','e=>e.map(o=>o.value)')
+        chk('allyStrike' in dos3 and 'cleansePct' in dos3 and 'reviveDowned' in dos3,'allyStrike + cleansePct + reviveDowned listed on hit')
+        pg.select_option(f'#s{k}-when','passive'); dos4=pg.eval_on_selector_all(f'#s{k}-do option','e=>e.map(o=>o.value)')
+        chk('reflectDebuff' in dos4,'reflectDebuff listed on passive')
+        # ชุด 8: ช่องเสริมอยู่ใน "ตั้งค่าเพิ่มเติม" (ปิดไว้ถ้าเป็นค่าตั้งต้น) · ประโยคภาษาพูด + ตัวอย่าง + คำอธิบายผล
+        pg.select_option(f'#s{k}-when','passive'); pg.select_option(f'#s{k}-do','shareArmor')
+        hd=pg.inner_text(f'#skillList .skcard:nth-child({k+1}) .skillnow'); chk('ทุกครั้งที่ตัวนี้ได้เกราะ' in hd and 'ตัวอย่าง' in hd,'plain sentence + example')
+        chk(pg.is_visible(f'#skillList .skcard:nth-child({k+1}) .dohelp'),'effect help shown')
+        pg.select_option(f'#s{k}-when','hitTaken'); pg.select_option(f'#s{k}-do','reflect')
+        pg.uncheck(f'#s{k}-lv1') if pg.is_checked(f'#s{k}-lv1') else None
+        pg.uncheck(f'#s{k}-lv2') if pg.is_checked(f'#s{k}-lv2') else None
+        print(w,'dirty:',pg.inner_text('#dirty'))
+        # sim with edited HL-2 lv3
+        pg.click('#tab-sim'); pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'HL-2',level:3}; simTeam[1][0][0]={id:'WY-3',level:3}; renderSimTeams()")
+        # ชุด 13: ปุ่มเลเวลทุกตัว (ใต้สนาม)
+        pg.click('#simLvAll [data-lvall="1"]'); chk(pg.evaluate("simTeam.flat(2).filter(Boolean).every(u=>u.level===1)"),'all level 1')
+        pg.click('#simLvAll [data-lvall="up"]'); chk(pg.evaluate("simTeam.flat(2).filter(Boolean).every(u=>u.level===2)"),'all level +1')
+        pg.select_option('#simLvSide','1'); pg.click('#simLvAll [data-lvall="3"]')
+        chk(pg.evaluate("simTeam[1].flat().filter(Boolean).every(u=>u.level===3) && simTeam[0].flat().filter(Boolean).every(u=>u.level===2)"),'right team only lv3')
+        pg.select_option('#simLvSide','both'); pg.evaluate("simTeam[0][0][0].level=3; saveSim(); renderSimTeams()")
+        pg.click('#simRun'); sk=pg.text_content('#simSkills'); print(w,'sim:',pg.inner_text('#simCards').replace('\n',' '))
+        chk('สะท้อน' in sk,'sim shows new skill')
+        # ชุด 30.4: ส่วนสกิลทำงานกี่ครั้งย่อไว้ (เปิดได้) · สรุปรายตัวใช้ติดช็อต/ติดไฟให้ศัตรู · ป้ายมัลติฮิต ×N (×1 ซ่อน)
+        chk(pg.evaluate("!document.getElementById('simSkillsFold').open") and 'ติดช็อตให้ศัตรู' in pg.text_content('#pane-match .sumtbl thead') and 'ติดไฟให้ศัตรู' in pg.text_content('#pane-match .sumtbl thead') and 'ดาเมจช็อต' not in pg.text_content('#pane-match .sumtbl thead'),'skill count folded + given columns')
+        # ชุด 36: ส่วนสกิลทำงานกี่ครั้ง/สรุปรายตัว/บันทึก ย้ายไปแท็บวิเคราะห์แมตช์ · หน้าแรกตัวละ 1 แถว (ย่อ) กางได้ 2 ชั้น · ตารางใครตีใคร · กราฟ
+        chk(pg.locator('#simRes #simSkillsFold').count()==0 and pg.is_visible('#toMatch'),'sections moved out of sim tab')
+        pg.click('#toMatch'); chk(pg.is_visible('#pane-match') and pg.is_hidden('#pane-sim') and pg.get_attribute('#tab-match','aria-selected')=='true','match tab opens')
+        mu=pg.evaluate("[document.querySelectorAll('#mxUnits details.mxu').length, unitsOf(simLast.r).length, [...document.querySelectorAll('#mxUnits details.mxu')].every(d=>!d.open), !document.getElementById('mxMatFold').open && !document.getElementById('mxChartFold').open]")
+        chk(mu[0]==mu[1] and mu[2] and mu[3],'one collapsed row per unit '+str(mu))
+        pg.click('#mxUnits details.mxu >> nth=0 >> summary')
+        head=pg.inner_text('#mxUnits details.mxu >> nth=0 >> .mx-row.h')
+        chk(all(x in head for x in ['ที่มา','ครั้ง','รวม','เกราะกัน','HP หาย']),'unit pane table header '+head[:60])
+        chk(pg.locator('#mxUnits details.mxu >> nth=0 >> .mx-lk').count()>0,'unit pane has log link')
+        # ดาเมจที่ทำรวมทุกตัว = ดาเมจรวมในสรุปรายตัว (วิธีนับเดียวกัน)
+        cmp=pg.evaluate("""(()=>{const a=[...document.querySelectorAll('#mxUnits details.mxu')].map(d=>+d.querySelector('.mx-num .mx-val').textContent.replace(/,/g,'')); const b=[...document.querySelectorAll('#simUnits tr')].map(tr=>+tr.children[7].textContent); return [a,b];})()""")
+        chk(len(cmp[0])==len(cmp[1]) and all(abs(x-y)<=1 for x,y in zip(*cmp)),'match totals equal summary '+str(cmp))
+        # ชุด 37 + UX: 4 แท็บรายตัวอยู่ข้างหัวข้อ "รายตัว" (นอกแถว) · แผนภูมิในแถวเปลี่ยนตามแท็บ · ลิงก์ไปบันทึก
+        u0='#mxUnits details.mxu >> nth=0'
+        tabs=pg.eval_on_selector_all('#mxTabs button','e=>e.map(b=>b.textContent)')
+        chk(tabs==['ทำดาเมจ','โดนทำดาเมจ','อื่นๆ','สเตตัส'],'4 unit tabs next to heading '+str(tabs))
+        chk(pg.evaluate("!!document.querySelector('.mx-sechead #mxTabs') && !document.querySelector('#mxUnits .mx-tabs')"),'tabs moved out of unit rows')
+        sub=pg.inner_text(u0+' >> .mx-sub'); chk(re.fullmatch(r'\d+ ฮิต',sub) is not None,'collapsed sub line '+sub)
+        chk('ฮิต' in pg.inner_text(u0+' >> .mx-pane:not([hidden]) .mx-tot >> nth=0') and 'ดาเมจรวม' in pg.inner_text(u0+' >> .mx-pane:not([hidden]) .mx-tot >> nth=0'),'tab1 description line')
+        for i,nm in enumerate(tabs):
+            pg.click(f'#mxTabs button >> nth={i}')
+            chk(pg.eval_on_selector_all(u0+' >> .mx-pane:not([hidden])','e=>e.length')==1 and pg.get_attribute(f'#mxTabs button >> nth={i}','aria-selected')=='true','tab '+nm+' shows one pane')
+        # แผนภูมิในแถวเปลี่ยนตามแท็บ: แท็บ 1 = "ทำ" · แท็บ 2 = "รับ" · แถวละ 1 แท่ง
+        pg.click('#mxTabs button >> nth=0'); lab0=pg.inner_text(u0+' >> .mx-num small'); bars0=pg.eval_on_selector(u0,'e=>e.querySelectorAll(":scope > summary > .mx-bar").length')
+        pg.click('#mxTabs button >> nth=1'); lab1=pg.inner_text(u0+' >> .mx-num small'); bars1=pg.eval_on_selector(u0,'e=>e.querySelectorAll(":scope > summary > .mx-bar").length')
+        chk(lab0=='ทำ' and lab1=='รับ' and bars0==1 and bars1==1,'row chart follows selected tab '+lab0+'/'+lab1)
+        # tab 2: 1 แถวต่อ 1 ศัตรู · ลิงก์เดียวต่อแถว
+        pg.click('#mxTabs button >> nth=1')
+        rows=pg.eval_on_selector_all(u0+' >> .mx-pane:not([hidden]) .mx-rw','e=>e.map(r=>[r.querySelectorAll(".mx-lk").length, r.textContent])')
+        chk(len(rows)>=1 and all(x[0]>=1 for x in rows),'tab2 every enemy row has log link '+str([x[0] for x in rows]))
+        pairrow=pg.locator(u0+' >> .mx-pane:not([hidden]) .mx-rw:has(.mx-lk:text("เฉพาะคู่")) .mx-lk >> nth=0')
+        if pairrow.count()>0:
+            pairrow.click()
+            chk(pg.evaluate("document.getElementById('simLogFold').open") and pg.is_visible('#simPairBar') and pg.input_value('#simWho')=='' and not pg.is_checked('#simOnlyProc') and not pg.is_checked('#simNoSet'),'pair link opens log, clears filters')
+            chk(pg.eval_on_selector_all('#simLog li[data-ev]','e=>e.length')>=1,'pair view has lines')
+            pg.click('#simPairBar button'); chk(pg.is_hidden('#simPairBar'),'pair filter removable')
+        # tab 4: สเตตัส · กางแล้วมีลิงก์ → ไปบรรทัดเดียว ไฮไลต์ ล้างตัวกรอง
+        pg.evaluate("document.getElementById('simOnlyProc').checked=true")
+        pg.click('#mxTabs button >> nth=3')
+        stx=pg.eval_on_selector_all(u0+' >> .mx-pane:not([hidden]) details.mxs','e=>e.length')
+        if stx>0:
+            pg.click(u0+' >> .mx-pane:not([hidden]) details.mxs >> nth=0 >> summary')
+            if pg.locator(u0+' >> .mx-pane:not([hidden]) details.mxs >> nth=0 >> .mx-lk').count()>0:
+                pg.click(u0+' >> .mx-pane:not([hidden]) details.mxs >> nth=0 >> .mx-lk >> nth=0')
+                chk(pg.evaluate("document.getElementById('simLogFold').open") and pg.eval_on_selector_all('#simLog li.lg-hi','e=>e.length')==1 and not pg.is_checked('#simOnlyProc') and pg.is_hidden('#simPairBar'),'stat link highlights one line, filters cleared')
+        # tab 3: ทุกแถวมีลิงก์
+        pg.click('#mxTabs button >> nth=2')
+        fx=pg.eval_on_selector_all(u0+' >> .mx-pane:not([hidden]) .mx-rw','e=>e.map(r=>r.querySelectorAll(".mx-lk").length)')
+        chk(all(n>=1 for n in fx),'tab3 every row has log link '+str(fx))
+        chk(pg.evaluate("(()=>{const r=simLast.r, idx=r.events.findIndex((e,i)=>i>10&&e.k==='dmg'); const ls=battleLogLines(r, simLast.m, {limit:3, keep:new Set([idx])}); return ls.some(li=>li.dataset&&li.dataset.ev===String(idx));})()"),'log keeps target line beyond limit')
+        pg.click('#mxTabs button >> nth=0')
+        pg.click('#mxMatFold summary'); pg.click('#mxMat td button:not([disabled]) >> nth=0'); chk(pg.eval_on_selector_all('#mxMat .mx-cell li','e=>e.length')>=1,'matrix cell breakdown')
+        pg.click('#mxChartFold summary'); ch=pg.evaluate("[document.querySelectorAll('#mxChart polyline').length, document.querySelectorAll('#mxChart .mx-chips button').length]")
+        chk(ch[0]>=2 and ch[0]==ch[1],'chart lines + chips '+str(ch))
+        pg.click('#mxChart .mx-chips button >> nth=0'); chk(pg.evaluate("document.getElementById('mxChart').classList.contains('hi') && document.querySelectorAll('#mxChart polyline.on').length===1"),'chart highlight')
+        chk(not pg.evaluate('document.documentElement.scrollWidth > innerWidth + 1'),'match tab no horizontal scroll')
+        pg.click('#simSkillsFold summary'); chk(pg.evaluate("document.getElementById('simSkillsFold').open"),'skill count unfolds')
+        pg.click('#tab-sim')
+        # ชุด 33: ฮิต = ครั้งที่ออกไปตี (ตีแบ่งนับ 1) · ดาเมจรวม = ดาเมจฮิต + ดาเมจอื่นๆ
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'SF-8',level:1}; simTeam[1][0][0]={id:'HL-6',level:1}; simTeam[1][0][1]={id:'HL-1',level:1}; simTeam[1][1][0]={id:'PT-1',level:1}; renderSimTeams()"); pg.click('#simRun')
+        sm=pg.evaluate("""(()=>{const r=simLast.r, me=r.events[0].units.find(x=>x.side===0).uid; const want=r.events.filter(e=>e.k==='dmg'&&e.why==='hit'&&e.from===me&&!e.sub).length;
+          const row=[...document.querySelectorAll('#simUnits tr')][0].children; const n=i=>+row[i].textContent; return [n(2), want, n(7), n(3)+n(6)];})()""")
+        chk(sm[0]==sm[1] and abs(sm[2]-sm[3])<=1,'summary swings + total '+str(sm))
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'WY-5',level:3}; simTeam[1][0][0]={id:'HL-6',level:1}; renderSimTeams()"); pg.click('#simRun')
+        mc=pg.evaluate("(()=>{const m=simLast.m; return [...simView.units.values()].map(v=>[m[v.id].multi[v.level-1], v.multiEl.hidden, v.multiEl.textContent]);})()")
+        chk(all((x[0]>1 and not x[1] and x[2]=='×'+str(x[0])) or (x[0]==1 and x[1]) for x in mc) and any(x[0]>1 for x in mc),'multihit chip '+str(mc))
+        # เรียกตัวมาแทน (PL-5): จำลองแล้วมีตัวใหม่โผล่ในสนาม
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-5',level:1}; simTeam[1][0][0]={id:'HL-6',level:3}; renderSimTeams()")
+        pg.click('#simRun'); pg.click('#simSkip')
+        chk('เรียก' in pg.text_content('#simLog'),'summon shown in log')
+        # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
+        pg.evaluate("simTeam=emptySim(); simTeam[1][0][0]={id:'HL-1',level:1}; saveSim(); renderSimTeams(); dock.side=0; renderDock()")
+        pg.fill('#dockQ','PL-3'); chk(pg.eval_on_selector_all('#dockList .dk-item','e=>e.length')==1,'dock search filters')
+        pg.click('#dockList .dk-item'); chk(pg.evaluate("simTeam[0].flat().some(u=>u&&u.id==='PL-3')") and pg.is_visible('#dockList .dk-item'),'dock tap adds + stays open')
+        pg.fill('#dockQ','')
+        it=pg.locator('#dockList .dk-item >> nth=4'); it.evaluate("e=>{e.scrollIntoView({block:'start'}); scrollBy(0,-170)}"); bb=it.bounding_box(); cid=it.get_attribute('data-cid')  # ช่องเป้าต้องอยู่ในจอ (ลากจริงใกล้ขอบจอ = เลื่อนหน้าให้เอง)
+        tb=pg.locator('#simArena [data-key="1:0:1"]').bounding_box()
+        pg.mouse.move(bb['x']+15,bb['y']+10); pg.mouse.down(); pg.mouse.move(bb['x']+35,bb['y']+30,steps=3); pg.mouse.move(tb['x']+tb['width']/2,tb['y']+tb['height']/2,steps=8); pg.mouse.up()
+        chk(pg.evaluate("JSON.stringify(simTeam[1][0][1])")=='{"id":"%s","level":1}'%cid and pg.evaluate("simTeam.flat(2).filter(Boolean).length")==3,'dock drag to slot (no extra tap add)')
+        pg.click('#simDock > summary'); pg.wait_for_timeout(100); chk(not pg.evaluate("$('simDock').open") and pg.is_hidden('#dockList') and pg.evaluate("dock.open")==False,'dock hides (ชุด 35.1)')
+        pg.click('#simDock > summary'); chk(pg.is_visible('#dockList'),'dock shows again')
+        st=pg.evaluate("JSON.stringify(uiState('t'))"); pg.evaluate("simTeam=emptySim(); simSpeed=1")
+        pg.evaluate("applyUi(Object.assign(JSON.parse(%r),{ctrls:{simLvSide:'evil',simSeed:'5'}}))"%st)
+        chk(pg.evaluate("simTeam[1][0][1]!==null && $('simLvSide').value==='both' && $('simSeed').value==='5'"),'ui state round trip + bad value rejected')
+        chk(pg.evaluate("(()=>{const d={chars:Object.fromEntries(BASE_CHARS.map(c=>[c.id,{skills:c.skills,hp:c.hp}])),tribes:{}}; const keep=[chars,tribes]; applyDiffs(JSON.parse(JSON.stringify(d))); const n=countEdits(diffs()); [chars,tribes]=keep; return n;})()")==0,'same values after round trip are not marked edited')
+        # reload: draft persists
+        pg.reload(); pg.evaluate("current='HL-2'; showTab('chars'); renderCharForm()")
+        n2=pg.eval_on_selector_all('#skillList .skcard','e=>e.length'); chk(n2==n1,'draft persisted after reload')
+        # validation error path: break multi
+        pg.fill('#f-multi-0','0'); pg.press('#f-multi-0','Tab'); chk(not pg.is_hidden('#errs'),'error shown for multi 0'); chk(pg.inner_text('#sbSave')=='!','edit step badge flags error'); print(w,'err:',pg.inner_text('#errs')[:80])
+        chk(pg.is_disabled('#analyze'),'analyze disabled on error')
+        # reset
+        pg.click('#cundo'); chk(pg.is_hidden('#errs'),'undo clears')
+        pg.on('dialog', lambda d: d.accept())
+        # malicious name
+        pg.fill('#f-name','<img src=x onerror=alert(1)>ab'); pg.press('#f-name','Tab'); print(w,'name sanitized:',pg.input_value('#f-name'))
+        chk('<' not in pg.input_value('#f-name'),'name sanitize')
+        # ปุ่มวิเคราะห์: ตรวจแค่ว่ากดได้ (การวัดจริงทดสอบด้วย node lab/measure.mjs แล้ว · ตัดสิน 22 ต.ค. เพื่อลดเวลา)
+        chk(not pg.is_disabled('#analyze'),'analyze enabled')
+        # cleanup draft
+        pg.evaluate("localStorage.clear()")
+        hs=pg.evaluate('document.documentElement.scrollWidth > innerWidth + 1'); print(w,'balance hscroll',hs)
+        ctx.close()
+    b.close()
+print('FAILS',fails); print('ERRORS',errs)

@@ -1,0 +1,728 @@
+<title>Automon Arena</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* โต๊ะเตรียมทีมกลางสนามทราย: แถบสถานะ → ร้าน → บอร์ด 3×2 (หน้าหันขวาเข้าหาศัตรู) → ม้านั่ง → ปุ่มสู้ · สีเผ่าชุดเดียวกับหน้าจอสู้ */
+:root {
+  --bg: #efe9df; --panel: #fbf8f3; --ink: #231f1a; --mute: #6b6258; --line: #d8cfc2; --soft: #f1ebe1;
+  --arena: #e3d6c1; --arena-line: #c9b89c; --mid: #a8916d; --accent: #2d5f7c; --on-accent: #ffffff;
+  --gold: #9a6b00; --gold-bg: #f7e7bf; --r-unc: #2f7d3a; --r-rare: #1d5fb8; --r-epic: #7a3fb0; --r-legend: #8f6200; --r-legend-bg: #fbefc9; --heart: #b3263a; --sel: #2d5f7c;
+  --hp: #3c9a5f; --hp-bg: #d9cfbf; --armor: #6d7f92; --ok: #1f7a4a; --bad: #b3261e;
+  --tg-start: #2f6f8f; --tg-ongoing: #b5531c; --tg-once: #7a5a00; --tg-down: #a92f48; --tg-shop: #3d7a3a;
+  --t-steel: #6e7d8c; --t-fire: #d9542b; --t-bolt: #d6a11a; --t-wind: #2f9c7b; --t-spirit: #7d62c6; --t-fiend: #a92f48;
+  --n-hit: #b3261e; --n-shock: #a77a00; --n-burn: #d9542b; --n-heal: #2a8a52; --n-armor: #4f6478; --n-storm: #8a6b3c;
+  --f-display: "Mitr", "IBM Plex Sans Thai", Tahoma, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --arena: #2b251c; --arena-line: #4a3f30; --mid: #7d6a4c; --accent: #8cc0de; --on-accent: #10202a;
+  --gold: #f0c860; --gold-bg: #3a2f14; --r-unc: #7fd18c; --r-rare: #7fb2f0; --r-epic: #c9a2f2; --r-legend: #f0c860; --r-legend-bg: #3a2f14; --heart: #f07a8c; --sel: #8cc0de;
+  --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
+  --tg-start: #8cc6e4; --tg-ongoing: #f39a6a; --tg-once: #e8c25e; --tg-down: #ef7f95; --tg-shop: #8fd48a;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --n-hit: #ff8a80; --n-shock: #f5cf5a; --n-burn: #ff9a6b; --n-heal: #7be0a2; --n-armor: #b5c7da; --n-storm: #d8b67a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --arena: #2b251c; --arena-line: #4a3f30; --mid: #7d6a4c; --accent: #8cc0de; --on-accent: #10202a;
+  --gold: #f0c860; --gold-bg: #3a2f14; --r-unc: #7fd18c; --r-rare: #7fb2f0; --r-epic: #c9a2f2; --r-legend: #f0c860; --r-legend-bg: #3a2f14; --heart: #f07a8c; --sel: #8cc0de;
+  --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
+  --tg-start: #8cc6e4; --tg-ongoing: #f39a6a; --tg-once: #e8c25e; --tg-down: #ef7f95; --tg-shop: #8fd48a;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --n-hit: #ff8a80; --n-shock: #f5cf5a; --n-burn: #ff9a6b; --n-heal: #7be0a2; --n-armor: #b5c7da; --n-storm: #d8b67a; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 12px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 12px; }
+h1 { font: 600 1.25rem var(--f-display); margin: 0; }
+h2 { font: 600 .95rem var(--f-display); margin: 0; }
+h3 { font: 600 .85rem var(--f-display); margin: 10px 0 4px; color: var(--mute); } /* ชุด 22: หัวข้อย่อยหน้าจบ run */
+#runEnd, #resume { display: grid; gap: 6px; }
+.top { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.stats { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.stat { font: 500 .85rem var(--f-mono); font-variant-numeric: tabular-nums; padding: 3px 10px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line); white-space: nowrap; }
+.stat.gold { color: var(--gold); background: var(--gold-bg); border-color: transparent; font-weight: 600; }
+.stat.heart { color: var(--heart); }
+button { font: 600 .9rem var(--f-body); border-radius: 8px; padding: 8px 13px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+button.danger { color: var(--bad); }
+button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, [data-ref]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.grow { flex: 1; }
+.hint { font-size: .78rem; color: var(--mute); margin: 0; }
+
+/* ร้าน */
+.shop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.slot { position: relative; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); padding: 6px 4px 4px; display: grid; justify-items: center; gap: 2px; min-height: 104px; cursor: pointer; touch-action: none; user-select: none; }
+.slot.empty { cursor: default; opacity: .5; }
+.slot.locked { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.slot .price { font: 600 .75rem var(--f-mono); color: var(--gold); }
+.rar { font-weight: 700; white-space: nowrap; }
+.slot .rar { font-size: .62rem; }
+.rar.r0 { color: var(--mute); } .rar.r1 { color: var(--r-unc); } .rar.r2 { color: var(--r-rare); } .rar.r3 { color: var(--r-epic); }
+.rar.r4 { color: var(--r-legend); background: var(--r-legend-bg); border-radius: 999px; padding: 0 6px; }
+.hint .rar { font-size: .85rem; }
+.slot .lock { font-size: .66rem; padding: 2px 6px; border-radius: 6px; margin-top: 2px; }
+.slot.cant .price { color: var(--bad); }
+.slot.owned { border: 2px solid var(--tg-start); padding: 5px 3px 3px; }
+.slot.owned.ready { border-color: var(--tg-shop); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tg-shop) 35%, transparent); }
+.slot .own { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font: 600 .58rem var(--f-mono); padding: 1px 4px; border-radius: 6px; background: var(--tg-start); color: var(--bg); }
+.slot.ready .own { background: var(--tg-shop); }
+
+/* ตัวละคร (ใช้ทั้งร้าน บอร์ด ม้านั่ง) */
+.shape { width: 34px; height: 34px; background: var(--tc); display: grid; place-items: center; flex: none; }
+.s-square { border-radius: 7px; } .s-circle { border-radius: 50%; }
+.s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); }
+.s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); }
+.s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+/* ชุด 25: รูปตัวละครรายตัว (unitShape ใน game/view.js) · ลวดลายเรขาคณิตด้านใน + ขอบตามความหายาก (ธรรมดาไม่มีขอบ) */
+.mon { display: inline-grid; flex: none; --rc: transparent; }
+.mon > div { position: relative; overflow: hidden; }
+.mon svg.pat { position: absolute; inset: 0; width: 100%; height: 100%; color: rgba(255,255,255,.72); filter: drop-shadow(0 0 1px rgba(0,0,0,.5)); pointer-events: none; }
+.mon { position: relative; } .mon.has-lv { margin-bottom: 7px; }
+.mon > .lv { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); z-index: 1; padding: 0 3px 0 2px; border-radius: 4px; background: rgba(20,16,12,.78); color: #fff; font-size: .5rem; line-height: 1.35; letter-spacing: -1px; white-space: nowrap; text-shadow: none; }
+.mon.rr1 { --rc: var(--r-unc); } .mon.rr2 { --rc: var(--r-rare); } .mon.rr3 { --rc: var(--r-epic); } .mon.rr4 { --rc: var(--r-legend); }
+.mon.rr1, .mon.rr2 { filter: drop-shadow(1.5px 0 0 var(--rc)) drop-shadow(-1.5px 0 0 var(--rc)) drop-shadow(0 1.5px 0 var(--rc)) drop-shadow(0 -1.5px 0 var(--rc)); }
+.mon.rr3 { filter: drop-shadow(2px 0 0 var(--rc)) drop-shadow(-2px 0 0 var(--rc)) drop-shadow(0 2px 0 var(--rc)) drop-shadow(0 -2px 0 var(--rc)); }
+.mon.rr4 { filter: drop-shadow(2.5px 0 0 var(--rc)) drop-shadow(-2.5px 0 0 var(--rc)) drop-shadow(0 2.5px 0 var(--rc)) drop-shadow(0 -2.5px 0 var(--rc)) drop-shadow(0 0 4px var(--rc)); }
+.lv { color: #fff; font-size: .55rem; letter-spacing: -1px; padding-top: 6px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.uname { font-size: .66rem; line-height: 1.2; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uid { font: 500 .6rem var(--f-mono); color: var(--mute); }
+.perm-dot { position: absolute; top: 3px; right: 4px; font: 600 .58rem var(--f-mono); color: var(--accent); }
+
+/* บอร์ดและม้านั่ง */
+.boardwrap { background: var(--arena); border: 1px solid var(--arena-line); border-radius: 10px; padding: 8px; display: grid; gap: 4px; }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 28px; gap: 6px; font-size: .7rem; color: var(--mute); text-align: center; font-weight: 600; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 28px; grid-template-rows: repeat(2, auto); gap: 6px; }
+.enemy { grid-row: 1 / 3; grid-column: 4; display: grid; place-items: center; writing-mode: vertical-rl; font-size: .7rem; color: var(--mute); border-left: 2px dashed var(--mid); }
+.cell { position: relative; min-height: 86px; border: 1px dashed var(--arena-line); border-radius: 8px; display: grid; place-items: center; padding: 4px 2px; min-width: 0; touch-action: none; user-select: none; cursor: pointer; }
+.cell.filled { border-style: solid; background: color-mix(in srgb, var(--panel) 55%, transparent); }
+.bench .cell { background: var(--soft); border-color: var(--line); min-height: 80px; }
+.bench { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.unit { display: grid; justify-items: center; gap: 2px; min-width: 0; width: 100%; }
+.sel { outline: 3px solid var(--sel); outline-offset: 1px; }
+.mergeable { box-shadow: 0 0 0 2px var(--gold) inset; }
+.ghost { position: fixed; z-index: 50; pointer-events: none; transform: translate(-50%, -50%); opacity: .85; }
+.drop-ok { background: color-mix(in srgb, var(--accent) 18%, transparent) !important; }
+
+/* เผ่าบนบอร์ด */
+.tribes { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .76rem; color: var(--mute); }
+.tribes span { display: inline-flex; align-items: center; gap: 4px; }
+.tribes span.on { color: var(--ink); font-weight: 600; }
+.tribes i { display: inline-block; width: 11px; height: 11px; background: var(--tc); }
+
+/* แผงรายละเอียด */
+.info { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: start; }
+.info .stats2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 2px 10px; font-size: .8rem; }
+.info .stats2 b { font: 500 .8rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.info .skill { font-size: .82rem; }
+.info .perm { font-size: .78rem; color: var(--accent); }
+.lvtabs { display: flex; gap: 4px; flex-wrap: wrap; } .lvtabs button { padding: 4px 10px; font: 600 .78rem var(--f-mono); }
+.info .stats2.now { padding: 4px 6px; border-radius: 6px; background: var(--soft); color: var(--accent); }
+.info .stats2.now .nowlbl { grid-column: 1 / -1; font-weight: 600; font-size: .76rem; }
+.msgs { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: .8rem; color: var(--mute); }
+.msgs li.err { color: var(--bad); }
+
+/* ช่วงสู้ (ใช้ส่วนแสดงผลชุดเดียวกับหน้าจอสู้) */
+.stage { position: relative; background: var(--arena); border: 1px solid var(--arena-line); border-radius: 12px; padding: 10px 8px 12px; overflow-x: auto; }
+.heads, .arena { display: grid; grid-template-columns: 1fr 12px 1fr; gap: 6px; min-width: 360px; }
+.heads > div { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; font-size: .72rem; color: var(--mute); font-weight: 600; }
+.heads .team { grid-column: 1 / -1; font: 600 .85rem var(--f-display); color: var(--ink); }
+.side { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto); gap: 6px; }
+.mid { background: repeating-linear-gradient(var(--mid) 0 6px, transparent 6px 12px); width: 2px; justify-self: center; }
+.arena .cell { min-height: 116px; cursor: default; touch-action: auto; }
+.arena .unit { transition: opacity .3s, filter .3s; }
+.arena .unit.down { opacity: .35; filter: grayscale(1); }
+.arena .unit.down::after { content: "down"; font: 600 .7rem var(--f-mono); color: var(--ink); background: var(--panel); border-radius: 4px; padding: 0 4px; position: absolute; top: 4px; right: 4px; }
+.hp { position: relative; width: 90%; height: 6px; border-radius: 3px; background: var(--hp-bg); overflow: hidden; }
+.hp-fill { position: absolute; inset: 0 auto 0 0; background: var(--hp); transition: width .15s; }
+.armor-fill { position: absolute; inset: 0 auto 0 0; height: 2px; background: var(--armor); transition: width .15s; }
+.nums { display: flex; flex-direction: column; align-items: center; font: 500 .62rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--mute); line-height: 1.25; }
+.armor-text { color: var(--n-armor); }
+.skill.off { opacity: .5; }
+.skill .lv-now { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.chips { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 14px; }
+.chip { font: 600 .6rem var(--f-body); padding: 0 4px; border-radius: 4px; background: var(--panel); }
+.c-burn { color: var(--n-burn); } .c-shock { color: var(--n-shock); } .c-multi { color: var(--ink, inherit); font-weight: 700; }
+.float { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font: 600 .8rem var(--f-mono); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px var(--arena), 0 0 3px var(--arena); }
+.n-hit { color: var(--n-hit); } .n-shock { color: var(--n-shock); } .n-burn { color: var(--n-burn); } .n-heal { color: var(--n-heal); } .n-armor { color: var(--n-armor); } .n-storm { color: var(--n-storm); }
+.result { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--arena) 70%, transparent); border-radius: 12px; }
+.result > div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 22px; text-align: center; display: grid; gap: 8px; justify-items: center; }
+.result strong { font: 600 1.3rem var(--f-display); }
+.speed { display: flex; gap: 4px; margin-left: auto; }
+.speed button { padding: 8px 7px; font-family: var(--f-mono); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+@media (max-width: 520px) { .slot { min-height: 96px; } .cell { min-height: 78px; } .shape { width: 28px; height: 28px; } }
+.tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-right: 6px; vertical-align: 1px; }
+.tag { font: 600 .66rem var(--f-body); padding: 0 6px; border-radius: 999px; white-space: nowrap; border: 1px solid currentColor; }
+.tag.k-start { color: var(--tg-start); } .tag.k-ongoing { color: var(--tg-ongoing); } .tag.k-once { color: var(--tg-once); } .tag.k-down { color: var(--tg-down); } .tag.k-shop { color: var(--tg-shop); }
+.tag.t-own { color: var(--mute); border-style: dashed; }
+.tag.d-now { color: var(--mute); border-style: dotted; }
+.tag.d-match { color: var(--bg); background: var(--tg-start); border-color: var(--tg-start); }
+.tag.d-perm { color: var(--bg); background: var(--tg-shop); border-color: var(--tg-shop); }
+/* ชุด 25: รีเพลย์ + บันทึกการต่อสู้ละเอียด (ชุดเดียวกับห้องบาลานซ์) */
+:root { --sideL: #1d5fb8; --sideR: #b3261e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sideL: #7fb2f0; --sideR: #ff8a80; } }
+:root[data-theme="dark"] { --sideL: #7fb2f0; --sideR: #ff8a80; }
+.replays li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.replays li button { padding: 3px 10px; font-size: .78rem; }
+details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
+.logbox .row label { font-size: .8rem; display: inline-flex; gap: 4px; align-items: center; }
+.logbox select { font: inherit; max-width: 100%; }
+.simlog { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow-y: auto; font-family: var(--f-body); font-size: .82rem; border: 1px solid var(--line); border-radius: 8px; }
+.simlog li { display: block; padding: 3px 8px; line-height: 1.6; border-bottom: 1px solid var(--soft); white-space: pre-wrap; overflow-wrap: anywhere; }
+.simlog li.proc { background: var(--soft); } .simlog li.big { font-weight: 700; } .simlog li.set { color: var(--mute); }
+/* ชุด 30.4 แก้กระตุก: บันทึกการต่อสู้มีหลายพันบรรทัด → ให้เบราว์เซอร์วาดเฉพาะบรรทัด/ตารางที่อยู่บนจอ */
+.simlog { content-visibility: auto; contain-intrinsic-size: auto 420px; } .simlog li { content-visibility: auto; contain-intrinsic-size: auto 22px; }
+.simlog .lg-t { display: inline-block; min-width: 46px; font: 500 .74rem var(--f-mono); color: var(--mute); }
+.simlog .lg-L { color: var(--sideL); font-weight: 600; } .simlog .lg-R { color: var(--sideR); font-weight: 600; }
+.simlog .lg-L i, .simlog .lg-R i { display: inline-block; width: 9px; height: 9px; margin-right: 3px; background: var(--tc); border-radius: 2px; }
+.simlog .lg-dmg { font-weight: 700; color: var(--n-hit); } .simlog .lg-hp { color: var(--n-hit); } .simlog .lg-arm { color: var(--n-armor); font-weight: 600; }
+.simlog .lg-heal { color: var(--n-heal); font-weight: 600; } .simlog .lg-burn { color: var(--n-burn); font-weight: 600; } .simlog .lg-shock { color: var(--n-shock); font-weight: 600; }
+.simlog .lg-pos { font-weight: 400; font-size: .7rem; opacity: .75; }
+.simlog .lg-st { color: var(--mute); font-family: var(--f-mono); font-size: .76rem; } .simlog .lg-skill { color: var(--accent); }
+[hidden] { display: none !important; } /* ซ่อนจริงเสมอ แม้ CSS ตั้ง display ไว้ */
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>Automon Arena</h1>
+    <div class="stats" aria-live="polite">
+      <span class="stat" id="sRound">รอบ 1</span>
+      <span class="stat heart" id="sHearts">หัวใจ 10</span>
+      <span class="stat" id="sWins">ชนะ 0/10</span>
+      <span class="stat gold" id="sGold">เงิน 10</span>
+    </div>
+  </div>
+
+  <section class="panel" id="notice" hidden><p class="hint" id="noticeText"></p></section>
+
+  <section class="panel" id="resume" hidden>
+    <h2>มี run ที่เล่นค้างไว้</h2>
+    <p class="hint" id="resumeInfo"></p>
+    <div class="row"><button class="primary" id="resumeGo" type="button">เล่นต่อ</button><button id="resumeNew" type="button">เริ่ม run ใหม่</button></div>
+    <p class="hint">เล่นต่อจะกลับไปเริ่มรอบร้านค้าที่ค้างไว้ (ร้านเดิม เงินเดิม)</p>
+  </section>
+
+  <section class="panel" id="runEnd" hidden>
+    <h2 id="endTitle"></h2>
+    <p class="hint" id="endSummary"></p>
+    <h3>ทีมสุดท้าย</h3>
+    <ul class="msgs" id="endTeam"></ul>
+    <h3>สถิติ run</h3>
+    <ul class="msgs" id="endStats"></ul>
+    <h3>ประวัติ run ในเครื่องนี้</h3>
+    <ol class="msgs" id="endHistory"></ol>
+    <h3>รีเพลย์แมตช์ใน run นี้</h3>
+    <ol class="msgs replays" id="endReplays"></ol>
+    <div class="row"><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
+  </section>
+
+  <div id="prep" style="display:grid;gap:12px">
+    <section class="panel">
+      <div class="row"><h2 class="grow">ร้านค้า</h2><button id="reroll" type="button">รีโรล −1</button></div>
+      <div class="shop" id="shop"></div>
+      <p class="hint">แตะตัวในร้านแล้วแตะช่องว่างเพื่อซื้อลงช่องนั้น หรือกด "ซื้อ" ในแผงด้านล่าง (ลงม้านั่ง) · ลากก็ได้</p>
+    </section>
+
+    <section class="panel">
+      <div class="row"><h2 class="grow">ทีม</h2><div class="tribes" id="tribes"></div></div>
+      <div class="boardwrap">
+        <div class="cols"><span>หลัง</span><span>กลาง</span><span>หน้า</span><span></span></div>
+        <div class="board" id="board"><div class="enemy">ศัตรู</div></div>
+      </div>
+      <div class="row"><h2 class="grow">ม้านั่ง</h2><span class="hint">ลากตัวไปทับตัวชนิดเดียวกัน เลเวลเท่ากัน เมื่อมีครบ 3 ตัว = รวมร่าง (กรอบสีทอง)</span></div>
+      <div class="bench" id="bench"></div>
+    </section>
+
+    <section class="panel" id="infoPanel">
+      <div id="info" class="hint">แตะตัวละครเพื่อดูค่าพลังและสกิล</div>
+      <ul class="msgs" id="msgs"></ul>
+    </section>
+
+    <section class="panel" id="replayPanel" hidden>
+      <details><summary id="replaySum">รีเพลย์แมตช์ใน run นี้</summary><ol class="msgs replays" id="replayList"></ol></details>
+    </section>
+
+    <div class="row">
+      <button class="primary" id="fight" type="button">เริ่มสู้</button>
+      <span class="hint" id="fightHint"></span>
+      <span class="grow"></span>
+      <button id="newRun" type="button">เริ่ม run ใหม่</button>
+    </div>
+  </div>
+
+  <div id="battle" hidden style="display:grid;gap:10px">
+    <div class="row">
+      <h2 id="battleTitle">แมตช์</h2>
+      <span class="stat" id="clock">0.0 วิ</span>
+      <div class="speed" role="group" aria-label="ความเร็ว">
+        <button type="button" data-speed="1" aria-pressed="false">1×</button>
+        <button type="button" data-speed="2" aria-pressed="true">2×</button>
+        <button type="button" data-speed="4" aria-pressed="false">4×</button>
+        <button type="button" data-speed="8" aria-pressed="false">8×</button>
+        <button type="button" data-speed="16" aria-pressed="false">16×</button>
+      </div>
+      <button id="skip" type="button">ข้ามไปผล</button>
+    </div>
+    <div class="stage">
+      <div class="heads">
+        <div><span class="team">ทีมคุณ</span><span>หลัง</span><span>กลาง</span><span>หน้า</span></div>
+        <div></div>
+        <div><span class="team">คู่แข่ง (บอท)</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
+      </div>
+      <div class="arena" id="arena"></div>
+      <div class="result" id="result" hidden><div><strong id="resultTitle"></strong><span class="hint" id="resultSub"></span><ul class="msgs" id="endMsgs"></ul><button class="primary" id="next" type="button">ไปรอบถัดไป</button></div></div>
+    </div>
+    <details class="panel logbox" id="logBox">
+      <summary>บันทึกการต่อสู้ละเอียด</summary>
+      <div class="row">
+        <label>ดูเฉพาะ <select id="logWho"></select></label>
+        <label><input type="checkbox" id="logProc"> เฉพาะสกิลที่ทำงาน</label>
+        <label><input type="checkbox" id="logNoSet"> ซ่อนบรรทัดโจมตี</label>
+      </div>
+      <ol class="simlog" id="logList"></ol>
+    </details>
+  </div>
+</div>
+
+<script>
+/*__CORE__*/const $ = id => document.getElementById(id);
+const chars = buildCharacterList(), CM = makeCharMap(chars);
+const S = RULES.shop;
+let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
+let P = null, B = null, sel = null, msgs = [], speed = 2, confirmEmpty = false;
+// ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
+const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
+let stats = newStats(), startedAt = Date.now(), pendingEnd = null;
+// ชุด 23: ทีมบอทเตรียมไว้ล่วงหน้า 90 ทีม ตามขั้นชนะ × ช่วงรอบ (core/botdata.js) · ตรวจตอนเปิดเกม · ผิด/ค่าเกมไม่ตรง = กลับไปใช้บอทซื้อสด
+const BOT_OK = validateBotTeams(BOT_TEAMS, CM, RULES, DATA_HASH).ok;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* ไม่มีที่เก็บ */ } },
+};
+function saveRun() { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); }
+// ชุด 25 (7A): รีเพลย์ทุกแมตช์ใน run นี้ · เก็บทีม 2 ฝั่ง + ผล แยกจากเซฟ (core/save.js readReplays ตรวจทุกช่องตอนโหลด)
+const REPLAY_KEY = 'automon-run-replays-v1';
+let replays = [], replayMode = null;
+function saveReplays() { store.set(REPLAY_KEY, makeReplays(P.seed, DATA_HASH, replays)); }
+// ชุด 25 (8A): สรุปรายแมตช์ลงฐานข้อมูลของหน้านี้ · ไม่มีฐานข้อมูล (เปิดนอก Claude / ไม่ได้สิทธิ์เขียน) = ข้ามเงียบๆ เกมเล่นได้ปกติ
+let playDb, playWait = [];
+(async () => {
+  try { playDb = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('db') : null; } catch (e) { playDb = null; }
+  const q = playWait; playWait = null; for (const r of q) logPlay(r);
+})();
+function logPlay(rec) {
+  if (!checkPlayRecord(rec, CM, RULES)) return; // ตรวจทุกช่องก่อนเขียน
+  if (playWait) { if (playWait.length < 20) playWait.push(rec); return; } // ฐานข้อมูลยังไม่พร้อม (เพิ่งเปิดหน้า)
+  if (!playDb) return;
+  try { Promise.resolve(playDb.collection('plays').add(rec)).catch(() => {}); } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
+}
+function showNotice(t) { $('noticeText').textContent = t; $('notice').hidden = !t; }
+
+function randSeed() { try { return crypto.getRandomValues(new Uint32Array(1))[0]; } catch (e) { return (Date.now() ^ 0x5bd1e995) >>> 0; } }
+function startNewRun() {
+  const seed = randSeed();
+  P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
+  sel = null; msgs = []; stats = newStats(); startedAt = Date.now();
+  replays = []; replayMode = null; saveReplays();
+  saveRun(); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
+  showScreen('prep');
+  beginRound();
+}
+function showScreen(name) {
+  $('prep').hidden = name !== 'prep'; $('battle').hidden = name !== 'battle';
+  $('resume').hidden = name !== 'resume'; $('runEnd').hidden = name !== 'runEnd';
+}
+function beginRound() {
+  const r = startRound(P, chars); pushMsgs(r);
+  startRound(B, chars, RULES, { unlockWins: P.wins });
+  render();
+}
+function pushMsgs(r, isErr) {
+  if (!r) return;
+  if (!r.ok) msgs.unshift({ t: r.msg, err: true });
+  else for (const m of r.msgs || []) msgs.unshift({ t: m });
+  msgs = msgs.slice(0, 5);
+}
+
+// ---------- วาดหน้าจอ ----------
+// el(tag, cls, text) มาจาก game/view.js
+const shapeOf = (id, level) => unitShape(CM[id], level); // ชุด 25: รูปรายตัว (game/view.js)
+const refKey = r => r.at === 'board' ? `b:${r.row}:${r.lane}` : r.at === 'bench' ? `n:${r.i}` : `s:${r.i}`;
+const sameRef = (a, b) => a && b && refKey(a) === refKey(b);
+function unitAt(ref) { return ref.at === 'board' ? P.board[ref.row][ref.lane] : ref.at === 'bench' ? P.bench[ref.i] : null; }
+function mergeTargets(u) { // ตัวชนิดเดียวกัน เลเวลเท่ากัน ที่มีครบ 3
+  if (!u || u.level >= RULES.maxLevel) return [];
+  const same = allUnits(P).filter(x => x.u.id === u.id && x.u.level === u.level);
+  return same.length >= S.mergeCount ? same.map(x => x.ref) : [];
+}
+
+function render() {
+  $('sRound').textContent = `รอบ ${P.round}`;
+  $('sHearts').textContent = `หัวใจ ${P.hearts}`;
+  $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
+  $('sGold').textContent = `เงิน ${P.gold}`;
+  $('reroll').textContent = `รีโรล −${S.rerollCost}`;
+  $('reroll').disabled = P.gold < S.rerollCost || P.over;
+
+  const shop = $('shop'); shop.replaceChildren();
+  P.shop.forEach((s, i) => {
+    const ref = { at: 'shop', i };
+    const card = el('div', 'slot'); card.dataset.ref = refKey(ref); card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    if (!s.id) { card.classList.add('empty'); card.append(el('span', 'hint', 'ขายแล้ว')); shop.append(card); return; }
+    const c = CM[s.id];
+    card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price}`);
+    if (s.locked) card.classList.add('locked');
+    if (c.price > P.gold) card.classList.add('cant');
+    if (sel && sameRef(sel, ref)) card.classList.add('sel');
+    const lock = el('button', 'lock', s.locked ? 'ล็อกแล้ว' : 'ล็อก'); lock.type = 'button';
+    lock.addEventListener('click', e => { e.stopPropagation(); pushMsgs(toggleLock(P, i)); render(); });
+    lock.addEventListener('pointerdown', e => e.stopPropagation());
+    card.append(shapeOf(c.id), el('span', 'uname', c.name), el('span', 'uid', c.id), rarityTag(c.rarity), el('span', 'price', `${c.price} เงิน`), lock);
+    // ชุด 24: ไฮไลต์ตัวที่มีอยู่แล้วบนบอร์ด/ม้านั่ง · มี Lv1 ครบ (รวมร่าง − 1) ตัว = ซื้อแล้วรวมร่างได้
+    const mine = allUnits(P).filter(x => x.u.id === c.id), lv1 = mine.filter(x => x.u.level === 1).length;
+    if (mine.length) {
+      const ready = lv1 >= S.mergeCount - 1;
+      card.classList.add('owned'); if (ready) card.classList.add('ready');
+      card.append(el('span', 'own', ready ? 'รวมร่างได้' : `มีแล้ว ${mine.length}`));
+      card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price} · มีแล้ว ${mine.length} ตัว${ready ? ' ซื้อแล้วรวมร่างได้' : ''}`);
+    }
+    shop.append(card);
+  });
+
+  const selU = sel && sel.at !== 'shop' ? unitAt(sel) : null;
+  const mt = mergeTargets(selU);
+  const cellFor = ref => {
+    const u = unitAt(ref), cell = el('div', 'cell'); cell.dataset.ref = refKey(ref); cell.tabIndex = 0; cell.setAttribute('role', 'button');
+    if (u) {
+      cell.classList.add('filled');
+      const c = CM[u.id];
+      const box = el('div', 'unit'); box.append(shapeOf(u.id, u.level), el('span', 'uname', c.name), el('span', 'uid', c.id));
+      if (Object.keys(u.perm).length) cell.append(el('span', 'perm-dot', '+ถาวร'));
+      cell.append(box);
+      cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
+    } else cell.setAttribute('aria-label', 'ช่องว่าง');
+    if (sel && sameRef(sel, ref)) cell.classList.add('sel');
+    else if (mt.some(r => sameRef(r, ref))) cell.classList.add('mergeable');
+    return cell;
+  };
+  const board = $('board'); [...board.querySelectorAll('.cell')].forEach(n => n.remove());
+  const enemy = board.querySelector('.enemy');
+  for (let lane = 0; lane < 2; lane++) for (const row of [2, 1, 0]) board.insertBefore(cellFor({ at: 'board', row, lane }), enemy);
+  // grid ใส่เรียงแถว: เลนบน (หลัง กลาง หน้า) แล้วเลนล่าง · ช่องศัตรูอยู่คอลัมน์ 4
+  enemy.style.gridRow = '1 / 3';
+  const bench = $('bench'); bench.replaceChildren(...P.bench.map((_, i) => cellFor({ at: 'bench', i })));
+
+  // เผ่าบนบอร์ด
+  const entries = teamEntries(P), counts = countTribes(entries, CM), steps = tribeSteps(counts);
+  $('tribes').replaceChildren(...Object.entries(counts).filter(([, n]) => n > 0).map(([t, n]) => {
+    const s = el('span', steps[t] ? 'on' : ''); const i = el('i'); i.style.setProperty('--tc', TRIBE_STYLE[t].color);
+    s.append(i, `${t} ${n}${steps[t] ? ` · ขั้น ${steps[t]}` : ''}`); return s;
+  }));
+  if (!entries.length) $('tribes').replaceChildren(el('span', '', 'บอร์ดยังว่าง'));
+
+  renderInfo();
+  renderReplays($('replayList'), 'prep');
+  $('replayPanel').hidden = !replays.length;
+  $('replaySum').textContent = `รีเพลย์แมตช์ใน run นี้ (${replays.length})`;
+  $('msgs').replaceChildren(...msgs.map(m => el('li', m.err ? 'err' : '', m.t)));
+  $('fight').disabled = P.over;
+  $('fightHint').textContent = P.over ? '' : confirmEmpty ? 'บอร์ดว่าง จะแพ้ทันที · กดอีกครั้งเพื่อยืนยัน' : `บนบอร์ด ${entries.length}/6 ตัว`;
+}
+
+function statLine(id, level, perm, all) {
+  // ค่าที่ใช้สู้จริง (รวมค่าถาวรทุกชนิด · ชุด 6) คำนวณด้วยตัวจัดทีมเดียวกับการต่อสู้ · all = แสดงทุกค่าแม้เป็น 0 (ชุด 26)
+  const c = CM[id], p = perm || {}, u = unitOf(c, { id, level, row: 0, lane: 0, perm: p }, RULES, null);
+  return [
+    ['HP', u.maxHp], ['พลังโจมตี', u.atk],
+    ['คูลดาวน์', `${(Math.max(RULES.minCooldownMs, u.cdMs) / 1000).toFixed(2)} วิ`],
+    ['มัลติฮิต', u.multi], ['ไฟ/ฮิต', u.burnHit], ['ช็อต/ฮิต', u.shockHit],
+    ...(u.armorHit || all ? [['เกราะ/ฮิต', u.armorHit]] : []),
+    ...(u.healHit || all ? [['ฟื้น/ฮิต', u.healHit]] : []),
+    ...(u.startArmor ? [['เกราะสะสม (ถาวร)', u.startArmor]] : []),
+  ];
+}
+function renderInfo() {
+  const box = $('info'); box.replaceChildren(); box.className = '';
+  if (!sel) { box.className = 'hint'; box.textContent = 'แตะตัวละครเพื่อดูค่าพลังและสกิล'; return; }
+  let id, level = 1, perm = {}, u = null;
+  if (sel.at === 'shop') { id = P.shop[sel.i].id; if (!id) { sel = null; return renderInfo(); } }
+  else { u = unitAt(sel); if (!u) { sel = null; return renderInfo(); } id = u.id; level = u.level; perm = u.perm; }
+  const c = CM[id];
+  // ชุด 26 (ผู้ใช้เลือก): ปุ่มสลับดู Lv1/2/3 · ค่าเริ่ม = เลเวลของตัวนี้ · เลือกตัวใหม่ = กลับค่าเริ่ม
+  const key = refKey(sel) + ':' + id + ':' + level;
+  if (infoLv.key !== key) infoLv = { key, lv: level };
+  const vl = infoLv.lv;
+  const wrap = el('div', 'info'); wrap.append(shapeOf(id, vl));
+  const right = el('div'); right.style.display = 'grid'; right.style.gap = '4px'; right.style.minWidth = '0';
+  const extra = c.extraTribes.length ? ` + ${c.extraTribes.join(', ')}` : '';
+  right.append(el('h2', '', `${c.id} ${c.name} · เลเวล ${level}`), (() => { const h = el('span', 'hint', `${c.tribe}${extra} · `); h.append(rarityTag(c.rarity), ` · แถวแนะนำ ${rowHintTh(c.rowHint)}`); return h; })());
+  const lvBar = el('div', 'lvtabs'); lvBar.setAttribute('role', 'group'); lvBar.setAttribute('aria-label', 'ดูค่าพลังเลเวล');
+  for (let L = 1; L <= RULES.maxLevel; L++) {
+    const b = el('button', '', `Lv${L}${L === level && sel.at !== 'shop' ? ' (ตอนนี้)' : ''}`); b.type = 'button'; b.dataset.lv = String(L);
+    b.setAttribute('aria-pressed', String(L === vl));
+    b.addEventListener('click', () => { infoLv.lv = L; renderInfo(); });
+    lvBar.append(b);
+  }
+  right.append(lvBar);
+  const st = el('div', 'stats2');
+  for (const [k, v] of statLine(id, vl, {}, true)) { const d = el('span', '', `${k} `); d.append(el('b', '', String(v))); st.append(d); }
+  right.append(st);
+  // ค่าถาวร: แยกแถว "ตอนนี้ (รวมถาวร)" ของเลเวลปัจจุบัน (ผู้ใช้เลือก)
+  if (Object.values(perm).some(v => v)) {
+    const now = el('div', 'stats2 now'); now.append(el('span', 'nowlbl', `ตอนนี้ Lv${level} (รวมถาวร)`));
+    for (const [k, v] of statLine(id, level, perm, true)) { const d = el('span', '', `${k} `); d.append(el('b', '', String(v))); now.append(d); }
+    right.append(now);
+  }
+  // สกิลเฉพาะเลเวลอื่น แสดงจาง · ค่าในคำอธิบายขีดเส้นใต้ตามเลเวลที่เลือกดู
+  for (const sk of c.skills) { const on = !sk.lv || sk.lv.includes(vl); const line = el('span', on ? 'skill' : 'skill off'); line.append(skillTags(sk), skillLineEl(sk, on ? vl : 0)); right.append(line); }
+  if (!c.skills.length) right.append(el('span', 'hint', 'ไม่มีสกิล'));
+  const pk = Object.entries(perm).filter(([, v]) => v);
+  if (pk.length) right.append(el('span', 'perm', 'ค่าถาวร: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
+  const actions = el('div', 'row');
+  if (sel.at === 'shop') {
+    const b = el('button', 'primary', `ซื้อ ${c.price} เงิน`); b.type = 'button'; b.disabled = c.price > P.gold;
+    b.addEventListener('click', () => doBuy(sel.i, null)); actions.append(b);
+  } else {
+    const b = el('button', 'danger', `ขาย ได้คืน ${u.paid}`); b.type = 'button';
+    b.addEventListener('click', () => { const r = sell(P, sel, chars); pushMsgs(r); sel = null; render(); }); actions.append(b);
+    const mt = mergeTargets(u);
+    if (mt.length) actions.append(el('span', 'hint', `รวมร่างได้: ลากไปทับตัวที่มีกรอบสีทอง`));
+  }
+  right.append(actions);
+  wrap.append(right); box.append(wrap);
+}
+
+// ---------- คำสั่ง (ทุกคำสั่งผ่านแกนกลาง ซึ่งตรวจกฎก่อนทำ) ----------
+function doBuy(i, dest) { const r = buy(P, i, dest, chars); pushMsgs(r); sel = r.ok ? r.ref : sel; render(); }
+function act(from, to) {
+  if (!from || !to || sameRef(from, to)) return;
+  if (from.at === 'shop') { if (to.at === 'shop') return; if (unitAt(to)) { pushMsgs({ ok: false, msg: 'ซื้อลงช่องที่มีตัวอยู่ไม่ได้ เลือกช่องว่าง' }); render(); return; } return doBuy(from.i, to); }
+  if (to.at === 'shop') return;
+  const r = move(P, from, to, chars); pushMsgs(r);
+  sel = r.ok ? to : from; render();
+}
+function parseRef(key) {
+  if (!key) return null;
+  const [k, a, b] = key.split(':');
+  if (k === 'b') return { at: 'board', row: +a, lane: +b };
+  if (k === 'n') return { at: 'bench', i: +a };
+  if (k === 's') return { at: 'shop', i: +a };
+  return null;
+}
+function tap(ref) {
+  confirmEmpty = false;
+  if (ref.at === 'shop') { sel = sel && sameRef(sel, ref) ? null : (P.shop[ref.i].id ? ref : null); render(); return; }
+  const u = unitAt(ref);
+  if (sel && sel.at === 'shop') { if (!u) return doBuy(sel.i, ref); sel = ref; render(); return; }
+  if (sel && !sameRef(sel, ref)) return act(sel, ref);
+  sel = u && !sameRef(sel, ref) ? ref : null; render();
+}
+
+// แตะหรือลาก (pointer events ใช้ได้ทั้งเมาส์และนิ้ว)
+let drag = null;
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('#prep [data-ref]'); if (!t || e.button > 0) return;
+  const ref = parseRef(t.dataset.ref);
+  const hasThing = ref.at === 'shop' ? !!P.shop[ref.i].id : !!unitAt(ref);
+  drag = { ref, x: e.clientX, y: e.clientY, moved: false, ghost: null, hasThing, src: t };
+});
+document.addEventListener('pointermove', e => {
+  if (!drag || !drag.hasThing) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+  if (!drag.moved) {
+    drag.moved = true;
+    const id = drag.ref.at === 'shop' ? P.shop[drag.ref.i].id : unitAt(drag.ref).id;
+    drag.ghost = shapeOf(id, drag.ref.at === 'shop' ? 0 : unitAt(drag.ref).level); drag.ghost.classList.add('ghost'); document.body.append(drag.ghost);
+  }
+  drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
+  document.querySelectorAll('.drop-ok').forEach(n => n.classList.remove('drop-ok'));
+  const over = document.elementFromPoint(e.clientX, e.clientY);
+  const cell = over && over.closest('#prep .cell'); if (cell) cell.classList.add('drop-ok');
+});
+document.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const d = drag; drag = null;
+  document.querySelectorAll('.drop-ok').forEach(n => n.classList.remove('drop-ok'));
+  if (d.ghost) d.ghost.remove();
+  if (!d.moved) { tap(d.ref); return; }
+  const over = document.elementFromPoint(e.clientX, e.clientY);
+  const t = over && over.closest('#prep [data-ref]');
+  if (t) act(d.ref, parseRef(t.dataset.ref));
+});
+document.addEventListener('pointercancel', () => { if (drag && drag.ghost) drag.ghost.remove(); drag = null; });
+document.addEventListener('keydown', e => {
+  const t = e.target.closest && e.target.closest('#prep [data-ref]');
+  if (t && e.target.tagName !== 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); tap(parseRef(t.dataset.ref)); }
+  if (e.key === 'Escape') { sel = null; render(); }
+});
+
+$('reroll').addEventListener('click', () => { pushMsgs(reroll(P, chars)); render(); });
+$('newRun').addEventListener('click', () => {
+  if ($('newRun').dataset.confirm !== '1' && !P.over) { $('newRun').dataset.confirm = '1'; $('newRun').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; }, 3000); return; }
+  $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
+});
+
+// ---------- สู้ ----------
+let lastResult = null;
+const view = new BattleView($('arena'), CM, {
+  onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; },
+  onEnd: () => finishMatch(),
+});
+$('fight').addEventListener('click', () => {
+  if (P.over) return;
+  if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; render(); return; }
+  confirmEmpty = false; sel = null;
+  const foe = BOT_OK ? pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round) : null;
+  if (!foe) botShop(B, chars, RULES, { unlockWins: P.wins });
+  const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = foe ? foe.team : teamEntries(B);
+  let result;
+  try { result = simulate(buildTeam(teamA, CM), buildTeam(teamB, CM)); }
+  catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
+  lastResult = result;
+  // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
+  const w = result.winner, won = w !== 1;
+  const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
+  const r = endMatch(P, won, chars, RULES, gain(0));
+  if (!foe) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
+  addMatchStats(stats, result);
+  replays.push(replayEntry(round, teamA, teamB, result)); saveReplays(); // ชุด 25
+  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB, foe }));
+  pendingEnd = { r, w }; replayMode = null;
+  if (P.over) { store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, Date.now())))); store.del(SAVE_KEY); }
+  else saveRun();
+  showNotice('');
+  showScreen('battle'); $('result').hidden = true;
+  $('battleTitle').textContent = `แมตช์รอบ ${P.round}` + (foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
+  view.speed = speed; view.load(result); resetLog(); view.play();
+});
+// ---------- รีเพลย์ (ชุด 25) ----------
+const resTh = w => (w === 0 ? 'ชนะ' : w === 1 ? 'แพ้' : 'เสมอ');
+function renderReplays(list, back) {
+  list.replaceChildren(...(replays.length ? replays.map((x, i) => {
+    const li = el('li', '', `รอบ ${x.r} · ${resTh(x.w)} · ${(x.t / 1000).toFixed(1)} วิ`), b = el('button', '', 'ดูรีเพลย์'); b.type = 'button';
+    b.addEventListener('click', () => watchReplay(i, back)); li.append(b); return li;
+  }) : [el('li', '', 'ยังไม่มีแมตช์')]));
+}
+function watchReplay(i, back) {
+  const x = replays[i]; if (!x) return;
+  let result;
+  try { result = simulate(buildTeam(x.a, CM), buildTeam(x.b, CM)); } catch (e) { result = null; }
+  // จำลองซ้ำแล้วต้องได้ผลและเวลาเดิม · ไม่ตรง = ระบบต่อสู้เปลี่ยนหลังเล่นแมตช์นั้น → ไม่เล่น แจ้งแทน
+  if (!result || result.winner !== x.w || Math.floor(result.timeMs) !== x.t) { showNotice(`รีเพลย์รอบ ${x.r} ใช้ไม่ได้: เกมอัปเดตระบบการต่อสู้หลังแมตช์นี้ ผลจึงไม่ตรงกับที่เล่นจริง`); return; }
+  showNotice(''); sel = null; pendingEnd = null; replayMode = { back, x };
+  showScreen('battle'); $('result').hidden = true;
+  $('battleTitle').textContent = `รีเพลย์รอบ ${x.r}`;
+  view.speed = speed; view.load(result); resetLog(); view.play();
+}
+// ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
+function logNameEl(u) {
+  const c = CM[u.id], s = el('span', u.side === 0 ? 'lg-L' : 'lg-R'), dot = el('i');
+  dot.style.setProperty('--tc', (TRIBE_STYLE[c.tribe] || {}).color || 'var(--mute)');
+  s.append(dot, c.name, el('span', 'lg-pos', ` ${ROW_TH[u.row]}${u.lane + 1}`));
+  s.title = `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} · ${c.id} Lv${u.level}`;
+  return s;
+}
+function resetLog() {
+  $('logBox').open = false; $('logList').replaceChildren();
+  const r = view.result, sw = $('logWho');
+  sw.replaceChildren(el('option', '', 'ทุกตัว'), ...unitsOf(r).map(u => { const o = el('option', '', `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[u.row]}${u.lane + 1} · ${CM[u.id].name} Lv${u.level}`); o.value = String(u.uid); return o; }));
+  sw.firstChild.value = '';
+}
+function renderLog() {
+  if (!$('logBox').open || !view.result) return;
+  const v = $('logWho').value, who = v === '' ? null : Number(v);
+  $('logList').replaceChildren(...battleLogLines(view.result, CM, { who: Number.isInteger(who) ? who : null, onlyProc: $('logProc').checked, hideSet: $('logNoSet').checked, nameEl: logNameEl }));
+}
+$('logBox').addEventListener('toggle', renderLog);
+for (const id of ['logWho', 'logProc', 'logNoSet']) $(id).addEventListener('change', renderLog);
+function finishMatch() {
+  if (replayMode) { // ชุด 25: รีเพลย์ แสดงผลอย่างเดียว ไม่แตะสถานะ run
+    const x = replayMode.x;
+    $('resultTitle').textContent = `รีเพลย์รอบ ${x.r}: ${resTh(x.w)}`;
+    $('resultSub').textContent = `${(x.t / 1000).toFixed(1)} วิ`;
+    $('endMsgs').replaceChildren();
+    $('next').textContent = 'กลับ';
+    $('result').hidden = false; return;
+  }
+  if (!pendingEnd) return;
+  const { r, w } = pendingEnd; // ผลถูกนำไปใช้ตอนกดสู้แล้ว (ชุด 22) · ตรงนี้แสดงผลอย่างเดียว
+  $('resultTitle').textContent = w === 0 ? 'ชนะ' : w === 1 ? 'แพ้ เสียหัวใจ 1 ดวง' : 'เสมอ นับเป็นชนะ';
+  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ชนะ ${P.wins}/${S.winsToFinish}`;
+  $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
+  $('next').textContent = P.over ? 'ดูสรุป run' : 'ไปรอบถัดไป';
+  msgs = (r.msgs || []).map(t => ({ t }));
+  $('result').hidden = false;
+}
+$('next').addEventListener('click', () => {
+  if (replayMode) { const back = replayMode.back; replayMode = null; showScreen(back); if (back === 'prep') render(); else renderRunEnd(); return; }
+  pendingEnd = null;
+  if (P.over) { renderRunEnd(); showScreen('runEnd'); return; }
+  showScreen('prep'); beginRound();
+});
+
+// ---------- หน้าจบ run (ชุด 22 · ผู้ใช้เลือก 4A+B+C) · ทุกข้อความใส่ด้วย textContent ----------
+const nameOf = id => (CM[id] ? `${id} ${CM[id].name}` : id);
+function renderRunEnd() {
+  const won = P.wins >= S.winsToFinish;
+  $('endTitle').textContent = won ? 'จบ run: ชนะครบ 10 แมตช์' : 'จบ run: หัวใจหมด';
+  $('endSummary').textContent = `ชนะ ${P.wins}/${S.winsToFinish} · หัวใจเหลือ ${P.hearts}/${S.hearts} · เล่น ${P.round} รอบ`;
+  const team = boardUnits(P).map(({ u }) => {
+    const perm = Object.entries(u.perm).filter(([, v]) => v > 0).map(([k, v]) => `${SHOP_GIVE_TH[k] || k} +${v}`).join(' · ');
+    return el('li', '', `${nameOf(u.id)} · เลเวล ${u.level}${perm ? ' · ถาวร: ' + perm : ''}`);
+  });
+  $('endTeam').replaceChildren(...(team.length ? team : [el('li', '', 'ไม่มีตัวบนบอร์ด')]));
+  const top = topDamage(stats), avg = stats.matches ? stats.timeMs / stats.matches / 1000 : 0;
+  const ranked = Object.entries(stats.dmg).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  $('endStats').replaceChildren(
+    el('li', '', `แมตช์ ${stats.matches} · ชนะ ${stats.w} · เสมอ ${stats.d} · แพ้ ${stats.l}`),
+    el('li', '', `ชนะติดกันสูงสุด ${stats.best} แมตช์ · แมตช์ยาวเฉลี่ย ${avg.toFixed(1)} วิ`),
+    el('li', '', top ? `ทำดาเมจสูงสุด: ${nameOf(top.id)} (${top.v})` : 'ยังไม่มีดาเมจ'),
+    ...ranked.slice(1).map(([id, v], i) => el('li', '', `อันดับ ${i + 2}: ${nameOf(id)} (${v})`)));
+  const hist = readHistory(store.get(HIST_KEY));
+  $('endHistory').replaceChildren(...(hist.length ? hist.map(h => el('li', '',
+    `${new Date(h.at).toLocaleDateString('th-TH')} · ${h.won ? 'ชนะครบ' : 'หัวใจหมด'} · ชนะ ${h.wins} · ${h.rounds} รอบ · ทีม ${h.team.map(u => `${u.id}★${u.level}`).join(' ') || '-'}${h.top ? ' · ดาเมจสูงสุด ' + h.top : ''}`))
+    : [el('li', '', 'ยังไม่มีประวัติ')]));
+  renderReplays($('endReplays'), 'runEnd');
+}
+$('endNew').addEventListener('click', () => startNewRun());
+
+// ---------- เปิดเกม: เซฟเดิม (ชุด 22) ----------
+function boot() {
+  const r = readSave(store.get(SAVE_KEY), CM, RULES, DATA_HASH);
+  if (r.status === 'ok') {
+    const o = r.save;
+    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่)`;
+    $('resumeGo').onclick = () => {
+      P = o.P; B = o.B; stats = o.stats; startedAt = o.startedAt; sel = null; msgs = []; showNotice('');
+      const rp = readReplays(store.get(REPLAY_KEY), CM, RULES, DATA_HASH, P.seed); // ชุด 25: รีเพลย์ของ run นี้เท่านั้น
+      replays = rp.list; replayMode = null;
+      if (rp.status === 'data') showNotice('เกมอัปเดตแล้ว รีเพลย์ของ run นี้จึงถูกซ่อน');
+      if (rp.status === 'bad') showNotice('ข้อมูลรีเพลย์เสียหายหรือผิดรูปแบบ จึงถูกล้าง (เล่นต่อได้ตามปกติ)');
+      if (rp.status !== 'ok') saveReplays();
+      showScreen('prep'); beginRound();
+    };
+    $('resumeNew').onclick = () => { showNotice(''); startNewRun(); };
+    showScreen('resume');
+    return;
+  }
+  if (r.status !== 'none') store.del(SAVE_KEY);
+  startNewRun();
+  if (r.status === 'data') showNotice('เกมอัปเดตค่าตัวละครหรือกฎแล้ว เซฟ run เดิมจึงถูกล้าง · เริ่ม run ใหม่ให้แล้ว');
+  if (r.status === 'bad') showNotice('เซฟ run เดิมเสียหายหรือผิดรูปแบบ จึงถูกล้าง · เริ่ม run ใหม่ให้แล้ว');
+}
+$('skip').addEventListener('click', () => { if (view.result && !view.ended) view.skip(); });
+document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
+  speed = +b.dataset.speed; view.speed = speed;
+  document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+}));
+
+boot();
+</script>

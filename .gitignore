@@ -1,0 +1,9 @@
+node_modules/
+# build output (node src/build.mjs)
+src/game.html
+src/balance.html
+src/system-check.html
+# local measure output / screenshots
+*.measure.json
+shots/
+__pycache__/
