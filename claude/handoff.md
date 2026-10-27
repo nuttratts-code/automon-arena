@@ -2,13 +2,16 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** · open WIP branch: none (work from main) · last done: set D (a)+(b) MERGED into main (fast-forward, user agreed 27 Oct; Action green run 40512454097, local tests 128/128, ui_smoke FAILS [] ERRORS []; branch `claude/set-d-docs-tests-split` can be deleted by user) · next step: Next 1 (anomaly, Opus) · open decisions: none · publish pending: system-check page changed (embeds new test files) — republish check only if user wants; game/balance room byte-identical, nothing to republish · publish access: writer on all 3 artifacts
+- Account active now: **this chat (27 Oct 20:51)** · open WIP branch: `claude/damage-anomaly` (investigation only, adds src/lab/replay.mjs, no game change) · last done: Next 1 cause FOUND with evidence (see State) · next step: wait for user's choice on the 2 decisions below, then fix + re-measure · open decisions: (1) SF-6 shock loop fix A/B/C (2) count overkill in suspicious metric? · publish pending: none new (check page note from set D still stands) · publish access: writer on all 3 artifacts
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
 - Published: game v57 · balance room v102 · check v56 · tests 128/128 (split into tests/helpers.js + t-*.js topic files in set D; helper TBR now in tests/helpers.js) · bot teams 90, hash 58de9165
 - Post-import measure (n 24000, seed 4242, abnormal 0): outliers SF-8 +6.5, WY-8 −11.3 (user's intent, passed) · details in measure-log
-- ⚠ **ANOMALY still open (27 Oct): results.suspicious has 10 matches with damage far above total HP** (dmgPerHp 11–255). Worst: level 3, side B [HL-2 HL-3 SF-6 HL-5 PT-5 SF-7], PT-5 dealt 1,379,755. Others: PT-5 (lv1/lv2), WN-3 (team HL-1 PL-2 SF-1 WN-3 WN-2 SF-6), HL-7 (3 mix teams). Suspect damage loop / reflect / damage counted after death. Cause unknown — investigate with evidence (replay seed + match index from results.suspicious; seed in results.seed) before any fix. Not fixed.
+- ⚠ **ANOMALY cause found (27 Oct, not fixed):** reproduced exactly with `node lab/replay.mjs 3 9315` (PT-5 1,379,755). Two causes, both follow the written rules (not a code bug):
+  (a) **SF-6 stealShock ↔ shock/hit feedback loop**: each SF-6 hit adds shock/hit to target, then steals 30% of target shock into its own shock/hit (combat-rules line 120); target shock never decays (line 77) → grows ~×3 per 2 sets (steal 4 → 213,667 by 161 s; SF-6 shock/hit 1.37M). Every ally hit then deals that shock → PT-5/HL-3 'dealt' huge. Same cause in WN-3 (lv3 i 11033) and SF-3 (i 16741) matches.
+  (b) **metric counts overkill**: hurt() adds full amount to dealt even past 0 HP → match 9315 overkill 2,071,205 of ~2.08M total (>99%). HL-7 match (i 5954): atkOf-armor on hitTaken stacks, atk 20 → 4284 (design, polynomial) + overkill.
+  All top matches are long (168–187 s, storm starts 180 s). Options offered to user: A cap stolen shock (number needed) · B stolen shock only for next set (recommended) · C leave it, fix metric only. Metric: recommend count only real HP loss for suspicious list.
 - **Set B done and MERGED into main (branch `claude/split-balance-template`, no behaviour change):** `src/lab/balance.template.html` (3452 lines) → 33-line shell + 23 fragments in `src/lab/balance/{css,js}/` + `body.html` (map: `src/lab/balance/README.md`). build.mjs got `<!--@include path-->`. Proof: sha256 of balance.html / game.html / system-check.html identical before vs after · tests 128/128. New `.github/workflows/tests.yml` runs `node tools/bootstrap.mjs setup` on every push (ui_smoke/measure not in CI). Docs updated: setup.md V1.26, match-tabs-spec V1.2, backlog V1.2 (now English), GEMINI.md.
 - Open design note: sticky `.topbar` is ~148px (~16% of a 900px screen) — user may want it slimmer.
 - ui_smoke.py needs args: `python3 tests/ui_smoke.py <dir with built html> <screenshot dir>` (run `node build.mjs` in src first). ~3–4 min: run in background, wait with Monitor.
@@ -18,7 +21,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 
 ## Next
 0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
-1. Investigate suspicious-damage anomaly (Opus): reproduce one match from seed/index, find cause with evidence, report to user before any fix. If a bug is fixed, re-measure needed.
+1. Anomaly: cause found (see State). Waiting for user decisions → then fix on `claude/damage-anomaly`, add test, re-measure (needed if SF-6 rule changes).
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
