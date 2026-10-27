@@ -55,7 +55,11 @@ function replayMatch(t) {
   try { saveSim(); } catch (e) {}
   showTab('sim'); renderSimTeams();
   runSim(false, true);
-  $('simMsg').textContent = 'โหลดแมตช์จากท็อป 10 · ใช้เมล็ดสุ่มจากทีม (ผลตรงกับตอนวัด)';
+  // A9: the replay uses the CURRENT values — if they were edited after the analysis, the result may differ from the measured one
+  const edited = !!(lastRun && lastRun.key !== JSON.stringify(diffs()));
+  $('simMsg').textContent = edited
+    ? 'โหลดแมตช์จากท็อป 10 · ⚠ มีการแก้ค่าหลังวัด ผลอาจไม่ตรงกับตอนวัด (ใช้ค่าปัจจุบัน) · กด "วิเคราะห์" ใหม่ถ้าต้องการให้ตรง'
+    : 'โหลดแมตช์จากท็อป 10 · ใช้เมล็ดสุ่มจากทีม (ผลตรงกับตอนวัด)';
 }
 function renderTop() {
   const box = $('mxTop'), sum = $('mxTopSum'); if (!box) return;

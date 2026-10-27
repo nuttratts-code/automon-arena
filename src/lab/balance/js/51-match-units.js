@@ -77,7 +77,11 @@ const mxFoldOpen = (k, title, build) => { // กล่องกางได้ (
 function mxOutPane(uid, k) {
   const { m, U, per, act } = mxCtx, P = per.get(uid), a = act.get(uid), box = el('div', 'mx-pane');
   const to = P.out.reduce((s0, rr) => s0 + rr.amt, 0), t = el('div', 'mx-tot');
-  t.append(`ฮิต ${nf(a.hits)} ครั้ง · ติดไฟศัตรู ${nf(a.burnN)} ครั้ง (รวม ${nf(a.burnU)} หน่วย) · ติดช็อตศัตรู ${nf(a.shockN)} ครั้ง (รวม ${nf(a.shockU)} หน่วย) · ดาเมจรวม `, el('b', '', nf(to)));
+  const bits = [];
+  if (a.hits > 0) bits.push(`ฮิต ${nf(a.hits)} ครั้ง${a.subs > 0 ? ` (+ ${nf(a.subs)} ฮิตย่อยจากตีแบ่ง · ตารางนับรวม ${nf(a.hits + a.subs)})` : ''}`);
+  if (a.burnN > 0) bits.push(`ติดไฟศัตรู ${nf(a.burnN)} ครั้ง (รวม ${nf(a.burnU)} หน่วย)`);
+  if (a.shockN > 0) bits.push(`ติดช็อตศัตรู ${nf(a.shockN)} ครั้ง (รวม ${nf(a.shockU)} หน่วย)`);
+  t.append(bits.length ? `${bits.join(' · ')} · ดาเมจรวม ` : 'ไม่ได้ฮิตหรือติดสถานะศัตรู · ดาเมจรวม ', el('b', '', nf(to)));
   box.append(t);
   // ตารางตามที่มา (ชั้นเดียว) — รูปแบบเดียวกับแท็บ "โดนทำดาเมจ" และ "อื่นๆ"
   const srcRows = list => MX_SRC.filter(w => list.some(r => mxWhy(r.why) === w)).map(w => {
@@ -85,10 +89,10 @@ function mxOutPane(uid, k) {
     const dot = el('span', 'mx-dot'); dot.style.setProperty('--c', MX_COLOR[w]);
     const byTo = new Map();
     for (const r of rs) { let q = byTo.get(r.to); if (!q) byTo.set(r.to, q = { a: mxAgg(), evs: [] }); mxAdd(q.a, r); q.evs.push(r.ei); }
-    const kids = [...byTo].sort((x, y) => y[1].a.amt - x[1].a.amt).map(([to, q]) => { const d2 = el('span', 'mx-dot'); d2.style.setProperty('--c', MX_COLOR[w]); return { label: [d2, mxWho(to, U, m)], cells: [nf(q.a.n), nf(q.a.amt), nf(q.a.abs), nf(q.a.amt - q.a.abs)], evs: q.evs }; });
-    return { label: [dot, MX_NAME[w]], cells: [nf(g.n), nf(g.amt), nf(g.abs), nf(g.amt - g.abs)], evs: rs.map(r => r.ei), kids, dots: [MX_COLOR[w]] };
+    const kids = [...byTo].sort((x, y) => y[1].a.amt - x[1].a.amt).map(([to, q]) => { const d2 = el('span', 'mx-dot'); d2.style.setProperty('--c', MX_COLOR[w]); return { label: [d2, mxWho(to, U, m)], cells: [nfc(q.a.n), nf(q.a.amt), nf(q.a.abs), nf(mxLoss(q.a))], evs: q.evs }; });
+    return { label: [dot, MX_NAME[w]], cells: [nfc(g.n), nf(g.amt), nf(g.abs), nf(mxLoss(g))], evs: rs.map(r => r.ei), kids, dots: [MX_COLOR[w]] };
   });
-  const HEADS = ['ที่มา', 'ครั้ง', 'รวม', 'เกราะกัน', 'HP หาย'];
+  const HEADS = ['ที่มา', 'ครั้ง', 'รวม', 'เกราะกัน', 'HP หายจริง'];
   box.append(mxTable(HEADS, srcRows(P.out)));
   if (P.ally.length) box.append(el('h5', '', 'ดาเมจที่ใส่พวกเดียวกัน'), mxTable(HEADS, srcRows(P.ally)));
   return box;
@@ -99,109 +103,28 @@ function mxInPane(uid, k) {
   const { U, m, per } = mxCtx, P = per.get(uid), box = el('div', 'mx-pane'), me = U.get(uid);
   if (!P.in.length) { box.append(el('span', 'mx-tot', 'ไม่ได้รับดาเมจ')); return box; }
   const tot = mxAgg(); P.in.forEach(rr => mxAdd(tot, rr));
-  const t = el('div', 'mx-tot'); t.append('รวมที่โดน ', el('b', '', nf(tot.amt)), ` = เกราะกัน ${nf(tot.abs)} + HP หาย ${nf(tot.amt - tot.abs)}`, tot.over >= 0.5 ? ` (ในนั้นเกิน HP ที่เหลือ ${nf(tot.over)})` : ''); box.append(t);
+  const t = el('div', 'mx-tot'); t.append('รวมที่โดน ', el('b', '', nf(tot.amt)), ` = เกราะกัน ${nf(tot.abs)} + HP หายจริง ${nf(mxLoss(tot))}`, tot.over >= 0.5 ? ` + เกิน HP ที่เหลือ ${nf(tot.over)}` : ''); box.append(t);
   // จัดกลุ่มเหมือนแท็บ 1: หัวข้อ = ที่มาของดาเมจ (สี) · แถวย่อย = โดนจากใคร (ชื่อ)
   const bySrc3 = new Map();
   for (const rr of P.in) { const w = mxWhy(rr.why); if (!bySrc3.has(w)) bySrc3.set(w, []); bySrc3.get(w).push(rr); }
   const rows = [...bySrc3].map(([w, list]) => { const a = mxAgg(); list.forEach(rr => mxAdd(a, rr)); return { w, list, a }; }).sort((x, y) => y.a.amt - x.a.amt);
-  box.append(mxTable(['ที่มา', 'ครั้ง', 'รวม', 'เกราะกัน', 'HP หาย'], rows.map(({ w, list, a }) => {
+  box.append(mxTable(['ที่มา', 'ครั้ง', 'รวม', 'เกราะกัน', 'HP หายจริง'], rows.map(({ w, list, a }) => {
     const dot = el('span', 'mx-dot'); dot.style.setProperty('--c', MX_COLOR[w]);
     const byFrom = new Map();
     for (const rr of list) { const k = rr.from == null ? 'n' : rr.from; let q = byFrom.get(k); if (!q) byFrom.set(k, q = { a: mxAgg(), evs: [] }); mxAdd(q.a, rr); q.evs.push(rr.ei); }
     const kids = [...byFrom].sort((x, y) => y[1].a.amt - x[1].a.amt).map(([k, q]) => {
       const d2 = el('span', 'mx-dot'); d2.style.setProperty('--c', MX_COLOR[w]);
       const lab = k === 'n' ? [d2, el('span', 'mx-ally', 'ไม่มีเจ้าของ (พายุทราย · ไฟที่ไม่มีผู้ทำ)')] : [d2, mxWho(k, U, m)];
-      return { label: lab, cells: [nf(q.a.n), nf(q.a.amt), nf(q.a.abs), nf(q.a.amt - q.a.abs)], evs: q.evs };
+      return { label: lab, cells: [nfc(q.a.n), nf(q.a.amt), nf(q.a.abs), nf(mxLoss(q.a))], evs: q.evs };
     });
-    return { label: [dot, MX_NAME[w]], cells: [nf(list.length), nf(a.amt), nf(a.abs), nf(a.amt - a.abs)], evs: list.map(rr => rr.ei), kids, dots: [MX_COLOR[w]] };
+    return { label: [dot, MX_NAME[w]], cells: [nfc(a.n), nf(a.amt), nf(a.abs), nf(mxLoss(a))], evs: list.map(rr => rr.ei), kids, dots: [MX_COLOR[w]] };
   })));
   return box;
 }
 
 // แท็บ 3: อื่นๆ · ผลตัวเลขของสกิลที่ไม่ใช่ดาเมจ · ที่ได้รับ + ที่ใช้กับตัวอื่น · ทุกแถวมีลิงก์ไปบรรทัดในบันทึก
 const MX_FX = ['heal', 'armor', 'cleanse', 'revive', 'steal', 'summon', 'cdCut', 'reflectDebuff'];
-function mxFxEnds(e) { // [ผู้ใช้/ผู้ให้, ผู้รับ]
-  if (e.k === 'revive') return [e.from ?? null, e.who];
-  if (e.k === 'summon') return [e.from, e.who];
-  return [e.from ?? null, e.to];
-}
-function mxFxInfo(e, role) { // { name, num (ค่าที่รวมได้ หรือ null), fmt, text (ข้อความเมื่อมี 1 ครั้ง) }
-  switch (e.k) {
-    case 'heal': return { name: 'ฟื้น HP', num: e.amount, fmt: nf };
-    case 'armor': return { name: 'ได้เกราะ' + (e.why === 'share' ? ' (แบ่งเกราะ)' : e.why === 'tribe' ? ' (โบนัสเผ่า)' : e.why === 'armorHit' ? ' (เกราะ/ฮิต)' : ''), num: e.amount, fmt: nf };
-    case 'cleanse': return e.what === 'pct' ? { name: 'ล้างไฟ/ช็อตบางส่วน', num: null, text: `ไฟ −${e.cut[0]} ช็อต −${e.cut[1]}` } : { name: e.what === 'burn' ? 'ดับไฟ' : 'ล้างสถานะ', num: null, text: '' };
-    case 'revive': return { name: 'ชุบ/ลุกกลับมา', num: null, text: `HP ${nf(e.hp)}` };
-    case 'steal': return { name: role === 'given' ? 'ดูดช็อต' : 'โดนดูดช็อต', num: e.amount, fmt: nf };
-    case 'summon': return { name: role === 'given' ? 'เรียกมาสู้แทน' : 'ถูกเรียกมาสู้แทน', num: null, text: `HP ${nf(e.unit.hp)}` };
-    case 'cdCut': return { name: 'ลดคูลดาวน์ที่เหลือ', num: e.ms, fmt: v => `${v / 1000} วิ` };
-    case 'reflectDebuff': { const kd = e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'; return { name: (role === 'given' ? 'สะท้อน' : 'โดนสะท้อน') + kd, num: e.amount, fmt: e.kind === 'cdSlowPct' ? v => `${Math.round(v * 10) / 10}%` : nf }; }
-  }
-  return null;
-}
-function mxFxRoles() {
-  if (mxCtx.fx) return mxCtx.fx;
-  const fx = new Map(), add = (uid, role, ei) => { if (uid == null) return; let x = fx.get(uid); if (!x) fx.set(uid, x = { given: [], recv: [] }); x[role].push(ei); };
-  mxCtx.r.events.forEach((e, ei) => {
-    if (!MX_FX.includes(e.k)) return;
-    const [actor, target] = mxFxEnds(e);
-    add(target, 'recv', ei); if (actor != null && actor !== target) add(actor, 'given', ei);
-  });
-  return (mxCtx.fx = fx);
-}
-function mxFxPane(uid) {
-  const { r, U, m } = mxCtx, roles = mxFxRoles().get(uid) || { given: [], recv: [] }, box = el('div', 'mx-pane');
-  box.append(el('p', 'mx-note', 'ผลตัวเลขของสกิลที่ไม่ใช่ดาเมจ: ฟื้น HP · เกราะ · ล้างสถานะ · ชุบ · ดูดช็อต · เรียกตัวมาสู้แทน · ลดคูลดาวน์ที่เหลือ · สะท้อนดีบัฟ (ผลที่เพิ่ม/ลดสเตตัสอยู่ในแท็บ "สเตตัส")'));
-  for (const [role, title] of [['recv', 'ที่ตัวนี้ได้รับ'], ['given', 'ที่ตัวนี้ใช้กับตัวอื่น']]) {
-    box.append(el('h5', '', roles[role].length ? title : `${title} · ไม่มี`));
-    const groups = new Map();
-    for (const ei of roles[role]) {
-      const e = r.events[ei], info = mxFxInfo(e, role); if (!info) continue;
-      const [actor, target] = mxFxEnds(e), other = role === 'recv' ? actor : target;
-      const src = (e.d && e.d.src === 'tribe') || e.why === 'tribe' ? 'โบนัสเผ่า' : e.d && e.d.si != null && actor != null ? `สกิล ${e.d.si + 1}` : '';
-      const key = `${info.name}|${other ?? 'x'}|${src}`;
-      let g = groups.get(key); if (!g) groups.set(key, g = { info, other, src, n: 0, sum: 0, evs: [] });
-      g.n++; g.sum += info.num ?? 0; g.evs.push(ei);
-    }
-    box.append(mxTable(['ผล', 'ครั้ง', 'รวม'], [...groups.values()].sort((x, y) => y.sum - x.sum || y.n - x.n).map(g => {
-      const lab = [`${g.info.name} ${role === 'recv' ? '←' : '→'} `];
-      if (g.other === uid) lab.push(el('span', 'mx-ally', 'ตัวเอง'));
-      else if (g.other != null) lab.push(mxWho(g.other, U, m));
-      else lab.push(el('span', 'mx-ally', g.src === 'โบนัสเผ่า' ? 'โบนัสเผ่า' : 'ผลติดตัว/ไม่มีเจ้าของ'));
-      if (g.info.num == null && g.info.text) lab.push(el('span', 'mx-ally', ` · ${g.info.text}`));
-      const extra = g.src && g.src !== 'โบนัสเผ่า' ? el('span', 'mx-note', g.src) : null;
-      return { label: lab, cells: [nf(g.n), g.info.num != null ? g.info.fmt(g.sum) : '—'], evs: g.evs, extra };
-    })));
-  }
-  return box;
-}
-
-// แท็บ 4: สเตตัส · ค่าตอนจบแมตช์ (เทียบก่อนโบนัสเผ่า/สกิลตอนเริ่ม) + ที่มาของการเปลี่ยน (ชนิดเท่านั้น: สกิล / โบนัสเผ่า / ถาวร) พร้อมลิงก์
-const MX_STATS = [['atk', 'พลังโจมตี', 'n'], ['maxHp', 'HP สูงสุด', 'n'], ['multi', 'มัลติฮิต (ฮิตต่อชุด)', 'n'], ['burnHit', 'ไฟต่อฮิต', 'n'], ['shockHit', 'ช็อตต่อฮิต', 'n'], ['armorHit', 'เกราะต่อฮิต', 'n'],
-  ['cdMs', 'คูลดาวน์พื้นฐาน', 's'], ['cdMult', 'ตัวคูณคูลดาวน์', 'x'], ['cdAmp', 'ผลลดคูลดาวน์ที่ได้รับ', '%'],
-  ['hitAmp', 'ดาเมจตี', '%'], ['burnAmp', 'ดาเมจไฟ', '%'], ['shockAmp', 'ดาเมจช็อต', '%'], ['healAmp', 'ฟื้น HP ที่ได้รับ', '%'], ['armorAmp', 'เกราะที่ได้รับ', '%'], ['healToAtk', 'ฟื้นเป็นพลัง', '%'],
-  ['burnTaken', 'ดาเมจไฟที่โดน', '%'], ['shockTaken', 'ดาเมจช็อตที่โดน', '%'], ['dmgTaken', 'ดาเมจตีที่โดน', '%']];
-const MX_STAT_EV = { hpUp: ['maxHp', 1], multiUp: ['multi', 1], burnHitUp: ['burnHit', 1], shockHitUp: ['shockHit', 1], armorHitUp: ['armorHit', 1], cdMsDown: ['cdMs', -1], cdSlowPct: ['cdMult', 1], burnTakenUp: ['burnTaken', 1], shockTakenUp: ['shockTaken', 1], dmgTakenUp: ['dmgTaken', 1], armorGainCut: ['armorAmp', -1], healCut: ['healAmp', -1],
-  hitAmp: ['hitAmp', 1], burnAmp: ['burnAmp', 1], shockAmp: ['shockAmp', 1], healAmp: ['healAmp', 1], armorAmp: ['armorAmp', 1], cdAmp: ['cdAmp', 1], healToAtk: ['healToAtk', 1] };
-const mxFmtV = (kind, v) => (kind === 's' ? `${(v / 1000).toFixed(2)} วิ` : kind === 'x' ? `×${v.toFixed(2)}` : kind === '%' ? `${Math.round(v * 10) / 10}%` : nf(v));
-const mxFmtD = (kind, v) => { const a = Math.abs(v); return (v > 0 ? '+' : '−') + (kind === 's' ? `${(a / 1000).toFixed(2)} วิ` : kind === 'x' ? a.toFixed(2) : kind === '%' ? `${Math.round(a * 10) / 10}%` : nf(a)); };
-function mxStatEvents() { // uid → Map(สเตตัส → [{ ei, eff }])
-  if (mxCtx.st) return mxCtx.st;
-  const st = new Map(), add = (uid, key, ei, eff) => { let a = st.get(uid); if (!a) st.set(uid, a = new Map()); let l = a.get(key); if (!l) a.set(key, l = []); l.push({ ei, eff }); };
-  mxCtx.r.events.forEach((e, ei) => {
-    if (e.k === 'atkUp') add(e.to, 'atk', ei, e.amount);
-    else if (e.k === 'maxhp') add(e.to, 'maxHp', ei, -e.amount);
-    else if (e.k === 'cdPct') add(e.to, 'cdMult', ei, -e.pct);
-    else if (e.k === 'buff' && MX_STAT_EV[e.what]) { const [key, sg] = MX_STAT_EV[e.what]; add(e.to, key, ei, sg * e.amount); }
-  });
-  return (mxCtx.st = st);
-}
-function mxStatKind(ei) { // ชนิดที่มา: โบนัสเผ่า / ถาวร (สกิลที่ติดไปแมตช์ถัดไป) / สกิล / ไม่ทราบ
-  const e = mxCtx.r.events[ei], { U, m } = mxCtx;
-  if (e.d && e.d.src === 'tribe') return ['tribe', 'โบนัสเผ่า'];
-  const o = e.from != null ? U.get(e.from) : null, c = o && m[o.id], s = c && e.d && e.d.si != null ? c.skills[e.d.si] : null;
-  if (s && s.perm) return ['perm', 'ถาวร (สกิลที่ติดไปแมตช์ถัดไป)'];
-  return e.d ? ['skill', 'สกิล'] : ['other', 'ผลติดตัว/ไม่ทราบที่มา'];
-}
+// แท็บ 4: สเตตัส · ค่าตอนจบแมตช์ (รวมโบนัสเผ่า/สกิล/บัฟแล้ว) · ไม่มีที่มา/ก่อน-หลัง (A8: ลบโค้ดเก่าที่สัญญาไว้แล้ว)
 function mxStatPane(uid, k) {
   const box = el('div', 'mx-pane'), x = mxCtx.res.get(uid), u = mxCtx.U.get(uid);
   if (!x || !x.fin) { box.append(el('p', 'mx-note', 'ไม่มีข้อมูลสเตตัสของแมตช์นี้ · กด "จำลองใหม่" ในแท็บลองสู้')); return box; }
@@ -266,7 +189,7 @@ function mxMetric(uid) {
     const by = {}; let ti = 0;
     for (const rr of P.in) { ti += rr.amt; const w = mxWhy(rr.why); (by[w] ||= mxAgg()); mxAdd(by[w], rr); }
     const who = new Set(P.in.map(rr => rr.from ?? 'n')).size;
-    return put('รับ', nf(ti), P.in.length ? `จาก ${nf(who)} ตัว · ${nf(P.in.length)} ครั้ง` : 'ไม่ได้รับดาเมจ', mxBar(by, ti, sc.in));
+    return put('รับ', nf(ti), P.in.length ? `จาก ${nf(who)} ตัว · ${nfc(P.in.reduce((s0, rr) => s0 + rr.f, 0))} ครั้ง` : 'ไม่ได้รับดาเมจ', mxBar(by, ti, sc.in));
   }
   if (mxTabSel === 2) { // อื่นๆ: ผลที่ไม่ใช่ดาเมจ — "ทำ X | ติดเกราะ … · ติดชุบ …"
     const f = fxTot.get(uid) || { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0 };
@@ -283,7 +206,6 @@ function mxMetric(uid) {
     mxBarSegs(hp / max * 100, [[hp, 'var(--hp)', `HP ${nf(hp)} / ${nf(max)}`, max]]));
 }
 const MX_FX_LEG = [['heal', 'ฮิล', 'var(--n-heal)'], ['armor', 'เกราะ', 'var(--n-armor)'], ['skill', 'สกิล', 'var(--n-skill)']];
-const MX_STAT_LEG = [['โบนัสเผ่า', 'var(--n-skill)'], ['สกิล', 'var(--n-skill)'], ['ถาวร', 'var(--n-cnt)'], ['ผลติดตัว', 'var(--mute)']];
 function mxLegendPaint() { // legend เปลี่ยนตามแท็บ · สีที่ไม่มีในแมตช์นี้แสดงจาง ๆ
   const box = $('mxLegend'); if (!box || !mxCtx) return;
   const L = mxCtx.legend || { dmg: new Set(), fx: new Set() };
@@ -377,24 +299,22 @@ function renderMatch() {
   const per = new Map(all.map(u => [u.uid, { out: [], ally: [], in: [] }]));
   for (const x of recs) { per.get(x.to)?.in.push(x); if (x.from != null) { const p = per.get(x.from); if (p) (foe(x) ? p.out : p.ally).push(x); } }
   // ชุด 37: นับครั้งของแต่ละตัว (ฮิต · ติดไฟ · ติดช็อต ใส่ศัตรู) ให้บรรทัดย่อและแท็บ "ดาเมจที่ทำ"
-  const act = new Map(all.map(u => [u.uid, { hits: 0, burnN: 0, burnU: 0, shockN: 0, shockU: 0 }]));
+  const act = new Map(all.map(u => [u.uid, { hits: 0, subs: 0, burnN: 0, burnU: 0, shockN: 0, shockU: 0 }]));
   for (const e of r.events) {
     if (e.from == null || e.to == null) continue;
     const a = act.get(e.from); if (!a || sideOf(e.from) === sideOf(e.to)) continue;
-    if (e.k === 'dmg' && e.why === 'hit' && !e.sub) a.hits++;
+    if (e.k === 'dmg' && e.why === 'hit') { if (e.sub) a.subs++; else a.hits++; }
     else if (e.k === 'burn') { a.burnN++; a.burnU += e.amount; }
     else if (e.k === 'shock') { a.shockN++; a.shockU += e.amount; }
   }
   // Tab "อื่นๆ" card line: heal/armor this unit GAVE (incl. to itself) · received ones are in the unit's detail pane (set 39)
-  const fxTot = new Map(all.map(u => [u.uid, { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0, cnt: {} }]));
-  const FX_CNT = { revive: 'ติดชุบ', cleanse: 'ติดล้าง', steal: 'ติดดูด', summon: 'ติดเรียก', cdCut: 'ติดลดคูลดาวน์', reflectDebuff: 'ติดสะท้อนดีบัฟ' };
+  const fxTot = new Map(all.map(u => [u.uid, { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0 }]));
   const fxGiven = mxFxGiven(r); // A1: card and pane read the same list
   for (const [uid, rows] of fxGiven) { const q = fxTot.get(uid); if (!q) continue;
     for (const row of rows.values()) for (const { e } of row.list) {
-      if (e.k === 'heal' || e.k === 'armor') { q[e.k] += e.amount; q.cnt[e.k] = (q.cnt[e.k] || 0) + 1; if (e.k === 'heal') q.heals++; else q.armors++; }
+      if (e.k === 'heal' || e.k === 'armor') { q[e.k] += e.amount; if (e.k === 'heal') q.heals++; else q.armors++; }
       else q.skills++;
     } }
-  for (const e of r.events) { const tag = FX_CNT[e.k]; if (!tag) continue; const uid = (e.k === 'revive' || e.k === 'summon') ? e.who : (e.to ?? e.who); const q = fxTot.get(uid); if (q) q.cnt[tag] = (q.cnt[tag] || 0) + 1; }
   mxCtx = { r, m, U, recs, per, act, res, fxTot, fxGiven, maxOut: 1, maxIn: 1, maxFx: 1 };
   const sum = list => { const s = {}; let t = 0; for (const x of list) { const w = mxWhy(x.why); (s[w] ||= mxAgg()); mxAdd(s[w], x); t += x.amt; } return [s, t]; };
   // สเกลแยกตามฝั่ง (ซ้ายเทียบซ้าย) เพื่อไม่ให้ตัวที่ทำน้อยกลายเป็นจุดเมื่ออีกฝั่งทำดาเมจสูงมาก
