@@ -2,12 +2,12 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **this chat (27 Oct 20:51)** · open WIP branch: `claude/damage-anomaly` (investigation only, adds src/lab/replay.mjs, no game change) · last done: Next 1 cause FOUND (see State) + set 39 match code button published (balance room v103) · next step: wait for user's choice on the 2 decisions below, then fix + re-measure · open decisions: (1) match card 'อื่นๆ' tab counts received heal/armor as 'ทำ' — A given only (rec.) / B given+received (2) count overkill in suspicious metric? · DECIDED 27 Oct: SF-6 loop = C, keep rule as is · publish pending: check page (now 129 tests) — republish only if user wants · publish access: writer on all 3 artifacts
+- Account active now: **this chat (27 Oct)** · open WIP branch: `claude/damage-anomaly` (all tested: 129/129, ui_smoke FAILS [] ERRORS []; merge to main when user agrees) · last done: anomaly cause found + set 39 (match code button, 'อื่นๆ' card counts giver) published balance room v104 · next step: ask user to merge, then Next 2/3 · open decisions: none (SF-6 loop = keep, C · overkill metric = leave for now) · publish pending: check page (129 tests) only if user wants · publish access: writer on all 3 artifacts
 
 ## State
-- **Set 39 (match code, user chose A):** try-fight tab button "คัดลอกรหัสแมตช์" copies `AMATCH1 {json}` (seed 0 = seed from teams, both teams, tribe-off switches, edited values diff, result, base fingerprint). User pastes it in chat → save to a file → `cd src && node lab/replay.mjs --code <file> [--fx]` (prints MATCHES/DIFFERS vs page result; --fx lists heal/armor events with source). Code: src/lab/matchcode.js (validated parse, diff only on existing fields). Open question from user: WY-4 got heals +32/+40 in some match — WY-4 has no heal skill, likely an ally heal; ask for the match code.
+- **Set 39 (match code, user chose A):** try-fight tab button "คัดลอกรหัสแมตช์" copies `AMATCH1 {json}` (seed 0 = seed from teams, both teams, tribe-off switches, edited values diff, result, base fingerprint). User pastes it in chat → save to a file → `cd src && node lab/replay.mjs --code <file> [--fx]` (prints MATCHES/DIFFERS vs page result; --fx lists heal/armor events with source). Code: src/lab/matchcode.js (validated parse, diff only on existing fields). WY-4 heal question answered: PT-7 lane heal (not a bug); led to card fix (match-tabs-spec V1.3).
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
-- Published: game v57 · balance room v103 · check v56 · tests 129/129 (split into tests/helpers.js + t-*.js topic files in set D; helper TBR now in tests/helpers.js) · bot teams 90, hash 58de9165
+- Published: game v57 · balance room v104 · check v56 · tests 129/129 (split into tests/helpers.js + t-*.js topic files in set D; helper TBR now in tests/helpers.js) · bot teams 90, hash 58de9165
 - Post-import measure (n 24000, seed 4242, abnormal 0): outliers SF-8 +6.5, WY-8 −11.3 (user's intent, passed) · details in measure-log
 - ⚠ **ANOMALY cause found (27 Oct, not fixed):** reproduced exactly with `node lab/replay.mjs 3 9315` (PT-5 1,379,755). Two causes, both follow the written rules (not a code bug):
   (a) **SF-6 stealShock ↔ shock/hit feedback loop**: each SF-6 hit adds shock/hit to target, then steals 30% of target shock into its own shock/hit (combat-rules line 120); target shock never decays (line 77) → grows ~×3 per 2 sets (steal 4 → 213,667 by 161 s; SF-6 shock/hit 1.37M). Every ally hit then deals that shock → PT-5/HL-3 'dealt' huge. Same cause in WN-3 (lv3 i 11033) and SF-3 (i 16741) matches.
@@ -22,7 +22,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 
 ## Next
 0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
-1. Anomaly: cause found (see State). Waiting for user decisions → then fix on `claude/damage-anomaly`, add test, re-measure (needed if SF-6 rule changes).
+1. Anomaly: closed (user kept SF-6 rule; overkill metric left as is — can revisit). Match code tool ready for future bug reports.
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
@@ -34,7 +34,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - Possible follow-up: tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure tribe tier effects only if user asks.
 
 ## Doc versions
-combat-rules V2.2 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.2 (done) · characters.csv 27 Oct
+combat-rules V2.2 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.3 (done) · characters.csv 27 Oct
 
 ## Links (update existing, never create new)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC

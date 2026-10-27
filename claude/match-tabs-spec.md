@@ -1,4 +1,4 @@
-# match-tabs-spec.md — match analysis: per-unit 4 tabs (English · V1.2 · DONE 26 Oct 2026, ชุด 37 · V1.2 28 Oct: code locations updated after template split)
+# match-tabs-spec.md — match analysis: per-unit 4 tabs (English · V1.3 · DONE 26 Oct 2026, ชุด 37 · V1.2 28 Oct: code locations updated after template split)
 Status: implemented and published to the Balance Room (v100). Kept as the reference for what the tabs show and how they link to the log.
 
 ## What was built
@@ -6,7 +6,7 @@ Status: implemented and published to the Balance Room (v100). Kept as the refere
 - Sub-tabs per unit (`mxUnitBody` in lab/balance/js/51-match-units.js; panes built lazily, selected tab remembered per unit):
   1. **ดาเมจที่ทำ** — description line (hits, burn times + total units, shock times + total units, total damage) + source breakdown.
   2. **ดาเมจที่โดน** — one row per enemy (not merged), ONE link per row = log filtered to that pair (burn ticks included). Row "no owner" jumps to its first line. Old combined breakdown kept in a fold.
-  3. **อื่นๆ** — non-damage numeric effects, received + given, grouped; every row linked. Event set chosen by Claude (not asked): heal, armor, cleanse, revive, steal, summon, cdCut, reflectDebuff. Stat changes live in tab 4.
+  3. **อื่นๆ** — non-damage numeric effects, received + given, grouped; every row linked. Event set chosen by Claude (not asked): heal, armor, cleanse, revive, steal, summon, cdCut, reflectDebuff. Stat changes live in tab 4. V1.3 (27 Oct, set 39, user chose A): the card summary line counts heal/armor the unit GAVE (incl. to itself; tribe armor without a source counts for the receiver); received effects stay in the detail pane.
   4. **สเตตัส** — final stats from `ini`/`fin` snapshots; each expands to kind rows (skill / tribe bonus / permanent / other) with links, plus a residual row "set at match start" (e.g. tribe start bonuses, no log line).
 - Links: open `#simLogFold`, clear filters, scroll + highlight (`lg-hi`); pair filter bar "เอาตัวกรองออก"; target lines beyond the 2000-line limit are still rendered (`keep`). Changing a log filter by hand drops the link filter.
 - `simSummary` fold table kept.

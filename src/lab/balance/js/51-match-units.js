@@ -270,7 +270,7 @@ function mxMetric(uid) {
   }
   if (mxTabSel === 2) { // อื่นๆ: ผลที่ไม่ใช่ดาเมจ — "ทำ X | ติดเกราะ … · ติดชุบ …"
     const f = fxTot.get(uid) || { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0 };
-    const tot = f.heal + f.armor;                              // 200 = เกราะที่ได้ + ฮิลที่ได้ (หน่วย)
+    const tot = f.heal + f.armor;                              // armor + heal given (units)
     const parts = [];
     if (f.heals > 0) parts.push(`ติดฮิล ${nf(f.heals)}`);
     if (f.armors > 0) parts.push(`ติดเกราะ ${nf(f.armors)}`);
@@ -382,11 +382,12 @@ function renderMatch() {
     else if (e.k === 'burn') { a.burnN++; a.burnU += e.amount; }
     else if (e.k === 'shock') { a.shockN++; a.shockU += e.amount; }
   }
-  // แท็บ "อื่นๆ" ใช้ยอดฟื้น/เกราะที่ตัวนั้นได้รับ (จากบันทึกเหตุการณ์)
+  // Tab "อื่นๆ" card line: heal/armor this unit GAVE (incl. to itself) · received ones are in the unit's detail pane (set 39)
   const fxTot = new Map(all.map(u => [u.uid, { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0, cnt: {} }]));
   const FX_CNT = { revive: 'ติดชุบ', cleanse: 'ติดล้าง', steal: 'ติดดูด', summon: 'ติดเรียก', cdCut: 'ติดลดคูลดาวน์', reflectDebuff: 'ติดสะท้อนดีบัฟ' };
   for (const e of r.events) {
-    if ((e.k === 'heal' || e.k === 'armor') && fxTot.has(e.to)) { const q = fxTot.get(e.to); q[e.k] += e.amount; q.cnt[e.k] = (q.cnt[e.k] || 0) + 1; if (e.k === 'heal') q.heals++; else q.armors++; }
+    // set 39 (user chose A): heal/armor counts for the unit that gave it · no source (tribe armor) = the receiver
+    if ((e.k === 'heal' || e.k === 'armor') && fxTot.has(e.from ?? e.to)) { const q = fxTot.get(e.from ?? e.to); q[e.k] += e.amount; q.cnt[e.k] = (q.cnt[e.k] || 0) + 1; if (e.k === 'heal') q.heals++; else q.armors++; }
     else if (e.d && e.d.si != null && e.from != null && fxTot.has(e.from)) fxTot.get(e.from).skills++;
     else { const tag = FX_CNT[e.k]; if (!tag) continue; const uid = (e.k === 'revive' || e.k === 'summon') ? e.who : (e.to ?? e.who); const q = fxTot.get(uid); if (q) q.cnt[tag] = (q.cnt[tag] || 0) + 1; }
   }
