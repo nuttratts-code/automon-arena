@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: relay workflow set up · next step: user picks task set (see Next) · publish access for account 2: not yet shared (artifacts owned by account 1)
+- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: relay workflow set up · next step: user picks task set (see Next) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
