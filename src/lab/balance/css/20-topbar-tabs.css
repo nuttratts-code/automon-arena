@@ -1,0 +1,99 @@
+/* แถบบน (ขั้นตอน + แท็บ) ติดบนจอตลอดเวลาเลื่อน */
+.topbar { position: sticky; top: 0; z-index: 6; background: var(--bg); display: grid; gap: 6px; padding-bottom: 8px; box-shadow: 0 8px 12px -10px rgb(0 0 0 / .45); }
+.tabs.main { background: var(--bg); }
+@media (max-width: 700px) {
+  .topbar { position: static; box-shadow: none; padding-bottom: 0; }
+  .tabs.main { position: sticky; top: 0; z-index: 4; }
+}
+/* แท็บหลักติดบนจอตลอด (เว้นที่ให้แถบขั้นตอนที่ลอยอยู่ด้านบน) */
+.tabs.main { background: var(--bg); }
+.grid3 { display: grid; grid-template-columns: minmax(110px, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 6px 8px; align-items: center; }
+.grid3 .h { font-size: .74rem; color: var(--mute); font-weight: 600; }
+.grid3 label { font-size: .84rem; }
+.hint { font-size: .78rem; color: var(--mute); margin: 0; }
+.grid3 .bud { font-family: var(--f-mono, monospace); font-size: .9rem; padding: 6px 10px; border-radius: 6px; background: var(--ok-bg); color: var(--ok); font-variant-numeric: tabular-nums; }
+.grid3 .bud span { opacity: .75; }
+.grid3 .bud.over { background: var(--hi-bg); color: var(--hi); }
+.grid3 .mid { font-family: var(--f-mono, monospace); font-size: .8rem; color: var(--mute); padding: 0 10px 4px; font-variant-numeric: tabular-nums; }
+.grid3 .mid.low { color: var(--hi); font-weight: 600; }
+.grid3 .midlab { font-size: .8rem; color: var(--mute); }
+.grid3 .budnote { grid-column: 2 / -1; }
+.grid3 .budnote.over { color: var(--hi); font-weight: 600; }
+.was { font: .72rem var(--f-mono); color: var(--mute); }
+.errs { color: var(--hi); font-size: .86rem; margin: 0; padding-left: 1.1em; }
+.desc { background: var(--soft); border-radius: 8px; padding: 8px 10px; font-size: .86rem; }
+textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; box-sizing: border-box; resize: vertical; }
+textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+#sform select { width: 100%; min-width: 0; }
+.ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ideas li.idea { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; }
+.ideas .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .78rem; color: var(--mute); }
+.ideas .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ideas .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.ideas .acts button { padding: 4px 10px; font-size: .82rem; }
+.ideas textarea { width: 100%; }
+.ideas li.done { opacity: .7; }
+.ideas .reply { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .88rem; background: var(--soft); border-radius: 6px; padding: 6px 8px; }
+.tb { display: inline-flex; gap: 2px; vertical-align: -2px; margin-right: 6px; }
+.tb i { display: inline-block; width: 13px; height: 13px; background: var(--tc); }
+.tb i.s-square { border-radius: 3px; } .tb i.s-circle { border-radius: 50%; }
+.tb i.s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); }
+.tb i.s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.tb i.s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); }
+.tb i.s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+.tb i.extra { width: 9px; height: 9px; align-self: flex-end; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--mute); }
+.cp { position: relative; min-width: 0; }
+.cp-btn { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; text-align: left; font-weight: 600; }
+.cp-caret { margin-left: 8px; color: var(--mute); }
+/* ตัวเลือกตัวละคร (20 ต.ค.): กางลงจากที่เดิมเต็มความกว้างของแถบ ยาวลงไปจนครบทุกตัว (ไม่มีกล่องเลื่อน ไม่เด้งเต็มจอ) */
+.cp-sheet { flex: 1 0 100%; width: 100%; min-width: 0; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.12); display: grid; }
+.cp-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.cp-head h2 { flex: 1; min-width: 0; font-size: .95rem; }
+.cp-tools { display: grid; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.cp-search { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: 16px; }
+.cp-search:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.cp-tribes { display: flex; gap: 6px; flex-wrap: wrap; }
+.cp-tribes button { padding: 6px 10px; font-size: .84rem; }
+.cp-tribes button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.cp-list { padding: 4px 12px 14px; display: grid; gap: 4px; align-content: start; }
+.cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 6px 8px; }
+.cp-group { font-size: .8rem; font-weight: 700; color: var(--mute); padding: 12px 2px 4px; display: flex; align-items: center; }
+.cp-item { display: flex; align-items: center; gap: 2px; min-width: 0; border: 1px solid var(--line); background: var(--panel); text-align: left; font-weight: 400; padding: 10px 10px; border-radius: 8px; }
+.cp-item:hover { background: var(--soft); }
+.cp-item[aria-selected="true"] { background: var(--soft); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.cp-none { justify-self: start; margin-top: 8px; }
+.cp-empty { color: var(--mute); padding: 16px 2px; }
+.cp-rar { margin-left: auto; font-size: .74rem; color: var(--mute); padding-left: 10px; }
+.catgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.cat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; align-content: start; }
+.cat.want { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
+.cat h4 { margin: 0; font-size: .95rem; }
+.cat .ex { font-size: .82rem; background: var(--soft); border-radius: 6px; padding: 6px 8px; }
+.cat .warn { font-size: .8rem; color: var(--lo); }
+.cat .warn.bad { color: var(--hi); }
+.cat input[type=text] { width: 100%; font: inherit; font-size: .84rem; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+#catFilter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.split { display: grid; gap: 18px; grid-template-columns: 1fr; align-items: start; }
+.col { min-width: 0; display: grid; gap: 10px; align-content: start; }
+.skillnow { background: var(--soft); border-left: 3px solid var(--accent); border-radius: 6px; padding: 8px 10px; font-size: .92rem; }
+.skillnow.none { border-left-color: var(--line); color: var(--mute); }
+.skcard { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; }
+.skcard.shop .skillnow { border-left-color: var(--lo); }
+.skcard .row { align-items: flex-start; flex-wrap: nowrap; }
+.skcard .skillnow { min-width: 0; }
+#skillList select { width: 100%; min-width: 0; }
+table.list td { vertical-align: top; }
+table.list td.skcell { white-space: normal; min-width: 220px; overflow-wrap: anywhere; } /* 21 ต.ค.: เดิม 300px ทำให้ตารางกว้างเกินกรอบ คอลัมน์สกิลตกขอบ */
+table.list td:first-child { white-space: normal; min-width: 150px; }
+table.list .lv3 { display: grid; gap: 2px; justify-items: end; font-variant-numeric: tabular-nums; }
+table.list .lv3.left { justify-items: start; }
+table.list .lv3.lvlab span { color: var(--mute); font-size: .78rem; }
+table.list .lv3 span { white-space: nowrap; line-height: 1.4rem; height: 1.4rem; }
+table.list .lv3 .chg { background: var(--edit); border-radius: 4px; padding: 0 4px; font-weight: 600; }
+table.list th.lvh { color: var(--mute); }
+table.list .lv3 .over { color: var(--hi); font-weight: 700; }
+table.list .skline + .skline { margin-top: 4px; }
+table.list tr.grp th { background: var(--soft); color: var(--ink); font-size: .85rem; padding-top: 10px; }
+#listFilter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#listEditBtn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }

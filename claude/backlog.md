@@ -1,26 +1,27 @@
-# งานที่พักไว้ Automon Arena (backlog)
+# Automon Arena backlog (parked work)
 
-V1.1 · 28 ต.ค. 2026 · ไม่เปิดจนกว่าจะหยิบมาทำ · โฟกัสตอนนี้อยู่ใน handoff ข้อ 3 · ประเด็นบาลานซ์ที่ค้างอยู่ใน handoff ข้อ 3 "บาลานซ์ที่ค้าง" ไม่ใช่ที่นี่
+V1.2 · 28 Oct 2026 · translated to English (was Thai V1.1) · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here
 
-## เกมเพลย์ / จังหวะ
-- ความยาวแมตช์และจังหวะ run: เป้า "ยิ่งเล่นนานยิ่งสู้นาน" แต่วัดได้สั้นลงเรื่อยๆ (ยาวสุดต้น run) · ถึงพายุทราย 9–70% ต่อรอบ (เป้า < 5%) · แผน "ลด HP + ค่าป้องกันครึ่งหนึ่ง" ผู้ใช้ยกเลิก 24 ต.ค. · ยังไม่มีทางแก้ที่เลือก
-- ค่าสะสมข้าม run / ข้ามแมตช์: วัดด้วย runlen/simRun · สกิลสะสม PL-2 PT-3 WY-3 HL-4 HL-5 WN-1 WN-2 SF-7 ประจุ · ความสามารถถาวรไม่มีเพดาน · ค่า % ถาวรซ้อนแบบบวก
+## Gameplay / pacing
+- Match length and run pacing: goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
+- Values accumulating across runs / matches: measure with runlen/simRun · accumulating skills PL-2 PT-3 WY-3 HL-4 HL-5 WN-1 WN-2 SF-7 charge · permanent abilities have no cap · permanent % values stack additively
 
-## เศรษฐกิจ
-- ขั้น 5.5 บาลานซ์เศรษฐกิจ (ราคา รวมร่าง สกิลถาวร HL-4 WN-5 PL-2 PT-4 SF-7 · ช็อตถาวรไม่มีเพดาน · ตำนานที่เลเวล 1) ด้วย run จำลอง → ขั้น 6 ขัดเกลา ทดสอบมือถือ
+## Economy
+- Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test
 
-## ระบบที่ยังไม่ออกแบบ
-- อาหาร · ไอเทม · Partner (ร้านค้า MVP1 ขายตัวละครอย่างเดียว)
-- MVP2: Ghost Battle + ออนไลน์ · กฎเสมอใหม่ (ตอนนี้เสมอ = ผู้เล่นชนะ) · เซิร์ฟเวอร์คำนวณผลต่อสู้/ทอง/ค่าถาวรเอง
+## Systems not designed yet
+- Food · items · Partner (MVP1 shop sells characters only)
+- MVP2: Ghost Battle + online · new tie rule (now tie = player wins) · server computes battle result / gold / permanent values itself
 
-## ข้อมูลการเล่น
-- เมื่อผู้ใช้เล่นเกมแล้ว สรุปจากคอลเลกชัน plays (อัตราชนะตามรอบ ความยาว ถึงพายุ ตัวที่ใช้บ่อย) · วิธีอ่าน workflow/botteams.md ข้อ 14
+## Play data
+- Once the user has played: summarise from the plays collection (win rate by round, length, reaching sandstorm, most-used characters) · how to read it: workflow/botteams.md item 14
 
-## ค้างตัดสิน (ไม่เร่ง)
-- ย้าย "ตีแบ่งทุกตัว" ไปอยู่ใต้เงื่อนไข "ติดตัว"
-- ตีความ "เพิ่มคูลดาวน์ 20%"
-- ยืนยันภาพในหัว 6 เผ่า (ข้อเสนอเดิม: เหล็กกล้า ผู้พิทักษ์สวมเกราะ · เพลิงเผา ผู้จุดไฟให้ศัตรูไหม้ · สายฟ้า ผู้เรียกฟ้าผ่า · วายุ นักล่าเร็วดั่งลม · ภูติ ผู้ร่ายเวทเร่งเวลา · อสูร ผู้ไม่ยอมล้ม) · ไอเดียสกิลเก็บไว้: ชาร์จ เติบโต
-- เลเวล 4 (รวมเลเวล 3 จำนวน 3 ตัว หรือไอเทม) · หน้าตาหลังรวมร่าง
+## Undecided (not urgent)
+- Move "split hit to every unit" under the "on self" condition
+- Interpretation of "cooldown +20%"
+- Confirm the head-image of the 6 tribes (earlier proposal: เหล็กกล้า armoured guardian · เพลิงเผา igniter who burns enemies · สายฟ้า lightning caller · วายุ hunter fast as the wind · ภูติ spellcaster who speeds up time · อสูร one who refuses to fall) · skill ideas kept: charge, growth
+- Level 4 (merge three level-3 units, or an item) · look after merging
 
-## แพลตฟอร์ม (ตัดสิน 27 ต.ค.)
-- ย้ายโค้ด/เอกสารไป GitHub + Jules (รายละเอียดใน build-plan ขอบเขต MVP2) · ค้าง: ผู้ใช้ตรวจสิทธิ์ Jules ใน Google AI Pro และเชื่อม Jules กับ repo · สร้าง GitHub Action รันเทสต์อัตโนมัติ (ยังไม่ทำ)
+## Platform (decided 27 Oct)
+- Move code/docs to GitHub + Jules (details in build-plan, MVP2 scope) · still open: user checks Jules access in Google AI Pro and connects Jules to the repo
+- GitHub Action running build + tests automatically: DONE 28 Oct (`.github/workflows/tests.yml`, runs on every push; ui_smoke/measure stay local)

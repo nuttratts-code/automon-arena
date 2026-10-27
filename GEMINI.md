@@ -1,6 +1,6 @@
 # Automon Arena — brief for Jules (Gemini)
 
-Automon Arena is an original creature auto-battler (single-player offline MVP1). Pure-JS deterministic battle core in `src/core`, lab tools in `src/lab`, UI in `src/game`, tests in `src/tests`. Built to 3 HTML pages by `node src/build.mjs`.
+Automon Arena is an original creature auto-battler (single-player offline MVP1). Pure-JS deterministic battle core in `src/core`, lab tools in `src/lab`, UI in `src/game`, tests in `src/tests`. Built to 3 HTML pages by `node src/build.mjs`. The Balance Room page is a small shell (`src/lab/balance.template.html`) plus fragments in `src/lab/balance/` (see its README.md); GitHub Actions runs build + tests on every push.
 
 ## You work from task cards
 Only do what the task card (written by Claude, handed over by the owner) says. If something is unclear or the card conflicts with the code, stop and say so in the PR description — do not guess.

@@ -1,0 +1,123 @@
+/* ชุด 29: แถบ 4 ขั้น (จอกว้างอยู่บน · จอแคบเป็นแถบล่าง) · ตารางเผ่า × ความหายาก */
+.steps { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+.steps button { display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; padding: 8px 6px; border-radius: 8px; color: var(--mute); font-weight: 600; position: relative; min-width: 0; }
+.steps button:hover { background: var(--soft); }
+.steps button i { font-style: normal; flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font: 700 .78rem var(--f-mono, monospace); background: var(--soft); color: var(--mute); }
+.steps button[aria-current="step"] { background: var(--accent); color: var(--on-accent); }
+.steps button[aria-current="step"] i { background: var(--on-accent); color: var(--accent); }
+.steps .sb { font: 600 .72rem var(--f-mono, monospace); padding: 1px 6px; border-radius: 99px; background: var(--soft); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 8em; }
+.steps .sb.err { background: var(--hi-bg); color: var(--hi); }
+.steps .sb:empty { display: none; }
+/* ชุด 30.1: ปุ่มบันทึกอยู่บนแถบขั้น กดได้ทุกหน้า · ป้าย = จำนวนจุดที่แก้ ("!" = มีค่าผิด) */
+.steps .step-save { color: var(--accent); border: 1px solid var(--accent); padding-inline: 14px; }
+.steps .step-save i { background: none; width: auto; font-size: .95rem; }
+.steps .step-save:disabled { opacity: .6; }
+.savemsg { margin: 0; padding: 6px 10px; border-radius: 8px; background: var(--soft); }
+.errbox { background: var(--hi-bg); border-radius: 10px; padding: 10px 12px 10px 28px; }
+.tgrid { display: grid; grid-template-columns: minmax(112px, .85fr) repeat(5, minmax(0, 1fr)); align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.tg-corner, .tg-rh { background: var(--soft); padding: 8px; display: grid; gap: 2px; justify-items: start; align-content: start; }
+.tg-rh small { color: var(--mute); font-size: .74rem; }
+.tg-row { display: contents; }
+.tg-tribe { display: grid; grid-template-columns: auto 1fr; align-content: start; align-items: center; text-align: left; border: 0; border-radius: 0; background: var(--panel); padding: 10px 8px; border-top: 1px solid var(--line); font-weight: 600; }
+.tg-tribe small { grid-column: 1 / -1; color: var(--mute); font-weight: 400; font-size: .74rem; }
+.tg-tribe:hover { background: var(--soft); }
+.tg-cell { display: flex; flex-direction: column; gap: 4px; padding: 6px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); min-width: 0; }
+.tg-cell .tg-rl { display: none; }
+.tg-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; text-align: left; font-weight: 400; padding: 6px 16px 6px 7px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); min-width: 0; position: relative; font-size: .84rem; line-height: 1.3; }
+.tg-chip b { font: 600 .78rem var(--f-mono, monospace); }
+.tg-chip .tb { margin-right: 0; }
+.tg-chip .tg-name { flex-basis: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mute); font-size: .78rem; }
+.tg-chip:hover { background: var(--soft); }
+.tg-chip.edited::after { content: ""; position: absolute; top: 6px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--lo); }
+.tg-chip[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tg-empty { color: var(--mute); opacity: .5; padding: 4px 2px; }
+#tribePick button[aria-pressed="true"], #saveList button.tribe { font-weight: 600; }
+#tribePick button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#saveList:empty { display: none; }
+@media (max-width: 700px) {
+  .steps { position: fixed; top: auto; left: 0; right: 0; bottom: 0; border-radius: 0; border-width: 1px 0 0; gap: 2px;
+    padding: 4px max(6px, env(safe-area-inset-left, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-right, 0px)); box-shadow: 0 -2px 10px rgb(0 0 0 / .08); }
+  .steps button { flex-direction: column; gap: 2px; font-size: .8rem; padding: 6px 2px; min-height: 54px; }
+  .steps .sb { position: absolute; top: 2px; right: 2px; font-size: .62rem; max-width: 5.5em; }
+  .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .wrap { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+  .tgrid { grid-template-columns: 1fr; border: 0; gap: 10px; border-radius: 0; overflow: visible; }
+  .tg-corner, .tg-rh { display: none; }
+  .tg-row { display: grid; grid-template-columns: 1fr; align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tg-tribe { border-top: 0; background: var(--soft); grid-template-columns: auto auto 1fr; gap: 6px; }
+  .tg-tribe small { grid-column: auto; justify-self: end; }
+  .tg-cell { flex-direction: row; flex-wrap: wrap; align-items: center; border-left: 0; padding: 6px 8px; }
+  .tg-cell .tg-rl { display: inline-block; flex: 0 0 auto; min-width: 74px; text-align: center; }
+  .tg-chip { max-width: 100%; }
+  .tg-chip .tg-name { flex-basis: auto; max-width: 11em; }
+}
+
+/* ชุด 36: แท็บวิเคราะห์แมตช์ · ตัวละ 1 แถว กางลึกได้ 3 ชั้น (ตัว → แหล่งดาเมจ → ส่วนประกอบ) · สีฝั่งเป็นแถบซ้ายของแถว สีแหล่งดาเมจเป็นแท่ง */
+/* กันตารางดันกริดจนหน้าล้นแนวนอน (มือถือ) */
+#mxBody > *, #pane-match .foldsec, #pane-match .tbl { min-width: 0; }
+/* PC: ล็อกความกว้างของส่วนวิเคราะห์แมตช์ให้อยู่กลางหน้า */
+#pane-match { width: 100%; max-width: 1000px; margin-inline: auto; }
+/* สรุปแมตช์ด้านบน */
+.mx-sum { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: .84rem; color: var(--mute); }
+.mx-sum .win { font-size: 1.04rem; color: var(--ink); }
+.mx-sum .mx-sumchip { display: inline-flex; gap: 5px; align-items: baseline; white-space: nowrap; }
+.mx-sum .mx-sumchip > small { font-size: .74rem; }
+.mx-sum .mx-sumchip > b { color: var(--ink); font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+/* ตารางแมตช์ต้องสงสัย: คอลัมน์ทีมตัดบรรทัดได้ จะได้ไม่ดันตารางจนปุ่มหลุดจอ */
+.mxt-team { white-space: normal !important; max-width: 190px; font-size: .76rem; line-height: 1.3; overflow-wrap: anywhere; }
+.mxt-act { white-space: nowrap; }
+/* แท็บสเตตัส: ค่าสุดท้ายแบบช่องเล็ก ๆ (ประหยัดพื้นที่) */
+.mx-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 6px 8px; }
+.mx-stat { display: grid; gap: 1px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); min-width: 0; }
+.mx-stat > small { font: 400 .68rem var(--f-body); color: var(--mute); }
+.mx-stat > b { font: 600 .86rem var(--f-mono); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) { .mx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }/* แถบเครื่องมือรายตัว: การ์ด/ตาราง · เรียง · ซ่อน down */
+.mx-tools { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: .8rem; }
+.mx-seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+.mx-seg button { font-size: .78rem; padding: 4px 10px; min-height: 28px; border-radius: 999px; background: transparent; }
+.mx-seg button[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: var(--on-accent); }
+.mx-tools select, #mxLogQ { font-size: .8rem; padding: 4px 8px; min-height: 32px; border-radius: 6px; }
+#mxLogQ { flex: 1 1 180px; max-width: 280px; }
+.pill.mx-down { background: var(--soft); color: var(--mute); border-color: var(--line); }
+.mx-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: .86rem; color: var(--mute); }
+.mx-head b { color: var(--ink); font-size: 1rem; }
+.mx-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .76rem; color: var(--mute); }
+.mx-legend .off { opacity: .35; }
+.mx-dots { display: inline-flex; gap: 2px; align-items: center; }
+.mx-dots .mx-dot { margin-right: 0; }
+.mx-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); vertical-align: -1px; margin-right: 4px; flex: none; }
+.mx-side { display: grid; gap: 6px; }
+.mx-side > h4 { margin: 4px 0 0; font-size: .9rem; }
+.mx-side.sL > h4 { color: var(--sideL); } .mx-side.sR > h4 { color: var(--sideR); }
+details.mxu { border: 1px solid var(--line); border-left: 4px solid var(--sc); border-radius: 8px; background: var(--panel); min-width: 0; }
+details.mxu[open] { box-shadow: 0 2px 10px rgb(0 0 0 / .06); }
+details.mxu > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; grid-template-rows: auto auto; gap: 2px 10px; align-items: center; padding: 8px 10px; }
+details.mxu > summary::-webkit-details-marker, details.mxs > summary::-webkit-details-marker { display: none; }
+details.mxu > summary::after, details.mxs > summary::after { content: '▸'; color: var(--mute); justify-self: end; }
+details.mxu > summary::after { justify-self: end; grid-column: 3; grid-row: 1 / 3; }
+details.mxu[open] > summary::after, details.mxs[open] > summary::after { content: '▾'; }
+.mx-name { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: .86rem; font-weight: 600; grid-column: 1; grid-row: 1; }
+.mx-name > span.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mx-name .pill { margin-left: 2px; }
+@media (max-width: 560px) {
+  details.mxu > summary { display: grid; grid-template-columns: minmax(0, 1fr) 14px; grid-template-rows: auto auto auto; gap: 2px 8px; padding: 8px 8px; }
+  .mx-name { grid-column: 1; grid-row: 1; min-width: 0; }
+  .mx-name > span.nm { font-size: .8rem; }
+  .mx-num { grid-column: 1; grid-row: 2; justify-self: start; }
+  details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 3; }
+  .mx-line > .mx-sep, .mx-line > .mx-sub { display: none; }
+}
+.mx-head > * + *::before { content: '·'; margin-right: 14px; color: var(--mute); }
+.mx-num { display: grid; gap: 4px; min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; font: 500 .82rem var(--f-mono); font-variant-numeric: tabular-nums; }
+/* แท่งกราฟอยู่บรรทัดที่ 2 กินเต็มความกว้างแถว: ตัวมากสุด = 100% ถึงขอบขวา */
+details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 2; }
+/* บรรทัดเดียว: ทำ 141 | 47 ฮิต · ไฟ 0 · ช็อต 0 */
+.mx-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.mx-line > small { flex: none; font: 400 .7rem var(--f-body); color: var(--mute); }
+.mx-line > .mx-val { flex: none; font-weight: 600; }
+.mx-line > .mx-sep { flex: none; color: var(--mute); opacity: .55; }
+.mx-line > .mx-sub { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 400 .68rem var(--f-body); color: var(--mute); }
+.mx-bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; background: var(--soft); }
+.mx-bar i { display: block; height: 100%; background: var(--c); }
+.mx-bar i + i { box-sizing: border-box; border-left: 1px solid var(--panel); }
+.mx-body { display: grid; gap: 10px; padding: 8px 10px 12px; border-top: 1px dashed var(--line); }

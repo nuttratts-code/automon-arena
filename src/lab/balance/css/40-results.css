@@ -1,0 +1,149 @@
+/* ผลแมตช์เป็นป้ายเล็กด้านล่าง ไม่บังสนาม (ยังแตะดูตัวละครได้) */
+.stage .result { position: sticky; left: 0; margin-top: 8px; display: flex; justify-content: center; }
+.stage .result > div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 14px; display: flex; gap: 10px; align-items: center; }
+.stage .result strong { font-size: 1rem; }
+.simctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.simctl .clock { font: 500 .9rem var(--f-mono); font-variant-numeric: tabular-nums; padding: 3px 10px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line); }
+.simctl [data-sspeed][aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+@media (max-width: 520px) { .stage .cell { min-height: 92px; } .stage .shape { width: 28px; height: 28px; } }
+
+.stage .cell:has(.unit) { cursor: pointer; }
+.stage .cell.picked { outline: 3px solid var(--accent); outline-offset: 1px; }
+.stage .cell.sel { box-shadow: inset 0 0 0 3px var(--accent); }
+.stage .cell .tplus { color: var(--mute); font-size: 1.5rem; }
+.stage .cell { cursor: pointer; }
+.simstage { display: grid; gap: 8px; }
+.dock { display: grid; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+.dock > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; list-style: none; }
+.dock > summary::-webkit-details-marker { display: none; }
+.dock:not([open]) { padding: 6px 10px; } .dock:not([open]) .dk-hint { display: none; }
+.dk-toggle { margin-left: auto; font-size: .8rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; background: var(--panel); white-space: nowrap; }
+.dk-toggle::after { content: 'ซ่อน ▴'; } .dock:not([open]) .dk-toggle::after { content: 'แสดง ▾'; }
+.dock .dk-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.dock .dk-tools .cp-search { flex: 1 1 200px; width: auto; }
+.dock .cp-tribes { margin-top: 8px; }
+.dk-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 6px; max-height: 172px; overflow-y: auto; margin-top: 8px; padding: 2px; overscroll-behavior: contain; }
+.dk-item { display: flex; align-items: center; gap: 4px; min-width: 0; border: 1px solid var(--line); background: var(--panel); text-align: left; font-weight: 400; padding: 8px 8px; border-radius: 8px; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.dk-item:hover { background: var(--bg); }
+.dk-item.lifted { outline: 3px dashed var(--accent); }
+.dk-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .84rem; }
+.dk-plus { color: var(--accent); font-size: 1rem; }
+body.nosel { user-select: none; -webkit-user-select: none; }
+.benchrow { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; }
+@media (max-width: 520px) { .bench { flex-basis: 100%; } }
+.benchrow > .status { white-space: nowrap; font-size: .8rem; }
+.bench { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; max-width: 520px; }
+.bcell { min-height: 58px; border: 1px dashed var(--line); border-radius: 8px; display: grid; place-items: center; padding: 2px; cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; min-width: 0; background: var(--soft); }
+.bcell:has(.tunit) { border-style: solid; background: var(--panel); cursor: grab; }
+.bcell .tunit { transform: scale(.8); }
+.bcell .tname { font-size: .7rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bcell .tplus { color: var(--mute); }
+.bcell.sel { box-shadow: inset 0 0 0 3px var(--accent); }
+.bcell.dropok { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.bcell.dragging { opacity: .35; }
+.bcell.lifted { outline: 3px dashed var(--accent); }
+.stage.setup .heads .team::after { content: ' · จัดทีม'; font-weight: 400; color: var(--mute); }
+.simtribes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: .78rem; color: var(--mute); }
+.simtribes > div { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.simtribes > div:last-child { justify-content: flex-end; }
+.simtribes span.on { color: var(--ink); font-weight: 600; }
+.siminfo { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: start; background: var(--panel); }
+.siminfo:empty { display: none; }
+.siminfo .lvtabs { display: flex; gap: 4px; flex-wrap: wrap; } .siminfo .lvtabs button { padding: 3px 10px; font: 600 .78rem var(--f-mono, monospace); }
+.siminfo .lvtabs button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.siminfo .lv-now { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.siminfo .resrow { font-size: .8rem; color: var(--mute); }
+.presets { display: block; } .presets summary { cursor: pointer; padding: 4px 0; }
+.presets .row { margin-top: 6px; } .presets input[type=text] { flex: 1 1 140px; min-width: 0; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: .86rem; }
+.presetlist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.presetlist li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: .84rem; }
+.presetlist .pname { font-weight: 600; } .presetlist .pmem { color: var(--mute); flex: 1 1 100%; font-size: .78rem; }
+.presetlist button { padding: 3px 9px; font-size: .8rem; }
+.siminfo .shape { width: 40px; height: 40px; background: var(--tc); display: grid; place-items: center; }
+.siminfo .s-square { border-radius: 8px; } .siminfo .s-circle { border-radius: 50%; }
+.siminfo .s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); } .siminfo .s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.siminfo .s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); } .siminfo .s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+.siminfo .lv { color: #fff; font-size: .6rem; letter-spacing: -1px; padding-top: 8px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.siminfo h3 { margin: 0; font-size: 1rem; }
+.siminfo .body { display: grid; gap: 5px; min-width: 0; }
+.siminfo .stats2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 2px 10px; font-size: .8rem; }
+.siminfo .stats2 b { font: 500 .8rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.siminfo .skline { font-size: .84rem; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.siminfo .skline.off { opacity: .5; }
+.siminfo .cnt { font: 600 .72rem var(--f-mono); padding: 0 6px; border-radius: 99px; background: var(--soft); color: var(--mute); white-space: nowrap; }
+.siminfo .cnt.zero { color: var(--lo); background: var(--lo-bg); }
+
+.tabs { align-items: center; }
+.combo-btn { padding: 6px 12px; font-size: .86rem; }
+.combo-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.combo-only { display: none !important; }
+#editor.combo .combo-only { display: flex !important; }
+.wrap.wide { max-width: 1560px; }
+#editor.combo .split { grid-template-columns: 1fr; }
+@media (min-width: 1180px) {
+  #editor.combo .panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 18px; align-items: start; }
+}
+#editor.combo #pane-sim { border-top: 3px solid var(--accent); padding-top: 10px; }
+@media (min-width: 1180px) { #editor.combo #pane-sim { border-top: 0; border-left: 3px solid var(--accent); padding: 0 4px 0 14px; } }
+
+.simteam.sideL h3 { color: var(--sideL); } .simteam.sideR h3 { color: var(--sideR); }
+.tgrid { display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 6px; align-items: center; }
+.tgrid .h { font-size: .74rem; color: var(--mute); font-weight: 600; text-align: center; }
+.tcell { min-height: 74px; border: 1px dashed var(--line); border-radius: 8px; background: var(--soft); padding: 4px 2px; display: grid; place-items: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-weight: 400; min-width: 0; }
+.tcell.filled { border-style: solid; background: var(--panel); cursor: grab; }
+.tcell.picked { outline: 3px solid var(--accent); outline-offset: 1px; }
+.tcell.dropok { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.tcell.dragging, .stage .cell.dragging { opacity: .35; }
+.stage .cell.dropok { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.stage .cell:has(.unit) { touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: grab; }
+.tcell.lifted, .stage .cell.lifted { outline: 3px dashed var(--accent); outline-offset: 1px; }
+.tplus { font-size: 1.3rem; color: var(--mute); }
+.tunit { display: grid; justify-items: center; gap: 2px; min-width: 0; width: 100%; }
+.tshape { width: 30px; height: 30px; background: var(--tc); display: grid; place-items: center; }
+.tshape.s-square { border-radius: 7px; } .tshape.s-circle { border-radius: 50%; }
+.tshape.s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); } .tshape.s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.tshape.s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); } .tshape.s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+.tshape .lv { color: #fff; font-size: .52rem; letter-spacing: -1px; padding-top: 6px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+/* ชุด 25: รูปตัวละครรายตัว (unitShape ใน game/view.js) · ลวดลายเรขาคณิตด้านใน + ขอบตามความหายาก (ธรรมดาไม่มีขอบ) */
+.mon { display: inline-grid; flex: none; --rc: transparent; }
+.mon > div { position: relative; overflow: hidden; }
+.mon svg.pat { position: absolute; inset: 0; width: 100%; height: 100%; color: rgba(255,255,255,.72); filter: drop-shadow(0 0 1px rgba(0,0,0,.5)); pointer-events: none; }
+.mon { position: relative; } .mon.has-lv { margin-bottom: 7px; }
+.mon > .lv { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); z-index: 1; padding: 0 3px 0 2px; border-radius: 4px; background: rgba(20,16,12,.78); color: #fff; font-size: .5rem; line-height: 1.35; letter-spacing: -1px; white-space: nowrap; text-shadow: none; }
+.mon.rr1 { --rc: var(--r-unc); } .mon.rr2 { --rc: var(--r-rare); } .mon.rr3 { --rc: var(--r-epic); } .mon.rr4 { --rc: var(--r-legend); }
+.mon.rr1, .mon.rr2 { filter: drop-shadow(1.5px 0 0 var(--rc)) drop-shadow(-1.5px 0 0 var(--rc)) drop-shadow(0 1.5px 0 var(--rc)) drop-shadow(0 -1.5px 0 var(--rc)); }
+.mon.rr3 { filter: drop-shadow(2px 0 0 var(--rc)) drop-shadow(-2px 0 0 var(--rc)) drop-shadow(0 2px 0 var(--rc)) drop-shadow(0 -2px 0 var(--rc)); }
+.mon.rr4 { filter: drop-shadow(2.5px 0 0 var(--rc)) drop-shadow(-2.5px 0 0 var(--rc)) drop-shadow(0 2.5px 0 var(--rc)) drop-shadow(0 -2.5px 0 var(--rc)) drop-shadow(0 0 4px var(--rc)); }
+.tname { font-size: .7rem; line-height: 1.2; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#editor.combo #cdesc { cursor: grab; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; border: 1px dashed var(--line); border-radius: 8px; padding: 6px 8px; }
+#editor.combo #cdesc::after { content: '  ⠿ ลากไปวางในช่องทีมหรือสนาม'; color: var(--mute); font-size: .8rem; white-space: nowrap; }
+#cdesc.lifted { outline: 3px dashed var(--accent); }
+#simRun.stale { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sumtbl th, .sumtbl td { white-space: nowrap; }
+.dragghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -50%); opacity: .9; box-shadow: 0 8px 20px rgba(0,0,0,.25); border-radius: 8px; background: var(--panel); }
+.simslot-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+.seg { display: inline-flex; } .seg button { border-radius: 0; padding: 6px 10px; } .seg button:first-child { border-radius: 8px 0 0 8px; } .seg button:last-child { border-radius: 0 8px 8px 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.simlog { font-family: var(--f-body); font-size: .82rem; }
+.simlog li { display: block; line-height: 1.6; }
+.simlog li.set { color: var(--mute); }
+.simlog .lg-t { display: inline-block; min-width: 46px; font: 500 .74rem var(--f-mono); color: var(--mute); }
+.simlog .lg-L { color: var(--sideL); font-weight: 600; } .simlog .lg-R { color: var(--sideR); font-weight: 600; }
+.simlog .lg-L .tb, .simlog .lg-R .tb { margin-right: 3px; }
+.simlog .lg-dmg { font-weight: 700; color: var(--n-hit); } .simlog .lg-hp { color: var(--n-hit); } .simlog .lg-arm { color: var(--n-armor); font-weight: 600; }
+.simlog .lg-heal { color: var(--n-heal); font-weight: 600; } .simlog .lg-burn { color: var(--n-burn); font-weight: 600; } .simlog .lg-shock { color: var(--n-shock); font-weight: 600; }
+.simlog .lg-pos { font-weight: 400; font-size: .7rem; opacity: .75; }
+.simlog .lg-st { color: var(--mute); font-family: var(--f-mono); font-size: .76rem; } .simlog .lg-skill { color: var(--accent); }
+/* ชุด 13: แท็บไม่ตัดคำ เลื่อนแนวนอนได้บนจอแคบ · แถบบันทึกสรุปตัวที่แก้ · ส่วนย่อยในแท็บ · คำอธิบายยาวพับไว้ */
+.tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.tabs button { white-space: nowrap; flex: none; }
+@media (max-width: 600px) { .tabs button { padding: 8px 8px; font-size: .9rem; } .bar #dirty { flex-basis: 100%; } }
+#dirty b { color: var(--ink); }
+.subsec { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+details.fold > summary { cursor: pointer; font-weight: 600; }
+details.foldsec > summary { cursor: pointer; display: flex; align-items: baseline; gap: 8px; list-style: none; } details.foldsec > summary::before { content: '▸'; color: var(--mute); } details.foldsec[open] > summary::before { content: '▾'; } details.foldsec > summary h3 { display: inline; margin: 0; }
+.hint details { display: inline; } .hint details summary { display: inline; cursor: pointer; color: var(--accent); }
+td.err { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(--hi); font-weight: 700; }
+.card.warnc b { color: var(--hi); }
+.lastres { display: block; margin-top: 2px; }

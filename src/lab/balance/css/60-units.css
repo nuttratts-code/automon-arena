@@ -1,0 +1,75 @@
+/* ชุด 37 + UX: แท็บรายตัว 4 แท็บ อยู่ข้างหัวข้อ "รายตัว" · เปลี่ยนทั้งแผนภูมิในแถวและรายละเอียดของทุกตัว */
+.mx-sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.mx-sechead > h3 { margin: 0; }
+.mx-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.mx-tabs button { font-size: .8rem; padding: 5px 11px; min-height: 32px; border-radius: 999px; background: var(--bg); }
+.mx-tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.mx-pane { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.mx-pane[hidden] { display: none; }
+
+/* แถวแบบตาราง: ชื่อ + ตัวเลขหลายคอลัมน์ (ครั้ง · รวม · เกราะกัน · HP หาย) + ลิงก์เวลาไปบันทึก */
+.mx-rows { display: grid; gap: 0; font-size: .8rem; min-width: 0; }
+.mx-rw { display: grid; gap: 1px; padding: 4px 0; border-bottom: 1px solid var(--soft); }
+.mx-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(var(--n, 4), minmax(44px, auto)); gap: 8px; align-items: baseline; min-width: 0; }
+.mx-row > span { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mx-row > span.l { text-align: left; font-family: var(--f-body); white-space: normal; overflow-wrap: anywhere; }
+.mx-row.h { color: var(--mute); font-size: .7rem; padding: 0 0 3px; border-bottom: 1px solid var(--line); }
+.mx-row.h > span { font-family: var(--f-body); font-weight: 600; }
+.mx-subrows { margin: 2px 0 6px 8px; padding-left: 10px; border-left: 2px solid var(--line); }
+.mx-subrows .mx-row > span.l { color: var(--mute); font-size: .76rem; }
+.mx-rw.sub { border-bottom: 0; padding: 2px 0; }
+.mx-erow { display: grid; gap: 4px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); padding: 6px 8px; font-size: .82rem; min-width: 0; }
+@media (max-width: 560px) {
+  .mx-row { grid-template-columns: minmax(0, 1fr) repeat(var(--n, 4), 40px); gap: 5px; font-size: .74rem; }
+  .mx-row.h { display: none; }
+}
+.mx-erow .top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+.mx-erow .top .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.mx-erow .src { color: var(--mute); font-size: .76rem; overflow-wrap: anywhere; }
+.mx-lk { font: 500 .7rem var(--f-mono); padding: 2px 7px; min-height: 24px; border-radius: 6px; margin: 0 4px 2px 0; background: var(--panel); }
+.mx-links { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 2px; }
+.mx-note { font-size: .76rem; color: var(--mute); margin: 0; }
+/* แถวสเตตัส: ชื่อ + จำนวนครั้ง + ลูกศรบรรทัดแรก · ค่าก่อน → หลังบรรทัดที่สอง (ชื่อยาวบนมือถือไม่ถูกบีบ) */
+details.mxs.st > summary { grid-template-columns: minmax(0, 1fr) auto 12px; }
+details.mxs.st > summary::after { grid-column: 3; grid-row: 1; }
+details.mxs.st > summary .n { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+.simlog li.lg-hi { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); outline: 2px solid var(--accent); outline-offset: -2px; }
+.mx-panel { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.mx-panel h5 { margin: 6px 0 0; font-size: .84rem; }
+.mx-tot { font-size: .8rem; color: var(--mute); }
+.mx-tot b { color: var(--ink); font-family: var(--f-mono); }
+details.mxs { border: 1px solid var(--line); border-radius: 7px; background: var(--bg); min-width: 0; }
+details.mxs > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 12px; gap: 8px; align-items: center; padding: 6px 8px; font-size: .82rem; }
+details.mxs > summary .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+details.mxs > summary .cnt { color: var(--mute); font-size: .74rem; }
+.mx-deep { display: grid; gap: 8px; padding: 2px 8px 8px; font-size: .8rem; }
+.mx-deep h6 { margin: 0; font-size: .74rem; color: var(--mute); font-weight: 600; }
+.mx-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.mx-lines li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; border-bottom: 1px solid var(--soft); padding: 2px 0; }
+.mx-lines li > span:first-child { overflow-wrap: anywhere; }
+.mx-lines .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mx-lines .lg-L, .mx-lines .lg-R { font-weight: 600; }
+.mx-lines .lg-L { color: var(--sideL); } .mx-lines .lg-R { color: var(--sideR); }
+.mx-ally { color: var(--mute); }
+.mx-mat { display: grid; gap: 10px; }
+.mx-mat table { width: auto; min-width: 100%; }
+.mx-mat th, .mx-mat td { padding: 4px 6px; text-align: right; }
+.mx-mat th:first-child, .mx-mat td:first-child { text-align: left; }
+.mx-mat td button { font: 500 .8rem var(--f-mono); font-variant-numeric: tabular-nums; padding: 4px 8px; min-width: 52px; border-radius: 6px; border: 1px solid transparent; background: color-mix(in srgb, var(--hc) calc(var(--a) * 1%), var(--panel)); }
+.mx-mat td button[aria-pressed="true"] { border-color: var(--ink); }
+.mx-mat td button:disabled { background: none; color: var(--mute); }
+.mx-mat .colL { color: var(--sideL); } .mx-mat .colR { color: var(--sideR); }
+.mx-cell { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; font-size: .82rem; }
+.mx-cell:empty { display: none; }
+.mx-chart { display: grid; gap: 8px; }
+.mx-chart svg { width: 100%; height: auto; display: block; }
+.mx-chart .ax { fill: var(--mute); font: 10px var(--f-mono); }
+.mx-chart .grid { stroke: var(--line); stroke-width: 1; }
+.mx-chart .ln { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+.mx-chart.hi .ln { stroke-opacity: .2; } .mx-chart.hi .ln.on { stroke-opacity: 1; stroke-width: 3; }
+.mx-chart.hi .pt { opacity: .15; } .mx-chart.hi .pt.on { opacity: 1; }
+.mx-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.mx-chips button { font-size: .76rem; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.mx-chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.mx-chips svg { width: 22px; height: 8px; }
+[hidden] { display: none !important; } /* ซ่อนจริงเสมอ แม้ CSS ตั้ง display ไว้ */

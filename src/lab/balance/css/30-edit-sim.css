@@ -1,0 +1,95 @@
+/* ชุด 30: โหมดแก้ค่าในหน้ารายการ · ช่องเล็กเรียง 3 เลเวล บน→ล่าง · ชุด 30.1: ตารางกว้างเท่าเนื้อหา ไม่เหลือช่องว่าง */
+table.list.editing { width: auto; }
+table.list.editing td, table.list.editing th { padding-left: 4px; padding-right: 4px; }
+table.list.editing .lv3 { justify-items: start; }
+table.list.editing th.n { text-align: left; }
+table.list.editing td.skcell { min-width: 140px; max-width: 240px; font-size: .8rem; }
+table.list.editing td:first-child { min-width: 104px; }
+table.list.editing .lv3 { gap: 3px; }
+table.list.editing .lv3 span { height: auto; line-height: inherit; }
+table.list.editing input[type=number] { width: 56px; padding: 3px 5px; font-size: .82rem; }
+table.list.editing .lvlab span { line-height: 1.75rem; height: 1.75rem; }
+table.list.editing td:first-child input[type=text] { width: 100%; min-width: 0; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: .86rem; }
+table.list.editing select { font-size: .82rem; padding: 3px 2px; max-width: 96px; }
+table.list .oth { display: grid; grid-template-columns: auto repeat(3, 46px); gap: 3px 4px; align-items: center; font-size: .78rem; color: var(--mute); }
+table.list .oth input[type=number] { width: 46px; }
+#saveBox #dirty { min-width: min(100%, 18em); } /* มือถือ: ข้อความไม่ถูกบีบเป็นคอลัมน์แคบ */
+table.list .lskbtn { margin-top: 6px; font-size: .8rem; padding: 3px 8px; }
+.edited { color: var(--lo); font-weight: 700; }
+#skillList input[type=text] { width: 100%; min-width: 0; padding: 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); font: inherit; font-size: .88rem; }
+#skillList input[type=text].changed { background: var(--edit); border-color: var(--lo); }
+#editor { scroll-margin-top: 90px; }
+.rar { font-weight: 700; font-size: .8rem; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.rar.r0 { color: var(--mute); } .rar.r1 { color: var(--r-unc); } .rar.r2 { color: var(--r-rare); } .rar.r3 { color: var(--r-epic); } .rar.r4 { color: var(--r-legend); background: var(--r-legend-bg); }
+.cp-rar.rar { margin-left: auto; font-size: .72rem; padding: 0 7px; }
+.skhead { display: flex; align-items: center; gap: 8px; }
+@media (min-width: 820px) { .split { grid-template-columns: 1fr 1fr; } }
+.tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-right: 6px; vertical-align: 1px; }
+.tag { font: 600 .66rem var(--f-body); padding: 0 6px; border-radius: 999px; white-space: nowrap; border: 1px solid currentColor; }
+.tag.k-start { color: var(--tg-start); } .tag.k-ongoing { color: var(--tg-ongoing); } .tag.k-once { color: var(--tg-once); } .tag.k-down { color: var(--tg-down); } .tag.k-shop { color: var(--tg-shop); }
+.tag.t-own { color: var(--mute); border-style: dashed; }
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.skex { font-size: .8rem; color: var(--mute); margin-top: 2px; }
+details.more { border-top: 1px dashed var(--line); padding-top: 6px; }
+details.more summary { cursor: pointer; font-size: .84rem; color: var(--mute); margin-bottom: 6px; }
+.durhint { font-size: .8rem; color: var(--mute); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tag.d-now { color: var(--mute); border-style: dotted; }
+.tag.d-match { color: var(--bg); background: var(--tg-start); border-color: var(--tg-start); }
+.tag.d-perm { color: var(--bg); background: var(--tg-shop); border-color: var(--tg-shop); }
+.lvbox { gap: 12px; padding: 4px 6px; border-radius: 6px; } .lvbox.changed { background: var(--edit); }
+.lvbox label { display: inline-flex; gap: 4px; align-items: center; font-size: .86rem; }
+details.gloss { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+details.gloss summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+.glist { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 0; font-size: .84rem; }
+.glist dt { font-weight: 700; } .glist dd { margin: 0; color: var(--ink); }
+.simteams { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .simteams { grid-template-columns: 1fr 1fr; } }
+.simteam { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.simgrid { display: grid; grid-template-columns: 44px 1fr 1fr; gap: 6px; align-items: center; }
+.simslot { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; min-width: 0; }
+@media (min-width: 560px) { .simslot { grid-template-columns: minmax(0, 1fr) 62px; } }
+#simCards b { font-size: 1.05rem; font-family: var(--f-body); }
+.simslot select { width: 100%; min-width: 0; font-size: .82rem; padding: 6px 4px; }
+.simres { display: grid; gap: 12px; }
+.simlog { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow-y: auto; font: .8rem var(--f-mono); border: 1px solid var(--line); border-radius: 8px; }
+.simlog li { padding: 3px 8px; border-bottom: 1px solid var(--soft); white-space: pre-wrap; overflow-wrap: anywhere; }
+.simlog li.proc { background: var(--soft); }
+.simlog li.big { font-weight: 700; }
+/* ชุด 30.4 แก้กระตุก: บันทึกการต่อสู้มีหลายพันบรรทัด → ให้เบราว์เซอร์วาดเฉพาะบรรทัด/ตารางที่อยู่บนจอ */
+.simlog { content-visibility: auto; contain-intrinsic-size: auto 420px; } .simlog li { content-visibility: auto; contain-intrinsic-size: auto 22px; }
+#simRes .tbl, #pane-match .tbl { content-visibility: auto; contain-intrinsic-size: auto 300px; }
+tr.never td { background: var(--lo-bg); }
+td.wrap { white-space: normal; min-width: 240px; }
+
+/* สนามจำลอง (ส่วนแสดงผลชุดเดียวกับหน้าเกม game/view.js) */
+.stage { position: relative; background: var(--arena); border: 1px solid var(--arena-line); border-radius: 12px; padding: 10px 8px 12px; overflow-x: auto; }
+.stage .heads, .stage .arena { display: grid; grid-template-columns: 1fr 12px 1fr; gap: 6px; min-width: 360px; }
+.stage .heads > div { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; font-size: .72rem; color: var(--mute); font-weight: 600; }
+.stage .heads .team { grid-column: 1 / -1; font-size: .85rem; color: var(--ink); }
+.stage .heads > div:first-child .team { color: var(--sideL); } .stage .heads > div:last-child .team { color: var(--sideR); }
+.stage .side { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto); gap: 6px; }
+.stage .mid { background: repeating-linear-gradient(var(--mid) 0 6px, transparent 6px 12px); width: 2px; justify-self: center; }
+.stage .cell { position: relative; min-height: 112px; border: 1px dashed var(--arena-line); border-radius: 8px; display: grid; place-items: center; padding: 4px 2px; min-width: 0; }
+.stage .unit { display: grid; justify-items: center; gap: 2px; min-width: 0; width: 100%; transition: opacity .3s, filter .3s; }
+.stage .unit.down { opacity: .35; filter: grayscale(1); }
+.stage .unit.down::after { content: "down"; font: 600 .7rem var(--f-mono); color: var(--ink); background: var(--panel); border-radius: 4px; padding: 0 4px; position: absolute; top: 4px; right: 4px; }
+.stage .shape { width: 34px; height: 34px; background: var(--tc); display: grid; place-items: center; flex: none; }
+.stage .s-square { border-radius: 7px; } .stage .s-circle { border-radius: 50%; }
+.stage .s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); }
+.stage .s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.stage .s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); }
+.stage .s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+.stage .lv { color: #fff; font-size: .55rem; letter-spacing: -1px; padding-top: 6px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.stage .uname { font-size: .66rem; line-height: 1.2; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage .hp { position: relative; width: 90%; height: 6px; border-radius: 3px; background: var(--hp-bg); overflow: hidden; }
+.stage .hp-fill { position: absolute; inset: 0 auto 0 0; background: var(--hp); transition: width .15s; }
+.stage .armor-fill { position: absolute; inset: 0 auto 0 0; height: 2px; background: var(--armor); transition: width .15s; }
+.stage .nums { display: flex; flex-direction: column; align-items: center; font: 500 .62rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--mute); line-height: 1.25; }
+.stage .armor-text { color: var(--n-armor); }
+.stage .chips { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 14px; }
+.stage .chip { font: 600 .6rem var(--f-body); padding: 0 4px; border-radius: 4px; background: var(--panel); }
+.stage .c-burn { color: var(--n-burn); } .stage .c-shock { color: var(--n-shock); } .stage .c-multi { color: var(--ink, inherit); font-weight: 700; }
+.stage .float { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font: 600 .8rem var(--f-mono); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px var(--arena), 0 0 3px var(--arena); z-index: 2; }
+.stage .float.n-skill { font: 600 .68rem var(--f-body); color: var(--accent); top: 6%; }
+.n-hit { color: var(--n-hit); } .n-shock { color: var(--n-shock); } .n-burn { color: var(--n-burn); } .n-heal { color: var(--n-heal); } .n-armor { color: var(--n-armor); } .n-storm { color: var(--n-storm); }

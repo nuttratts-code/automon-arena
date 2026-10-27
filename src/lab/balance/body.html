@@ -1,0 +1,282 @@
+<div class="wrap">
+  <div>
+    <h1>ห้องบาลานซ์ Automon</h1>
+    <p class="sub">1 เลือกตัว → 2 แก้ → 3 ดูผล · ปุ่ม "บันทึก" บนแถบกดได้ทุกหน้า · ใช้ตัวคำนวณเดียวกับเกม</p>
+  </div>
+
+  <div class="topbar">
+  <nav class="steps" id="steps" aria-label="ขั้นตอน">
+    <button type="button" id="step-pick"><i>1</i><span>เลือกตัว</span></button>
+    <button type="button" id="step-edit"><i>2</i><span>แก้</span><b class="sb" id="sbEdit"></b></button>
+    <button type="button" id="step-result"><i>3</i><span>ดูผล</span></button>
+    <button type="button" id="save" class="step-save" title="บันทึกค่าที่แก้ทั้งหมดให้ Claude"><i>💾</i><span>บันทึก</span><b class="sb" id="sbSave" hidden></b></button>
+  </nav>
+  <p class="status savemsg" id="saveMsg" hidden></p>
+  <ul class="errs errbox" id="errs" hidden></ul>
+
+    <div class="tabs main" role="tablist">
+      <button role="tab" id="tab-chars" aria-selected="true" type="button">แก้ตัวละคร</button>
+      <button role="tab" id="tab-tribes" aria-selected="false" type="button" hidden>โบนัสเผ่า</button>
+      <button role="tab" id="tab-sim" aria-selected="false" type="button" title="จัดทีมลองสู้ 1 แมตช์ (จำลองสกิล)">ลองสู้</button>
+      <button role="tab" id="tab-match" aria-selected="false" type="button" title="ดาเมจทุกครั้งของแมตช์ที่จำลองล่าสุด แยกตามที่มา">วิเคราะห์แมตช์</button>
+      <span class="grow"></span>
+      <button id="combo" class="combo-btn" type="button" aria-pressed="false" title="แก้ตัวละครกับจำลองสกิลพร้อมกัน แก้แล้วจำลองใหม่ให้ทันที">⇆ ทำไปลองไป</button>
+    </div>
+  </div>
+
+  <section id="view-pick" class="view">
+    <div class="row"><h2 class="grow">เลือกตัวละคร</h2>
+      <div class="seg" role="group" aria-label="มุมมอง"><button type="button" id="tab-grid" aria-pressed="true">ตาราง</button><button type="button" id="tab-list" aria-pressed="false">รายการ</button></div>
+    </div>
+    <p class="hint" id="gridHint">แถว = เผ่า · คอลัมน์ = ความหายาก · แตะตัว = เปิดแก้ · แตะชื่อเผ่า = แก้โบนัสเผ่า · จุดส้ม = แก้แล้ว · ตัวที่มี 2 เผ่าอยู่ในแถวเผ่าหลัก (รูปเล็ก = เผ่าเพิ่ม)</p>
+    <div class="tgrid" id="tgrid"></div>
+    <div id="pane-list" hidden style="display:grid;gap:10px">
+      <div class="row"><button type="button" id="listEditBtn" aria-pressed="false">✎ โหมดแก้ค่า</button><span class="status" id="listEditNote"></span></div>
+      <div class="row" id="listFilter" role="group" aria-label="กรองตามเผ่า"></div>
+      <p class="hint">ตัวละ 1 แถว เรียงตามเผ่าและความหายาก · กรองเผ่าแล้วรวมตัวที่มีเผ่านั้นเป็นเผ่าเพิ่มด้วย · ค่าพลังแสดงครบ 3 เลเวล (บน→ล่าง = Lv1 / Lv2 / Lv3) · แต้ม = แต้มพลังพื้นฐาน Lv1 ไม่นับสกิล เทียบงบรวมสกิลของความหายาก (สีแดง = เกินงบทั้งที่ยังไม่นับสกิล) · ค่าที่แก้แล้วแสดงทันที (จุดเหลือง = แก้แล้ว) · แตะแถวเพื่อเปิดแก้ (ขั้น 2) · กด "โหมดแก้ค่า" เพื่อแก้ชื่อ ความหายาก แถว และค่าพลังในตารางนี้ได้เลย (สกิลแก้ในขั้น 2)</p>
+      <div class="tbl"><table class="list">
+        <thead><tr><th>ตัวละคร</th><th>ความหายาก</th><th>แถว</th><th class="n lvh">Lv</th><th class="n">HP</th><th class="n">โจมตี</th><th class="n">คูลดาวน์</th><th>อื่นๆ</th><th class="n" title="แต้มพลังพื้นฐาน Lv1 = √(เลือดรวม × ดาเมจต่อวินาที) ไม่นับสกิล · งบรวมสกิลของความหายาก">แต้ม / งบ</th><th>สกิล (Lv1 / 2 / 3)</th></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table></div>
+    </div>
+
+  </section>
+
+  <section id="editor" class="view" hidden>
+
+    <details class="gloss">
+      <summary>คำศัพท์สกิล: ระหว่างสู้ / ถาวร / ชุด / คูลดาวน์สกิล</summary>
+      <dl class="glist" id="gloss"></dl>
+    </details>
+
+    <div class="panes" id="panes">
+    <div id="pane-chars" style="display:grid;gap:12px">
+      <div class="row"><span class="status">ตัวละคร</span><div class="cp" id="pick"></div></div>
+      <div class="desc" id="cdesc"></div>
+      <div class="split">
+        <div class="col">
+          <h3>ค่าพลัง</h3>
+          <div class="grid3" id="cform"></div>
+          <div class="row">
+            <button id="x24" type="button" title="HP พลังโจมตี ไฟ/ฮิต ช็อต/ฮิต เกราะ/ฮิต = Lv1 ×2 / ×4 · คูลดาวน์และมัลติฮิต = เท่า Lv1 · สกิลไม่เปลี่ยน">ตั้ง Lv2/3 จาก Lv1 (×2 / ×4)</button>
+            <button id="cundo" type="button">คืนค่าตัวนี้</button>
+          </div>
+        </div>
+        <div class="col">
+          <h3 class="skhead">สกิล <span id="skRar"></span></h3>
+          <div id="skillList" style="display:grid;gap:10px"></div>
+          <div class="row"><button id="addBattle" type="button">+ เพิ่มสกิล</button></div>
+          <p class="hint">ตัวเลือกมีเฉพาะสกิลที่เกมทำได้แล้ว (ครบตาม Lab เดิม) · เลือก เมื่อ → ทำ → กับ → ค่า แล้วกดระยะเวลา (ทันที / ระหว่างสู้ / ถาวร) · ปุ่มที่กดไม่ได้ = ผลนั้นใช้ระยะเวลานั้นไม่ได้ · เงื่อนไขหลังสู้/ร้านค้าเป็นถาวรเสมอ · ค่าถาวรเห็นผลในเกม ส่วนวิเคราะห์และจำลองสกิลวัดแค่แมตช์เดียว · อยากได้สกิลแบบใหม่ ดู "คลังสกิลแบบใหม่" ด้านล่าง หรือพิมพ์ในช่องไอเดีย</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="pane-tribes" hidden style="display:grid;gap:14px">
+      <div class="row" id="tribePick" role="group" aria-label="เลือกเผ่า"></div>
+      <p class="hint">ตัวเลขโบนัสเผ่า ขั้น 2 / 4 / 6 ตัว · ให้ผลกับทั้งทีม</p>
+      <div id="tform" style="display:grid;gap:14px"></div>
+    </div>
+
+    <div id="pane-sim" hidden style="display:grid;gap:12px">
+      <p class="hint">จัดทีมในสนามด้านล่างแล้วกด "จำลอง" · แตะช่องเพื่อใส่/เปลี่ยนตัว · กดค้างแล้วลากเพื่อย้ายหรือสลับช่อง · ใช้ค่าที่แก้อยู่ในห้องนี้ทันที (ยังไม่ต้องบันทึก) · ผลเหมือนเดิมทุกครั้งถ้าใช้เลขสุ่มเดิม · สกิลร้านค้าไม่ทำงานในการต่อสู้</p>
+      <div class="simstage" id="simStageBox">
+          <div class="simctl">
+            <button class="primary" id="simRun" type="button">จำลอง</button>
+            <button id="simPlay" type="button" disabled>เล่น</button>
+            <button id="simReplay" type="button">เล่นใหม่</button>
+            <button id="simSkip" type="button">ข้ามไปผล</button>
+            <span class="clock" id="simClock">0.0 วิ</span>
+            <span class="grow"></span>
+            <span class="status">ความเร็ว</span>
+            <button type="button" data-sspeed="0.5" aria-pressed="false">½×</button>
+            <button type="button" data-sspeed="1" aria-pressed="true">1×</button>
+            <button type="button" data-sspeed="2" aria-pressed="false">2×</button>
+            <button type="button" data-sspeed="4" aria-pressed="false">4×</button>
+            <button type="button" data-sspeed="8" aria-pressed="false">8×</button>
+            <button type="button" data-sspeed="16" aria-pressed="false">16×</button>
+          </div>
+          <div class="benchrow"><span class="status">ม้านั่งสำรอง</span><div class="bench" id="simBench"></div></div>
+          <details class="dock" id="simDock" open>
+            <summary><span class="status">ค้นหาตัวลงสนาม</span> <span class="hint dk-hint">แตะ = ลงช่องว่างแรก · ลากไปวางช่องไหนก็ได้ (มือถือกดค้างแล้วลาก)</span><span class="dk-toggle" aria-hidden="true"></span></summary>
+            <div class="dk-tools">
+              <input type="search" id="dockQ" class="cp-search" maxlength="30" placeholder="ค้นหาชื่อหรือ ID เช่น ไฟ, PL-3" aria-label="ค้นหาตัวละครลงสนาม" autocomplete="off">
+              <div class="seg" id="dockSide" role="group" aria-label="แตะแล้วลงทีมไหน"><button type="button" data-dside="0">ลงทีมซ้าย</button><button type="button" data-dside="1">ลงทีมขวา</button></div>
+            </div>
+            <div class="cp-tribes" id="dockTribes" role="group" aria-label="กรองตามเผ่า"></div>
+            <div class="dk-list" id="dockList"></div>
+          </details>
+          <div class="simtribes"><div id="simTribesL"></div><div id="simTribesR"></div></div>
+          <div class="stage">
+            <div class="heads">
+              <div><span class="team">ทีมซ้าย</span><span>หลัง</span><span>กลาง</span><span>หน้า</span></div>
+              <div></div>
+              <div><span class="team">ทีมขวา</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
+            </div>
+            <div class="arena" id="simArena"></div>
+            <div class="result" id="simOver" hidden><div><strong id="simOverTitle"></strong><button id="simOverReplay" type="button">ดูอีกครั้ง</button></div></div>
+          </div>
+          <div class="benchrow" id="simLvAll"><span class="status">เลเวลทุกตัว</span>
+            <select id="simLvSide" aria-label="ใช้กับทีมไหน"><option value="both">ทั้งสองทีม</option><option value="0">ทีมซ้าย</option><option value="1">ทีมขวา</option></select>
+            <div class="seg" role="group" aria-label="ตั้งเลเวลทุกตัว"><button type="button" data-lvall="1">Lv1</button><button type="button" data-lvall="2">Lv2</button><button type="button" data-lvall="3">Lv3</button></div>
+            <button type="button" data-lvall="up" title="ทุกตัว +1 เลเวล (สูงสุด Lv3)">+1 เลเวล</button>
+            <button type="button" data-lvall="down" title="ทุกตัว −1 เลเวล (ต่ำสุด Lv1)">−1 เลเวล</button>
+          </div>
+          <details class="benchrow presets" id="presetBox">
+            <summary><span class="status">ทีมที่เซฟ</span> <span class="status" id="presetCount"></span></summary>
+            <div class="row">
+              <select id="presetSide" aria-label="เซฟทีมฝั่งไหน"><option value="0">ทีมซ้าย</option><option value="1">ทีมขวา</option></select>
+              <input type="text" id="presetName" maxlength="30" placeholder="ชื่อทีม (ไม่ใส่ก็ได้)" aria-label="ชื่อทีม">
+              <button type="button" id="presetSave">เซฟทีมฝั่งนี้</button>
+              <span class="status" id="presetMsg"></span>
+            </div>
+            <ol class="presetlist" id="presetList"></ol>
+          </details>
+        <div class="siminfo" id="simInfo" aria-live="polite"></div>
+      </div>
+      <div class="simslot-bar" id="simSlot"></div>
+      <div class="row">
+        <button id="simRand" type="button">สุ่มทีม</button>
+        <button id="simClear" type="button">ล้างทีม</button>
+        <button id="simAddCur" type="button">+ ใส่ตัวที่แก้อยู่</button>
+        <label class="status"><input type="checkbox" id="simOffL" checked autocomplete="off"> ปิดโบนัสเผ่าฝั่งซ้าย</label>
+        <label class="status"><input type="checkbox" id="simOffR" checked autocomplete="off"> ปิดโบนัสเผ่าฝั่งขวา</label>
+        <label class="status" for="simSeed">เลขสุ่ม</label><input type="number" inputmode="numeric" id="simSeed" value="1" min="1" max="999999" style="width:90px">
+      </div>
+      <div class="row combo-only">
+        <label class="status"><input type="checkbox" id="simAuto"> แก้ค่าแล้วจำลองใหม่ทันที</label>
+        <label class="status"><input type="checkbox" id="simInstant"> แสดงผลทันที (ไม่เล่นภาพ)</label>
+        <span class="status">แตะตัวในสนาม = เปิดแก้ตัวนั้น · ลากชื่อตัวที่กำลังแก้ไปวางในช่องได้</span>
+      </div>
+      <p class="status" id="simMsg"></p>
+      <div class="simres" id="simRes" hidden>
+        <p class="hint">แตะตัวละครในสนามเพื่อดูค่าพลังและสกิล · ชื่อสกิลสีน้ำเงินลอยขึ้นเมื่อสกิลทำงาน · ตัวเลขแดง = ดาเมจ · เขียว = ฟื้น HP · รายละเอียดทั้งแมตช์อยู่ในแท็บ "วิเคราะห์แมตช์"</p>
+        <div class="cards" id="simCards"></div>
+        <div class="row"><button type="button" id="toMatch">ดูวิเคราะห์แมตช์ ›</button><span class="status">ดาเมจทุกครั้ง แยกว่ามาจากอะไร ทำใส่ใคร โดนจากใคร</span></div>
+      </div>
+    </div>
+    <div id="pane-match" hidden style="display:grid;gap:14px">
+      <div id="mxEmpty" class="row"><span class="status grow">ยังไม่มีแมตช์ · จัดทีมในแท็บลองสู้แล้วกด "จำลอง" ก่อน</span><button type="button" id="mxGoSim">ไปลองสู้</button></div>
+      <div id="mxBody" hidden style="display:grid;gap:14px">
+        <div class="mx-head" id="mxHead"></div>
+        <p class="status" id="mxStale" hidden></p>
+        <div class="subsec" style="border-top:0;padding-top:0">
+          <div class="mx-sechead">
+            <h3>รายตัว</h3>
+            <div class="mx-tabs" id="mxTabs" role="tablist" aria-label="เลือกว่าจะดูค่าอะไรของแต่ละตัว"></div>
+          </div>
+          <p class="hint">ตัวละ 1 แถว · แท็บด้านขวาของ "รายตัว" เปลี่ยนทั้งแผนภูมิในแถวและรายละเอียดของทุกตัว: ทำดาเมจ (ใส่ศัตรู) · โดนทำดาเมจ (แยกรายศัตรู) · อื่นๆ (ฟื้น เกราะ ล้างสถานะ ฯลฯ) · สเตตัส (ค่าตอนจบแมตช์) · แตะแถวเพื่อกาง · ปุ่มเวลาในรายละเอียด = ไปบรรทัดนั้นในบันทึกการต่อสู้ · ดาเมจ = ส่วนที่เกราะกัน + ส่วนที่ HP หาย</p>
+          <div class="mx-legend" id="mxLegend"></div>
+          <div id="mxUnits" style="display:grid;gap:12px"></div>
+          <div id="mxTableBox" hidden></div>
+        </div>
+        <details class="foldsec" id="mxMatFold"><summary><h3>ใครตีใคร</h3><span class="status">ตาราง ผู้ทำ × ผู้โดน</span></summary>
+          <p class="hint">แถว = ผู้ทำดาเมจ · คอลัมน์ = ผู้โดน · สีเข้ม = ดาเมจมาก · แตะช่องเพื่อดูแยกตามที่มา · "ไม่มีเจ้าของ" = พายุทราย และไฟ/ดาเมจที่ไม่มีผู้ทำ (เช่น ไฟจากโบนัสเผ่า)</p>
+          <div class="mx-mat" id="mxMat"></div>
+        </details>
+        <details class="foldsec" id="mxChartFold"><summary><h3>กราฟตามเวลา</h3><span class="status">HP ของทุกตัว + จุดดาเมจใหญ่</span></summary>
+          <p class="hint">เส้น = HP % ของแต่ละตัว (ไม่นับเกราะ) · จุด = ดาเมจครั้งเดียวที่มากกว่า 20% ของ HP สูงสุด สีตามที่มา · แตะชื่อด้านล่างเพื่อเน้นเส้นตัวนั้น</p>
+          <div class="mx-chart" id="mxChart"></div>
+        </details>
+        <details class="foldsec" id="simSkillsFold"><summary><h3>สกิลทำงานกี่ครั้ง</h3><span class="status" id="simSkillsNote"></span></summary>
+        <p class="hint">แถวสีส้ม = สกิลไม่ทำงานเลยในแมตช์นี้ (อาจเพราะเงื่อนไขไม่เกิด ไม่มีเป้า หรือมีปัญหา) · "ครั้งแรก" = วินาทีที่ทำงานครั้งแรก</p>
+        <div class="tbl"><table>
+          <thead><tr><th>ตัวละคร</th><th>สกิล</th><th class="n">ครั้ง</th><th class="n">ครั้งแรก</th></tr></thead>
+          <tbody id="simSkills"></tbody>
+        </table></div>
+        </details>
+        <details class="foldsec" id="simSumFold"><summary><h3>สรุปรายตัว (ตาราง)</h3></summary>
+        <p class="hint">นับเฉพาะสิ่งที่ตัวนี้ทำ · ฮิต = จำนวนทีที่ตีโดนจริง · ติดช็อต/ติดไฟให้ศัตรู = จำนวนช็อต/ไฟรวมที่ตัวนี้ทำให้ฝั่งตรงข้ามติด · อื่นๆ = สกิล สวนกลับ สะท้อน</p>
+        <div class="tbl"><table class="sumtbl">
+          <thead><tr><th>ตัวละคร</th><th>ผล</th><th class="n" title="จำนวนครั้งที่ออกไปตี (ตีแบ่งหลายตัวนับ 1)">ฮิต</th><th class="n">ดาเมจฮิต</th><th class="n">ติดช็อตให้ศัตรู</th><th class="n">ติดไฟให้ศัตรู</th><th class="n" title="ช็อตที่แตกตอนตี + ไฟที่ตัวนี้ติดให้แล้วเผา (แบ่งตามสัดส่วน) + ดาเมจจากสกิล">ดาเมจอื่นๆ</th><th class="n" title="ดาเมจฮิต + ดาเมจอื่นๆ = ดาเมจทั้งหมดที่ทำต่อศัตรู">ดาเมจรวม</th><th class="n">ได้เกราะ</th></tr></thead>
+          <tbody id="simUnits"></tbody>
+        </table></div>
+        </details>
+        <details class="foldsec" id="simLogFold"><summary><h3>บันทึกการต่อสู้</h3><span class="status">ทุกเหตุการณ์ตามเวลา</span></summary>
+        <div class="row"><span class="grow"></span>
+          <label class="status" for="simWho">ดูเฉพาะ</label><select id="simWho"></select>
+          <label class="status"><input type="checkbox" id="simOnlyProc"> เฉพาะสกิล</label>
+          <label class="status"><input type="checkbox" id="simNoSet"> ซ่อนบรรทัดเริ่มโจมตี</label>
+        </div>
+        <div class="row">
+          <input id="mxLogQ" type="search" placeholder="ค้นหาในบันทึก… (เช่น ชื่อตัว เลขดาเมจ)" aria-label="ค้นหาในบันทึก">
+          <div class="mx-chips" id="mxLogKinds" role="group" aria-label="กรองตามชนิด"></div>
+          <span class="grow"></span>
+          <button type="button" id="mxLogCopy">คัดลอกที่แสดงอยู่</button>
+          <span class="status" id="mxLogCount"></span>
+        </div>
+        <ol class="simlog" id="simLog"></ol>
+        </details>
+      </div>
+    </div>
+    </div>
+    <div class="subsec savebox" id="saveBox">
+      <div class="subsec" id="ideaBox" style="border-top:0;padding-top:0">
+    <h3>ไอเดียสกิล</h3>
+    <p class="hint">พิมพ์สกิลที่อยากได้เป็นภาษาไทย แล้วกดส่ง · Claude จะอ่าน แปลงเป็นสกิลที่เกมใช้งานได้ แล้วตอบกลับในรายการนี้ · สกิลแบบใหม่ที่เกมยังทำไม่ได้ Claude จะเสนอวิธีทำให้คุณเลือกก่อน</p>
+    <div class="row">
+      <span class="status">สำหรับ</span><b id="ideaFor"></b>
+      <label class="status"><input type="checkbox" id="ideaGeneral"> ทั่วไป / ตัวละครใหม่ (ไม่ผูกกับตัวที่แก้อยู่)</label>
+    </div>
+    <textarea id="ideaText" rows="3" maxlength="1000" placeholder="เช่น เมื่อเพื่อนข้างหน้า down ได้เกราะ 20/40/80 และตีเร็วขึ้น 20% ที่เหลือของแมตช์"></textarea>
+    <div class="row"><button class="primary" id="ideaSend" type="button">ส่งไอเดียให้ Claude</button><span class="status" id="ideaMsg"></span></div>
+    <div class="row"><label class="status"><input type="checkbox" id="ideaShowDone"> แสดงไอเดียที่จบแล้ว (ใช้แล้ว / ไม่ใช้)</label><span class="status" id="ideaHidden"></span></div>
+    <ol class="ideas" id="ideas"><li class="status">ยังไม่มีไอเดีย</li></ol>
+      </div>
+
+      <details class="subsec fold" id="catalog">
+    <summary>คลังสกิลแบบใหม่ (กลไกที่เกมยังไม่มี · กดเพื่อเปิด) <span class="status" id="pickCount"></span></summary>
+    <p class="hint">กลไกที่พบบ่อยในเกมแนวจัดทีมแล้วสู้อัตโนมัติ ซึ่งเกมเรายังไม่มี · กด "อยากได้" ตัวที่ชอบ (จดเพิ่มได้) แล้วบอก Claude ในแชท · Claude จะเพิ่มกลไกให้ แล้วคุณเอาไปใส่ตัวละครเองในส่วนแก้สกิลด้านบน · ยังไม่มีอะไรเปลี่ยนในเกมจนกว่าจะเลือก</p>
+    <div class="row" id="catFilter" role="group" aria-label="กรองหมวด"></div>
+    <div class="catgrid" id="catList"></div>
+  </details>
+      <div class="subsec" id="editedBox">
+    <h3>ค่าที่แก้ (กด "บันทึก" บนแถบด้านบนเพื่อส่งให้ Claude)</h3>
+    <div class="row">
+      <span class="status grow" id="dirty">ยังไม่ได้แก้ค่า</span>
+      <button id="reset" type="button">กลับค่าตั้งต้น</button>
+    </div>
+    <div class="row" id="saveList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-result" class="view" hidden>
+    <h2>ดูผล</h2>
+    <div id="pane-analysis" hidden style="display:grid;gap:12px">
+    <div class="row">
+      <button class="primary" id="analyze" type="button">วิเคราะห์</button>
+      <label class="status" for="mN">จำนวนแมตช์</label>
+      <select id="mN"><option value="12000">12,000 ต่อเลเวล (ระหว่างปรับ)</option><option value="24000">24,000 ต่อเลเวล (ยืนยันก่อนส่ง)</option></select>
+      <span class="status" id="msg">กด "วิเคราะห์" เพื่อวัดผล</span>
+    </div>
+    <div class="progress" aria-hidden="true"><div id="prog"></div></div>
+    <div class="cards" id="cards">
+      <div class="card"><b>–</b><span>หลุดเกณฑ์</span></div>
+      <div class="card"><b>–</b><span>ใกล้ขอบ</span></div>
+      <div class="card"><b>–</b><span>ขั้นเผ่าที่หลุดเป้า</span></div>
+      <div class="card"><b>–</b><span>ความยาวแมตช์ Lv1 / ผสม (เป้า 20–40 วิ)</span></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <h3>แมตช์ต้องสงสัย (ดาเมจรวม ÷ HP ศัตรูรวม สูงสุด 10 อันดับ)</h3>
+    <p class="hint">ดาเมจรวมทั้งสองฝั่ง ÷ HP สูงสุดรวมของทุกตัวในสนาม · ค่ามาก = ดาเมจไหลเกิน HP ที่มีจริง (ยื้อ/ฮีลวน/ตัวคูณซ้อน) · กด "ส่งไปลองสู้" เพื่อเปิดแมตช์นั้น (ใช้เมล็ดสุ่มจากทีม = ผลตรงกับตอนวัด)</p>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>Lv</th><th class="n">ดาเมจรวม</th><th class="n">HP ศัตรู</th><th class="n">เท่า</th><th class="n">เวลา</th><th>ผล</th><th>ทีมซ้าย</th><th>ทีมขวา</th><th></th></tr></thead>
+      <tbody id="mxTop"><tr><td colspan="10" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
+    </table></div>
+    <div id="mxTopSum" style="display:grid;gap:4px"></div>
+    <p class="hint">วิธีเดียวกับที่ Claude วัดก่อนเผยแพร่ · ทีมสุ่ม วัด 4 ชุด (เลเวลผสม Lv1 Lv2 Lv3) เมล็ดสุ่ม 4242 · ตัวเลข = ห่างจากเป้าของตัวนั้นกี่จุด · เป้า = ค่าเฉลี่ย + 5 จุดต่อราคา (ตัวที่มีสกิลร้านค้า −2) · หลุด = ผสมเกิน ±6 หรือเลเวลใดเกิน ±10 · ใกล้ขอบ = ผสม ≥5 หรือเลเวลใด ≥9 · 12,000 แมตช์ผลขยับได้ราว ±1 จุด ใกล้ขอบให้วัดซ้ำด้วย 24,000 · ไม่รวมค่าถาวรที่สะสมข้ามแมตช์</p>
+    <h3>อันดับตัวละคร (หลุดและใกล้ขอบอยู่บนสุด · แตะเพื่อเปิดแก้)</h3>
+    <div class="tbl"><table>
+      <thead id="rankHead"></thead>
+      <tbody id="rank"><tr><td colspan="9" class="status" style="white-space:normal">ยังไม่ได้วิเคราะห์</td></tr></tbody>
+    </table></div>
+    <h3>ผลโบนัสเผ่า (เลเวล 1 ตามแผนเทสต์ tribe-rules · อยู่ในทีมที่ชนะ = เลเวลผสม)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>เผ่า</th><th>ขั้น</th><th class="n">โบนัสเพิ่มชนะ</th><th class="n">ชนะทีมผสม</th><th>ผล</th><th class="n">อยู่ในทีมที่ชนะ</th></tr></thead>
+      <tbody id="tribeRes"><tr><td colspan="6" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
+    </table></div>
+    <p class="hint">เป้าจาก tribe-rules: ขั้น 2 โบนัสเพิ่มอัตราชนะ +5 ถึง +15% · ขั้น 6 ชนะทีมผสมไม่เกิน 70% · ไม่มีเผ่าไหนอยู่ในทีมที่ชนะเกิน 50% · ขั้น 4 ยังไม่มีเป้า</p>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,22 @@
+name: tests
+
+# Runs the same check CLAUDE.md / GEMINI.md require before a PR: build the 3 pages + run all tests.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build + tests
+        working-directory: src
+        run: node tools/bootstrap.mjs setup
