@@ -98,7 +98,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .boardwrap { background: var(--arena); border: 1px solid var(--arena-line); border-radius: 10px; padding: 8px; display: grid; gap: 4px; }
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 28px; gap: 6px; font-size: .7rem; color: var(--mute); text-align: center; font-weight: 600; }
 .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 28px; grid-template-rows: repeat(2, auto); gap: 6px; }
-.enemy { grid-row: 1 / 3; grid-column: 4; display: grid; place-items: center; writing-mode: vertical-rl; font-size: .7rem; color: var(--mute); border-left: 2px dashed var(--mid); }
+.enemy { grid-row: 1 / 3; grid-column: 4; display: grid; place-items: center; writing-mode: vertical-rl; font-size: .85rem; font-weight: 600; letter-spacing: .08em; color: var(--mute); border-left: 2px dashed var(--mid); }
 .cell { position: relative; min-height: 86px; border: 1px dashed var(--arena-line); border-radius: 8px; display: grid; place-items: center; padding: 4px 2px; min-width: 0; touch-action: none; user-select: none; cursor: pointer; }
 .cell.filled { border-style: solid; background: color-mix(in srgb, var(--panel) 55%, transparent); }
 .bench .cell { background: var(--soft); border-color: var(--line); min-height: 80px; }
@@ -156,6 +156,8 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .speed { display: flex; gap: 4px; margin-left: auto; }
 .speed button { padding: 8px 7px; font-family: var(--f-mono); }
 button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* B2: "เริ่มสู้" stays visible at the bottom of the screen on every round (was below the fold under the info panel on phones) */
+.fightbar { position: sticky; bottom: 0; z-index: 5; background: var(--bg); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
 @media (max-width: 520px) { .slot { min-height: 96px; } .cell { min-height: 78px; } .shape { width: 28px; height: 28px; } }
 @media (max-width: 520px) { .heads, .arena { min-width: 296px; grid-template-columns: 1fr 8px 1fr; gap: 4px; } .side { gap: 4px; } } /* B1: battle board fits 390px (was min 360px in a 340px stage → enemy back column cut off) */
 .tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-right: 6px; vertical-align: 1px; }
@@ -249,7 +251,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
       <details><summary id="replaySum">รีเพลย์แมตช์ใน run นี้</summary><ol class="msgs replays" id="replayList"></ol></details>
     </section>
 
-    <div class="row">
+    <div class="row fightbar">
       <button class="primary" id="fight" type="button">เริ่มสู้</button>
       <span class="hint" id="fightHint"></span>
       <span class="grow"></span>
@@ -364,11 +366,15 @@ function mergeTargets(u) { // ตัวชนิดเดียวกัน เ�
   return same.length >= S.mergeCount ? same.map(x => x.ref) : [];
 }
 
-function render() {
+// B3: top chips are refreshed when a round starts (render) and again when the result popup shows (not during the fight, so the result is not spoiled)
+function renderChips() {
   $('sRound').textContent = `รอบ ${P.round}`;
   $('sHearts').textContent = `หัวใจ ${P.hearts}`;
   $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('sGold').textContent = `เงิน ${P.gold}`;
+}
+function render() {
+  renderChips();
   $('reroll').textContent = `รีโรล −${S.rerollCost}`;
   $('reroll').disabled = P.gold < S.rerollCost || P.over;
 
@@ -489,7 +495,7 @@ function renderInfo() {
   if (pk.length) right.append(el('span', 'perm', 'ค่าถาวร: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
   const actions = el('div', 'row');
   if (sel.at === 'shop') {
-    const b = el('button', 'primary', `ซื้อ ${c.price} เงิน`); b.type = 'button'; b.disabled = c.price > P.gold;
+    const b = el('button', 'primary', c.price > P.gold ? `ซื้อ ${c.price} เงิน · เงินไม่พอ (มี ${P.gold})` : `ซื้อ ${c.price} เงิน`); b.type = 'button'; b.disabled = c.price > P.gold;
     b.addEventListener('click', () => doBuy(sel.i, null)); actions.append(b);
   } else {
     const b = el('button', 'danger', `ขาย ได้คืน ${u.paid}`); b.type = 'button';
@@ -655,6 +661,7 @@ function finishMatch() {
   }
   if (!pendingEnd) return;
   const { r, w } = pendingEnd; // ผลถูกนำไปใช้ตอนกดสู้แล้ว (ชุด 22) · ตรงนี้แสดงผลอย่างเดียว
+  renderChips();
   $('resultTitle').textContent = w === 0 ? 'ชนะ' : w === 1 ? 'แพ้ เสียหัวใจ 1 ดวง' : 'เสมอ นับเป็นชนะ';
   $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ชนะ ${P.wins}/${S.winsToFinish}`;
   $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
