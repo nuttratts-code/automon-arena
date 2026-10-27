@@ -13,24 +13,15 @@ const mxAdd = (a, r) => { a.n += r.f; a.amt += r.amt; a.abs += r.abs; a.over += 
 
 // แยกดาเมจทุกครั้งเป็นรายการ { t, to, from, why, amt, abs, over, d, f } · ไฟแบ่งตามสัดส่วนคนที่ทำให้ติด (วิธีเดียวกับสรุปรายตัว)
 function mxRecords(r) {
-  const share = new Map(), recs = [];
+  const bs = burnShares(), recs = []; // A7: same tracker as the battle's u.dealt (core/battle.js)
   for (let ei = 0; ei < r.events.length; ei++) {
     const e = r.events[ei]; // ชุด 37: ei = เลขเหตุการณ์ (ใช้เป็นลิงก์ไปบรรทัดในบันทึก)
-    if (e.k === 'burn') {
-      let m = share.get(e.to); if (!m) share.set(e.to, m = new Map());
-      const before = e.total - e.amount, tot = [...m.values()].reduce((a, b) => a + b, 0);
-      if (tot > 0) for (const [k, v] of m) m.set(k, before > 0 ? v * before / tot : 0);
-      const key = e.from != null ? e.from : -1; m.set(key, (m.get(key) || 0) + e.amount);
-    } else if (e.k === 'cleanse' && e.what !== 'pct') share.delete(e.to);
-    else if (e.k === 'down') share.delete(e.who);
+    if (e.k === 'burn' || e.k === 'cleanse' || e.k === 'down') bs.see(e.k, e);
     else if (e.k === 'dmg') {
       const d = e.d && typeof e.d === 'object' ? e.d : {}, over = d.over || 0;
       const push = (from, f) => recs.push({ t: e.t, ei, to: e.to, from, why: e.why, d, f, amt: e.amount * f, abs: e.absorbed * f, over: over * f, sub: !!e.sub, raw: e });
-      if (e.why === 'burn') {
-        const m = share.get(e.to), tot = m ? [...m.values()].reduce((a, b) => a + b, 0) : 0;
-        if (m && tot > 0) for (const [src, part] of m) { if (part > 0) push(src >= 0 ? src : null, part / tot); }
-        else push(null, 1);
-      } else push(e.from, 1);
+      if (e.why === 'burn') for (const [src, f] of bs.split(e.to)) push(src >= 0 ? src : null, f);
+      else push(e.from, 1);
     }
   }
   return recs;

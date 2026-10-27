@@ -92,7 +92,7 @@ function renderTop() {
   sum.replaceChildren(
     el('span', 'status', 'ตัวต้นเหตุประจำ: ' + (topC.length ? topC.map(([id, n]) => id + ' (' + n + '/' + list.length + ')').join(' · ') : '—')),
     el('span', 'status', 'คอมโปต้องสงสัย: ' + (topComp && topComp[1] > 1 ? topComp[0] + ' (' + topComp[1] + ' ครั้ง)' : 'ไม่มีคอมโปซ้ำ')),
-    el('span', 'status', 'สัญญาณผิดปกติ: ' + (w ? 'ดาเมจ ' + fmt(w.dmgPerHp) + '× HP ศัตรู · ' + (w.timeMs / 1000).toFixed(0) + ' วิ · ฝั่งเดียว ' + Math.round(w.sideRatio * 100) + '%' : '—')));
+    el('span', 'status', 'สัญญาณผิดปกติ: ' + (w ? 'ดาเมจ ' + fmt(w.dmgPerHp) + '× HP รวมสองฝั่ง · ' + (w.timeMs / 1000).toFixed(0) + ' วิ · ฝั่งเดียว ' + Math.round(w.sideRatio * 100) + '%' : '—')));
 }
 function renderResults() {
   if (!lastRun) return;

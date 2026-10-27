@@ -65,7 +65,7 @@ function renderSimInfo() {
   for (const [k, v] of [['HP', c.hp[L]], ['พลังโจมตี', c.atk[L]], ['คูลดาวน์', `${(c.cdMs[L] / 1000).toFixed(1)} วิ`], ['มัลติฮิต', c.multi[L]], ['ไฟ/ฮิต', c.burn[L]], ['ช็อต/ฮิต', c.shock[L]], ['เกราะ/ฮิต', c.armorHit[L]], ['ฟื้น/ฮิต', c.healHit[L]]]) { const d = el('span', '', `${k} `); d.append(el('b', '', String(v))); stats.append(d); }
   body.append(stats);
   const res = t.u ? simLast.r.units.find(x => x.uid === t.u.uid) : null;
-  if (res) body.append(el('div', 'resrow', `ผลแมตช์ (Lv${t.level}): ทำดาเมจ ${res.dealt} · โดนดาเมจ ${res.taken} · ${res.down ? 'down' : `จบด้วย HP ${res.hp}`}`));
+  if (res) body.append(el('div', 'resrow', `ผลแมตช์ (Lv${t.level}): ทำดาเมจ ${nf(res.dealt)} · โดนดาเมจ ${res.taken} · ${res.down ? 'down' : `จบด้วย HP ${res.hp}`}`));
   const cnt = new Map();
   if (t.u) for (const e of simLast.r.events) if (e.k === 'proc' && e.who === t.u.uid) cnt.set(e.si, (cnt.get(e.si) || 0) + 1);
   if (!c.skills.length) body.append(el('span', 'hint', 'ไม่มีสกิล'));

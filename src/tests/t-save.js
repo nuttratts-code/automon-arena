@@ -1,5 +1,5 @@
 // ชุดทดสอบ: เซฟกลางทาง สถิติ/ประวัติ run รีเพลย์ บันทึกข้อมูลการเล่น · แยกจาก mechanics.js (ชุด D) · ตัวช่วยอยู่ helpers.js
-import { simulate } from '../core/battle.js';
+import { burnShares, simulate } from '../core/battle.js';
 import { botShop } from '../core/bot.js';
 import { buildCharacterList } from '../core/characters.js';
 import { makeRng } from '../core/rng.js';
@@ -56,6 +56,28 @@ export const TESTS_SAVE = [
     eq(readSave(null, cm, RULES, H).status, 'none', 'ไม่มีเซฟ');
     const c2 = structuredClone(chars); c2[0].hp = [1, 2, 3];
     ok(dataHash(c2) !== H, 'แก้ค่าตัวละครแล้วแฮชเปลี่ยน');
+  }],
+  ['A7: ดาเมจไฟนับให้ผู้ทำให้ติดตามสัดส่วน (u.dealt = แยกจากเหตุการณ์ · สถิติ run ด้วย)', () => {
+    const bs = burnShares();
+    bs.see('burn', { to: 5, amount: 30, total: 30, from: 0 }); bs.see('burn', { to: 5, amount: 10, total: 30, from: 1 }); // ไฟเหลือ 20 ก่อน 1 ใส่ 10
+    eq(bs.split(5), [[0, 2 / 3], [1, 1 / 3]], 'แบ่งตามไฟที่เหลือ');
+    bs.see('cleanse', { to: 5, what: 'pct' }); eq(bs.split(5).length, 2, 'ล้างบางส่วน = สัดส่วนเดิม');
+    bs.see('down', { who: 5 }); eq(bs.split(5), [[-1, 1]], 'down = ไม่มีเจ้าของ');
+    const chars = buildCharacterList(), cm = makeCharMap(chars), rng = makeRng(31);
+    let burns = 0;
+    for (let i = 0; i < 60; i++) {
+      const res = simulate(buildTeam(randomTeam(rng, chars, 6, 2), cm), buildTeam(randomTeam(rng, chars, 6, 2), cm));
+      const b = burnShares(), d = new Map(), st = newStats(), want = {};
+      for (const e of res.events) {
+        if (e.k === 'burn' || e.k === 'cleanse' || e.k === 'down') b.see(e.k, e);
+        else if (e.k === 'dmg') for (const [s, f] of e.why === 'burn' ? (burns++, b.split(e.to)) : [[e.from ?? -1, 1]]) if (s >= 0) d.set(s, (d.get(s) || 0) + e.amount * f);
+      }
+      for (const x of res.units) ok(Math.abs((d.get(x.uid) || 0) - x.dealt) < 1e-6, `แมตช์ ${i} uid ${x.uid}: dealt ${x.dealt} ≠ ${d.get(x.uid) || 0}`);
+      for (const x of res.units) if (x.side === 0 && x.dealt > 0) want[x.id] = (want[x.id] || 0) + x.dealt;
+      addMatchStats(st, res);
+      for (const [id, v] of Object.entries(want)) ok(Math.abs((st.dmg[id] || 0) - v) <= 1 + 1e-9 * v, `แมตช์ ${i} สถิติ run ${id}: ${st.dmg[id]} vs ${v}`);
+    }
+    ok(burns > 0, 'มีไฟในชุดทดสอบ');
   }],
   ['ชุด 22: สถิติ run และประวัติ run กรองข้อมูลผิด', () => {
     const st = newStats();
