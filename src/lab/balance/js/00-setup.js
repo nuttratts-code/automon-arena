@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const BASE_CHARS = buildCharacterList();
 const BASE_TRIBES = JSON.parse(JSON.stringify(RULES.tribeBonus));
+const BASE_FP = baseFingerprint(BASE_CHARS, BASE_TRIBES); // set 39: match code base check
 const clone = x => JSON.parse(JSON.stringify(x));
 let chars = clone(BASE_CHARS);
 let tribes = clone(BASE_TRIBES);

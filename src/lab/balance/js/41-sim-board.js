@@ -288,7 +288,9 @@ function runSim(auto, fromTeamSeed) {
   const seed = Math.max(1, Math.min(999999, Math.round(+$('simSeed').value) || 1));
   const r = simulate(buildTeam(A, m), buildTeam(B, m), { rules: rulesNow(), ...(fromTeamSeed ? {} : { seed }), tribesOff: [$('simOffL').checked, $('simOffR').checked], detail: true }); // ชุด 36: จดส่วนประกอบดาเมจให้แท็บวิเคราะห์แมตช์
   const prev = simLast && simLast.r;
-  simLast = { r, m, teamKey: JSON.stringify(simTeam) };
+  simLast = { r, m, teamKey: JSON.stringify(simTeam),
+    code: makeMatchCode({ base: BASE_FP, seed: fromTeamSeed ? 0 : seed, A, B, tribesOff: [$('simOffL').checked, $('simOffR').checked], diff: diffs(), result: r }) }; // set 39: match code for bug reports
+  $('simCodeBox').hidden = true;
   const wasStale = $('simRun').classList.contains('stale'); clearSimStale();
   // จำลองใหม่หลังแก้ค่า: บอกผลก่อนแก้เทียบกับตอนนี้ ให้เห็นทันทีว่าแรงขึ้นหรืออ่อนลง
   const wtxt = x => (x.winner === 0 ? 'ซ้ายชนะ' : x.winner === 1 ? 'ขวาชนะ' : 'เสมอ') + ` ${(x.timeMs / 1000).toFixed(1)} วิ`;
@@ -299,6 +301,14 @@ function runSim(auto, fromTeamSeed) {
   if ($('simInstant').checked && comboOn) simView.skip();
 }
 $('simRun').addEventListener('click', () => runSim(false));
+// set 39: copy the code of the last simulated match (user pastes it in chat → Claude replays it with lab/replay.mjs --code)
+$('simCode').addEventListener('click', () => {
+  if (!simLast || !simLast.code) { $('simMsg').textContent = 'กด "จำลอง" ก่อน แล้วค่อยคัดลอกรหัสแมตช์'; return; }
+  const code = simLast.code, box = $('simCodeBox');
+  const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); $('simMsg').textContent = 'คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง'; };
+  const ok = () => { $('simMsg').textContent = 'คัดลอกรหัสแมตช์แล้ว (แมตช์ที่จำลองล่าสุด) · วางในแชทได้เลย'; };
+  try { navigator.clipboard.writeText(code).then(ok, showBox); } catch (e) { showBox(); }
+});
 // ใส่ตัวลงช่องว่างแรกของฝั่ง (เริ่มจากแถวที่แนะนำ) · คืนช่องที่ใส่ หรือ null ถ้าเต็ม
 function addToSide(id, side) {
   const c = charOf(id); if (!c || !chars.some(x => x.id === id)) return null;

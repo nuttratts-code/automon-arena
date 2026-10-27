@@ -7,6 +7,7 @@ import { RULES } from '../core/rules.js';
 import { REPLAY_MAX, SAVE_MAX_CHARS, addMatchStats, checkPlayRecord, checkReplay, dataHash, historyEntry, makeReplays, makeSave, newStats, playRecord, pushHistory, readHistory, readReplays, readSave, replayEntry, validateRunState } from '../core/save.js';
 import { buy, endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
+import { applyMatchDiff, baseFingerprint, makeMatchCode, parseMatchCode } from '../lab/matchcode.js';
 import { eq, ok, randomTeam } from './helpers.js';
 export const TESTS_SAVE = [
   ['ชุด 22: เซฟ run ผ่านตัวตรวจทุกรอบ · เล่นต่อแล้วได้ร้านเดิม', () => {
@@ -116,5 +117,26 @@ export const TESTS_SAVE = [
     const bads = [x => { x.res = 'x'; }, x => { x.round = 0; }, x => { x.team[0].id = 'ZZ-1'; }, x => { x.timeMs = 1.5; }, x => { x.data = '<b>'; },
       x => { x.foeSrc = 'live'; }, x => { x.storm = 'yes'; }, x => { x.extra = 1; }, x => { x.winsBefore = 99; }, x => { x.team = Array(7).fill(x.team[0]); }];
     bads.forEach((f, i) => { const y = JSON.parse(JSON.stringify(rec)); f(y); ok(!checkPlayRecord(y, m), `บันทึกผิดแบบที่ ${i + 1} ต้องถูกปฏิเสธ`); });
+  }],
+  ['ชุด 39: รหัสแมตช์ (ห้องบาลานซ์) เล่นซ้ำได้ผลเดิม · ค่าที่แก้ติดไปด้วย · รหัสเสีย/ช่องแปลกถูกปฏิเสธ', () => {
+    const base = buildCharacterList(), bt = JSON.parse(JSON.stringify(RULES.tribeBonus)), fp = baseFingerprint(base, bt);
+    const edited = JSON.parse(JSON.stringify(base)), c0 = edited.find(c => c.id === 'WY-4'); c0.atk = c0.atk.map(x => x * 3);
+    const diff = { chars: { 'WY-4': { atk: c0.atk } }, tribes: {} };
+    const A = [{ id: 'WY-4', level: 2, row: 2, lane: 0 }, { id: 'HL-1', level: 1, row: 0, lane: 1 }], B = [{ id: 'PL-1', level: 2, row: 1, lane: 1 }, { id: 'SF-6', level: 1, row: 0, lane: 0 }];
+    for (const seed of [0, 77]) {
+      const m = makeCharMap(edited), run = () => simulate(buildTeam(A, m), buildTeam(B, m), { rules: RULES, ...(seed ? { seed } : {}), tribesOff: [false, true] });
+      const r = run(), code = makeMatchCode({ base: fp, seed, A, B, tribesOff: [false, true], diff, result: r });
+      const mc = parseMatchCode(code); eq(mc.base, fp, 'ฐานเดิม'); eq([mc.seed, mc.A, mc.B, mc.tribesOff], [seed, A, B, [false, true]], 'อ่านรหัสกลับได้ครบ');
+      const { chars } = applyMatchDiff(base, bt, mc.diff), m2 = makeCharMap(chars);
+      const r2 = simulate(buildTeam(mc.A, m2), buildTeam(mc.B, m2), { rules: RULES, ...(mc.seed ? { seed: mc.seed } : {}), tribesOff: mc.tribesOff });
+      eq([r2.winner, r2.timeMs, r2.events.length], [r.winner, r.timeMs, r.events.length], 'เล่นซ้ำได้ผลเดิม seed ' + seed);
+    }
+    const good = makeMatchCode({ base: fp, seed: 1, A, B, tribesOff: [true, true], diff, result: { winner: 0, timeMs: 1000 } });
+    for (const bad of ['', 'hello', good.slice(0, -5), good.replace('"WY-4",2', '"WY-4",9'), good.replace('AMATCH1', 'AMATCH2')]) {
+      let threw = false; try { parseMatchCode(bad); } catch (e) { threw = true; } ok(threw, 'รหัสเสียต้องถูกปฏิเสธ: ' + bad.slice(0, 30));
+    }
+    for (const d of [{ chars: { 'XX-1': { atk: [1, 1, 1] } }, tribes: {} }, { chars: { 'WY-4': { atk: 5 } }, tribes: {} }, { chars: { 'WY-4': { evil: 1 } }, tribes: {} }, { chars: { 'WY-4': JSON.parse('{"__proto__":{"x":1}}') }, tribes: {} }, { chars: {}, tribes: { nope: {} } }]) {
+      let threw = false; try { applyMatchDiff(base, bt, d); } catch (e) { threw = true; } ok(threw, 'ค่าที่แก้แปลกต้องถูกปฏิเสธ ' + JSON.stringify(d).slice(0, 40));
+    }
   }],
 ];

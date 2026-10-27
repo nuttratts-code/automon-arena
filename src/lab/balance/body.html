@@ -141,7 +141,9 @@
         <label class="status"><input type="checkbox" id="simOffL" checked autocomplete="off"> ปิดโบนัสเผ่าฝั่งซ้าย</label>
         <label class="status"><input type="checkbox" id="simOffR" checked autocomplete="off"> ปิดโบนัสเผ่าฝั่งขวา</label>
         <label class="status" for="simSeed">เลขสุ่ม</label><input type="number" inputmode="numeric" id="simSeed" value="1" min="1" max="999999" style="width:90px">
+        <button id="simCode" type="button">คัดลอกรหัสแมตช์</button>
       </div>
+      <textarea id="simCodeBox" readonly hidden rows="3" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px" aria-label="รหัสแมตช์"></textarea>
       <div class="row combo-only">
         <label class="status"><input type="checkbox" id="simAuto"> แก้ค่าแล้วจำลองใหม่ทันที</label>
         <label class="status"><input type="checkbox" id="simInstant"> แสดงผลทันที (ไม่เล่นภาพ)</label>
