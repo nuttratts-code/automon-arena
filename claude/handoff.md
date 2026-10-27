@@ -1,5 +1,8 @@
-# Automon Arena handoff (English · updated 28 Oct 2026 · instructions V3.0)
+# Automon Arena handoff (English · updated 27 Oct 2026 · instructions V3.0)
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
+
+## Relay (two accounts take turns — rules in CLAUDE.md)
+- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: relay workflow set up · next step: user picks task set (see Next) · publish access for account 2: not yet shared (artifacts owned by account 1)
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
@@ -9,7 +12,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - Open design note: sticky `.topbar` is ~148px (~16% of a 900px screen) — user may want it slimmer.
 - ui_smoke.py needs args: `python3 tests/ui_smoke.py <dir with built html> <screenshot dir>` (run `node build.mjs` in src first). ~3–4 min: run in background, wait with Monitor.
 - Publish note: artifact must be Artifact-`read` (no path) before publishing; first publish may be refused, see workflow/publish.md.
-- **Repo migration DONE (28 Oct, branch `claude/migrate-to-git`, not yet merged to main):** code+docs now live in git https://github.com/nuttratts-code/automon-arena (`src/`, `claude/`, CLAUDE.md, GEMINI.md). `cd src && node tools/bootstrap.mjs setup` = build + tests (128/128). recover.py / extract-from-pages.py removed; setup.md, workflow.md, bootstrap.mjs rewritten for git. Publishing artifacts still via Artifact tool (publish.md). Jules flow + Gemini limits: GEMINI.md. Platform decision recorded in build-plan V1.43 + backlog V1.1.
+- **Repo migration DONE (28 Oct, merged into main):** code+docs now live in git https://github.com/nuttratts-code/automon-arena (`src/`, `claude/`, CLAUDE.md, GEMINI.md). `cd src && node tools/bootstrap.mjs setup` = build + tests (128/128). recover.py / extract-from-pages.py removed; setup.md, workflow.md, bootstrap.mjs rewritten for git. Publishing artifacts still via Artifact tool (publish.md). Jules flow + Gemini limits: GEMINI.md. Platform decision recorded in build-plan V1.43 + backlog V1.1.
 - In git, archive/ and instructions.md are NOT copied (stay in the Project). Project docs are now a stale copy — git is the source of truth; do not sync both.
 
 ## Next

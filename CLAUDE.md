@@ -38,6 +38,14 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Work on a branch; merge to main only after tests pass (and the user agrees). Gemini/Jules PRs are reviewed + tested by Claude before merge. See GEMINI.md for what Jules may/may not touch.
 - Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
 
+## Relay between two Claude accounts (decision 27 Oct)
+Two Claude accounts take turns on this repo: when one hits its usage limit, the other picks up. Only ONE account works at a time.
+- **Start of every chat:** `git fetch origin` → check the "Relay" block at the top of claude/handoff.md → if it names an open WIP branch, check it out and continue from "Next step"; otherwise branch from latest main.
+- **While working:** commit + push after every meaningful step (a limit can cut the chat at any moment; unpushed work is lost). Branch name: `claude/<topic>`. Never force-push; never rewrite another account's commits.
+- **Before stopping / when the chat feels long / at end of set:** update the Relay block (account, branch, last done, next step, open decisions) and push. Merge to main only when tests pass and the user agreed.
+- **Published artifacts** (game / balance room / check) are owned by the original account. The other account may update them only if they were shared with edit access ("writer" in an Artifact read); otherwise do not publish — note "publish pending" in the Relay block for the owner account.
+- Balance Room data (ArtifactData) lives in the artifact, not git: same ownership rule.
+
 ## Token saving
 - 1 task set = decide → edit → test → publish once. End of set (or long chat) → update claude/handoff.md (≤ 1 screen; older content → claude/archive/) + say "ควรเปิดแชทใหม่ได้แล้ว" + list what the user must do first, recommended model (Sonnet routine / Opus deep design or hard bugs / Haiku trivial) with a 1-line reason, and a message to paste.
 - Tiny fix but heavy search → log in handoff "งานรอรวม". Do pending items when 3 are queued / the same file is already open / user says so. Warn if pending > 2 task sets.
