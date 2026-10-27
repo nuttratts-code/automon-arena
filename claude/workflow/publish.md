@@ -10,7 +10,7 @@ V1.26 · 26 Oct 2026 (translated to English; 3: publish sequence confirmed again
 
 ## 4. Test the pages
 - `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 -I tests/ui_smoke.py <html folder> <image folder>` (blocks non-file: requests) · ~2–3 minutes (normally run through `node tools/bootstrap.mjs final`, section 9)
-- Build again before every run (the system-check page counts tests from the built mechanics.js)
+- Build again before every run (the system-check page counts tests from the built tests/*.js files)
 - Do not click the analyze button in the Balance Room (only check it is clickable · real measuring uses section 6)
 - **Page cannot be tested** (playwright/browser unusable in that round) = do not publish, tell the user the cause (V1.25)
 - The html folder must contain game.html · balance.html · system-check.html

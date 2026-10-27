@@ -1,6 +1,6 @@
 # workflow · code setup: build, test, docs (git repo)
 
-V1.26 · 28 Oct 2026 · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action.
+V1.27 · 27 Oct 2026 · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action. V1.27 (set D): tests split into topic files, see section 2.
 
 ## 1. Get the code
 - The source of truth is the git repo (`src/**`, `claude/**`). Clone/pull it; nothing is extracted from published pages any more.
@@ -12,6 +12,7 @@ V1.26 · 28 Oct 2026 · rewritten for the GitHub repo (was: fetch code from the 
 
 ## 2. Tests and build
 - `node tests/run.js` · `node build.mjs` (run inside `src/`) → system-check.html, balance.html, game.html.
+- Test layout (set D): shared helpers `tests/helpers.js` (mk, dummy, u, fight, eq, ok…; no tests inside) · topic files `tests/t-{combat,skills,skill-targets,tribe,shop,bots,save,validate}.js`, each exporting one `TESTS_*` array · `tests/mechanics.js` joins them into `TESTS` + `runTests` + `matchStats` (run.js and the check page use it). Add a new test to the file of its topic; a new test file must also be added to the `TESTS` list in `build.mjs` (before `mechanics.js`) and to the import list in `mechanics.js`. Top-level names must stay unique across all bundled files (build.mjs checks).
 - Templates may contain `<!--@include path-->` (path relative to `src/`): build.mjs pastes that file exactly as it is (fragment must end with a newline). To prove a refactor changed nothing: build before and after, `sha256sum` the 3 built pages — they must be identical.
 - GitHub Action `.github/workflows/tests.yml` runs `node tools/bootstrap.mjs setup` (build + tests) on every push. It does not run ui_smoke / measure (those stay local, `bootstrap.mjs final`). Check the result on the repo's Actions tab before merging to main.
 - Character-values-only change: edit `src/core/characters.js` (via `tools/apply-config.mjs` / apply-tune), then normal build + tests. No page patching is needed any more.

@@ -2,11 +2,11 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: set B merged into main (fast-forward, user agreed 27 Oct; Action was green, run 40508263726) · next step: set D (see Next 0) · open decisions: none · publish pending: none (built pages are byte-identical, nothing to republish) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
+- Account active now: **account 2** · open WIP branch: `claude/set-d-docs-tests-split` (set D done, pushed, NOT merged · waiting for ui_smoke result + user agreement) · last done: set D (a)+(b) · next step: user agrees → check Action green → merge to main (fast-forward) → then Next 1 (anomaly, Opus) · open decisions: merge set D? · publish pending: system-check page changed (embeds new test files) — republish check only if user wants; game/balance room byte-identical, nothing to republish · publish access: writer on all 3 artifacts
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
-- Published: game v57 · balance room v102 · check v56 · tests 128/128 (5 tribe tests now value-independent: helper TBR in tests/mechanics.js) · bot teams 90, hash 58de9165
+- Published: game v57 · balance room v102 · check v56 · tests 128/128 (split into tests/helpers.js + t-*.js topic files in set D; helper TBR now in tests/helpers.js) · bot teams 90, hash 58de9165
 - Post-import measure (n 24000, seed 4242, abnormal 0): outliers SF-8 +6.5, WY-8 −11.3 (user's intent, passed) · details in measure-log
 - ⚠ **ANOMALY still open (27 Oct): results.suspicious has 10 matches with damage far above total HP** (dmgPerHp 11–255). Worst: level 3, side B [HL-2 HL-3 SF-6 HL-5 PT-5 SF-7], PT-5 dealt 1,379,755. Others: PT-5 (lv1/lv2), WN-3 (team HL-1 PL-2 SF-1 WN-3 WN-2 SF-6), HL-7 (3 mix teams). Suspect damage loop / reflect / damage counted after death. Cause unknown — investigate with evidence (replay seed + match index from results.suspicious; seed in results.seed) before any fix. Not fixed.
 - **Set B done and MERGED into main (branch `claude/split-balance-template`, no behaviour change):** `src/lab/balance.template.html` (3452 lines) → 33-line shell + 23 fragments in `src/lab/balance/{css,js}/` + `body.html` (map: `src/lab/balance/README.md`). build.mjs got `<!--@include path-->`. Proof: sha256 of balance.html / game.html / system-check.html identical before vs after · tests 128/128. New `.github/workflows/tests.yml` runs `node tools/bootstrap.mjs setup` on every push (ui_smoke/measure not in CI). Docs updated: setup.md V1.26, match-tabs-spec V1.2, backlog V1.2 (now English), GEMINI.md.
@@ -17,19 +17,20 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - In git, archive/ and instructions.md are NOT copied (stay in the Project). Project docs are now a stale copy — git is the source of truth; do not sync both.
 
 ## Next
-0. **Set D (user chose 27 Oct, Sonnet):** (a) build-plan.md: move finished parts to claude/archive/build-plan-done.md + add a heading index at the top; combat-rules.md: add a heading index only (option 1A — Thai docs, keep Thai, bump versions +0.1). (b) Split src/tests/mechanics.js (144 KB) into topic files (combat/tribe/shop…) with zero behaviour change, same test count 128/128, like set B. (Old branches: deleted by user 27 Oct; Claude cannot delete branches through the proxy — ask the user.)
+0. **Set D: DONE on branch `claude/set-d-docs-tests-split`, awaiting merge.** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
 1. Investigate suspicious-damage anomaly (Opus): reproduce one match from seed/index, find cause with evidence, report to user before any fix. If a bug is fixed, re-measure needed.
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
 ## Pending bundle ("งานรอรวม")
 - Translate remaining workflow files to English when next opened: workflow/data-format.md, balance-import.md · same for budget-notes. Done: handoff, pending, measure-log, backlog, workflow.md, workflow/{setup,publish,measure,botteams}.md.
+- build-plan stale lines (not touched in set D): section "โครงสร้างโค้ด" still says code lives in claude/src/ and mentions tools/extract-from-pages.py (removed) — fix when next opened.
 - Ask user: set target dates in build-plan? (none = cannot warn "behind schedule").
 - Optional: user may later ask to remove the `simSummary` table fold (kept in ชุด 37).
 - Possible follow-up: tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure tribe tier effects only if user asks.
 
 ## Doc versions
-combat-rules V2.1 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.43 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.26 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.2 (done) · characters.csv 27 Oct
+combat-rules V2.2 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.2 (done) · characters.csv 27 Oct
 
 ## Links (update existing, never create new)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC
