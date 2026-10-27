@@ -2,14 +2,14 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: **`claude/split-balance-template`** (set B, NOT merged) · last done: set B finished + pushed (see State) · next step: user agrees → merge branch to main (GitHub Action already GREEN on the branch, run 40508263726, 28 Oct) · open decision: merge now? · publish pending: none (built pages are byte-identical, nothing to republish) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
+- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: set B merged into main (fast-forward, user agreed 27 Oct; Action was green, run 40508263726) · next step: user picks task set (see Next) · open decisions: none · publish pending: none (built pages are byte-identical, nothing to republish) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
 - Published: game v57 · balance room v102 · check v56 · tests 128/128 (5 tribe tests now value-independent: helper TBR in tests/mechanics.js) · bot teams 90, hash 58de9165
 - Post-import measure (n 24000, seed 4242, abnormal 0): outliers SF-8 +6.5, WY-8 −11.3 (user's intent, passed) · details in measure-log
 - ⚠ **ANOMALY still open (27 Oct): results.suspicious has 10 matches with damage far above total HP** (dmgPerHp 11–255). Worst: level 3, side B [HL-2 HL-3 SF-6 HL-5 PT-5 SF-7], PT-5 dealt 1,379,755. Others: PT-5 (lv1/lv2), WN-3 (team HL-1 PL-2 SF-1 WN-3 WN-2 SF-6), HL-7 (3 mix teams). Suspect damage loop / reflect / damage counted after death. Cause unknown — investigate with evidence (replay seed + match index from results.suspicious; seed in results.seed) before any fix. Not fixed.
-- **Set B done on branch `claude/split-balance-template` (28 Oct, no behaviour change):** `src/lab/balance.template.html` (3452 lines) → 33-line shell + 23 fragments in `src/lab/balance/{css,js}/` + `body.html` (map: `src/lab/balance/README.md`). build.mjs got `<!--@include path-->`. Proof: sha256 of balance.html / game.html / system-check.html identical before vs after · tests 128/128. New `.github/workflows/tests.yml` runs `node tools/bootstrap.mjs setup` on every push (ui_smoke/measure not in CI). Docs updated: setup.md V1.26, match-tabs-spec V1.2, backlog V1.2 (now English), GEMINI.md.
+- **Set B done and MERGED into main (branch `claude/split-balance-template`, no behaviour change):** `src/lab/balance.template.html` (3452 lines) → 33-line shell + 23 fragments in `src/lab/balance/{css,js}/` + `body.html` (map: `src/lab/balance/README.md`). build.mjs got `<!--@include path-->`. Proof: sha256 of balance.html / game.html / system-check.html identical before vs after · tests 128/128. New `.github/workflows/tests.yml` runs `node tools/bootstrap.mjs setup` on every push (ui_smoke/measure not in CI). Docs updated: setup.md V1.26, match-tabs-spec V1.2, backlog V1.2 (now English), GEMINI.md.
 - Open design note: sticky `.topbar` is ~148px (~16% of a 900px screen) — user may want it slimmer.
 - ui_smoke.py needs args: `python3 tests/ui_smoke.py <dir with built html> <screenshot dir>` (run `node build.mjs` in src first). ~3–4 min: run in background, wait with Monitor.
 - Publish note: artifact must be Artifact-`read` (no path) before publishing; first publish may be refused, see workflow/publish.md.
@@ -18,7 +18,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 
 ## Next
 1. Investigate suspicious-damage anomaly (Opus): reproduce one match from seed/index, find cause with evidence, report to user before any fix. If a bug is fixed, re-measure needed.
-2. Merge set B (branch above) once the Action is green and the user agrees. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
+2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
 
 ## Pending bundle ("งานรอรวม")
