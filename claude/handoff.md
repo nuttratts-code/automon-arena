@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: set B merged into main (fast-forward, user agreed 27 Oct; Action was green, run 40508263726) · next step: user picks task set (see Next) · open decisions: none · publish pending: none (built pages are byte-identical, nothing to republish) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
+- Account active now: **account 2** (connected via GitHub user NuttRatt, collaborator) · open WIP branch: none (work from main) · last done: set B merged into main (fast-forward, user agreed 27 Oct; Action was green, run 40508263726) · next step: set D (see Next 0) · open decisions: none · publish pending: none (built pages are byte-identical, nothing to republish) · publish access for account 2: writer on all 3 artifacts (shared 27 Oct) — both accounts may publish
 
 ## State
 - **Balance: done · import done (set 38, 27 Oct)** · config/main cleared (v204, empty chars/tribes) · results/latest v9 is now stale vs. the new game (user re-measures only if they want) · DRAFT_KEY v9
@@ -17,6 +17,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - In git, archive/ and instructions.md are NOT copied (stay in the Project). Project docs are now a stale copy — git is the source of truth; do not sync both.
 
 ## Next
+0. **Set D (user chose 27 Oct, Sonnet):** (a) build-plan.md: move finished parts to claude/archive/build-plan-done.md + add a heading index at the top; combat-rules.md: add a heading index only (option 1A — Thai docs, keep Thai, bump versions +0.1). (b) Split src/tests/mechanics.js (144 KB) into topic files (combat/tribe/shop…) with zero behaviour change, same test count 128/128, like set B. (c) Old merged branches: deletion is blocked from Claude's proxy; user deletes them on GitHub.
 1. Investigate suspicious-damage anomaly (Opus): reproduce one match from seed/index, find cause with evidence, report to user before any fix. If a bug is fixed, re-measure needed.
 2. User: verify Jules access (Google AI Pro), connect Jules to the repo. Then Claude: first task card test for Jules. (GitHub Action for tests: done in set B.)
 3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
