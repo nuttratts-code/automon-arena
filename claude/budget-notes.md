@@ -1,37 +1,37 @@
-# โน้ตงบค่าพลัง: ค่าพลังแต่ละอย่างใช้งบกี่แต้ม (Automon Arena)
+# Stat budget notes: how many points each stat costs (Automon Arena)
 
-V1.0 · 22 ต.ค. 2026 · ใช้คู่กับ combat-rules V1.28 · คำนวณด้วย `node lab/cost.mjs`
+V1.1 · 28 Oct 2026 · translated to English (content unchanged) · V1.0 22 Oct 2026 · paired with combat-rules V1.28 · computed with `node lab/cost.mjs`
 
-> ทุกตัวเลขในโน้ตนี้เป็น **(ค่าเสนอ)** มาจากสูตรแต้มพลังพื้นฐานที่ยังไม่ได้วัดเทียบผลชนะจริง ใช้เป็นตัวช่วยกะคร่าวๆ เท่านั้น ผลวัดบาลานซ์ (±6) ยังเป็นตัวตัดสิน
+> Every number here is **(ค่าเสนอ)** (proposed): from the base power-point formula, not yet measured against real win rates. Rough estimation aid only; balance measurement (±6) still decides.
 
-## สูตรที่ใช้ (combat-rules V1.20)
-- แต้มพลังพื้นฐาน = √(เลือดรวม × ดาเมจต่อวินาที) · ไม่นับสกิล
-- ดาเมจต่อวินาที = (พลังโจมตี + ไฟ/ฮิต × 1.5 + ช็อต/ฮิต × 3) × มัลติฮิต ÷ คูลดาวน์ (ค่าเสนอ)
-- เลือดรวม = HP + เกราะ/ฮิต × ฮิตต่อวินาที × 15 วิ (ค่าเสนอ)
-- งบรวม (พื้นฐาน + สกิล) ที่ Lv1: ธรรมดา 16 · ไม่ธรรมดา 28 · หายาก 36 · หายากมาก 51 · ตำนาน 74 · Lv2 ×2 · Lv3 ×4
+## Formula (combat-rules V1.20)
+- Base power points = √(total HP × damage per second) · skills not counted
+- Damage per second = (ATK + burn/hit × 1.5 + shock/hit × 3) × multihit ÷ cooldown (ค่าเสนอ)
+- Total HP = HP + armor/hit × hits per second × 15 s (ค่าเสนอ)
+- Total budget (base + skills) at Lv1: common 16 · uncommon 28 · rare 36 · very rare 51 · legendary 74 · Lv2 ×2 · Lv3 ×4
 
-## ราคาโดยประมาณที่ Lv1 (ค่าเฉลี่ยตัวละครทั้ง 48 ตัว · ในวงเล็บ = ช่วงต่ำสุด–สูงสุด) (ค่าเสนอ)
-| เพิ่มค่า | ใช้งบประมาณ | ช่วง |
+## Approximate price at Lv1 (average over all 48 characters · range = min–max) (ค่าเสนอ)
+| Stat change | Budget used | Range |
 |---|---|---|
-| พลังโจมตี +1 | 1.2 แต้ม | 0.3–2.7 |
-| HP +10 | 0.8 แต้ม | 0.3–1.3 |
-| ไฟ/ฮิต +1 | 1.8 แต้ม | 0.4–4.0 |
-| ช็อต/ฮิต +1 | 3.4 แต้ม | 0.9–7.5 |
-| เกราะ/ฮิต +1 | 0.5 แต้ม | 0.1–1.9 |
-| คูลดาวน์ −0.1 วิ | 0.3 (ธรรมดา) – 0.9 (ตำนาน) แต้ม | 0.05–1.2 |
-| มัลติฮิต +1 | 7 (ธรรมดา) – 22 (ตำนาน) แต้ม | 3–29 |
+| ATK +1 | 1.2 pts | 0.3–2.7 |
+| HP +10 | 0.8 pts | 0.3–1.3 |
+| burn/hit +1 | 1.8 pts | 0.4–4.0 |
+| shock/hit +1 | 3.4 pts | 0.9–7.5 |
+| armor/hit +1 | 0.5 pts | 0.1–1.9 |
+| cooldown −0.1 s | 0.3 (common) – 0.9 (legendary) pts | 0.05–1.2 |
+| multihit +1 | 7 (common) – 22 (legendary) pts | 3–29 |
 
-## อัตราแลกคร่าวๆ (ค่าเสนอ)
-- ไฟ/ฮิต 1 ≈ พลังโจมตี 1.5 ≈ เกราะ/ฮิต 3–4 ≈ HP 20
-- ช็อต/ฮิต 1 ≈ ไฟ/ฮิต 2 ≈ พลังโจมตี 3 ≈ เกราะ/ฮิต 7
-- พลังโจมตี 1 ≈ HP 15 ≈ เกราะ/ฮิต 2–3
-- ตัวอย่าง: ตัวเกราะให้ **เกราะ/ฮิต 5** ใช้งบพอๆ กับตัวไฟให้ **ไฟ/ฮิต 1.5** (ไม่ใช่ 2)
+## Rough exchange rates (ค่าเสนอ)
+- burn/hit 1 ≈ ATK 1.5 ≈ armor/hit 3–4 ≈ HP 20
+- shock/hit 1 ≈ burn/hit 2 ≈ ATK 3 ≈ armor/hit 7
+- ATK 1 ≈ HP 15 ≈ armor/hit 2–3
+- Example: an armor unit giving **armor/hit 5** costs about the same as a burn unit giving **burn/hit 1.5** (not 2)
 
-## ทำไมช่วงกว้าง (อ่านก่อนใช้)
-- ไฟ ช็อต พลังโจมตี เพิ่มฝั่ง **ตีแรง** · HP เกราะ เพิ่มฝั่ง **ยืนได้นาน** · แต้มคิดจากสองฝั่งคูณกัน → ตัวที่ตีแรงอยู่แล้ว ได้แต้มจากเกราะ/HP มากกว่า และกลับกัน
-- เกราะ/ฮิต ขึ้นกับจำนวนฮิตต่อวินาที: ตัวตีเร็ว/มัลติฮิตเยอะ ได้เกราะต่อวินาทีมาก → แพงกว่า
-- มัลติฮิต และคูลดาวน์ คูณทุกอย่างที่ติดกับฮิต จึงแพงขึ้นตามค่าพลังที่ตัวนั้นมี
-- ฮิล ไม่อยู่ในสูตรนี้ (เป็นสกิล) · สกิลทุกแบบใช้งบส่วนที่เหลือ (งบ − แต้มพื้นฐาน) ดูในห้องบาลานซ์ช่อง "แต้ม / งบ"
+## Why the ranges are wide (read before use)
+- Burn, shock, ATK raise the **hit hard** side · HP, armor raise the **stay alive** side · points multiply the two → a unit that already hits hard gains more points from armor/HP, and vice versa
+- armor/hit depends on hits per second: fast / high-multihit units gain more armor per second → more expensive
+- Multihit and cooldown multiply everything tied to a hit, so they get pricier the more stats the unit has
+- Healing is not in this formula (it is a skill) · all skills use the remaining budget (budget − base points), see the Balance Room "แต้ม / งบ" field
 
-## ขั้นถัดไปที่เสนอ (ยังไม่ทำ)
-- วัดอัตราแลกจริงด้วยการจำลอง (+1 ทีละค่า ดูผลชนะที่เปลี่ยน) แล้วแก้ 1.5 / 3 / 15 ให้ตรง → ค่อยเอาป้าย (ค่าเสนอ) ออก
+## Proposed next step (not done)
+- Measure real exchange rates by simulation (+1 one stat at a time, watch the win-rate change), then correct 1.5 / 3 / 15 → then remove the (ค่าเสนอ) labels

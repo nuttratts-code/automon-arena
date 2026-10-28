@@ -1,15 +1,15 @@
-# workflow · รูปแบบข้อมูลตัวละครและสกิล (core/characters.js)
+# workflow · character and skill data format (core/characters.js)
 
-V1.22 · 24 ต.ค. 2026 · แยกจาก workflow.md V1.21 (เนื้อหาเดิม ไม่ตัด · เลขหัวข้อเดิมคงไว้ให้อ้างอิงได้)
+V1.23 · 28 Oct 2026 · translated to English (content unchanged) · split from workflow.md V1.21 (content kept, original section numbers kept for references)
 
-## 7. รูปแบบข้อมูลตัวละคร (core/characters.js)
-- ROWS: `[ID, ชื่อ, เผ่า, เผ่าเพิ่ม, ความหายาก, ราคา, แถว, HP[3], ATK[3], คูลดาวน์วิ (ตัวเลขเดียว หรือ [3]), มัลติฮิต[3], ไฟ[3], ช็อต[3], เกราะ/ฮิต[3]?, ฟื้น/ฮิต[3]?]` (V1.12 · ฟื้น/ฮิต ต้องมีเกราะ/ฮิตก่อน ใส่ [0,0,0] ได้ · apply-config และ csv.mjs รู้จักแล้ว)
-- SKILLS: `{ when, do, to, v[3], cd?(ms), lv?[...], chance?, tags?, summon?(ID เฉพาะ do: 'summon'), perm?(true · สกิลระหว่างสู้ที่ตั้งถาวร เฉพาะ do ที่มี DO_INFO.perm) }` · ฟื้น HP ใช้ได้เฉพาะเผ่าภูติและอสูร
-- ผลแบบ % ของ: do = dmgOf / burnOf / shockOf / armorOf / healOf / reflectOf (V1.4) / atkOf ฯลฯ + `of: { stat: atk|armor|maxHp|hp|hpLost|burn|shock, who: self|each|ctx|allEnemies|allAllies|laneEnemies|rowEnemies|laneAllies|rowAllies }` · ผลเดิม (dmgPctAtk dmgPctArmor dmgPctEnemyBurn armorPct healPct burnPctArmor) ห้ามใช้ในข้อมูลใหม่ · แบ่งเกราะ to = ผู้รับ (allAllies = ทั้งทีม)
-- ผู้รับฝ่ายเรา: backAlly = ช่องติดกันข้างหลังเท่านั้น · backLaneAlly = ตัวใกล้สุดข้างหลังในเลน ข้ามช่องว่าง (V1.4) · allyAt + `at: { row: front|mid|back|any, lane: same|other|both }` (ชุด 14) · `sameTribe: true` กรองเผ่าเดียวกันได้กับผู้รับฝ่ายเรา (ตรวจด้วย sameTribeOk ใน rules.js)
-- สกิลหลังสู้/ร้านค้า: do = permHp/permAtk/permArmor/permBurn/permShock/permMulti/permCdPct หรือ perm_<ชนิด> (สร้างอัตโนมัติจาก DO_INFO.perm · คู่กับผลระหว่างสู้ใน SHOP_PAIR) · ค่าถาวรแบบ % เก็บเป็นชนิด hpPct atkPct burnPct shockPct armorHitPct
-- ช่องสกิลเสริม (V1.10 · ชุด 17): `skipSameId: true` (ไม่ให้ผลกับตัวอื่นที่ ID เดียวกัน · ตรวจด้วย skipSameIdOk ใน rules.js) · `cdGrow: 1–500` (% ที่คูลดาวน์สกิลยาวขึ้นทุกครั้งที่ใช้ · ต้องมี cd) · apply-config.mjs รู้จักทั้งสองช่องแล้ว
-- ผลใหม่ชุด 20: `{ when: 'hit', do: 'allyStrike', to: 'allyRandom', sameTribe: true, v: [ฮิต] }` (พาเพื่อนไปตีเป้าเดียวกัน · ไม่เข้าคิว ตีทันทีใน trigger · เหตุการณ์ 'carry') · `{ do: 'cleansePct', v: [%] }` (เหตุการณ์ cleanse what:'pct') · `{ when: 'passive', do: 'reflectDebuff', to: 'allAllies', v: [%] }` (เพดาน RULES.reflectDebuffMaxPct · เหตุการณ์ 'reflectDebuff') · ฮิต 1 ครั้งอยู่ในฟังก์ชัน strike() ใน battle.js (ใช้ร่วมกับฮิตที่ถูกพาไป)
-- (ชุด 21) ลำดับใน tick ต้องไม่ขึ้นกับฝั่ง: ผลที่ทำทันทีระหว่างฮิตหรือข้ามฝั่ง ให้เก็บคิวแล้วทำหลังคิวที่เกี่ยวข้อง (ดู reflQ revQ summons) · คิวสถานะ/ฟื้นใช้ drainS/drainH · เพิ่มกลไกใหม่ที่อ่าน/แก้ค่าของอีกฝั่ง ต้องตรวจสลับฝั่งเสมอ
-- ผลการต่อสู้ `simulate().aborted` = 'hits' | 'effects' เมื่อตัวตัดนิรภัยหยุด (ผล = เสมอ)
-- ผลการต่อสู้ `simulate().perm` = [{ side, row, lane, id, key, amount }] → ส่งให้ `endMatch(st, won, chars, rules, gains)` ของฝั่งนั้น
+## 7. Character data format (core/characters.js)
+- ROWS: `[ID, name, tribe, extra tribe, rarity, price, row, HP[3], ATK[3], cooldown s (single number or [3]), multihit[3], burn[3], shock[3], armor/hit[3]?, heal/hit[3]?]` (V1.12 · heal/hit requires armor/hit before it; [0,0,0] allowed · apply-config and csv.mjs know it)
+- SKILLS: `{ when, do, to, v[3], cd?(ms), lv?[...], chance?, tags?, summon?(ID, only for do: 'summon'), perm?(true · in-match skill made permanent, only for a do with DO_INFO.perm) }` · HP heal allowed only for the spirit and demon tribes
+- %-of effects: do = dmgOf / burnOf / shockOf / armorOf / healOf / reflectOf (V1.4) / atkOf etc. + `of: { stat: atk|armor|maxHp|hp|hpLost|burn|shock, who: self|each|ctx|allEnemies|allAllies|laneEnemies|rowEnemies|laneAllies|rowAllies }` · legacy effects (dmgPctAtk dmgPctArmor dmgPctEnemyBurn armorPct healPct burnPctArmor) must not be used in new data · armor share `to` = receiver (allAllies = whole team)
+- Ally receivers: backAlly = adjacent slot behind only · backLaneAlly = nearest unit behind in the lane, skipping gaps (V1.4) · allyAt + `at: { row: front|mid|back|any, lane: same|other|both }` (set 14) · `sameTribe: true` filters to same tribe for ally receivers (checked by sameTribeOk in rules.js)
+- After-match / shop skills: do = permHp/permAtk/permArmor/permBurn/permShock/permMulti/permCdPct or perm_<type> (auto-generated from DO_INFO.perm · paired with the in-match effect in SHOP_PAIR) · % permanent values stored as types hpPct atkPct burnPct shockPct armorHitPct
+- Extra skill fields (V1.10 · set 17): `skipSameId: true` (no effect on other units with the same ID · checked by skipSameIdOk in rules.js) · `cdGrow: 1–500` (% the skill cooldown grows each use · requires cd) · apply-config.mjs knows both fields
+- Set 20 effects: `{ when: 'hit', do: 'allyStrike', to: 'allyRandom', sameTribe: true, v: [hits] }` (brings an ally to hit the same target · not queued, hits immediately in the trigger · event 'carry') · `{ do: 'cleansePct', v: [%] }` (event cleanse what:'pct') · `{ when: 'passive', do: 'reflectDebuff', to: 'allAllies', v: [%] }` (cap RULES.reflectDebuffMaxPct · event 'reflectDebuff') · a single hit lives in strike() in battle.js (shared with carried hits)
+- (set 21) Order inside a tick must not depend on side: effects applied mid-hit or across sides are queued and run after the related queue (see reflQ revQ summons) · status/heal queues use drainS/drainH · any new mechanic that reads/changes the other side's values must be checked with sides swapped
+- Battle result `simulate().aborted` = 'hits' | 'effects' when a safety cutoff stops it (result = draw)
+- Battle result `simulate().perm` = [{ side, row, lane, id, key, amount }] → passed to `endMatch(st, won, chars, rules, gains)` of that side
