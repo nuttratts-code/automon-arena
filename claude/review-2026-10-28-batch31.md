@@ -1,6 +1,6 @@
 # Batch 31 options: measured results as colours on the step-1 grid + tribe overview (28 Oct 2026)
 
-Status: WAITING for user pick (asked in chat 28 Oct). Nothing coded yet.
+Status: **user chose A (28 Oct) · DONE in set 50, balance room v114.** Tribe numbers shown uncoloured (no threshold).
 
 ## What exists today
 - Step 1 grid (`src/lab/balance/js/31-steps.js` renderGrid): tribe rows × rarity columns, one chip per character (ID + name, gold edge = edited).
