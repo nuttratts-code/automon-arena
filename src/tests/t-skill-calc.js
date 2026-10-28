@@ -94,7 +94,8 @@ function scAgree(x, tag) {
     if (c) c.skills.forEach((s, si) => {
       const evs = r.events.filter(e => e.k !== 'dmg' && e.from === u.uid && e.d && e.d.si === si && !(e.k === 'heal' || e.k === 'armor') || ((e.k === 'heal' || e.k === 'armor') && (e.from ?? e.to) === u.uid && e.d && e.d.si === si && !/Hit$/.test(e.why || '') && e.why !== 'share' && e.why !== 'tribe'));
       const row = (fxGiven.get(u.uid) || new Map()).get('si:' + si), n = row ? row.list.length : 0;
-      ok(n === evs.length, `${tag}: ${u.id} skill ${si + 1} tab row has ${n} effects, battle logged ${evs.length}`);
+      const refl = r.events.filter(e => e.k === 'reflectDebuff' && Array.isArray(e.by) && e.by.some(b => b.uid === u.uid && b.si === si)).length; // F1: PT-8 reflects (event from = protected ally, listed under the reflecting PT-8's row)
+      ok(n === evs.length + refl, `${tag}: ${u.id} skill ${si + 1} tab row has ${n} effects, battle logged ${evs.length + refl}`);
     });
   }
   ok(near(tot[0], side0[0]) && near(tot[1], side0[1]), `${tag}: header 'ซ้ายทำ/ขวาทำ' ${tot} ≠ ${side0}`);
@@ -396,17 +397,17 @@ const SC_SKILL = [
     for (const p of scProcs(x.r, me, 0).filter(e => e.t <= 20000)) {
       const hs = h0.filter(q => q.t === p.t); if (!hs.length) continue;
       const S = at(x.r.events.indexOf(hs[0])), lost = S.get(me).maxHp - Math.max(0, S.get(me).hp);
-      // first receiver: exact · later receivers: at most that (PT-6's lost HP is re-read after each heal → finding F3)
-      hs.forEach((e, k) => { const r0 = S.get(e.to), want = Math.min(Math.floor(lost * v0 / 100), r0.maxHp - r0.hp); ok(k === 0 ? e.amount === want : e.amount <= want, `t ${p.t}: heal #${k + 1} ${e.amount} want ${k ? '≤ ' : ''}${want} (${v0}% of PT-6 lost HP ${lost})`); });
+      // F3 (28 Oct, user A): PT-6's lost HP is read once when the skill fires → every receiver gets the same % (capped by its own missing HP)
+      hs.forEach((e, k) => { const r0 = S.get(e.to), want = Math.min(Math.floor(lost * v0 / 100), r0.maxHp - r0.hp); eq(e.amount, want, `t ${p.t}: heal #${k + 1} (${v0}% of PT-6 lost HP ${lost})`); });
     }
     return x;
   }],
   ['WN-2', 'ตัวเอง down แล้วลุก (โควตาอสูร) → พลังโจมตี +v ถาวร', (c, L, i) => {
-    // tribes on: demon quota lets WN-2 get back up (with only real down the effect is lost → finding F2, see SC_FINDINGS)
+    // tribes on: demon quota lets WN-2 get back up once (in-match +v) · every down counts for the permanent gain, including the real one later (F2)
     const x = scRun([[c, L, 0, 0], [scC('WN-3'), 1, 1, 0], [scC('WN-7'), 1, 2, 0], [scC('PT-1'), 1, 2, 1]], [[scPunch('ZP-1', 2000), 1, 0, 0]], { rules: RULES }), me = x.uid(0, 0, 0), v = sk('WN-2').v[i];
     ok(x.r.events.some(e => e.k === 'revive' && e.who === me), 'got back up');
     eq(scSk(x.r, me, 0, 'atkUp').map(e => e.amount), [v], 'attack +v when back up');
-    eq(x.r.perm.filter(g => g.id === 'WN-2').map(g => g.amount), [v], 'kept as permanent');
+    eq(x.r.perm.filter(g => g.id === 'WN-2').map(g => g.amount), [v * scProcs(x.r, me, 0).length], 'permanent gain on every down (F2): the real down later in the match counts too');
     return x;
   }],
   ['WN-3', 'โดนตี → HP สูงสุด +2% (HP เพิ่มเท่ากัน)', (c, L, i) => {
@@ -436,7 +437,7 @@ const SC_SKILL = [
     eq(got.sort(), [[x.uid(1, 0, 0), 1001 - Math.floor(1001 * v / 100)], [x.uid(1, 0, 1), 500 - Math.floor(500 * v / 100)]].sort(), 'front row max HP cut (cut rounded down)');
     return x;
   }],
-  ['WN-6', 'เพื่อน down → พลังโจมตี +v% · ตีโดน → ดูดเลือด 50% ของดาเมจฮิต', (c, L, i) => {
+  ['WN-6', 'เพื่อน down → พลังโจมตี +v% · ตีโดน → ดูดเลือด 50% ของดาเมจที่ฮิตนั้นทำ (รวมช็อตที่แตก)', (c, L, i) => {
     const glass = mk('ZG-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(1) });
     const x = scRun([[c, L, 2, 0], [glass, 1, 0, 0]], [[scPunch('ZP-1', 5), 1, 0, 0], [scPunch('ZP-2', 300, { cdMs: [4000, 4000, 4000], skills: [{ when: 'matchStart', do: 'shock', to: 'enemyFront', v: L3(0) }] }), 1, 1, 0]]), me = x.uid(0, 2, 0);
     const v0 = sk('WN-6').v[i], v1 = sk('WN-6', 1).v[i];
@@ -444,9 +445,46 @@ const SC_SKILL = [
     eq(up.map(e => e.amount), [Math.floor(c.atk[i] * v0 / 100)], 'attack +v% after 1 ally down');
     const at = scLedger(x.r);
     for (const h of scSk(x.r, me, 1, 'heal').filter(e => e.t <= 40000)) {
-      const hit = x.r.events.filter(e => e.k === 'dmg' && e.why === 'hit' && e.from === me && e.t === h.t).reduce((a, e) => a + e.amount, 0), s = at(x.r.events.indexOf(h)).get(me);
-      eq(h.amount, Math.min(Math.floor(hit * v1 / 100), s.maxHp - s.hp), `t ${h.t}: lifesteal of hit ${hit}`);
+      const hit = x.r.events.filter(e => e.k === 'dmg' && (e.why === 'hit' || e.why === 'shock') && e.from === me && e.t === h.t).reduce((a, e) => a + e.amount, 0), s = at(x.r.events.indexOf(h)).get(me);
+      eq(h.amount, Math.min(Math.floor(hit * v1 / 100), s.maxHp - s.hp), `t ${h.t}: lifesteal of hit + shock burst ${hit}`);
     }
+    return x;
+  }],
+  // F4 (28 Oct, user B): the rule is kept as the code does it — lifesteal counts the hit AND the shock that bursts on that target (hit 20 + shock 30 → heals 50% of 50)
+  ['WN-6', 'ดูดเลือดรวมช็อตที่แตกบนเป้า (ฮิต 20 + ช็อต 30 → ดูด 50% ของ 50)', (c, L, i) => {
+    const sh = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(100000), skills: [{ when: 'matchStart', do: 'shock', to: 'enemyFront', v: L3(30) }] });
+    const x = scRun([[c, L, 0, 0], [sh, 1, 1, 0]], [[scPunch('ZP-1', 20), 1, 0, 0]]), me = x.uid(0, 0, 0), v1 = sk('WN-6', 1).v[i], at = scLedger(x.r);
+    const h = scSk(x.r, me, 1, 'heal')[0];
+    ok(h, 'lifesteal fired');
+    const hit = x.r.events.filter(e => e.k === 'dmg' && e.why === 'hit' && e.from === me && e.t === h.t).reduce((a, e) => a + e.amount, 0);
+    const burst = x.r.events.filter(e => e.k === 'dmg' && e.why === 'shock' && e.from === me && e.t === h.t).reduce((a, e) => a + e.amount, 0), s = at(x.r.events.indexOf(h)).get(me);
+    ok(burst > 0, 'shock burst happened in the same set');
+    eq(h.amount, Math.min(Math.floor((hit + burst) * v1 / 100), s.maxHp - s.hp), `lifesteal of hit ${hit} + shock ${burst}`);
+    return x;
+  }],
+  // F2 (28 Oct, user A): WN-2 gains the permanent attack on EVERY down, including a real down (no demon quota, no revive)
+  ['WN-2', 'down จริง (ไม่ได้ลุก) → ได้พลังโจมตี +v ถาวรด้วย (ผลในแมตช์ไม่มี)', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0]], [[scPunch('ZP-1', 2000), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('WN-2').v[i];
+    ok(x.r.events.some(e => e.k === 'down' && e.who === me) && !x.r.events.some(e => e.k === 'revive' && e.who === me), 'WN-2 went down for good');
+    eq(scProcs(x.r, me, 0).length, 1, 'skill fired once');
+    eq(x.r.perm.filter(g => g.id === 'WN-2').map(g => g.amount), [v], 'permanent attack gained after a real down');
+    ok(!x.r.events.some(e => e.k === 'atkUp' && e.to === me), 'no in-match attack change on a unit that is down');
+    return x;
+  }],
+  // F1 (28 Oct, user B): PT-8 reflected burn/shock → credited to the protected ally (tab 'ทำดาเมจ' + dealt) · PT-8's 'อื่นๆ' row lists every reflect with who got it
+  ['PT-8', 'ไฟ/ช็อตที่สะท้อน นับเป็นของเพื่อนที่ถูกปกป้อง · แท็บ "อื่นๆ" ของ PT-8 ลงทุกครั้งที่สะท้อน + เป้า', (c, L, i) => {
+    const sh = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: 1000, hp: L3(100000), shock: L3(10), burn: L3(10) });
+    const x = scRun([[c, L, 1, 0], [scC('HL-3'), 3, 0, 0]], [[sh, 1, 0, 0]]), me = x.uid(0, 1, 0), ally = x.uid(0, 0, 0), foe = x.uid(1, 0, 0);
+    const refl = x.r.events.filter(e => e.k === 'reflectDebuff');
+    ok(refl.length > 0, 'reflected at least once');
+    ok(refl[0].from === ally, 'first reflect: from = the protected ally (not PT-8)');
+    ok(refl.every(e => x.model.sideOf(e.from) === 0 && e.to === foe && e.by.some(b => b.uid === me && b.si === 0)), 'reflect: from = the protected unit (own side), to = the enemy, by lists PT-8');
+    const row = (x.model.fxGiven.get(me) || new Map()).get('si:0');
+    ok(row && refl.every(e => row.list.some(q => q.e === e)), "every reflect is in PT-8's 'อื่นๆ' row (with the enemy as target)");
+    const back = x.r.events.filter(e => (e.k === 'burn' || e.k === 'shock') && e.why === 'reflect');
+    ok(back.length > 0 && back.every(e => x.model.sideOf(e.from) === 0 && e.from !== foe), 'reflected burn/shock credited to the protected unit');
+    ok(back[0].from === ally, 'first reflected burn credited to the protected ally');
+    ok(x.model.per.get(ally).out.some(q => q.why === 'burn'), "reflected burn damage shows under the protected ally's 'ทำดาเมจ'");
     return x;
   }],
   ['PT-5', 'ตีโดน → เพื่อนภูติสุ่ม (ไม่ใช่ PT-5) ตีเป้าเดียวกันทันที', (c, L, i) => {
@@ -484,38 +522,8 @@ const SC_COVER = ['สกิล+แท็บวิเคราะห์: ทุ�
   const miss = SC_CH.filter(c => c.skills.length && !SC_SHOP.has(c.id) && !have.has(c.id)).map(c => c.id);
   eq(miss, [], 'characters with in-match skills but no test');
 }];
-// ---- Findings (28 Oct): the rule text and the battle disagree, or the tab misses something. Not failures yet:
-// `node tests/run.js` prints them as 'รอผู้ใช้ตัดสิน'. User picks per claude/review-2026-10-28.md → fix → move to TESTS.
-const scOnce = (id, fn) => () => { const c = scC(id); for (const [L, i] of scLv(c)) { try { fn(c, L, i); } catch (e) { throw new Error(`Lv${L}: ${e.message}`); } } };
-export const FINDINGS_SKILL_CALC = [
-  ['F1 PT-8 สะท้อนดีบัฟ: แท็บ "อื่นๆ" ของ PT-8 ควรนับครั้งที่สะท้อน · ดาเมจไฟ/ช็อตที่สะท้อนควรนับให้ PT-8', scOnce('PT-8', (c, L, i) => {
-    const sh = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: 1000, hp: L3(100000), shock: L3(10), burn: L3(10) });
-    const x = scRun([[c, L, 1, 0], [scC('HL-3'), 3, 0, 0]], [[sh, 1, 0, 0]]), me = x.uid(0, 1, 0);
-    const n = x.r.events.filter(e => e.k === 'reflectDebuff').length, row = (x.model.fxGiven.get(me) || new Map()).get('si:0');
-    ok(row && row.list.length >= n, `tab 'อื่นๆ' of PT-8: ${row ? row.list.length : 0} rows, battle reflected ${n} times`);
-    ok(x.model.per.get(me).out.some(q => q.why === 'burn'), "reflected burn damage shows under PT-8 'ทำดาเมจ'");
-  })],
-  ['F2 WN-2: down จริง (ไม่ได้ลุก) → ควรได้พลังโจมตี +v ถาวร (combat-rules C-8.5 "ทำงานทุกครั้ง")', scOnce('WN-2', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0]], [[scPunch('ZP-1', 2000), 1, 0, 0]]), v = sk('WN-2').v[i];
-    eq(x.r.perm.filter(g => g.id === 'WN-2').map(g => g.amount), [v], 'permanent attack after a real down');
-  })],
-  ['F3 PT-6: ทุกคนที่ได้ฟื้นในครั้งเดียวกันได้ % ของ HP ที่ PT-6 เสีย "ค่าเดียวกัน" (ตอนนี้ตัวแรกฟื้น PT-6 ก่อน ตัวถัดไปได้น้อยลง)', scOnce('PT-6', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 0, 1], [scC('HL-1'), 1, 1, 1]], [[scPunch('ZP-1', 15), 1, 0, 0], [scPunch('ZP-2', 5), 1, 0, 1]]), me = x.uid(0, 0, 0), v0 = sk('PT-6').v[i], at = scLedger(x.r);
-    for (const p of scProcs(x.r, me, 0).filter(e => e.t <= 20000)) {
-      const hs = scSk(x.r, me, 0, 'heal').filter(q => q.t === p.t); if (hs.length < 2) continue;
-      const S = at(x.r.events.indexOf(hs[0])), lost = S.get(me).maxHp - Math.max(0, S.get(me).hp);
-      for (const e of hs) { const r0 = e.to === me ? S.get(me) : S.get(e.to); eq(e.amount, Math.min(Math.floor(lost * v0 / 100), r0.maxHp - r0.hp), `t ${p.t}: heal to #${e.to}`); }
-    }
-  })],
-  ['F4 WN-6 ดูดเลือด: นับเฉพาะดาเมจฮิต (combat-rules "ดูดเลือด % ดาเมจฮิต") ไม่รวมช็อตที่แตกบนเป้า', scOnce('WN-6', (c, L, i) => {
-    const sh = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(100000), skills: [{ when: 'matchStart', do: 'shock', to: 'enemyFront', v: L3(30) }] });
-    const x = scRun([[c, L, 0, 0], [sh, 1, 1, 0]], [[scPunch('ZP-1', 20), 1, 0, 0]]), me = x.uid(0, 0, 0), v1 = sk('WN-6', 1).v[i], at = scLedger(x.r);
-    const h = scSk(x.r, me, 1, 'heal')[0];
-    ok(h, 'lifesteal fired');
-    const hit = x.r.events.filter(e => e.k === 'dmg' && e.why === 'hit' && e.from === me && e.t === h.t).reduce((a, e) => a + e.amount, 0), s = at(x.r.events.indexOf(h)).get(me);
-    eq(h.amount, Math.min(Math.floor(hit * v1 / 100), s.maxHp - s.hp), `lifesteal of hit ${hit}`);
-  })],
-];
+// Findings F1-F4 (review 28 Oct): all four decided by the user the same day and fixed → now real tests above. The list stays so tests/run.js keeps its "รอผู้ใช้ตัดสิน" output for future findings.
+export const FINDINGS_SKILL_CALC = [];
 // ---- Random full matches (all 48 characters, Lv1–3 mixed, tribe bonuses ON): tab = battle in every match ----
 const SC_FUZZ = ['แท็บวิเคราะห์ = ผลต่อสู้: 300 แมตช์สุ่ม ทุกตัว ทุกเลเวล เปิดโบนัสเผ่า', () => {
   const rng = makeRng(4242), m = makeCharMap(SC_CH);

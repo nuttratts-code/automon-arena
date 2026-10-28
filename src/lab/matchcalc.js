@@ -45,6 +45,8 @@ export function mxFxGiven(r) { // uid → Map(key → { key, name, color, si, li
       else if (e.why === 'tribe' || (e.d && e.d.src === 'tribe')) put(g, e.k + ':tribe', () => ({ name: (A ? 'เกราะ' : 'ฮิล') + ' (โบนัสเผ่า)', color: c }), x);
       else if (si != null) put(g, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
       else put(g, e.k + ':etc', () => ({ name: A ? 'ให้เกราะ (อื่นๆ)' : 'ให้ฮิล (อื่นๆ)', color: c }), x);
+    } else if (e.k === 'reflectDebuff' && Array.isArray(e.by)) { // F1: from = protected ally (gets the damage credit) · the PT-8 that reflected lists it under its skill row (to = who got it back)
+      for (const b of e.by) if (b.si != null) put(b.uid, 'si:' + b.si, () => ({ si: b.si, color: 'var(--n-skill)' }), x);
     } else if (si != null && e.k !== 'dmg' && e.from != null) put(e.from, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
   });
   return out;

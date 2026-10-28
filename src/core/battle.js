@@ -47,6 +47,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const SRC_KINDS = new Set(['armor', 'heal', 'buff', 'atkUp', 'perm', 'maxhp', 'cleanse', 'steal', 'cdCut', 'cdPct', 'reflectDebuff', 'revive']);
   const bShare = burnShares(); // A7: burn credit by share (runs with log off too)
   const log = (k, d) => {
+    if (muteLog && k !== 'perm') return; // F2: ผลถาวรของตัวที่ down จริง จดเฉพาะ perm
     if (k === 'burn' || k === 'cleanse' || k === 'down') bShare.see(k, d);
     if (!logOn) return;
     if (detailOn && dCur && SRC_KINDS.has(k) && !('d' in d)) events.push({ t, k, ...d, ...('from' in d ? {} : { from: dFrom }), d: { ...dCur } });
@@ -54,6 +55,7 @@ export function simulate(teamA, teamB, opts = {}) {
   };
   // ชุด 36: opts.detail = จดส่วนประกอบของดาเมจ (ช่อง d ในเหตุการณ์ dmg) ให้แท็บวิเคราะห์แมตช์ · จดอย่างเดียว ไม่เปลี่ยนผล · ปิดอยู่ตอนวัด/บอท/เกม
   const detailOn = logOn && !!opts.detail;
+  let muteLog = false; // F2: true ระหว่างทำผลถาวรของตัวที่ down จริง (ดู apply)
   let dCur = null; // สกิลที่กำลังทำผล (ลำดับสกิล + ชนิดผล) ให้ดาเมจที่เกิดจากสกิลรู้ที่มา
   let dFrom = null; // uid ของผู้ใช้สกิลที่กำลังทำผล (คู่กับ dCur)
 
@@ -133,6 +135,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // ชุด 14: ผู้รับของสกิล = เป้าตามช่อง to + เพื่อนตามตำแหน่ง (allyAt) + กรองเผ่าเดียวกัน (sameTribe · นับเผ่าเพิ่ม · ตัวเองผ่านเสมอถ้าเป้าเดิมรวมตัวเอง)
   const RAND_N = { allyRandom: 1, allyRandom2: 2 };
   function skillTargetsOf(u, s, ctx) {
+    if (s.to === 'self' && s.perm && u.down && ctx.downed === u) return [u]; // F2: ตัวเอง down จริง ยังได้ค่าถาวร
     if (RAND_N[s.to] && (s.sameTribe || s.skipSameId)) { // ชุด 20: เป้าสุ่ม + กรอง → กรองก่อนแล้วค่อยสุ่ม (เดิมสุ่มก่อนแล้วกรอง ทำให้บ่อยครั้งไม่มีผู้รับ)
       // ชุด 21: พาเพื่อนไปตี (ทำทันทีระหว่างฮิต) ใช้ "ยังไม่ down" แทน HP > 0 · เพื่อนที่ HP หมดใน tick นี้ยังตีได้ เหมือนชุดปกติที่ตั้งไว้แล้ว (ไม่ขึ้นกับลำดับฝั่ง)
       let pool = allies(u).filter(x => x !== u);
@@ -259,11 +262,13 @@ export function simulate(teamA, teamB, opts = {}) {
       for (const [to, pct] of Object.entries(f.shareTo)) if (pct > 0) for (const x of targetsOf(f, to, {})) if (x !== f) addArmor(x, v * pct / 100, 'share');
     }
   }
-  function addStatus(f, kind, v, why, src) {
+  // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค.: ไฟ/ช็อตที่ PT-8 สะท้อน นับเป็นของเพื่อนที่ถูกปกป้อง · ไม่ใช้ค่า +% ของมัน)
+  function addStatus(f, kind, v, why, src, credit) {
     if (kind === 'burn' && src && src.side !== f.side && src.burnAmp) v *= amp(src.burnAmp); // ไฟที่ทำให้ติด +% (ชุด 6)
     v = Math.floor(v);
     if (v <= 0 || f.down) return;
-    f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: src ? src.uid : null }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
+    const by = src || credit;
+    f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
     if (kind === 'burn' && src && src.burnNoDecay) f.noDecayPerm = true;
     if (why !== 'reflect' && src && src.side !== f.side) reflectBack(f, src, kind, v);
   }
@@ -271,12 +276,12 @@ export function simulate(teamA, teamB, opts = {}) {
   // ตัวที่โดนยังโดนเต็ม · ของที่สะท้อนไปแล้วไม่สะท้อนกลับ (กันวน) · ไฟ/ช็อตที่สะท้อน ปัดลง
   function reflectBack(f, src, kind, v) {
     if (!f.reflDebuff.length || !up(src)) return;
-    let p = 0; for (const r of f.reflDebuff) if (up(r.by)) p += r.pct;
+    let p = 0; const by = []; for (const r of f.reflDebuff) if (up(r.by)) { p += r.pct; by.push({ uid: r.by.uid, si: r.si }); }
     p = Math.min(R.reflectDebuffMaxPct ?? 100, p);
     if (!(p > 0)) return;
     // ชุด 21: เก็บไว้ทำหลังคิวสถานะของ tick นั้นหมด (เดิมทำทันที → ลำดับฝั่งมีผล เช่น PL-4 อ่านไฟศัตรูก่อน/หลังไฟที่สะท้อน · เทสต์สลับฝั่งพัง)
-    if (kind === 'cdSlowPct') reflQ.push({ src, from: f, kind, amount: v * p / 100 });
-    else { const n = Math.floor(v * p / 100); if (n > 0) reflQ.push({ src, from: f, kind, amount: n }); }
+    if (kind === 'cdSlowPct') reflQ.push({ src, from: f, kind, amount: v * p / 100, by });
+    else { const n = Math.floor(v * p / 100); if (n > 0) reflQ.push({ src, from: f, kind, amount: n, by }); }
   }
   let reflQ = [], revQ = [];
   function flushRevive() {
@@ -290,11 +295,12 @@ export function simulate(teamA, teamB, opts = {}) {
   function flushRefl() {
     while (reflQ.length) {
       const list = reflQ; reflQ = [];
-      for (const { src, from, kind, amount } of list) {
+      for (const { src, from, kind, amount, by } of list) {
         if (src.down) continue;
-        log('reflectDebuff', { to: src.uid, from: from.uid, kind, amount });
+        // F1 (28 Oct, user B): from = เพื่อนที่ถูกปกป้อง (ผู้ได้เครดิตไฟ/ช็อตที่สะท้อน) · by = PT-8 ที่สะท้อน (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-8 แสดงว่าสะท้อนใส่ใคร)
+        log('reflectDebuff', { to: src.uid, from: from.uid, kind, amount, ...(detailOn ? { by } : {}) });
         if (kind === 'cdSlowPct') { src.cdMult *= 1 + amount / 100; buff(src, 'cdSlowPct', amount); }
-        else addStatus(src, kind, amount, 'reflect', null);
+        else addStatus(src, kind, amount, 'reflect', null, from);
       }
     }
   }
@@ -345,7 +351,13 @@ export function simulate(teamA, teamB, opts = {}) {
   }
 
   // ทำผลของสกิล 1 ครั้ง
-  function apply(it) { // ชุด 36: จดที่มาของดาเมจจากสกิล (เฉพาะเมื่อเปิด detail)
+  // F2 (28 Oct, user A): สกิล "ตัวเอง down" ที่ได้ค่าถาวรให้ตัวเอง ได้ค่าถาวรทุกครั้งที่ทำงาน แม้ down จริง (ไม่ลุก) · ผลในแมตช์ไม่มี (ตัวนี้สู้ต่อไม่ได้แล้ว): ปิดบันทึกยกเว้น perm แล้วคืนค่าตัวนั้นเหมือนเดิม
+  function apply(it) {
+    if (!(it.u.down && it.ctx.downed === it.u && it.s.perm && it.s.to === 'self')) return applyD(it);
+    const keep = { ...it.u }; muteLog = true;
+    try { return applyD(it); } finally { muteLog = false; Object.assign(it.u, keep); }
+  }
+  function applyD(it) { // ชุด 36: จดที่มาของดาเมจจากสกิล (เฉพาะเมื่อเปิด detail)
     if (!detailOn) return apply0(it);
     const prev = dCur, prevFrom = dFrom; dCur = { si: it.s.idx ?? null, what: it.s.do, ...(it.s.src ? { src: it.s.src } : {}), ...(it.s.why === 'tribe' ? { src: 'tribe' } : {}) }; dFrom = it.u.uid;
     try { return apply0(it); } finally { dCur = prev; dFrom = prevFrom; }
@@ -386,7 +398,7 @@ export function simulate(teamA, teamB, opts = {}) {
         if (!up(u)) break;
         revQ.push({ u, v }); // ชุด 21: ชุบหลังฟื้น HP ทั้งหมดของ tick (เดิมชุบทันที → ฟื้นที่เลือก "เพื่อน HP ต่ำสุด" ขึ้นกับลำดับฝั่ง)
         break; }
-      case 'reflectDebuff': for (const x of T()) { x.reflDebuff.push({ by: u, pct: v }); buff(x, 'reflectDebuff', v); } break;
+      case 'reflectDebuff': for (const x of T()) { x.reflDebuff.push({ by: u, pct: v, si: s.idx ?? null }); buff(x, 'reflectDebuff', v); } break;
       case 'eatAllyBurn': { let sum = 0; for (const x of allies(u)) if (x.burn > 0) { sum += x.burn; x.burn = 0; x.noDecay = 0; x.noDecayPerm = false; log('cleanse', { to: x.uid, what: 'burn' }); }
         const a = Math.floor(sum * v / 100); if (a > 0) { u.atkBonus += a; log('atkUp', { to: u.uid, amount: a }); permRec(u, s, u, a); } break; }
       case 'stealShock': for (const x of T()) if (up(x) && x.shock > 0) { // ดูดช็อต (SF-6): ช็อตบนเป้าลดลงเท่าที่ดูด ตัวเองได้ช็อตต่อฮิตเท่านั้น (ระหว่างสู้)
@@ -406,7 +418,8 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'shockHitOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, a); } } break;
       case 'armorHitOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, a); } } break;
       case 'armorOf': for (const x of T()) { const a = ofVal(u, s, x, ctx) * v / 100; addArmor(x, a, why); permRec(u, s, x, a); } break;
-      case 'healOf': for (const x of T()) { const a = ofVal(u, s, x, ctx) * v / 100; heal(x, a, u); permRec(u, s, x, a); } break;
+      // F3 (28 Oct, user A): ค่าที่ใช้คิดอ่านครั้งเดียวตอนสกิลทำงาน → ทุกคนที่ได้ฟื้นได้ % ของค่าเดียวกัน (เดิมอ่านใหม่หลังฟื้นแต่ละคน PT-6 ฟื้นตัวเองก่อนแล้วคนถัดไปได้น้อยลง) · who=each (WN-5) ยังอ่านของแต่ละคน
+      case 'healOf': { const once = s.of && s.of.who === 'each' ? null : ofVal(u, s, null, ctx); for (const x of T()) { const a = (once ?? ofVal(u, s, x, ctx)) * v / 100; heal(x, a, u); permRec(u, s, x, a); } break; }
       case 'healToAtk': u.healToAtk += v; statNote(u, 'healToAtk', v); permRec(u, s, u, v); break;
       case 'dmg': for (const x of T()) hurt(x, v, u, false, dwhy); break;
       case 'dmgPctAtk': for (const x of T()) hurt(x, atkOf(u) * v / 100, u, false, dwhy); break;
