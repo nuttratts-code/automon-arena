@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **none (set 43 done 28 Oct)** · open WIP branch: none (`claude/skill-analysis-tests` MERGED into main 28 Oct; user may delete the old branch) · last done: F1=B (+PT-8 row lists reflect targets) F2=A F3=A F4=B fixed, combat-rules V2.3, tests 221/221, ui_smoke FAILS [] ERRORS [] · next step: none queued · open decisions: none · publish pending: **balance room + check (code changed: battle.js, matchcalc.js, labels.js) — owner account publishes; game too (labels.js + battle fixes)**
+- Account active now: **none (set 43 done 28 Oct)** · open WIP branch: `claude/pt8-credit-a` (tests 221/221, merge after user OK) · (`claude/skill-analysis-tests` MERGED into main 28 Oct; user may delete the old branch) · last done: F1 changed to A (reflect credited to PT-8, row shows enemy + protected ally) F2=A F3=A F4=B fixed, combat-rules V2.4, tests 221/221, ui_smoke FAILS [] ERRORS [] · next step: none queued · open decisions: none · publish pending: **balance room + check (code changed: battle.js, matchcalc.js, labels.js) — owner account publishes; game too (labels.js + battle fixes)**
 
 ## State
 - **Set 42 (28 Oct, user ask): skill numbers + match tab tests.** `src/tests/t-skill-calc.js` (90 tests): base kit of all 48 chars Lv1–3, one test per in-match skill (expected from combat-rules + live char data, ledger replays the log), every scenario also checks the match tab = battle, coverage guard (new in-match skill without a test = fail), 300 random tribe-on matches. Match-tab numbers moved to `src/lab/matchcalc.js` (pure, bundled into balance + check pages; page behaviour unchanged). 4 findings F1–F4 in claude/review-2026-10-28.md: printed as `WAIT` by `node tests/run.js`, not failures; user picks, then fix + move test into TESTS. Shop-time skills stay in t-shop.js.
@@ -37,7 +37,7 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - Possible follow-up: tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure tribe tier effects only if user asks.
 
 ## Doc versions
-combat-rules V2.3 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.3 (done) · characters.csv 27 Oct
+combat-rules V2.4 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.26 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.4 (English) · match-tabs-spec V1.3 (done) · characters.csv 27 Oct
 
 ## Links (update existing, never create new)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC
