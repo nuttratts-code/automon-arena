@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **none (set 49 done 28 Oct, second account)** · open WIP branch: none — sets 45–49 MERGED into main (user OK 28 Oct) · tests 227/227 · ui_smoke FAILS [] ERRORS [] · last done: set 49 imported the 28 Oct Balance Room values (12 chars, via AMCFG1 code; pre-import check MATCH; abnormal 0; outliers WY-8 −11 / PT-6 −9.4 / WN-6 passed — measure-log Set 49) · bot teams regenerated (hash 521fadbf) · next step: none queued · open decisions: none · publish: game v63 · balance room v113 · check v64 (28 Oct) · config/main NOT cleared (this account has no db access) → owner account may clear it to `{chars:{}, tribes:{}, appliedAt, appliedNote}`; page defaults already = imported values, so yellow clears anyway
+- Account active now: **this chat (28 Oct night)** · open WIP branch: **`claude/pending-batch31`** (pending bundle done: simSummary → core burnShares, build-plan V1.45 with MVP1 target 28 Nov, data-format + budget-notes translated; tests 227/227; ui_smoke: see last done) · next step: user picks batch 31 option A/B/C in **claude/review-2026-10-28-batch31.md**, then code it in 31-steps.js on the same branch · open decisions: batch 31 option · publish: game v63 · balance room v113 · check v64 (balance room must be republished after simSummary change + batch 31) · config/main NOT cleared (owner account may clear it)
 
 ## State
 - **Set 49 (28 Oct): import of Balance Room values** (HL-2 HL-6 HL-7 HL-8 PL-4 PL-6 PT-2 PT-3 PT-6 PT-8 SF-6 SF-8). New kits: HL-2 hit → front ally armor/hit +v · PT-6 hit → 2 random spirit allies heal/hit +30 + atkOf healHit 10% · PT-8 hitTaken → spirit allies cd −3% + hit → back-row spirit allies heal/hit +10. t-skill-calc: new-kit tests + old kits kept as 'สกิลเลิกใช้ (กลไกยังอยู่)' tests (reflectDebuff is now unused). Watch: PT-6/PT-8 heal/hit growth stacks with atkOf (like the SF-6 loop) — abnormal 0 in 24000 matches.
@@ -26,21 +26,18 @@ Read by Claude every new chat. User gets a Thai summary in chat at the end of ea
 - In git, archive/ and instructions.md are NOT copied (stay in the Project). Project docs are now a stale copy — git is the source of truth; do not sync both.
 
 ## Next
-0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.44: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
+0. **Set D: DONE and MERGED into main (27 Oct).** (a) build-plan V1.45: finished parts → claude/archive/build-plan-done.md + heading index; combat-rules V2.2: heading index. (b) mechanics.js split into helpers.js + 8 t-*.js files (tests reordered by topic; same 128 names, 128/128, balance.html/game.html sha identical, only system-check.html differs). Old branches: user deletes (proxy cannot).
 1. **Review: ALL items fixed and published (sets 40 + 41).** Details: claude/review-2026-10-27.md. Old text: Original ask: REPORT FIRST, change nothing until user picks.** (a) Code review: look for mismatches like the 'อื่นๆ' card bug (labels vs what is counted, received vs given, overkill counting, stale/aggregate numbers in Balance Room tabs `src/lab/balance/js/5*.js`, `61-analyze.js`; game page `src/game/`). (b) UX/UI review of game + Balance Room (odd spots, confusing labels, mobile 390px; sticky topbar ~148px already noted). Use ui_smoke screenshots, never read whole built HTML. Output: Thai list, each item = where + why odd + suggested fix + size; user decides. Done before: anomaly closed (SF-6 loop kept = C; overkill metric left as is).
 2. ~~Jules~~ **cancelled by user (28 Oct)** — do not propose Jules work; GEMINI.md kept as is.
-3. Batch 31: measured results as colors on the grid, step 1 + tribe overview.
+3. Batch 31: measured results as colors on the grid, step 1 + tribe overview → options in claude/review-2026-10-28-batch31.md (waiting for user).
 
 ## Pending bundle ("งานรอรวม")
-- Balance Room `simSummary` (41-sim-board.js) still has its own burn-share split; could call core `burnShares()` (same result today, ui_smoke checks they match).
-- Translate remaining workflow files to English when next opened: workflow/data-format.md, balance-import.md · same for budget-notes. Done: handoff, pending, measure-log, backlog, workflow.md, workflow/{setup,publish,measure,botteams}.md.
-- build-plan stale lines (not touched in set D): section "โครงสร้างโค้ด" still says code lives in claude/src/ and mentions tools/extract-from-pages.py (removed) — fix when next opened.
-- Ask user: set target dates in build-plan? (none = cannot warn "behind schedule").
+- MVP1 target 28 Nov 2026 (user, 28 Oct) · step 5.5 economy ~14 Nov (proposed) · step 6 polish/mobile 28 Nov → warn if behind.
 - Optional: user may later ask to remove the `simSummary` table fold (kept in ชุด 37).
 - Possible follow-up: tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure tribe tier effects only if user asks.
 
 ## Doc versions
-combat-rules V2.6 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.44 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.28 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.0 · measure-log V1.5 (English) · match-tabs-spec V1.3 (done) · characters.csv 28 Oct
+combat-rules V2.6 · tribe-rules V2.1 · shop-merge-rules V1.11 · build-plan V1.45 · instructions V3.0 (Thai) · ops-rules v1.1 · pending V1.1 · workflow V1.26 (publish V1.26 · measure V1.27 · botteams V1.23 · balance-import V1.28 · setup V1.27 · others V1.22) · backlog V1.2 (English) · budget-notes V1.1 (English) · measure-log V1.5 (English) · match-tabs-spec V1.3 (done) · characters.csv 28 Oct
 
 ## Links (update existing, never create new)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC
