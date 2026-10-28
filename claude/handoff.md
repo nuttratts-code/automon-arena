@@ -2,7 +2,7 @@
 Read by Claude every new chat. User gets a Thai summary in chat at the end of each task set (decision 26 Oct).
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **none (set 41 closed 28 Oct)** · open WIP branch: none (`claude/review-fixes-2` merged into main, tests 130/130, ui_smoke clean) · last done: all review items fixed + published (game v59 · balance room v106 · check v58) · next step: user picks the next set (see Next) · open decisions: none · publish pending: none · publish access: writer on all 3 artifacts
+- Account active now: **this account (set 42, 28 Oct)** · open WIP branch: `claude/skill-analysis-tests` · doing: per-character skill number tests + match-tab numbers agree with engine (user ask 28 Oct); step 1 done = match-tab calc moved to src/lab/matchcalc.js (no behaviour change, ui_smoke not yet run) · next step: tests/t-skill-calc.js (scenario per character × Lv1–3, expected from rule formula + mxModel vs engine), then fuzz over random matches · open decisions: none · publish pending: balance room (after tests + ui_smoke)
 
 ## State
 - **Set 39 (match code, user chose A):** try-fight tab button "คัดลอกรหัสแมตช์" copies `AMATCH1 {json}` (seed 0 = seed from teams, both teams, tribe-off switches, edited values diff, result, base fingerprint). User pastes it in chat → save to a file → `cd src && node lab/replay.mjs --code <file> [--fx]` (prints MATCHES/DIFFERS vs page result; --fx lists heal/armor events with source). Code: src/lab/matchcode.js (validated parse, diff only on existing fields). WY-4 heal question answered: PT-7 lane heal (not a bug); led to card fix (match-tabs-spec V1.3).
