@@ -1,6 +1,9 @@
 # Rune proposal (28 Oct 2026, stage mode demo) — waiting for user picks
 Context: backlog "Stage mode (demo)". User ideas: DNA, revive, gold, damage. Claude assumed structure option 3 (team runes in slots + unit runes used on one unit) — not confirmed. No numbers yet: every number = ask user first.
 
+## Decided 29 Oct
+- Many runes per run, same type max 1 per run · drops: boss 100%, hard 50%, normal 30%, easy 10% (else fallback reward)
+
 ## Structure (proposal)
 - Team runes: 3 slots (ค่าเสนอ), effect on whole team, can sell for gold, same rune max 1 per team
 - Unit runes: used on 1 unit, stays on it (kept through merge, lost when sold — ค่าเสนอ), max 1 per unit
