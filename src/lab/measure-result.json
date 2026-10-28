@@ -1,0 +1,2839 @@
+{
+ "n": 24000,
+ "seed": 4242,
+ "levels": {
+  "1": {
+   "HL-1": {
+    "win": 44.3,
+    "err": 2.6,
+    "games": 5770
+   },
+   "HL-2": {
+    "win": 45.8,
+    "err": 4.1,
+    "games": 5722
+   },
+   "HL-3": {
+    "win": 51.5,
+    "err": 4.8,
+    "games": 5613
+   },
+   "HL-7": {
+    "win": 57.7,
+    "err": 6,
+    "games": 5672
+   },
+   "HL-4": {
+    "win": 40,
+    "err": -4.7,
+    "games": 5736
+   },
+   "HL-5": {
+    "win": 48.1,
+    "err": -3.5,
+    "games": 5703
+   },
+   "HL-8": {
+    "win": 63.6,
+    "err": 6.9,
+    "games": 5598
+   },
+   "HL-6": {
+    "win": 71.9,
+    "err": 5.2,
+    "games": 5569
+   },
+   "PL-1": {
+    "win": 40.2,
+    "err": -1.5,
+    "games": 5669
+   },
+   "PL-2": {
+    "win": 42.4,
+    "err": -2.2,
+    "games": 5496
+   },
+   "PL-3": {
+    "win": 44.9,
+    "err": 3.2,
+    "games": 5673
+   },
+   "PL-7": {
+    "win": 43,
+    "err": -3.6,
+    "games": 5684
+   },
+   "PL-4": {
+    "win": 48.5,
+    "err": -3.1,
+    "games": 5715
+   },
+   "PL-5": {
+    "win": 55,
+    "err": -1.7,
+    "games": 5799
+   },
+   "PL-8": {
+    "win": 45.2,
+    "err": -6.5,
+    "games": 5623
+   },
+   "PL-6": {
+    "win": 69.6,
+    "err": 2.9,
+    "games": 5720
+   },
+   "SF-1": {
+    "win": 44.3,
+    "err": 2.6,
+    "games": 5677
+   },
+   "SF-2": {
+    "win": 41.3,
+    "err": -0.4,
+    "games": 5779
+   },
+   "SF-3": {
+    "win": 43.3,
+    "err": -3.4,
+    "games": 5764
+   },
+   "SF-7": {
+    "win": 39.5,
+    "err": -5.2,
+    "games": 5622
+   },
+   "SF-4": {
+    "win": 54.5,
+    "err": 2.8,
+    "games": 5686
+   },
+   "SF-5": {
+    "win": 60.9,
+    "err": 9.2,
+    "games": 5838
+   },
+   "SF-8": {
+    "win": 54.7,
+    "err": -1.9,
+    "games": 5668
+   },
+   "SF-6": {
+    "win": 70.6,
+    "err": 3.9,
+    "games": 5642
+   },
+   "WY-1": {
+    "win": 41.3,
+    "err": -0.4,
+    "games": 5757
+   },
+   "WY-2": {
+    "win": 41.3,
+    "err": -0.4,
+    "games": 5693
+   },
+   "WY-3": {
+    "win": 39.4,
+    "err": -5.3,
+    "games": 5687
+   },
+   "WY-7": {
+    "win": 41.8,
+    "err": -4.9,
+    "games": 5761
+   },
+   "WY-4": {
+    "win": 55.7,
+    "err": 4,
+    "games": 5818
+   },
+   "WY-5": {
+    "win": 54.9,
+    "err": 3.2,
+    "games": 5660
+   },
+   "WY-8": {
+    "win": 44.8,
+    "err": -11.9,
+    "games": 5755
+   },
+   "WY-6": {
+    "win": 75.9,
+    "err": 9.2,
+    "games": 5737
+   },
+   "PT-1": {
+    "win": 44.8,
+    "err": 3.1,
+    "games": 5549
+   },
+   "PT-2": {
+    "win": 44.7,
+    "err": 3.1,
+    "games": 5748
+   },
+   "PT-3": {
+    "win": 43.3,
+    "err": -3.3,
+    "games": 5748
+   },
+   "PT-7": {
+    "win": 49.5,
+    "err": 2.9,
+    "games": 5755
+   },
+   "PT-4": {
+    "win": 46.7,
+    "err": -5,
+    "games": 5744
+   },
+   "PT-5": {
+    "win": 47,
+    "err": -4.7,
+    "games": 5672
+   },
+   "PT-8": {
+    "win": 57.9,
+    "err": 1.2,
+    "games": 5703
+   },
+   "PT-6": {
+    "win": 63.2,
+    "err": -3.5,
+    "games": 5616
+   },
+   "WN-1": {
+    "win": 42.8,
+    "err": 3.1,
+    "games": 5666
+   },
+   "WN-2": {
+    "win": 44,
+    "err": 2.3,
+    "games": 5635
+   },
+   "WN-3": {
+    "win": 50.6,
+    "err": 3.9,
+    "games": 5633
+   },
+   "WN-7": {
+    "win": 46.1,
+    "err": -0.6,
+    "games": 5742
+   },
+   "WN-4": {
+    "win": 47.2,
+    "err": -4.5,
+    "games": 5766
+   },
+   "WN-5": {
+    "win": 45.8,
+    "err": -5.9,
+    "games": 5766
+   },
+   "WN-8": {
+    "win": 61.7,
+    "err": 5,
+    "games": 5620
+   },
+   "WN-6": {
+    "win": 59.4,
+    "err": -7.3,
+    "games": 5785
+   }
+  },
+  "2": {
+   "HL-1": {
+    "win": 44.2,
+    "err": 2.6,
+    "games": 5770
+   },
+   "HL-2": {
+    "win": 46,
+    "err": 4.3,
+    "games": 5722
+   },
+   "HL-3": {
+    "win": 51.1,
+    "err": 4.4,
+    "games": 5613
+   },
+   "HL-7": {
+    "win": 56.6,
+    "err": 4.9,
+    "games": 5672
+   },
+   "HL-4": {
+    "win": 40.1,
+    "err": -4.6,
+    "games": 5736
+   },
+   "HL-5": {
+    "win": 48,
+    "err": -3.7,
+    "games": 5703
+   },
+   "HL-8": {
+    "win": 64.4,
+    "err": 7.7,
+    "games": 5598
+   },
+   "HL-6": {
+    "win": 70.7,
+    "err": 4,
+    "games": 5569
+   },
+   "PL-1": {
+    "win": 40.8,
+    "err": -0.9,
+    "games": 5669
+   },
+   "PL-2": {
+    "win": 41.4,
+    "err": -3.2,
+    "games": 5496
+   },
+   "PL-3": {
+    "win": 46.2,
+    "err": 4.5,
+    "games": 5673
+   },
+   "PL-7": {
+    "win": 44.7,
+    "err": -2,
+    "games": 5684
+   },
+   "PL-4": {
+    "win": 53.2,
+    "err": 1.5,
+    "games": 5715
+   },
+   "PL-5": {
+    "win": 57.5,
+    "err": 0.8,
+    "games": 5799
+   },
+   "PL-8": {
+    "win": 47.6,
+    "err": -4.1,
+    "games": 5623
+   },
+   "PL-6": {
+    "win": 71.4,
+    "err": 4.7,
+    "games": 5720
+   },
+   "SF-1": {
+    "win": 44.1,
+    "err": 2.4,
+    "games": 5677
+   },
+   "SF-2": {
+    "win": 41.1,
+    "err": -0.6,
+    "games": 5779
+   },
+   "SF-3": {
+    "win": 42.1,
+    "err": -4.6,
+    "games": 5764
+   },
+   "SF-7": {
+    "win": 38.6,
+    "err": -6.1,
+    "games": 5622
+   },
+   "SF-4": {
+    "win": 53.9,
+    "err": 2.2,
+    "games": 5686
+   },
+   "SF-5": {
+    "win": 59.4,
+    "err": 7.7,
+    "games": 5838
+   },
+   "SF-8": {
+    "win": 53.3,
+    "err": -3.4,
+    "games": 5668
+   },
+   "SF-6": {
+    "win": 68.3,
+    "err": 1.6,
+    "games": 5642
+   },
+   "WY-1": {
+    "win": 42.6,
+    "err": 0.9,
+    "games": 5757
+   },
+   "WY-2": {
+    "win": 41.4,
+    "err": -0.3,
+    "games": 5693
+   },
+   "WY-3": {
+    "win": 39,
+    "err": -5.7,
+    "games": 5687
+   },
+   "WY-7": {
+    "win": 41.5,
+    "err": -5.2,
+    "games": 5761
+   },
+   "WY-4": {
+    "win": 57.9,
+    "err": 6.2,
+    "games": 5818
+   },
+   "WY-5": {
+    "win": 48.4,
+    "err": -3.3,
+    "games": 5660
+   },
+   "WY-8": {
+    "win": 45.7,
+    "err": -11,
+    "games": 5755
+   },
+   "WY-6": {
+    "win": 75.1,
+    "err": 8.4,
+    "games": 5737
+   },
+   "PT-1": {
+    "win": 44.2,
+    "err": 2.5,
+    "games": 5549
+   },
+   "PT-2": {
+    "win": 44.5,
+    "err": 2.8,
+    "games": 5748
+   },
+   "PT-3": {
+    "win": 43.3,
+    "err": -3.4,
+    "games": 5748
+   },
+   "PT-7": {
+    "win": 49.7,
+    "err": 3,
+    "games": 5755
+   },
+   "PT-4": {
+    "win": 47,
+    "err": -4.7,
+    "games": 5744
+   },
+   "PT-5": {
+    "win": 46.6,
+    "err": -5.1,
+    "games": 5672
+   },
+   "PT-8": {
+    "win": 57.3,
+    "err": 0.6,
+    "games": 5703
+   },
+   "PT-6": {
+    "win": 61.7,
+    "err": -5,
+    "games": 5616
+   },
+   "WN-1": {
+    "win": 42.7,
+    "err": 3,
+    "games": 5666
+   },
+   "WN-2": {
+    "win": 43.7,
+    "err": 2,
+    "games": 5635
+   },
+   "WN-3": {
+    "win": 51.6,
+    "err": 4.9,
+    "games": 5633
+   },
+   "WN-7": {
+    "win": 43.6,
+    "err": -3.1,
+    "games": 5742
+   },
+   "WN-4": {
+    "win": 47.1,
+    "err": -4.6,
+    "games": 5766
+   },
+   "WN-5": {
+    "win": 44.9,
+    "err": -6.8,
+    "games": 5766
+   },
+   "WN-8": {
+    "win": 61,
+    "err": 4.3,
+    "games": 5620
+   },
+   "WN-6": {
+    "win": 66.2,
+    "err": -0.5,
+    "games": 5785
+   }
+  },
+  "3": {
+   "HL-1": {
+    "win": 43.6,
+    "err": 2,
+    "games": 5770
+   },
+   "HL-2": {
+    "win": 44.3,
+    "err": 2.6,
+    "games": 5722
+   },
+   "HL-3": {
+    "win": 48.5,
+    "err": 1.8,
+    "games": 5613
+   },
+   "HL-7": {
+    "win": 54.5,
+    "err": 2.9,
+    "games": 5672
+   },
+   "HL-4": {
+    "win": 40.4,
+    "err": -4.2,
+    "games": 5736
+   },
+   "HL-5": {
+    "win": 48.3,
+    "err": -3.4,
+    "games": 5703
+   },
+   "HL-8": {
+    "win": 62.7,
+    "err": 6,
+    "games": 5598
+   },
+   "HL-6": {
+    "win": 67,
+    "err": 0.4,
+    "games": 5569
+   },
+   "PL-1": {
+    "win": 44.3,
+    "err": 2.6,
+    "games": 5669
+   },
+   "PL-2": {
+    "win": 40.3,
+    "err": -4.4,
+    "games": 5496
+   },
+   "PL-3": {
+    "win": 46.7,
+    "err": 5.1,
+    "games": 5673
+   },
+   "PL-7": {
+    "win": 45,
+    "err": -1.7,
+    "games": 5684
+   },
+   "PL-4": {
+    "win": 61.4,
+    "err": 9.7,
+    "games": 5715
+   },
+   "PL-5": {
+    "win": 59.7,
+    "err": 3,
+    "games": 5799
+   },
+   "PL-8": {
+    "win": 56.7,
+    "err": 5.1,
+    "games": 5623
+   },
+   "PL-6": {
+    "win": 69.9,
+    "err": 3.3,
+    "games": 5720
+   },
+   "SF-1": {
+    "win": 43.4,
+    "err": 1.7,
+    "games": 5677
+   },
+   "SF-2": {
+    "win": 41.4,
+    "err": -0.2,
+    "games": 5779
+   },
+   "SF-3": {
+    "win": 42,
+    "err": -4.6,
+    "games": 5764
+   },
+   "SF-7": {
+    "win": 39.2,
+    "err": -5.5,
+    "games": 5622
+   },
+   "SF-4": {
+    "win": 52.6,
+    "err": 0.9,
+    "games": 5686
+   },
+   "SF-5": {
+    "win": 57.3,
+    "err": 5.6,
+    "games": 5838
+   },
+   "SF-8": {
+    "win": 50.8,
+    "err": -5.9,
+    "games": 5668
+   },
+   "SF-6": {
+    "win": 63.4,
+    "err": -3.2,
+    "games": 5642
+   },
+   "WY-1": {
+    "win": 44,
+    "err": 2.4,
+    "games": 5757
+   },
+   "WY-2": {
+    "win": 41.6,
+    "err": 0,
+    "games": 5693
+   },
+   "WY-3": {
+    "win": 39.3,
+    "err": -5.4,
+    "games": 5687
+   },
+   "WY-7": {
+    "win": 40.8,
+    "err": -5.8,
+    "games": 5761
+   },
+   "WY-4": {
+    "win": 56.2,
+    "err": 4.5,
+    "games": 5818
+   },
+   "WY-5": {
+    "win": 44.4,
+    "err": -7.2,
+    "games": 5660
+   },
+   "WY-8": {
+    "win": 45.3,
+    "err": -11.3,
+    "games": 5755
+   },
+   "WY-6": {
+    "win": 72,
+    "err": 5.4,
+    "games": 5737
+   },
+   "PT-1": {
+    "win": 44.3,
+    "err": 2.6,
+    "games": 5549
+   },
+   "PT-2": {
+    "win": 44.8,
+    "err": 3.1,
+    "games": 5748
+   },
+   "PT-3": {
+    "win": 43.5,
+    "err": -3.1,
+    "games": 5748
+   },
+   "PT-7": {
+    "win": 48.9,
+    "err": 2.2,
+    "games": 5755
+   },
+   "PT-4": {
+    "win": 48.3,
+    "err": -3.4,
+    "games": 5744
+   },
+   "PT-5": {
+    "win": 47,
+    "err": -4.7,
+    "games": 5672
+   },
+   "PT-8": {
+    "win": 55.5,
+    "err": -1.2,
+    "games": 5703
+   },
+   "PT-6": {
+    "win": 58.2,
+    "err": -8.5,
+    "games": 5616
+   },
+   "WN-1": {
+    "win": 43.1,
+    "err": 3.5,
+    "games": 5666
+   },
+   "WN-2": {
+    "win": 43.5,
+    "err": 1.8,
+    "games": 5635
+   },
+   "WN-3": {
+    "win": 51.6,
+    "err": 4.9,
+    "games": 5633
+   },
+   "WN-7": {
+    "win": 42.3,
+    "err": -4.3,
+    "games": 5742
+   },
+   "WN-4": {
+    "win": 48.9,
+    "err": -2.8,
+    "games": 5766
+   },
+   "WN-5": {
+    "win": 44.9,
+    "err": -6.8,
+    "games": 5766
+   },
+   "WN-8": {
+    "win": 59.3,
+    "err": 2.7,
+    "games": 5620
+   },
+   "WN-6": {
+    "win": 78.4,
+    "err": 11.8,
+    "games": 5785
+   }
+  },
+  "mix": {
+   "HL-1": {
+    "win": 44.8,
+    "err": 3.2,
+    "games": 5584
+   },
+   "HL-2": {
+    "win": 47.4,
+    "err": 5.8,
+    "games": 5682
+   },
+   "HL-3": {
+    "win": 50.7,
+    "err": 4.1,
+    "games": 5606
+   },
+   "HL-7": {
+    "win": 55.3,
+    "err": 3.7,
+    "games": 5627
+   },
+   "HL-4": {
+    "win": 42.4,
+    "err": -2.2,
+    "games": 5790
+   },
+   "HL-5": {
+    "win": 47.4,
+    "err": -4.2,
+    "games": 5728
+   },
+   "HL-8": {
+    "win": 59.8,
+    "err": 3.2,
+    "games": 5703
+   },
+   "HL-6": {
+    "win": 64,
+    "err": -2.6,
+    "games": 5748
+   },
+   "PL-1": {
+    "win": 46.3,
+    "err": 4.7,
+    "games": 5596
+   },
+   "PL-2": {
+    "win": 43.4,
+    "err": -1.3,
+    "games": 5723
+   },
+   "PL-3": {
+    "win": 46.2,
+    "err": 4.6,
+    "games": 5697
+   },
+   "PL-7": {
+    "win": 45.8,
+    "err": -0.8,
+    "games": 5733
+   },
+   "PL-4": {
+    "win": 56.1,
+    "err": 4.5,
+    "games": 5599
+   },
+   "PL-5": {
+    "win": 57.8,
+    "err": 1.2,
+    "games": 5869
+   },
+   "PL-8": {
+    "win": 50.8,
+    "err": -0.9,
+    "games": 5766
+   },
+   "PL-6": {
+    "win": 65.2,
+    "err": -1.4,
+    "games": 5705
+   },
+   "SF-1": {
+    "win": 45.7,
+    "err": 4.1,
+    "games": 5751
+   },
+   "SF-2": {
+    "win": 42.8,
+    "err": 1.2,
+    "games": 5737
+   },
+   "SF-3": {
+    "win": 44.4,
+    "err": -2.2,
+    "games": 5668
+   },
+   "SF-7": {
+    "win": 42.1,
+    "err": -2.5,
+    "games": 5590
+   },
+   "SF-4": {
+    "win": 54,
+    "err": 2.4,
+    "games": 5708
+   },
+   "SF-5": {
+    "win": 56.2,
+    "err": 4.6,
+    "games": 5694
+   },
+   "SF-8": {
+    "win": 52.5,
+    "err": -4.1,
+    "games": 5467
+   },
+   "SF-6": {
+    "win": 64.4,
+    "err": -2.3,
+    "games": 5685
+   },
+   "WY-1": {
+    "win": 45.4,
+    "err": 3.8,
+    "games": 5745
+   },
+   "WY-2": {
+    "win": 42.8,
+    "err": 1.2,
+    "games": 5706
+   },
+   "WY-3": {
+    "win": 41.2,
+    "err": -3.4,
+    "games": 5732
+   },
+   "WY-7": {
+    "win": 43.5,
+    "err": -3.1,
+    "games": 5621
+   },
+   "WY-4": {
+    "win": 54.3,
+    "err": 2.7,
+    "games": 5688
+   },
+   "WY-5": {
+    "win": 48.4,
+    "err": -3.2,
+    "games": 5682
+   },
+   "WY-8": {
+    "win": 45.6,
+    "err": -11,
+    "games": 5707
+   },
+   "WY-6": {
+    "win": 66.7,
+    "err": 0.1,
+    "games": 5741
+   },
+   "PT-1": {
+    "win": 45.9,
+    "err": 4.3,
+    "games": 5619
+   },
+   "PT-2": {
+    "win": 46.4,
+    "err": 4.7,
+    "games": 5646
+   },
+   "PT-3": {
+    "win": 44.1,
+    "err": -2.5,
+    "games": 5724
+   },
+   "PT-7": {
+    "win": 48.5,
+    "err": 1.9,
+    "games": 5686
+   },
+   "PT-4": {
+    "win": 48.7,
+    "err": -2.9,
+    "games": 5834
+   },
+   "PT-5": {
+    "win": 47.8,
+    "err": -3.8,
+    "games": 5907
+   },
+   "PT-8": {
+    "win": 54.3,
+    "err": -2.3,
+    "games": 5754
+   },
+   "PT-6": {
+    "win": 57.2,
+    "err": -9.4,
+    "games": 5666
+   },
+   "WN-1": {
+    "win": 44.6,
+    "err": 5,
+    "games": 5678
+   },
+   "WN-2": {
+    "win": 44.8,
+    "err": 3.2,
+    "games": 5636
+   },
+   "WN-3": {
+    "win": 51.7,
+    "err": 5.1,
+    "games": 5741
+   },
+   "WN-7": {
+    "win": 44.2,
+    "err": -2.4,
+    "games": 5729
+   },
+   "WN-4": {
+    "win": 48.5,
+    "err": -3.1,
+    "games": 5694
+   },
+   "WN-5": {
+    "win": 46.3,
+    "err": -5.3,
+    "games": 5699
+   },
+   "WN-8": {
+    "win": 56.1,
+    "err": -0.5,
+    "games": 5626
+   },
+   "WN-6": {
+    "win": 64.5,
+    "err": -2.1,
+    "games": 5693
+   }
+  }
+ },
+ "avgTime": {
+  "1": 84.3,
+  "2": 79.5,
+  "3": 73.5,
+  "mix": 74.3
+ },
+ "tribeWin": {
+  "เหล็กกล้า": {
+   "inTeams": 28.599999999999998,
+   "inWinners": 29.824339694174146
+  },
+  "เพลิงเผา": {
+   "inTeams": 23.94375,
+   "inWinners": 25.043177892918827
+  },
+  "สายฟ้า": {
+   "inTeams": 23.589583333333334,
+   "inWinners": 23.95214625721387
+  },
+  "วายุ": {
+   "inTeams": 39.40208333333333,
+   "inWinners": 38.41358102700198
+  },
+  "ภูติ": {
+   "inTeams": 29.06458333333333,
+   "inWinners": 28.97763174522937
+  },
+  "อสูร": {
+   "inTeams": 38.95625,
+   "inWinners": 39.64362441551877
+  }
+ },
+ "aborted": {
+  "1": 0,
+  "2": 0,
+  "3": 0,
+  "mix": 0
+ },
+ "abortSample": null,
+ "top": [
+  {
+   "level": 2,
+   "i": 17249,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 188000,
+   "dmgTotal": 61713,
+   "dmgA": 59554,
+   "dmgB": 2159,
+   "hpTotal": 2541,
+   "dmgPerHp": 24.29,
+   "dps": 328.3,
+   "sideRatio": 0.97,
+   "survivors": [
+    0,
+    1
+   ],
+   "perUnit": [
+    {
+     "id": "WY-5",
+     "side": 0,
+     "dealt": 208,
+     "taken": 3725,
+     "hp": 0
+    },
+    {
+     "id": "SF-2",
+     "side": 0,
+     "dealt": 24,
+     "taken": 287,
+     "hp": 0
+    },
+    {
+     "id": "PT-7",
+     "side": 0,
+     "dealt": 288,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 0,
+     "dealt": 72,
+     "taken": 235,
+     "hp": 0
+    },
+    {
+     "id": "WY-4",
+     "side": 0,
+     "dealt": 5129,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "PL-6",
+     "side": 0,
+     "dealt": 53833,
+     "taken": 462,
+     "hp": 0
+    },
+    {
+     "id": "PL-3",
+     "side": 1,
+     "dealt": 530,
+     "taken": 204,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 1160,
+     "taken": 61343,
+     "hp": 188
+    },
+    {
+     "id": "WN-1",
+     "side": 1,
+     "dealt": 136,
+     "taken": 319,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 1,
+     "dealt": 77,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 1,
+     "dealt": 72,
+     "taken": 238,
+     "hp": 0
+    },
+    {
+     "id": "HL-4",
+     "side": 1,
+     "dealt": 184,
+     "taken": 310,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "SF-2",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PT-7",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-4",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "PL-6",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-3",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-1",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-4",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "HL-2",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 2,
+   "i": 17379,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 186000,
+   "dmgTotal": 63583,
+   "dmgA": 61714,
+   "dmgB": 1869,
+   "hpTotal": 2974,
+   "dmgPerHp": 21.38,
+   "dps": 341.8,
+   "sideRatio": 0.97,
+   "survivors": [
+    0,
+    1
+   ],
+   "perUnit": [
+    {
+     "id": "WN-3",
+     "side": 0,
+     "dealt": 21,
+     "taken": 408,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 0,
+     "dealt": 16,
+     "taken": 278,
+     "hp": 0
+    },
+    {
+     "id": "WY-6",
+     "side": 0,
+     "dealt": 4104,
+     "taken": 678,
+     "hp": 0
+    },
+    {
+     "id": "PL-5",
+     "side": 0,
+     "dealt": 568,
+     "taken": 230,
+     "hp": 0
+    },
+    {
+     "id": "WY-1",
+     "side": 0,
+     "dealt": 686,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 0,
+     "dealt": 56207,
+     "taken": 892,
+     "hp": 0
+    },
+    {
+     "id": "PL-3",
+     "side": 1,
+     "dealt": 503,
+     "taken": 217,
+     "hp": 0
+    },
+    {
+     "id": "PL-3",
+     "side": 1,
+     "dealt": 81,
+     "taken": 200,
+     "hp": 0
+    },
+    {
+     "id": "WN-2",
+     "side": 1,
+     "dealt": 40,
+     "taken": 286,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 1104,
+     "taken": 61258,
+     "hp": 210
+    },
+    {
+     "id": "HL-1",
+     "side": 1,
+     "dealt": 64,
+     "taken": 303,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 1,
+     "dealt": 77,
+     "taken": 230,
+     "hp": 0
+    },
+    {
+     "id": "PL-7",
+     "side": 0,
+     "dealt": 112,
+     "taken": 163,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WN-3",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PL-5",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-6",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-1",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "PL-3",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PL-3",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-2",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-1",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 2,
+   "i": 6709,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 185000,
+   "dmgTotal": 50170,
+   "dmgA": 48550,
+   "dmgB": 1620,
+   "hpTotal": 2608,
+   "dmgPerHp": 19.24,
+   "dps": 271.2,
+   "sideRatio": 0.97,
+   "survivors": [
+    0,
+    1
+   ],
+   "perUnit": [
+    {
+     "id": "HL-7",
+     "side": 0,
+     "dealt": 17259,
+     "taken": 785,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 0,
+     "dealt": 48,
+     "taken": 235,
+     "hp": 0
+    },
+    {
+     "id": "PL-6",
+     "side": 0,
+     "dealt": 28442,
+     "taken": 538,
+     "hp": 0
+    },
+    {
+     "id": "HL-4",
+     "side": 0,
+     "dealt": 56,
+     "taken": 164,
+     "hp": 0
+    },
+    {
+     "id": "PL-1",
+     "side": 0,
+     "dealt": 2530,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "WN-7",
+     "side": 0,
+     "dealt": 215,
+     "taken": 208,
+     "hp": 0
+    },
+    {
+     "id": "PL-2",
+     "side": 1,
+     "dealt": 33,
+     "taken": 203,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 1116,
+     "taken": 48309,
+     "hp": 166
+    },
+    {
+     "id": "WN-5",
+     "side": 1,
+     "dealt": 110,
+     "taken": 225,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 1,
+     "dealt": 77,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "WY-3",
+     "side": 1,
+     "dealt": 20,
+     "taken": 123,
+     "hp": 0
+    },
+    {
+     "id": "PT-4",
+     "side": 1,
+     "dealt": 264,
+     "taken": 310,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-6",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-4",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "PL-1",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-2",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WN-5",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-3",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "PT-4",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 2,
+   "i": 2229,
+   "runSeed": 4242,
+   "winner": 0,
+   "timeMs": 186000,
+   "dmgTotal": 51755,
+   "dmgA": 1630,
+   "dmgB": 50125,
+   "hpTotal": 2694,
+   "dmgPerHp": 19.21,
+   "dps": 278.3,
+   "sideRatio": 0.97,
+   "survivors": [
+    2,
+    0
+   ],
+   "perUnit": [
+    {
+     "id": "WN-2",
+     "side": 0,
+     "dealt": 16,
+     "taken": 247,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 0,
+     "dealt": 1092,
+     "taken": 50030,
+     "hp": 21
+    },
+    {
+     "id": "PT-7",
+     "side": 0,
+     "dealt": 56,
+     "taken": 236,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 0,
+     "dealt": 77,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "WN-7",
+     "side": 0,
+     "dealt": 136,
+     "taken": 242,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 0,
+     "dealt": 253,
+     "taken": 630,
+     "hp": 175
+    },
+    {
+     "id": "WN-8",
+     "side": 1,
+     "dealt": 1188,
+     "taken": 358,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 1,
+     "dealt": 2536,
+     "taken": 533,
+     "hp": 0
+    },
+    {
+     "id": "WN-6",
+     "side": 1,
+     "dealt": 1780,
+     "taken": 630,
+     "hp": 0
+    },
+    {
+     "id": "WY-1",
+     "side": 1,
+     "dealt": 342,
+     "taken": 122,
+     "hp": 0
+    },
+    {
+     "id": "WY-7",
+     "side": 1,
+     "dealt": 304,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 1,
+     "dealt": 43975,
+     "taken": 837,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WN-2",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PT-7",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-7",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WN-8",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WY-1",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-6",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "WY-7",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 1,
+   "i": 6709,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 185000,
+   "dmgTotal": 21768,
+   "dmgA": 21198,
+   "dmgB": 570,
+   "hpTotal": 1302,
+   "dmgPerHp": 16.72,
+   "dps": 117.7,
+   "sideRatio": 0.97,
+   "survivors": [
+    0,
+    1
+   ],
+   "perUnit": [
+    {
+     "id": "HL-7",
+     "side": 0,
+     "dealt": 8739,
+     "taken": 580,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 0,
+     "dealt": 32,
+     "taken": 115,
+     "hp": 0
+    },
+    {
+     "id": "PL-6",
+     "side": 0,
+     "dealt": 11285,
+     "taken": 310,
+     "hp": 0
+    },
+    {
+     "id": "HL-4",
+     "side": 0,
+     "dealt": 44,
+     "taken": 81,
+     "hp": 0
+    },
+    {
+     "id": "PL-1",
+     "side": 0,
+     "dealt": 903,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "WN-7",
+     "side": 0,
+     "dealt": 195,
+     "taken": 104,
+     "hp": 0
+    },
+    {
+     "id": "PL-2",
+     "side": 1,
+     "dealt": 15,
+     "taken": 110,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 322,
+     "taken": 21208,
+     "hp": 88
+    },
+    {
+     "id": "WN-5",
+     "side": 1,
+     "dealt": 66,
+     "taken": 111,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 1,
+     "dealt": 35,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "WY-3",
+     "side": 1,
+     "dealt": 12,
+     "taken": 79,
+     "hp": 0
+    },
+    {
+     "id": "PT-4",
+     "side": 1,
+     "dealt": 120,
+     "taken": 150,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "HL-7",
+     "level": 1,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 1,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-6",
+     "level": 1,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-4",
+     "level": 1,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-7",
+     "level": 1,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "PL-1",
+     "level": 1,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WY-5",
+     "level": 1,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-2",
+     "level": 1,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WN-5",
+     "level": 1,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 1,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-3",
+     "level": 1,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "PT-4",
+     "level": 1,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 3,
+   "i": 10104,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 175000,
+   "dmgTotal": 74583,
+   "dmgA": 2734,
+   "dmgB": 71849,
+   "hpTotal": 5250,
+   "dmgPerHp": 14.21,
+   "dps": 426.2,
+   "sideRatio": 0.96,
+   "survivors": [
+    0,
+    3
+   ],
+   "perUnit": [
+    {
+     "id": "HL-1",
+     "side": 0,
+     "dealt": 340,
+     "taken": 4750,
+     "hp": 0
+    },
+    {
+     "id": "WY-2",
+     "side": 0,
+     "dealt": 232,
+     "taken": 4803,
+     "hp": 0
+    },
+    {
+     "id": "PL-8",
+     "side": 0,
+     "dealt": 1434,
+     "taken": 17790,
+     "hp": 0
+    },
+    {
+     "id": "HL-8",
+     "side": 0,
+     "dealt": 352,
+     "taken": 24425,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 0,
+     "dealt": 280,
+     "taken": 5717,
+     "hp": 0
+    },
+    {
+     "id": "WY-3",
+     "side": 0,
+     "dealt": 96,
+     "taken": 14364,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 48,
+     "taken": 514,
+     "hp": 0
+    },
+    {
+     "id": "PT-2",
+     "side": 1,
+     "dealt": 63015,
+     "taken": 1091,
+     "hp": 420
+    },
+    {
+     "id": "PT-2",
+     "side": 1,
+     "dealt": 40,
+     "taken": 521,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 1,
+     "dealt": 8113,
+     "taken": 168,
+     "hp": 292
+    },
+    {
+     "id": "WN-7",
+     "side": 1,
+     "dealt": 105,
+     "taken": 440,
+     "hp": 0
+    },
+    {
+     "id": "SF-6",
+     "side": 1,
+     "dealt": 528,
+     "taken": 0,
+     "hp": 630
+    }
+   ],
+   "teamA": [
+    {
+     "id": "HL-1",
+     "level": 3,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WY-2",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "HL-8",
+     "level": 3,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "PL-8",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-3",
+     "level": 3,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "WN-4",
+     "level": 3,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WY-5",
+     "level": 3,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PT-2",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PT-2",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 3,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "SF-6",
+     "level": 3,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "WN-7",
+     "level": 3,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 2,
+   "i": 20475,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 184000,
+   "dmgTotal": 38050,
+   "dmgA": 1891,
+   "dmgB": 36159,
+   "hpTotal": 2707,
+   "dmgPerHp": 14.06,
+   "dps": 206.8,
+   "sideRatio": 0.95,
+   "survivors": [
+    0,
+    2
+   ],
+   "perUnit": [
+    {
+     "id": "WN-2",
+     "side": 0,
+     "dealt": 116,
+     "taken": 19482,
+     "hp": 0
+    },
+    {
+     "id": "PL-5",
+     "side": 0,
+     "dealt": 428,
+     "taken": 204,
+     "hp": 0
+    },
+    {
+     "id": "WY-3",
+     "side": 0,
+     "dealt": 48,
+     "taken": 12563,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 0,
+     "dealt": 204,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 0,
+     "dealt": 809,
+     "taken": 2988,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 0,
+     "dealt": 170,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "PL-6",
+     "side": 1,
+     "dealt": 468,
+     "taken": 484,
+     "hp": 0
+    },
+    {
+     "id": "WN-1",
+     "side": 1,
+     "dealt": 64,
+     "taken": 305,
+     "hp": 0
+    },
+    {
+     "id": "HL-7",
+     "side": 1,
+     "dealt": 35323,
+     "taken": 859,
+     "hp": 315
+    },
+    {
+     "id": "PT-5",
+     "side": 1,
+     "dealt": 144,
+     "taken": 227,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 1,
+     "dealt": 80,
+     "taken": 150,
+     "hp": 80
+    },
+    {
+     "id": "WN-4",
+     "side": 1,
+     "dealt": 80,
+     "taken": 166,
+     "hp": 0
+    },
+    {
+     "id": "PL-7",
+     "side": 0,
+     "dealt": 116,
+     "taken": 982,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "WN-2",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PL-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WY-3",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WN-4",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "WN-4",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WN-1",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-6",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "PT-5",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "HL-7",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "WN-4",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": "mix",
+   "i": 13048,
+   "runSeed": 4242,
+   "winner": 0,
+   "timeMs": 187000,
+   "dmgTotal": 63328,
+   "dmgA": 3621,
+   "dmgB": 59707,
+   "hpTotal": 4790,
+   "dmgPerHp": 13.22,
+   "dps": 338.7,
+   "sideRatio": 0.94,
+   "survivors": [
+    1,
+    0
+   ],
+   "perUnit": [
+    {
+     "id": "PL-2",
+     "side": 0,
+     "dealt": 66,
+     "taken": 411,
+     "hp": 0
+    },
+    {
+     "id": "WN-2",
+     "side": 0,
+     "dealt": 68,
+     "taken": 564,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 0,
+     "dealt": 3272,
+     "taken": 59501,
+     "hp": 400
+    },
+    {
+     "id": "SF-3",
+     "side": 0,
+     "dealt": 6,
+     "taken": 154,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 0,
+     "dealt": 154,
+     "taken": 630,
+     "hp": 0
+    },
+    {
+     "id": "PT-4",
+     "side": 0,
+     "dealt": 55,
+     "taken": 347,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 240,
+     "taken": 4762,
+     "hp": 0
+    },
+    {
+     "id": "PT-8",
+     "side": 1,
+     "dealt": 1122,
+     "taken": 1395,
+     "hp": 0
+    },
+    {
+     "id": "PT-7",
+     "side": 1,
+     "dealt": 1241,
+     "taken": 630,
+     "hp": 0
+    },
+    {
+     "id": "WN-1",
+     "side": 1,
+     "dealt": 272,
+     "taken": 72,
+     "hp": 0
+    },
+    {
+     "id": "PT-5",
+     "side": 1,
+     "dealt": 348,
+     "taken": 150,
+     "hp": 0
+    },
+    {
+     "id": "PT-6",
+     "side": 1,
+     "dealt": 56484,
+     "taken": 1272,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "WN-2",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-2",
+     "level": 3,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "SF-3",
+     "level": 1,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-5",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 3,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "PT-4",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "PT-8",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WN-1",
+     "level": 1,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "PT-7",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "PT-6",
+     "level": 3,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "PT-5",
+     "level": 1,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 2,
+   "i": 4842,
+   "runSeed": 4242,
+   "winner": 1,
+   "timeMs": 187000,
+   "dmgTotal": 39471,
+   "dmgA": 37404,
+   "dmgB": 2067,
+   "hpTotal": 3108,
+   "dmgPerHp": 12.7,
+   "dps": 211.1,
+   "sideRatio": 0.95,
+   "survivors": [
+    0,
+    1
+   ],
+   "perUnit": [
+    {
+     "id": "HL-5",
+     "side": 0,
+     "dealt": 140,
+     "taken": 480,
+     "hp": 0
+    },
+    {
+     "id": "WN-5",
+     "side": 0,
+     "dealt": 140,
+     "taken": 321,
+     "hp": 0
+    },
+    {
+     "id": "HL-6",
+     "side": 0,
+     "dealt": 34544,
+     "taken": 2125,
+     "hp": 0
+    },
+    {
+     "id": "HL-2",
+     "side": 0,
+     "dealt": 72,
+     "taken": 231,
+     "hp": 0
+    },
+    {
+     "id": "WN-6",
+     "side": 0,
+     "dealt": 2368,
+     "taken": 630,
+     "hp": 0
+    },
+    {
+     "id": "WY-7",
+     "side": 0,
+     "dealt": 140,
+     "taken": 180,
+     "hp": 0
+    },
+    {
+     "id": "PT-3",
+     "side": 1,
+     "dealt": 36,
+     "taken": 531,
+     "hp": 0
+    },
+    {
+     "id": "WY-5",
+     "side": 1,
+     "dealt": 1120,
+     "taken": 34511,
+     "hp": 168
+    },
+    {
+     "id": "HL-1",
+     "side": 1,
+     "dealt": 104,
+     "taken": 542,
+     "hp": 0
+    },
+    {
+     "id": "WY-8",
+     "side": 1,
+     "dealt": 77,
+     "taken": 316,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 1,
+     "dealt": 102,
+     "taken": 410,
+     "hp": 0
+    },
+    {
+     "id": "WY-7",
+     "side": 1,
+     "dealt": 628,
+     "taken": 2364,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "WN-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "HL-5",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "HL-6",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "HL-2",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "WN-6",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "teamB": [
+    {
+     "id": "PT-3",
+     "level": 2,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WY-5",
+     "level": 2,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "HL-1",
+     "level": 2,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WY-8",
+     "level": 2,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WY-7",
+     "level": 2,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "WN-4",
+     "level": 2,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  },
+  {
+   "level": 3,
+   "i": 13216,
+   "runSeed": 4242,
+   "winner": 0,
+   "timeMs": 178600,
+   "dmgTotal": 62394,
+   "dmgA": 58708,
+   "dmgB": 3686,
+   "hpTotal": 4990,
+   "dmgPerHp": 12.5,
+   "dps": 349.4,
+   "sideRatio": 0.94,
+   "survivors": [
+    6,
+    0
+   ],
+   "perUnit": [
+    {
+     "id": "PL-2",
+     "side": 0,
+     "dealt": 2873,
+     "taken": 1118,
+     "hp": 68
+    },
+    {
+     "id": "SF-2",
+     "side": 0,
+     "dealt": 240,
+     "taken": 568,
+     "hp": 40
+    },
+    {
+     "id": "PT-2",
+     "side": 0,
+     "dealt": 48458,
+     "taken": 1110,
+     "hp": 80
+    },
+    {
+     "id": "WN-3",
+     "side": 0,
+     "dealt": 300,
+     "taken": 376,
+     "hp": 550
+    },
+    {
+     "id": "SF-6",
+     "side": 0,
+     "dealt": 6549,
+     "taken": 514,
+     "hp": 86
+    },
+    {
+     "id": "WN-4",
+     "side": 0,
+     "dealt": 288,
+     "taken": 0,
+     "hp": 280
+    },
+    {
+     "id": "WN-5",
+     "side": 1,
+     "dealt": 339,
+     "taken": 6087,
+     "hp": 0
+    },
+    {
+     "id": "WY-2",
+     "side": 1,
+     "dealt": 496,
+     "taken": 6249,
+     "hp": 0
+    },
+    {
+     "id": "SF-6",
+     "side": 1,
+     "dealt": 365,
+     "taken": 21568,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 1,
+     "dealt": 224,
+     "taken": 7547,
+     "hp": 0
+    },
+    {
+     "id": "SF-4",
+     "side": 1,
+     "dealt": 2038,
+     "taken": 1179,
+     "hp": 0
+    },
+    {
+     "id": "WN-4",
+     "side": 1,
+     "dealt": 224,
+     "taken": 16078,
+     "hp": 0
+    }
+   ],
+   "teamA": [
+    {
+     "id": "SF-2",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "PL-2",
+     "level": 3,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "WN-3",
+     "level": 3,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "PT-2",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "SF-6",
+     "level": 3,
+     "row": 2,
+     "lane": 0
+    },
+    {
+     "id": "WN-4",
+     "level": 3,
+     "row": 2,
+     "lane": 1
+    }
+   ],
+   "teamB": [
+    {
+     "id": "WY-2",
+     "level": 3,
+     "row": 0,
+     "lane": 1
+    },
+    {
+     "id": "WN-5",
+     "level": 3,
+     "row": 0,
+     "lane": 0
+    },
+    {
+     "id": "SF-6",
+     "level": 3,
+     "row": 1,
+     "lane": 0
+    },
+    {
+     "id": "WN-4",
+     "level": 3,
+     "row": 1,
+     "lane": 1
+    },
+    {
+     "id": "WN-4",
+     "level": 3,
+     "row": 2,
+     "lane": 1
+    },
+    {
+     "id": "SF-4",
+     "level": 3,
+     "row": 2,
+     "lane": 0
+    }
+   ],
+   "aborted": null
+  }
+ ]
+}
