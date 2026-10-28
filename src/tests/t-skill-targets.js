@@ -213,6 +213,18 @@ export const TESTS_SKILL_TARGETS = [
     const base = buildCharacterList(), bad = { ...base[0], id: 'ZZ-3', skills: [{ when: 'matchStart', do: 'dmgOf', of: { stat: 'atk', who: 'ctx' }, to: 'enemyFront', v: L3(1) }] };
     ok(validateConfig([...base, bad]).errors.some(e => e.startsWith('ZZ-3')), 'เงื่อนไขที่ไม่มีเป้าหมาย/ผู้ตี ใช้ ctx ไม่ได้');
   }],
+  ['ชุด 46: พลังโจมตี + % ของ ฟื้น/ฮิต ของตัวเอง ทุกครั้งที่ตีโดน (atkOf คิดจาก healHit)', () => {
+    const sk = { when: 'hit', do: 'atkOf', of: { stat: 'healHit', who: 'self' }, to: 'self', v: L3(50) };
+    ok(skErr(mk('AA-1', { tribe: 'เพลิงเผา', skills: [sk] })).length === 0, 'validate รับ healHit เป็นค่าที่ใช้คิด');
+    const A = mk('A', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(9000), healHit: L3(5), skills: [sk] });
+    const E = mk('E', { atk: L3(50), cdMs: 700, hp: L3(10000) });
+    const r = fight([A, E], [u('A')], [u('E')]);
+    const a = uidOf(r, 0, 'A');
+    eq(ev(r, 'atkUp', e => e.to === a).slice(0, 6).map(e => e.amount), [2, 2, 2, 2, 2, 2], 'ทุกฮิต +50% ของ ฟื้น/ฮิต 5 = +2 (ปัดลง) สะสมต่อเนื่อง');
+    const B = mk('B', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(9000), skills: [sk] }); // ฟื้น/ฮิต 0 → ไม่ได้อะไร
+    const r2 = fight([B, E], [u('B')], [u('E')]);
+    eq(ev(r2, 'atkUp', e => e.to === uidOf(r2, 0, 'B')).length, 0, 'ฟื้น/ฮิต 0 = ไม่ได้พลังโจมตี');
+  }],
   ['ค่าพลังฟื้น/ฮิต: ทุกฮิตที่ตีโดน ตัวเองฟื้น HP ได้ทุกเผ่า (ชุด 18)', () => {
     const A = mk('A', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(100), healHit: L3(5) });
     const E = mk('E', { atk: L3(50), cdMs: 700, hp: L3(10000) });

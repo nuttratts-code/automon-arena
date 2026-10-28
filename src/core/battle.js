@@ -323,7 +323,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const snapStats = f => ({ atk: atkOf(f), maxHp: f.maxHp, multi: f.multi + f.multiBonus, burnHit: f.burnHit, shockHit: f.shockHit, armorHit: f.armorHit, healHit: f.healHit || 0, cdMs: f.cdMs, cdMult: f.cdMult, hitAmp: f.hitAmp, burnAmp: f.burnAmp, shockAmp: f.shockAmp, healAmp: f.healAmp, armorAmp: f.armorAmp, cdAmp: f.cdAmp, healToAtk: f.healToAtk, burnTaken: f.burnTaken, shockTaken: f.shockTaken, dmgTaken: f.dmgTakenAmp });
   const iniStats = new Map();
   // ค่าที่ผล "% ของ" ใช้คิด (ชุด 7): stat ของ who · each = ตัวที่โดนผล · ctx = เป้าหมาย/ผู้ตี · all* = รวมตัวที่ยืนอยู่
-  const STAT = { atk: (f, me, ctx) => atkOf(f), armor: (f, me, ctx) => (f === me && ctx.armorSnap != null ? ctx.armorSnap : f.armor), maxHp: f => f.maxHp, hp: f => Math.max(0, f.hp), hpLost: f => Math.max(0, f.maxHp - Math.max(0, f.hp)), burn: f => f.burn, shock: f => f.shock };
+  const STAT = { atk: (f, me, ctx) => atkOf(f), armor: (f, me, ctx) => (f === me && ctx.armorSnap != null ? ctx.armorSnap : f.armor), maxHp: f => f.maxHp, hp: f => Math.max(0, f.hp), hpLost: f => Math.max(0, f.maxHp - Math.max(0, f.hp)), burn: f => f.burn, shock: f => f.shock, healHit: f => f.healHit || 0 };
   function ofVal(u, s, x, ctx) {
     const st = STAT[s.of && s.of.stat]; if (!st) return 0;
     const who = s.of.who, one = f => (f ? st(f, u, ctx) : 0);

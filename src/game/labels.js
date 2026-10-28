@@ -168,7 +168,7 @@ export function skillTags(s) {
 // withDur = ต่อ [ระหว่างสู้]/[ถาวร] ท้ายประโยค (ใช้กับข้อความล้วน เช่น CSV บันทึก) · หน้าที่มีแท็กใช้แท็กแทน
 export const EXTRA_DMG = new Set(['dmg', 'dmgPctAtk', 'dmgPctArmor', 'dmgPctEnemyBurn', 'dmgOf']);
 // ผลแบบ % ของ (ชุด 7): ชื่อค่าและเจ้าของค่า · ctx = เป้าหมาย/ผู้ตี ตามเงื่อนไข
-export const STAT_TH = { atk: 'พลังโจมตี', armor: 'เกราะ', maxHp: 'HP สูงสุด', hp: 'HP ที่เหลือ', hpLost: 'HP ที่เสียไป', burn: 'ไฟที่ติด', shock: 'ช็อตที่ติด' };
+export const STAT_TH = { atk: 'พลังโจมตี', armor: 'เกราะ', maxHp: 'HP สูงสุด', hp: 'HP ที่เหลือ', hpLost: 'HP ที่เสียไป', burn: 'ไฟที่ติด', shock: 'ช็อตที่ติด', healHit: 'ฟื้น/ฮิต' };
 export const WHO_TH = { self: 'ตัวนี้ (ผู้ถือสกิล)', each: 'ตัวที่ได้รับผลเอง (คิดแยกทีละตัว)', ctx: 'เป้าหมาย / ผู้ตี', allEnemies: 'ศัตรูทุกตัวรวมกัน', allAllies: 'เพื่อนทุกตัวรวมกัน (รวมตัวเอง)', laneEnemies: 'ศัตรูเลนเดียวกันรวมกัน', rowEnemies: 'ศัตรูแถวเดียวกับตัวนี้รวมกัน (ทั้ง 2 เลน)', laneAllies: 'เพื่อนเลนเดียวกันรวมกัน (รวมตัวเอง)', rowAllies: 'เพื่อนแถวเดียวกันรวมกัน (รวมตัวเอง · ทั้ง 2 เลน)' };
 export const whoTh = (who, when) => (who === 'ctx' ? (CTX_WHEN[when] === 'attacker' ? 'ผู้ตี' : 'เป้าหมาย') : who === 'each' ? 'ตัวที่ได้รับผลเอง' : who === 'self' ? 'ตัวนี้' : WHO_TH[who] || who);
 export const isLegacyDo = d => Object.prototype.hasOwnProperty.call(LEGACY_OF, d);

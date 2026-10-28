@@ -176,7 +176,7 @@ for (const [d, x] of Object.entries(DO_INFO)) {
   const name = 'perm_' + x.perm; DO_INFO[name] = { shop: x.perm }; SHOP_PAIR[name] = d;
 }
 // ผลแบบ % ของ: ค่าที่ใช้คิด และเป็นค่าของใคร (each = ตัวที่โดนผล คิดแยกทีละตัว · ctx = เป้าหมาย/ผู้ตีตามเงื่อนไข · all* = รวมทุกตัวที่ยืนอยู่)
-export const OF_STATS = ['atk', 'armor', 'maxHp', 'hp', 'hpLost', 'burn', 'shock'];
+export const OF_STATS = ['atk', 'armor', 'maxHp', 'hp', 'hpLost', 'burn', 'shock', 'healHit']; // healHit (28 ต.ค. ผู้ใช้ขอ): ฟื้น/ฮิต ปัจจุบันของตัวนั้น
 export const OF_WHO = ['self', 'each', 'ctx', 'allEnemies', 'allAllies', 'laneEnemies', 'rowEnemies', 'laneAllies', 'rowAllies']; // ชุด 12: รวมของศัตรู/เพื่อน เลนเดียวกัน หรือแถวเดียวกับตัวนี้ (ทั้ง 2 เลน)
 export const CTX_WHEN = { set: 'target', hit: 'target', hits3: 'target', hitTaken: 'attacker', armorBreak: 'attacker', lowHp: 'attacker' };
 // ผลเดิมที่ฝังค่าไว้ในชื่อ → แบบใหม่ (ห้องบาลานซ์แปลงร่างเก่าให้ · ตัวคำนวณยังรองรับแบบเดิม)
