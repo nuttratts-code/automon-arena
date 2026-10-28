@@ -1,6 +1,6 @@
 # Automon Arena backlog (parked work)
 
-V1.4 · 29 Oct 2026 · rune drop rules · V1.3 added stage mode (demo) decisions · V1.2 translated to English (was Thai V1.1) · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here
+V1.5 · 29 Oct 2026 · rune cap + fallback rewards · V1.4 rune drop rules · V1.3 added stage mode (demo) decisions · V1.2 translated to English (was Thai V1.1) · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here
 
 ## Gameplay / pacing
 - Match length and run pacing: goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
@@ -12,7 +12,7 @@ V1.4 · 29 Oct 2026 · rune drop rules · V1.3 added stage mode (demo) decisions
 - Hearts: same as now (loss = −1 heart, 10 hearts)
 - Run: 10 matches = 2 bosses (stages 5 and 10); player may keep playing after that, bosses keep getting stronger (endless)
 - Rewards: Claude's proposal (ค่าเสนอ) easy = gold · normal = permanent values · hard = rare unit — plus a **rune system (user idea 28 Oct): team-wide effects, e.g. DNA rune = add a chosen tribe to a unit · revive rune = revive once at 100% HP · gold rune · damage rune. Open: structure (team slots vs on a unit), conflicts with tribe-rules (max 1 extra tribe; extra tribe must match skill mechanic), revive vs อสูร identity and on-down skills (HL-5, PT-3)**
-- Rune drops (user 29 Oct): boss = rune guaranteed · normal stage: hard 50% / normal 30% / easy 10% chance of a rune (numbers from user, ค่าเสนอ until measured), else a fallback reward (proposal: easy gold · normal permanent values · hard rare unit — not confirmed) · player can hold many runes but no duplicate type in one run · roll tied to the run seed (reload = same result, Claude decided) · pool exhausted → fallback reward (Claude proposal) · open: cap on runes held / slots
+- Rune drops (user 29 Oct): boss = rune guaranteed · normal stage: hard 50% / normal 30% / easy 10% chance of a rune (numbers from user, ค่าเสนอ until measured), else a fallback reward (user OK 29 Oct: easy gold · normal permanent values · hard rare unit) · player can hold many runes but no duplicate type in one run · roll tied to the run seed (reload = same result, Claude decided) · pool exhausted → fallback reward (Claude proposal) · no cap on runes held (user 29 Oct) · after stage 10 (endless) runes drop only from bosses, normal stages give the fallback reward only (user 29 Oct)
 - Claude's suggestions, not decided: bosses carry a special rule (Balatro-style), pool of 4–6 bosses (demo may start with 2–3), show the next boss from the start of each 5-stage block
 - Open: rune design · boss HP/attack/rules/scaling (numbers = ask user) · how skills that target front/back row or trigger "enemy down" work vs a single boss · scoring/storm vs boss · effect on MVP1 target date (user: keep plan as is for now, 28 Oct)
 

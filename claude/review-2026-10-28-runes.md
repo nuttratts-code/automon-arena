@@ -2,10 +2,10 @@
 Context: backlog "Stage mode (demo)". User ideas: DNA, revive, gold, damage. Claude assumed structure option 3 (team runes in slots + unit runes used on one unit) — not confirmed. No numbers yet: every number = ask user first.
 
 ## Decided 29 Oct
-- Many runes per run, same type max 1 per run · drops: boss 100%, hard 50%, normal 30%, easy 10% (else fallback reward)
+- Many runes per run, same type max 1 per run · drops: boss 100%, hard 50%, normal 30%, easy 10% (else fallback reward: easy gold · normal permanent values · hard rare unit) · no cap on runes held · after stage 10 runes only from bosses
 
 ## Structure (proposal)
-- Team runes: 3 slots (ค่าเสนอ), effect on whole team, can sell for gold, same rune max 1 per team
+- Team runes: no slot cap (user 29 Oct), effect on whole team, can sell for gold, same rune max 1 per team
 - Unit runes: used on 1 unit, stays on it (kept through merge, lost when sold — ค่าเสนอ), max 1 per unit
 - Rarity follows unit rarity (ธรรมดา → ตำนาน); hard difficulty / boss drop rarer runes
 - Demo: start with ~10 runes, add later
