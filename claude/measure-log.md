@@ -1,6 +1,13 @@
 # Measurement log per task set (Automon Arena)
 
-V1.4 · 27 Oct 2026 (translated to English; set 38 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md
+V1.5 · 28 Oct 2026 (set 49 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md
+
+## Set 49 · balance import (28 Oct 2026 · values entered the game)
+Source: AMCFG1 code pasted in chat by the user (second account cannot read the db) · config saved 15:24:53Z · measured 15:24:33Z · pre-import check MATCH · 12 characters: HL-2 HL-6 HL-7 HL-8 PL-4 PL-6 PT-2 PT-3 PT-6 PT-8 SF-6 SF-8 (rows; new kits HL-2 / PT-6 / PT-8; SF-6 / SF-8 / PT-8 stats) · no tribe changes.
+- Claude measure (bootstrap final): n 24000, seed 4242, 533 s, abnormal 0 · avg match 84.3 / 79.5 / 73.5 / mix 74.3 s.
+- Outliers (user's values, passed): WY-8 mix −11.0 · PT-6 mix −9.4 (Lv3 −8.5) · WN-6 mix −2.1 (Lv1 −7.3, Lv3 +11.8). Near edge: HL-2 +5.8 · PL-4 +4.5 (Lv3 +9.7) · SF-5 +4.6 (Lv1 +9.2) · WY-6 (Lv1 +9.2) · WN-1 +5.0 · WN-3 +5.1 · WN-5 −5.3.
+- Winning-team tribe share (mix): steel 29.8 · fire 25 · thunder 24 · wind 38.4 · spirit 29 · demon 39.6.
+- Bot teams regenerated (hash 521fadbf). Old skill kits of HL-2/PT-6/PT-8 kept as retired-skill tests (reflectDebuff now unused by any character).
 
 ## Set 38 · balance import (27 Oct 2026 · values entered the game)
 Source: config/main v203 (48 characters + 6 tribes, saved 27 Oct 09:19Z) · results/latest v9 (user measured in the Balance Room, n 24000, aborted 0) · checks passed: results.edits == config/main, aborted 0.
