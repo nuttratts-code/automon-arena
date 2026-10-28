@@ -78,3 +78,26 @@ $('reset').addEventListener('click', () => {
   applyDiffs(null); renderCharForm(); renderTribeForm(); refreshDirty();
 });
 
+// set 48: copy the saved values (config/main) + the edits the last "วิเคราะห์" measured (results/latest) as one code.
+// For when Claude cannot read this page's database (other account) · Claude: tools/cfgcode.mjs <pasted file> <out dir>
+$('cfgCopy').addEventListener('click', async () => {
+  const msg = t => { $('cfgMsg').textContent = t; $('cfgMsg').hidden = !t; };
+  if (!db) { msg('คัดลอกไม่ได้ในมุมมองนี้ (ต้องเปิดหน้าขณะล็อกอิน)'); return; }
+  $('cfgCopy').disabled = true;
+  try {
+    const [cs, rs] = await Promise.all([db.doc('config/main').get(), db.doc('results/latest').get()]);
+    const cfg = cs && cs.exists ? cs.data() : null;
+    if (!cfg) { msg('ยังไม่มีค่าที่บันทึก · กด 💾 บันทึก ก่อน'); return; }
+    const res = rs && rs.exists ? rs.data() : null;
+    const measured = res ? { at: res.at || null, edits: res.edits || null } : null;
+    const code = 'AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured });
+    const unsaved = canon(diffs()) !== canon({ chars: cfg.chars || {}, tribes: cfg.tribes || {} });
+    const note = unsaved ? ' · ⚠ มีค่าที่แก้หลังกด 💾 (ค่านั้นไม่อยู่ในรหัส)' : '';
+    const box = $('cfgBox');
+    const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); msg('คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง' + note); };
+    const ok = () => { box.hidden = true; msg('คัดลอกค่าที่บันทึกแล้ว · วางในแชทกับ Claude ได้เลย' + note); };
+    try { await navigator.clipboard.writeText(code); ok(); } catch (e) { showBox(); }
+  } catch (e) {
+    msg('อ่านค่าที่บันทึกไม่สำเร็จ: ' + (e && e.message ? e.message : 'ลองใหม่อีกครั้ง'));
+  } finally { $('cfgCopy').disabled = false; }
+});

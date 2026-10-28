@@ -6,6 +6,7 @@ import { CTX_WHEN, DO_INFO, RULES, SKILL_KINDS, SKILL_SPEC, WHEN_KIND, cleanTags
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
+import { parseCfgCode, preImportCheck } from '../tools/cfgcode.mjs';
 export const TESTS_VALIDATE = [
   ['ทุกคู่สกิลที่หน้าบาลานซ์ให้เลือก ใช้งานได้จริงในตัวคำนวณ', () => {
     const chars = buildCharacterList(), m0 = makeCharMap(chars), rng = makeRng(5);
@@ -85,5 +86,19 @@ export const TESTS_VALIDATE = [
     for (let i = 0; i < 40; i++) { const r = pickHintRow('กลาง+หลัง', i / 40); seen.add(r); }
     eq([...seen].sort(), [1, 2], 'สุ่มได้ทั้ง 2 แถวที่เลือก ไม่ออกแถวอื่น');
     eq([pickHintRow('หน้า', 0.9), pickHintRow('ที่ไหนก็ได้', 0.9)], [null, null], 'แถวเดียว/ที่ไหนก็ได้ ใช้ลำดับเดิม (ผลวัดเดิมไม่เปลี่ยน)');
+  }],
+  ['ชุด 48: รหัสค่าที่บันทึก (AMCFG1) ตรวจก่อนใช้ + เทียบผลวัด', () => {
+    const cfg = { chars: { 'PT-1': { hp: [10, 20, 40] } }, tribes: {}, savedAt: 'x' };
+    const code = 'ข้อความนำ AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured: { at: 'y', edits: { tribes: {}, chars: { 'PT-1': { hp: [10, 20, 40] } } } } });
+    const r = parseCfgCode(code);
+    eq(r.config.chars, cfg.chars, 'อ่าน config ได้');
+    ok(preImportCheck(r).ok, 'ผลวัดตรงกับค่าที่บันทึก = ผ่าน');
+    const r2 = parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured: { edits: { chars: {}, tribes: {} } } }));
+    eq(preImportCheck(r2).diff, ['chars:PT-1'], 'ผลวัดไม่ตรง = บอกตัวที่ต่าง');
+    ok(!preImportCheck(parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg }))).ok, 'ไม่มีผลวัด = ไม่ผ่าน');
+    for (const bad of ['ไม่มีรหัส', 'AMCFG1 {พัง', 'AMCFG1 ' + JSON.stringify({ v: 2, config: cfg }), 'AMCFG1 ' + JSON.stringify({ v: 1, config: { chars: { 'ZZ-9': {} } } }), 'AMCFG1 ' + JSON.stringify({ v: 1, config: { tribes: { 'ไม่มีเผ่า': {} } } }), 'AMCFG1 ' + JSON.stringify({ v: 1, config: { chars: [] } })]) {
+      let threw = false; try { parseCfgCode(bad); } catch (e) { threw = true; }
+      ok(threw, 'รหัสผิดต้องถูกปฏิเสธ: ' + bad.slice(0, 40));
+    }
   }],
 ];
