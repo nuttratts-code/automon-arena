@@ -55,7 +55,7 @@ export const skillDur = s => (s && (s.perm || isShopWhen(s.when)) ? 'perm' : dur
 // ชุด 8 (22 ต.ค.): จัดตามเป้าหมายของผล (ผู้ใช้เลือก) แทนการจัดตามค่าพลัง
 export const DO_GROUPS = [
   ['โจมตี (ดาเมจ ไฟ ช็อต ใส่ศัตรู)', ['dmg', 'dmgOf', 'armorBreakDmg', 'reflect', 'reflectOf', 'counter', 'counterMulti', 'execute', 'selfKo', 'burn', 'burnOf', 'shock', 'shockOf', 'noDecay', 'spreadBurn', 'moveShock']],
-  ['ป้องกัน (เกราะ)', ['armor', 'armorOf', 'shareArmor', 'armorHitUp', 'armorHitPct', 'armorHitOf', 'armorAmp']],,
+  ['ป้องกัน (เกราะ)', ['armor', 'armorOf', 'shareArmor', 'armorHitUp', 'armorHitPct', 'armorHitOf', 'armorAmp']],
   ['ฟื้น · ลุก · ชุบ', ['heal', 'healOf', 'healHitUp', 'lifesteal', 'healAmp', 'revive', 'reviveAlly', 'reviveDowned', 'cleanse', 'cleansePct', 'reflectDebuff']],
   ['เสริมพลัง (ตัวเอง / เพื่อน)', ['hpUp', 'hpPct', 'hpOf', 'atkUp', 'atkPct', 'atkOf', 'hitAmp', 'multiUp', 'cdPct', 'cdMsDown', 'cdCut', 'cdAmp', 'burnHitUp', 'burnHitPct', 'burnHitOf', 'burnAmp', 'burnNoDecay', 'shockHitUp', 'shockHitPct', 'shockHitOf', 'shockAmp', 'eatAllyBurn', 'healToAtk']],
   ['ลดพลังศัตรู', ['freeze', 'cdSlowPct', 'stun', 'stealShock', 'maxHpCut', 'burnTakenUp', 'shockTakenUp', 'dmgTakenUp', 'armorGainCut', 'healCut']],
@@ -115,7 +115,7 @@ export const TO_TH = {
   allyRandom: 'เพื่อนสุ่ม 1 ตัว', allyRandom2: 'เพื่อนสุ่ม 2 ตัว', tribeAllies: 'เพื่อนเผ่าเดียวกัน', nextTribeBuy: 'เพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ', allAllies: 'ทั้งทีม',
 };
 export const GIVE_TH = { hp: 'HP', atk: 'พลังโจมตี', armor: 'เกราะสะสม', burn: 'ไฟ/ฮิต', shock: 'ช็อต/ฮิต', multi: 'มัลติฮิต', cdPct: 'คูลดาวน์ −%',
-  armorHit: 'เกราะ/ฮิต', cdMs: 'คูลดาวน์ −', hpPct: 'HP +%', atkPct: 'พลังโจมตี +%', burnPct: 'ไฟ/ฮิต +%', shockPct: 'ช็อต/ฮิต +%', armorHitPct: 'เกราะ/ฮิต +%',
+  healHit: 'ฟื้น/ฮิต', armorHit: 'เกราะ/ฮิต', cdMs: 'คูลดาวน์ −', hpPct: 'HP +%', atkPct: 'พลังโจมตี +%', burnPct: 'ไฟ/ฮิต +%', shockPct: 'ช็อต/ฮิต +%', armorHitPct: 'เกราะ/ฮิต +%',
   healAmp: 'ฟื้น HP ที่ได้รับ +%', hitAmp: 'ดาเมจตี +%', burnAmp: 'ไฟที่ทำให้ติด +%',
   cdStart: 'เริ่มแมตช์ลดคูลดาวน์', shareArmor: 'แบ่งเกราะให้ทั้งทีม %', healToAtk: 'ฟื้นเป็นพลัง %', armorAmp: 'เกราะที่ได้รับ +%', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +%', shockAmp: 'ดาเมจช็อต +%', burnNoDecay: 'ไฟที่ติดไม่ลด' };
 // ข้อความค่าถาวร 1 ชนิด เช่น "พลังโจมตี +4" · "เริ่มแมตช์ลดคูลดาวน์ 1.5 วิ" · "ไฟที่ติดไม่ลด"
