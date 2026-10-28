@@ -214,30 +214,6 @@ function mxLegendPaint() { // legend เปลี่ยนตามแท็บ 
   else if (mxTabSel === 3) box.replaceChildren(); // แท็บสเตตัส = ค่าสุดท้าย ไม่มีสีให้ดู
   else box.replaceChildren(...MX_SRC.map(w => mk(MX_NAME[w], MX_COLOR[w], L.dmg.has(w))));
 }
-// A1 (28 Oct): ONE list of "what this unit gave" used by both the card (fxTot) and the pane, so they always agree.
-// giver: heal/armor = from ?? receiver (tribe armor has no source) · other effects = from · damage (k dmg) never (A2).
-// rows: hit-based / แบ่งเกราะ / โบนัสเผ่า / one row per skill / leftovers — nothing counted on the card is missing here.
-const mxIsHit = e => /Hit$/.test(e.why || '');
-function mxFxGiven(r) { // uid → [{ key, name, color, si, list: [{ e, ei }] }]
-  const out = new Map(), put = (uid, key, mk, x) => {
-    let rows = out.get(uid); if (!rows) out.set(uid, rows = new Map());
-    let row = rows.get(key); if (!row) rows.set(key, row = { key, ...mk(), list: [] }); row.list.push(x);
-  };
-  r.events.forEach((e, ei) => {
-    const x = { e, ei }, si = e.d && e.d.si != null ? e.d.si : null;
-    if (e.k === 'heal' || e.k === 'armor') {
-      const g = e.from ?? e.to, A = e.k === 'armor', c = A ? 'var(--n-armor)' : 'var(--n-heal)';
-      if (g == null) return;
-      if (mxIsHit(e)) put(g, e.k + ':hit', () => ({ name: A ? 'ให้เกราะ (ฮิต)' : 'ฟื้น/ฮิต', color: c }), x);
-      else if (A && e.why === 'share') put(g, 'share', () => ({ name: 'แบ่งเกราะ', color: c }), x);
-      else if (e.why === 'tribe' || (e.d && e.d.src === 'tribe')) put(g, e.k + ':tribe', () => ({ name: (A ? 'เกราะ' : 'ฮิล') + ' (โบนัสเผ่า)', color: c }), x);
-      else if (si != null) put(g, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
-      else put(g, e.k + ':etc', () => ({ name: A ? 'ให้เกราะ (อื่นๆ)' : 'ให้ฮิล (อื่นๆ)', color: c }), x);
-    } else if (si != null && e.k !== 'dmg' && e.from != null) put(e.from, 'si:' + si, () => ({ si, color: 'var(--n-skill)' }), x);
-  });
-  return out;
-}
-const mxFxAmt = e => (e.k === 'armor' || e.k === 'heal') ? (e.amount || 0) : 0;
 // แท็บ 3: ผลที่ไม่ใช่ดาเมจ — "ตัวนี้ไปทำกับใคร" พร้อมลิงก์บันทึก
 function mxFxPane2(uid) {
   const { U, m, fxGiven } = mxCtx, box = el('div', 'mx-pane'), me = U.get(uid), c = me ? m[me.id] : null;
@@ -279,11 +255,10 @@ function renderMatch() {
   const stale = $('simRun').classList.contains('stale');
   $('mxStale').hidden = !stale; $('mxStale').textContent = stale ? 'มีการแก้ค่าหรือทีมหลังจำลอง · ตัวเลขด้านล่างยังเป็นของแมตช์เดิม (กด "จำลองใหม่" ในแท็บลองสู้)' : '';
   const key = r; if (mxKey === key && $('mxUnits').childElementCount) return; mxKey = key;
-  const all = unitsOf(r), U = new Map(all.map(u => [u.uid, u])), recs = mxRecords(r), res = new Map(r.units.map(u => [u.uid, u]));
-  const sideOf = uid => (U.get(uid) || {}).side, foe = rr => rr.from != null && sideOf(rr.from) !== sideOf(rr.to);
+  const all = unitsOf(r), res = new Map(r.units.map(u => [u.uid, u]));
+  const model = mxModel(r, all), { U, recs, sideOf, foe, tot, per, act, fxTot, fxGiven } = model; // set 42: numbers from lab/matchcalc.js
   // หัว
   const win = r.winner === 0 ? 'ทีมซ้ายชนะ' : r.winner === 1 ? 'ทีมขวาชนะ' : 'เสมอ';
-  const tot = [0, 1].map(sd => recs.filter(x => foe(x) && sideOf(x.from) === sd).reduce((a, x) => a + x.amt, 0));
   // สรุปแมตช์: ผล · เวลา · ดาเมจสองฝั่ง · ตัวรอด · พายุ · seed
   const alive = [0, 1].map(sd => all.filter(u => u.side === sd && !(res.get(u.uid) || {}).down).length);
   const chip = (lab, val, title) => { const s = el('span', 'mx-sumchip'); s.append(el('small', '', lab), el('b', '', val)); if (title) s.title = title; return s; };
@@ -295,28 +270,8 @@ function renderMatch() {
     chip('พายุเริ่ม', `${((RULES.stormStartMs || 0) / 1000).toFixed(1)} วิ`),
     chip('เลขสุ่ม', simSeedLabel()));
 
-  // รายตัว
-  const per = new Map(all.map(u => [u.uid, { out: [], ally: [], in: [] }]));
-  for (const x of recs) { per.get(x.to)?.in.push(x); if (x.from != null) { const p = per.get(x.from); if (p) (foe(x) ? p.out : p.ally).push(x); } }
-  // ชุด 37: นับครั้งของแต่ละตัว (ฮิต · ติดไฟ · ติดช็อต ใส่ศัตรู) ให้บรรทัดย่อและแท็บ "ดาเมจที่ทำ"
-  const act = new Map(all.map(u => [u.uid, { hits: 0, subs: 0, burnN: 0, burnU: 0, shockN: 0, shockU: 0 }]));
-  for (const e of r.events) {
-    if (e.from == null || e.to == null) continue;
-    const a = act.get(e.from); if (!a || sideOf(e.from) === sideOf(e.to)) continue;
-    if (e.k === 'dmg' && e.why === 'hit') { if (e.sub) a.subs++; else a.hits++; }
-    else if (e.k === 'burn') { a.burnN++; a.burnU += e.amount; }
-    else if (e.k === 'shock') { a.shockN++; a.shockU += e.amount; }
-  }
-  // Tab "อื่นๆ" card line: heal/armor this unit GAVE (incl. to itself) · received ones are in the unit's detail pane (set 39)
-  const fxTot = new Map(all.map(u => [u.uid, { heal: 0, armor: 0, heals: 0, armors: 0, skills: 0 }]));
-  const fxGiven = mxFxGiven(r); // A1: card and pane read the same list
-  for (const [uid, rows] of fxGiven) { const q = fxTot.get(uid); if (!q) continue;
-    for (const row of rows.values()) for (const { e } of row.list) {
-      if (e.k === 'heal' || e.k === 'armor') { q[e.k] += e.amount; if (e.k === 'heal') q.heals++; else q.armors++; }
-      else q.skills++;
-    } }
   mxCtx = { r, m, U, recs, per, act, res, fxTot, fxGiven, maxOut: 1, maxIn: 1, maxFx: 1 };
-  const sum = list => { const s = {}; let t = 0; for (const x of list) { const w = mxWhy(x.why); (s[w] ||= mxAgg()); mxAdd(s[w], x); t += x.amt; } return [s, t]; };
+  const sum = mxBySrc;
   // สเกลแยกตามฝั่ง (ซ้ายเทียบซ้าย) เพื่อไม่ให้ตัวที่ทำน้อยกลายเป็นจุดเมื่ออีกฝั่งทำดาเมจสูงมาก
   // สเกลเดียวทั้งกระดาน: ตัวที่มากที่สุด = 100% ที่เหลือลดหลั่นตามสัดส่วน
   const scale = {
