@@ -47,9 +47,40 @@ $('tab-tribes').addEventListener('click', () => showTab('tribes'));
 $('tab-sim').addEventListener('click', () => showTab('sim'));
 $('tab-match').addEventListener('click', () => showTab('match'));
 function editedIds(d) { return Object.keys(d.chars).filter(id => Object.keys(d.chars[id]).length); }
+// Batch 31: measured result per character/tribe for the step-1 grid · source = this page's last "วิเคราะห์" (lastRun) or the saved results/latest (savedRes, validated on load)
+let savedRes = null;
+const stableKey = x => JSON.stringify(x, (k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(q => [q, v[q]])) : v));
+const finiteNum = x => typeof x === 'number' && Number.isFinite(x);
+function cleanSavedRes(r) {
+  if (!r || typeof r !== 'object' || !r.chars || typeof r.chars !== 'object') return null;
+  const out = { chars: {}, tribes: {}, edits: r.edits && typeof r.edits === 'object' ? r.edits : { chars: {}, tribes: {} }, at: typeof r.at === 'string' ? r.at.slice(0, 40) : '' };
+  for (const c of chars) {
+    const e = r.chars[c.id] && r.chars[c.id].err;
+    if (e && ['mix', 1, 2, 3].every(L => finiteNum(e[L]))) out.chars[c.id] = { mix: e.mix, 1: e[1], 2: e[2], 3: e[3] };
+  }
+  for (const t of TRIBES) {
+    const x = r.tribes && r.tribes[t]; if (!x || typeof x !== 'object') continue;
+    const o = {}; for (const st of RULES.tribeSteps) if (x[st] && finiteNum(x[st].uplift)) o[st] = x[st].uplift;
+    out.tribes[t] = o;
+  }
+  return Object.keys(out.chars).length ? out : null;
+}
+function gridResults() {
+  if (lastRun && lastRun.now) {
+    const now = lastRun.now, res = { chars: {}, tribes: {}, edits: JSON.parse(lastRun.key), src: 'page' };
+    for (const c of chars) if (now.levels.mix[c.id]) res.chars[c.id] = Object.fromEntries(MEASURE.levels.map(L => [L, now.levels[L][c.id].err]));
+    for (const t of TRIBES) if (now.tr && now.tr[t]) res.tribes[t] = Object.fromEntries(RULES.tribeSteps.filter(st => now.tr[t][st]).map(st => [st, now.tr[t][st].uplift]));
+    return res;
+  }
+  return savedRes ? { ...savedRes, src: 'saved' } : null;
+}
 // ตารางเผ่า × ความหายาก: ตัวอยู่ในแถวเผ่าหลัก · แตะตัว = แก้ · แตะชื่อเผ่า = แก้โบนัสเผ่านั้น
 function renderGrid() {
-  const edited = new Set(editedIds(diffs()));
+  const d = diffs(), edited = new Set(editedIds(d)), res = gridResults();
+  const charStale = id => !res || stableKey(res.edits.chars?.[id] || {}) !== stableKey(d.chars[id] || {});
+  const tribeStale = t => !res || stableKey(res.edits.tribes?.[t] || {}) !== stableKey(d.tribes[t] || {});
+  const anyStale = res && stableKey(res.edits) !== stableKey(d);
+  $('gridLegend').replaceChildren(...(res ? [' · สีตามผลวัด', res.src === 'saved' ? ' (ผลที่บันทึกไว้)' : ' (วิเคราะห์ล่าสุด)', ': ', pill(...VERDICT_TH.ok), ' ', pill(...VERDICT_TH.near), ' ', pill(...VERDICT_TH.out), ' ', pill('แก้หลังวัด / ยังไม่วัด', 'p-na'), ' · ตัวเลข = ห่างเป้า (ผสม)', anyStale ? ' · มีค่าที่แก้หลังวัด กดวิเคราะห์ใหม่เพื่ออัปเดต' : ''] : [' · ยังไม่มีผลวัด: กดวิเคราะห์ในขั้น 3 แล้วตารางจะเป็นสีตามผล']));
   const out = [el('div', 'tg-corner', '')];
   for (const r of RARITIES) { const h = el('div', 'tg-rh', ''); h.append(rarityTag(r), el('small', '', `ราคา ${RULES.shop.prices[r]}`)); out.push(h); }
   for (const t of TRIBES) {
@@ -57,6 +88,8 @@ function renderGrid() {
     const members = chars.filter(c => c.tribe === t), extra = chars.filter(c => c.extraTribes.includes(t)).length;
     const th = el('button', 'tg-tribe', ''); th.type = 'button'; th.title = `แก้โบนัสเผ่า${t}`;
     th.append(tribeBadge(t), el('span', '', t), el('small', '', `${members.length} ตัว${extra ? ` +${extra} เผ่าเพิ่ม` : ''} · โบนัสเผ่า ›`));
+    const up = res && res.tribes[t];
+    if (up && Object.keys(up).length) { const u = el('small', 'tg-up' + (tribeStale(t) ? ' stale' : ''), ''); Object.entries(up).forEach(([st, v], i) => u.append(...(i ? [' · '] : []), el('span', '', `ขั้น ${st} ${sgn(v)}`))); u.title = 'ผลวัดโบนัสเผ่า: อัตราชนะที่เพิ่มขึ้นเมื่อเปิดแต่ละขั้น'; th.append(u); }
     th.addEventListener('click', () => { tribeSel = t; showTab('tribes'); });
     row.append(th);
     for (const r of RARITIES) {
@@ -69,7 +102,9 @@ function renderGrid() {
         b.append(el('b', '', c.id), el('span', 'tg-name', c.name));
         b.classList.toggle('edited', edited.has(c.id));
         if (c.id === current) b.setAttribute('aria-current', 'true');
-        b.title = `${c.id} ${c.name} · ${describe(c)}${edited.has(c.id) ? ' · แก้แล้ว' : ''}`;
+        const e = res && res.chars[c.id], stale = !e || charStale(c.id), v = e && verdict(e);
+        if (res) { b.classList.add(stale ? 'r-na' : 'r-' + v); if (e) b.append(el('span', 'tg-res', sgn(e.mix))); }
+        b.title = `${c.id} ${c.name} · ${describe(c)}${edited.has(c.id) ? ' · แก้แล้ว' : ''}${e ? ` · ผลวัด ห่างเป้า ผสม ${sgn(e.mix)} · Lv1 ${sgn(e[1])} · Lv2 ${sgn(e[2])} · Lv3 ${sgn(e[3])} → ${stale ? 'แก้หลังวัด' : VERDICT_TH[v][0]}` : ''}`;
         b.addEventListener('click', () => { setCurrent(c.id); showTab('chars'); });
         box.append(b);
       }
