@@ -94,7 +94,7 @@ function scAgree(x, tag) {
     if (c) c.skills.forEach((s, si) => {
       const evs = r.events.filter(e => e.k !== 'dmg' && e.from === u.uid && e.d && e.d.si === si && !(e.k === 'heal' || e.k === 'armor') || ((e.k === 'heal' || e.k === 'armor') && (e.from ?? e.to) === u.uid && e.d && e.d.si === si && !/Hit$/.test(e.why || '') && e.why !== 'share' && e.why !== 'tribe'));
       const row = (fxGiven.get(u.uid) || new Map()).get('si:' + si), n = row ? row.list.length : 0;
-      const refl = r.events.filter(e => e.k === 'reflectDebuff' && Array.isArray(e.by) && e.by.some(b => b.uid === u.uid && b.si === si)).length; // F1: PT-8 reflects (event from = protected ally, listed under the reflecting PT-8's row)
+      const refl = r.events.filter(e => e.k === 'reflectDebuff' && e.from === u.uid && e.si === si).length; // F1: PT-8 reflects (event from = the reflecting PT-8, listed under its row)
       ok(n === evs.length + refl, `${tag}: ${u.id} skill ${si + 1} tab row has ${n} effects, battle logged ${evs.length + refl}`);
     });
   }
@@ -471,20 +471,20 @@ const SC_SKILL = [
     ok(!x.r.events.some(e => e.k === 'atkUp' && e.to === me), 'no in-match attack change on a unit that is down');
     return x;
   }],
-  // F1 (28 Oct, user B): PT-8 reflected burn/shock → credited to the protected ally (tab 'ทำดาเมจ' + dealt) · PT-8's 'อื่นๆ' row lists every reflect with who got it
-  ['PT-8', 'ไฟ/ช็อตที่สะท้อน นับเป็นของเพื่อนที่ถูกปกป้อง · แท็บ "อื่นๆ" ของ PT-8 ลงทุกครั้งที่สะท้อน + เป้า', (c, L, i) => {
+  // F1 (28 Oct, user A): PT-8 reflected burn/shock → credited to PT-8 itself · its 'อื่นๆ' row lists every reflect: who got it back (to) and which ally it protected (ally)
+  ['PT-8', 'ไฟ/ช็อตที่สะท้อน นับเป็นของ PT-8 เอง · แท็บ "อื่นๆ" ลงทุกครั้งที่สะท้อน + เป้าที่โดนกลับ + เพื่อนที่ปกป้อง', (c, L, i) => {
     const sh = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: 1000, hp: L3(100000), shock: L3(10), burn: L3(10) });
     const x = scRun([[c, L, 1, 0], [scC('HL-3'), 3, 0, 0]], [[sh, 1, 0, 0]]), me = x.uid(0, 1, 0), ally = x.uid(0, 0, 0), foe = x.uid(1, 0, 0);
     const refl = x.r.events.filter(e => e.k === 'reflectDebuff');
     ok(refl.length > 0, 'reflected at least once');
-    ok(refl[0].from === ally, 'first reflect: from = the protected ally (not PT-8)');
-    ok(refl.every(e => x.model.sideOf(e.from) === 0 && e.to === foe && e.by.some(b => b.uid === me && b.si === 0)), 'reflect: from = the protected unit (own side), to = the enemy, by lists PT-8');
+    ok(refl.every(e => e.from === me && e.to === foe && e.si === 0), 'reflect: from = PT-8, to = the enemy, si = skill 1');
+    ok(refl[0].ally === ally && refl.every(e => x.model.sideOf(e.ally) === 0), 'ally = the protected unit (first one is the front ally)');
     const row = (x.model.fxGiven.get(me) || new Map()).get('si:0');
-    ok(row && refl.every(e => row.list.some(q => q.e === e)), "every reflect is in PT-8's 'อื่นๆ' row (with the enemy as target)");
+    ok(row && refl.every(e => row.list.some(q => q.e === e)), "every reflect is in PT-8's 'อื่นๆ' row");
     const back = x.r.events.filter(e => (e.k === 'burn' || e.k === 'shock') && e.why === 'reflect');
-    ok(back.length > 0 && back.every(e => x.model.sideOf(e.from) === 0 && e.from !== foe), 'reflected burn/shock credited to the protected unit');
-    ok(back[0].from === ally, 'first reflected burn credited to the protected ally');
-    ok(x.model.per.get(ally).out.some(q => q.why === 'burn'), "reflected burn damage shows under the protected ally's 'ทำดาเมจ'");
+    ok(back.length > 0 && back.every(e => e.from === me), 'reflected burn/shock credited to PT-8');
+    ok(x.model.per.get(me).out.some(q => q.why === 'burn'), "reflected burn damage shows under PT-8's 'ทำดาเมจ'");
+    ok(!x.model.per.get(ally).out.some(q => q.why === 'burn'), 'the protected ally is not credited');
     return x;
   }],
   ['PT-5', 'ตีโดน → เพื่อนภูติสุ่ม (ไม่ใช่ PT-5) ตีเป้าเดียวกันทันที', (c, L, i) => {

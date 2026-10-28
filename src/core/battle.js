@@ -262,7 +262,7 @@ export function simulate(teamA, teamB, opts = {}) {
       for (const [to, pct] of Object.entries(f.shareTo)) if (pct > 0) for (const x of targetsOf(f, to, {})) if (x !== f) addArmor(x, v * pct / 100, 'share');
     }
   }
-  // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค.: ไฟ/ช็อตที่ PT-8 สะท้อน นับเป็นของเพื่อนที่ถูกปกป้อง · ไม่ใช้ค่า +% ของมัน)
+  // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค. ผู้ใช้เลือก A: ไฟ/ช็อตที่สะท้อน นับเป็นของ PT-8 ที่สะท้อน · ไม่ใช้ค่า +% ของมัน · ถ้ามี PT-8 หลายตัวปกป้องเพื่อนคนเดียวกัน นับให้ตัวแรก)
   function addStatus(f, kind, v, why, src, credit) {
     if (kind === 'burn' && src && src.side !== f.side && src.burnAmp) v *= amp(src.burnAmp); // ไฟที่ทำให้ติด +% (ชุด 6)
     v = Math.floor(v);
@@ -276,7 +276,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // ตัวที่โดนยังโดนเต็ม · ของที่สะท้อนไปแล้วไม่สะท้อนกลับ (กันวน) · ไฟ/ช็อตที่สะท้อน ปัดลง
   function reflectBack(f, src, kind, v) {
     if (!f.reflDebuff.length || !up(src)) return;
-    let p = 0; const by = []; for (const r of f.reflDebuff) if (up(r.by)) { p += r.pct; by.push({ uid: r.by.uid, si: r.si }); }
+    let p = 0; const by = []; for (const r of f.reflDebuff) if (up(r.by)) { p += r.pct; by.push({ u: r.by, si: r.si }); }
     p = Math.min(R.reflectDebuffMaxPct ?? 100, p);
     if (!(p > 0)) return;
     // ชุด 21: เก็บไว้ทำหลังคิวสถานะของ tick นั้นหมด (เดิมทำทันที → ลำดับฝั่งมีผล เช่น PL-4 อ่านไฟศัตรูก่อน/หลังไฟที่สะท้อน · เทสต์สลับฝั่งพัง)
@@ -297,10 +297,11 @@ export function simulate(teamA, teamB, opts = {}) {
       const list = reflQ; reflQ = [];
       for (const { src, from, kind, amount, by } of list) {
         if (src.down) continue;
-        // F1 (28 Oct, user B): from = เพื่อนที่ถูกปกป้อง (ผู้ได้เครดิตไฟ/ช็อตที่สะท้อน) · by = PT-8 ที่สะท้อน (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-8 แสดงว่าสะท้อนใส่ใคร)
-        log('reflectDebuff', { to: src.uid, from: from.uid, kind, amount, ...(detailOn ? { by } : {}) });
+        const g = by[0]; // ผู้สะท้อน (นับเครดิตให้ตัวนี้) · from = เพื่อนที่ถูกปกป้อง
+        // F1 (28 Oct, user A): from = PT-8 ที่สะท้อน (ได้เครดิต) · ally/si = เพื่อนที่ถูกปกป้อง + ลำดับสกิล (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-8)
+        log('reflectDebuff', { to: src.uid, from: g.u.uid, kind, amount, ...(detailOn ? { ally: from.uid, si: g.si } : {}) });
         if (kind === 'cdSlowPct') { src.cdMult *= 1 + amount / 100; buff(src, 'cdSlowPct', amount); }
-        else addStatus(src, kind, amount, 'reflect', null, from);
+        else addStatus(src, kind, amount, 'reflect', null, g.u);
       }
     }
   }
