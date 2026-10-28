@@ -74,12 +74,23 @@ function gridResults() {
   }
   return savedRes ? { ...savedRes, src: 'saved' } : null;
 }
+// values a result was measured with = defaults + its saved edits (applyDiffs on a swap, globals restored)
+let measuredCache = { k: null, v: null };
+function measuredValues(edits) {
+  const k = stableKey(edits); if (measuredCache.k === k) return measuredCache.v;
+  const keepC = chars, keepT = tribes;
+  try { applyDiffs(edits); measuredCache = { k, v: { chars: Object.fromEntries(chars.map(c => [c.id, stableKey(c)])), tribes: Object.fromEntries(TRIBES.map(t => [t, stableKey(tribes[t])])) } }; }
+  finally { chars = keepC; tribes = keepT; }
+  return measuredCache.v;
+}
 // ตารางเผ่า × ความหายาก: ตัวอยู่ในแถวเผ่าหลัก · แตะตัว = แก้ · แตะชื่อเผ่า = แก้โบนัสเผ่านั้น
 function renderGrid() {
   const d = diffs(), edited = new Set(editedIds(d)), res = gridResults();
-  const charStale = id => !res || stableKey(res.edits.chars?.[id] || {}) !== stableKey(d.chars[id] || {});
-  const tribeStale = t => !res || stableKey(res.edits.tribes?.[t] || {}) !== stableKey(d.tribes[t] || {});
-  const anyStale = res && stableKey(res.edits) !== stableKey(d);
+  // stale = the values measured differ from the values now (compare real values, not edit lists: an import turns edits into defaults)
+  const was = res && measuredValues(res.edits);
+  const charStale = id => !was || was.chars[id] !== stableKey(chars.find(c => c.id === id));
+  const tribeStale = t => !was || was.tribes[t] !== stableKey(tribes[t]);
+  const anyStale = res && (chars.some(c => charStale(c.id)) || TRIBES.some(tribeStale));
   $('gridLegend').replaceChildren(...(res ? [' · สีตามผลวัด', res.src === 'saved' ? ' (ผลที่บันทึกไว้)' : ' (วิเคราะห์ล่าสุด)', ': ', pill(...VERDICT_TH.ok), ' ', pill(...VERDICT_TH.near), ' ', pill(...VERDICT_TH.out), ' ', pill('แก้หลังวัด / ยังไม่วัด', 'p-na'), ' · ตัวเลข = ห่างเป้า (ผสม)', anyStale ? ' · มีค่าที่แก้หลังวัด กดวิเคราะห์ใหม่เพื่ออัปเดต' : ''] : [' · ยังไม่มีผลวัด: กดวิเคราะห์ในขั้น 3 แล้วตารางจะเป็นสีตามผล']));
   const out = [el('div', 'tg-corner', '')];
   for (const r of RARITIES) { const h = el('div', 'tg-rh', ''); h.append(rarityTag(r), el('small', '', `ราคา ${RULES.shop.prices[r]}`)); out.push(h); }
