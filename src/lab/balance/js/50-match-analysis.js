@@ -1,35 +1,15 @@
 // ---------- ชุด 36: แท็บวิเคราะห์แมตช์ ----------
 // ใช้ผลจำลองล่าสุด (simLast) ที่จำลองแบบจดส่วนประกอบดาเมจ (detail) · ตัวละ 1 แถว → แตะ = แยกตามที่มา → แตะที่มา = ส่วนประกอบ + ใส่ใคร/โดนจากใคร
 // + ตารางใครตีใคร + กราฟ HP ตามเวลา · ข้อความทั้งหมดใส่ด้วย textContent / createElementNS เท่านั้น
-const MX_SRC = ['hit', 'counter', 'shock', 'burn', 'skill', 'downSkill', 'armorBreak', 'reflect', 'execute', 'storm'];
+// MX_SRC mxWhy mxAgg mxAdd mxLoss mxRecords mxModel: lab/matchcalc.js (set 42, tested in tests/t-skill-calc.js)
 const MX_COLOR = { hit: 'var(--n-hit)', counter: 'var(--n-cnt)', reflect: 'var(--n-reflect)', shock: 'var(--n-shock)', burn: 'var(--n-burn)', storm: 'var(--n-storm)', skill: 'var(--n-skill)', downSkill: 'var(--n-down)', armorBreak: 'var(--n-abrk)', execute: 'var(--n-exec)' };
 const MX_NAME = { hit: 'ฮิต', counter: 'สวนกลับ', shock: 'ช็อต', burn: 'ไฟ', skill: 'สกิล', downSkill: 'สกิลตอน down', armorBreak: 'เกราะแตก', reflect: 'สะท้อน', execute: 'down ทันที', storm: 'พายุทราย' };
-const mxWhy = w => (MX_SRC.includes(w) ? w : 'skill');
 const nf = v => Math.round(v).toLocaleString('en-US');
 const pctTxt = v => `${v > 0 ? '+' : ''}${v}%`;
 let mxKey = null, mxOpen = new Set(), mxCellSel = null, mxHi = null;
-const mxAgg = () => ({ n: 0, amt: 0, abs: 0, over: 0 });
-const mxAdd = (a, r) => { a.n += r.f; a.amt += r.amt; a.abs += r.abs; a.over += r.over; };
-// A5: 'HP หายจริง' = amount − armor − overkill (the part beyond remaining HP is not real HP loss; the overkill metric itself is unchanged)
-const mxLoss = a => Math.max(0, a.amt - a.abs - a.over);
 // A4: counts of share-split burn are fractional (1 tick with k sources = k records of 1/k) · integer when whole, else 1 decimal
 const nfc = v => (Math.abs(v - Math.round(v)) < 0.05 ? nf(v) : (Math.round(v * 10) / 10).toLocaleString('en-US'));
 
-// แยกดาเมจทุกครั้งเป็นรายการ { t, to, from, why, amt, abs, over, d, f } · ไฟแบ่งตามสัดส่วนคนที่ทำให้ติด (วิธีเดียวกับสรุปรายตัว)
-function mxRecords(r) {
-  const bs = burnShares(), recs = []; // A7: same tracker as the battle's u.dealt (core/battle.js)
-  for (let ei = 0; ei < r.events.length; ei++) {
-    const e = r.events[ei]; // ชุด 37: ei = เลขเหตุการณ์ (ใช้เป็นลิงก์ไปบรรทัดในบันทึก)
-    if (e.k === 'burn' || e.k === 'cleanse' || e.k === 'down') bs.see(e.k, e);
-    else if (e.k === 'dmg') {
-      const d = e.d && typeof e.d === 'object' ? e.d : {}, over = d.over || 0;
-      const push = (from, f) => recs.push({ t: e.t, ei, to: e.to, from, why: e.why, d, f, amt: e.amount * f, abs: e.absorbed * f, over: over * f, sub: !!e.sub, raw: e });
-      if (e.why === 'burn') for (const [src, f] of bs.split(e.to)) push(src >= 0 ? src : null, f);
-      else push(e.from, 1);
-    }
-  }
-  return recs;
-}
 // ข้อความที่มาของดาเมจ 1 ครั้ง · ใช้เป็นกลุ่ม (ครั้งที่ข้อความเหมือนกันรวมเป็นบรรทัดเดียว)
 function mxCompose(rec, U, m) {
   const d = rec.d, P = [];

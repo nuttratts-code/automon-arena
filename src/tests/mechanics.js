@@ -14,6 +14,7 @@ import { TESTS_SHOP } from './t-shop.js';
 import { TESTS_BOTS } from './t-bots.js';
 import { TESTS_SAVE } from './t-save.js';
 import { TESTS_VALIDATE } from './t-validate.js';
+import { TESTS_SKILL_CALC } from './t-skill-calc.js';
 
 export const TESTS = [
   ...TESTS_COMBAT,
@@ -24,6 +25,7 @@ export const TESTS = [
   ...TESTS_BOTS,
   ...TESTS_SAVE,
   ...TESTS_VALIDATE,
+  ...TESTS_SKILL_CALC,
 ];
 
 export function runTests() {
