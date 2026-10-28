@@ -11,7 +11,7 @@ V1.3 · 28 Oct 2026 · added stage mode (demo) decisions · V1.2 translated to E
 - Structure: fixed enemy teams (normal monsters) stage by stage · before each stage the player picks 1 of 3 difficulties, each with a different reward · every 5 stages a random boss
 - Hearts: same as now (loss = −1 heart, 10 hearts)
 - Run: 10 matches = 2 bosses (stages 5 and 10); player may keep playing after that, bosses keep getting stronger (endless)
-- Rewards: Claude's proposal (ค่าเสนอ) easy = gold · normal = permanent values · hard = rare unit — plus a **rune system designed by the user (waiting for the user's design)**
+- Rewards: Claude's proposal (ค่าเสนอ) easy = gold · normal = permanent values · hard = rare unit — plus a **rune system (user idea 28 Oct): team-wide effects, e.g. DNA rune = add a chosen tribe to a unit · revive rune = revive once at 100% HP · gold rune · damage rune. Open: structure (team slots vs on a unit), conflicts with tribe-rules (max 1 extra tribe; extra tribe must match skill mechanic), revive vs อสูร identity and on-down skills (HL-5, PT-3)**
 - Claude's suggestions, not decided: bosses carry a special rule (Balatro-style), pool of 4–6 bosses (demo may start with 2–3), show the next boss from the start of each 5-stage block
 - Open: rune design · boss HP/attack/rules/scaling (numbers = ask user) · how skills that target front/back row or trigger "enemy down" work vs a single boss · scoring/storm vs boss · effect on MVP1 target date (user: keep plan as is for now, 28 Oct)
 
@@ -19,7 +19,7 @@ V1.3 · 28 Oct 2026 · added stage mode (demo) decisions · V1.2 translated to E
 - Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test
 
 ## Systems not designed yet
-- Food · items · Partner (MVP1 shop sells characters only)
+- Food · items (MVP1 shop sells characters only) · Partner removed by the user 28 Oct
 - MVP2: Ghost Battle + online · new tie rule (now tie = player wins) · server computes battle result / gold / permanent values itself
 
 ## Play data
