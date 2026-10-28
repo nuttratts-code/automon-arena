@@ -335,6 +335,9 @@ with sync_playwright() as p:
         # tab 4: สเตตัส · กางแล้วมีลิงก์ → ไปบรรทัดเดียว ไฮไลต์ ล้างตัวกรอง
         pg.evaluate("document.getElementById('simOnlyProc').checked=true")
         pg.click('#mxTabs button >> nth=3')
+        fin=pg.eval_on_selector(u0,'e=>[...e.querySelectorAll(":scope > summary > .mx-fin .mx-fc")].map(c=>c.firstChild.textContent)')
+        chk(fin==['พลังโจมตี','คูลดาวน์','มัลติฮิต','ไฟ/ฮิต','ช็อต/ฮิต','เกราะ/ฮิต','ฟื้น/ฮิต'],'stat tab: final stats incl. cooldown visible in row without opening '+str(fin))
+        chk(pg.eval_on_selector(u0,'e=>[...e.querySelectorAll(":scope > summary > .mx-fin .mx-fc")].every(c=>c.style.getPropertyValue("--c").startsWith("var(--n-"))'),'stat chips each have own colour var')
         stx=pg.eval_on_selector_all(u0+' >> .mx-pane:not([hidden]) details.mxs','e=>e.length')
         if stx>0:
             pg.click(u0+' >> .mx-pane:not([hidden]) details.mxs >> nth=0 >> summary')

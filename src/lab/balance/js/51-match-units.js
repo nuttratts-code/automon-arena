@@ -130,21 +130,31 @@ const MX_FX = ['heal', 'armor', 'cleanse', 'revive', 'steal', 'summon', 'cdCut',
 function mxStatPane(uid, k) {
   const box = el('div', 'mx-pane'), x = mxCtx.res.get(uid), u = mxCtx.U.get(uid);
   if (!x || !x.fin) { box.append(el('p', 'mx-note', 'ไม่มีข้อมูลสเตตัสของแมตช์นี้ · กด "จำลองใหม่" ในแท็บลองสู้')); return box; }
-  const f = x.fin;
   box.append(el('p', 'mx-note', 'ค่าสุดท้ายของตัวนี้ ณ ตอนจบแมตช์ (รวมโบนัสเผ่า / สกิล / บัฟทั้งหมดแล้ว)'));
-  const rows = [
-    ['HP', `${nf(Math.max(0, x.hp))} / ${nf(f.maxHp)}`],
-    ['พลังโจมตี', nf(f.atk)],
-    ['มัลติฮิต', `×${nf(f.multi)}`],
-    ['ไฟ/ฮิต', nf(f.burnHit || 0)],
-    ['ช็อต/ฮิต', nf(f.shockHit || 0)],
-    ['เกราะ/ฮิต', nf(f.armorHit || 0)],
-    ['ฟื้น/ฮิต', nf(f.healHit || 0)],
-  ];
-  const g = el('div', 'mx-stats');
-  for (const [lab, val] of rows) { const tl = el('div', 'mx-stat'); tl.append(el('small', '', lab), el('b', '', val)); tl.title = `${lab} ตอนจบแมตช์`; g.append(tl); }
-  box.append(g);
+  box.append(mxStatTiles(x, 'mx-stats', 'mx-stat'));
   return box;
+}
+// ค่าสุดท้ายตอนจบแมตช์ · 1 ช่อง = 1 สี (ใช้สีชุดเดียวกับตัวเลขลอย/บันทึกการต่อสู้) · คูลดาวน์ = ที่ใช้จริงตามสูตรในแมตช์ (cdMs × cdMult ไม่ต่ำกว่า minCooldownMs)
+function mxStatRows(x) {
+  const f = x.fin, cd = Math.max(RULES.minCooldownMs || 0, Math.round(f.cdMs * f.cdMult));
+  return [
+    ['HP', `${nf(Math.max(0, x.hp))} / ${nf(f.maxHp)}`, 'var(--hp)'],
+    ['พลังโจมตี', nf(f.atk), 'var(--n-hit)'],
+    ['คูลดาวน์', `${(cd / 1000).toFixed(2)} วิ`, 'var(--n-skill)'],
+    ['มัลติฮิต', `×${nf(f.multi)}`, 'var(--n-cnt)'],
+    ['ไฟ/ฮิต', nf(f.burnHit || 0), 'var(--n-burn)'],
+    ['ช็อต/ฮิต', nf(f.shockHit || 0), 'var(--n-shock)'],
+    ['เกราะ/ฮิต', nf(f.armorHit || 0), 'var(--n-armor)'],
+    ['ฟื้น/ฮิต', nf(f.healHit || 0), 'var(--n-heal)'],
+  ];
+}
+function mxStatTiles(x, boxCls, tileCls) {
+  const g = el('div', boxCls);
+  for (const [lab, val, color] of mxStatRows(x)) {
+    const tl = el('div', tileCls); tl.style.setProperty('--c', color);
+    tl.append(el('small', '', lab), el('b', '', val)); tl.title = `${lab} ตอนจบแมตช์`; g.append(tl);
+  }
+  return g;
 }
 
 // แท็บอยู่ข้างหัวข้อ "รายตัว" (ไม่ใช่ในแต่ละแถว) · เลือกแท็บเดียวแล้วทุกตัวเปลี่ยนตาม
@@ -204,8 +214,18 @@ function mxMetric(uid) {
       mxBarSegs(tot / sc.fx * 100, [[f.heal, 'var(--n-heal)', `ฮิล ${nf(f.heal)}`, tot], [f.armor, 'var(--n-armor)', `เกราะ ${nf(f.armor)}`, tot]]));
   }
   const max = Math.max(1, (x.fin && x.fin.maxHp) || x.hp || 1), hp = Math.max(0, x.hp || 0);
-  return put('HP ตอนจบ', `${nf(hp)}/${nf(max)}`, x.down ? 'down' : 'รอด',
+  const out = put('HP ตอนจบ', `${nf(hp)}/${nf(max)}`, x.down ? 'down' : 'รอด',
     mxBarSegs(hp / max * 100, [[hp, 'var(--hp)', `HP ${nf(hp)} / ${nf(max)}`, max]]));
+  // แท็บสเตตัส: ค่าสุดท้ายทุกช่อง (รวมคูลดาวน์) โชว์ในแถวเลย ไม่ต้องกดกาง · HP อยู่ในบรรทัด/แท่งด้านบนแล้ว จึงไม่ซ้ำ
+  if (x.fin) {
+    const chips = el('div', 'mx-fin');
+    for (const [lab, val, color] of mxStatRows(x).slice(1)) {
+      const c = el('span', 'mx-fc'); c.style.setProperty('--c', color); c.title = `${lab} ตอนจบแมตช์`;
+      c.append(el('small', '', lab), el('b', '', val)); chips.append(c);
+    }
+    out.append(chips);
+  }
+  return out;
 }
 const MX_FX_LEG = [['heal', 'ฮิล', 'var(--n-heal)'], ['armor', 'เกราะ', 'var(--n-armor)'], ['skill', 'สกิล', 'var(--n-skill)']];
 function mxLegendPaint() { // legend เปลี่ยนตามแท็บ · สีที่ไม่มีในแมตช์นี้แสดงจาง ๆ
@@ -244,7 +264,13 @@ function mxRepaint() { // เปลี่ยนเฉพาะแผนภูม
   if (!mxCtx || !$('mxBody') || $('mxBody').hidden) return;
   for (const det of $('mxUnits').querySelectorAll('details.mxu')) {
     const uid = +det.dataset.uid, num = det.querySelector('summary .mx-num');
-    if (num) { const fresh = mxMetric(uid), nb = fresh.querySelector(".mx-bar"), ob = det.querySelector("summary > .mx-bar"); if (nb && ob) ob.replaceWith(nb); num.replaceWith(fresh); }
+    if (num) {
+      const fresh = mxMetric(uid), nb = fresh.querySelector(".mx-bar"), ob = det.querySelector("summary > .mx-bar");
+      const nc = fresh.querySelector(".mx-fin"), oc = det.querySelector("summary > .mx-fin"); // ช่องสเตตัสในแถว: ติดเฉพาะแท็บสเตตัส
+      if (nb && ob) ob.replaceWith(nb);
+      if (oc) { if (nc) oc.replaceWith(nc); else oc.remove(); } else if (nc) det.querySelector("summary").append(nc);
+      num.replaceWith(fresh);
+    }
     const body = det.querySelector('.mx-body');
     if (body) body.replaceChildren(mxUnitPane(uid, `u${uid}`));
   }
@@ -301,7 +327,7 @@ function renderMatch() {
       if (c) nm.append(tribeBadge(c.tribe, c.extraTribes));
       nm.append(el('span', 'nm', `${c ? c.name : u.id} Lv${u.level} · ${ROW_TH[u.row]}${u.lane + 1}`), pill(x && x.down ? 'down' : 'ยืน', x && x.down ? 'mx-down' : 'p-ok'));
       nm.title = `${u.id} ${c ? c.name : ''} · ${mxShort(u)}`;
-      const mn = mxMetric(u.uid), bar = mn.querySelector(".mx-bar"); s.append(nm, mn); if (bar) s.append(bar); det.append(s);
+      const mn = mxMetric(u.uid), bar = mn.querySelector(".mx-bar"), chips = mn.querySelector(".mx-fin"); s.append(nm, mn); if (bar) s.append(bar); if (chips) s.append(chips); det.append(s);
       const body = () => mxUnitBody(u.uid, k);
       if (det.open) det.append(body());
       box.append(det);
