@@ -98,6 +98,8 @@ function mxOutPane(uid, k) {
   return box;
 }
 
+// G1: label of the ownerless row depends on the source (execute without owner = SF-5 type selfKo skill)
+const MX_NOOWNER = { storm: 'ไม่มีเจ้าของ (พายุทราย)', burn: 'ไม่มีเจ้าของ (ไฟที่ไม่มีผู้ทำ)', execute: 'ตัวเอง down (สกิล)' };
 // แท็บ 2: ดาเมจที่โดน · 1 แถวต่อ 1 ศัตรู (ไม่รวมกัน) · ลิงก์เดียวต่อแถว = เปิดบันทึกเฉพาะคู่ (ตัวนี้ × ศัตรูตัวนั้น)
 function mxInPane(uid, k) {
   const { U, m, per } = mxCtx, P = per.get(uid), box = el('div', 'mx-pane'), me = U.get(uid);
@@ -114,7 +116,7 @@ function mxInPane(uid, k) {
     for (const rr of list) { const k = rr.from == null ? 'n' : rr.from; let q = byFrom.get(k); if (!q) byFrom.set(k, q = { a: mxAgg(), evs: [] }); mxAdd(q.a, rr); q.evs.push(rr.ei); }
     const kids = [...byFrom].sort((x, y) => y[1].a.amt - x[1].a.amt).map(([k, q]) => {
       const d2 = el('span', 'mx-dot'); d2.style.setProperty('--c', MX_COLOR[w]);
-      const lab = k === 'n' ? [d2, el('span', 'mx-ally', 'ไม่มีเจ้าของ (พายุทราย · ไฟที่ไม่มีผู้ทำ)')] : [d2, mxWho(k, U, m)];
+      const lab = k === 'n' ? [d2, el('span', 'mx-ally', MX_NOOWNER[w] || 'ไม่มีเจ้าของ')] : [d2, mxWho(k, U, m)];
       return { label: lab, cells: [nfc(q.a.n), nf(q.a.amt), nf(q.a.abs), nf(mxLoss(q.a))], evs: q.evs };
     });
     return { label: [dot, MX_NAME[w]], cells: [nfc(a.n), nf(a.amt), nf(a.abs), nf(mxLoss(a))], evs: list.map(rr => rr.ei), kids, dots: [MX_COLOR[w]] };
@@ -122,7 +124,7 @@ function mxInPane(uid, k) {
   return box;
 }
 
-// แท็บ 3: อื่นๆ · ผลตัวเลขของสกิลที่ไม่ใช่ดาเมจ · ที่ได้รับ + ที่ใช้กับตัวอื่น · ทุกแถวมีลิงก์ไปบรรทัดในบันทึก
+// Tab 3 อื่นๆ: non-damage effects this unit GAVE (incl. revive/summon since G2/G3) · every row links to the log
 const MX_FX = ['heal', 'armor', 'cleanse', 'revive', 'steal', 'summon', 'cdCut', 'reflectDebuff'];
 // แท็บ 4: สเตตัส · ค่าตอนจบแมตช์ (รวมโบนัสเผ่า/สกิล/บัฟแล้ว) · ไม่มีที่มา/ก่อน-หลัง (A8: ลบโค้ดเก่าที่สัญญาไว้แล้ว)
 function mxStatPane(uid, k) {

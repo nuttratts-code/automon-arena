@@ -307,7 +307,8 @@ export function simLine(e, S, U, cm) {
     case 'summon': return ['✚ ', who(e.from), ' เรียก ', who(e.who), ` มาสู้แทน `, { t: `HP ${e.unit.hp}`, c: 'lg-heal' }];
     case 'perm': return ['◆ ', who(e.to), ' ได้ ', { t: permText(e.key, e.amount), c: 'lg-skill' }, ' ถาวร (ติดไปแมตช์ถัดไป)'];
     case 'steal': return [who(e.from), ' ดูดช็อต ', { t: String(e.amount), c: 'lg-shock' }, ' จาก ', who(e.to), ` (เหลือ ${e.total})`];
-    case 'revive': return ['✚ ', who(e.who), ` ${e.why === 'ally' ? 'ถูกเพื่อนชุบ' : e.why === 'tribe' ? 'ลุกกลับมา (โบนัสเผ่า)' : 'ลุกกลับมา'} `, { t: `HP ${e.hp}`, c: 'lg-heal' }];
+    case 'revive': return e.why === 'ally' && e.from != null ? ['✚ ', who(e.who), ' ถูก ', who(e.from), ' ชุบ ', { t: `HP ${e.hp}`, c: 'lg-heal' }] // G2: shows who revived (detail on)
+      : ['✚ ', who(e.who), ` ${e.why === 'ally' ? 'ถูกเพื่อนชุบ' : e.why === 'tribe' ? 'ลุกกลับมา (โบนัสเผ่า)' : 'ลุกกลับมา'} `, { t: `HP ${e.hp}`, c: 'lg-heal' }];
     case 'end': return [`จบแมตช์: ${e.winner === 0 ? 'ทีมซ้ายชนะ' : e.winner === 1 ? 'ทีมขวาชนะ' : 'เสมอ'}`];
     default: return null;
   }

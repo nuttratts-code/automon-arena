@@ -234,6 +234,8 @@ const SC_SKILL = [
     ok(s, 'summoned');
     eq([s.unit.id, s.unit.level, s.unit.row, s.unit.lane, s.unit.hp, s.unit.maxHp, s.unit.armor], ['PL-7', L, 0, 0, p7.hp[i], p7.hp[i], 0], 'summoned unit');
     ok(x.model.per.has(s.unit.uid), 'summoned unit has its own row in the tab');
+    const fx = [...(x.model.fxGiven.get(me) || new Map()).values()].flatMap(r => r.list.map(q => q.e));
+    ok(fx.includes(s), 'G3: summon listed in PL-5 tab อื่นๆ');
     return x;
   }],
   ['PL-8', 'ตีโดน → ติดไฟ v ศัตรูทั้งเลน', (c, L, i) => {
@@ -272,6 +274,7 @@ const SC_SKILL = [
     ok(x.r.events.some(e => e.k === 'down' && e.who === me && e.t === 0), 'down at 0 s');
     eq(x.r.events.filter(e => e.k === 'shock' && e.from === me).map(e => [e.to, e.amount]).sort(), [[x.uid(1, 0, 0), v], [x.uid(1, 1, 1), v]].sort(), 'shock to every enemy');
     eq(x.model.act.get(me).shockU, 2 * v, "tab sub-line 'ติดช็อต'");
+    ok(x.model.per.get(me).in.some(r => r.why === 'execute' && r.from == null), "G1: self-KO = ownerless 'execute' row in SF-5 tab โดนทำดาเมจ (label 'ตัวเอง down (สกิล)')");
     return x;
   }],
   ['SF-8', 'ทุกชุด → ตีแบ่งทุกตัว (หารพลังโจมตี/ช็อตเท่ากัน ปัดลง ต่ำสุด 1)', (c, L, i) => {
@@ -504,6 +507,8 @@ const SC_SKILL = [
     const h1 = scHits(x.r, me)[0], rev = x.r.events.filter(e => e.k === 'revive' && e.t === h1.t);
     eq(rev.length, sk('WN-4', L === 3 ? 1 : 0).v[i], 'allies revived on first hit');
     for (const e of rev) eq(e.hp, Math.floor(50 * (RULES.reviveAllyHpPct ?? 20) / 100), 'revive HP 20%');
+    const fx = [...(x.model.fxGiven.get(me) || new Map()).values()].flatMap(r => r.list.map(q => q.e));
+    for (const e of rev) { eq(e.from, me, 'G2: revive giver = WN-4'); ok(fx.includes(e), 'G2: revive listed in WN-4 tab อื่นๆ'); }
     return x;
   }],
 ];
