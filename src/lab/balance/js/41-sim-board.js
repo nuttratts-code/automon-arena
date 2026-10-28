@@ -328,38 +328,29 @@ $('combo').addEventListener('click', () => {
 });
 $('combo').setAttribute('aria-pressed', String(comboOn));
 function simUnitName(u) { const c = simLast.m[u.id]; return `${u.side === 0 ? 'ซ้าย' : 'ขวา'} ${ROW_TH[u.row]}${u.lane + 1} · ${c ? c.name : u.id} Lv${u.level}`; }
-// สรุปรายตัวจากบันทึกเหตุการณ์ · ดาเมจไฟแบ่งให้ผู้ทำให้ติดตามสัดส่วน (ไฟลดลงพร้อมกันทุกส่วน สัดส่วนจึงคงเดิม)
+// Per-unit summary from the event log · burn damage split among appliers by share (core burnShares)
 function simSummary(r, start) {
   const side = new Map(unitsOf(r).map(u => [u.uid, u.side])), foe = (a, b) => side.has(a) && side.has(b) && side.get(a) !== side.get(b); // ชุด 33: นับเฉพาะดาเมจใส่ฝั่งตรงข้าม
   const S = new Map(unitsOf(r).map(u => [u.uid, { sets: 0, hits: 0, hitDmg: 0, shockDmg: 0, burnDmg: 0, otherDmg: 0, burnGiven: 0, shockGiven: 0, armorGot: 0, absorbed: 0, taken: 0, burnTaken: 0, healed: 0 }]));
-  const share = new Map(); // เป้า → Map(ผู้ทำให้ติด → ส่วนของไฟ)
+  const bs = burnShares(); // burn credit by share: same core tracker as battle u.dealt and matchcalc (core/battle.js)
   const add = (uid, k, v) => { const x = S.get(uid); if (x) x[k] += v; };
   for (const e of r.events) {
+    if (e.k === 'burn' || e.k === 'cleanse' || e.k === 'down') bs.see(e.k, e);
     switch (e.k) {
       case 'set': add(e.who, 'sets', 1); break;
       case 'dmg':
         add(e.to, 'taken', e.amount); add(e.to, 'absorbed', e.absorbed || 0);
         if (e.why === 'burn') {
           add(e.to, 'burnTaken', e.amount);
-          const m = share.get(e.to), tot = m ? [...m.values()].reduce((a, b) => a + b, 0) : 0;
-          if (m && tot > 0) for (const [src, part] of m) if (foe(src, e.to)) add(src, 'burnDmg', e.amount * part / tot);
+          for (const [src, part] of bs.split(e.to)) if (foe(src, e.to)) add(src, 'burnDmg', e.amount * part);
         } else if (e.from != null && foe(e.from, e.to)) {
           if (e.why === 'hit') { if (!e.sub) add(e.from, 'hits', 1); add(e.from, 'hitDmg', e.amount); } // ชุด 33: ฮิต = ครั้งที่ออกไปตี (ตีแบ่งหลายตัวนับ 1)
           else if (e.why === 'shock') add(e.from, 'shockDmg', e.amount);
           else add(e.from, 'otherDmg', e.amount);
         }
         break;
-      case 'burn': {
-        if (e.from != null) add(e.from, 'burnGiven', e.amount);
-        let m = share.get(e.to); if (!m) share.set(e.to, m = new Map());
-        const before = e.total - e.amount, tot = [...m.values()].reduce((a, b) => a + b, 0);
-        if (tot > 0) for (const [k, v] of m) m.set(k, before > 0 ? v * before / tot : 0); // ปรับส่วนเดิมให้เท่าไฟที่เหลือจริงก่อนเพิ่ม
-        const key = e.from != null ? e.from : -1; m.set(key, (m.get(key) || 0) + e.amount);
-        break;
-      }
+      case 'burn': if (e.from != null) add(e.from, 'burnGiven', e.amount); break;
       case 'shock': if (e.from != null) add(e.from, 'shockGiven', e.amount); break;
-      case 'cleanse': if (e.what !== 'pct') share.delete(e.to); break; // ชุด 20: ล้างบางส่วน = ส่วนแบ่งเดิมปรับตามไฟที่เหลือตอนติดไฟครั้งถัดไป
-      case 'down': share.delete(e.who); break;
       case 'armor': add(e.to, 'armorGot', e.amount); break;
       case 'heal': add(e.to, 'healed', e.amount); break;
     }

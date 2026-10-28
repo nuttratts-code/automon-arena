@@ -8,6 +8,7 @@ renderCharForm(); renderTribeForm(); refreshDirty();
 (async () => {
   db = await window.claude?.use?.('db') ?? null;
   if (!db) return;
+  db.doc('results/latest').get().then(r => { savedRes = cleanSavedRes(r.exists ? r.data() : null); if (savedRes && !lastRun && !$('tgrid').hidden && !$('view-pick').hidden) renderGrid(); }, () => {}); // batch 31
   db.collection('ideas').orderBy('at', 'desc').onSnapshot(snap => renderIdeas(snap.docs), () => {});
   db.collection('simTeams').onSnapshot(snap => { presets = snap.docs.map(d => cleanPreset(d.id, d.data())).filter(Boolean).sort((a, b) => (a.at < b.at ? -1 : 1)).slice(0, PRESET_MAX); renderPresets(); }, () => {});
   db.collection('skillPicks').onSnapshot(snap => {
