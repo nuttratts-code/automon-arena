@@ -6,7 +6,7 @@ import { CTX_WHEN, DO_INFO, RULES, SKILL_KINDS, SKILL_SPEC, WHEN_KIND, cleanTags
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
-import { parseCfgCode, preImportCheck } from '../tools/cfgcode.mjs';
+import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
 export const TESTS_VALIDATE = [
   ['ทุกคู่สกิลที่หน้าบาลานซ์ให้เลือก ใช้งานได้จริงในตัวคำนวณ', () => {
     const chars = buildCharacterList(), m0 = makeCharMap(chars), rng = makeRng(5);
