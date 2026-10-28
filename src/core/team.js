@@ -39,7 +39,7 @@ export function unitOf(c, e, rules, charMap) {
       healAmp: p.healAmp || 0, hitAmp: p.hitAmp || 0, burnAmp: p.burnAmp || 0,
       shareTo: Object.fromEntries(SHARE_TO.filter(t => p['share_' + t] > 0).map(t => [t, p['share_' + t]])), // แบ่งเกราะถาวรแยกผู้รับ (ชุด 7)
       armorHit: pctOf((c.armorHit ? c.armorHit[L] : 0) + (p.armorHit || 0), p.armorHitPct), // เกราะ/ฮิต (ค่าถาวรได้จากชุด 6)
-      healHit: c.healHit ? c.healHit[L] : 0, // ฟื้น/ฮิต (ชุด 18) · ไม่มีค่าถาวร
+      healHit: (c.healHit ? c.healHit[L] : 0) + (p.healHit || 0), // ฟื้น/ฮิต (ชุด 18) · ค่าถาวรได้จากสกิลถาวร healHitUp (28 ต.ค.)
       multi: c.multi[L] + Math.min(p.multi || 0, rules.permCaps.multi ?? Infinity), // มัลติฮิตแยกเลเวล (19 ต.ค.)
       cdMs: Math.max(0, Math.round((c.cdMs[L] - (p.cdMs || 0)) * cdMult)), // คูลดาวน์แยกเลเวล (20 ต.ค.) · ค่าถาวรลดเป็นมิลลิวินาที (ชุด 6) · ค่าต่ำสุดตัดตอนสู้
       // สกิลร้านค้าไม่ใช้ระหว่างสู้ · สกิลที่ระบุเลเวลใช้เฉพาะเลเวลนั้น · idx = ลำดับสกิลบนการ์ด (ใช้แสดงผลจำลอง)

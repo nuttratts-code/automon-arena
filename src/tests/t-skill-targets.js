@@ -213,6 +213,18 @@ export const TESTS_SKILL_TARGETS = [
     const base = buildCharacterList(), bad = { ...base[0], id: 'ZZ-3', skills: [{ when: 'matchStart', do: 'dmgOf', of: { stat: 'atk', who: 'ctx' }, to: 'enemyFront', v: L3(1) }] };
     ok(validateConfig([...base, bad]).errors.some(e => e.startsWith('ZZ-3')), 'เงื่อนไขที่ไม่มีเป้าหมาย/ผู้ตี ใช้ ctx ไม่ได้');
   }],
+  ['ชุด 46: พลังโจมตี + % ของ ฟื้น/ฮิต ของตัวเอง ทุกครั้งที่ตีโดน (atkOf คิดจาก healHit)', () => {
+    const sk = { when: 'hit', do: 'atkOf', of: { stat: 'healHit', who: 'self' }, to: 'self', v: L3(50) };
+    ok(skErr(mk('AA-1', { tribe: 'เพลิงเผา', skills: [sk] })).length === 0, 'validate รับ healHit เป็นค่าที่ใช้คิด');
+    const A = mk('A', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(9000), healHit: L3(5), skills: [sk] });
+    const E = mk('E', { atk: L3(50), cdMs: 700, hp: L3(10000) });
+    const r = fight([A, E], [u('A')], [u('E')]);
+    const a = uidOf(r, 0, 'A');
+    eq(ev(r, 'atkUp', e => e.to === a).slice(0, 6).map(e => e.amount), [2, 2, 2, 2, 2, 2], 'ทุกฮิต +50% ของ ฟื้น/ฮิต 5 = +2 (ปัดลง) สะสมต่อเนื่อง');
+    const B = mk('B', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(9000), skills: [sk] }); // ฟื้น/ฮิต 0 → ไม่ได้อะไร
+    const r2 = fight([B, E], [u('B')], [u('E')]);
+    eq(ev(r2, 'atkUp', e => e.to === uidOf(r2, 0, 'B')).length, 0, 'ฟื้น/ฮิต 0 = ไม่ได้พลังโจมตี');
+  }],
   ['ค่าพลังฟื้น/ฮิต: ทุกฮิตที่ตีโดน ตัวเองฟื้น HP ได้ทุกเผ่า (ชุด 18)', () => {
     const A = mk('A', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(100), healHit: L3(5) });
     const E = mk('E', { atk: L3(50), cdMs: 700, hp: L3(10000) });
@@ -224,6 +236,17 @@ export const TESTS_SKILL_TARGETS = [
     for (const bad of [[1, 2], [-1, 0, 0], ['1', 2, 3]]) ok(skErr({ ...B, healHit: bad }).length > 0, 'ค่าผิด ' + JSON.stringify(bad));
     const c = { ...B, cdMs: L3(2000), multi: L3(2) }, p0 = basePower({ ...c, healHit: L3(0) }), p1 = basePower(c);
     eq(p1.ehp - p0.ehp, 5 * 1 * RULES.power.armorLifeSec, 'งบค่าพลัง: นับเป็นเลือดรวม (ฟื้น × ฮิตต่อวิ × เวลายืน)');
+  }],
+  ['ผล ฟื้น/ฮิต +: ทุกฮิตที่ตีโดนบวกค่า ฟื้น/ฮิต ให้ตัวเองสะสมระหว่างสู้ ใส่ได้ทุกเผ่า (28 ต.ค.)', () => {
+    const grow = { when: 'hit', do: 'healHitUp', to: 'self', v: L3(2) };
+    const A = mk('A', { atk: L3(10), cdMs: 1000, multi: 3, hp: L3(9000), skills: [grow] }); // HP สูงพอที่จะยังยืนถึง 2 วิ
+    const E = mk('E', { atk: L3(50), cdMs: 700, hp: L3(10000) });
+    const r = fight([A, E], [u('A')], [u('E')]);
+    const a = uidOf(r, 0, 'A');
+    eq(ev(r, 'buff', e => e.to === a && e.what === 'healHitUp' && e.t === 1000).map(e => e.amount), [2, 2, 2], 'ตี 3 ฮิต บวกฮิตละ +2');
+    const total = t => ev(r, 'heal', e => e.to === a && e.t === t).reduce((s, e) => s + e.amount, 0);
+    eq([total(1000), total(2000)], [0, 18], 'รอบแรกฟื้น 0 (ค่ายังไม่โต · บวกหลังฮิต) · รอบสอง 3 ฮิต × (ฟื้น/ฮิต 6) = 18');
+    eq(skErr({ ...mk('AA-2', { tribe: 'เพลิงเผา' }), skills: [grow] }).length, 0, 'เผ่าไหนก็ใส่ได้ (ไม่ติดกฎสกิลฟื้น HP เฉพาะภูติ/อสูร)');
   }],
   ['พาเพื่อนไปตี: สุ่มเพื่อนเผ่าเดียวกันตีเป้าเดียวกันทันที นับเป็นฮิตปกติ ไม่พาต่อ (ชุด 20)', () => {
     const strike = { when: 'hit', do: 'allyStrike', to: 'allyRandom', sameTribe: true, v: L3(1) };

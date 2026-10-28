@@ -323,7 +323,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const snapStats = f => ({ atk: atkOf(f), maxHp: f.maxHp, multi: f.multi + f.multiBonus, burnHit: f.burnHit, shockHit: f.shockHit, armorHit: f.armorHit, healHit: f.healHit || 0, cdMs: f.cdMs, cdMult: f.cdMult, hitAmp: f.hitAmp, burnAmp: f.burnAmp, shockAmp: f.shockAmp, healAmp: f.healAmp, armorAmp: f.armorAmp, cdAmp: f.cdAmp, healToAtk: f.healToAtk, burnTaken: f.burnTaken, shockTaken: f.shockTaken, dmgTaken: f.dmgTakenAmp });
   const iniStats = new Map();
   // ค่าที่ผล "% ของ" ใช้คิด (ชุด 7): stat ของ who · each = ตัวที่โดนผล · ctx = เป้าหมาย/ผู้ตี · all* = รวมตัวที่ยืนอยู่
-  const STAT = { atk: (f, me, ctx) => atkOf(f), armor: (f, me, ctx) => (f === me && ctx.armorSnap != null ? ctx.armorSnap : f.armor), maxHp: f => f.maxHp, hp: f => Math.max(0, f.hp), hpLost: f => Math.max(0, f.maxHp - Math.max(0, f.hp)), burn: f => f.burn, shock: f => f.shock };
+  const STAT = { atk: (f, me, ctx) => atkOf(f), armor: (f, me, ctx) => (f === me && ctx.armorSnap != null ? ctx.armorSnap : f.armor), maxHp: f => f.maxHp, hp: f => Math.max(0, f.hp), hpLost: f => Math.max(0, f.maxHp - Math.max(0, f.hp)), burn: f => f.burn, shock: f => f.shock, healHit: f => f.healHit || 0 };
   function ofVal(u, s, x, ctx) {
     const st = STAT[s.of && s.of.stat]; if (!st) return 0;
     const who = s.of.who, one = f => (f ? st(f, u, ctx) : 0);
@@ -453,6 +453,7 @@ export function simulate(teamA, teamB, opts = {}) {
       // ชุด 6: ค่าพลังเพิ่มทุกแบบ (+ ค่า / + %) · ผลที่ได้รับ/ที่ทำ +% · ผลใส่ศัตรู
       case 'hpPct': for (const x of T()) { const a = Math.floor(x.maxHp * v / 100); x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, v); } break;
       case 'armorHitUp': for (const x of T()) { x.armorHit += v; buff(x, 'armorHitUp', v); permRec(u, s, x, v); } break;
+      case 'healHitUp': for (const x of T()) { x.healHit = (x.healHit || 0) + v; buff(x, 'healHitUp', v); permRec(u, s, x, v); } break; // ฟื้น/ฮิต + (28 ต.ค.)
       case 'armorHitPct': for (const x of T()) { const a = Math.floor(x.armorHit * v / 100); x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, v); } break;
       case 'burnHitPct': for (const x of T()) { const a = Math.floor(x.burnHit * v / 100); x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, v); } break;
       case 'shockHitPct': for (const x of T()) { const a = Math.floor(x.shockHit * v / 100); x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, v); } break;

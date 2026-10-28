@@ -236,7 +236,10 @@
     <div class="row">
       <span class="status grow" id="dirty">ยังไม่ได้แก้ค่า</span>
       <button id="reset" type="button">กลับค่าตั้งต้น</button>
+      <button id="cfgCopy" type="button" title="คัดลอกค่าที่บันทึกล่าสุด (💾) ไปวางในแชท ใช้เมื่อ Claude อ่านค่าจากหน้านี้เองไม่ได้">คัดลอกค่าให้ Claude</button>
     </div>
+    <p class="status" id="cfgMsg" hidden></p>
+    <textarea id="cfgBox" readonly hidden rows="3" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px" aria-label="ค่าที่บันทึก (รหัส)"></textarea>
     <div class="row" id="saveList"></div>
       </div>
     </div>

@@ -112,7 +112,7 @@ export function shopTargetsBase(st, ref, to, self, chars) {
 }
 export const SHOP_GIVE_TH = { hp: 'HP', atk: 'พลังโจมตี', armor: 'เกราะสะสม', burn: 'ไฟ/ฮิต', shock: 'ช็อต/ฮิต', multi: 'มัลติฮิต', cdPct: 'คูลดาวน์ −%',
   cdStart: 'เริ่มแมตช์ลดคูลดาวน์ (มิลลิวินาที)', shareArmor: 'แบ่งเกราะ %', healToAtk: 'ฟื้นเป็นพลัง %', armorAmp: 'เกราะที่ได้รับ +%', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +%', shockAmp: 'ดาเมจช็อต +%', burnNoDecay: 'ไฟที่ติดไม่ลด',
-  armorHit: 'เกราะ/ฮิต', cdMs: 'คูลดาวน์ − (มิลลิวินาที)', hpPct: 'HP +%', atkPct: 'พลังโจมตี +%', burnPct: 'ไฟ/ฮิต +%', shockPct: 'ช็อต/ฮิต +%', armorHitPct: 'เกราะ/ฮิต +%',
+  healHit: 'ฟื้น/ฮิต', armorHit: 'เกราะ/ฮิต', cdMs: 'คูลดาวน์ − (มิลลิวินาที)', hpPct: 'HP +%', atkPct: 'พลังโจมตี +%', burnPct: 'ไฟ/ฮิต +%', shockPct: 'ช็อต/ฮิต +%', armorHitPct: 'เกราะ/ฮิต +%',
   healAmp: 'ฟื้น HP ที่ได้รับ +%', hitAmp: 'ดาเมจตี +%', burnAmp: 'ไฟที่ทำให้ติด +%' };
 export const SHARE_TH = { frontAlly: 'เพื่อนข้างหน้า', backAlly: 'เพื่อนข้างหลัง', frontBackAlly: 'เพื่อนหน้าและหลัง', frontLaneAlly: 'เพื่อนแถวหน้าเลนเดียวกัน', backLaneAlly: 'เพื่อนข้างหลังเลนเดียวกัน', frontRowAllies: 'เพื่อนแถวหน้า', backRowAllies: 'เพื่อนแถวหลัง', allyLowest: 'เพื่อน HP ต่ำสุด', allyRandom: 'เพื่อนสุ่ม 1 ตัว', allyRandom2: 'เพื่อนสุ่ม 2 ตัว', tribeAllies: 'เพื่อนเผ่าเดียวกัน' };
 for (const t of SHARE_TO) SHOP_GIVE_TH['share_' + t] = `แบ่งเกราะให้${SHARE_TH[t] || t} %`;
