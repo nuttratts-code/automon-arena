@@ -1,4 +1,4 @@
-# Match tab pattern check (28 Oct 2026, set 44 — report only, nothing changed)
+# Match tab pattern check (28 Oct 2026, set 44) — G1–G3 FIXED (user: แก้), G5 = C
 User ask: do all characters follow the same pattern? Tab 1 = my damage first, then to whom · Tab 2 = damage I took first, then from whom · Tab อื่นๆ = heal/armor/skill I gave first, then to whom.
 
 Answer: yes — one shared code path for all 48 characters (src/lab/matchcalc.js + lab/balance/js/51-match-units.js), no per-character branches. Checked by reading code + scanning 400 random matches (all chars, Lv1–3, tribes on). Exceptions found:
@@ -11,3 +11,9 @@ Answer: yes — one shared code path for all 48 characters (src/lab/matchcalc.js
 - G6 · tab สเตตัส: final stats only, no "to whom" (not part of the pattern, by design).
 - Known decisions, not bugs: shock damage credited to the hitter who pops it (user 28 Oct, keep); burn split by applier share (A7); storm = no owner.
 - Stale comment: 51-match-units.js line 125 says อื่นๆ shows received + given; it shows given only since A1.
+
+## Fix (set 44, merged 28 Oct)
+- G1: tab 2 ownerless row label by source (`MX_NOOWNER`: storm / burn / execute = 'ตัวเอง down (สกิล)').
+- G2: `reviveUnit(f, pct, why, giver, s)` logs `from` + `d.si` (detail on only) for WN-4 reviveDowned, reviveAlly and self-revive skills; tribe revive still no giver. Log line: 'X ถูก WN-4 ชุบ'.
+- G3: summon event gets `d.si` (detail on only) → row in PL-5 tab อื่นๆ.
+- Tests: assertions added to SF-5 / PL-5 / WN-4 cases, 221/221 · ui_smoke FAILS [] ERRORS [] · detail-off events unchanged (parity tests).

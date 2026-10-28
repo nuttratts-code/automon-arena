@@ -286,10 +286,10 @@ export function simulate(teamA, teamB, opts = {}) {
   let reflQ = [], revQ = [];
   function flushRevive() {
     const list = revQ; revQ = [];
-    for (const { u, v } of list) {
+    for (const { u, v, s } of list) {
       if (!up(u)) continue;
       const pool = F.filter(x => x.side === u.side && x.down && !x.summoned && !x.replaced);
-      for (const x of pickN(pool, v, u.side)) { x.down = false; x.lastHitBy = null; reviveUnit(x, R.reviveAllyHpPct, 'ally'); }
+      for (const x of pickN(pool, v, u.side)) { x.down = false; x.lastHitBy = null; reviveUnit(x, R.reviveAllyHpPct, 'ally', u, s); }
     }
   }
   function flushRefl() {
@@ -397,7 +397,7 @@ export function simulate(teamA, teamB, opts = {}) {
       } break;
       case 'reviveDowned': { // ชุด 20 (WN-4): ชุบเพื่อนที่ down จริงอยู่ สุ่ม v ตัว · ไม่รวมตัวที่ถูกเรียกมาสู้แทน และตัวที่ช่องถูกแทนแล้ว · HP เท่าชุบเพื่อน
         if (!up(u)) break;
-        revQ.push({ u, v }); // ชุด 21: ชุบหลังฟื้น HP ทั้งหมดของ tick (เดิมชุบทันที → ฟื้นที่เลือก "เพื่อน HP ต่ำสุด" ขึ้นกับลำดับฝั่ง)
+        revQ.push({ u, v, s }); // ชุด 21: ชุบหลังฟื้น HP ทั้งหมดของ tick (เดิมชุบทันที → ฟื้นที่เลือก "เพื่อน HP ต่ำสุด" ขึ้นกับลำดับฝั่ง)
         break; }
       case 'reflectDebuff': for (const x of T()) { x.reflDebuff.push({ by: u, pct: v, si: s.idx ?? null }); buff(x, 'reflectDebuff', v); } break;
       case 'eatAllyBurn': { let sum = 0; for (const x of allies(u)) if (x.burn > 0) { sum += x.burn; x.burn = 0; x.noDecay = 0; x.noDecayPerm = false; log('cleanse', { to: x.uid, what: 'burn' }); }
@@ -678,7 +678,7 @@ export function simulate(teamA, teamB, opts = {}) {
         const rv = f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
         if (rv) { // สกิลลุกกลับมา: เกิดแทนการ down (ผลตอน down ด้านบนทำงานไปแล้ว)
           fire(f, rv, 'selfDown');
-          reviveUnit(f, rv.value, 'skill');
+          reviveUnit(f, rv.value, 'skill', f, rv);
           continue;
         }
         // ชุบเพื่อน (WN-4): เพื่อนที่ยังยืนอยู่ใช้ได้ v ครั้ง/แมตช์ · ฟื้นด้วย HP reviveAllyHpPct%
@@ -690,7 +690,7 @@ export function simulate(teamA, teamB, opts = {}) {
         }
         if (ra) {
           fire(healer, ra, 'allyDown');
-          reviveUnit(f, R.reviveAllyHpPct, 'ally');
+          reviveUnit(f, R.reviveAllyHpPct, 'ally', healer, ra);
           continue;
         }
         if (reviveLeft[f.side] > 0) { // โบนัสอสูร: ตัวที่ down ก่อนลุกกลับมา
@@ -711,17 +711,17 @@ export function simulate(teamA, teamB, opts = {}) {
         const n = mkFighter(sm.unit, f.side); n.uid = F.length; n.summoned = true; F.push(n);
         n.cdLeft = effCd(n);
         if (detailOn) iniStats.set(n.uid, snapStats(n));
-        log('summon', { who: n.uid, from: f.uid, unit: { uid: n.uid, side: n.side, id: n.id, name: n.name, level: n.level, row: n.row, lane: n.lane, hp: n.hp, maxHp: n.maxHp, armor: n.armor } });
+        log('summon', { who: n.uid, from: f.uid, ...(detailOn ? { d: { si: sm.idx ?? null, what: sm.do } } : {}), unit: { uid: n.uid, side: n.side, id: n.id, name: n.name, level: n.level, row: n.row, lane: n.lane, hp: n.hp, maxHp: n.maxHp, armor: n.armor } });
         trigger(n, 'passive', {});
       }
       drainAll();
     }
   }
-  function reviveUnit(f, pct, why) {
+  function reviveUnit(f, pct, why, giver, s) { // G2: giver + skill index logged with detail on only (tab อื่นๆ "ชุบใส่ใคร")
     f.hp = Math.max(1, Math.floor(f.maxHp * pct / 100));
     f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false;
     f.cdLeft = effCd(f);
-    log('revive', { who: f.uid, hp: f.hp, why });
+    log('revive', { who: f.uid, hp: f.hp, why, ...(detailOn && giver ? { from: giver.uid, d: { si: s.idx ?? null, what: s.do } } : {}) });
   }
 }
 
