@@ -32,7 +32,7 @@ export const DO_TH = {
   permHp: ['HP +', '', 'perm'], permAtk: ['พลังโจมตี +', '', 'perm'], permArmor: ['เกราะสะสม +', '', 'perm'], permBurn: ['ไฟต่อฮิต +', '', 'perm'],
   permShock: ['ช็อตต่อฮิต +', '', 'perm'], permMulti: ['มัลติฮิต +', '', 'perm'], permCdPct: ['คูลดาวน์ −', '%', 'perm'],
   // ชุด 6 (22 ต.ค.)
-  hpPct: ['HP สูงสุด +', '%', 'match'], armorHitUp: ['เกราะ/ฮิต +', '', 'match'], armorHitPct: ['เกราะ/ฮิต +', '%', 'match'],
+  hpPct: ['HP สูงสุด +', '%', 'match'], armorHitUp: ['เกราะ/ฮิต +', '', 'match'], healHitUp: ['ฟื้น/ฮิต +', '', 'match'], armorHitPct: ['เกราะ/ฮิต +', '%', 'match'],
   burnHitPct: ['ไฟต่อฮิต +', '%', 'match'], shockHitPct: ['ช็อตต่อฮิต +', '%', 'match'], cdMsDown: ['คูลดาวน์ −', 'ms', 'match'],
   healAmp: ['ฟื้น HP ที่ได้รับ +', '%', 'match'], hitAmp: ['ดาเมจตีที่ทำ +', '%', 'match'], burnAmp: ['ไฟที่ทำให้ติด +', '%', 'match'],
   dmgOf: ['ดาเมจ', '%'], burnOf: ['ติดไฟ', '%'], shockOf: ['ติดช็อต', '%'], armorOf: ['ได้เกราะ', '%'], healOf: ['ฟื้น HP', '%'],
@@ -55,8 +55,8 @@ export const skillDur = s => (s && (s.perm || isShopWhen(s.when)) ? 'perm' : dur
 // ชุด 8 (22 ต.ค.): จัดตามเป้าหมายของผล (ผู้ใช้เลือก) แทนการจัดตามค่าพลัง
 export const DO_GROUPS = [
   ['โจมตี (ดาเมจ ไฟ ช็อต ใส่ศัตรู)', ['dmg', 'dmgOf', 'armorBreakDmg', 'reflect', 'reflectOf', 'counter', 'counterMulti', 'execute', 'selfKo', 'burn', 'burnOf', 'shock', 'shockOf', 'noDecay', 'spreadBurn', 'moveShock']],
-  ['ป้องกัน (เกราะ)', ['armor', 'armorOf', 'shareArmor', 'armorHitUp', 'armorHitPct', 'armorHitOf', 'armorAmp']],
-  ['ฟื้น · ลุก · ชุบ', ['heal', 'healOf', 'lifesteal', 'healAmp', 'revive', 'reviveAlly', 'reviveDowned', 'cleanse', 'cleansePct', 'reflectDebuff']],
+  ['ป้องกัน (เกราะ)', ['armor', 'armorOf', 'shareArmor', 'armorHitUp', 'armorHitPct', 'armorHitOf', 'armorAmp']],,
+  ['ฟื้น · ลุก · ชุบ', ['heal', 'healOf', 'healHitUp', 'lifesteal', 'healAmp', 'revive', 'reviveAlly', 'reviveDowned', 'cleanse', 'cleansePct', 'reflectDebuff']],
   ['เสริมพลัง (ตัวเอง / เพื่อน)', ['hpUp', 'hpPct', 'hpOf', 'atkUp', 'atkPct', 'atkOf', 'hitAmp', 'multiUp', 'cdPct', 'cdMsDown', 'cdCut', 'cdAmp', 'burnHitUp', 'burnHitPct', 'burnHitOf', 'burnAmp', 'burnNoDecay', 'shockHitUp', 'shockHitPct', 'shockHitOf', 'shockAmp', 'eatAllyBurn', 'healToAtk']],
   ['ลดพลังศัตรู', ['freeze', 'cdSlowPct', 'stun', 'stealShock', 'maxHpCut', 'burnTakenUp', 'shockTakenUp', 'dmgTakenUp', 'armorGainCut', 'healCut']],
   ['พิเศษ (เรียกตัว · ปรับการโจมตีชุดนั้น)', ['summon', 'allyStrike', 'extraHit', 'spread', 'retarget', 'splitAll']],
@@ -71,7 +71,7 @@ export const DO_HELP = {
   moveShock: 'ตัวที่ down แล้ว ช็อตของมันส่งต่อไปตัวอื่น %',
   armor: 'ได้เกราะเป็นตัวเลข · อยู่จนโดนตีหมด', armorOf: 'ได้เกราะเท่ากับ % ของค่าที่เลือกด้านล่าง',
   shareArmor: 'ทุกครั้งที่ตัวนี้ได้เกราะ ผู้รับได้เกราะเพิ่ม % ของจำนวนที่ตัวนี้ได้ (เกราะที่ได้จากการแบ่งไม่แบ่งต่อ)',
-  armorHitUp: 'เพิ่มเกราะ/ฮิต (ทุกฮิตที่ตีโดนได้เกราะ) เป็นตัวเลข', armorHitPct: 'เพิ่มเกราะ/ฮิต เป็น %', armorAmp: 'เกราะที่ได้รับทุกทางมากขึ้น %',
+  armorHitUp: 'เพิ่มเกราะ/ฮิต (ทุกฮิตที่ตีโดนได้เกราะ) เป็นตัวเลข', healHitUp: 'เพิ่มฟื้น/ฮิต (ทุกฮิตที่ตีโดนฟื้น HP ตัวเอง) เป็นตัวเลข', armorHitPct: 'เพิ่มเกราะ/ฮิต เป็น %', armorAmp: 'เกราะที่ได้รับทุกทางมากขึ้น %',
   heal: 'ฟื้น HP เป็นตัวเลข (ไม่เกิน HP สูงสุด)', healOf: 'ฟื้น HP เท่ากับ % ของค่าที่เลือกด้านล่าง', lifesteal: 'ฟื้น HP ตัวเอง % ของดาเมจที่ฮิตนั้นทำ (รวมช็อตที่แตกบนเป้า)',
   healAmp: 'การฟื้น HP ที่ได้รับมากขึ้น %', revive: 'down แล้วลุกกลับมาด้วย HP % ของ HP สูงสุด', reviveAlly: 'ชุบเพื่อนที่ down กลับมา (HP 20%) ได้กี่ครั้งต่อแมตช์',
   cleanse: 'ล้างไฟ ช็อต แช่แข็ง มึนงง ออกหมด',
@@ -302,7 +302,7 @@ export function simLine(e, S, U, cm) {
     case 'cleanse': return e.what === 'pct' ? [who(e.to), ` ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]} (เหลือไฟ ${e.burn} ช็อต ${e.shock})`] : [who(e.to), e.what === 'burn' ? ' ไฟถูกดับ' : ' ถูกล้างสถานะ'];
     case 'carry': return ['➜ ', who(e.by), ' พา ', who(e.who), ' ไปตี ', who(e.target)]; // ชุด 20
     case 'reflectDebuff': return ['↩ ', who(e.from), ` สะท้อน${e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'} `, { t: e.kind === 'cdSlowPct' ? `+${Math.round(e.amount * 10) / 10}%` : `+${e.amount}`, c: e.kind === 'burn' ? 'lg-burn' : e.kind === 'shock' ? 'lg-shock' : 'lg-skill' }, ' กลับไปหา ', who(e.to), ...(e.ally != null ? [' (สะท้อนให้ ', who(e.ally), ')'] : [])];
-    case 'buff': return [who(e.to), ` ${{ freeze: 'แช่แข็ง +', cdSlowPct: 'คูลดาวน์ช้าลง +', stun: 'มึนงง ', hpUp: 'HP สูงสุด +', multiUp: 'มัลติฮิต +', burnHitUp: 'ไฟต่อฮิต +', shockHitUp: 'ช็อตต่อฮิต +', armorHitUp: 'เกราะ/ฮิต +', cdMsDown: 'คูลดาวน์ −', burnTakenUp: 'ดาเมจไฟที่โดน +', shockTakenUp: 'ดาเมจช็อตที่โดน +', dmgTakenUp: 'ดาเมจตีที่โดน +', armorGainCut: 'เกราะที่ได้รับ −', healCut: 'ฟื้น HP ที่ได้รับ −', reflectDebuff: 'สะท้อนดีบัฟ ', hitAmp: 'ดาเมจตี +', burnAmp: 'ดาเมจไฟ +', shockAmp: 'ดาเมจช็อต +', healAmp: 'ฟื้น HP ที่ได้รับ +', armorAmp: 'เกราะที่ได้รับ +', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +', healToAtk: 'ฟื้นเป็นพลัง +' }[e.what] || e.what + ' '}${['freeze', 'stun', 'cdMsDown'].includes(e.what) ? `${e.amount / 1000} วิ` : Math.round(e.amount * 10) / 10}${/Taken|Cut|Pct|Amp|healToAtk|reflectDebuff/.test(e.what) ? '%' : ''}`];
+    case 'buff': return [who(e.to), ` ${{ freeze: 'แช่แข็ง +', cdSlowPct: 'คูลดาวน์ช้าลง +', stun: 'มึนงง ', hpUp: 'HP สูงสุด +', multiUp: 'มัลติฮิต +', burnHitUp: 'ไฟต่อฮิต +', shockHitUp: 'ช็อตต่อฮิต +', armorHitUp: 'เกราะ/ฮิต +', healHitUp: 'ฟื้น/ฮิต +', cdMsDown: 'คูลดาวน์ −', burnTakenUp: 'ดาเมจไฟที่โดน +', shockTakenUp: 'ดาเมจช็อตที่โดน +', dmgTakenUp: 'ดาเมจตีที่โดน +', armorGainCut: 'เกราะที่ได้รับ −', healCut: 'ฟื้น HP ที่ได้รับ −', reflectDebuff: 'สะท้อนดีบัฟ ', hitAmp: 'ดาเมจตี +', burnAmp: 'ดาเมจไฟ +', shockAmp: 'ดาเมจช็อต +', healAmp: 'ฟื้น HP ที่ได้รับ +', armorAmp: 'เกราะที่ได้รับ +', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +', healToAtk: 'ฟื้นเป็นพลัง +' }[e.what] || e.what + ' '}${['freeze', 'stun', 'cdMsDown'].includes(e.what) ? `${e.amount / 1000} วิ` : Math.round(e.amount * 10) / 10}${/Taken|Cut|Pct|Amp|healToAtk|reflectDebuff/.test(e.what) ? '%' : ''}`];
     case 'down': return ['✖ ', who(e.who), ' down'];
     case 'summon': return ['✚ ', who(e.from), ' เรียก ', who(e.who), ` มาสู้แทน `, { t: `HP ${e.unit.hp}`, c: 'lg-heal' }];
     case 'perm': return ['◆ ', who(e.to), ' ได้ ', { t: permText(e.key, e.amount), c: 'lg-skill' }, ' ถาวร (ติดไปแมตช์ถัดไป)'];

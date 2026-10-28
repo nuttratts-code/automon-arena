@@ -98,7 +98,7 @@ export const PERM_ABIL = ['cdStart', 'shareArmor', 'healToAtk', 'armorAmp', 'cdA
 export const SHARE_TO = ['frontAlly', 'backAlly', 'frontBackAlly', 'frontLaneAlly', 'backLaneAlly', 'frontRowAllies', 'backRowAllies', 'allyLowest', 'allyRandom', 'allyRandom2', 'tribeAllies'];
 for (const t of SHARE_TO) PERM_ABIL.push('share_' + t);
 // ค่าถาวรแบบค่าพลังเพิ่ม (22 ต.ค. ชุด 6): เกราะ/ฮิต · ลดคูลดาวน์เป็นวินาที · ค่าแบบ % เก็บเป็น % ติดตัว (ผู้ใช้เลือก · รวมร่างแล้วคิดจากค่าเลเวลใหม่)
-export const PERM_STAT2 = ['armorHit', 'cdMs', 'hpPct', 'atkPct', 'burnPct', 'shockPct', 'armorHitPct'];
+export const PERM_STAT2 = ['healHit', 'armorHit', 'cdMs', 'hpPct', 'atkPct', 'burnPct', 'shockPct', 'armorHitPct'];
 export const SHOP_WHEN = ['buy', 'sell', 'merge', 'matchEnd', 'matchWin', 'shopStart'];
 // phase: ลำดับใน tick 0 เกราะ → 1 ดาเมจ → 2 สถานะ → 3 ฟื้น HP · side: เป้าต้องเป็นศัตรู (foe) หรือฝ่ายเรา (ally)
 // perm (22 ต.ค. combat-rules V1.24): สกิลระหว่างสู้ที่ติ๊ก "ถาวร" (s.perm = true) ให้ผลทันที + เก็บเป็นค่าถาวรชนิดนี้กับตัวฝ่ายเราที่ได้รับ
@@ -146,6 +146,7 @@ export const DO_INFO = {
   multiUp: { phase: 2, side: 'ally', perm: 'multi' }, burnHitUp: { phase: 2, side: 'ally', perm: 'burn' }, shockHitUp: { phase: 2, side: 'ally', perm: 'shock' },
   // ชุด 6 (22 ต.ค. ผู้ใช้ขอให้ครบทุกค่าพลัง ทั้ง + ค่า และ + %)
   hpPct: { phase: 2, side: 'ally', perm: 'hpPct' }, armorHitUp: { phase: 2, side: 'ally', perm: 'armorHit' }, armorHitPct: { phase: 2, side: 'ally', perm: 'armorHitPct' },
+  healHitUp: { phase: 2, side: 'ally', perm: 'healHit' }, // 28 ต.ค.: ฟื้น/ฮิต + (ผู้ใช้ขอ · ยังไม่ใส่ให้ตัวละครไหน)
   burnHitPct: { phase: 2, side: 'ally', perm: 'burnPct' }, shockHitPct: { phase: 2, side: 'ally', perm: 'shockPct' }, cdMsDown: { phase: 2, side: 'ally', perm: 'cdMs' },
   healAmp: { phase: 2, side: 'ally', perm: 'healAmp' }, hitAmp: { phase: 2, side: 'ally', perm: 'hitAmp' }, burnAmp: { phase: 2, side: 'ally', perm: 'burnAmp' },
   // ชุด 7 (22 ต.ค.): ผลแบบ "% ของ ค่า ของ ใคร" เลือกเองในช่อง of = { stat, who } (แทนผลที่ฝังค่าไว้ในชื่อ)

@@ -453,6 +453,7 @@ export function simulate(teamA, teamB, opts = {}) {
       // ชุด 6: ค่าพลังเพิ่มทุกแบบ (+ ค่า / + %) · ผลที่ได้รับ/ที่ทำ +% · ผลใส่ศัตรู
       case 'hpPct': for (const x of T()) { const a = Math.floor(x.maxHp * v / 100); x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, v); } break;
       case 'armorHitUp': for (const x of T()) { x.armorHit += v; buff(x, 'armorHitUp', v); permRec(u, s, x, v); } break;
+      case 'healHitUp': for (const x of T()) { x.healHit = (x.healHit || 0) + v; buff(x, 'healHitUp', v); permRec(u, s, x, v); } break; // ฟื้น/ฮิต + (28 ต.ค.)
       case 'armorHitPct': for (const x of T()) { const a = Math.floor(x.armorHit * v / 100); x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, v); } break;
       case 'burnHitPct': for (const x of T()) { const a = Math.floor(x.burnHit * v / 100); x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, v); } break;
       case 'shockHitPct': for (const x of T()) { const a = Math.floor(x.shockHit * v / 100); x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, v); } break;
