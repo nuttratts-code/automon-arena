@@ -1,5 +1,13 @@
-# Rune system v2 — user request 29 Oct 2026 (set 53) · WAITING for user answers Q1–Q13
+# Rune system v2 — user request 29 Oct 2026 (set 53) · ANSWERED 29 Oct, Balance Room part built (Q13 A)
 Source: user message 29 Oct (Thai). Builds on claude/review-2026-10-28-runes.md (T1–T12, U1–U8) and core/stage.js. Every number = ค่าเสนอ until the user confirms.
+
+## User answers (29 Oct)
+Q1 A rune = attached skill/effect · Q2 A badge from scope · Q3 scope list OK · **Q4 B DNA = real tribe** (bonus + tribe-targeted skills) · Q5 A field runes boost whole team · **Q6 B player picks the partner** (สายสัมพันธ์/คู่หู) · Q7 A cheat death on one unit · Q8 OK · Q9 OK · Q10 OK (direct hit only) · **Q11: without the rune the player sees NOTHING of the enemy; with it: positions + full details** · **Q12: 3 rarity tiers** (ธรรมดา/หายาก/ตำนาน; 5-tier list mapped: ธรรมดา+ไม่ธรรมดา → ธรรมดา, หายาก → หายาก, หายากมาก+ตำนาน → ตำนาน; weights 60/30/10 ค่าเสนอ, boss skips ธรรมดา) · Q13 A Balance Room only, battle/shop code in phase 2a.
+
+## Built (set 53, core/stage.js + Balance Room tab)
+- 51 preset runes: eco T1–T4 X2 X3 X8 · builder stat runes T5–T7 U3 U5 U6 S1–S9 X1 X10 X11 (effect/scope/flat-% editable) · DNA D1–D6 · field F1–F6 · special T8–T12 X4–X7 X9 U2 U4 U7 U8 · U1 removed (→ D1–D6).
+- User-made runes (max 40): stat (effect list RUNE_EFFECTS) or skill (any battle skill; copy from a character skill). Saved as `stage.custom`.
+- Set-52 saved values of T5/T6/T7/U3/U5/U6 migrate to `v`.
 
 ## Already done this set
 - Food system removed (user decision): combat-rules V2.7 (C-10), shop-merge-rules V1.13 (S-2, S-3, S-8), backlog. Food never existed in code.
