@@ -23,7 +23,7 @@ V1.7 · 29 Oct 2026 · set 52 user answers (boss spot/bars, endless 50, rune sta
 - Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test
 
 ## Systems not designed yet
-- Food · items (MVP1 shop sells characters only) · Partner removed by the user 28 Oct
+- Items (MVP1 shop sells characters only) · Food removed by the user 29 Oct (runes replace it) · Partner removed by the user 28 Oct
 - MVP2: Ghost Battle + online · new tie rule (now tie = player wins) · server computes battle result / gold / permanent values itself
 
 ## Play data
