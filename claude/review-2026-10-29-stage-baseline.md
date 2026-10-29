@@ -20,4 +20,4 @@ DPS = damage per second the player team deals to a passive dummy in the first 30
 Notes
 - Growth flattens after stage ~10: bot reaches 6 units ≈ Lv2 each and stops merging to Lv3; only permanent values keep growing. Endless bosses must not outscale this (runes not included here).
 - Bot is a simple buyer; real players are probably stronger → treat as a floor, re-check with real play data (plays collection) after the demo.
-- Use (proposal, not decided): enemy team for easy ≈ p25, normal ≈ median, hard ≈ p75 of that stage; boss sized from median DPS × fight time.
+- Use (user chose 29 Oct): enemy team for easy ≈ p25, normal ≈ median, hard ≈ p75 of that stage; boss sized from median DPS × fight time.
