@@ -11,7 +11,7 @@
 | `css/10…60-*.css` | styles, in cascade order (later files may override earlier ones) |
 | `body.html` | page markup |
 | `js/00-setup` `10-state` | aliases, constants, edited-values state |
-| `js/20-char-form` `21-tribe-form` | character / tribe forms |
+| `js/20-char-form` `21-tribe-form` `22-stage-form` | character / tribe forms · rune / boss / stage-mode settings tab (data in core/stage.js, saved as config/main.stage) |
 | `js/30-tabs-overview` `31-steps` | tabs, overview, 4-step flow |
 | `js/40-sim-skill` `41-sim-board` | skill simulation, simulation team board |
 | `js/50-match-analysis` `51-match-units` `52-battle-view` | match analysis tab (`mx*`, `renderMatch`, `mxUnitBody`), per-unit tabs, battle view |
