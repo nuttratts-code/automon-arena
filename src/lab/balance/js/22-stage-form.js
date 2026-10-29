@@ -35,7 +35,14 @@ function renderStageRunes(box) {
     for (const r of STAGE_RUNES.filter(q => q.kind === kind)) {
       const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id];
       const card = el('div', 'subsec', ''); card.style.display = 'grid'; card.style.gap = '6px';
-      const head = el('div', 'row', ''); head.append(el('b', '', `${r.id} ${r.name}`), el('span', 'grow', ''), stageOnBox(`stg-on-${r.id}`, x.on, v => { x.on = v; }));
+      const head = el('div', 'row', '');
+      const nm = document.createElement('input'); nm.type = 'text'; nm.id = `stg-${r.id}-name`; nm.maxLength = 16; nm.value = x.name; nm.title = 'ชื่อรูน (แก้ได้)';
+      nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 16); if (v) x.name = v; nm.value = x.name; nm.classList.toggle('changed', x.name !== b.name); stageChanged(); renderStageIdeaFor(); });
+      nm.classList.toggle('changed', x.name !== b.name);
+      const mx = el('label', 'status', 'มีได้/run '); mx.title = '1 = รูนเฉพาะ (มีได้ชิ้นเดียวต่อ run) · 2 ขึ้นไป = เก็บซ้ำได้ แต่ละชิ้นเพิ่มค่าซ้อนกันเหมือนเลเวล';
+      mx.append(stageNum(`stg-${r.id}-max`, x.max, b.max, 1, RUNE_MAX_HI, v => { x.max = v; }));
+      const kindSay = el('span', 'status', ''); stageSayEls.push([kindSay, () => x.max === 1 ? '★ รูนเฉพาะ' : `ซ้อนได้ ${x.max} ระดับ`]);
+      head.append(el('b', '', r.id), nm, mx, kindSay, el('span', 'grow', ''), stageOnBox(`stg-on-${r.id}`, x.on, v => { x.on = v; }));
       const say = el('div', 'desc', ''); stageSayEls.push([say, () => runeSay(r)]);
       const row = el('div', 'row', '');
       for (const [k, label, , lo, hi, unit] of r.f) { const l = el('label', 'status', `${label}${unit ? ` (${unit})` : ''} `); l.append(stageNum(`stg-${r.id}-${k}`, x[k], b[k], lo, hi, v => { x[k] = v; })); row.append(l); }
@@ -44,7 +51,7 @@ function renderStageRunes(box) {
   }
 }
 function renderStageBosses(box) {
-  box.append(el('p', 'hint', 'ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง) · เทียบ: ผู้เล่นค่ากลางด่าน 5 ตี ~7/วิ HP ทีม ~756 · ด่าน 10 ตี ~14/วิ HP ~1140'));
+  box.append(el('p', 'hint', 'แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง) · เทียบ: ผู้เล่นค่ากลางด่าน 5 ตี ~7/วิ HP ทีม ~756 · ด่าน 10 ตี ~14/วิ HP ~1140'));
   stageCfg.bosses.forEach((bs, idx) => {
     const base = STAGE_BASE.bosses.find(x => x.id === bs.id) || bs;
     const card = el('div', 'subsec', ''); card.style.display = 'grid'; card.style.gap = '6px';
@@ -54,8 +61,10 @@ function renderStageBosses(box) {
     const del = el('button', '', 'ลบ'); del.type = 'button'; del.disabled = stageCfg.bosses.length <= 1;
     del.addEventListener('click', () => { stageCfg.bosses.splice(idx, 1); stageChanged(); renderStage(); });
     head.append(el('b', '', bs.id), nm, tribeBadge(bs.tribe), selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); }), el('span', 'grow', ''), stageOnBox(`stg-on-${bs.id}`, bs.on, v => { bs.on = v; }), del);
+    const sp = el('div', 'row', ''); const spl = el('label', 'status', 'ยืนตรงไหน ');
+    spl.append(selectInput(`stg-${bs.id}-spot`, BOSS_SPOTS, bs.spot, v => { bs.spot = v; stageChanged(); renderStage(); })); sp.append(spl);
     const row = el('div', 'row', '');
-    for (const [k, label, lo, hi] of BOSS_STATS) { const l = el('label', 'status', `${label} `); l.append(stageNum(`stg-${bs.id}-${k}`, bs[k], base[k], lo, hi, v => { bs[k] = k === 'cdMs' ? Math.round(v / 100) * 100 : v; })); row.append(l); }
+    for (const [k, label, lo, hi] of BOSS_STATS.filter(q => q[0] !== 'moveSec' || bs.spot === 'move')) { const l = el('label', 'status', `${label} `); l.append(stageNum(`stg-${bs.id}-${k}`, bs[k], base[k], lo, hi, v => { bs[k] = k === 'cdMs' ? Math.round(v / 100) * 100 : ['bars', 'moveSec', 'multi'].includes(k) ? Math.round(v) : v; })); row.append(l); }
     const rr = el('div', 'row', ''); const rl = el('label', 'status', 'กฎพิเศษ ');
     rl.append(selectInput(`stg-${bs.id}-rule`, BOSS_RULES.map(r => [r[0], r[1]]), bs.rule, v => { const r = BOSS_RULES.find(q => q[0] === v); bs.rule = v; bs.ruleV = r[2]; stageChanged(); renderStage(); }));
     rr.append(rl);
@@ -66,8 +75,8 @@ function renderStageBosses(box) {
     const g2 = el('label', 'status', 'หลังด่าน 10 แรงขึ้น/ตัว (%)'); g2.append(stageNum(`stg-${bs.id}-endlessPct`, bs.endlessPct, base.endlessPct, 0, 500, v => { bs.endlessPct = v; }));
     gr.append(g1, g2);
     const say = el('div', 'desc', '');
-    stageSayEls.push([say, () => [1, 2, 3, 4].map(k => { const s = bossAt(bs, k); return `บอสครั้งที่ ${k} (ด่าน ${k * stageCfg.settings.bossEvery}): HP ${s.hp} ตี ${fmt(s.dps)}/วิ`; }).join(' · ')]);
-    card.append(head, row, rr, gr, say); box.append(card);
+    stageSayEls.push([say, () => [1, 2, 3, 4].map(k => { const s = bossAt(bs, k); return `บอสครั้งที่ ${k} (ด่าน ${k * stageCfg.settings.bossEvery}): HP ${s.hp} (${bs.bars} แถบ × ${s.barHp}) ตี ${fmt(s.dps)}/วิ`; }).join(' · ')]);
+    card.append(head, sp, row, rr, gr, say); box.append(card);
   });
   const add = el('button', '', '+ เพิ่มบอส'); add.type = 'button'; add.disabled = stageCfg.bosses.length >= 12;
   add.addEventListener('click', () => {
@@ -79,7 +88,8 @@ function renderStageBosses(box) {
 function renderStageSettings(box) {
   const g = el('div', 'row', ''); g.style.flexWrap = 'wrap';
   for (const [k, label, , lo, hi, unit] of STAGE_SETTINGS) { const l = el('label', 'status', `${label} (${unit}) `); l.append(stageNum(`stg-set-${k}`, stageCfg.settings[k], STAGE_BASE.settings[k], lo, hi, v => { stageCfg.settings[k] = v; })); g.append(l); }
-  box.append(el('p', 'hint', 'หลังด่าน 10 (เล่นต่อ) ได้รูนจากบอสเท่านั้น · ไม่ได้รูน = ของรางวัลแทน: ง่าย เงิน · กลาง ค่าถาวร · ยาก ตัวหายาก (ผู้ใช้ตัดสิน 29 ต.ค.)'), g);
+  const grow = el('p', 'desc', ''); stageSayEls.push([grow, () => { const st = stageCfg.settings; return 'ศัตรูด่านปกติ (HP + พลังโจมตี) × ' + [20, 25, 30, 40, 50].filter(n => n <= st.lastStage).map(n => `ด่าน ${n}: ${fmt(enemyMultAt(st, n))}`).join(' · '); }]);
+  box.append(el('p', 'hint', 'หลังด่าน 10 (เล่นต่อ) ได้รูนจากบอสเท่านั้น · ไม่ได้รูน = ของรางวัลแทน: ง่าย เงิน · กลาง ค่าถาวร · ยาก ตัวหายาก (ผู้ใช้ตัดสิน 29 ต.ค.) · ทีมศัตรูวัดไว้ถึงด่าน 19 · เกินนั้นใช้ทีมด่าน 19 แล้วคูณให้แรงขึ้นแบบทบต้น'), g, grow);
 }
 function renderStage() {
   stageSayEls.length = 0;
@@ -92,7 +102,7 @@ for (const p of ['runes', 'bosses', 'settings']) $('stg-' + p).addEventListener(
 // Ideas for runes / bosses go to the same `ideas` collection; `char` = "รูน T5 คม" / "บอส B1 ชื่อ" / "รูน (ใหม่)" / "บอส (ใหม่)".
 function renderStageIdeaFor() {
   const sel = $('stgIdeaFor'), keep = sel.value;
-  const opts = [['รูน (ใหม่)', 'รูนใหม่'], ['บอส (ใหม่)', 'บอสใหม่'], ...STAGE_RUNES.map(r => [`รูน ${r.id} ${r.name}`, `รูน ${r.id} ${r.name}`]), ...stageCfg.bosses.map(b => [`บอส ${b.id} ${b.name}`, `บอส ${b.id} ${b.name}`])];
+  const opts = [['รูน (ใหม่)', 'รูนใหม่'], ['บอส (ใหม่)', 'บอสใหม่'], ...STAGE_RUNES.map(r => [`รูน ${r.id} ${stageCfg.runes[r.id].name}`, `รูน ${r.id} ${stageCfg.runes[r.id].name}`]), ...stageCfg.bosses.map(b => [`บอส ${b.id} ${b.name}`, `บอส ${b.id} ${b.name}`])];
   sel.replaceChildren(...opts.map(([v, l]) => new Option(l, v)));
   if (opts.some(o => o[0] === keep)) sel.value = keep;
 }

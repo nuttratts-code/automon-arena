@@ -1,4 +1,4 @@
-// Stage mode (demo) data — phase 1 (29 Oct 2026): runes, bosses, stage settings that the Balance Room edits.
+// Stage mode (demo) data — phase 1 (29 Oct 2026; set 52 added rune name/max, boss spot/bars/moveSec, endless settings): runes, bosses, stage settings that the Balance Room edits.
 // The battle engine does NOT use these yet (phase 2). Every number = proposal (ค่าเสนอ) until the user confirms.
 // Design notes: claude/backlog.md "Stage mode" · claude/review-2026-10-28-runes.md · claude/review-2026-10-29-stage-baseline.md
 import { TRIBES } from './rules.js';
@@ -27,6 +27,12 @@ export const STAGE_RUNES = [
   { id: 'U8', kind: 'unit', name: 'เงา', text: 'ขายแล้วได้ตัว Lv1 คืนที่ม้านั่ง ({times} ครั้ง/run)', f: [['times', 'ครั้ง/run', 1, 0, 3, '']] },
 ];
 
+// Copies of one rune a player may hold in a run (user 29 Oct, set 52): 1 = unique rune · 2+ = stacks like levels (each copy adds its values again).
+// Shop/economy runes default to 3, battle runes to 1 (ค่าเสนอ).
+export const RUNE_MAX_DEFAULT = { T1: 3, T2: 3, T3: 2, T4: 3 };
+export const RUNE_MAX_HI = 9;
+const RUNE_NAME_MAX = 16;
+
 // Boss special rules: [id, label, default value, min, max, unit] (unit '' with max 0 = no value)
 export const BOSS_RULES = [
   ['none', 'ไม่มีกฎพิเศษ', 0, 0, 0, ''],
@@ -38,24 +44,33 @@ export const BOSS_RULES = [
   ['reflect', 'สะท้อนดาเมจกลับ', 10, 1, 100, '%'],
   ['cdSlow', 'คูลดาวน์ผู้เล่นช้าลง', 20, 1, 200, '%'],
 ];
+// Where the boss stands (user 29 Oct, set 52: per boss) · board side = 3 rows × 2 lanes. 'move' = 1 slot, jumps to a random slot every moveSec.
+export const BOSS_SPOTS = [
+  ['all', 'ทุกช่อง (6 ช่อง)'], ['four', 'แถวหน้า + แถวกลาง (4 ช่อง)'], ['front', 'แถวหน้า (2 ช่อง)'], ['one', '1 ช่อง (แถวหน้า เลนบน)'], ['move', '1 ช่อง ย้ายที่เรื่อยๆ'],
+];
 // Boss stats = at its first appearance (stage 5) · stage 10 = × mult10 · after stage 10 each boss + endlessPct%
-export const BOSS_STATS = [['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4]];
-const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV) => ({ id, name, tribe, hp, atk, cdMs, multi: 1, armor: 0, burn: 0, shock: 0, rule, ruleV, mult10: 2, endlessPct: 15, on: true });
+// bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
+export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4]];
+const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, rule, ruleV, mult10: 2, endlessPct: 15, on: true });
 // Sized from the stage baseline (median player at stage 5: ~7 dmg/s, team HP ~756) → boss lasts ~60 s, kills the team in ~60 s.
 export const STAGE_BOSSES = [
-  stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50),
-  stageBoss('B2', 'เงาหลังม่าน', 'ภูติ', 400, 22, 1800, 'backSilence', 10),
-  stageBoss('B3', 'อสุรกายคลั่ง', 'อสูร', 420, 20, 2000, 'enrage', 20),
-  stageBoss('B4', 'กระจกสะท้อน', 'สายฟ้า', 380, 22, 2000, 'reflect', 10),
+  stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50, 'all'),
+  stageBoss('B2', 'เงาหลังม่าน', 'ภูติ', 400, 22, 1800, 'backSilence', 10, 'move'),
+  stageBoss('B3', 'อสุรกายคลั่ง', 'อสูร', 420, 20, 2000, 'enrage', 20, 'four'),
+  stageBoss('B4', 'กระจกสะท้อน', 'สายฟ้า', 380, 22, 2000, 'reflect', 10, 'front'),
 ];
 export const STAGE_SETTINGS = [
   ['bossEvery', 'บอสทุกกี่ด่าน', 5, 1, 20, 'ด่าน'], ['bossesPerRun', 'บอสใน run หลัก', 2, 1, 10, 'ตัว'],
   ['dropHard', 'โอกาสได้รูน ด่านยาก', 50, 0, 100, '%'], ['dropNormal', 'โอกาสได้รูน ด่านกลาง', 30, 0, 100, '%'], ['dropEasy', 'โอกาสได้รูน ด่านง่าย', 10, 0, 100, '%'], ['dropBoss', 'โอกาสได้รูน บอส', 100, 0, 100, '%'],
+  // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
+  ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
+// Normal-enemy HP/attack multiplier at a stage (1 before growFrom).
+export const enemyMultAt = (st, stage) => (1 + st.growPct / 100) ** Math.max(0, stage - st.growFrom + 1);
 
 export function stageDefaults() {
   return {
-    runes: Object.fromEntries(STAGE_RUNES.map(r => [r.id, { on: true, ...Object.fromEntries(r.f.map(([k, , v]) => [k, v])) }])),
+    runes: Object.fromEntries(STAGE_RUNES.map(r => [r.id, { on: true, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, ...Object.fromEntries(r.f.map(([k, , v]) => [k, v])) }])),
     bosses: STAGE_BOSSES.map(b => ({ ...b })),
     settings: Object.fromEntries(STAGE_SETTINGS.map(([k, , v]) => [k, v])),
   };
@@ -70,6 +85,8 @@ export function cleanStage(o) {
   if (isObj(o.runes)) for (const r of STAGE_RUNES) {
     const x = o.runes[r.id]; if (!isObj(x)) continue;
     if (typeof x.on === 'boolean') out.runes[r.id].on = x.on;
+    const rn = typeof x.name === 'string' ? x.name.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, RUNE_NAME_MAX) : ''; if (rn) out.runes[r.id].name = rn;
+    if (Number.isInteger(x.max) && x.max >= 1 && x.max <= RUNE_MAX_HI) out.runes[r.id].max = x.max;
     for (const [k, , , lo, hi] of r.f) if (num(x[k], lo, hi)) out.runes[r.id][k] = x[k];
   }
   if (isObj(o.settings)) for (const [k, , , lo, hi] of STAGE_SETTINGS) if (num(o.settings[k], lo, hi)) out.settings[k] = o.settings[k];
@@ -78,11 +95,12 @@ export function cleanStage(o) {
     for (const x of o.bosses) {
       if (!isObj(x) || typeof x.id !== 'string' || !/^B\d{1,2}$/.test(x.id) || ids.has(x.id)) continue;
       ids.add(x.id);
-      const base = STAGE_BOSSES.find(b => b.id === x.id) || stageBoss(x.id, 'บอสใหม่', TRIBES[0], 400, 20, 2000, 'none', 0);
+      const base = STAGE_BOSSES.find(b => b.id === x.id) || stageBoss(x.id, 'บอสใหม่', TRIBES[0], 400, 20, 2000, 'none', 0, 'all');
       const b = { ...base };
       const nm = typeof x.name === 'string' ? x.name.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 24) : ''; if (nm) b.name = nm;
       if (TRIBES.includes(x.tribe)) b.tribe = x.tribe;
-      for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi)) b[k] = x[k];
+      if (BOSS_SPOTS.some(q => q[0] === x.spot)) b.spot = x.spot;
+      for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi) && (!['bars', 'moveSec', 'multi'].includes(k) || Number.isInteger(x[k]))) b[k] = x[k];
       const rule = BOSS_RULES.find(r => r[0] === x.rule); if (rule) { b.rule = rule[0]; b.ruleV = rule[4] ? (num(x.ruleV, rule[3], rule[4]) ? x.ruleV : rule[2]) : 0; }
       if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
       if (num(x.endlessPct, 0, 500)) b.endlessPct = x.endlessPct;
@@ -97,5 +115,5 @@ export function cleanStage(o) {
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
 export function bossAt(b, k) {
   const m = k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2);
-  return { hp: Math.round(b.hp * m), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
+  return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
 }
