@@ -8,6 +8,7 @@ const stageEdited = () => !same(stageCfg, STAGE_BASE);
 function stageCount() {
   let n = 0;
   for (const r of STAGE_RUNES) for (const k of Object.keys(stageCfg.runes[r.id])) if (stageCfg.runes[r.id][k] !== STAGE_BASE.runes[r.id][k]) n++;
+  n += Math.abs(stageCfg.custom.length - STAGE_BASE.custom.length) + stageCfg.custom.filter(c => c.id && STAGE_BASE.custom.some(b => b.id === c.id && !same(b, c))).length;
   for (const k of Object.keys(stageCfg.settings)) if (stageCfg.settings[k] !== STAGE_BASE.settings[k]) n++;
   if (!same(stageCfg.bosses, STAGE_BASE.bosses)) n += Math.max(1, stageCfg.bosses.filter(b => { const o = STAGE_BASE.bosses.find(x => x.id === b.id); return !o || !same(o, b); }).length + Math.max(0, STAGE_BASE.bosses.length - stageCfg.bosses.length));
   return n;
@@ -22,33 +23,133 @@ const stageNum = (id, v, base, lo, hi, set, step = 1) => {
   i.min = lo; i.max = hi; return i;
 };
 const stageSayEls = [];
-function runeSay(r) { const x = stageCfg.runes[r.id]; return r.text.replace(/\{(\w+)\}/g, (_, k) => String(x[k])); }
 function renderStageSay() { for (const [e, f] of stageSayEls) e.textContent = f(); }
 function stageOnBox(id, on, set) {
   const l = el('label', 'status'), c = document.createElement('input'); c.type = 'checkbox'; c.id = id; c.checked = on;
   c.addEventListener('change', () => { set(c.checked); stageChanged(); renderStageIdeaFor(); });
   l.append(c, ' ใช้ใน demo'); return l;
 }
+// Rune tab v2 (set 53): sections by rarity, category filter, search, one line per rune, tap ✎ to edit, user-made runes (stat / from a skill).
+let runeCat = 'all', runeQuery = '';
+const runeOpen = new Set();
+const RUNE_RAR_CLASS = { common: 'r0', rare: 'r2', legend: 'r4' };
+const runeRarTh = k => (RUNE_RARITY.find(r => r[0] === k) || [, k])[1];
+const runeSkillOf = x => ({ when: x.when, do: x.do, to: x.to, v: [x.v, x.v, x.v] });
+function runeLine(def, x) {
+  if (x.type === 'skill') return `${x.scope === 'tribe' ? 'เผ่า' + x.tribe : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1]}: ได้สกิล "${skillLine(runeSkillOf(x), 1)}"`;
+  return runeText(def, x);
+}
+// All runes as [def | null, record, isCustom]
+const runeList = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false]), ...stageCfg.custom.map(x => [null, x, true])];
+const runeCatOf = (def, x) => (def ? def.cat : x.type === 'skill' ? 'skill' : 'stat');
+const runeScopeOf = (def, x) => (def && def.f ? def.scope : x.scope);
+// Character skills that can become a rune (copy button)
+const runeSkillPicks = () => chars.flatMap(c => c.skills.map((s, k) => [c, s, k])).filter(([, s]) => runeSkillOk(s));
+function runeEditor(def, x, custom) {
+  const box = el('div', 'rune-edit', ''), base = def ? STAGE_BASE.runes[def.id] : x;
+  const redraw = () => { stageChanged(); renderStage(); };
+  const top = el('div', 'row', '');
+  const nm = document.createElement('input'); nm.type = 'text'; nm.id = `stg-${x.id || def.id}-name`; nm.maxLength = 16; nm.value = x.name; nm.title = 'ชื่อรูน (แก้ได้)';
+  nm.classList.toggle('changed', x.name !== base.name);
+  nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 16); if (v) x.name = v; redraw(); renderStageIdeaFor(); });
+  const rl = el('label', 'status', 'ความหายาก '); rl.append(selectInput(`stg-${x.id || def.id}-rarity`, RUNE_RARITY, x.rarity, v => { x.rarity = v; redraw(); }));
+  const mx = el('label', 'status', 'มีได้/run '); mx.title = '1 = รูนเฉพาะ (มีได้ชิ้นเดียวต่อ run) · 2 ขึ้นไป = เก็บซ้ำได้ แต่ละชิ้นเพิ่มค่าซ้อนกันเหมือนเลเวล';
+  mx.append(stageNum(`stg-${x.id || def.id}-max`, x.max, base.max, 1, RUNE_MAX_HI, v => { x.max = v; }));
+  top.append(nm, rl, mx); box.append(top);
+  const row = el('div', 'row', '');
+  const scopeSel = (allowEnemy) => { const l = el('label', 'status', 'ใช้กับ '); l.append(selectInput(`stg-${x.id || def.id}-scope`, RUNE_SCOPES.filter(s => allowEnemy || s[0] !== 'enemy'), x.scope, v => { x.scope = v; redraw(); })); return l; };
+  const tribeSel = () => { const l = el('label', 'status', 'เผ่า '); l.append(selectInput(`stg-${x.id || def.id}-tribe`, TRIBES.map(t => [t, t]), x.tribe, v => { x.tribe = v; redraw(); })); return l; };
+  if (def && def.f) {
+    for (const [k, label, , lo, hi, unit] of def.f) { const l = el('label', 'status', `${label}${unit ? ` (${unit})` : ''} `); l.append(stageNum(`stg-${def.id}-${k}`, x[k], base[k], lo, hi, v => { x[k] = v; })); row.append(l); }
+    if (def.id === 'T8') row.append(el('span', 'hint', 'เผ่าเลือกตอนได้รูน'));
+  } else if (x.type === 'skill') {
+    const pick = el('label', 'status rune-copy', 'ใช้สกิลของ ');
+    const picks = runeSkillPicks();
+    const sel = selectInput(`stg-${x.id}-copy`, [['', '— เลือกสกิลตัวละคร —'], ...picks.map(([c, s], i) => [String(i), `${c.id} ${c.name}: ${skillLine({ ...s, v: [s.v[0], s.v[0], s.v[0]] }, 1)}`])], '', v => {
+      const p = picks[Number(v)]; if (!p) return; const s = p[1]; Object.assign(x, { when: s.when, do: s.do, to: s.to, v: s.v[0] }); redraw();
+    });
+    pick.append(sel); box.append(pick);
+    const whenL = el('label', 'status', 'เมื่อ ');
+    whenL.append(selectInput(`stg-${x.id}-when`, BATTLE_WHEN.map(w => [w, WHEN_TH[w] || w]), x.when, w => {
+      x.when = w; if (!runeSkillOk(x)) { const d = Object.keys(DO_INFO).find(q => runeSkillOk({ when: w, do: q, to: skillTargets(w, q).filter(t => t !== 'allyAt')[0] })); if (d) { x.do = d; x.to = skillTargets(w, d).filter(t => t !== 'allyAt')[0]; } } redraw();
+    }));
+    const dos = Object.keys(DO_INFO).filter(d => skillTargets(x.when, d).some(t => runeSkillOk({ when: x.when, do: d, to: t })));
+    const doL = el('label', 'status', 'ทำ ');
+    doL.append(selectInput(`stg-${x.id}-do`, dos.map(d => [d, (DO_TH[d] || [d])[0] + ((DO_TH[d] || [])[1] === '%' ? ' %' : '')]), x.do, d => { x.do = d; if (!runeSkillOk(x)) x.to = skillTargets(x.when, d).filter(t => t !== 'allyAt')[0]; redraw(); }));
+    const toL = el('label', 'status', 'ให้/ใส่ ');
+    toL.append(selectInput(`stg-${x.id}-to`, skillTargets(x.when, x.do).filter(t => t !== 'allyAt').map(t => [t, TO_TH[t] || t]), x.to, t => { x.to = t; redraw(); }));
+    const vL = el('label', 'status', `ค่า${(DO_TH[x.do] || [])[1] ? ` (${(DO_TH[x.do] || [])[1]})` : ''} `); vL.append(stageNum(`stg-${x.id}-v`, x.v, x.v, 0, 1e5, v => { x.v = v; }));
+    row.append(whenL, doL, toL, vL, scopeSel(false)); if (x.scope === 'tribe') row.append(tribeSel());
+    box.append(el('p', 'hint', 'ตัวที่อยู่ในตำแหน่ง "ใช้กับ" ได้สกิลนี้เพิ่ม (ค่าเดียวทุกเลเวล) · ผู้รับ/เป้าของสกิลนับจากตัวที่ได้สกิล'));
+  } else {
+    const e = RUNE_EFF[x.eff];
+    const effL = el('label', 'status', 'ผล ');
+    effL.append(groupSelect(`stg-${x.id || def.id}-eff`, RUNE_EFFECTS.map(q => [q[0], q[1], q[4] === 'foe' ? 'ใส่ศัตรู' : 'ฝ่ายเรา']), x.eff, v => {
+      const q = RUNE_EFF[v]; x.eff = v; if (!q[x.mode === 'flat' ? 2 : 3]) x.mode = q[2] ? 'flat' : 'pct';
+      if (q[4] === 'foe') x.scope = 'enemy'; else if (x.scope === 'enemy') x.scope = 'team'; redraw();
+    }));
+    const modes = [e[2] && ['flat', e[5] === 'ms' ? 'ตัวเลข (มิลลิวินาที)' : 'ตัวเลข'], e[3] && ['pct', '%']].filter(Boolean);
+    const mL = el('label', 'status', 'แบบ '); const mSel = selectInput(`stg-${x.id || def.id}-mode`, modes, x.mode, v => { x.mode = v; redraw(); }); mSel.disabled = modes.length < 2; mL.append(mSel);
+    const vL = el('label', 'status', 'ค่า '); vL.append(stageNum(`stg-${x.id || def.id}-v`, x.v, base.v, 0, 1e5, v => { x.v = v; }));
+    row.append(effL, mL, vL);
+    if (e[4] !== 'foe') { row.append(scopeSel(false)); if (x.scope === 'tribe') row.append(tribeSel()); }
+  }
+  box.append(row);
+  if (custom) {
+    const del = el('button', '', 'ลบรูนนี้'); del.type = 'button';
+    del.addEventListener('click', () => { stageCfg.custom.splice(stageCfg.custom.indexOf(x), 1); runeOpen.delete(x.id); redraw(); });
+    box.append(del);
+  }
+  return box;
+}
 function renderStageRunes(box) {
-  for (const kind of ['team', 'unit']) {
-    box.append(el('h3', '', kind === 'team' ? 'รูนทีม (ผลกับทั้งทีม)' : 'รูนตัวละคร (ใส่ให้ 1 ตัว ติดตัวนั้นไป)'));
-    for (const r of STAGE_RUNES.filter(q => q.kind === kind)) {
-      const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id];
-      const card = el('div', 'subsec', ''); card.style.display = 'grid'; card.style.gap = '6px';
-      const head = el('div', 'row', '');
-      const nm = document.createElement('input'); nm.type = 'text'; nm.id = `stg-${r.id}-name`; nm.maxLength = 16; nm.value = x.name; nm.title = 'ชื่อรูน (แก้ได้)';
-      nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 16); if (v) x.name = v; nm.value = x.name; nm.classList.toggle('changed', x.name !== b.name); stageChanged(); renderStageIdeaFor(); });
-      nm.classList.toggle('changed', x.name !== b.name);
-      const mx = el('label', 'status', 'มีได้/run '); mx.title = '1 = รูนเฉพาะ (มีได้ชิ้นเดียวต่อ run) · 2 ขึ้นไป = เก็บซ้ำได้ แต่ละชิ้นเพิ่มค่าซ้อนกันเหมือนเลเวล';
-      mx.append(stageNum(`stg-${r.id}-max`, x.max, b.max, 1, RUNE_MAX_HI, v => { x.max = v; }));
-      const kindSay = el('span', 'status', ''); stageSayEls.push([kindSay, () => x.max === 1 ? '★ รูนเฉพาะ' : `ซ้อนได้ ${x.max} ระดับ`]);
-      head.append(el('b', '', r.id), nm, mx, kindSay, el('span', 'grow', ''), stageOnBox(`stg-on-${r.id}`, x.on, v => { x.on = v; }));
-      const say = el('div', 'desc', ''); stageSayEls.push([say, () => runeSay(r)]);
-      const row = el('div', 'row', '');
-      for (const [k, label, , lo, hi, unit] of r.f) { const l = el('label', 'status', `${label}${unit ? ` (${unit})` : ''} `); l.append(stageNum(`stg-${r.id}-${k}`, x[k], b[k], lo, hi, v => { x[k] = v; })); row.append(l); }
-      card.append(head, say, row); box.append(card);
+  const odds = (boss) => RUNE_RARITY.map(([k, t]) => `${t} ${fmt(rarityOdds(stageCfg.settings, boss)[k])}%`).join(' · ');
+  box.append(el('p', 'hint', `โอกาสความหายากตอนได้รูน: ${odds(false)} · บอส: ${odds(true)} (แก้น้ำหนักในแท็บ "ค่าโหมด") · เฉพาะตัว = ใส่ให้ 1 ตัว · ส่วนรวม = มีผลกับแถว/ทีม · ยังไม่มีผลในการต่อสู้ (ขั้นที่ 2)`));
+  const bar = el('div', 'row', '');
+  const seg = el('div', 'seg', ''); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'ประเภทรูน');
+  for (const [k, t] of [['all', 'ทั้งหมด'], ...RUNE_CATS]) {
+    const b = el('button', '', t); b.type = 'button'; b.id = `stg-cat-${k}`; b.setAttribute('aria-pressed', String(k === runeCat));
+    b.addEventListener('click', () => { runeCat = k; renderStage(); }); seg.append(b);
+  }
+  const q = document.createElement('input'); q.type = 'search'; q.id = 'stgRuneFind'; q.placeholder = 'ค้นหาชื่อ / ผล'; q.value = runeQuery;
+  q.addEventListener('input', () => { runeQuery = q.value; drawList(); });
+  bar.append(seg, q); box.append(bar);
+  const add = el('div', 'row', '');
+  const newRune = type => { let n = 1; while (stageCfg.custom.some(c => c.id === 'C' + n)) n++; const c = customDefault('C' + n, type); stageCfg.custom.push(c); runeOpen.add(c.id); runeCat = 'all'; runeQuery = ''; stageChanged(); renderStage(); };
+  const a1 = el('button', '', '+ รูนค่าพลังใหม่'), a2 = el('button', '', '+ รูนจากสกิลที่มีอยู่');
+  a1.type = a2.type = 'button'; a1.id = 'stgAddStat'; a2.id = 'stgAddSkill';
+  a1.disabled = a2.disabled = stageCfg.custom.length >= RUNE_CUSTOM_MAX;
+  a1.addEventListener('click', () => newRune('stat')); a2.addEventListener('click', () => newRune('skill'));
+  add.append(a1, a2); box.append(add);
+  const list = el('div', '', ''); list.style.display = 'grid'; list.style.gap = '10px'; box.append(list);
+  function drawList() {
+    list.replaceChildren();
+    const qq = runeQuery.trim().toLowerCase();
+    for (const [rk, rt] of RUNE_RARITY) {
+      const items = runeList().filter(([d, x]) => x.rarity === rk && (runeCat === 'all' || runeCatOf(d, x) === runeCat)
+        && (!qq || `${x.id || d.id} ${x.name} ${runeLine(d, x)}`.toLowerCase().includes(qq)));
+      const sec = document.createElement('details'); sec.className = 'rune-sec'; sec.open = true;
+      const sum = document.createElement('summary'); sum.append(el('span', `rar ${RUNE_RAR_CLASS[rk]}`, rt), ` ${items.length} รูน · เปิดใช้ ${items.filter(([, x]) => x.on).length}`);
+      sec.append(sum);
+      if (!items.length) sec.append(el('p', 'hint', 'ไม่มีรูนตามที่กรอง'));
+      for (const [d, x, custom] of items) {
+        const id = x.id || d.id, scope = runeScopeOf(d, x);
+        const row = el('div', 'rune-row', ''); row.classList.toggle('off', !x.on);
+        const head = el('div', 'rune-head', '');
+        const ed = el('button', 'rune-edit-btn', runeOpen.has(id) ? 'ปิด' : '✎ แก้'); ed.type = 'button'; ed.id = `stg-open-${id}`;
+        ed.setAttribute('aria-expanded', String(runeOpen.has(id)));
+        ed.addEventListener('click', () => { if (runeOpen.has(id)) runeOpen.delete(id); else runeOpen.add(id); drawList(); });
+        head.append(el('b', '', x.name), el('span', 'hint', id), el('span', `pill ${runeSolo(scope) ? 'rune-solo' : 'rune-team'}`, runeSolo(scope) ? 'เฉพาะตัว' : 'ส่วนรวม'),
+          el('span', 'pill rune-cat', (RUNE_CATS.find(c => c[0] === runeCatOf(d, x)) || [, ''])[1]), ...(x.max > 1 ? [el('span', 'hint', `ซ้อนได้ ${x.max}`)] : []), el('span', 'grow', ''),
+          stageOnBox(`stg-on-${id}`, x.on, v => { x.on = v; drawList(); }), ed);
+        row.append(head, el('div', 'rune-say', runeLine(d, x)));
+        if (runeOpen.has(id)) row.append(runeEditor(d, x, custom));
+        sec.append(row);
+      }
+      list.append(sec);
     }
   }
+  drawList();
 }
 function renderStageBosses(box) {
   box.append(el('p', 'hint', 'แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง) · เทียบ: ผู้เล่นค่ากลางด่าน 5 ตี ~7/วิ HP ทีม ~756 · ด่าน 10 ตี ~14/วิ HP ~1140'));
@@ -87,7 +188,7 @@ function renderStageBosses(box) {
 }
 function renderStageSettings(box) {
   const g = el('div', 'row', ''); g.style.flexWrap = 'wrap';
-  for (const [k, label, , lo, hi, unit] of STAGE_SETTINGS) { const l = el('label', 'status', `${label} (${unit}) `); l.append(stageNum(`stg-set-${k}`, stageCfg.settings[k], STAGE_BASE.settings[k], lo, hi, v => { stageCfg.settings[k] = v; })); g.append(l); }
+  for (const [k, label, , lo, hi, unit] of STAGE_SETTINGS) { const l = el('label', 'status', `${label}${unit ? ` (${unit})` : ''} `); l.append(stageNum(`stg-set-${k}`, stageCfg.settings[k], STAGE_BASE.settings[k], lo, hi, v => { stageCfg.settings[k] = v; })); g.append(l); }
   const grow = el('p', 'desc', ''); stageSayEls.push([grow, () => { const st = stageCfg.settings; return 'ศัตรูด่านปกติ (HP + พลังโจมตี) × ' + [20, 25, 30, 40, 50].filter(n => n <= st.lastStage).map(n => `ด่าน ${n}: ${fmt(enemyMultAt(st, n))}`).join(' · '); }]);
   box.append(el('p', 'hint', 'หลังด่าน 10 (เล่นต่อ) ได้รูนจากบอสเท่านั้น · ไม่ได้รูน = ของรางวัลแทน: ง่าย เงิน · กลาง ค่าถาวร · ยาก ตัวหายาก (ผู้ใช้ตัดสิน 29 ต.ค.) · ทีมศัตรูวัดไว้ถึงด่าน 19 · เกินนั้นใช้ทีมด่าน 19 แล้วคูณให้แรงขึ้นแบบทบต้น'), g, grow);
 }
@@ -102,7 +203,7 @@ for (const p of ['runes', 'bosses', 'settings']) $('stg-' + p).addEventListener(
 // Ideas for runes / bosses go to the same `ideas` collection; `char` = "รูน T5 คม" / "บอส B1 ชื่อ" / "รูน (ใหม่)" / "บอส (ใหม่)".
 function renderStageIdeaFor() {
   const sel = $('stgIdeaFor'), keep = sel.value;
-  const opts = [['รูน (ใหม่)', 'รูนใหม่'], ['บอส (ใหม่)', 'บอสใหม่'], ...STAGE_RUNES.map(r => [`รูน ${r.id} ${stageCfg.runes[r.id].name}`, `รูน ${r.id} ${stageCfg.runes[r.id].name}`]), ...stageCfg.bosses.map(b => [`บอส ${b.id} ${b.name}`, `บอส ${b.id} ${b.name}`])];
+  const opts = [['รูน (ใหม่)', 'รูนใหม่'], ['บอส (ใหม่)', 'บอสใหม่'], ...STAGE_RUNES.map(r => [`รูน ${r.id} ${stageCfg.runes[r.id].name}`, `รูน ${r.id} ${stageCfg.runes[r.id].name}`]), ...stageCfg.custom.map(c => [`รูน ${c.id} ${c.name}`, `รูน ${c.id} ${c.name}`]), ...stageCfg.bosses.map(b => [`บอส ${b.id} ${b.name}`, `บอส ${b.id} ${b.name}`])];
   sel.replaceChildren(...opts.map(([v, l]) => new Option(l, v)));
   if (opts.some(o => o[0] === keep)) sel.value = keep;
 }
