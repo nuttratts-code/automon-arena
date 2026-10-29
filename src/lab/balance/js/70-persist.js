@@ -24,7 +24,7 @@ $('save').addEventListener('click', async () => {
   $('save').disabled = true;
   try {
     const at = new Date().toISOString();
-    await db.doc('config/main').set({ ...diffs(), savedAt: at });
+    await db.doc('config/main').set({ ...diffs(), stage: stageCfg, savedAt: at }); // stage = runes/bosses/settings (stage mode phase 1)
     await db.doc('ui/main').set(uiState(at)); // ชุด 35: สิ่งที่เลือก/เปิดค้างไว้ทั้งหมด (เปิดใหม่หรือเปลี่ยนเครื่องก็กลับมาครบ)
     markSynced(at);
     saveMsg('บันทึกแล้ว (ค่าที่แก้ + ทีมในสนาม + สิ่งที่เลือกไว้) · บอก Claude ในแชทได้เลยว่าให้นำค่าไปใช้');
