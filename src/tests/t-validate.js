@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -16,7 +16,7 @@ export const TESTS_VALIDATE = [
     for (const b of STAGE_BOSSES) ok(BOSS_RULES.some(r => r[0] === b.rule), `${b.id} rule`);
     const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { dropHard: -1, dropEasy: 20 },
       bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
-    eq(bad.runes.T9.dmgPct, 40, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, name: 'ทอง', max: 3, rarity: 'common', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
+    eq(bad.runes.T9.dmgPct, 40, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ทอง', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
     eq(bad.settings.dropHard, 50, 'bad setting'); eq(bad.settings.dropEasy, 20, 'good setting');
     eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, 450, 'hp out of range'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].rule, 'armorCut', 'unknown rule kept default');
     eq(bad.bosses[1].rule, 'healCut', 'new boss rule'); eq(bad.bosses[1].ruleV, 50, 'rule value out of range → rule default');
@@ -34,6 +34,10 @@ export const TESTS_VALIDATE = [
     eq([r.runes.S1.eff, r.runes.S1.scope, r.runes.S1.v], ['eCd', 'enemy', 15], 'enemy effect → enemy scope, bad value → default');
     eq([r.runes.X10.eff, r.runes.X10.scope], ['atk', 'team'], 'ally effect cannot target enemy team'); eq([r.runes.D2.rarity, r.runes.D2.max], ['legend', 2], 'rarity + copies');
     eq([r.runes.F1.rarity, r.runes.F1.pct], ['rare', 50], 'unknown rarity → default');
+    const f = cleanStage({ runes: { F1: { scope: 'tribe', tribe: 'สายฟ้า', theme: 'shock', del: true }, U2: { scope: 'zz', theme: 'zz', del: 1 } } });
+    eq([f.runes.F1.scope, f.runes.F1.tribe, f.runes.F1.theme, f.runes.F1.del], ['tribe', 'สายฟ้า', 'shock', true], 'set 59: fixed rune scope/tribe/theme/delete');
+    eq([f.runes.U2.scope, f.runes.U2.theme, f.runes.U2.del], ['one', '', false], 'set 59: bad scope/theme/del → default');
+    eq(runeText(STAGE_RUNES.find(x => x.id === 'F1'), f.runes.F1), 'เผ่าสายฟ้า: เกราะที่ได้รับ +20%', 'field rune text follows scope'); ok(!runeActive(f.runes.F1), 'deleted rune not active');
     const c = cleanStage({ custom: [{ id: 'C1', type: 'stat', name: 'หิน', eff: 'hp', mode: 'flat', v: 40, scope: 'tribe', tribe: 'ภูติ', rarity: 'rare' }, { id: 'C1', type: 'stat' }, { id: 'C2', type: 'skill', when: 'hit', do: 'burn', to: 'target', v: 3, scope: 'enemy' },
       { id: 'C3', type: 'skill', when: 'hit', do: 'summon', to: 'self' }, { id: 'C4', type: 'skill', when: 'matchStart', do: 'lifesteal', to: 'self' }, { id: 'X1', type: 'stat' }, { id: 'C5', type: 'magic' }] }).custom;
     eq(c.map(x => x.id), ['C1', 'C2'], 'dup / bad skill / bad id / bad type dropped'); eq([c[0].eff, c[0].v, c[0].scope, c[0].tribe, c[0].rarity], ['hp', 40, 'tribe', 'ภูติ', 'rare'], 'custom stat rune');

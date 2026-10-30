@@ -31,19 +31,22 @@ const RUNE_RAR_CLASS = { common: 'r0', rare: 'r2', legend: 'r4' };
 const runeRarTh = k => (RUNE_RARITY.find(r => r[0] === k) || [, k])[1];
 const runeSkillOf = x => ({ when: x.when, do: x.do, to: x.to, v: [x.v, x.v, x.v] });
 function runeLine(def, x) {
-  if (x.type === 'skill') return `${x.scope === 'tribe' ? 'เผ่า' + x.tribe : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1]}: ได้สกิล "${skillLine(runeSkillOf(x), 1)}"`;
+  if (x.type === 'skill') return `${runeScopeLabel(x)}: ได้สกิล "${skillLine(runeSkillOf(x), 1)}"`;
   return runeText(def, x);
 }
-// All runes as [def | null, record, isCustom]
-const runeList = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false]), ...stageCfg.custom.map(x => [null, x, true])];
-const runeScopeOf = (def, x) => (def && def.f ? def.scope : x.scope);
+// All runes as [def | null, record, isCustom] · deleted built-in runes (set 59) live in their own fold
+const runeAll = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false]), ...stageCfg.custom.map(x => [null, x, true])];
+const runeList = () => runeAll().filter(([, x]) => !x.del);
 // Rune themes (user 30 Oct): a finer grouping on top of RUNE_CATS — what the rune is about (เกราะ, เงิน, ไฟ …).
 // Builder / custom runes follow their current effect (RUNE_THEME_EFF), fixed runes use RUNE_THEME_FIXED, field runes follow their tribe.
-const RUNE_THEMES = [['dmg', 'โจมตี/ดาเมจ'], ['armor', 'เกราะ/ป้องกัน'], ['heal', 'HP/ฟื้นฟู'], ['speed', 'ความเร็ว'], ['burn', 'ไฟ'], ['shock', 'ช็อต'], ['debuff', 'กดศัตรู'], ['survive', 'รอดตาย'], ['gold', 'เงิน/ร้าน'], ['tribe', 'เผ่า'], ['other', 'อื่นๆ']];
 const RUNE_THEME_EFF = { atk: 'dmg', hitDmg: 'dmg', multi: 'dmg', hp: 'heal', healHit: 'heal', healAmp: 'heal', lifesteal: 'heal', armor: 'armor', armorHit: 'armor', armorAmp: 'armor', cd: 'speed', burn: 'burn', burnAmp: 'burn', shock: 'shock', shockAmp: 'shock', eCd: 'debuff', eMaxHp: 'debuff', eBurn: 'burn', eShock: 'shock', eDmgTaken: 'debuff', eHealCut: 'debuff', eArmorCut: 'debuff' };
 const RUNE_THEME_FIXED = { T1: 'gold', T2: 'gold', T3: 'gold', T4: 'gold', X8: 'gold', X2: 'gold', X3: 'gold', U8: 'gold', T8: 'tribe', T9: 'dmg', T10: 'dmg', T11: 'dmg', T12: 'dmg', X7: 'dmg', X5: 'heal', U4: 'armor', U2: 'survive', X4: 'survive', X6: 'survive', U7: 'other', X9: 'other' };
 const RUNE_THEME_FIELD = { 'เหล็กกล้า': 'armor', 'เพลิงเผา': 'burn', 'สายฟ้า': 'shock', 'วายุ': 'dmg', 'ภูติ': 'heal', 'อสูร': 'dmg' };
 function runeThemeOf(def, x) {
+  if (x.theme) return x.theme; // set 59: picked by the user
+  return runeThemeAuto(def, x);
+}
+function runeThemeAuto(def, x) {
   if (def && def.f) {
     if (RUNE_THEME_FIXED[def.id]) return RUNE_THEME_FIXED[def.id];
     if (def.cat === 'tribe') return 'tribe';
@@ -74,12 +77,16 @@ function runeEditor(def, x, custom) {
   nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 16); if (v) x.name = v; redraw(); renderStageIdeaFor(); });
   const maxF = fld('มีได้ต่อ run', stageNum(`stg-${rid}-max`, x.max, base.max, 1, RUNE_MAX_HI, v => { x.max = v; }));
   maxF.title = '1 = รูนเฉพาะ (มีได้ชิ้นเดียวต่อ run) · 2 ขึ้นไป = เก็บซ้ำได้ แต่ละชิ้นเพิ่มค่าซ้อนกันเหมือนเลเวล';
-  const g = fgrid(fld('ชื่อรูน', nm, 'wide'), fld('ความหายาก', selectInput(`stg-${rid}-rarity`, RUNE_RARITY, x.rarity, v => { x.rarity = v; redraw(); })), maxF);
-  const scopeF = () => fld('ใช้กับ', selectInput(`stg-${rid}-scope`, RUNE_SCOPES.filter(s => s[0] !== 'enemy'), x.scope, v => { x.scope = v; redraw(); }));
+  // Set 59 (user 30 Oct): every rune has the same basics — name, rarity, copies, theme, who it works on
+  const themeF = fld('หมวด', selectInput(`stg-${rid}-theme`, [['', `อัตโนมัติ (${runeThemeTh(runeThemeAuto(def, x))})`], ...RUNE_THEMES], x.theme, v => { x.theme = v; redraw(); }));
+  const g = fgrid(fld('ชื่อรูน', nm, 'wide'), fld('ความหายาก', selectInput(`stg-${rid}-rarity`, RUNE_RARITY, x.rarity, v => { x.rarity = v; redraw(); })), maxF, themeF);
+  const scopeF = (all = false) => fld('ใช้กับ', selectInput(`stg-${rid}-scope`, all ? RUNE_SCOPES : RUNE_SCOPES.filter(s => s[0] !== 'enemy'), x.scope, v => { x.scope = v; redraw(); }));
   const tribeF = () => fld('เผ่า', selectInput(`stg-${rid}-tribe`, TRIBES.map(t => [t, t]), x.tribe, v => { x.tribe = v; redraw(); }));
   const notes = [];
   if (def && def.f) {
     for (const [k, label, , lo, hi, unit] of def.f) g.append(fld(`${label}${unit ? ` (${unit})` : ''}`, stageNum(`stg-${def.id}-${k}`, x[k], base[k], lo, hi, v => { x[k] = v; })));
+    g.append(scopeF(true)); if (x.scope === 'tribe') g.append(tribeF());
+    if (x.scope !== def.scope) notes.push(`เดิมใช้กับ "${(RUNE_SCOPES.find(s => s[0] === def.scope) || [, def.scope])[1]}"`);
     if (def.id === 'T8') notes.push('เผ่าเลือกตอนได้รูน');
   } else if (x.type === 'skill') {
     const picks = runeSkillPicks();
@@ -107,11 +114,10 @@ function runeEditor(def, x, custom) {
     if (e[4] !== 'foe') { g.append(scopeF()); if (x.scope === 'tribe') g.append(tribeF()); }
   }
   box.append(g, ...notes.map(t => el('p', 'hint', t)));
-  if (custom) {
-    const del = el('button', 'rune-del', 'ลบรูนนี้'); del.type = 'button';
-    del.addEventListener('click', () => { stageCfg.custom.splice(stageCfg.custom.indexOf(x), 1); runeOpen.delete(x.id); redraw(); });
-    box.append(del);
-  }
+  // Set 59: built-in runes are deleted softly (fold "รูนที่ลบแล้ว" → เอาคืน) · user-made runes are removed for good
+  const del = el('button', 'rune-del', custom ? 'ลบรูนนี้ (ถาวร)' : 'ลบรูนนี้'); del.type = 'button'; del.id = `stg-del-${rid}`;
+  del.addEventListener('click', () => { if (custom) stageCfg.custom.splice(stageCfg.custom.indexOf(x), 1); else x.del = true; runeOpen.delete(rid); redraw(); renderStageIdeaFor(); });
+  box.append(del);
   return box;
 }
 function renderStageRunes(box) {
@@ -155,7 +161,7 @@ function renderStageRunes(box) {
       if (!byTheme) sum.append(el('span', 'sec-odds', `โอกาสได้ ด่านปกติ ${fmt(odds(false)[rk])}% · บอส ${fmt(odds(true)[rk])}%`));
       sec.append(sum);
       for (const [d, x, custom] of items) {
-        const id = x.id || d.id, scope = runeScopeOf(d, x), open = runeOpen.has(id);
+        const id = x.id || d.id, scope = x.scope, open = runeOpen.has(id);
         const row = el('div', 'rune-row', ''); row.classList.toggle('off', !x.on); row.classList.toggle('open', open);
         const toggle = () => { if (runeOpen.has(id)) runeOpen.delete(id); else runeOpen.add(id); drawList(); };
         const ed = el('button', 'chev', open ? '▾' : '▸'); ed.type = 'button'; ed.id = `stg-open-${id}`;
@@ -175,6 +181,19 @@ function renderStageRunes(box) {
     }
   }
   drawList();
+  const gone = runeAll().filter(([, x]) => x.del);
+  if (gone.length) {
+    const f = document.createElement('details'); f.className = 'rune-sec rune-gone'; f.id = 'stgRuneGone';
+    const sum = document.createElement('summary'); sum.append(el('span', 'pill', 'รูนที่ลบแล้ว'), el('span', 'sec-n', `${gone.length} รูน · ไม่ออกในเกม`)); f.append(sum);
+    for (const [d, x] of gone) {
+      const row = el('div', 'rune-row off', ''), head = el('div', 'rune-head', ''), main = el('div', 'rune-main', '');
+      main.append(el('div', 'rune-l1', ''), el('div', 'rune-meta', d.id)); main.firstChild.append(el('b', '', x.name), el('span', 'rune-say', runeLine(d, x)));
+      const back = el('button', '', 'เอาคืน'); back.type = 'button'; back.id = `stg-undel-${d.id}`;
+      back.addEventListener('click', () => { x.del = false; stageChanged(); renderStage(); renderStageIdeaFor(); });
+      head.append(main, back); row.append(head); f.append(row);
+    }
+    box.append(f);
+  }
 }
 // Median player team (stage baseline, review-2026-10-29-stage-baseline.md) — only stages 5 and 10 are measured.
 const STAGE_MEDIAN = { 5: { dps: 7, hp: 756 }, 10: { dps: 14, hp: 1140 } };

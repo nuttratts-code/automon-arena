@@ -10,6 +10,10 @@ export const RUNE_RARITY = [['common', 'ธรรมดา'], ['rare', 'หา�
 export const RUNE_CATS = [['stat', 'ค่าพลัง'], ['skill', 'สกิล'], ['tribe', 'เพิ่มเผ่า'], ['field', 'เวทสนาม'], ['special', 'พิเศษ'], ['eco', 'เงิน/ร้าน']];
 export const RUNE_SCOPES = [['one', 'ตัวเดียว'], ['front', 'แถวหน้า'], ['mid', 'แถวกลาง'], ['back', 'แถวหลัง'], ['laneTop', 'เลนบน'], ['laneBottom', 'เลนล่าง'], ['tribe', 'เผ่าที่เลือก'], ['team', 'ทั้งทีม'], ['enemy', 'ทีมศัตรู']];
 export const runeSolo = scope => scope === 'one';
+// Rune themes (user 30 Oct): finer grouping than RUNE_CATS · a rune's `theme` '' = automatic (page picks from its effect) (set 59: user may pick any)
+export const RUNE_THEMES = [['dmg', 'โจมตี/ดาเมจ'], ['armor', 'เกราะ/ป้องกัน'], ['heal', 'HP/ฟื้นฟู'], ['speed', 'ความเร็ว'], ['burn', 'ไฟ'], ['shock', 'ช็อต'], ['debuff', 'กดศัตรู'], ['survive', 'รอดตาย'], ['gold', 'เงิน/ร้าน'], ['tribe', 'เผ่า'], ['other', 'อื่นๆ']];
+// In play = switched on and not deleted (set 59: built-in runes can be deleted and restored)
+export const runeActive = x => !!x && x.on && !x.del;
 // Stat effects for builder runes, each = an existing skill effect (DO_INFO) · [key, label, flat do, % do, side, flat unit]
 export const RUNE_EFFECTS = [
   ['atk', 'พลังโจมตี +', 'atkUp', 'atkPct', 'ally'], ['hp', 'HP สูงสุด +', 'hpUp', 'hpPct', 'ally'],
@@ -27,7 +31,8 @@ export const RUNE_EFF = Object.fromEntries(RUNE_EFFECTS.map(e => [e[0], e]));
 const RUNE_V_MAX = 1e5;
 const runeFx = (id, cat, rarity, scope, name, text, f = []) => ({ id, cat, rarity, scope, name, text, f });
 const runeBx = (id, rarity, name, eff, mode, v, scope, cat = 'stat') => ({ id, cat, rarity, name, b: { eff, mode, v, scope } });
-const RUNE_FIELD_TEXT = { 'เหล็กกล้า': 'ทั้งทีม เกราะที่ได้รับ +{pct}%', 'เพลิงเผา': 'ทั้งทีม ไฟที่ทำให้ติด +{pct}%', 'สายฟ้า': 'ทั้งทีม ช็อตที่ทำให้ติด +{pct}%', 'วายุ': 'ทั้งทีม ดาเมจต่อฮิต +{pct}%', 'ภูติ': 'ทั้งทีม ฟื้น HP ที่ได้รับ +{pct}%', 'อสูร': 'ทั้งทีม ดาเมจ +{pct}% หลังเพื่อนตัวไหนก็ได้ down' };
+// Field rune text has no "who" part: the scope label is put in front (set 59: user picks ทั้งทีม / เผ่าที่เลือก …)
+const RUNE_FIELD_TEXT = { 'เหล็กกล้า': 'เกราะที่ได้รับ +{pct}%', 'เพลิงเผา': 'ไฟที่ทำให้ติด +{pct}%', 'สายฟ้า': 'ช็อตที่ทำให้ติด +{pct}%', 'วายุ': 'ดาเมจต่อฮิต +{pct}%', 'ภูติ': 'ฟื้น HP ที่ได้รับ +{pct}%', 'อสูร': 'ดาเมจ +{pct}% หลังเพื่อนตัวไหนก็ได้ down' };
 export const STAGE_RUNES = [
   // เงิน/ร้าน
   runeFx('T1', 'eco', 'common', 'team', 'ทอง', 'ได้เงินเพิ่ม {gold} ทุกด่าน', [['gold', 'เงิน/ด่าน', 2, 0, 20, '']]),
@@ -86,21 +91,24 @@ const RUNE_NAME_MAX = 16;
 const RUNE_OLD_V = { T5: 'dmgPct', T6: 'armorPct', T7: 'cdPct', U3: 'cdPct', U5: 'burn', U6: 'multi' };
 // Skill runes (Q1 A): the unit(s) in scope get one battle skill · same checks as the skill editor (no "% ของ…", no summon, no position target)
 export const runeSkillOk = s => !!s && BATTLE_WHEN.includes(s.when) && !!DO_INFO[s.do] && !DO_INFO[s.do].shop && !DO_INFO[s.do].of && s.do !== 'summon' && s.to !== 'allyAt' && skillTargets(s.when, s.do).includes(s.to);
-const runeScopeLabel = x => x.scope === 'tribe' ? `เผ่า${x.tribe}` : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1];
+export const runeScopeLabel = x => x.scope === 'tribe' ? `เผ่า${x.tribe}` : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1];
 // Effect text of a fixed or builder rune (skill runes: the page writes the skill line)
 export function runeText(r, x) {
-  if (r && r.f) return r.text.replace(/\{(\w+)\}/g, (_, k) => String(x[k]));
+  if (r && r.f) {
+    const t = r.text.replace(/\{(\w+)\}/g, (_, k) => String(x[k]));
+    return r.cat === 'field' || (x.scope && x.scope !== r.scope) ? `${runeScopeLabel(x)}: ${t}` : t;
+  }
   const e = RUNE_EFF[x.eff];
   if (!e) return '';
   const unit = x.mode === 'pct' ? (e[0] === 'armor' ? '% ของ HP สูงสุด' : '%') : e[5] === 'ms' ? ' มิลลิวินาที' : '';
   return `${runeScopeLabel(x)}: ${e[1]}${e[0] === 'lifesteal' ? ' ' : ''}${x.v}${unit}`;
 }
 function runeDefault(r) {
-  const base = { on: true, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, rarity: r.rarity };
-  return r.f ? { ...base, ...Object.fromEntries(r.f.map(([k, , v]) => [k, v])) } : { ...base, ...r.b, tribe: TRIBES[0] };
+  const base = { on: true, del: false, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, rarity: r.rarity, theme: '', tribe: TRIBES[0] };
+  return r.f ? { ...base, scope: r.scope, ...Object.fromEntries(r.f.map(([k, , v]) => [k, v])) } : { ...base, ...r.b };
 }
 export function customDefault(id, type = 'stat') {
-  const base = { id, type, on: true, name: 'รูนใหม่', max: 1, rarity: 'common', scope: 'team', tribe: TRIBES[0] };
+  const base = { id, type, on: true, del: false, name: 'รูนใหม่', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: TRIBES[0] };
   return type === 'skill' ? { ...base, when: 'matchStart', do: 'atkUp', to: 'self', v: 5 } : { ...base, eff: 'atk', mode: 'flat', v: 5 };
 }
 const runeNum = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
@@ -108,6 +116,8 @@ const runeIsObj = x => x && typeof x === 'object' && !Array.isArray(x);
 const runeName = s => typeof s === 'string' ? s.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, RUNE_NAME_MAX) : '';
 function cleanRuneCommon(x, d) {
   if (typeof x.on === 'boolean') d.on = x.on;
+  if (typeof x.del === 'boolean') d.del = x.del;
+  if (x.theme === '' || RUNE_THEMES.some(t => t[0] === x.theme)) d.theme = x.theme;
   const nm = runeName(x.name); if (nm) d.name = nm;
   if (Number.isInteger(x.max) && x.max >= 1 && x.max <= RUNE_MAX_HI) d.max = x.max;
   if (RUNE_RARITY.some(q => q[0] === x.rarity)) d.rarity = x.rarity;
@@ -127,7 +137,11 @@ function cleanRunes(o, out) {
   if (runeIsObj(o.runes)) for (const r of STAGE_RUNES) {
     const x = o.runes[r.id]; if (!runeIsObj(x)) continue;
     const d = out.runes[r.id]; cleanRuneCommon(x, d);
-    if (r.f) { for (const [k, , , lo, hi] of r.f) if (runeNum(x[k], lo, hi)) d[k] = x[k]; continue; }
+    if (r.f) {
+      for (const [k, , , lo, hi] of r.f) if (runeNum(x[k], lo, hi)) d[k] = x[k];
+      if (RUNE_SCOPES.some(s => s[0] === x.scope)) d.scope = x.scope; // set 59: any scope (user wants full freedom)
+      continue;
+    }
     const y = x.v === undefined && RUNE_OLD_V[r.id] ? { ...x, v: x[RUNE_OLD_V[r.id]] } : x;
     cleanRuneStat(y, d);
   }
