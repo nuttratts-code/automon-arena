@@ -159,6 +159,12 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .pill.rune-solo { background: var(--soft); color: var(--accent); border: 1px solid currentColor; }
 .pill.rune-team { background: var(--soft); color: var(--ink); border: 1px solid var(--line); }
 .pill.rune-cat { background: transparent; color: var(--mute); border: 1px solid var(--line); }
+/* Rune themes (30 Oct): finer groups such as เกราะ / เงิน / ไฟ — chips wrap on phones */
+.pill.rune-theme { background: var(--soft); color: var(--ink); border: 1px dashed var(--line); }
+.rune-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
+.rune-chips > span { font-size: .8rem; color: var(--mute); margin-right: 2px; }
+.rune-chips button { padding: 3px 9px; border-radius: 99px; font-size: .82rem; }
+.rune-chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 #pane-stage .seg { flex-wrap: wrap; }
 #pane-stage > *, #stgBody, #stgBody > div, .rune-sec, .rune-row, .rune-edit { min-width: 0; }
 .rune-edit .rune-copy { display: grid; gap: 4px; } .rune-edit .rune-copy select { width: 100%; }

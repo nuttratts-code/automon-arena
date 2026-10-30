@@ -30,7 +30,7 @@ function stageOnBox(id, on, set) {
   l.append(c, ' ใช้ใน demo'); return l;
 }
 // Rune tab v2 (set 53): sections by rarity, category filter, search, one line per rune, tap ✎ to edit, user-made runes (stat / from a skill).
-let runeCat = 'all', runeQuery = '';
+let runeCat = 'all', runeQuery = '', runeTheme = 'all', runeGroup = 'rarity';
 const runeOpen = new Set();
 const RUNE_RAR_CLASS = { common: 'r0', rare: 'r2', legend: 'r4' };
 const runeRarTh = k => (RUNE_RARITY.find(r => r[0] === k) || [, k])[1];
@@ -43,6 +43,24 @@ function runeLine(def, x) {
 const runeList = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false]), ...stageCfg.custom.map(x => [null, x, true])];
 const runeCatOf = (def, x) => (def ? def.cat : x.type === 'skill' ? 'skill' : 'stat');
 const runeScopeOf = (def, x) => (def && def.f ? def.scope : x.scope);
+// Rune themes (user 30 Oct): a finer grouping on top of RUNE_CATS — what the rune is about (เกราะ, เงิน, ไฟ …).
+// Builder / custom runes follow their current effect (RUNE_THEME_EFF), fixed runes use RUNE_THEME_FIXED, field runes follow their tribe.
+const RUNE_THEMES = [['dmg', 'โจมตี/ดาเมจ'], ['armor', 'เกราะ/ป้องกัน'], ['heal', 'HP/ฟื้นฟู'], ['speed', 'ความเร็ว'], ['burn', 'ไฟ'], ['shock', 'ช็อต'], ['debuff', 'กดศัตรู'], ['survive', 'รอดตาย'], ['gold', 'เงิน/ร้าน'], ['tribe', 'เผ่า'], ['other', 'อื่นๆ']];
+const RUNE_THEME_EFF = { atk: 'dmg', hitDmg: 'dmg', multi: 'dmg', hp: 'heal', healHit: 'heal', healAmp: 'heal', lifesteal: 'heal', armor: 'armor', armorHit: 'armor', armorAmp: 'armor', cd: 'speed', burn: 'burn', burnAmp: 'burn', shock: 'shock', shockAmp: 'shock', eCd: 'debuff', eMaxHp: 'debuff', eBurn: 'burn', eShock: 'shock', eDmgTaken: 'debuff', eHealCut: 'debuff', eArmorCut: 'debuff' };
+const RUNE_THEME_FIXED = { T1: 'gold', T2: 'gold', T3: 'gold', T4: 'gold', X8: 'gold', X2: 'gold', X3: 'gold', U8: 'gold', T8: 'tribe', T9: 'dmg', T10: 'dmg', T11: 'dmg', T12: 'dmg', X7: 'dmg', X5: 'heal', U4: 'armor', U2: 'survive', X4: 'survive', X6: 'survive', U7: 'other', X9: 'other' };
+const RUNE_THEME_FIELD = { 'เหล็กกล้า': 'armor', 'เพลิงเผา': 'burn', 'สายฟ้า': 'shock', 'วายุ': 'dmg', 'ภูติ': 'heal', 'อสูร': 'dmg' };
+function runeThemeOf(def, x) {
+  if (def && def.f) {
+    if (RUNE_THEME_FIXED[def.id]) return RUNE_THEME_FIXED[def.id];
+    if (def.cat === 'tribe') return 'tribe';
+    if (def.cat === 'field') return RUNE_THEME_FIELD[TRIBES[+def.id.slice(1) - 1]] || 'other';
+    if (def.cat === 'eco') return 'gold';
+    return 'other';
+  }
+  if (x.type === 'skill') { const e = RUNE_EFFECTS.find(e => e[2] === x.do || e[3] === x.do); return (e && RUNE_THEME_EFF[e[0]]) || 'other'; }
+  return RUNE_THEME_EFF[x.eff] || 'other';
+}
+const runeThemeTh = k => (RUNE_THEMES.find(t => t[0] === k) || [, k])[1];
 // Character skills that can become a rune (copy button)
 const runeSkillPicks = () => chars.flatMap(c => c.skills.map((s, k) => [c, s, k])).filter(([, s]) => runeSkillOk(s));
 function runeEditor(def, x, custom) {
@@ -114,22 +132,45 @@ function renderStageRunes(box) {
   const q = document.createElement('input'); q.type = 'search'; q.id = 'stgRuneFind'; q.placeholder = 'ค้นหาชื่อ / ผล'; q.value = runeQuery;
   q.addEventListener('input', () => { runeQuery = q.value; drawList(); });
   bar.append(seg, q); box.append(bar);
+  // Theme chips (finer groups) + group-by switch
+  const all = runeList();
+  const chips = el('div', 'rune-chips', ''); chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', 'หมวดย่อยรูน');
+  chips.append(el('span', '', 'หมวดย่อย:'));
+  for (const [k, t] of [['all', 'ทั้งหมด'], ...RUNE_THEMES]) {
+    const n = k === 'all' ? all.length : all.filter(([d, x]) => runeThemeOf(d, x) === k).length;
+    if (!n && k !== runeTheme) continue;
+    const b = el('button', '', `${t} ${n}`); b.type = 'button'; b.id = `stg-theme-${k}`; b.setAttribute('aria-pressed', String(k === runeTheme));
+    b.addEventListener('click', () => { runeTheme = k; renderStage(); }); chips.append(b);
+  }
+  box.append(chips);
+  const grp = el('div', 'rune-chips', ''); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'จัดกลุ่มรูน');
+  grp.append(el('span', '', 'จัดกลุ่มตาม:'));
+  for (const [k, t] of [['rarity', 'ความหายาก'], ['theme', 'หมวดย่อย']]) {
+    const b = el('button', '', t); b.type = 'button'; b.id = `stg-group-${k}`; b.setAttribute('aria-pressed', String(k === runeGroup));
+    b.addEventListener('click', () => { runeGroup = k; renderStage(); }); grp.append(b);
+  }
+  box.append(grp);
   const add = el('div', 'row', '');
   const newRune = type => { let n = 1; while (stageCfg.custom.some(c => c.id === 'C' + n)) n++; const c = customDefault('C' + n, type); stageCfg.custom.push(c); runeOpen.add(c.id); runeCat = 'all'; runeQuery = ''; stageChanged(); renderStage(); };
   const a1 = el('button', '', '+ รูนค่าพลังใหม่'), a2 = el('button', '', '+ รูนจากสกิลที่มีอยู่');
   a1.type = a2.type = 'button'; a1.id = 'stgAddStat'; a2.id = 'stgAddSkill';
   a1.disabled = a2.disabled = stageCfg.custom.length >= RUNE_CUSTOM_MAX;
-  a1.addEventListener('click', () => newRune('stat')); a2.addEventListener('click', () => newRune('skill'));
+  a1.addEventListener('click', () => { runeTheme = 'all'; newRune('stat'); }); a2.addEventListener('click', () => { runeTheme = 'all'; newRune('skill'); });
   add.append(a1, a2); box.append(add);
   const list = el('div', '', ''); list.style.display = 'grid'; list.style.gap = '10px'; box.append(list);
   function drawList() {
     list.replaceChildren();
     const qq = runeQuery.trim().toLowerCase();
-    for (const [rk, rt] of RUNE_RARITY) {
-      const items = runeList().filter(([d, x]) => x.rarity === rk && (runeCat === 'all' || runeCatOf(d, x) === runeCat)
-        && (!qq || `${x.id || d.id} ${x.name} ${runeLine(d, x)}`.toLowerCase().includes(qq)));
+    const byTheme = runeGroup === 'theme';
+    const shown = runeList().filter(([d, x]) => (runeCat === 'all' || runeCatOf(d, x) === runeCat)
+      && (runeTheme === 'all' || runeThemeOf(d, x) === runeTheme)
+      && (!qq || `${x.id || d.id} ${x.name} ${runeLine(d, x)} ${runeThemeTh(runeThemeOf(d, x))}`.toLowerCase().includes(qq)));
+    if (byTheme && !shown.length) list.append(el('p', 'hint', 'ไม่มีรูนตามที่กรอง'));
+    for (const [rk, rt] of (byTheme ? RUNE_THEMES : RUNE_RARITY)) {
+      const items = shown.filter(([d, x]) => (byTheme ? runeThemeOf(d, x) : x.rarity) === rk);
+      if (byTheme && !items.length) continue;
       const sec = document.createElement('details'); sec.className = 'rune-sec'; sec.open = true;
-      const sum = document.createElement('summary'); sum.append(el('span', `rar ${RUNE_RAR_CLASS[rk]}`, rt), ` ${items.length} รูน · เปิดใช้ ${items.filter(([, x]) => x.on).length}`);
+      const sum = document.createElement('summary'); sum.append(byTheme ? el('span', 'pill rune-theme', rt) : el('span', `rar ${RUNE_RAR_CLASS[rk]}`, rt), ` ${items.length} รูน · เปิดใช้ ${items.filter(([, x]) => x.on).length}`);
       sec.append(sum);
       if (!items.length) sec.append(el('p', 'hint', 'ไม่มีรูนตามที่กรอง'));
       for (const [d, x, custom] of items) {
@@ -139,8 +180,10 @@ function renderStageRunes(box) {
         const ed = el('button', 'rune-edit-btn', runeOpen.has(id) ? 'ปิด' : '✎ แก้'); ed.type = 'button'; ed.id = `stg-open-${id}`;
         ed.setAttribute('aria-expanded', String(runeOpen.has(id)));
         ed.addEventListener('click', () => { if (runeOpen.has(id)) runeOpen.delete(id); else runeOpen.add(id); drawList(); });
-        head.append(el('b', '', x.name), el('span', 'hint', id), el('span', `pill ${runeSolo(scope) ? 'rune-solo' : 'rune-team'}`, runeSolo(scope) ? 'เฉพาะตัว' : 'ส่วนรวม'),
-          el('span', 'pill rune-cat', (RUNE_CATS.find(c => c[0] === runeCatOf(d, x)) || [, ''])[1]), ...(x.max > 1 ? [el('span', 'hint', `ซ้อนได้ ${x.max}`)] : []), el('span', 'grow', ''),
+        head.append(el('b', '', x.name), el('span', 'hint', id), ...(byTheme ? [el('span', `rar ${RUNE_RAR_CLASS[x.rarity]}`, runeRarTh(x.rarity))] : []),
+          el('span', `pill ${runeSolo(scope) ? 'rune-solo' : 'rune-team'}`, runeSolo(scope) ? 'เฉพาะตัว' : 'ส่วนรวม'),
+          el('span', 'pill rune-cat', (RUNE_CATS.find(c => c[0] === runeCatOf(d, x)) || [, ''])[1]),
+          ...(byTheme ? [] : [el('span', 'pill rune-theme', runeThemeTh(runeThemeOf(d, x)))]), ...(x.max > 1 ? [el('span', 'hint', `ซ้อนได้ ${x.max}`)] : []), el('span', 'grow', ''),
           stageOnBox(`stg-on-${id}`, x.on, v => { x.on = v; drawList(); }), ed);
         row.append(head, el('div', 'rune-say', runeLine(d, x)));
         if (runeOpen.has(id)) row.append(runeEditor(d, x, custom));
