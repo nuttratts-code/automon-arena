@@ -46,6 +46,7 @@ Two Claude accounts take turns on this repo: when one hits its usage limit, the 
 - **Before stopping / when the chat feels long / at end of set:** update the Relay block (account, branch, last done, next step, open decisions) and push. Merge to main only when tests pass and the user agreed.
 - **Finding the artifacts:** they are shared from the other account, so `Artifact list` (any scope) does NOT show them. Always open them by URL from the "Links" section of claude/handoff.md (`Artifact read` with that url) — never conclude "no access" from an empty list.
 - **Published artifacts** (game / balance room / check) are owned by the original account. The other account may update them only if they were shared with edit access ("writer" in an Artifact read); otherwise do not publish — note "publish pending" in the Relay block for the owner account.
+- **Publish workflow (decision 30 Oct):** a chat started elsewhere cannot see the artifacts ("not found"); only the old chat opened FROM the Balance Room page can publish, and that page always reopens the same chat. So: do all work in new chats, merge to main, then tell the user to paste in that old chat: `git fetch แล้ว publish <artifact> จาก main (<set>) อย่างเดียว ไม่ต้องทำอย่างอื่น ตอบสั้นเป็นภาษาไทย`. Note "publish pending" in the Relay block until done. Do not create a new copy of an artifact (link changes, Balance Room data is lost).
 - Balance Room data (ArtifactData) lives in the artifact, not git: same ownership rule.
 
 ## Token saving
