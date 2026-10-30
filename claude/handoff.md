@@ -2,11 +2,11 @@
 Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/archive/ (full pre-trim copy: archive/handoff-2026-10-30-full.md). User gets a Thai summary in chat at the end of each task set.
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
-- Account active now: **second account, set 53 29 Oct** · open WIP branch: **`claude/stage-mode`** (NOT merged; tests 229/229 · ui_smoke FAILS [] ERRORS []) · set 53 done: food removed from docs (combat-rules V2.7, shop-merge-rules V1.13) · runes v2 built for the Balance Room (claude/review-2026-10-29-runes-v2.md) · **balance room v118 published**
+- Account active now: **second account (rattanakon.ns), set 54 30 Oct** · open WIP branch: **`claude/stage-mode`** (NOT merged; tests 229/229 · ui_smoke FAILS [] ERRORS [], not re-run) · set 54 done: rune themes (หมวดย่อย เกราะ/เงิน/ไฟ… + group-by switch) → claude/review-2026-10-30-rune-themes.md · **balance room v120 published** (built from src)
 - Next step: (1) user tunes runes in Balance Room → 💾 → pastes `AMCFG1` code → set core/stage.js defaults from config.stage; (2) phase 2a battle code (boss + battle runes) — ask before starting
 - Open: merge claude/stage-mode → main (ask user) · MVP1 step 5.5 pending (28 Nov at risk) · config/main NOT cleared
-- Publish: game v63 · balance room v118 · check v64 (not republished)
-- 2nd account (rattanakon.ns, 30 Oct): GitHub push OK; **cannot publish or read artifacts** (cross-org, confirmed) → it notes "publish pending" here; the main account publishes.
+- Publish: game v63 · balance room v120 · check v64 (not republished)
+- 2nd account (rattanakon.ns): GitHub push OK; **balance room now shared as writer (30 Oct) → can read + publish it**. Game/check: not checked.
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 90, hash 521fadbf
