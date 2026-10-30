@@ -219,3 +219,9 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .bvs .bk { color: var(--mute); }
 @media (min-width: 900px) { .boss-body > fieldset:first-child { grid-column: span 2; } }
 @media (prefers-reduced-motion: reduce) { .sw input, .sw input::after { transition: none; } }
+/* Sim tab set 57: result line under controls, team buttons under the arena, one help fold */
+#simMsg:empty { display: none; }
+.simsum { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+.simsum .win { font-size: 1.05rem; } .simsum .win.wL { color: var(--sideL); } .simsum .win.wR { color: var(--sideR); }
+.simsum .grow { flex: 1 1 0; } .simsum.stale { opacity: .55; }
+.simteamrow { gap: 6px 10px; }
