@@ -3,6 +3,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
 - Account active now: **second account (rattanakon.ns), set 54 30 Oct** · open WIP branch: **`claude/stage-mode`** (NOT merged; tests 229/229 · ui_smoke FAILS [] ERRORS [], not re-run) · set 54 done: rune themes (หมวดย่อย เกราะ/เงิน/ไฟ… + group-by switch) → claude/review-2026-10-30-rune-themes.md · **balance room v120 published** (built from src)
+- Set 55 (30 Oct, 2nd account): rune tab UX pass "A" on `claude/stage-mode` (commit 92815b3, tests pass, probe no errors): removed duplicate category filter row, one-line rune rows, icon pills, group switch next to search, intro hint folded. **Publish pending** (2nd account lost access to balance room artifact: get_artifact "not found" → owner account must publish from branch). Known/skipped by user: custom-rune edits not counted in "แก้แล้ว N จุด"; ui_smoke 'battle perm skill applied after match' flaky once (passed on rerun, game code unchanged).
 - Next step: (1) user tunes runes in Balance Room → 💾 → pastes `AMCFG1` code → set core/stage.js defaults from config.stage; (2) phase 2a battle code (boss + battle runes) — ask before starting
 - Open: merge claude/stage-mode → main (ask user) · MVP1 step 5.5 pending (28 Nov at risk) · config/main NOT cleared
 - Publish: game v63 · balance room v120 · check v64 (not republished)
