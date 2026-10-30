@@ -153,7 +153,8 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .rune-row { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 6px; }
 .rune-row.off { opacity: .55; }
 .rune-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.rune-say { font-size: .86rem; }
+.rune-say { font-size: .86rem; flex: 1 1 240px; min-width: 0; }
+.rune-head .grow { flex: 0 0 0; }
 .rune-edit { display: grid; gap: 6px; background: var(--soft); border-radius: 8px; padding: 8px; }
 .rune-edit select { max-width: 100%; }
 .pill.rune-solo { background: var(--soft); color: var(--accent); border: 1px solid currentColor; }
