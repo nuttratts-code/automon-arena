@@ -80,8 +80,10 @@
 
     <div id="pane-stage" hidden style="display:grid;gap:14px">
       <details class="hint"><summary>ℹ️ เกี่ยวกับโหมดด่าน (demo)</summary>ขั้นที่ 1: ปรับค่าและส่งไอเดียได้ · <b>ยังไม่มีผลในการต่อสู้และวัดผลยังไม่ได้</b> (ขั้นที่ 2) · ค่าทั้งหมดเป็นค่าเสนอ · กด 💾 บันทึกให้ Claude ด้านล่างเหมือนตัวละคร</details>
-      <div class="seg" role="group" aria-label="ส่วน"><button type="button" id="stg-runes" aria-pressed="true">รูน</button><button type="button" id="stg-bosses" aria-pressed="false">บอส</button><button type="button" id="stg-settings" aria-pressed="false">ค่าโหมด</button></div>
-      <div class="status" id="stgDirty"></div>
+      <div class="stg-top">
+        <div class="seg" role="group" aria-label="ส่วน"><button type="button" id="stg-runes" aria-pressed="true">รูน</button><button type="button" id="stg-bosses" aria-pressed="false">บอส</button><button type="button" id="stg-settings" aria-pressed="false">ค่าโหมด</button></div>
+        <div class="status" id="stgDirty"></div>
+      </div>
       <div id="stgBody" style="display:grid;gap:12px"></div>
       <div class="subsec" style="display:grid;gap:8px">
         <h3>ไอเดียรูน / บอส</h3>
