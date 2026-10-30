@@ -5,7 +5,7 @@ import { TRIBES, DO_INFO, BATTLE_WHEN, skillTargets } from './rules.js';
 
 // ---------- Runes v2 (user 29 Oct, set 53 · claude/review-2026-10-29-runes-v2.md) ----------
 // Every rune: rarity (3 tiers, user Q12) · category · scope ('one' = เฉพาะตัว, others = ส่วนรวม, user Q2 A).
-// Two shapes: fixed runes (own fields f = [key, label, default, min, max, unit], text uses {key}) and builder runes (b = stat effect + scope + flat/%, user Q1 A + Q3).
+// Set 60 (user 30 Oct): every rune = common basics + one effect `eff` the user can switch: stat (flat/% + value), special (own fields) or skill.
 export const RUNE_RARITY = [['common', 'ธรรมดา'], ['rare', 'หายาก'], ['legend', 'ตำนาน']];
 export const RUNE_CATS = [['stat', 'ค่าพลัง'], ['skill', 'สกิล'], ['tribe', 'เพิ่มเผ่า'], ['field', 'เวทสนาม'], ['special', 'พิเศษ'], ['eco', 'เงิน/ร้าน']];
 export const RUNE_SCOPES = [['one', 'ตัวเดียว'], ['front', 'แถวหน้า'], ['mid', 'แถวกลาง'], ['back', 'แถวหลัง'], ['laneTop', 'เลนบน'], ['laneBottom', 'เลนล่าง'], ['tribe', 'เผ่าที่เลือก'], ['team', 'ทั้งทีม'], ['enemy', 'ทีมศัตรู']];
@@ -29,57 +29,82 @@ export const RUNE_EFFECTS = [
 ];
 export const RUNE_EFF = Object.fromEntries(RUNE_EFFECTS.map(e => [e[0], e]));
 const RUNE_V_MAX = 1e5;
-const runeFx = (id, cat, rarity, scope, name, text, f = []) => ({ id, cat, rarity, scope, name, text, f });
-const runeBx = (id, rarity, name, eff, mode, v, scope, cat = 'stat') => ({ id, cat, rarity, name, b: { eff, mode, v, scope } });
-// Field rune text has no "who" part: the scope label is put in front (set 59: user picks ทั้งทีม / เผ่าที่เลือก …)
-const RUNE_FIELD_TEXT = { 'เหล็กกล้า': 'เกราะที่ได้รับ +{pct}%', 'เพลิงเผา': 'ไฟที่ทำให้ติด +{pct}%', 'สายฟ้า': 'ช็อตที่ทำให้ติด +{pct}%', 'วายุ': 'ดาเมจต่อฮิต +{pct}%', 'ภูติ': 'ฟื้น HP ที่ได้รับ +{pct}%', 'อสูร': 'ดาเมจ +{pct}% หลังเพื่อนตัวไหนก็ได้ down' };
+// Special effects (set 60, user 30 Oct: every rune can take any effect — no rune is tied to its own code any more).
+// [key, theme, natural scope, label, text, fields f = [key, label, default, min, max, unit]] · unit 'tribe' = pick a tribe (default '' = first tribe)
+// Text gets the scope label in front when the rune is used on another scope than the natural one.
+const spec = (key, theme, scope, label, text, f = []) => ({ key, theme, scope, label, text, f });
+export const RUNE_SPECIAL = [
+  // เงิน/ร้าน
+  spec('gold', 'gold', 'team', 'ได้เงินทุกด่าน', 'ได้เงินเพิ่ม {gold} ทุกด่าน', [['gold', 'เงิน/ด่าน', 2, 0, 20, '']]),
+  spec('interest', 'gold', 'team', 'ดอกเบี้ย', 'มีเงินเก็บทุก {per} ได้เพิ่ม {gold} (สูงสุด {cap})', [['per', 'ทุกๆ เงิน', 5, 1, 50, ''], ['gold', 'ได้เพิ่ม', 1, 0, 10, ''], ['cap', 'สูงสุด', 3, 0, 20, '']]),
+  spec('shopSlots', 'gold', 'team', 'ร้านเพิ่มช่อง', 'ร้านเพิ่ม {slots} ช่อง', [['slots', 'ช่องเพิ่ม', 1, 0, 3, '']]),
+  spec('freeRoll', 'gold', 'team', 'สุ่มร้านฟรี', 'สุ่มร้านฟรี {free} ครั้งต่อรอบ', [['free', 'ครั้งฟรี/รอบ', 1, 0, 5, '']]),
+  spec('heartTrade', 'gold', 'team', 'แลกหัวใจเป็นเงิน', 'ลดหัวใจ 1 ดวง ได้เงิน {gold} (รอบละครั้ง · ใช้ไม่ได้ถ้าหัวใจเหลือน้อยกว่า {minHearts})', [['gold', 'เงินที่ได้', 10, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
+  spec('lure', 'gold', 'one', 'ตัวนี้ออกในร้านบ่อยขึ้น', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ออกในร้านบ่อยขึ้น ×{mult}', [['mult', 'โอกาส ×', 3, 1, 10, '']]),
+  spec('fastMerge', 'gold', 'one', 'รวมร่างเร็ว', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ใช้ {need} ตัวรวมร่าง (ปกติ 3)', [['need', 'ใช้กี่ตัว', 2, 2, 3, 'ตัว']]),
+  spec('shadow', 'gold', 'one', 'ขายแล้วได้คืน', 'ขายแล้วได้ตัว Lv1 คืนที่ม้านั่ง ({times} ครั้ง/run)', [['times', 'ครั้ง/run', 1, 0, 3, '']]),
+  // เผ่า (Q4 B: นับเป็นเผ่าจริง ทั้งโบนัสเผ่าและสกิลที่เล็งเผ่า · ไม่ติดกฎเผ่าเพิ่มได้ 1)
+  spec('addTribe', 'tribe', 'one', 'ได้เผ่าเพิ่ม', 'ได้เผ่า{gain}เพิ่ม (นับเป็นเผ่าจริง)', [['gain', 'เผ่าที่ได้', '', 0, 0, 'tribe']]),
+  spec('flag', 'tribe', 'team', 'ธงเผ่า (นับเผ่าเพิ่ม)', 'เผ่าที่เลือกนับเพิ่ม {count} ตัว (รูนนี้พาไปได้ไม่เกินขั้น {maxTier} · เผ่าเลือกตอนได้รูน)', [['count', 'นับเพิ่ม', 1, 0, 4, 'ตัว'], ['maxTier', 'ขั้นสูงสุด', 4, 2, 6, '']]),
+  // ดาเมจ
+  spec('allyDownDmg', 'dmg', 'team', 'ดาเมจ + หลังเพื่อน down', 'ดาเมจ +{pct}% หลังเพื่อนตัวไหนก็ได้ down', [['pct', 'เพิ่ม', 20, 0, 300, '%']]),
+  spec('bossDmg', 'dmg', 'team', 'ดาเมจใส่บอส +', 'ดาเมจใส่บอส +{dmgPct}%', [['dmgPct', 'ดาเมจใส่บอส', 40, 0, 300, '%']]),
+  spec('lastStand', 'dmg', 'team', 'เหลือตัวเดียวแรงขึ้น', 'เหลือตัวเดียว: ดาเมจ +{dmgPct}% คูลดาวน์ −{cdPct}%', [['dmgPct', 'ดาเมจ', 50, 0, 300, '%'], ['cdPct', 'คูลดาวน์ลด', 30, 0, 80, '%']]),
+  spec('growth', 'dmg', 'team', 'ชนะติดกันแรงขึ้น', 'ชนะติดกัน ดาเมจ +{stepPct}% ต่อด่าน (สูงสุด {maxPct}%) แพ้แล้วรีเซ็ต', [['stepPct', 'ต่อด่าน', 3, 0, 50, '%'], ['maxPct', 'สูงสุด', 30, 0, 300, '%']]),
+  spec('glass', 'dmg', 'team', 'ดาเมจ + แลก HP −', 'ดาเมจ +{dmgPct}% แต่ HP สูงสุด −{hpPct}%', [['dmgPct', 'ดาเมจ', 35, 0, 300, '%'], ['hpPct', 'HP ลด', 20, 0, 90, '%']]),
+  spec('buddy', 'dmg', 'one', 'คู่หูตีตาม', 'ตัวนี้โจมตี → คู่ที่ผู้เล่นเลือกตีเป้าเดียวกันตาม {pct}% ของการโจมตีปกติ (ครั้งละชุด · ตีตามต่อไม่ได้)', [['pct', 'แรงตีตาม', 100, 1, 300, '%']]),
+  // ป้องกัน/รอด
+  spec('fortress', 'heal', 'team', 'HP + แลกพลังโจมตี −', 'HP สูงสุด +{hpPct}% แต่พลังโจมตี −{atkPct}%', [['hpPct', 'HP เพิ่ม', 30, 0, 300, '%'], ['atkPct', 'พลังโจมตีลด', 20, 0, 90, '%']]),
+  spec('taunt', 'armor', 'one', 'โล่ + ล่อเป้า', 'เกราะ {armorPct}% ของ HP สูงสุด และศัตรูต้องตีตัวนี้ก่อน', [['armorPct', 'เกราะ', 30, 0, 300, '%']]),
+  spec('revive', 'survive', 'one', 'ฟื้นหลัง down', 'ฟื้น {times} ครั้ง/แมตช์ ด้วย HP {hpPct}%', [['times', 'ครั้ง/แมตช์', 1, 0, 3, ''], ['hpPct', 'HP ตอนฟื้น', 50, 1, 100, '%']]),
+  spec('avoidDeath', 'survive', 'one', 'เลี่ยงจุดตาย', 'ฮิตที่จะทำให้ down ถูกยกเลิกทั้งหมด (ดาเมจ ไฟ ช็อตของฮิตนั้น) {times} ครั้ง/แมตช์', [['times', 'ครั้ง/แมตช์', 1, 1, 3, '']]),
+  spec('link', 'survive', 'one', 'คู่รับดาเมจแทน', 'ตัวนี้โดนตี → คู่ที่ผู้เล่นเลือกรับดาเมจแทน {pct}% (รับแทนต่อไม่ได้)', [['pct', 'รับแทน', 50, 1, 100, '%']]),
+  // อื่นๆ
+  spec('permUp', 'other', 'one', 'ค่าถาวร +', 'ค่าถาวรที่ได้ +{permPct}%', [['permPct', 'ค่าถาวร', 50, 0, 300, '%']]),
+  spec('scout', 'other', 'team', 'ส่องทีมศัตรู', 'ก่อนสู้เห็นตำแหน่งวางตัวและรายละเอียดทีมศัตรู (ไม่มีรูนนี้ = ไม่เห็นอะไรเลย)'),
+];
+export const RUNE_SPEC = Object.fromEntries(RUNE_SPECIAL.map(s => [s.key, s]));
+// Effect kinds: stat (RUNE_EFFECTS, flat/% + value) · special (RUNE_SPECIAL, own fields) · 'skill' (one battle skill, Q1 A)
+export const runeKind = eff => eff === 'skill' ? 'skill' : RUNE_EFF[eff] ? 'stat' : RUNE_SPEC[eff] ? 'special' : '';
+// Built-in runes = name + rarity + starting effect (p = values that differ from the effect's defaults)
+const rune = (id, rarity, name, eff, scope, p = {}) => ({ id, rarity, name, eff, scope, p });
+const runeSt = (id, rarity, name, eff, mode, v, scope) => rune(id, rarity, name, eff, scope, { mode, v });
+// Field runes: one effect per tribe (F6 อสูร = special allyDownDmg)
+const RUNE_FIELD_EFF = { 'เหล็กกล้า': 'armorAmp', 'เพลิงเผา': 'burnAmp', 'สายฟ้า': 'shockAmp', 'วายุ': 'hitDmg', 'ภูติ': 'healAmp', 'อสูร': 'allyDownDmg' };
 export const STAGE_RUNES = [
   // เงิน/ร้าน
-  runeFx('T1', 'eco', 'common', 'team', 'ทอง', 'ได้เงินเพิ่ม {gold} ทุกด่าน', [['gold', 'เงิน/ด่าน', 2, 0, 20, '']]),
-  runeFx('T2', 'eco', 'common', 'team', 'ดอกเบี้ย', 'มีเงินเก็บทุก {per} ได้เพิ่ม {gold} (สูงสุด {max})', [['per', 'ทุกๆ เงิน', 5, 1, 50, ''], ['gold', 'ได้เพิ่ม', 1, 0, 10, ''], ['max', 'สูงสุด', 3, 0, 20, '']]),
-  runeFx('T3', 'eco', 'rare', 'team', 'แผงใหญ่', 'ร้านเพิ่ม {slots} ช่อง', [['slots', 'ช่องเพิ่ม', 1, 0, 3, '']]),
-  runeFx('T4', 'eco', 'common', 'team', 'สุ่มฟรี', 'สุ่มร้านฟรี {free} ครั้งต่อรอบ', [['free', 'ครั้งฟรี/รอบ', 1, 0, 5, '']]),
-  runeFx('X8', 'eco', 'common', 'team', 'แลกหัวใจ', 'ลดหัวใจ 1 ดวง ได้เงิน {gold} (รอบละครั้ง · ใช้ไม่ได้ถ้าหัวใจเหลือน้อยกว่า {minHearts})', [['gold', 'เงินที่ได้', 10, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
-  runeFx('X2', 'eco', 'legend', 'one', 'ดึงดูดตัว', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ออกในร้านบ่อยขึ้น ×{mult}', [['mult', 'โอกาส ×', 3, 1, 10, '']]),
-  runeFx('X3', 'eco', 'legend', 'one', 'รวมร่างเร็ว', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ใช้ {need} ตัวรวมร่าง (ปกติ 3)', [['need', 'ใช้กี่ตัว', 2, 2, 3, 'ตัว']]),
-  // ค่าพลัง (builder: แก้ผล / ตำแหน่ง / ค่าหรือ % ได้)
-  runeBx('T5', 'rare', 'คม', 'hitDmg', 'pct', 15, 'team'),
-  runeBx('T6', 'common', 'แนวหน้า', 'armor', 'pct', 20, 'front'),
-  runeBx('T7', 'common', 'แนวหลัง', 'cd', 'pct', 15, 'back'),
-  runeBx('U3', 'common', 'เร่ง', 'cd', 'pct', 20, 'one'),
-  runeBx('U5', 'common', 'เพลิงติด', 'burn', 'flat', 2, 'one'),
-  runeBx('U6', 'rare', 'ลูกโซ่', 'multi', 'flat', 1, 'one'),
-  runeBx('S1', 'common', 'ใจสู้', 'hp', 'pct', 15, 'team'),
-  runeBx('S2', 'common', 'หนังหนา', 'armorHit', 'flat', 1, 'team'),
-  runeBx('S3', 'common', 'ประกายไฟ', 'burn', 'flat', 1, 'team'),
-  runeBx('S4', 'common', 'ประจุ', 'shock', 'flat', 1, 'team'),
-  runeBx('S5', 'legend', 'พายุหมุน', 'multi', 'flat', 1, 'team'),
-  runeBx('S6', 'common', 'ใบไม้ผลิ', 'healHit', 'flat', 2, 'team'),
-  runeBx('S7', 'common', 'พลังกล้า', 'atk', 'pct', 10, 'team'),
-  runeBx('S8', 'common', 'พลังดิบ', 'atk', 'flat', 3, 'one'),
-  runeBx('S9', 'rare', 'ลมส่ง', 'cd', 'pct', 10, 'team'),
-  runeBx('X1', 'rare', 'ดูดเลือด', 'lifesteal', 'pct', 15, 'one'),
-  runeBx('X10', 'common', 'ถ่วงเวลา', 'eCd', 'pct', 15, 'enemy'),
-  runeBx('X11', 'rare', 'กัดกร่อน', 'eMaxHp', 'pct', 10, 'enemy'),
-  // เพิ่มเผ่า (Q4 B: นับเป็นเผ่าจริง ทั้งโบนัสเผ่าและสกิลที่เล็งเผ่า · ไม่ติดกฎเผ่าเพิ่มได้ 1)
-  ...TRIBES.map((t, i) => runeFx('D' + (i + 1), 'tribe', 'common', 'one', 'รูน' + t, `ตัวที่เลือกได้เผ่า${t}เพิ่ม (นับเป็นเผ่าจริง)`)),
+  rune('T1', 'common', 'ทอง', 'gold', 'team'), rune('T2', 'common', 'ดอกเบี้ย', 'interest', 'team'),
+  rune('T3', 'rare', 'แผงใหญ่', 'shopSlots', 'team'), rune('T4', 'common', 'สุ่มฟรี', 'freeRoll', 'team'),
+  rune('X8', 'common', 'แลกหัวใจ', 'heartTrade', 'team'), rune('X2', 'legend', 'ดึงดูดตัว', 'lure', 'one'), rune('X3', 'legend', 'รวมร่างเร็ว', 'fastMerge', 'one'),
+  // ค่าพลัง
+  runeSt('T5', 'rare', 'คม', 'hitDmg', 'pct', 15, 'team'),
+  runeSt('T6', 'common', 'แนวหน้า', 'armor', 'pct', 20, 'front'),
+  runeSt('T7', 'common', 'แนวหลัง', 'cd', 'pct', 15, 'back'),
+  runeSt('U3', 'common', 'เร่ง', 'cd', 'pct', 20, 'one'),
+  runeSt('U5', 'common', 'เพลิงติด', 'burn', 'flat', 2, 'one'),
+  runeSt('U6', 'rare', 'ลูกโซ่', 'multi', 'flat', 1, 'one'),
+  runeSt('S1', 'common', 'ใจสู้', 'hp', 'pct', 15, 'team'),
+  runeSt('S2', 'common', 'หนังหนา', 'armorHit', 'flat', 1, 'team'),
+  runeSt('S3', 'common', 'ประกายไฟ', 'burn', 'flat', 1, 'team'),
+  runeSt('S4', 'common', 'ประจุ', 'shock', 'flat', 1, 'team'),
+  runeSt('S5', 'legend', 'พายุหมุน', 'multi', 'flat', 1, 'team'),
+  runeSt('S6', 'common', 'ใบไม้ผลิ', 'healHit', 'flat', 2, 'team'),
+  runeSt('S7', 'common', 'พลังกล้า', 'atk', 'pct', 10, 'team'),
+  runeSt('S8', 'common', 'พลังดิบ', 'atk', 'flat', 3, 'one'),
+  runeSt('S9', 'rare', 'ลมส่ง', 'cd', 'pct', 10, 'team'),
+  runeSt('X1', 'rare', 'ดูดเลือด', 'lifesteal', 'pct', 15, 'one'),
+  runeSt('X10', 'common', 'ถ่วงเวลา', 'eCd', 'pct', 15, 'enemy'),
+  runeSt('X11', 'rare', 'กัดกร่อน', 'eMaxHp', 'pct', 10, 'enemy'),
+  // เพิ่มเผ่า
+  ...TRIBES.map((t, i) => rune('D' + (i + 1), 'common', 'รูน' + t, 'addTribe', 'one', { gain: t })),
   // เวทสนาม (Q5 A: ทั้งทีมได้ผล)
-  ...TRIBES.map((t, i) => runeFx('F' + (i + 1), 'field', 'rare', 'team', 'สนาม' + t, RUNE_FIELD_TEXT[t], [['pct', 'เพิ่ม', 20, 0, 300, '%']])),
+  ...TRIBES.map((t, i) => rune('F' + (i + 1), 'rare', 'สนาม' + t, RUNE_FIELD_EFF[t], 'team', RUNE_SPEC[RUNE_FIELD_EFF[t]] ? {} : { mode: 'pct', v: 20 })),
   // พิเศษ
-  runeFx('T8', 'special', 'legend', 'team', 'ธงเผ่า', 'เผ่าที่เลือกนับเพิ่ม {count} ตัว (รูนนี้พาไปได้ไม่เกินขั้น {maxTier})', [['count', 'นับเพิ่ม', 1, 0, 4, 'ตัว'], ['maxTier', 'ขั้นสูงสุด', 4, 2, 6, '']]),
-  runeFx('T9', 'special', 'rare', 'team', 'ล่าบอส', 'ดาเมจใส่บอส +{dmgPct}%', [['dmgPct', 'ดาเมจใส่บอส', 40, 0, 300, '%']]),
-  runeFx('T10', 'special', 'legend', 'team', 'คนสุดท้าย', 'เหลือตัวเดียว: ดาเมจ +{dmgPct}% คูลดาวน์ −{cdPct}%', [['dmgPct', 'ดาเมจ', 50, 0, 300, '%'], ['cdPct', 'คูลดาวน์ลด', 30, 0, 80, '%']]),
-  runeFx('T11', 'special', 'rare', 'team', 'เติบโต', 'ชนะติดกัน ดาเมจ +{stepPct}% ต่อด่าน (สูงสุด {maxPct}%) แพ้แล้วรีเซ็ต', [['stepPct', 'ต่อด่าน', 3, 0, 50, '%'], ['maxPct', 'สูงสุด', 30, 0, 300, '%']]),
-  runeFx('T12', 'special', 'legend', 'team', 'แก้วบาง', 'ดาเมจ +{dmgPct}% แต่ HP สูงสุดทั้งทีม −{hpPct}%', [['dmgPct', 'ดาเมจ', 35, 0, 300, '%'], ['hpPct', 'HP ลด', 20, 0, 90, '%']]),
-  runeFx('X5', 'special', 'rare', 'team', 'ป้อมปราการ', 'HP สูงสุดทั้งทีม +{hpPct}% แต่พลังโจมตี −{atkPct}%', [['hpPct', 'HP เพิ่ม', 30, 0, 300, '%'], ['atkPct', 'พลังโจมตีลด', 20, 0, 90, '%']]),
-  runeFx('U2', 'special', 'legend', 'one', 'ชุบ', 'ฟื้น {times} ครั้ง/แมตช์ ด้วย HP {hpPct}%', [['times', 'ครั้ง/แมตช์', 1, 0, 3, ''], ['hpPct', 'HP ตอนฟื้น', 50, 1, 100, '%']]),
-  runeFx('X4', 'special', 'legend', 'one', 'เลี่ยงจุดตาย', 'ฮิตที่จะทำให้ down ถูกยกเลิกทั้งหมด (ดาเมจ ไฟ ช็อตของฮิตนั้น) {times} ครั้ง/แมตช์', [['times', 'ครั้ง/แมตช์', 1, 1, 3, '']]),
-  runeFx('U4', 'special', 'rare', 'one', 'โล่', 'เกราะ {armorPct}% ของ HP สูงสุด และศัตรูต้องตีตัวนี้ก่อน', [['armorPct', 'เกราะ', 30, 0, 300, '%']]),
-  runeFx('X6', 'special', 'rare', 'one', 'สายสัมพันธ์', 'ตัวนี้โดนตี → คู่ที่ผู้เล่นเลือกรับดาเมจแทน {pct}% (รับแทนต่อไม่ได้)', [['pct', 'รับแทน', 50, 1, 100, '%']]),
-  runeFx('X7', 'special', 'legend', 'one', 'คู่หู', 'ตัวนี้โจมตี → คู่ที่ผู้เล่นเลือกตีเป้าเดียวกันตาม {pct}% ของการโจมตีปกติ (ครั้งละชุด · ตีตามต่อไม่ได้)', [['pct', 'แรงตีตาม', 100, 1, 300, '%']]),
-  runeFx('U7', 'special', 'legend', 'one', 'คงทน', 'ค่าถาวรที่ได้ +{permPct}%', [['permPct', 'ค่าถาวร', 50, 0, 300, '%']]),
-  runeFx('U8', 'special', 'legend', 'one', 'เงา', 'ขายแล้วได้ตัว Lv1 คืนที่ม้านั่ง ({times} ครั้ง/run)', [['times', 'ครั้ง/run', 1, 0, 3, '']]),
-  runeFx('X9', 'special', 'common', 'team', 'ส่องทีม', 'ก่อนสู้เห็นตำแหน่งวางตัวและรายละเอียดทีมศัตรู (ไม่มีรูนนี้ = ไม่เห็นอะไรเลย)'),
+  rune('T8', 'legend', 'ธงเผ่า', 'flag', 'team'), rune('T9', 'rare', 'ล่าบอส', 'bossDmg', 'team'), rune('T10', 'legend', 'คนสุดท้าย', 'lastStand', 'team'),
+  rune('T11', 'rare', 'เติบโต', 'growth', 'team'), rune('T12', 'legend', 'แก้วบาง', 'glass', 'team'), rune('X5', 'rare', 'ป้อมปราการ', 'fortress', 'team'),
+  rune('U2', 'legend', 'ชุบ', 'revive', 'one'), rune('X4', 'legend', 'เลี่ยงจุดตาย', 'avoidDeath', 'one'), rune('U4', 'rare', 'โล่', 'taunt', 'one'),
+  rune('X6', 'rare', 'สายสัมพันธ์', 'link', 'one'), rune('X7', 'legend', 'คู่หู', 'buddy', 'one'), rune('U7', 'legend', 'คงทน', 'permUp', 'one'),
+  rune('U8', 'legend', 'เงา', 'shadow', 'one'), rune('X9', 'common', 'ส่องทีม', 'scout', 'team'),
 ];
 export const RUNE_BY_ID = Object.fromEntries(STAGE_RUNES.map(r => [r.id, r]));
 // Copies of one rune a player may hold in a run (user 29 Oct, set 52): 1 = unique rune · 2+ = stacks like levels. Shop/economy runes 3, others 1 (ค่าเสนอ).
@@ -87,29 +112,49 @@ export const RUNE_MAX_DEFAULT = { T1: 3, T2: 3, T3: 2, T4: 3 };
 export const RUNE_MAX_HI = 9;
 export const RUNE_CUSTOM_MAX = 40;
 const RUNE_NAME_MAX = 16;
-// Saved data from set 52 (old field name → builder value v)
-const RUNE_OLD_V = { T5: 'dmgPct', T6: 'armorPct', T7: 'cdPct', U3: 'cdPct', U5: 'burn', U6: 'multi' };
+// Saved data from older sets (old field name → stat value v): set 52 builder runes, set 59 field runes (pct)
+const RUNE_OLD_V = { T5: 'dmgPct', T6: 'armorPct', T7: 'cdPct', U3: 'cdPct', U5: 'burn', U6: 'multi', F1: 'pct', F2: 'pct', F3: 'pct', F4: 'pct', F5: 'pct' };
 // Skill runes (Q1 A): the unit(s) in scope get one battle skill · same checks as the skill editor (no "% ของ…", no summon, no position target)
 export const runeSkillOk = s => !!s && BATTLE_WHEN.includes(s.when) && !!DO_INFO[s.do] && !DO_INFO[s.do].shop && !DO_INFO[s.do].of && s.do !== 'summon' && s.to !== 'allyAt' && skillTargets(s.when, s.do).includes(s.to);
 export const runeScopeLabel = x => x.scope === 'tribe' ? `เผ่า${x.tribe}` : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1];
-// Effect text of a fixed or builder rune (skill runes: the page writes the skill line)
-export function runeText(r, x) {
-  if (r && r.f) {
-    const t = r.text.replace(/\{(\w+)\}/g, (_, k) => String(x[k]));
-    return r.cat === 'field' || (x.scope && x.scope !== r.scope) ? `${runeScopeLabel(x)}: ${t}` : t;
+// Effect text of a rune record (skill runes: the page writes the skill line)
+export function runeText(x) {
+  const k = runeKind(x.eff);
+  if (k === 'special') {
+    const s = RUNE_SPEC[x.eff], t = s.text.replace(/\{(\w+)\}/g, (_, q) => String(x[q]));
+    return x.scope !== s.scope ? `${runeScopeLabel(x)}: ${t}` : t;
   }
+  if (k !== 'stat') return '';
   const e = RUNE_EFF[x.eff];
-  if (!e) return '';
   const unit = x.mode === 'pct' ? (e[0] === 'armor' ? '% ของ HP สูงสุด' : '%') : e[5] === 'ms' ? ' มิลลิวินาที' : '';
   return `${runeScopeLabel(x)}: ${e[1]}${e[0] === 'lifesteal' ? ' ' : ''}${x.v}${unit}`;
 }
-function runeDefault(r) {
-  const base = { on: true, del: false, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, rarity: r.rarity, theme: '', tribe: TRIBES[0] };
-  return r.f ? { ...base, scope: r.scope, ...Object.fromEntries(r.f.map(([k, , v]) => [k, v])) } : { ...base, ...r.b };
+// Values an effect starts with when picked (ค่าเสนอ)
+function runeEffDefaults(eff) {
+  const k = runeKind(eff);
+  if (k === 'skill') return { when: 'matchStart', do: 'atkUp', to: 'self', v: 5 };
+  if (k === 'special') return Object.fromEntries(RUNE_SPEC[eff].f.map(([q, , v, , , u]) => [q, u === 'tribe' ? v || TRIBES[0] : v]));
+  const e = RUNE_EFF[eff];
+  return e[2] ? { mode: 'flat', v: 5 } : { mode: 'pct', v: 10 };
 }
-export function customDefault(id, type = 'stat') {
-  const base = { id, type, on: true, del: false, name: 'รูนใหม่', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: TRIBES[0] };
-  return type === 'skill' ? { ...base, when: 'matchStart', do: 'atkUp', to: 'self', v: 5 } : { ...base, eff: 'atk', mode: 'flat', v: 5 };
+const RUNE_COMMON = ['id', 'on', 'del', 'name', 'max', 'rarity', 'theme', 'scope', 'tribe'];
+// Same rune with another effect: keeps name/rarity/copies/theme/scope, drops the old effect's values (page "ผล" dropdown)
+export function runeWithEff(x, eff) {
+  if (!runeKind(eff)) return x;
+  const y = Object.fromEntries(RUNE_COMMON.filter(k => k in x).map(k => [k, x[k]]));
+  Object.assign(y, { eff }, runeEffDefaults(eff));
+  const e = RUNE_EFF[eff];
+  if (e && e[4] === 'foe') y.scope = 'enemy';
+  else if (y.scope === 'enemy') y.scope = RUNE_SPEC[eff] ? RUNE_SPEC[eff].scope : 'team';
+  return y;
+}
+function runeDefault(r) {
+  const base = { on: true, del: false, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, rarity: r.rarity, theme: '', tribe: TRIBES[0], scope: r.scope, eff: r.eff };
+  return { ...base, ...runeEffDefaults(r.eff), ...r.p };
+}
+export function customDefault(id, eff = 'atk') {
+  if (eff === 'stat') eff = 'atk';
+  return runeWithEff({ id, on: true, del: false, name: 'รูนใหม่', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: TRIBES[0] }, eff);
 }
 const runeNum = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
 const runeIsObj = x => x && typeof x === 'object' && !Array.isArray(x);
@@ -122,41 +167,49 @@ function cleanRuneCommon(x, d) {
   if (Number.isInteger(x.max) && x.max >= 1 && x.max <= RUNE_MAX_HI) d.max = x.max;
   if (RUNE_RARITY.some(q => q[0] === x.rarity)) d.rarity = x.rarity;
   if (TRIBES.includes(x.tribe)) d.tribe = x.tribe;
-}
-// Builder fields: effect, flat/% (only modes the effect has), scope (enemy effects ↔ enemy scope), value
-function cleanRuneStat(x, d) {
-  if (RUNE_EFF[x.eff]) d.eff = x.eff;
-  const e = RUNE_EFF[d.eff];
-  if (x.mode === 'flat' || x.mode === 'pct') d.mode = x.mode;
-  if (!e[d.mode === 'flat' ? 2 : 3]) d.mode = e[2] ? 'flat' : 'pct';
   if (RUNE_SCOPES.some(s => s[0] === x.scope)) d.scope = x.scope;
-  if (e[4] === 'foe') d.scope = 'enemy'; else if (d.scope === 'enemy') d.scope = 'team';
-  if (runeNum(x.v, 0, RUNE_V_MAX)) d.v = x.v;
+}
+// Effect values by kind · stat: flat/% only where the effect has it, enemy effects ↔ enemy scope · skill: never on the enemy team
+// Returns false when a skill rune's skill is not allowed.
+function cleanRuneEff(x, d) {
+  const k = runeKind(d.eff);
+  if (k === 'stat') {
+    const e = RUNE_EFF[d.eff];
+    if (x.mode === 'flat' || x.mode === 'pct') d.mode = x.mode;
+    if (!e[d.mode === 'flat' ? 2 : 3]) d.mode = e[2] ? 'flat' : 'pct';
+    if (e[4] === 'foe') d.scope = 'enemy'; else if (d.scope === 'enemy') d.scope = 'team';
+    if (runeNum(x.v, 0, RUNE_V_MAX)) d.v = x.v;
+  } else if (k === 'special') {
+    for (const [q, , , lo, hi, u] of RUNE_SPEC[d.eff].f) if (u === 'tribe' ? TRIBES.includes(x[q]) : runeNum(x[q], lo, hi)) d[q] = x[q];
+  } else {
+    const s = { when: x.when, do: x.do, to: x.to };
+    if (runeSkillOk(s)) Object.assign(d, s); else if (x.when !== undefined || x.do !== undefined) return false;
+    if (d.scope === 'enemy') d.scope = 'team';
+    if (runeNum(x.v, 0, RUNE_V_MAX)) d.v = x.v;
+  }
+  return true;
+}
+// Saved rune → clean record on top of default d · old saves: no eff = the rune's starting effect, custom type 'skill' = skill rune
+function cleanRune(x, d) {
+  let eff = x.eff;
+  if (eff === undefined && x.type === 'skill') eff = 'skill';
+  if (runeKind(eff) && eff !== d.eff) d = runeWithEff(d, eff);
+  cleanRuneCommon(x, d);
+  return cleanRuneEff(x, d) ? d : null;
 }
 function cleanRunes(o, out) {
   if (runeIsObj(o.runes)) for (const r of STAGE_RUNES) {
     const x = o.runes[r.id]; if (!runeIsObj(x)) continue;
-    const d = out.runes[r.id]; cleanRuneCommon(x, d);
-    if (r.f) {
-      for (const [k, , , lo, hi] of r.f) if (runeNum(x[k], lo, hi)) d[k] = x[k];
-      if (RUNE_SCOPES.some(s => s[0] === x.scope)) d.scope = x.scope; // set 59: any scope (user wants full freedom)
-      continue;
-    }
-    const y = x.v === undefined && RUNE_OLD_V[r.id] ? { ...x, v: x[RUNE_OLD_V[r.id]] } : x;
-    cleanRuneStat(y, d);
+    const y = x.v === undefined && RUNE_OLD_V[r.id] && x[RUNE_OLD_V[r.id]] !== undefined && (x.eff === undefined || x.eff === r.eff) ? { ...x, v: x[RUNE_OLD_V[r.id]] } : x;
+    out.runes[r.id] = cleanRune(y, out.runes[r.id]) || out.runes[r.id];
   }
   if (Array.isArray(o.custom)) {
     const ids = new Set();
     for (const x of o.custom.slice(0, RUNE_CUSTOM_MAX)) {
-      if (!runeIsObj(x) || typeof x.id !== 'string' || !/^C\d{1,3}$/.test(x.id) || ids.has(x.id) || (x.type !== 'stat' && x.type !== 'skill')) continue;
-      const d = customDefault(x.id, x.type); cleanRuneCommon(x, d);
-      if (x.type === 'stat') cleanRuneStat(x, d);
-      else {
-        const s = { when: x.when, do: x.do, to: x.to }; if (!runeSkillOk(s)) continue;
-        Object.assign(d, s);
-        if (RUNE_SCOPES.some(q => q[0] === x.scope && q[0] !== 'enemy')) d.scope = x.scope;
-        if (runeNum(x.v, 0, RUNE_V_MAX)) d.v = x.v;
-      }
+      if (!runeIsObj(x) || typeof x.id !== 'string' || !/^C\d{1,3}$/.test(x.id) || ids.has(x.id)) continue;
+      const eff = x.type === 'skill' ? 'skill' : x.eff !== undefined ? x.eff : x.type === 'stat' ? 'atk' : null;
+      if (!runeKind(eff)) continue;
+      const d = cleanRune({ ...x, eff }, customDefault(x.id, eff)); if (!d) continue;
       ids.add(x.id); out.custom.push(d);
     }
   }

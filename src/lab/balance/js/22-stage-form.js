@@ -7,7 +7,7 @@ try { const d = JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY) || 'null'); if 
 const stageEdited = () => !same(stageCfg, STAGE_BASE);
 function stageCount() {
   let n = 0;
-  for (const r of STAGE_RUNES) for (const k of Object.keys(stageCfg.runes[r.id])) if (stageCfg.runes[r.id][k] !== STAGE_BASE.runes[r.id][k]) n++;
+  for (const r of STAGE_RUNES) { const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id]; for (const k of new Set([...Object.keys(x), ...Object.keys(b)])) if (x[k] !== b[k]) n++; }
   n += Math.abs(stageCfg.custom.length - STAGE_BASE.custom.length) + stageCfg.custom.filter(c => c.id && STAGE_BASE.custom.some(b => b.id === c.id && !same(b, c))).length;
   for (const k of Object.keys(stageCfg.settings)) if (stageCfg.settings[k] !== STAGE_BASE.settings[k]) n++;
   if (!same(stageCfg.bosses, STAGE_BASE.bosses)) n += Math.max(1, stageCfg.bosses.filter(b => { const o = STAGE_BASE.bosses.find(x => x.id === b.id); return !o || !same(o, b); }).length + Math.max(0, STAGE_BASE.bosses.length - stageCfg.bosses.length));
@@ -31,30 +31,21 @@ const RUNE_RAR_CLASS = { common: 'r0', rare: 'r2', legend: 'r4' };
 const runeRarTh = k => (RUNE_RARITY.find(r => r[0] === k) || [, k])[1];
 const runeSkillOf = x => ({ when: x.when, do: x.do, to: x.to, v: [x.v, x.v, x.v] });
 function runeLine(def, x) {
-  if (x.type === 'skill') return `${runeScopeLabel(x)}: ได้สกิล "${skillLine(runeSkillOf(x), 1)}"`;
-  return runeText(def, x);
+  if (x.eff === 'skill') return `${runeScopeLabel(x)}: ได้สกิล "${skillLine(runeSkillOf(x), 1)}"`;
+  return runeText(x);
 }
 // All runes as [def | null, record, isCustom] · deleted built-in runes (set 59) live in their own fold
 const runeAll = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false]), ...stageCfg.custom.map(x => [null, x, true])];
 const runeList = () => runeAll().filter(([, x]) => !x.del);
-// Rune themes (user 30 Oct): a finer grouping on top of RUNE_CATS — what the rune is about (เกราะ, เงิน, ไฟ …).
-// Builder / custom runes follow their current effect (RUNE_THEME_EFF), fixed runes use RUNE_THEME_FIXED, field runes follow their tribe.
+// Rune themes (user 30 Oct): what the rune is about (เกราะ, เงิน, ไฟ …) · set 60: follows the rune's current effect
 const RUNE_THEME_EFF = { atk: 'dmg', hitDmg: 'dmg', multi: 'dmg', hp: 'heal', healHit: 'heal', healAmp: 'heal', lifesteal: 'heal', armor: 'armor', armorHit: 'armor', armorAmp: 'armor', cd: 'speed', burn: 'burn', burnAmp: 'burn', shock: 'shock', shockAmp: 'shock', eCd: 'debuff', eMaxHp: 'debuff', eBurn: 'burn', eShock: 'shock', eDmgTaken: 'debuff', eHealCut: 'debuff', eArmorCut: 'debuff' };
-const RUNE_THEME_FIXED = { T1: 'gold', T2: 'gold', T3: 'gold', T4: 'gold', X8: 'gold', X2: 'gold', X3: 'gold', U8: 'gold', T8: 'tribe', T9: 'dmg', T10: 'dmg', T11: 'dmg', T12: 'dmg', X7: 'dmg', X5: 'heal', U4: 'armor', U2: 'survive', X4: 'survive', X6: 'survive', U7: 'other', X9: 'other' };
-const RUNE_THEME_FIELD = { 'เหล็กกล้า': 'armor', 'เพลิงเผา': 'burn', 'สายฟ้า': 'shock', 'วายุ': 'dmg', 'ภูติ': 'heal', 'อสูร': 'dmg' };
 function runeThemeOf(def, x) {
   if (x.theme) return x.theme; // set 59: picked by the user
   return runeThemeAuto(def, x);
 }
 function runeThemeAuto(def, x) {
-  if (def && def.f) {
-    if (RUNE_THEME_FIXED[def.id]) return RUNE_THEME_FIXED[def.id];
-    if (def.cat === 'tribe') return 'tribe';
-    if (def.cat === 'field') return RUNE_THEME_FIELD[TRIBES[+def.id.slice(1) - 1]] || 'other';
-    if (def.cat === 'eco') return 'gold';
-    return 'other';
-  }
-  if (x.type === 'skill') { const e = RUNE_EFFECTS.find(e => e[2] === x.do || e[3] === x.do); return (e && RUNE_THEME_EFF[e[0]]) || 'other'; }
+  if (RUNE_SPEC[x.eff]) return RUNE_SPEC[x.eff].theme;
+  if (x.eff === 'skill') { const e = RUNE_EFFECTS.find(e => e[2] === x.do || e[3] === x.do); return (e && RUNE_THEME_EFF[e[0]]) || 'other'; }
   return RUNE_THEME_EFF[x.eff] || 'other';
 }
 const runeThemeTh = k => (RUNE_THEMES.find(t => t[0] === k) || [, k])[1];
@@ -83,36 +74,43 @@ function runeEditor(def, x, custom) {
   const scopeF = (all = false) => fld('ใช้กับ', selectInput(`stg-${rid}-scope`, all ? RUNE_SCOPES : RUNE_SCOPES.filter(s => s[0] !== 'enemy'), x.scope, v => { x.scope = v; redraw(); }));
   const tribeF = () => fld('เผ่า', selectInput(`stg-${rid}-tribe`, TRIBES.map(t => [t, t]), x.tribe, v => { x.tribe = v; redraw(); }));
   const notes = [];
-  if (def && def.f) {
-    for (const [k, label, , lo, hi, unit] of def.f) g.append(fld(`${label}${unit ? ` (${unit})` : ''}`, stageNum(`stg-${def.id}-${k}`, x[k], base[k], lo, hi, v => { x[k] = v; })));
+  // Set 60 (user 30 Oct): every rune picks any effect — stat (flat/% + value), special (own fields) or a battle skill
+  const kind = runeKind(x.eff), eb = base.eff === x.eff ? base : {};
+  const effOpts = [...RUNE_EFFECTS.map(q => [q[0], q[1], q[4] === 'foe' ? 'ค่าพลัง ใส่ศัตรู' : 'ค่าพลัง ฝ่ายเรา']),
+    ...RUNE_SPECIAL.map(s => [s.key, s.label, s.theme === 'gold' ? 'เงิน/ร้าน' : s.theme === 'tribe' ? 'เผ่า' : 'พิเศษ']), ['skill', 'ได้สกิล (เลือกเอง)', 'สกิล']];
+  g.append(fld('ผล', groupSelect(`stg-${rid}-eff`, effOpts, x.eff, v => {
+    const y = runeWithEff(x, v); for (const k of Object.keys(x)) delete x[k]; Object.assign(x, y); redraw();
+  }), 'wide'));
+  if (kind === 'special') {
+    for (const [k, label, , lo, hi, unit] of RUNE_SPEC[x.eff].f) {
+      if (unit === 'tribe') g.append(fld(label, selectInput(`stg-${rid}-${k}`, TRIBES.map(t => [t, t]), x[k], v => { x[k] = v; redraw(); })));
+      else g.append(fld(`${label}${unit ? ` (${unit})` : ''}`, stageNum(`stg-${rid}-${k}`, x[k], eb[k], lo, hi, v => { x[k] = v; })));
+    }
     g.append(scopeF(true)); if (x.scope === 'tribe') g.append(tribeF());
-    if (x.scope !== def.scope) notes.push(`เดิมใช้กับ "${(RUNE_SCOPES.find(s => s[0] === def.scope) || [, def.scope])[1]}"`);
-    if (def.id === 'T8') notes.push('เผ่าเลือกตอนได้รูน');
-  } else if (x.type === 'skill') {
+    if (x.scope !== RUNE_SPEC[x.eff].scope) notes.push(`ผลนี้ปกติใช้กับ "${(RUNE_SCOPES.find(s => s[0] === RUNE_SPEC[x.eff].scope) || [, ''])[1]}"`);
+  } else if (kind === 'skill') {
     const picks = runeSkillPicks();
-    g.append(fld('ใช้สกิลของ (คัดลอก)', selectInput(`stg-${x.id}-copy`, [['', '— เลือกสกิลตัวละคร —'], ...picks.map(([c, s], i) => [String(i), `${c.id} ${c.name}: ${skillLine({ ...s, v: [s.v[0], s.v[0], s.v[0]] }, 1)}`])], '', v => {
+    g.append(fld('ใช้สกิลของ (คัดลอก)', selectInput(`stg-${rid}-copy`, [['', '— เลือกสกิลตัวละคร —'], ...picks.map(([c, s], i) => [String(i), `${c.id} ${c.name}: ${skillLine({ ...s, v: [s.v[0], s.v[0], s.v[0]] }, 1)}`])], '', v => {
       const p = picks[Number(v)]; if (!p) return; const s = p[1]; Object.assign(x, { when: s.when, do: s.do, to: s.to, v: s.v[0] }); redraw();
     }), 'full'));
-    g.append(fld('เมื่อ', selectInput(`stg-${x.id}-when`, BATTLE_WHEN.map(w => [w, WHEN_TH[w] || w]), x.when, w => {
+    g.append(fld('เมื่อ', selectInput(`stg-${rid}-when`, BATTLE_WHEN.map(w => [w, WHEN_TH[w] || w]), x.when, w => {
       x.when = w; if (!runeSkillOk(x)) { const d = Object.keys(DO_INFO).find(q => runeSkillOk({ when: w, do: q, to: skillTargets(w, q).filter(t => t !== 'allyAt')[0] })); if (d) { x.do = d; x.to = skillTargets(w, d).filter(t => t !== 'allyAt')[0]; } } redraw();
     }), 'wide'));
     const dos = Object.keys(DO_INFO).filter(d => skillTargets(x.when, d).some(t => runeSkillOk({ when: x.when, do: d, to: t })));
-    g.append(fld('ทำ', selectInput(`stg-${x.id}-do`, dos.map(d => [d, (DO_TH[d] || [d])[0] + ((DO_TH[d] || [])[1] === '%' ? ' %' : '')]), x.do, d => { x.do = d; if (!runeSkillOk(x)) x.to = skillTargets(x.when, d).filter(t => t !== 'allyAt')[0]; redraw(); }), 'wide'));
-    g.append(fld('ให้/ใส่', selectInput(`stg-${x.id}-to`, skillTargets(x.when, x.do).filter(t => t !== 'allyAt').map(t => [t, TO_TH[t] || t]), x.to, t => { x.to = t; redraw(); }), 'wide'));
-    g.append(fld(`ค่า${(DO_TH[x.do] || [])[1] ? ` (${(DO_TH[x.do] || [])[1]})` : ''}`, stageNum(`stg-${x.id}-v`, x.v, x.v, 0, 1e5, v => { x.v = v; })), scopeF());
+    g.append(fld('ทำ', selectInput(`stg-${rid}-do`, dos.map(d => [d, (DO_TH[d] || [d])[0] + ((DO_TH[d] || [])[1] === '%' ? ' %' : '')]), x.do, d => { x.do = d; if (!runeSkillOk(x)) x.to = skillTargets(x.when, d).filter(t => t !== 'allyAt')[0]; redraw(); }), 'wide'));
+    g.append(fld('ให้/ใส่', selectInput(`stg-${rid}-to`, skillTargets(x.when, x.do).filter(t => t !== 'allyAt').map(t => [t, TO_TH[t] || t]), x.to, t => { x.to = t; redraw(); }), 'wide'));
+    g.append(fld(`ค่า${(DO_TH[x.do] || [])[1] ? ` (${(DO_TH[x.do] || [])[1]})` : ''}`, stageNum(`stg-${rid}-v`, x.v, eb.v, 0, 1e5, v => { x.v = v; })), scopeF());
     if (x.scope === 'tribe') g.append(tribeF());
     notes.push('ตัวที่อยู่ในตำแหน่ง "ใช้กับ" ได้สกิลนี้เพิ่ม (ค่าเดียวทุกเลเวล) · ผู้รับ/เป้าของสกิลนับจากตัวที่ได้สกิล');
+    if (['tribeAllies', 'allAllies', 'frontRowAllies', 'backRowAllies'].includes(x.to) && !runeSolo(x.scope)) notes.push('⚠️ หลายตัวได้สกิลนี้ และแต่ละตัวแจกให้เพื่อนหลายตัว → ผลซ้อนกันตามจำนวนตัว · ถ้าอยากให้ได้ครั้งเดียว ใช้ผล "ค่าพลัง" แทน');
   } else {
     const e = RUNE_EFF[x.eff];
-    g.append(fld('ผล', groupSelect(`stg-${rid}-eff`, RUNE_EFFECTS.map(q => [q[0], q[1], q[4] === 'foe' ? 'ใส่ศัตรู' : 'ฝ่ายเรา']), x.eff, v => {
-      const q = RUNE_EFF[v]; x.eff = v; if (!q[x.mode === 'flat' ? 2 : 3]) x.mode = q[2] ? 'flat' : 'pct';
-      if (q[4] === 'foe') x.scope = 'enemy'; else if (x.scope === 'enemy') x.scope = 'team'; redraw();
-    }), 'wide'));
     const modes = [e[2] && ['flat', e[5] === 'ms' ? 'ตัวเลข (มิลลิวินาที)' : 'ตัวเลข'], e[3] && ['pct', '%']].filter(Boolean);
     const mSel = selectInput(`stg-${rid}-mode`, modes, x.mode, v => { x.mode = v; redraw(); }); mSel.disabled = modes.length < 2;
-    g.append(fld('แบบ', mSel), fld('ค่า', stageNum(`stg-${rid}-v`, x.v, base.v, 0, 1e5, v => { x.v = v; })));
+    g.append(fld('แบบ', mSel), fld('ค่า', stageNum(`stg-${rid}-v`, x.v, eb.v, 0, 1e5, v => { x.v = v; })));
     if (e[4] !== 'foe') { g.append(scopeF()); if (x.scope === 'tribe') g.append(tribeF()); }
   }
+  if (def && base.eff !== x.eff) notes.push(`ผลเดิม: ${runeLine(def, base)}`);
   box.append(g, ...notes.map(t => el('p', 'hint', t)));
   // Set 59: built-in runes are deleted softly (fold "รูนที่ลบแล้ว" → เอาคืน) · user-made runes are removed for good
   const del = el('button', 'rune-del', custom ? 'ลบรูนนี้ (ถาวร)' : 'ลบรูนนี้'); del.type = 'button'; del.id = `stg-del-${rid}`;
@@ -136,10 +134,10 @@ function renderStageRunes(box) {
   const addM = document.createElement('details'); addM.className = 'add-menu';
   const addS = document.createElement('summary'); addS.textContent = '+ เพิ่มรูน'; addM.append(addS);
   const newRune = type => { let n = 1; while (stageCfg.custom.some(c => c.id === 'C' + n)) n++; const c = customDefault('C' + n, type); stageCfg.custom.push(c); runeOpen.add(c.id); runeQuery = ''; runeTheme = 'all'; stageChanged(); renderStage(); };
-  const a1 = el('button', '', 'รูนค่าพลังใหม่'), a2 = el('button', '', 'รูนจากสกิลที่มีอยู่');
+  const a1 = el('button', '', 'รูนใหม่ (เลือกผลทีหลังได้)'), a2 = el('button', '', 'รูนจากสกิลที่มีอยู่');
   a1.type = a2.type = 'button'; a1.id = 'stgAddStat'; a2.id = 'stgAddSkill';
   const full = stageCfg.custom.length >= RUNE_CUSTOM_MAX;
-  a1.addEventListener('click', () => newRune('stat')); a2.addEventListener('click', () => newRune('skill'));
+  a1.addEventListener('click', () => newRune('atk')); a2.addEventListener('click', () => newRune('skill'));
   const pop = el('div', 'add-pop', ''); pop.append(a1, a2); if (full) { a1.disabled = a2.disabled = true; pop.append(el('span', 'hint', `ครบ ${RUNE_CUSTOM_MAX} รูนแล้ว ลบรูนเก่าก่อน`)); }
   addM.append(pop);
   bar.append(q, th, grp, addM); box.append(bar);
