@@ -7,7 +7,40 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault } from '../core/stage.js';
 export const TESTS_VALIDATE = [
+  ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
+    const d = stageDefaults();
+    eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom, [], 'no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
+    for (const r of STAGE_RUNES) for (const [k, , v, lo, hi] of r.f || []) ok(v >= lo && v <= hi, `${r.id}.${k} default out of range`);
+    for (const b of STAGE_BOSSES) ok(BOSS_RULES.some(r => r[0] === b.rule), `${b.id} rule`);
+    const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { dropHard: -1, dropEasy: 20 },
+      bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
+    eq(bad.runes.T9.dmgPct, 40, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, name: 'ทอง', max: 3, rarity: 'common', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
+    eq(bad.settings.dropHard, 50, 'bad setting'); eq(bad.settings.dropEasy, 20, 'good setting');
+    eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, 450, 'hp out of range'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].rule, 'armorCut', 'unknown rule kept default');
+    eq(bad.bosses[1].rule, 'healCut', 'new boss rule'); eq(bad.bosses[1].ruleV, 50, 'rule value out of range → rule default');
+    const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
+      bosses: [{ id: 'B1', spot: 'four', bars: 7, moveSec: 3 }, { id: 'B2', spot: 'fly', bars: 2.5, moveSec: 0 }] });
+    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['แนวหน้า', 1, 1], 'bad name/max → default');
+    eq([s2.bosses[0].spot, s2.bosses[0].bars, s2.bosses[0].moveSec], ['four', 7, 3], 'boss spot/bars'); eq([s2.bosses[1].spot, s2.bosses[1].bars, s2.bosses[1].moveSec], ['move', 5, 8], 'bad spot/bars → default');
+    eq(s2.settings.growFrom, 20, 'growFrom out of range'); eq(enemyMultAt(s2.settings, 19), 1, 'no growth before growFrom'); ok(Math.abs(enemyMultAt(s2.settings, 21) - 1.21) < 1e-9, 'compounding');
+    eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
+    const b = STAGE_BOSSES[0]; eq(bossAt(b, 1).hp, b.hp, 'first boss'); eq(bossAt(b, 2).hp, Math.round(b.hp * b.mult10), 'stage 10'); eq(bossAt(b, 3).hp, Math.round(b.hp * b.mult10 * (1 + b.endlessPct / 100)), 'endless');
+  }],
+  ['รูน v2 (ชุด 53): รูนค่าพลัง/รูนที่เพิ่มเอง/ความหายาก ถูกตรวจ', () => {
+    const r = cleanStage({ runes: { T5: { dmgPct: 25 }, U6: { mode: 'pct', v: 2 }, S1: { eff: 'eCd', scope: 'team', v: 9e9 }, X10: { eff: 'atk', scope: 'enemy' }, D2: { rarity: 'legend', max: 2 }, F1: { rarity: 'epic', pct: 50 } } });
+    eq(r.runes.T5.v, 25, 'set-52 saved value moves to v'); eq([r.runes.U6.mode, r.runes.U6.v], ['flat', 2], 'multi has no % mode');
+    eq([r.runes.S1.eff, r.runes.S1.scope, r.runes.S1.v], ['eCd', 'enemy', 15], 'enemy effect → enemy scope, bad value → default');
+    eq([r.runes.X10.eff, r.runes.X10.scope], ['atk', 'team'], 'ally effect cannot target enemy team'); eq([r.runes.D2.rarity, r.runes.D2.max], ['legend', 2], 'rarity + copies');
+    eq([r.runes.F1.rarity, r.runes.F1.pct], ['rare', 50], 'unknown rarity → default');
+    const c = cleanStage({ custom: [{ id: 'C1', type: 'stat', name: 'หิน', eff: 'hp', mode: 'flat', v: 40, scope: 'tribe', tribe: 'ภูติ', rarity: 'rare' }, { id: 'C1', type: 'stat' }, { id: 'C2', type: 'skill', when: 'hit', do: 'burn', to: 'target', v: 3, scope: 'enemy' },
+      { id: 'C3', type: 'skill', when: 'hit', do: 'summon', to: 'self' }, { id: 'C4', type: 'skill', when: 'matchStart', do: 'lifesteal', to: 'self' }, { id: 'X1', type: 'stat' }, { id: 'C5', type: 'magic' }] }).custom;
+    eq(c.map(x => x.id), ['C1', 'C2'], 'dup / bad skill / bad id / bad type dropped'); eq([c[0].eff, c[0].v, c[0].scope, c[0].tribe, c[0].rarity], ['hp', 40, 'tribe', 'ภูติ', 'rare'], 'custom stat rune');
+    eq([c[1].do, c[1].to, c[1].v, c[1].scope], ['burn', 'target', 3, 'team'], 'skill rune: given to allies, never the enemy team');
+    ok(runeSkillOk(customDefault('C9', 'skill')), 'default skill rune is valid'); eq(cleanStage({ custom: [customDefault('C9', 'skill')] }).custom.length, 1, 'default skill rune survives');
+    const st = stageDefaults().settings; eq(rarityOdds(st), { common: 60, rare: 30, legend: 10 }, 'odds'); eq(rarityOdds(st, true), { common: 0, rare: 75, legend: 25 }, 'boss skips common');
+  }],
   ['ทุกคู่สกิลที่หน้าบาลานซ์ให้เลือก ใช้งานได้จริงในตัวคำนวณ', () => {
     const chars = buildCharacterList(), m0 = makeCharMap(chars), rng = makeRng(5);
     let n = 0;

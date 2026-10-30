@@ -19,6 +19,7 @@
       <button role="tab" id="tab-tribes" aria-selected="false" type="button" hidden>โบนัสเผ่า</button>
       <button role="tab" id="tab-sim" aria-selected="false" type="button" title="จัดทีมลองสู้ 1 แมตช์ (จำลองสกิล)">ลองสู้</button>
       <button role="tab" id="tab-match" aria-selected="false" type="button" title="ดาเมจทุกครั้งของแมตช์ที่จำลองล่าสุด แยกตามที่มา">ดูแมตช์</button>
+      <button role="tab" id="tab-stage" aria-selected="false" type="button" title="โหมดด่าน (demo): รูน บอส และค่าของโหมด · ยังไม่มีผลในการต่อสู้">รูน / บอส</button>
       <span class="grow"></span>
       <button id="combo" class="combo-btn" type="button" aria-pressed="false" title="แก้ตัวละครกับจำลองสกิลพร้อมกัน แก้แล้วจำลองใหม่ให้ทันที">⇆ ทำไปลองไป</button>
     </div>
@@ -75,6 +76,20 @@
       <div class="row" id="tribePick" role="group" aria-label="เลือกเผ่า"></div>
       <p class="hint">ตัวเลขโบนัสเผ่า ขั้น 2 / 4 / 6 ตัว · ให้ผลกับทั้งทีม</p>
       <div id="tform" style="display:grid;gap:14px"></div>
+    </div>
+
+    <div id="pane-stage" hidden style="display:grid;gap:14px">
+      <details class="hint"><summary>ℹ️ เกี่ยวกับโหมดด่าน (demo)</summary>ขั้นที่ 1: ปรับค่าและส่งไอเดียได้ · <b>ยังไม่มีผลในการต่อสู้และวัดผลยังไม่ได้</b> (ขั้นที่ 2) · ค่าทั้งหมดเป็นค่าเสนอ · กด 💾 บันทึกให้ Claude ด้านล่างเหมือนตัวละคร</details>
+      <div class="seg" role="group" aria-label="ส่วน"><button type="button" id="stg-runes" aria-pressed="true">รูน</button><button type="button" id="stg-bosses" aria-pressed="false">บอส</button><button type="button" id="stg-settings" aria-pressed="false">ค่าโหมด</button></div>
+      <div class="status" id="stgDirty"></div>
+      <div id="stgBody" style="display:grid;gap:12px"></div>
+      <div class="subsec" style="display:grid;gap:8px">
+        <h3>ไอเดียรูน / บอส</h3>
+        <div class="row"><span class="status">สำหรับ</span><select id="stgIdeaFor"></select></div>
+        <textarea id="stgIdeaText" rows="3" maxlength="1000" placeholder="เช่น บอสที่ทุก 15 วิ เรียกลูกน้อง 2 ตัว · รูนที่ทำให้ไฟลามไปตัวข้างๆ"></textarea>
+        <div class="row"><button class="primary" id="stgIdeaSend" type="button">ส่งไอเดียให้ Claude</button><span class="status" id="stgIdeaMsg"></span></div>
+        <ol class="ideas" id="stgIdeas"><li class="status">ยังไม่มีไอเดียรูน / บอส</li></ol>
+      </div>
     </div>
 
     <div id="pane-sim" hidden style="display:grid;gap:12px">

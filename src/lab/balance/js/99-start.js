@@ -9,7 +9,7 @@ renderCharForm(); renderTribeForm(); refreshDirty();
   db = await window.claude?.use?.('db') ?? null;
   if (!db) return;
   db.doc('results/latest').get().then(r => { savedRes = cleanSavedRes(r.exists ? r.data() : null); if (savedRes && !lastRun && !$('tgrid').hidden && !$('view-pick').hidden) renderGrid(); }, () => {}); // batch 31
-  db.collection('ideas').orderBy('at', 'desc').onSnapshot(snap => renderIdeas(snap.docs), () => {});
+  db.collection('ideas').orderBy('at', 'desc').onSnapshot(snap => { renderIdeas(snap.docs); renderStageIdeas(); }, () => {});
   db.collection('simTeams').onSnapshot(snap => { presets = snap.docs.map(d => cleanPreset(d.id, d.data())).filter(Boolean).sort((a, b) => (a.at < b.at ? -1 : 1)).slice(0, PRESET_MAX); renderPresets(); }, () => {});
   db.collection('skillPicks').onSnapshot(snap => {
     const ids = new Set(CATALOG.map(x => x.id)); picks = {};
@@ -23,10 +23,10 @@ renderCharForm(); renderTribeForm(); refreshDirty();
     const cfg = cs.exists ? cs.data() : null, ui = us.exists ? us.data() : null;
     const at = [ui && ui.at, cfg && cfg.savedAt].filter(x => typeof x === 'string').sort().pop();
     const sync = readSynced(), draft = JSON.stringify(diffs());
-    const clean = draft === '{"chars":{},"tribes":{}}' || (sync && sync.draft === draft);
+    const clean = draft === '{"chars":{},"tribes":{}}' || (sync && sync.draft === draft) && (!stageEdited() || same(stageCfg, cleanStage(cfg && cfg.stage))); // stage mode: unsaved rune/boss edits also block the load
     if (at && (!sync || at > sync.at)) {
       if (clean) {
-        if (cfg) { applyDiffs(cfg); renderCharForm(); renderTribeForm(); refreshDirty(); }
+        if (cfg) { applyDiffs(cfg); renderCharForm(); renderTribeForm(); refreshDirty(); stageCfg = cleanStage(cfg.stage); if (!$('pane-stage').hidden) renderStage(); else stageChanged(); }
         if (ui) applyUi(ui);
         markSynced(at); saveMsg('โหลดสิ่งที่บันทึกไว้แล้ว');
       } else saveMsg('เครื่องนี้มีค่าที่แก้แต่ยังไม่บันทึก จึงใช้ของในเครื่อง · กด 💾 เพื่อบันทึกทับ');
