@@ -171,3 +171,51 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .rune-edit .rune-copy { display: grid; gap: 4px; } .rune-edit .rune-copy select { width: 100%; }
 .rune-edit label { max-width: 100%; } .rune-edit select, .rune-edit button, .rune-edit input[type=text] { max-width: 100%; box-sizing: border-box; }
 .rune-sec, .rune-row, .rune-edit { grid-template-columns: minmax(0, 1fr); }
+/* Stage tab set 56: aligned fields, one toolbar, 2-line rune rows, foldable boss cards */
+.stg-top { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px 12px; align-items: end; }
+.fld { display: grid; gap: 4px; font-size: .8rem; color: var(--mute); min-width: 0; }
+.fld > input, .fld > select { width: 100%; min-width: 0; height: 36px; box-sizing: border-box; margin: 0; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-body); font-size: .9rem; }
+.fld > input[type=number] { font-family: var(--f-mono); text-align: right; }
+.fld > input.changed, .fld > select.changed { background: var(--edit); border-color: var(--lo); }
+.fld.wide { grid-column: span 2; } .fld.full { grid-column: 1 / -1; }
+.stg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stg-bar input[type=search] { flex: 1 1 180px; min-width: 0; height: 36px; box-sizing: border-box; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; }
+.stg-bar select { height: 36px; max-width: 100%; flex: 0 1 auto; }
+.add-menu { position: relative; } .add-menu > summary { list-style: none; cursor: pointer; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-weight: 600; font-size: .9rem; } .add-menu > summary::-webkit-details-marker { display: none; }
+.add-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; display: grid; gap: 6px; min-width: 190px; padding: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.rune-list { display: grid; gap: 10px; }
+.rune-sec > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.rune-sec > summary .sec-n { font-weight: 600; } .rune-sec > summary .sec-odds { font-weight: 400; font-size: .8rem; color: var(--mute); margin-left: auto; }
+.rune-row { gap: 6px; padding: 6px 0 4px; }
+.rune-head, .boss-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; cursor: pointer; }
+.rune-main { display: grid; gap: 1px; min-width: 0; }
+.rune-l1 { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; } .rune-l1 .rune-say { flex: 1 1 220px; }
+.rune-meta { font-size: .78rem; color: var(--mute); }
+.chev { width: 30px; height: 30px; padding: 0; border-radius: 6px; font-size: .9rem; line-height: 1; }
+.sw { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--mute); cursor: pointer; user-select: none; }
+.sw input { appearance: none; -webkit-appearance: none; width: 34px; height: 20px; margin: 0; border-radius: 99px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; }
+.sw input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--panel); transition: transform .15s; }
+.sw input:checked { background: var(--ok); } .sw input:checked::after { transform: translateX(14px); }
+.sw input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rune-edit { margin-left: 38px; gap: 10px; padding: 12px; } .rune-del { justify-self: start; }
+.boss-card { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: grid; gap: 12px; min-width: 0; }
+.boss-card.off { opacity: .55; } .boss-card.open { padding-bottom: 12px; }
+.boss-head { grid-template-columns: auto auto minmax(140px, 1fr) minmax(90px, 220px) auto auto; }
+.boss-title { display: grid; min-width: 0; }
+.hpbar { display: flex; gap: 2px; height: 10px; } .hpbar i { flex: 1; border-radius: 2px; background: var(--hp); }
+.boss-nums { min-width: 17ch; text-align: right; font-family: var(--f-mono); font-size: .82rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.boss-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px 18px; }
+.boss-body fieldset { border: 0; margin: 0; padding: 0; min-width: 0; } .boss-body legend { font-weight: 600; font-size: .88rem; padding: 0; margin-bottom: 6px; }
+.bvs-wrap { overflow-x: auto; }
+table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th { text-align: left; font-weight: 600; color: var(--mute); font-size: .78rem; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.bvs td { padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; } .bvs td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; } .bvs .mute { color: var(--mute); }
+.vtag { font-size: .76rem; font-weight: 600; padding: 1px 8px; border-radius: 99px; } .vtag.bad { background: var(--hi-bg); color: var(--hi); } .vtag.mid { background: var(--lo-bg); color: var(--lo); } .vtag.good { background: var(--ok-bg); color: var(--ok); }
+@media (max-width: 600px) {
+  .boss-head { grid-template-columns: auto minmax(0, 1fr) auto; } .boss-head > .tb { display: none; } .boss-head .hpwrap { grid-column: 2; grid-row: 2; } .boss-head .boss-nums { grid-column: 3; grid-row: 2; min-width: 0; }
+  .bvs .bk { display: none; } .bvs th, .bvs td { padding: 4px 4px; } .bvs th { white-space: normal; }
+  .rune-edit { margin-left: 0; } .rune-sec > summary .sec-odds { margin-left: 0; flex-basis: 100%; }
+}
+.bvs .bk { color: var(--mute); }
+@media (min-width: 900px) { .boss-body > fieldset:first-child { grid-column: span 2; } }
+@media (prefers-reduced-motion: reduce) { .sw input, .sw input::after { transition: none; } }

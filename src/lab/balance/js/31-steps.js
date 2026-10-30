@@ -29,6 +29,7 @@ function showTab(which) {
   $('pane-sim').hidden = !(which === 'sim' || both);
   $('pane-analysis').hidden = which !== 'analysis';
   $('pane-stage').hidden = which !== 'stage'; if (which === 'stage') renderStage();
+  document.querySelector('#editor > details.gloss').hidden = which === 'stage'; // set 56: skill glossary is not about runes/bosses
   $('pane-match').hidden = which !== 'match'; if (which === 'match') renderMatch();
   $('saveBox').hidden = $('pane-chars').hidden && $('pane-tribes').hidden && $('pane-stage').hidden; $('ideaBox').hidden = which === 'stage'; // stage tab has its own idea box // ส่วนบันทึกอยู่ใต้ส่วนแก้ตัวละคร/โบนัสเผ่า
   if (which === 'grid') renderGrid();
