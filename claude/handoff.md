@@ -7,7 +7,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 - Next step: (1) user tunes runes in Balance Room → 💾 → pastes `AMCFG1` code → set core/stage.js defaults from config.stage; (2) phase 2a battle code (boss + battle runes) — ask before starting
 - Open: MVP1 step 5.5 pending (28 Nov at risk) · config/main NOT cleared
 - Publish: game v63 · balance room v120 · check v64 (not republished)
-- 2nd account (rattanakon.ns): GitHub push OK; balance room was noted as shared as writer (30 Oct), BUT 30 Oct 17:00 recheck by URL from Links: get_artifact + read_artifact → "not found" for balance room AND game → no access from this account; publish pending stays with owner account.
+- 2nd account (rattanakon.ns) artifact access depends on the chat type: **this cloud session (Artifact tool, 30 Oct 17:05) opens game + balance room as writer** and can publish. The chat that reported "not found" used get_artifact/read_artifact (a different surface) — those tools cannot see artifacts shared from another account. Rule: publish only from a session whose `Artifact read` of the Links URL says "writer".
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 90, hash 521fadbf
