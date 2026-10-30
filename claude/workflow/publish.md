@@ -1,8 +1,9 @@
 # workflow · publish and test the pages
 
-V1.26 · 26 Oct 2026 (translated to English; 3: publish sequence confirmed again) · split from workflow.md V1.21 (content kept, section numbers kept for references)
+V1.27 · 30 Oct 2026 (3: publish from disk to save tokens) · V1.26 26 Oct (translated to English; 3: publish sequence confirmed again) · split from workflow.md V1.21 (content kept, section numbers kept for references)
 
 ## 3. Publish (never force · always update the existing link)
+- **Token rule (V1.27): always publish with `publish_files` (give the built file's path on disk, e.g. `{as: "index.html", path: "/…/src/game.html" (build writes game.html · balance.html · system-check.html into src/)}`), never paste the HTML into `publish_version`.** The page bytes then never pass through the chat (~320 KB balance page = huge token cost). Use `edit_version` only for a tiny text fix. Get `base_version` from `get_artifact` (no HTML), not `read_artifact`.
 - Publish with the existing url. The first publish is refused with a diff (this counts as having seen the latest page) → check that the diff contains only intended edits and nothing from others.
 - The 2nd publish is refused as "identical content". Then do an Artifact `read` of the url (no path) and publish the same file a 3rd time → it goes through (add a label such as "ชุด 12" · if the diff contains others' changes, merge first). Confirmed 26 Oct (ชุด 37).
 - Do not read the whole HTML page.
