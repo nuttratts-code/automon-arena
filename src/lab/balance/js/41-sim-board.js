@@ -62,7 +62,7 @@ function markSimSel() {
 let slotPick = null;
 function renderSimSlotBar() {
   const bar = $('simSlot'); bar.replaceChildren();
-  if (!simSel) { bar.append(el('span', 'hint', 'แตะช่องเพื่อใส่/เปลี่ยนตัวละคร · กดค้างแล้วลากเพื่อย้ายหรือสลับช่อง (ลากข้ามฝั่งได้)')); return; }
+  if (!simSel) { bar.append(el('span', 'hint', 'แตะช่องในสนามเพื่อเปลี่ยนตัว / เลเวล / เอาออก')); return; }
   const k = simSel, x = slotGet(k);
   bar.append(el('b', '', slotName(k)));
   const ph = el('div', 'cp'); bar.append(ph);
@@ -103,7 +103,7 @@ $('simLvSide').addEventListener('change', renderLvAll);
 // ทีมเปลี่ยน → ถ้าเคยจำลองแล้ว จำลองใหม่ให้เลย (ไม่ต้องกดซ้ำ)
 function simChanged() { if (!simLast) return; if (!$('simAuto').checked) { markSimStale(); return; } clearTimeout(simTimer); simTimer = setTimeout(() => runSim(true), 250); }
 // ปิดจำลองอัตโนมัติ (ค่าเริ่มต้น): แก้ค่า/ทีมแล้วไม่สู้เอง แค่เตือนให้กด "จำลอง" ใหม่
-function markSimStale() { const b = $('simRun'); if (b.classList.contains('stale')) return; b.classList.add('stale'); b.textContent = 'จำลองใหม่ ●'; $('simMsg').textContent = 'มีการแก้ค่าหรือทีม · ผลด้านล่างยังเป็นของเดิม กด "จำลองใหม่" เมื่อพร้อม'; if (!$('pane-match').hidden) renderMatch(); }
+function markSimStale() { const b = $('simRun'); if (b.classList.contains('stale')) return; b.classList.add('stale'); $('simSum').classList.add('stale'); b.textContent = 'จำลองใหม่ ●'; $('simMsg').textContent = 'มีการแก้ค่าหรือทีม · ผลด้านล่างยังเป็นของเดิม กด "จำลองใหม่" เมื่อพร้อม'; if (!$('pane-match').hidden) renderMatch(); }
 function clearSimStale() { const b = $('simRun'); b.classList.remove('stale'); b.textContent = 'จำลอง'; }
 try { $('simAuto').checked = localStorage.getItem('automon-balance-simauto') === '1'; } catch (e) {}
 $('simAuto').addEventListener('change', () => { try { localStorage.setItem('automon-balance-simauto', $('simAuto').checked ? '1' : ''); } catch (e) {} if ($('simAuto').checked && $('simRun').classList.contains('stale')) runSim(true); });
@@ -250,7 +250,7 @@ makeDraggable($('simStageBox'), '#simArena .cell, #simBench .bcell', 'key', c =>
     renderSimInfo();
   },
   (a, b) => { if (validKey(a) && validKey(b) && simSwap(a, b)) { simSel = b; slotEdited(a, b); } });
-$('simClear').addEventListener('click', () => { simTeam = emptySim(); simTeam[0][0][0] = { id: current, level: 1 }; saveSim(); renderSimTeams(); $('simRes').hidden = true; });
+$('simClear').addEventListener('click', () => { simTeam = emptySim(); simTeam[0][0][0] = { id: current, level: 1 }; saveSim(); renderSimTeams(); $('simRes').hidden = true; $('simSum').hidden = true; });
 $('simRand').addEventListener('click', () => {
   const rng = makeRng((Date.now() & 0xffff) + 7);
   simTeam = emptySim();
@@ -363,7 +363,12 @@ function renderSimResult() {
   const nm = uid => { const u = U.get(uid); return u ? `${u.side === 0 ? 'ซ้าย' : 'ขวา'} ${u.id}` : '?'; };
   const win = r.winner === 0 ? 'ทีมซ้ายชนะ' : r.winner === 1 ? 'ทีมขวาชนะ' : 'เสมอ';
   const tribeTxt = side => Object.entries(start.tribes[side] || {}).map(([t, n]) => `${t} ${n}`).join(', ') || 'ไม่มี';
-  $('simCards').replaceChildren(...[[win, 'ผล'], [`${(r.timeMs / 1000).toFixed(1)} วิ`, 'เวลา'], [tribeTxt(0), 'โบนัสเผ่าซ้าย'], [tribeTxt(1), 'โบนัสเผ่าขวา']].map(([b, sp]) => {
+  // Set 57: one-line result right under the run controls (no scrolling after จำลอง)
+  const sumBox = $('simSum'), go = el('button', '', 'ดูรายละเอียดแมตช์ ›'); go.type = 'button';
+  go.addEventListener('click', () => $('toMatch').click());
+  sumBox.replaceChildren(el('b', `win w${r.winner === 0 ? 'L' : r.winner === 1 ? 'R' : 'D'}`, win), el('span', 'status', `เวลา ${(r.timeMs / 1000).toFixed(1)} วิ`), el('span', 'grow', ''), go);
+  sumBox.classList.remove('stale'); sumBox.hidden = false;
+  $('simCards').replaceChildren(...[[tribeTxt(0), 'โบนัสเผ่าซ้าย'], [tribeTxt(1), 'โบนัสเผ่าขวา']].map(([b, sp]) => {
     const d = el('div', 'card'); d.append(el('b', '', b), el('span', '', sp)); return d;
   }));
   // สกิลทำงานกี่ครั้ง: นับจาก proc (si = ลำดับสกิลในตัวละคร)
