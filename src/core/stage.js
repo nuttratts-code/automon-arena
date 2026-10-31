@@ -233,7 +233,9 @@ export function rarityOdds(st, boss = false) {
   return Object.fromEntries(RUNE_RARITY.map(([k]) => [k, sum ? (w[k] / sum) * 100 : 0]));
 }
 
-// Boss special rules: [id, label, default value, min, max, unit] (unit '' with max 0 = no value)
+// Boss special rules: [id, label, default value, min, max, unit, extra] (max 0 = no value) · extra = second value [label, default, min, max, unit] or 'tribe' (rule needs a tribe)
+// Set 64 (user 31 Oct, claude/review-2026-10-31-boss-phases.md): pool grown from 8 to 38 (R1–R30) · all numbers ค่าเสนอ · battle effect waits for the boss battle engine (phase 2a).
+// Heal rules (lifesteal/regen/feedOnDown/dpsCheck) never refill an emptied bar and never re-trigger "enemy down" (loophole guard).
 export const BOSS_RULES = [
   ['none', 'ไม่มีกฎพิเศษ', 0, 0, 0, ''],
   ['backSilence', 'แถวหลังของผู้เล่นใช้สกิลไม่ได้ ช่วงแรก (วิ)', 10, 1, 180, 'วิ'],
@@ -243,7 +245,65 @@ export const BOSS_RULES = [
   ['enrage', 'บอสตีแรงขึ้นทุก 10 วิ', 20, 1, 200, '%'],
   ['reflect', 'สะท้อนดาเมจกลับ', 10, 1, 100, '%'],
   ['cdSlow', 'คูลดาวน์ผู้เล่นช้าลง', 20, 1, 200, '%'],
+  // บอสแรงขึ้น
+  ['atkUp', 'R1 บอสตีแรงขึ้น', 30, 1, 500, '%'],
+  ['fastAtk', 'R2 คูลดาวน์บอสเร็วขึ้น', 20, 1, 90, '%'],
+  ['multiUp', 'R3 บอสมัลติฮิตเพิ่ม', 1, 1, 5, 'ครั้ง'],
+  ['aoe', 'R4 บอสตีโดนทุกตัว (ดาเมจต่อตัว)', 40, 1, 100, '%'],
+  ['hunter', 'R5 บอสตีตัวที่เลือดน้อยสุดก่อน', 0, 0, 0, ''],
+  ['backStrike', 'R6 บอสตีแถวหลังก่อน', 0, 0, 0, ''],
+  ['execute', 'R7 ตีจนเลือดเหลือต่ำกว่านี้ = down ทันที', 15, 1, 50, '%'],
+  ['lifesteal', 'R8 บอสดูดเลือดจากดาเมจที่ทำ (ไม่เกินแถบปัจจุบัน)', 30, 1, 200, '%'],
+  ['regen', 'R9 บอสฟื้นเลือดทุกวิ (% ของ 1 แถบ · ไม่เกินแถบปัจจุบัน)', 3, 1, 50, '%'],
+  ['armorGrow', 'R10 บอสได้เกราะเพิ่มทุก 10 วิ', 20, 1, 10000, 'เกราะ'],
+  ['burnAura', 'R11 ทุก 5 วิ ผู้เล่นทุกตัวติดไฟ', 4, 1, 100, 'ไฟ'],
+  ['shockAura', 'R12 ทุก 5 วิ สุ่มผู้เล่น 1 ตัวติดช็อต', 2, 1, 100, 'ช็อต'],
+  ['desperate', 'R13 คลั่ง: บอสตีแรง ×2 แต่โดนดาเมจเพิ่ม', 50, 0, 300, '%'],
+  ['feedOnDown', 'R14 ผู้เล่น down 1 ตัว บอสฟื้นเลือด (% ของ 1 แถบ · ไม่เกินแถบปัจจุบัน)', 50, 1, 100, '%'],
+  // ผู้เล่นอ่อนลง
+  ['randomSilence', 'R15 ทุก X วิ สุ่มผู้เล่น 1 ตัวใช้สกิลไม่ได้', 8, 1, 60, 'วิ', ['ใช้ไม่ได้นาน', 4, 1, 60, 'วิ']],
+  ['freezeRow', 'R16 ทุก X วิ แช่แข็งผู้เล่น 1 แถว', 10, 1, 60, 'วิ', ['คูลดาวน์เพิ่ม', 2, 1, 20, 'วิ']],
+  ['noArmor', 'R17 ผู้เล่นได้เกราะเพิ่มไม่ได้', 0, 0, 0, ''],
+  ['frontBreak', 'R18 แถวหน้าผู้เล่นโดนดาเมจเพิ่ม', 30, 1, 300, '%'],
+  ['rowSwap', 'R19 สลับแถวหน้ากับแถวหลังของผู้เล่น (ตอนเริ่มเฟส)', 0, 0, 0, ''],
+  ['noRevive', 'R20 ชุบชีวิตไม่ได้ (รูน/สกิล)', 0, 0, 0, ''],
+  ['earlyStorm', 'R21 พายุทรายเริ่มทันทีเมื่อเข้าเฟสนี้', 0, 0, 0, ''],
+  // บอสป้องกัน
+  ['hitCap', 'R22 ตี 1 ครั้งเข้าได้ไม่เกิน (% ของ 1 แถบ)', 25, 1, 100, '%'],
+  ['minHit', 'R23 ฮิตที่ดาเมจต่ำกว่านี้ไม่เข้า', 3, 1, 1000, 'ดาเมจ'],
+  ['statusImmune', 'R24 บอสไม่ติดไฟ/ช็อต', 0, 0, 0, ''],
+  ['tribeWeak', 'R25 บอสโดนเผ่าที่เลือกตีแรงขึ้น', 50, 1, 300, '%', 'tribe'],
+  ['tribeResist', 'R25 บอสโดนเผ่าที่เลือกตีเบาลง', 50, 1, 100, '%', 'tribe'],
+  ['frontOnly', 'R26 ตีบอสได้เฉพาะแถวหน้าของผู้เล่น', 0, 0, 0, ''],
+  ['backOnly', 'R26 ตีบอสได้เฉพาะแถวหลังของผู้เล่น', 0, 0, 0, ''],
+  ['vanish', 'R27 ทุก X วิ บอสหายตัว (ตีไม่โดน)', 12, 2, 60, 'วิ', ['หายนาน', 2, 1, 10, 'วิ']],
+  // ไขปริศนา
+  ['dpsCheck', 'R28 ตีแถบไม่หมดในเวลานี้ แถบนั้นเต็มกลับ', 20, 3, 120, 'วิ'],
+  ['curse', 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า', 15, 3, 60, 'วิ', ['เป้า (% ของ 1 แถบ)', 50, 1, 100, '%']],
+  ['weakSpot', 'R30 หลังย้ายที่ บอสโดนดาเมจเพิ่ม 3 วิ (ใช้กับแบบย้ายที่)', 50, 1, 300, '%'],
 ];
+// Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
+export const BOSS_PHASE_FX = [
+  ['armorBar', 'X1 บอสได้เกราะ (% ของ 1 แถบ)', 50, 1, 300, '%'],
+  ['cleanse', 'X2 บอสล้างไฟ/ช็อตที่ติดตัว', 0, 0, 0, ''],
+  ['untargetable', 'X3 บอสตีไม่โดนชั่วคราว', 2, 1, 10, 'วิ'],
+  ['stunAll', 'X4 ผู้เล่นทุกตัวมึนงง', 2, 1, 10, 'วิ'],
+];
+// Phases (set 64, user 31 Oct: Q1 A by bars lost · Q2 A max 3 · Q3 A new rules replace old · Q4 B max 2 rules per phase)
+// phase = { at: bars lost when it starts (phase 1 = 0), rules: [{ id, v, v2?, tribe? }] ≤ 2, fx: [{ id, v }], spot: '' (keep) or a BOSS_SPOTS id }
+export const BOSS_MAX_PHASES = 3, BOSS_MAX_RULES = 2;
+export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
+export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '' });
+// Warnings for risky combos (review Q-warnings): returns Thai strings, empty = fine
+export function bossPhaseWarn(b, p) {
+  const has = id => p.rules.some(r => r.id === id), w = [];
+  if (has('execute') && has('aoe')) w.push('R7 + R4 เฟสเดียวกัน อาจล้างทีมผู้เล่นในทีเดียว');
+  if (has('hitCap') && has('minHit')) w.push('R22 + R23 พร้อมกัน แทบทุกทีมเสียเปรียบ');
+  const spot = p.spot || b.spot;
+  if ((has('frontOnly') || has('backOnly')) && spot !== 'all') w.push('R26 ใช้กับบอสที่ยืนทุกช่องเท่านั้น ไม่งั้นบางทีมตีไม่โดนเลย');
+  if (has('weakSpot') && spot !== 'move') w.push('R30 ได้ผลเฉพาะบอสแบบย้ายที่');
+  return w;
+}
 // Where the boss stands (user 29 Oct, set 52: per boss) · board side = 3 rows × 2 lanes. 'move' = 1 slot, jumps to a random slot every moveSec.
 export const BOSS_SPOTS = [
   ['all', 'ทุกช่อง (6 ช่อง)'], ['four', 'แถวหน้า + แถวกลาง (4 ช่อง)'], ['front', 'แถวหน้า (2 ช่อง)'], ['one', '1 ช่อง (แถวหน้า เลนบน)'], ['move', '1 ช่อง ย้ายที่เรื่อยๆ'],
@@ -251,7 +311,7 @@ export const BOSS_SPOTS = [
 // Boss stats = at its first appearance (stage 5) · stage 10 = × mult10 · after stage 10 each boss + endlessPct%
 // bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
 export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4]];
-const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, rule, ruleV, mult10: 2, endlessPct: 15, on: true });
+const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
 // Sized from the stage baseline (median player at stage 5: ~7 dmg/s, team HP ~756) → boss lasts ~60 s, kills the team in ~60 s.
 export const STAGE_BOSSES = [
   stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50, 'all'),
@@ -276,7 +336,7 @@ export function stageBase() {
     copiesRule: 'rarity', // set 61 marker: saves without it predate "copies follow rarity" (see cleanRunes)
     runes: Object.fromEntries(STAGE_RUNES.map(r => [r.id, runeDefault(r)])),
     custom: [],
-    bosses: STAGE_BOSSES.map(b => ({ ...b })),
+    bosses: STAGE_BOSSES.map(b => JSON.parse(JSON.stringify(b))),
     settings: Object.fromEntries(STAGE_SETTINGS.map(([k, , v]) => [k, v])),
   };
 }
@@ -302,7 +362,7 @@ function cleanStageOn(o, out) {
       if (TRIBES.includes(x.tribe)) b.tribe = x.tribe;
       if (BOSS_SPOTS.some(q => q[0] === x.spot)) b.spot = x.spot;
       for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi) && (!['bars', 'moveSec', 'multi'].includes(k) || Number.isInteger(x[k]))) b[k] = x[k];
-      const rule = BOSS_RULES.find(r => r[0] === x.rule); if (rule) { b.rule = rule[0]; b.ruleV = rule[4] ? (num(x.ruleV, rule[3], rule[4]) ? x.ruleV : rule[2]) : 0; }
+      b.phases = cleanPhases(x, b, num, isObj);
       if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
       if (num(x.endlessPct, 0, 500)) b.endlessPct = x.endlessPct;
       if (typeof x.on === 'boolean') b.on = x.on;
@@ -311,6 +371,35 @@ function cleanStageOn(o, out) {
     if (list.length) out.bosses = list;
   }
   return out;
+}
+
+// Phases from external data · old saves (rule/ruleV, before set 64) become phase 1 · bad rules/phases dropped, phase 1 always kept
+function cleanPhases(x, b, num, isObj) {
+  const rule1 = (r, def) => {
+    const q = BOSS_RULES.find(z => z[0] === r.id); if (!q || q[0] === 'none') return null;
+    const o = bossRule(q[0]); if (q[4]) o.v = num(r.v, q[3], q[4]) ? r.v : (def && def.id === q[0] ? def.v : q[2]);
+    if (Array.isArray(q[6])) o.v2 = num(r.v2, q[6][2], q[6][3]) ? r.v2 : q[6][1];
+    if (q[6] === 'tribe') o.tribe = TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];
+    return o;
+  };
+  const rules = (list, defs = []) => { const out = []; if (Array.isArray(list)) for (const r of list) { if (!isObj(r) || out.length >= BOSS_MAX_RULES || out.some(o => o.id === r.id)) continue; const o = rule1(r, defs.find(d => d.id === r.id)); if (o) out.push(o); } return out; };
+  if (!Array.isArray(x.phases)) {
+    if (!BOSS_RULES.some(q => q[0] === x.rule)) return b.phases.map(p => ({ ...p, rules: p.rules.map(r => ({ ...r })), fx: p.fx.map(f => ({ ...f })) }));
+    return [bossPhase(0, rules([{ id: x.rule, v: x.ruleV }], b.phases[0].rules))];
+  }
+  const out = [];
+  for (const p of x.phases.slice(0, 12)) {
+    if (!isObj(p) || out.length >= BOSS_MAX_PHASES) continue;
+    const at = out.length ? p.at : 0;
+    if (out.length && !(Number.isInteger(at) && at > out[out.length - 1].at && at < b.bars)) continue;
+    const ph = bossPhase(at, rules(p.rules, (b.phases[out.length] || b.phases[0]).rules));
+    if (out.length) {
+      if (Array.isArray(p.fx)) for (const f of p.fx) { const q = isObj(f) && BOSS_PHASE_FX.find(z => z[0] === f.id); if (q && !ph.fx.some(o => o.id === q[0])) ph.fx.push({ id: q[0], v: q[4] ? (num(f.v, q[3], q[4]) ? f.v : q[2]) : 0 }); }
+      if (BOSS_SPOTS.some(q => q[0] === p.spot)) ph.spot = p.spot;
+    }
+    out.push(ph);
+  }
+  return out.length ? out : [bossPhase(0)];
 }
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.

@@ -7,25 +7,37 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
     eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom.map(c => c.id), ['C1', 'C3', 'C5', 'C2', 'C4', 'C6'], 'user custom runes (set 62)'); eq(stageBase().custom, [], 'code base has no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
     for (const s of RUNE_SPECIAL) for (const [k, , v, lo, hi, u] of s.f) ok(u === 'tribe' || (v >= lo && v <= hi), `${s.key}.${k} default out of range`);
     for (const r of STAGE_RUNES) ok(runeKind(r.eff), `${r.id} effect`);
-    for (const b of STAGE_BOSSES) ok(BOSS_RULES.some(r => r[0] === b.rule), `${b.id} rule`);
+    for (const b of STAGE_BOSSES) ok(b.phases.length === 1 && b.phases[0].rules.every(r => BOSS_RULES.some(q => q[0] === r.id)), `${b.id} rule`);
     const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { dropHard: -1, dropEasy: 20 },
       bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
     eq(bad.runes.T9.dmgPct, 25, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ร่ำรวย', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', eff: 'gold', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
     eq(bad.settings.dropHard, 50, 'bad setting'); eq(bad.settings.dropEasy, 20, 'good setting');
-    eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, 450, 'hp out of range'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].rule, 'armorCut', 'unknown rule kept default');
-    eq(bad.bosses[1].rule, 'healCut', 'new boss rule'); eq(bad.bosses[1].ruleV, 50, 'rule value out of range → rule default');
+    eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, 450, 'hp out of range'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].phases[0].rules, [{ id: 'armorCut', v: 50 }], 'unknown rule kept default');
+    eq(bad.bosses[1].phases[0].rules, [{ id: 'healCut', v: 50 }], 'old rule/ruleV → phase 1 (value out of range → default)');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
       bosses: [{ id: 'B1', spot: 'four', bars: 7, moveSec: 3 }, { id: 'B2', spot: 'fly', bars: 2.5, moveSec: 0 }] });
     eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['โล่ไม้คู่', 3, 3], 'bad name/max → default (common = 3)');
     eq([s2.bosses[0].spot, s2.bosses[0].bars, s2.bosses[0].moveSec], ['four', 7, 3], 'boss spot/bars'); eq([s2.bosses[1].spot, s2.bosses[1].bars, s2.bosses[1].moveSec], ['move', 5, 8], 'bad spot/bars → default');
     eq(s2.settings.growFrom, 20, 'growFrom out of range'); eq(enemyMultAt(s2.settings, 19), 1, 'no growth before growFrom'); ok(Math.abs(enemyMultAt(s2.settings, 21) - 1.21) < 1e-9, 'compounding');
+    // Set 64 boss phases: max 3 · at rising and < bars · max 2 rules, no dup · fx/spot only from phase 2 · second value / tribe cleaned
+    const ph = cleanStage({ bosses: [{ id: 'B1', bars: 5, phases: [
+      { at: 3, rules: [{ id: 'atkUp', v: 40 }, { id: 'atkUp', v: 10 }, { id: 'regen', v: 999 }, { id: 'aoe' }], fx: [{ id: 'cleanse' }], spot: 'one' },
+      { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 99 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }, { id: 'armorBar' }, { id: 'evil' }], spot: 'fly' },
+      { at: 2, rules: [] }, { at: 5, rules: [] }, { at: 4, rules: [{ id: 'none' }, { id: 'curse', tribe: 'x' }] }, { at: 4.5 } ] }] }).bosses[0].phases;
+    eq(ph.map(p => p.at), [0, 2, 4], 'phase at: first = 0, rising, < bars, max 3');
+    eq(ph[0], { at: 0, rules: [{ id: 'atkUp', v: 40 }, { id: 'regen', v: 3 }], fx: [], spot: '' }, 'phase 1: dup dropped, max 2, bad value → default, no fx/spot');
+    eq(ph[1], { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 4 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }], spot: '' }, 'phase 2: v2 clamp, tribe, fx dedup, bad spot');
+    eq(ph[2].rules, [{ id: 'curse', v: 15, v2: 50 }], 'phase 3: none dropped, defaults');
+    for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
+    eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
+    eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'execute' }, { id: 'aoe' }], spot: '' }).length, 1, 'warn R7+R4'); eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'frontOnly' }], spot: 'all' }), [], 'R26 ok on all');
     eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
     const b = STAGE_BOSSES[0]; eq(bossAt(b, 1).hp, b.hp, 'first boss'); eq(bossAt(b, 2).hp, Math.round(b.hp * b.mult10), 'stage 10'); eq(bossAt(b, 3).hp, Math.round(b.hp * b.mult10 * (1 + b.endlessPct / 100)), 'endless');
   }],

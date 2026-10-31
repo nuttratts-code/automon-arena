@@ -225,3 +225,4 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .simsum .win { font-size: 1.05rem; } .simsum .win.wL { color: var(--sideL); } .simsum .win.wR { color: var(--sideR); }
 .simsum .grow { flex: 1 1 0; } .simsum.stale { opacity: .55; }
 .simteamrow { gap: 6px 10px; }
+.boss-body .warn-txt { color: var(--hi); font-size: .82rem; margin: 0; }

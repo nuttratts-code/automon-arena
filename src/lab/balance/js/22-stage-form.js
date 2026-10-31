@@ -235,6 +235,46 @@ function bossVsTable(bs) {
   }
   return t;
 }
+// Set 64 boss phases (user 31 Oct): phase 1 at fight start · phase 2–3 start after N bars are gone · new phase rules replace old ones · ≤ 2 rules per phase
+function bossPhaseForms(bs, base, grp) {
+  const ruleOpts = BOSS_RULES.map(r => [r[0], r[1]]), out = [];
+  bs.phases.forEach((p, i) => {
+    const bp = (base.phases || [])[i], id = `stg-${bs.id}-p${i}`, kids = [];
+    if (i) {
+      const lo = bs.phases[i - 1].at + 1, hi = (bs.phases[i + 1] ? bs.phases[i + 1].at : bs.bars) - 1;
+      kids.push(fld('เริ่มเมื่อแถบหายไป', stageNum(`${id}-at`, p.at, bp ? bp.at : p.at, lo, hi, v => { p.at = Math.round(v); })),
+        fld('ยืนตรงไหน', selectInput(`${id}-spot`, [['', 'เหมือนเดิม'], ...BOSS_SPOTS], p.spot, v => { p.spot = v; stageChanged(); renderStage(); }), 'wide'));
+    }
+    for (let k = 0; k < BOSS_MAX_RULES; k++) {
+      const r = p.rules[k], q = r && BOSS_RULES.find(z => z[0] === r.id), br = bp && r && bp.rules.find(z => z.id === r.id);
+      kids.push(fld(`กฎ ${k + 1}`, selectInput(`${id}-r${k}`, ruleOpts, r ? r.id : 'none', v => {
+        if (v === 'none') p.rules.splice(k, 1); else if (!p.rules.some((z, j) => j !== k && z.id === v)) p.rules[k] = bossRule(v);
+        stageChanged(); renderStage();
+      }), 'full'));
+      if (!q) break;
+      if (q[4]) kids.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-r${k}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
+      if (Array.isArray(q[6])) kids.push(fld(`${q[6][0]} (${q[6][4]})`, stageNum(`${id}-r${k}-v2`, r.v2, br ? br.v2 : q[6][1], q[6][2], q[6][3], v => { r.v2 = v; })));
+      if (q[6] === 'tribe') kids.push(fld('เผ่า', selectInput(`${id}-r${k}-tribe`, TRIBES.map(t => [t, t]), r.tribe, v => { r.tribe = v; stageChanged(); renderStage(); })));
+    }
+    if (i) BOSS_PHASE_FX.forEach((f, j) => {
+      const on = p.fx.find(z => z.id === f[0]), c = document.createElement('input'); c.type = 'checkbox'; c.id = `${id}-fx-${f[0]}`; c.checked = !!on;
+      c.addEventListener('change', () => { if (c.checked) p.fx.push({ id: f[0], v: f[2] }); else p.fx = p.fx.filter(z => z.id !== f[0]); stageChanged(); renderStage(); });
+      const l = el('label', 'sw', ''); l.append(c, el('span', '', f[1])); kids.push(fld(j ? '' : 'ตอนเปลี่ยนเฟส', l, 'full'));
+      if (on && f[4]) kids.push(fld(`ค่า (${f[5]})`, stageNum(`${id}-fx-${f[0]}-v`, on.v, f[2], f[3], f[4], v => { on.v = v; })));
+    });
+    for (const w of bossPhaseWarn(bs, p)) kids.push(el('p', 'fld full warn-txt', '⚠️ ' + w));
+    if (i) { const d = el('button', 'rune-del', 'ลบเฟสนี้'); d.type = 'button'; d.addEventListener('click', () => { bs.phases.splice(i, 1); stageChanged(); renderStage(); }); kids.push(d); }
+    out.push(grp(i ? `เฟส ${i + 1} · กฎใหม่แทนกฎเดิม` : 'เฟส 1 (เริ่มสู้)', ...kids));
+  });
+  const last = bs.phases[bs.phases.length - 1];
+  if (bs.phases.length < BOSS_MAX_PHASES) {
+    const add = el('button', '', '+ เพิ่มเฟส'); add.type = 'button'; add.id = `stg-${bs.id}-addphase`;
+    add.disabled = last.at + 1 >= bs.bars; add.title = add.disabled ? 'แถบสีเลือดไม่พอ เพิ่มจำนวนแถบก่อน' : 'เฟสใหม่เริ่มเมื่อแถบหายไปอีก 1 แถบ (แก้ได้)';
+    add.addEventListener('click', () => { bs.phases.push(bossPhase(last.at + 1)); stageChanged(); renderStage(); });
+    out.push(add);
+  }
+  return out;
+}
 function renderStageBosses(box) {
   const help = document.createElement('details'); help.className = 'hint';
   const hs = document.createElement('summary'); hs.textContent = 'วิธีอ่านค่าบอส'; help.append(hs,
@@ -247,7 +287,7 @@ function renderStageBosses(box) {
     const ch = el('button', 'chev', open ? '▾' : '▸'); ch.type = 'button'; ch.id = `stg-open-${bs.id}`; ch.setAttribute('aria-expanded', String(open)); ch.setAttribute('aria-label', `${open ? 'ปิด' : 'แก้'} ${bs.name}`);
     const toggle = () => { bossOpen = open ? null : bs.id; renderStage(); };
     ch.addEventListener('click', e => { e.stopPropagation(); toggle(); });
-    const title = el('div', 'boss-title', ''); title.append(el('b', '', `${bs.id} ${bs.name}`), el('span', 'rune-meta', [bs.tribe, (BOSS_SPOTS.find(s => s[0] === bs.spot) || [, bs.spot])[1], ...(bs.rule !== 'none' ? [(BOSS_RULES.find(r => r[0] === bs.rule) || [, bs.rule])[1]] : [])].join(' · ')));
+    const title = el('div', 'boss-title', ''); title.append(el('b', '', `${bs.id} ${bs.name}`), el('span', 'rune-meta', [bs.tribe, (BOSS_SPOTS.find(s => s[0] === bs.spot) || [, bs.spot])[1], ...bs.phases[0].rules.map(r => (BOSS_RULES.find(q => q[0] === r.id) || [, r.id])[1]), ...(bs.phases.length > 1 ? [`${bs.phases.length} เฟส`] : [])].join(' · ')));
     const barBox = el('div', 'hpwrap', ''), nums = el('span', 'boss-nums', '');
     stageSayEls.push([barBox, () => [bossBar(bs)]], [nums, () => { const s = bossAt(bs, 1); return `HP ${s.hp} · ตี ${fmt(s.dps)}/วิ`; }]);
     head.append(ch, tribeBadge(bs.tribe), title, barBox, nums, stageSwitch(`stg-on-${bs.id}`, bs.on, v => { bs.on = v; renderStage(); }));
@@ -259,16 +299,14 @@ function renderStageBosses(box) {
       nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 24); if (v) bs.name = v; nm.value = bs.name; stageChanged(); renderStage(); });
       const body = el('div', 'boss-body', '');
       const grp = (name, ...kids) => { const f = document.createElement('fieldset'); f.append(Object.assign(document.createElement('legend'), { textContent: name }), fgrid(...kids)); return f; };
-      const rule = BOSS_RULES.find(r => r[0] === bs.rule);
       const cdF = fld('คูลดาวน์ (วิ)', stageNum(`stg-${bs.id}-cdMs`, bs.cdMs / 1000, base.cdMs / 1000, 0.3, 60, v => { bs.cdMs = Math.round(v * 10) * 100; }, 0.1));
       body.append(
         grp('ตัวบอส', fld('ชื่อ', nm, 'wide'), fld('เผ่า', selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); })),
           fld('ยืนตรงไหน', selectInput(`stg-${bs.id}-spot`, BOSS_SPOTS, bs.spot, v => { bs.spot = v; stageChanged(); renderStage(); }), 'wide'),
           ...(bs.spot === 'move' ? [n('moveSec', 'ย้ายที่ทุก (วิ)', 1, 60, v => { bs.moveSec = Math.round(v); })] : []),
-          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
+          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
         grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4)),
-        grp('กฎพิเศษ', fld('กฎ', selectInput(`stg-${bs.id}-rule`, BOSS_RULES.map(r => [r[0], r[1]]), bs.rule, v => { const r = BOSS_RULES.find(q => q[0] === v); bs.rule = v; bs.ruleV = r[2]; stageChanged(); renderStage(); }), 'full'),
-          ...(rule && rule[4] ? [fld(`ค่า (${rule[5]})`, stageNum(`stg-${bs.id}-ruleV`, bs.ruleV, base.rule === bs.rule ? base.ruleV : rule[2], rule[3], rule[4], v => { bs.ruleV = v; }))] : [])),
+        ...bossPhaseForms(bs, base, grp),
         grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500)));
       const vs = el('div', 'bvs-wrap', ''); stageSayEls.push([vs, () => [bossVsTable(bs)]]);
       const del = el('button', 'rune-del', 'ลบบอสนี้'); del.type = 'button'; del.disabled = stageCfg.bosses.length <= 1;

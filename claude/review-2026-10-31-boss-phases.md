@@ -2,6 +2,7 @@
 
 User request 31 Oct: "add boss skill phases, e.g. when 5 HP bars are gone the rules change; find lots of rules, I will pick".
 Now (src/core/stage.js): each boss = 1 rule (`BOSS_RULES`, 8 rules) + `bars` (HP colour bars, default 5; each emptied bar = "enemy down" for skills). Bosses are data only — **the boss battle engine (phase 2a) is not built yet**, so no rule runs in a real fight today.
+**User answer 31 Oct: "take the recommended ones" → Q1 A · Q2 A · Q3 A · Q4 B · Q5 all X1–X5 offered as per-phase options (default off) · Q6 all rules R1–R30 offered in the editor, user picks per boss (R31 summon parked) · Q7 A (data + Balance Room editor, set 64, branch claude/festive-johnson-0iut2r). Loophole guards as ★.**
 ★ = recommended. All numbers = ค่าเสนอ (user tunes them in the Balance Room).
 
 ## Questions
