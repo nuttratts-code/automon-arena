@@ -74,8 +74,8 @@ with sync_playwright() as p:
             pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
             pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
         # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว
-        if not pg.evaluate('P.over'):
-            got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'set',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
+        # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว · 31 Oct: when matchStart (not 'set': a unit killed before its first attack never fires 'set' → ~1.3% random fails)
+            got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
               const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
             # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
             if pg.is_hidden('#battle'):
