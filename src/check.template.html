@@ -113,7 +113,6 @@ function render() {
       `คูลดาวน์ต่ำสุด <code>${R.minCooldownMs / 1000} วิ</code> (ค่าชั่วคราว)`,
       `ไฟ: ทำดาเมจเท่าจำนวนไฟทุก <code>${R.burnIntervalMs / 1000} วิ</code> แล้วลดลง <code>${R.burnDecay}</code>`,
       `พายุทราย: หลัง ${R.stormStartMs / 1000} วิ ทำดาเมจ <code>${R.stormDmgStart}</code> ทุกตัวทุกวิ แรงขึ้น <code>×${R.stormDmgMult}</code> ทุกครั้ง ${R.stormPierce ? 'ทะลุเกราะ' : 'เกราะกันได้'}`,
-      `โบนัสเผ่า 2/4/6: นับได้แล้ว แต่ยังไม่มีผล (ตัวเลขพักไว้ตามเอกสาร)`,
     ].map(x => `<li>${x}</li>`).join('');
     btn.disabled = false;
   }, 30);

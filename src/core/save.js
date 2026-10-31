@@ -69,7 +69,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   // ประจุรอใช้ (SF-7 ฯลฯ): ทีละ 1 อันต่อชนิดตัวละคร+สกิล (ตามกฎร้านค้า · ชุด 24 แก้บั๊ก: เดิมรับแค่ 1 อันทั้งทีม เซฟที่มี 2 ชนิดถูกล้าง)
   // ยาวไม่เกินจำนวนช่องบอร์ด+ม้านั่ง · ไม่ซ้ำ · ID/ลำดับสกิลมีจริง · เจ้าของยังอยู่ในทีม
   const chKeys = Array.isArray(st.charges) ? st.charges.map(x => (svObj(x) ? `${x.id}#${x.si}` : '?')) : null;
-  if (!chKeys || chKeys.length > 6 + S.bench || new Set(chKeys).size !== chKeys.length) errors.push('ประจุผิด');
+  if (!chKeys || chKeys.length > rules.maxBoard + S.bench || new Set(chKeys).size !== chKeys.length) errors.push('ประจุผิด');
   else for (const x of st.charges) {
     if (!svObj(x) || !svOnlyKeys(x, ['id', 'uid', 'si']) || typeof x.id !== 'string' || !svOwn(cm, x.id) || !svIntIn(x.uid, 1, 1e9) || !svIntIn(x.si, 0, 5) || !cm[x.id].skills[x.si] || !chargeOwner(st, x)) errors.push('ประจุผิด');
   }

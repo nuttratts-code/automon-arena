@@ -36,8 +36,8 @@ export function arrange(st, cm) {
   const all = allUnits(st).map(x => x.u).sort((a, b) => value(b, cm) - value(a, cm) || a.uid - b.uid);
   // แถวแนะนำหลายแถว: เลือกแถวต่างกันไปทุกรอบ (คิดจาก uid + รอบ ไม่ใช้ตัวสุ่มของ run จะได้ไม่กระทบร้านค้า)
   const key = u => { const h = cm[u.id].rowHint, p = pickHintRow(h, ((u.uid * 7 + st.round) % 2) / 2); return p != null ? p : BOT_HINT[h] ?? 1; };
-  const onBoard = all.slice(0, 6).sort((a, b) => key(a) - key(b) || a.uid - b.uid);
-  const rest = all.slice(6);
+  const onBoard = all.slice(0, SLOT_ORDER.length).sort((a, b) => key(a) - key(b) || a.uid - b.uid);
+  const rest = all.slice(SLOT_ORDER.length);
   st.board = [[null, null], [null, null], [null, null]];
   onBoard.forEach((u, i) => { const [r, l] = SLOT_ORDER[i]; st.board[r][l] = u; });
   st.bench = st.bench.map((_, i) => rest[i] || null);
@@ -51,7 +51,7 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
     tryMerges(st, chars, rules);
     const choices = st.shop.map((s, i) => ({ s, i })).filter(x => x.s.id && cm[x.s.id].price <= st.gold)
       .sort((a, b) => score(st, b.s.id, cm) - score(st, a.s.id, cm) || a.i - b.i);
-    const roomy = allUnits(st).length < 6 + st.bench.length;
+    const roomy = allUnits(st).length < rules.maxBoard + st.bench.length;
     if (choices.length && roomy) {
       let dest = null; // ม้านั่งเต็มแต่บอร์ดว่าง → ซื้อลงบอร์ด
       if (!st.bench.includes(null)) for (const [row, lane] of SLOT_ORDER) if (!st.board[row][lane]) { dest = { at: 'board', row, lane }; break; }

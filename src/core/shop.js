@@ -179,6 +179,7 @@ export function startRound(st, chars, rules = RULES, opts = {}) {
 
 // ---------- ซื้อ / ขาย / รีโรล / ล็อก ----------
 export function buy(st, slot, dest, chars, rules = RULES) {
+  if (st.over) return fail('run จบแล้ว');
   if (!Number.isInteger(slot) || slot < 0 || slot >= st.shop.length) return fail('ช่องร้านไม่ถูกต้อง');
   const s = st.shop[slot];
   if (!s.id) return fail('ช่องนี้ว่าง');
@@ -199,6 +200,7 @@ export function buy(st, slot, dest, chars, rules = RULES) {
 }
 
 export function sell(st, ref, chars, rules = RULES) {
+  if (st.over) return fail('run จบแล้ว');
   if (!okRef(st, ref) || ref.at === 'shop') return fail('ตำแหน่งไม่ถูกต้อง');
   const u = get(st, ref);
   if (!u) return fail('ช่องนี้ว่าง');
@@ -211,6 +213,7 @@ export function sell(st, ref, chars, rules = RULES) {
 }
 
 export function reroll(st, chars, rules = RULES, opts = {}) {
+  if (st.over) return fail('run จบแล้ว');
   const cost = rules.shop.rerollCost;
   if (st.gold < cost) return fail(`เงินไม่พอ (รีโรลใช้ ${cost})`);
   st.gold -= cost;

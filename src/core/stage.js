@@ -356,7 +356,7 @@ function cleanStageOn(o, out) {
     for (const x of o.bosses) {
       if (!isObj(x) || typeof x.id !== 'string' || !/^B\d{1,2}$/.test(x.id) || ids.has(x.id)) continue;
       ids.add(x.id);
-      const base = STAGE_BOSSES.find(b => b.id === x.id) || stageBoss(x.id, 'บอสใหม่', TRIBES[0], 400, 20, 2000, 'none', 0, 'all');
+      const base = out.bosses.find(b => b.id === x.id) || STAGE_BOSSES.find(b => b.id === x.id) || stageBoss(x.id, 'บอสใหม่', TRIBES[0], 400, 20, 2000, 'none', 0, 'all');
       const b = { ...base };
       const nm = typeof x.name === 'string' ? x.name.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 24) : ''; if (nm) b.name = nm;
       if (TRIBES.includes(x.tribe)) b.tribe = x.tribe;

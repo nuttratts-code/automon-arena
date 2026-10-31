@@ -5,7 +5,7 @@ import { buildCharacterList } from '../core/characters.js';
 import { makeRng } from '../core/rng.js';
 import { RULES } from '../core/rules.js';
 import { REPLAY_MAX, SAVE_MAX_CHARS, addMatchStats, checkPlayRecord, checkReplay, dataHash, historyEntry, makeReplays, makeSave, newStats, playRecord, pushHistory, readHistory, readReplays, readSave, replayEntry, validateRunState } from '../core/save.js';
-import { buy, endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
+import { buy, endMatch, move, newRun, reroll, sell, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { applyMatchDiff, baseFingerprint, makeMatchCode, parseMatchCode } from '../lab/matchcode.js';
 import { eq, ok, randomTeam } from './helpers.js';
@@ -159,6 +159,33 @@ export const TESTS_SAVE = [
     }
     for (const d of [{ chars: { 'XX-1': { atk: [1, 1, 1] } }, tribes: {} }, { chars: { 'WY-4': { atk: 5 } }, tribes: {} }, { chars: { 'WY-4': { evil: 1 } }, tribes: {} }, { chars: { 'WY-4': JSON.parse('{"__proto__":{"x":1}}') }, tribes: {} }, { chars: {}, tribes: { nope: {} } }]) {
       let threw = false; try { applyMatchDiff(base, bt, d); } catch (e) { threw = true; } ok(threw, 'ค่าที่แก้แปลกต้องถูกปฏิเสธ ' + JSON.stringify(d).slice(0, 40));
+    }
+  }],
+  ['31 Oct fuzz: random shop actions + fights · failed action never changes state · gold ≥ 0 · state/save valid every step', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars), R = makeRng(31102026), ri = n => R.int(n);
+    const ref = st => [{ at: 'bench', i: ri(st.bench.length) }, { at: 'board', row: ri(3), lane: ri(2) }, { at: 'shop', i: ri(st.shop.length) }][ri(3)];
+    for (let run = 0; run < 60; run++) {
+      const P = newRun(chars, ri(2 ** 32)), B = newRun(chars, ri(2 ** 32)), stats = newStats();
+      for (let g = 0; g < 40 && !P.over; g++) {
+        startRound(P, chars); startRound(B, chars, RULES, { unlockWins: P.wins });
+        for (let a = 0; a < 25; a++) {
+          const before = JSON.stringify(P), op = ri(5);
+          const r = op === 0 ? buy(P, ri(P.shop.length + 1), ri(2) ? ref(P) : null, chars) : op === 1 ? sell(P, ref(P), chars)
+            : op === 2 ? move(P, ref(P), ref(P), chars) : op === 3 ? (ri(4) ? { ok: true } : reroll(P, chars)) : toggleLock(P, ri(P.shop.length + 1));
+          if (!r.ok) eq(JSON.stringify(P), before, `run ${run} op ${op}: failed action changed state (${r.msg})`);
+          ok(Number.isInteger(P.gold) && P.gold >= 0, `run ${run}: gold ${P.gold}`);
+          const v = validateRunState(P, cm); ok(v.ok, `run ${run} op ${op}: ${v.errors.join(' · ')}`);
+        }
+        eq(readSave(makeSave(P, B, stats, 1, H), cm, RULES, H).status, 'ok', `run ${run}: save round-trip`);
+        botShop(B, chars, RULES, { unlockWins: P.wins });
+        const res = simulate(buildTeam(teamEntries(P), cm), buildTeam(teamEntries(B), cm), { log: !(run % 6) });
+        if (!(run % 6)) addMatchStats(stats, res);
+        const gain = s => (res.perm || []).filter(x => x.side === s);
+        endMatch(P, res.winner !== 1, chars, RULES, gain(0));
+        endMatch(B, res.winner === 1, chars, RULES, gain(1)); B.over = false; B.hearts = RULES.shop.hearts; B.lastWon = P.lastWon;
+      }
+      ok(P.over, `run ${run}: run should end`);
+      const g0 = P.gold; eq([buy(P, 0, null, chars).ok, reroll(P, chars).ok, P.gold], [false, false, g0], 'ended run: buy/reroll refused');
     }
   }],
 ];

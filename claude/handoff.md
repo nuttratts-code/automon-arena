@@ -1,18 +1,15 @@
 # Automon Arena handoff (English · updated 31 Oct 2026 workflow review · instructions V3.2)
 Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/archive/ (full pre-trim copy: archive/handoff-2026-10-30-full.md). User gets a Thai summary in chat at the end of each task set.
 
-## Relay (two accounts take turns — rules in CLAUDE.md)
+## Relay (two accounts take turns — rules in CLAUDE.md · full pre-trim block: archive/relay-2026-10-31.md)
 - **บาลานซ์: เสร็จแล้ว** (HARD RULE 4 reads this line; set to "กำลังปรับ" while the user is tuning → no import, no measure)
-- Account active now: **second account (rattanakon.ns), 31 Oct, set 64 boss phases** · **no open WIP branch** (claude/festive-johnson-0iut2r merged) — `claude/modest-wozniak-antecb` (docs + CI only) MERGED to main 31 Oct (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS [] · Actions gate success)
-- Last done: set 62 (stage defaults from user AMCFG1 → `core/stage-user.js`) merged + balance room **v128** published (v127 was broken) · process fixes (gate, CORE check) · workflow review 31 Oct: CI now runs the full gate (build + tests + ui_smoke), publish.md rewritten for the new artifact tools, stale docs fixed/archived, Jules docs archived. Older notes: archive/relay-sets-54-61.md.
-- **Decisions 31 Oct (user):** (a) publishing stays with the owner (first) account — 2nd account publishes only if `get_artifact` works on the Links URL, else "publish pending" + paste-message for the old Balance Room chat · (b) **pause Balance Room/rune tooling work; next focus = MVP1 step 5.5 economy** (28 Nov at risk).
-- Next step: step 5.5 economy — plan + questions sent 31 Oct in **claude/review-2026-10-31-economy.md** (Q1–Q4, waiting for user); after answers start on branch claude/economy. **Set 63 (rune ideas → 5 new special effects in core/stage.js) MERGED to main 31 Oct (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes). Balance room publish PENDING (owner account, paste-message given to user).** Details: claude/review-2026-10-31-rune-ideas.md. Phase 2a rune + boss battle code = parked (ask before starting) · user 31 Oct: "บอสยังไม่ได้ทำ" → offer boss work (fight vs boss, Q5/Q6 in review-2026-10-29-stage-phase2.md unanswered) as a next-set option.
-- **Set 64 boss phases MERGED to main 31 Oct** (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS []): boss `phases` (≤3, by bars lost, ≤2 rules each, fx X1–X4 + spot) + rules R1–R30 · editor in Balance Room boss card · **balance room published v130** · rules have no battle effect until the boss battle engine (2a). Details claude/review-2026-10-31-boss-phases.md.
-- **31 Oct ui_smoke fix MERGED** (cbf4d0b): battle perm test used `when:'set'` → ~1.3% random-seed fails; now `matchStart` (0/300). Game code unchanged. No open WIP branch (claude/fix-perm-smoke merged).
-- **31 Oct system test (report only, no code change):** GATE PASS on 05d26d1 + fuzz (1.5k runs / 454k shop actions / 35k battles) found no logic bugs; 1 tiny display bug (check page tribe-bonus line) + nits + economy signals + workflow tips → **claude/review-2026-10-31-system-test.md** (user picks).
-- Open: config/main NOT cleared · user may still re-edit stage runes (wait for a new AMCFG1 paste).
-- Publish: game v63 · balance room **v130 (set 64 + smoke fix, 31 Oct, main cbf4d0b, GATE PASS: tests 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS [])** · check v64. Set 63 publish done.
-- Artifact access: 31 Oct the Artifact tool read the balance room as "owned by you" in this chat and published v130 directly → always try `Artifact read` on the Links URL first; only fall back to the paste-message if it says not found / not writer.
+- Account: second (rattanakon.ns), 31 Oct · WIP branch: **claude/system-test-fixes** (see Next step).
+- Last done: sets 62–64 merged (stage defaults · rune special effects · boss phases, no battle effect until boss engine 2a) · ui_smoke perm-test fix · 31 Oct full system test → claude/review-2026-10-31-system-test.md (no logic bugs).
+- Next step: claude/system-test-fixes = B1 check-page stale line · N1 maxBoard instead of 6 · N2 cleanStage boss fallback = user defaults · N3 buy/sell/reroll refuse after run end · W3 shop fuzz test (233 tests). Merge after GATE PASS + user OK, then publish check + game + balance room.
+- **Economy 5.5 Q1–Q4 POSTPONED by user (31 Oct)** — claude/review-2026-10-31-economy.md; do not push for answers until the user returns to it. Probe data in review-2026-10-31-system-test.md.
+- Parked (ask first): phase 2a rune + boss battle engine (Q5/Q6 in review-2026-10-29-stage-phase2.md) · user may re-edit stage runes (wait for AMCFG1 paste) · config/main NOT cleared.
+- Publish: game v63 · balance room v130 (main cbf4d0b) · check v64. Always `Artifact read` the Links URL first; publish directly if writer, else "publish pending" + paste-message (CLAUDE.md).
+- User-side todo: W1 add `pip install playwright` to the cloud environment setup script · W5 delete 13 merged claude/* branches on github.com.
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 90, hash 521fadbf
@@ -26,7 +23,6 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Pending bundle ("งานรอรวม")
 - MVP1 target 28 Nov 2026 · step 5.5 economy ~14 Nov (proposed) · step 6 polish/mobile 28 Nov → warn if behind.
-- B1 check page: drop stale "tribe bonus no effect" line (review-2026-10-31-system-test.md).
 - Optional: remove the `simSummary` table fold (kept in ชุด 37) — only if user asks.
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.
 
