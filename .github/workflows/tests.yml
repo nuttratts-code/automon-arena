@@ -1,6 +1,7 @@
 name: tests
 
-# Runs the same check CLAUDE.md / GEMINI.md require before a PR: build the 3 pages + run all tests.
+# Same merge gate CLAUDE.md requires: build the 3 pages + run all tests + ui_smoke on the BUILT pages.
+# (Set 62 lesson: source tests passed while the built balance page was broken.)
 on:
   push:
   workflow_dispatch:
@@ -9,14 +10,23 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: /home/runner/pw-browsers
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Build + tests
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install playwright + chromium
+        run: |
+          pip install -q playwright
+          python -m playwright install --with-deps chromium
+      - name: Gate (build + tests + ui_smoke)
         working-directory: src
-        run: node tools/bootstrap.mjs setup
+        run: node tools/bootstrap.mjs gate
