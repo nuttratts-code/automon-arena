@@ -90,9 +90,12 @@ $('cfgCopy').addEventListener('click', async () => {
     if (!cfg) { msg('ยังไม่มีค่าที่บันทึก · กด 💾 บันทึก ก่อน'); return; }
     const res = rs && rs.exists ? rs.data() : null;
     const measured = res ? { at: res.at || null, edits: res.edits || null } : null;
-    const code = 'AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured });
+    // set 61: open ideas ride along (the other account cannot read the `ideas` collection) · cap 50 × 1000 chars
+    const ideas = ideaDocs.map(d => ({ id: d.id, x: d.data() || {} })).filter(({ x }) => IDEA_OPEN.has(typeof x.status === 'string' ? x.status : 'รอ Claude') && typeof x.text === 'string' && x.text)
+      .slice(0, 50).map(({ id, x }) => ({ id, char: typeof x.char === 'string' ? x.char.slice(0, 60) : '', text: x.text.slice(0, 1000), status: typeof x.status === 'string' ? x.status : 'รอ Claude', at: typeof x.at === 'string' ? x.at : '', ...(typeof x.reply === 'string' && x.reply ? { reply: x.reply.slice(0, 1000) } : {}) }));
+    const code = 'AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured, ideas });
     const unsaved = canon(diffs()) !== canon({ chars: cfg.chars || {}, tribes: cfg.tribes || {} });
-    const note = unsaved ? ' · ⚠ มีค่าที่แก้หลังกด 💾 (ค่านั้นไม่อยู่ในรหัส)' : '';
+    const note = (unsaved ? ' · ⚠ มีค่าที่แก้หลังกด 💾 (ค่านั้นไม่อยู่ในรหัส)' : '') + (ideas.length ? ` · มีไอเดียที่รอ Claude ${ideas.length} ข้อในรหัสด้วย` : '');
     const box = $('cfgBox');
     const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); msg('คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง' + note); };
     const ok = () => { box.hidden = true; msg('คัดลอกค่าที่บันทึกแล้ว · วางในแชทกับ Claude ได้เลย' + note); };

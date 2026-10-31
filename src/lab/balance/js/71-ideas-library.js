@@ -10,6 +10,7 @@ ideaPick.set();
 const IDEA_STATUS = { 'รอ Claude': 'p-lo', 'ใช้แล้ว': 'p-ok', 'ต้องเลือกก่อน': 'p-hi', 'ไม่ใช้': 'p-na' };
 // ไอเดีย: แก้/ลบได้ · ที่จบแล้ว (ใช้แล้ว/ไม่ใช้) ซ่อนไว้ก่อน · แก้ข้อความแล้วกลับเป็น "รอ Claude" ให้ Claude อ่านใหม่
 const IDEA_DONE = new Set(['ใช้แล้ว', 'ไม่ใช้']);
+const IDEA_OPEN = new Set(['รอ Claude', 'ต้องเลือกก่อน']); // set 61: these go into the "คัดลอกค่าให้ Claude" code
 let ideaDocs = [], ideaEditing = null, ideaDel = null;
 try { $('ideaShowDone').checked = localStorage.getItem('automon-balance-ideadone') === '1'; } catch (e) {}
 $('ideaShowDone').addEventListener('change', () => { try { localStorage.setItem('automon-balance-ideadone', $('ideaShowDone').checked ? '1' : ''); } catch (e) {} renderIdeas(); });
@@ -23,44 +24,51 @@ function renderIdeas(docs) {
   $('ideaHidden').textContent = hid && !showDone ? `ซ่อนไว้ ${hid} ข้อ` : '';
   if (!shown.length) { list.replaceChildren(Object.assign(document.createElement('li'), { className: 'status', textContent: all.length ? 'ไม่มีไอเดียที่ค้างอยู่' : 'ยังไม่มีไอเดีย' })); return; }
   list.replaceChildren(...shown.map(({ id, x }) => {
-    const li = document.createElement('li'); li.className = 'idea' + (IDEA_DONE.has(stOf(x)) ? ' done' : '');
-    const meta = document.createElement('div'); meta.className = 'meta';
-    const st = stOf(x);
     const who = cell(typeof x.char === 'string' && x.char ? x.char : 'ทั่วไป'); if (typeof x.char === 'string' && x.char && charOf(x.char)) who.prepend(charBadge(x.char));
-    meta.append(cell(st, `pill ${IDEA_STATUS[st] || 'p-na'}`), who, cell(typeof x.at === 'string' ? x.at.slice(0, 16).replace('T', ' ') : ''));
-    if (typeof x.editedAt === 'string') meta.append(cell('แก้แล้ว'));
-    li.append(meta);
-    const acts = el('div', 'acts');
-    if (ideaEditing === id) {
-      const ta = document.createElement('textarea'); ta.rows = 3; ta.maxLength = 1000; ta.value = typeof x.text === 'string' ? x.text : '';
-      const save = el('button', 'primary', 'บันทึก'), cancel = el('button', '', 'ยกเลิก'); save.type = cancel.type = 'button';
-      save.addEventListener('click', async () => {
-        const t = ta.value.trim().slice(0, 1000); if (!t || !db) return;
-        save.disabled = true;
-        try { await db.doc('ideas/' + id).update({ text: t, status: 'รอ Claude', editedAt: new Date().toISOString() }); ideaEditing = null; $('ideaMsg').textContent = 'แก้แล้ว · บอก Claude ในแชทได้เลย'; }
-        catch (e) { $('ideaMsg').textContent = 'แก้ไม่สำเร็จ ลองใหม่อีกครั้ง'; save.disabled = false; return; }
-        renderIdeas();
-      });
-      cancel.addEventListener('click', () => { ideaEditing = null; renderIdeas(); });
-      acts.append(save, cancel); li.append(ta, acts);
-      setTimeout(() => ta.focus(), 0);
-    } else {
-      li.append(cell(typeof x.text === 'string' ? x.text : '', 'text'));
-      if (typeof x.reply === 'string' && x.reply) li.append(cell(x.reply, 'reply'));
-      if (db) {
-        const ed = el('button', '', 'แก้'); ed.type = 'button';
-        ed.addEventListener('click', () => { ideaEditing = id; ideaDel = null; renderIdeas(); });
-        const del = el('button', 'danger', ideaDel === id ? 'กดอีกครั้งเพื่อลบ' : 'ลบ'); del.type = 'button';
-        del.addEventListener('click', async () => {
-          if (ideaDel !== id) { ideaDel = id; renderIdeas(); return; } // กดสองครั้งกันลบพลาด (ไม่ใช้กล่อง confirm)
-          ideaDel = null; del.disabled = true;
-          try { await db.doc('ideas/' + id).delete(); $('ideaMsg').textContent = 'ลบแล้ว'; } catch (e) { $('ideaMsg').textContent = 'ลบไม่สำเร็จ ลองใหม่อีกครั้ง'; renderIdeas(); }
-        });
-        acts.append(ed, del); li.append(acts);
-      }
-    }
-    return li;
+    return ideaItem(id, x, who, t => { $('ideaMsg').textContent = t; });
   }));
+}
+// Both idea lists redraw together (set 61: the rune/boss list on the stage tab has the same edit/delete)
+const ideasRedraw = () => { renderIdeas(); renderStageIdeas(); };
+// One idea row: status · who · time · text / reply · แก้ (status back to "รอ Claude") · ลบ (tap twice)
+function ideaItem(id, x, who, say) {
+  const stOf = q => (typeof q.status === 'string' ? q.status : 'รอ Claude');
+  const li = document.createElement('li'); li.className = 'idea' + (IDEA_DONE.has(stOf(x)) ? ' done' : '');
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const st = stOf(x);
+  meta.append(cell(st, `pill ${IDEA_STATUS[st] || 'p-na'}`), who, cell(typeof x.at === 'string' ? x.at.slice(0, 16).replace('T', ' ') : ''));
+  if (typeof x.editedAt === 'string') meta.append(cell('แก้แล้ว'));
+  li.append(meta);
+  const acts = el('div', 'acts');
+  if (ideaEditing === id) {
+    const ta = document.createElement('textarea'); ta.rows = 3; ta.maxLength = 1000; ta.value = typeof x.text === 'string' ? x.text : '';
+    const save = el('button', 'primary', 'บันทึก'), cancel = el('button', '', 'ยกเลิก'); save.type = cancel.type = 'button';
+    save.addEventListener('click', async () => {
+      const t = ta.value.trim().slice(0, 1000); if (!t || !db) return;
+      save.disabled = true;
+      try { await db.doc('ideas/' + id).update({ text: t, status: 'รอ Claude', editedAt: new Date().toISOString() }); ideaEditing = null; say('แก้แล้ว · บอก Claude ในแชทได้เลย'); }
+      catch (e) { say('แก้ไม่สำเร็จ ลองใหม่อีกครั้ง'); save.disabled = false; return; }
+      ideasRedraw();
+    });
+    cancel.addEventListener('click', () => { ideaEditing = null; ideasRedraw(); });
+    acts.append(save, cancel); li.append(ta, acts);
+    setTimeout(() => ta.focus(), 0);
+  } else {
+    li.append(cell(typeof x.text === 'string' ? x.text : '', 'text'));
+    if (typeof x.reply === 'string' && x.reply) li.append(cell(x.reply, 'reply'));
+    if (db) {
+      const ed = el('button', '', 'แก้'); ed.type = 'button';
+      ed.addEventListener('click', () => { ideaEditing = id; ideaDel = null; ideasRedraw(); });
+      const del = el('button', 'danger', ideaDel === id ? 'กดอีกครั้งเพื่อลบ' : 'ลบ'); del.type = 'button';
+      del.addEventListener('click', async () => {
+        if (ideaDel !== id) { ideaDel = id; ideasRedraw(); return; } // กดสองครั้งกันลบพลาด (ไม่ใช้กล่อง confirm)
+        ideaDel = null; del.disabled = true;
+        try { await db.doc('ideas/' + id).delete(); say('ลบแล้ว'); } catch (e) { say('ลบไม่สำเร็จ ลองใหม่อีกครั้ง'); ideasRedraw(); }
+      });
+      acts.append(ed, del); li.append(acts);
+    }
+  }
+  return li;
 }
 $('ideaSend').addEventListener('click', async () => {
   const text = $('ideaText').value.trim();

@@ -39,6 +39,8 @@ const runeAll = () => [...STAGE_RUNES.map(r => [r, stageCfg.runes[r.id], false])
 const runeList = () => runeAll().filter(([, x]) => !x.del);
 // Rune themes (user 30 Oct): what the rune is about (เกราะ, เงิน, ไฟ …) · set 60: follows the rune's current effect
 const RUNE_THEME_EFF = { atk: 'dmg', hitDmg: 'dmg', multi: 'dmg', hp: 'heal', healHit: 'heal', healAmp: 'heal', lifesteal: 'heal', armor: 'armor', armorHit: 'armor', armorAmp: 'armor', cd: 'speed', burn: 'burn', burnAmp: 'burn', shock: 'shock', shockAmp: 'shock', eCd: 'debuff', eMaxHp: 'debuff', eBurn: 'burn', eShock: 'shock', eDmgTaken: 'debuff', eHealCut: 'debuff', eArmorCut: 'debuff' };
+// Effect a new rune starts with under a หมวด filter (set 61)
+const RUNE_THEME_NEW = { dmg: 'atk', armor: 'armor', heal: 'hp', speed: 'cd', burn: 'burn', shock: 'shock', debuff: 'eCd', survive: 'revive', gold: 'gold', tribe: 'addTribe', other: 'atk' };
 function runeThemeOf(def, x) {
   if (x.theme) return x.theme; // set 59: picked by the user
   return runeThemeAuto(def, x);
@@ -66,11 +68,12 @@ function runeEditor(def, x, custom) {
   const nm = document.createElement('input'); nm.type = 'text'; nm.id = `stg-${rid}-name`; nm.maxLength = 16; nm.value = x.name; nm.title = 'ชื่อรูน (แก้ได้)';
   nm.classList.toggle('changed', x.name !== base.name);
   nm.addEventListener('change', () => { const v = cleanName(nm.value).slice(0, 16); if (v) x.name = v; redraw(); renderStageIdeaFor(); });
-  const maxF = fld('มีได้ต่อ run', stageNum(`stg-${rid}-max`, x.max, base.max, 1, RUNE_MAX_HI, v => { x.max = v; }));
-  maxF.title = '1 = รูนเฉพาะ (มีได้ชิ้นเดียวต่อ run) · 2 ขึ้นไป = เก็บซ้ำได้ แต่ละชิ้นเพิ่มค่าซ้อนกันเหมือนเลเวล';
+  // Set 61 (user rule): copies follow rarity (ธรรมดา 3 · หายาก 2 · ตำนาน 1) · still typeable, yellow when it differs from the rarity number
+  const maxF = fld('มีได้ต่อ run', stageNum(`stg-${rid}-max`, x.max, RUNE_COPIES[x.rarity], 1, RUNE_MAX_HI, v => { x.max = v; }));
+  maxF.title = `ตามความหายาก = ${RUNE_COPIES[x.rarity]} ชิ้น (ธรรมดา 3 · หายาก 2 · ตำนาน 1) · เปลี่ยนความหายากแล้วจำนวนเปลี่ยนตาม · พิมพ์เลขอื่นได้ (ช่องเป็นสีเหลือง)`;
   // Set 59 (user 30 Oct): every rune has the same basics — name, rarity, copies, theme, who it works on
   const themeF = fld('หมวด', selectInput(`stg-${rid}-theme`, [['', `อัตโนมัติ (${runeThemeTh(runeThemeAuto(def, x))})`], ...RUNE_THEMES], x.theme, v => { x.theme = v; redraw(); }));
-  const g = fgrid(fld('ชื่อรูน', nm, 'wide'), fld('ความหายาก', selectInput(`stg-${rid}-rarity`, RUNE_RARITY, x.rarity, v => { x.rarity = v; redraw(); })), maxF, themeF);
+  const g = fgrid(fld('ชื่อรูน', nm, 'wide'), fld('ความหายาก', selectInput(`stg-${rid}-rarity`, RUNE_RARITY, x.rarity, v => { x.rarity = v; x.max = RUNE_COPIES[v]; redraw(); })), maxF, themeF);
   const scopeF = (all = false) => fld('ใช้กับ', selectInput(`stg-${rid}-scope`, all ? RUNE_SCOPES : RUNE_SCOPES.filter(s => s[0] !== 'enemy'), x.scope, v => { x.scope = v; redraw(); }));
   const tribeF = () => fld('เผ่า', selectInput(`stg-${rid}-tribe`, TRIBES.map(t => [t, t]), x.tribe, v => { x.tribe = v; redraw(); }));
   const notes = [];
@@ -133,7 +136,15 @@ function renderStageRunes(box) {
   }
   const addM = document.createElement('details'); addM.className = 'add-menu';
   const addS = document.createElement('summary'); addS.textContent = '+ เพิ่มรูน'; addM.append(addS);
-  const newRune = type => { let n = 1; while (stageCfg.custom.some(c => c.id === 'C' + n)) n++; const c = customDefault('C' + n, type); stageCfg.custom.push(c); runeOpen.add(c.id); runeQuery = ''; runeTheme = 'all'; stageChanged(); renderStage(); };
+  // Set 61 (user): a new rune keeps the หมวด filter and starts with that theme's effect (theme '' = auto, still shown under the filter)
+  // · if its effect is not of that theme (skill rune, อื่นๆ) the theme is picked, so it stays in view · search is cleared so it is visible
+  const newRune = type => {
+    let n = 1; while (stageCfg.custom.some(c => c.id === 'C' + n)) n++;
+    const f = runeTheme !== 'all' ? runeTheme : '';
+    const c = customDefault('C' + n, type === 'skill' ? 'skill' : (f && RUNE_THEME_NEW[f]) || 'atk');
+    if (f && runeThemeAuto(null, c) !== f) c.theme = f;
+    stageCfg.custom.push(c); runeOpen.add(c.id); runeQuery = ''; stageChanged(); renderStage();
+  };
   const a1 = el('button', '', 'รูนใหม่ (เลือกผลทีหลังได้)'), a2 = el('button', '', 'รูนจากสกิลที่มีอยู่');
   a1.type = a2.type = 'button'; a1.id = 'stgAddStat'; a2.id = 'stgAddSkill';
   const full = stageCfg.custom.length >= RUNE_CUSTOM_MAX;
@@ -297,14 +308,10 @@ function renderStageIdeaFor() {
 const isStageIdea = x => typeof x.char === 'string' && /^(รูน|บอส)/.test(x.char);
 function renderStageIdeas() {
   const list = $('stgIdeas');
-  const mine = ideaDocs.map(d => d.data() || {}).filter(isStageIdea);
+  const mine = ideaDocs.map(d => ({ id: d.id, x: d.data() || {} })).filter(o => isStageIdea(o.x));
   if (!mine.length) { list.replaceChildren(el('li', 'status', 'ยังไม่มีไอเดียรูน / บอส')); return; }
-  list.replaceChildren(...mine.map(x => {
-    const li = el('li', 'idea', ''), meta = el('div', 'meta', '');
-    const st = typeof x.status === 'string' ? x.status : 'รอ Claude';
-    meta.append(cell(st, `pill ${IDEA_STATUS[st] || 'p-na'}`), cell(x.char), cell(typeof x.at === 'string' ? x.at.slice(0, 16).replace('T', ' ') : ''));
-    li.append(meta, el('div', '', typeof x.text === 'string' ? x.text : '')); return li;
-  }));
+  // Set 61: same row as the character ideas (edit → back to "รอ Claude", delete, reply) · 71-ideas-library.js ideaItem
+  list.replaceChildren(...mine.map(({ id, x }) => ideaItem(id, x, cell(x.char), t => { $('stgIdeaMsg').textContent = t; })));
 }
 $('stgIdeaSend').addEventListener('click', async () => {
   const text = $('stgIdeaText').value.trim(), msg = t => { $('stgIdeaMsg').textContent = t; };

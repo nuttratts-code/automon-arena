@@ -107,8 +107,11 @@ export const STAGE_RUNES = [
   rune('U8', 'legend', 'เงา', 'shadow', 'one'), rune('X9', 'common', 'ส่องทีม', 'scout', 'team'),
 ];
 export const RUNE_BY_ID = Object.fromEntries(STAGE_RUNES.map(r => [r.id, r]));
-// Copies of one rune a player may hold in a run (user 29 Oct, set 52): 1 = unique rune · 2+ = stacks like levels. Shop/economy runes 3, others 1 (ค่าเสนอ).
-export const RUNE_MAX_DEFAULT = { T1: 3, T2: 3, T3: 2, T4: 3 };
+// Copies of one rune a player may hold in a run: 1 = unique rune · 2+ = stacks like levels.
+// Set 61 (user rule 31 Oct): copies follow rarity for every rune — ธรรมดา 3 · หายาก 2 · ตำนาน 1 · still editable per rune.
+export const RUNE_COPIES = { common: 3, rare: 2, legend: 1 };
+// Defaults before set 61: an old save holding exactly these is treated as "not set" → copies follow rarity
+const RUNE_MAX_OLD = { T1: 3, T2: 3, T3: 2, T4: 3 };
 export const RUNE_MAX_HI = 9;
 export const RUNE_CUSTOM_MAX = 40;
 const RUNE_NAME_MAX = 16;
@@ -149,12 +152,12 @@ export function runeWithEff(x, eff) {
   return y;
 }
 function runeDefault(r) {
-  const base = { on: true, del: false, name: r.name, max: RUNE_MAX_DEFAULT[r.id] || 1, rarity: r.rarity, theme: '', tribe: TRIBES[0], scope: r.scope, eff: r.eff };
+  const base = { on: true, del: false, name: r.name, max: RUNE_COPIES[r.rarity], rarity: r.rarity, theme: '', tribe: TRIBES[0], scope: r.scope, eff: r.eff };
   return { ...base, ...runeEffDefaults(r.eff), ...r.p };
 }
 export function customDefault(id, eff = 'atk') {
   if (eff === 'stat') eff = 'atk';
-  return runeWithEff({ id, on: true, del: false, name: 'รูนใหม่', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: TRIBES[0] }, eff);
+  return runeWithEff({ id, on: true, del: false, name: 'รูนใหม่', max: RUNE_COPIES.common, rarity: 'common', theme: '', scope: 'team', tribe: TRIBES[0] }, eff);
 }
 const runeNum = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
 const runeIsObj = x => x && typeof x === 'object' && !Array.isArray(x);
@@ -164,8 +167,8 @@ function cleanRuneCommon(x, d) {
   if (typeof x.del === 'boolean') d.del = x.del;
   if (x.theme === '' || RUNE_THEMES.some(t => t[0] === x.theme)) d.theme = x.theme;
   const nm = runeName(x.name); if (nm) d.name = nm;
-  if (Number.isInteger(x.max) && x.max >= 1 && x.max <= RUNE_MAX_HI) d.max = x.max;
   if (RUNE_RARITY.some(q => q[0] === x.rarity)) d.rarity = x.rarity;
+  d.max = Number.isInteger(x.max) && x.max >= 1 && x.max <= RUNE_MAX_HI ? x.max : RUNE_COPIES[d.rarity];
   if (TRIBES.includes(x.tribe)) d.tribe = x.tribe;
   if (RUNE_SCOPES.some(s => s[0] === x.scope)) d.scope = x.scope;
 }
@@ -198,8 +201,9 @@ function cleanRune(x, d) {
   return cleanRuneEff(x, d) ? d : null;
 }
 function cleanRunes(o, out) {
+  const oldSave = o.copiesRule !== 'rarity', noOldMax = (x, m) => (oldSave && x.max === m ? { ...x, max: undefined } : x);
   if (runeIsObj(o.runes)) for (const r of STAGE_RUNES) {
-    const x = o.runes[r.id]; if (!runeIsObj(x)) continue;
+    const x = runeIsObj(o.runes[r.id]) ? noOldMax(o.runes[r.id], RUNE_MAX_OLD[r.id] || 1) : null; if (!x) continue;
     const y = x.v === undefined && RUNE_OLD_V[r.id] && x[RUNE_OLD_V[r.id]] !== undefined && (x.eff === undefined || x.eff === r.eff) ? { ...x, v: x[RUNE_OLD_V[r.id]] } : x;
     out.runes[r.id] = cleanRune(y, out.runes[r.id]) || out.runes[r.id];
   }
@@ -209,7 +213,7 @@ function cleanRunes(o, out) {
       if (!runeIsObj(x) || typeof x.id !== 'string' || !/^C\d{1,3}$/.test(x.id) || ids.has(x.id)) continue;
       const eff = x.type === 'skill' ? 'skill' : x.eff !== undefined ? x.eff : x.type === 'stat' ? 'atk' : null;
       if (!runeKind(eff)) continue;
-      const d = cleanRune({ ...x, eff }, customDefault(x.id, eff)); if (!d) continue;
+      const d = cleanRune({ ...noOldMax(x, 1), eff }, customDefault(x.id, eff)); if (!d) continue;
       ids.add(x.id); out.custom.push(d);
     }
   }
@@ -260,6 +264,7 @@ export const enemyMultAt = (st, stage) => (1 + st.growPct / 100) ** Math.max(0, 
 
 export function stageDefaults() {
   return {
+    copiesRule: 'rarity', // set 61 marker: saves without it predate "copies follow rarity" (see cleanRunes)
     runes: Object.fromEntries(STAGE_RUNES.map(r => [r.id, runeDefault(r)])),
     custom: [],
     bosses: STAGE_BOSSES.map(b => ({ ...b })),
