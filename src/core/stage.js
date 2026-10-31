@@ -290,7 +290,7 @@ export const BOSS_PHASE_FX = [
   ['stunAll', 'X4 ผู้เล่นทุกตัวมึนงง', 2, 1, 10, 'วิ'],
 ];
 // Phases (set 64, user 31 Oct: Q1 A by bars lost · Q2 A max 3 · Q3 A new rules replace old · Q4 B max 2 rules per phase)
-// phase = { at: bars lost when it starts (phase 1 = 0), rules: [{ id, v, v2?, tribe? }] ≤ 2, fx: [{ id, v }], spot: '' (keep) or a BOSS_SPOTS id }
+// phase = { at: bars lost when it starts (phase 1 = 0), rules: [{ id, v, v2?, tribe? }] ≤ 2, fx: [{ id, v }], spot: '' (keep) or a spot (see spotInfo) }
 export const BOSS_MAX_PHASES = 3, BOSS_MAX_RULES = 2;
 export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
 export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '' });
@@ -300,14 +300,48 @@ export function bossPhaseWarn(b, p) {
   if (has('execute') && has('aoe')) w.push('R7 + R4 เฟสเดียวกัน อาจล้างทีมผู้เล่นในทีเดียว');
   if (has('hitCap') && has('minHit')) w.push('R22 + R23 พร้อมกัน แทบทุกทีมเสียเปรียบ');
   const spot = p.spot || b.spot;
-  if ((has('frontOnly') || has('backOnly')) && spot !== 'all') w.push('R26 ใช้กับบอสที่ยืนทุกช่องเท่านั้น ไม่งั้นบางทีมตีไม่โดนเลย');
-  if (has('weakSpot') && spot !== 'move') w.push('R30 ได้ผลเฉพาะบอสแบบย้ายที่');
+  const si = spotInfo(spot) || { bits: '', move: false };
+  if ((has('frontOnly') || has('backOnly')) && (si.bits !== '111111' || si.move)) w.push('R26 ใช้กับบอสที่ยืนทุกช่องเท่านั้น ไม่งั้นบางทีมตีไม่โดนเลย');
+  if (has('weakSpot') && !si.move) w.push('R30 ได้ผลเฉพาะบอสแบบย้ายที่');
   return w;
 }
-// Where the boss stands (user 29 Oct, set 52: per boss) · board side = 3 rows × 2 lanes. 'move' = 1 slot, jumps to a random slot every moveSec.
-export const BOSS_SPOTS = [
-  ['all', 'ทุกช่อง (6 ช่อง)'], ['four', 'แถวหน้า + แถวกลาง (4 ช่อง)'], ['front', 'แถวหน้า (2 ช่อง)'], ['one', '1 ช่อง (แถวหน้า เลนบน)'], ['move', '1 ช่อง ย้ายที่เรื่อยๆ'],
+// Where the boss stands (user 29 Oct, set 52: per boss · set 65, user 31 Oct: any slots) · board side = 3 rows × 2 lanes.
+// Slot index = row × 2 + lane (row 0 front · 1 mid · 2 back; lane 0 top · 1 bottom).
+// spot = a preset id below, or a custom code: 'c' + 6 bits (stands on every slot marked 1) or 'm' + 6 bits (1 slot, jumps among the marked slots every moveSec; ≥ 2 slots).
+export const BOSS_SPOT_PRESETS = [
+  ['all', 'ทุกช่อง', '111111'], ['front', 'แถวหน้า', '110000'], ['mid', 'แถวกลาง', '001100'], ['back', 'แถวหลัง', '000011'],
+  ['four', 'หน้า + กลาง', '111100'], ['midBack', 'กลาง + หลัง', '001111'], ['frontBack', 'หน้า + หลัง', '110011'],
+  ['laneTop', 'เลนบน', '101010'], ['laneBottom', 'เลนล่าง', '010101'], ['one', 'หน้า เลนบน', '100000'],
 ];
+const SPOT_ROW = ['หน้า', 'กลาง', 'หลัง'], SPOT_LANE = ['บน', 'ล่าง'];
+// → { bits: '101010', move: bool } or null if not a valid spot
+export function spotInfo(spot) {
+  if (spot === 'move') return { bits: '111111', move: true };
+  const p = BOSS_SPOT_PRESETS.find(q => q[0] === spot); if (p) return { bits: p[2], move: false };
+  if (typeof spot !== 'string' || !/^[cm][01]{6}$/.test(spot)) return null;
+  const n = spot.slice(1).split('1').length - 1, move = spot[0] === 'm';
+  return n >= (move ? 2 : 1) ? { bits: spot.slice(1), move } : null;
+}
+export const validSpot = spot => !!spotInfo(spot);
+// bits + move → the shortest id (preset id when it matches)
+export function spotCode(bits, move) {
+  if (move) return bits === '111111' ? 'move' : 'm' + bits;
+  const p = BOSS_SPOT_PRESETS.find(q => q[2] === bits); return p ? p[0] : 'c' + bits;
+}
+export function spotLabel(spot) {
+  const s = spotInfo(spot); if (!s) return String(spot);
+  const idx = [...s.bits].flatMap((b, i) => (b === '1' ? [i] : [])), p = BOSS_SPOT_PRESETS.find(q => q[2] === s.bits);
+  const where = p ? p[1] : idx.map(i => `${SPOT_ROW[i >> 1]}${SPOT_LANE[i & 1]}`).join(' ');
+  return s.move ? `ย้ายที่ใน ${where} (ทีละ 1 ช่อง)` : `${where} (${idx.length} ช่อง)`;
+}
+// short form for the boss header line
+export function spotShort(spot) {
+  const s = spotInfo(spot); if (!s) return String(spot);
+  const p = BOSS_SPOT_PRESETS.find(q => q[2] === s.bits), n = s.bits.split('1').length - 1;
+  return (s.move ? 'ย้ายที่ · ' : 'ยืน ') + (p ? p[1] : `เลือกเอง ${n} ช่อง`);
+}
+// kept for old callers: [id, label] of the presets + 'move'
+export const BOSS_SPOTS = [...BOSS_SPOT_PRESETS.map(p => [p[0], spotLabel(p[0])]), ['move', spotLabel('move')]];
 // Boss stats = at its first appearance (stage 5) · stage 10 = × mult10 · after stage 10 each boss + endlessPct%
 // bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
 export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4]];
@@ -360,7 +394,7 @@ function cleanStageOn(o, out) {
       const b = { ...base };
       const nm = typeof x.name === 'string' ? x.name.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 24) : ''; if (nm) b.name = nm;
       if (TRIBES.includes(x.tribe)) b.tribe = x.tribe;
-      if (BOSS_SPOTS.some(q => q[0] === x.spot)) b.spot = x.spot;
+      if (validSpot(x.spot)) b.spot = x.spot;
       for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi) && (!['bars', 'moveSec', 'multi'].includes(k) || Number.isInteger(x[k]))) b[k] = x[k];
       b.phases = cleanPhases(x, b, num, isObj);
       if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
@@ -395,7 +429,7 @@ function cleanPhases(x, b, num, isObj) {
     const ph = bossPhase(at, rules(p.rules, (b.phases[out.length] || b.phases[0]).rules));
     if (out.length) {
       if (Array.isArray(p.fx)) for (const f of p.fx) { const q = isObj(f) && BOSS_PHASE_FX.find(z => z[0] === f.id); if (q && !ph.fx.some(o => o.id === q[0])) ph.fx.push({ id: q[0], v: q[4] ? (num(f.v, q[3], q[4]) ? f.v : q[2]) : 0 }); }
-      if (BOSS_SPOTS.some(q => q[0] === p.spot)) ph.spot = p.spot;
+      if (validSpot(p.spot)) ph.spot = p.spot;
     }
     out.push(ph);
   }

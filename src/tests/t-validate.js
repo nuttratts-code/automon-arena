@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -37,6 +37,11 @@ export const TESTS_VALIDATE = [
     eq(ph[2].rules, [{ id: 'curse', v: 15, v2: 50 }], 'phase 3: none dropped, defaults');
     for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
     eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
+    { const c = cleanStage({ bosses: [{ id: 'B1', spot: 'c100001' }, { id: 'B2', spot: 'm110000' }, { id: 'B3', spot: 'm100000' }, { id: 'B4', spot: 'c000000' }] });
+      eq(c.bosses.map(b => b.spot), ['c100001', 'm110000', 'four', 'front'], 'custom spot codes: valid kept, 1-slot move / empty rejected'); }
+    eq([spotCode('110000', false), spotCode('111111', true), spotCode('100001', false), spotCode('000011', true)], ['front', 'move', 'c100001', 'm000011'], 'spotCode presets');
+    eq([spotInfo('move'), spotInfo('one')], [{ bits: '111111', move: true }, { bits: '100000', move: false }], 'old spot ids still read');
+    eq(bossPhaseWarn({ spot: 'm000011' }, { rules: [{ id: 'weakSpot' }], spot: '' }), [], 'R30 ok on custom move');
     eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'execute' }, { id: 'aoe' }], spot: '' }).length, 1, 'warn R7+R4'); eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'frontOnly' }], spot: 'all' }), [], 'R26 ok on all');
     eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
     const b = STAGE_BOSSES[0]; eq(bossAt(b, 1).hp, b.hp, 'first boss'); eq(bossAt(b, 2).hp, Math.round(b.hp * b.mult10), 'stage 10'); eq(bossAt(b, 3).hp, Math.round(b.hp * b.mult10 * (1 + b.endlessPct / 100)), 'endless');
