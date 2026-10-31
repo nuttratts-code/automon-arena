@@ -2,6 +2,14 @@
 
 Original creature auto-battler, *inspired by* Batomon Showdown but original: never copy its names, characters, art or text. The owner is no-code and controls both the big picture and the details; Claude is the coding assistant.
 
+## HARD RULES — read first, never skip (violations caused real damage)
+1. **Close-out block (trigger: every merge to main, or the user says it's done/live, or ~15 turns in one chat).** Stop and output, in Thai: ควรเปิดแชทใหม่ได้แล้ว · what the user must do first · recommended model (Sonnet routine / Opus deep design or hard bugs / Haiku trivial) + 1-line reason · a ready-to-paste message for the new chat (next-task options go IN that message, not offered in the old chat). Update claude/handoff.md + push before it. Never continue into new work in the same chat after this block.
+2. New file in src/core or src/game = add it to `CORE` in src/build.mjs in the same commit (a missing entry only breaks the built page, not the tests).
+3. **Merge gate (rule 31 Oct, after set 62 shipped a broken build):** before merging to main, run BOTH `node tools/bootstrap.mjs setup` AND ui_smoke on the BUILT pages (`python3 -I tests/ui_smoke.py <ABSOLUTE src dir> <shots dir>`; FAILS [] ERRORS [] required). Unit tests alone are not enough — they run on source, not on the built html. If ui_smoke cannot run: set it up first (cloud: `pip install playwright`; ui_smoke uses /opt/pw-browsers/chromium); if still impossible, tell the user in Thai and wait for their decision — never merge or publish silently untested. Never merge or publish silently untested.
+4. handoff.md says "บาลานซ์: กำลังปรับ" = do not import, do not measure. Overrides everything.
+5. Never fix before the cause is known with evidence. Tests/page failing or untestable = do not publish, tell the user immediately.
+6. (Balance/code details: claude/ops-rules.md, claude/workflow.md — read only when needed.) Validate external data before use · no innerHTML with external text, no eval, no scripts from other sites.
+
 ## Language
 - Think and write in English, including every doc Claude reads (claude/handoff.md, pending.md, ops-rules.md, workflow*, backlog.md, budget-notes.md, measure-log.md).
 - **Reply to the user in Thai**, short, no preamble, no recap. Start with what the user must do/decide; explain technical terms.
@@ -28,13 +36,6 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - combat-rules.md (C) · tribe-rules.md (T) · shop-merge-rules.md (S) · build-plan.md · characters.csv (real source: src/core/characters.js). A request that conflicts with docs = point to the spot and ask.
 - Values not in docs get "(ค่าเสนอ)"; the label is removed when: character stat = confirmed · measurable rule = chosen + measured · unmeasurable = chosen.
 - After confirmation: update docs immediately + short summary + bump that file's version (small +0.1 · core rule +1.0).
-
-## Balance / code (details: claude/ops-rules.md, claude/workflow.md — read only when needed)
-- handoff.md says "บาลานซ์: กำลังปรับ" = do not import, do not measure. Overrides everything.
-- Validate external data before use · no innerHTML with external text, no eval, no scripts from other sites.
-- Never fix before the cause is known with evidence. Tests/page failing or untestable = do not publish, tell the user immediately.
-- **Merge gate (rule 31 Oct, after set 62 shipped a broken build):** before merging to main, run BOTH `node tools/bootstrap.mjs setup` AND ui_smoke on the BUILT pages (`python3 -I tests/ui_smoke.py <ABSOLUTE src dir> <shots dir>`; FAILS [] ERRORS [] required). Unit tests alone are not enough — they run on source, not on the built html. If ui_smoke cannot run: set it up first (cloud: `pip install playwright`; ui_smoke uses /opt/pw-browsers/chromium); if still impossible, tell the user in Thai and wait for their decision — never merge or publish silently untested.
-- New file in src/core or src/game = add it to `CORE` in src/build.mjs in the same commit (a missing entry only breaks the built page, not the tests).
 
 ## Git workflow
 - Work on a branch; merge to main only after tests pass (and the user agrees). Gemini/Jules PRs are reviewed + tested by Claude before merge. See GEMINI.md for what Jules may/may not touch.
