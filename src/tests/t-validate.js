@@ -7,23 +7,23 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
-    eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom, [], 'no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
+    eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom.map(c => c.id), ['C1', 'C3', 'C5', 'C2', 'C4', 'C6'], 'user custom runes (set 62)'); eq(stageBase().custom, [], 'code base has no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
     for (const s of RUNE_SPECIAL) for (const [k, , v, lo, hi, u] of s.f) ok(u === 'tribe' || (v >= lo && v <= hi), `${s.key}.${k} default out of range`);
     for (const r of STAGE_RUNES) ok(runeKind(r.eff), `${r.id} effect`);
     for (const b of STAGE_BOSSES) ok(BOSS_RULES.some(r => r[0] === b.rule), `${b.id} rule`);
     const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { dropHard: -1, dropEasy: 20 },
       bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
-    eq(bad.runes.T9.dmgPct, 40, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ทอง', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', eff: 'gold', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
+    eq(bad.runes.T9.dmgPct, 25, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ร่ำรวย', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', eff: 'gold', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
     eq(bad.settings.dropHard, 50, 'bad setting'); eq(bad.settings.dropEasy, 20, 'good setting');
     eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, 450, 'hp out of range'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].rule, 'armorCut', 'unknown rule kept default');
     eq(bad.bosses[1].rule, 'healCut', 'new boss rule'); eq(bad.bosses[1].ruleV, 50, 'rule value out of range → rule default');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
       bosses: [{ id: 'B1', spot: 'four', bars: 7, moveSec: 3 }, { id: 'B2', spot: 'fly', bars: 2.5, moveSec: 0 }] });
-    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['แนวหน้า', 3, 3], 'bad name/max → default (common = 3)');
+    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['โล่ไม้คู่', 3, 3], 'bad name/max → default (common = 3)');
     eq([s2.bosses[0].spot, s2.bosses[0].bars, s2.bosses[0].moveSec], ['four', 7, 3], 'boss spot/bars'); eq([s2.bosses[1].spot, s2.bosses[1].bars, s2.bosses[1].moveSec], ['move', 5, 8], 'bad spot/bars → default');
     eq(s2.settings.growFrom, 20, 'growFrom out of range'); eq(enemyMultAt(s2.settings, 19), 1, 'no growth before growFrom'); ok(Math.abs(enemyMultAt(s2.settings, 21) - 1.21) < 1e-9, 'compounding');
     eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
@@ -34,7 +34,7 @@ export const TESTS_VALIDATE = [
     eq(r.runes.T5.v, 25, 'set-52 saved value moves to v'); eq([r.runes.U6.mode, r.runes.U6.v], ['flat', 2], 'multi has no % mode');
     eq([r.runes.S1.eff, r.runes.S1.scope, r.runes.S1.v], ['eCd', 'enemy', 10], 'enemy effect → enemy scope, bad value → effect default');
     eq([r.runes.X10.eff, r.runes.X10.scope], ['atk', 'team'], 'ally effect cannot target enemy team'); eq([r.runes.D2.rarity, r.runes.D2.max], ['legend', 2], 'rarity + copies');
-    eq([r.runes.F1.rarity, r.runes.F1.eff, r.runes.F1.v], ['rare', 'armorAmp', 50], 'unknown rarity → default · set-59 field pct → v');
+    eq([r.runes.F1.rarity, r.runes.F1.eff, r.runes.F1.v], ['legend', 'armorAmp', 50], 'unknown rarity → default (user default F1 = legend, set 62) · set-59 field pct → v');
     const f = cleanStage({ runes: { F1: { scope: 'tribe', tribe: 'สายฟ้า', theme: 'shock', del: true }, U2: { scope: 'zz', theme: 'zz', del: 1 } } });
     eq([f.runes.F1.scope, f.runes.F1.tribe, f.runes.F1.theme, f.runes.F1.del], ['tribe', 'สายฟ้า', 'shock', true], 'set 59: fixed rune scope/tribe/theme/delete');
     eq([f.runes.U2.scope, f.runes.U2.theme, f.runes.U2.del], ['one', '', false], 'set 59: bad scope/theme/del → default');
@@ -163,7 +163,7 @@ export const TESTS_VALIDATE = [
   ['ชุด 61: จำนวนชิ้นต่อ run ตามความหายาก (ธรรมดา 3 · หายาก 2 · ตำนาน 1) · แก้เองได้', () => {
     eq(RUNE_COPIES, { common: 3, rare: 2, legend: 1 }, 'กฎของผู้ใช้');
     const d = stageDefaults();
-    for (const r of STAGE_RUNES) eq(d.runes[r.id].max, RUNE_COPIES[r.rarity], 'ค่าตั้งต้น ' + r.id);
+    for (const r of STAGE_RUNES) eq(stageBase().runes[r.id].max, RUNE_COPIES[r.rarity], 'ค่าตั้งต้น ' + r.id);
     eq(customDefault('C1').max, 3, 'รูนใหม่ (ธรรมดา) = 3');
     eq(d.copiesRule, 'rarity', 'มีป้ายบอกว่าใช้กฎใหม่');
     // old save (no copiesRule): old default numbers → follow rarity · numbers the user typed stay
