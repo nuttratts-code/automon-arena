@@ -91,6 +91,19 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   if (ms.near.length) say('⚠️ มีตัวใกล้ขอบ → วัดซ้ำ: node tools/bootstrap.mjs measure 48000');
   say(bad ? 'สรุป: ไม่ผ่าน ห้ามเผยแพร่ แจ้งผู้ใช้ทันที' : 'สรุป: ผ่านครบ (เผยแพร่ได้ถ้าไม่มีข้อ ⚠️ ค้าง)');
   process.exit(bad ? 1 : 0);
+} else if (mode === 'gate') { // V1.x (31 Oct): merge/publish gate = build + tests + ui_smoke on the BUILT pages (no balance measure) · ~4 min · sets up python playwright if missing
+  try { sh('node', ['build.mjs']); } catch (e) { say('❌ build ไม่สำเร็จ:', String(e.stderr || e.message).split('\n').slice(0, 6).join('\n')); process.exit(1); }
+  const have = await run('python3', ['-c', 'import playwright']);
+  if (/Error/.test(have.out)) { say('ติดตั้ง playwright (python) ...'); await run('pip', ['install', '-q', 'playwright']); }
+  mkdirSync(SHOTS, { recursive: true });
+  const t = await run('node', ['tests/run.js']); // sequential on purpose: in parallel the CPU-heavy tests starve ui_smoke (its 240 s wait timed out, 31 Oct)
+  const u = await run('python3', ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW);
+  const ts = summarizeTests(t.out), us = summarizeUi(u.out);
+  flag(ts.ok, `เทสต์ ${ts.total} (${t.sec} วิ)${ts.fails.length ? '\n   ' + ts.fails.join('\n   ') : ''}`);
+  flag(us.ok, `ui_smoke ${us.detail} (${u.sec} วิ)`);
+  if (!us.ok) say(lines(u.out).slice(-12).join('\n'));
+  say(bad ? 'GATE: FAIL — do not merge/publish, tell the user' : 'GATE: PASS — ok to merge');
+  process.exit(bad ? 1 : 0);
 } else if (mode === 'measure') {
   const m = await run('node', ['lab/measure.mjs', a1 || '12000', a2 || '4242']);
   const ms = summarizeMeasure(m.out);
@@ -98,6 +111,6 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   printMeasure(ms);
   process.exit(bad ? 1 : 0);
 } else {
-  say('โหมดไม่รู้จัก: setup | test | final | measure');
+  say('โหมดไม่รู้จัก: setup | test | gate | final | measure');
   process.exit(2);
 }
