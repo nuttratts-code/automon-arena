@@ -3,12 +3,12 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Relay (two accounts take turns — rules in CLAUDE.md · full pre-trim block: archive/relay-2026-10-31.md)
 - **บาลานซ์: เสร็จแล้ว** (HARD RULE 4 reads this line; set to "กำลังปรับ" while the user is tuning → no import, no measure)
-- Account: second (rattanakon.ns), 31 Oct · WIP branch: **claude/system-test-fixes** (see Next step).
-- Last done: sets 62–64 merged (stage defaults · rune special effects · boss phases, no battle effect until boss engine 2a) · ui_smoke perm-test fix · 31 Oct full system test → claude/review-2026-10-31-system-test.md (no logic bugs).
-- Next step: claude/system-test-fixes = B1 check-page stale line · N1 maxBoard instead of 6 · N2 cleanStage boss fallback = user defaults · N3 buy/sell/reroll refuse after run end · W3 shop fuzz test (233 tests). Merge after GATE PASS + user OK, then publish check + game + balance room.
+- Account: second (rattanakon.ns), 31 Oct · **no open WIP branch** (claude/system-test-fixes merged).
+- Last done: sets 62–64 merged · 31 Oct full system test (claude/review-2026-10-31-system-test.md, no logic bugs) → fixes merged to main 5a5220f (B1 check-page stale line · N1 maxBoard · N2 cleanStage boss fallback = user defaults · N3 buy/sell/reroll refuse after run end · W3 shop fuzz test) · GATE PASS tests 233/233 · ui_smoke 232/232 both sizes FAILS [] ERRORS [] · published.
+- Next step: user picks the next set (economy Q1–Q4 when ready · boss battle engine 2a · other).
 - **Economy 5.5 Q1–Q4 POSTPONED by user (31 Oct)** — claude/review-2026-10-31-economy.md; do not push for answers until the user returns to it. Probe data in review-2026-10-31-system-test.md.
 - Parked (ask first): phase 2a rune + boss battle engine (Q5/Q6 in review-2026-10-29-stage-phase2.md) · user may re-edit stage runes (wait for AMCFG1 paste) · config/main NOT cleared.
-- Publish: game v63 · balance room v130 (main cbf4d0b) · check v64. Always `Artifact read` the Links URL first; publish directly if writer, else "publish pending" + paste-message (CLAUDE.md).
+- Publish: game v65 · balance room v131 · check v65 (31 Oct, main 5a5220f, GATE PASS 233/233 · ui_smoke 232/232). Always `Artifact read` the Links URL first; publish directly if writer, else "publish pending" + paste-message (CLAUDE.md).
 - User-side todo: W1 add `pip install playwright` to the cloud environment setup script · W5 delete 13 merged claude/* branches on github.com.
 
 ## State (durable facts only — history in archive)
