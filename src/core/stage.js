@@ -2,6 +2,7 @@
 // The battle engine does NOT use these yet (phase 2). Every number = proposal (ค่าเสนอ) until the user confirms.
 // Design notes: claude/backlog.md "Stage mode" · claude/review-2026-10-28-runes.md · claude/review-2026-10-29-stage-baseline.md
 import { TRIBES, DO_INFO, BATTLE_WHEN, skillTargets } from './rules.js';
+import { STAGE_USER } from './stage-user.js';
 
 // ---------- Runes v2 (user 29 Oct, set 53 · claude/review-2026-10-29-runes-v2.md) ----------
 // Every rune: rarity (3 tiers, user Q12) · category · scope ('one' = เฉพาะตัว, others = ส่วนรวม, user Q2 A).
@@ -208,6 +209,7 @@ function cleanRunes(o, out) {
     out.runes[r.id] = cleanRune(y, out.runes[r.id]) || out.runes[r.id];
   }
   if (Array.isArray(o.custom)) {
+    out.custom = [];
     const ids = new Set();
     for (const x of o.custom.slice(0, RUNE_CUSTOM_MAX)) {
       if (!runeIsObj(x) || typeof x.id !== 'string' || !/^C\d{1,3}$/.test(x.id) || ids.has(x.id)) continue;
@@ -262,7 +264,8 @@ export const STAGE_SETTINGS = [
 // Normal-enemy HP/attack multiplier at a stage (1 before growFrom).
 export const enemyMultAt = (st, stage) => (1 + st.growPct / 100) ** Math.max(0, stage - st.growFrom + 1);
 
-export function stageDefaults() {
+// Code-built starting point (before the user's saved values) — tests/tools only.
+export function stageBase() {
   return {
     copiesRule: 'rarity', // set 61 marker: saves without it predate "copies follow rarity" (see cleanRunes)
     runes: Object.fromEntries(STAGE_RUNES.map(r => [r.id, runeDefault(r)])),
@@ -273,8 +276,10 @@ export function stageDefaults() {
 }
 
 // External data (database / pasted code) → only known keys, numbers in range, names cleaned. Unknown/bad parts fall back to defaults.
-export function cleanStage(o) {
-  const out = stageDefaults();
+// Defaults = code base + the user's confirmed config (stage-user.js, set 62 · 31 Oct 2026).
+export function stageDefaults() { return cleanStageOn(STAGE_USER, stageBase()); }
+export function cleanStage(o) { return cleanStageOn(o, stageDefaults()); }
+function cleanStageOn(o, out) {
   if (!o || typeof o !== 'object') return out;
   const num = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
   const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
