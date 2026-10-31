@@ -36,5 +36,5 @@ V1.9 · 31 Oct 2026 · set 61 rune copies follow rarity · V1.8 29 Oct 2026 · s
 - Level 4 (merge three level-3 units, or an item) · look after merging
 
 ## Platform (decided 27 Oct)
-- Move code/docs to GitHub + Jules (details in build-plan, MVP2 scope) · still open: user checks Jules access in Google AI Pro and connects Jules to the repo
+- Move code/docs to GitHub: done 27 Oct · Jules part cancelled by user 28 Oct
 - GitHub Action running build + tests automatically: DONE 28 Oct (`.github/workflows/tests.yml`, runs on every push; ui_smoke/measure stay local)

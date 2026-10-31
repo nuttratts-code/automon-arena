@@ -13,6 +13,8 @@ V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน gi
 | Creature_Auto_Battler_Game_Bible 4.xlsx | Game Bible เดิม · ใช้เฉพาะส่วนที่กฎหลักไม่ได้เขียน (ร้านค้า รวมร่าง แรงก์ เซฟ Ghost Battle) · ผู้ใช้เลือกเก็บเป็นเอกสารเก่า 24 ต.ค. |
 | batomon_analysis_template_test.xlsx | วิเคราะห์เกมต้นแบบ · อ้างอิงเท่านั้น ไม่ใช่กฎเกมเรา |
 | relay-sets-54-61.md | บันทึก Relay ชุด 54–61 (rune/boss/stage UX, ผลรูน, จำนวนชิ้นตามความหายาก) ย้ายจาก handoff 31 ต.ค. |
+| next-set-61.md · review-2026-10-30-{other-tabs,rune-themes,stage-ux}.md | แผนชุด 61 + รายงานตรวจชุด 54–60 ที่ทำเสร็จแล้ว (ย้ายมา 31 ต.ค.) |
+| GEMINI-jules-cancelled.md | คู่มือ Jules/Gemini เดิม · ผู้ใช้ยกเลิก Jules 28 ต.ค. |
 | handoff-2026-10-30-full.md | handoff ฉบับเต็มก่อนย่อ (sets 38–53: import, anomaly SF-6, review, set B/D, repo migration) |
 
 - ทุกไฟล์ในโฟลเดอร์นี้อยู่ใน git แล้ว (30 ต.ค.) · เอกสารใน Project ของ claude.ai ไม่ใช้แล้ว

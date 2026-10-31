@@ -1,5 +1,5 @@
-# pending.md — open balance items + proposed values not yet measured (V1.1 · English · translated 26 Oct 2026 from V1.0)
-Open when doing a balance/import batch or when the user asks.
+# pending.md — open balance items + proposed values not yet measured (V1.2 · English · checked 31 Oct 2026: all items still open, nothing measured since 26 Oct · V1.1 translated 26 Oct from V1.0)
+Open when doing a balance/import batch or when the user asks. Measure only when the user allows (ops-rules); balance status line lives at the top of handoff Relay.
 
 ## Open balance items (ask permission before each measurement · bundle with other questions)
 - Measure 48 characters at 24,000 (new storm) · PL-6 Lv2 +9.1–9.2 near the edge → 48,000 · runlen 2,000 runs seed 4242 after removing the permanent cap (`node lab/runlen.mjs 2000 4242`): check whether accumulating skills (PL-2 PT-3 WY-3 HL-4 HL-5) blow up late in a run.

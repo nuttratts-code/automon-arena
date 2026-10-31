@@ -1,6 +1,6 @@
 # Automon Arena code workflow (index)
 
-V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo)
+V1.27 · 31 Oct 2026 (handoff headings match the real file; Jules removed) · V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo)
 
 | Job | File | Old sections |
 | --- | --- | --- |
@@ -30,10 +30,10 @@ V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read
 - Subagents use more tokens overall → propose only when the main chat would otherwise fill up (measure.md 11).
 - Long chat mid-set → update handoff and tell the user to open a new chat.
 
-## handoff.md (same headings every time · status only)
-(1) current state + line "บาลานซ์: กำลังปรับ/เสร็จแล้ว" (2) last task set done (3) pending / next (4) proposed-but-unmeasured values + "รอวัด" items (5) doc versions (6) published page links (7) one line pointing to workflow/balance-import.md (8) file index, one line per file
+## handoff.md (same headings every time · status only · ≤ 1 screen)
+Relay (first line "บาลานซ์: กำลังปรับ/เสร็จแล้ว" · account + branch · last done · decisions · next step · open · publish versions · artifact access) → State (durable facts) → Pending bundle ("งานรอรวม") → Doc versions → Links → File index. Proposed-but-unmeasured values live in pending.md.
 
 ## Other docs
 - claude/backlog.md — parked work, not opened until picked up.
 - claude/archive/ — history, old measurements, decision reasons (in the Project only; open when the user asks "why").
-- CLAUDE.md (repo root) — standing instructions; GEMINI.md — brief for Jules/Gemini.
+- CLAUDE.md (repo root) — standing instructions. (Jules/Gemini cancelled 28 Oct; old brief in archive/GEMINI-jules-cancelled.md.)

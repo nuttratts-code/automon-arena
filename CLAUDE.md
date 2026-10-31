@@ -38,8 +38,8 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - After confirmation: update docs immediately + short summary + bump that file's version (small +0.1 · core rule +1.0).
 
 ## Git workflow
-- Work on a branch; merge to main only after tests pass (and the user agrees). Gemini/Jules PRs are reviewed + tested by Claude before merge. See GEMINI.md for what Jules may/may not touch.
-- Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
+- Work on a branch; merge to main only after tests pass (and the user agrees).
+- Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests); GitHub Actions runs the full gate on every push. Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
 
 ## Relay between two Claude accounts (decision 27 Oct)
 Two Claude accounts take turns on this repo: when one hits its usage limit, the other picks up. Only ONE account works at a time.
