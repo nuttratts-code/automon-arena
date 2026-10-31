@@ -1,11 +1,12 @@
 # ทดสอบหน้าเว็บจริงด้วย Chromium (Playwright): python3 -I tests/ui_smoke.py <โฟลเดอร์ที่มีไฟล์ .html> <โฟลเดอร์รูป>
-import sys, json
+import sys, json, os
 from playwright.sync_api import sync_playwright
 D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
 def chk(c,msg):
     if not c: fails.append(msg)
 with sync_playwright() as p:
-    b=p.chromium.launch()
+    _x=os.environ.get('CHROMIUM_PATH') or ('/opt/pw-browsers/chromium' if os.path.exists('/opt/pw-browsers/chromium') else None)  # cloud container: pre-installed browser
+    b=p.chromium.launch(executable_path=_x, args=['--no-sandbox']) if _x else p.chromium.launch()
     for w,h in [(1100,900),(390,844)]:
         ctx=b.new_context(viewport={'width':w,'height':h})
         pg=ctx.new_page()
