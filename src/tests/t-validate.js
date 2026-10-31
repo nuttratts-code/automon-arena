@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, stageDefaults, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -23,7 +23,7 @@ export const TESTS_VALIDATE = [
     eq(bad.bosses[1].rule, 'healCut', 'new boss rule'); eq(bad.bosses[1].ruleV, 50, 'rule value out of range → rule default');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
       bosses: [{ id: 'B1', spot: 'four', bars: 7, moveSec: 3 }, { id: 'B2', spot: 'fly', bars: 2.5, moveSec: 0 }] });
-    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['แนวหน้า', 1, 1], 'bad name/max → default');
+    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['แนวหน้า', 3, 3], 'bad name/max → default (common = 3)');
     eq([s2.bosses[0].spot, s2.bosses[0].bars, s2.bosses[0].moveSec], ['four', 7, 3], 'boss spot/bars'); eq([s2.bosses[1].spot, s2.bosses[1].bars, s2.bosses[1].moveSec], ['move', 5, 8], 'bad spot/bars → default');
     eq(s2.settings.growFrom, 20, 'growFrom out of range'); eq(enemyMultAt(s2.settings, 19), 1, 'no growth before growFrom'); ok(Math.abs(enemyMultAt(s2.settings, 21) - 1.21) < 1e-9, 'compounding');
     eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
@@ -148,5 +148,32 @@ export const TESTS_VALIDATE = [
       let threw = false; try { parseCfgCode(bad); } catch (e) { threw = true; }
       ok(threw, 'รหัสผิดต้องถูกปฏิเสธ: ' + bad.slice(0, 40));
     }
+  }],
+  ['ชุด 61: ไอเดียในรหัส AMCFG1 (ไม่บังคับ) ตรวจก่อนใช้', () => {
+    const cfg = { chars: {}, tribes: {} };
+    eq(parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg })).ideas, [], 'ไม่มีไอเดีย = รายการว่าง (รหัสเก่ายังใช้ได้)');
+    const r = parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, ideas: [{ id: 'a', char: 'รูน T5 คม', text: 'x'.repeat(2000), status: 'รอ Claude', at: '2026-10-31T10:00', reply: 'ok', evil: 1 }, { id: 'b', text: '   ' }, 5, { id: 'c', text: { a: 1 } }, { id: 'd', text: 'hi\u0007', status: 9 }] }));
+    eq(r.ideas.map(x => x.id), ['a', 'd'], 'ข้อว่าง/ไม่ใช่ข้อความ ถูกตัด');
+    eq([r.ideas[0].text.length, r.ideas[0].reply, 'evil' in r.ideas[0]], [1000, 'ok', false], 'จำกัดยาว 1000 · ช่องที่ไม่รู้จักถูกตัด');
+    eq([r.ideas[1].text, r.ideas[1].status, r.ideas[1].char], ['hi', 'รอ Claude', ''], 'ตัวอักษรควบคุมถูกลบ · สถานะผิด → รอ Claude');
+    eq(parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, ideas: Array.from({ length: 80 }, (_, i) => ({ id: 'i' + i, text: 't' })) })).ideas.length, 50, 'สูงสุด 50 ข้อ');
+    let threw = false; try { parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, ideas: 'x' })); } catch (e) { threw = true; }
+    ok(threw, 'ideas ที่ไม่ใช่รายการ ถูกปฏิเสธ');
+  }],
+  ['ชุด 61: จำนวนชิ้นต่อ run ตามความหายาก (ธรรมดา 3 · หายาก 2 · ตำนาน 1) · แก้เองได้', () => {
+    eq(RUNE_COPIES, { common: 3, rare: 2, legend: 1 }, 'กฎของผู้ใช้');
+    const d = stageDefaults();
+    for (const r of STAGE_RUNES) eq(d.runes[r.id].max, RUNE_COPIES[r.rarity], 'ค่าตั้งต้น ' + r.id);
+    eq(customDefault('C1').max, 3, 'รูนใหม่ (ธรรมดา) = 3');
+    eq(d.copiesRule, 'rarity', 'มีป้ายบอกว่าใช้กฎใหม่');
+    // old save (no copiesRule): old default numbers → follow rarity · numbers the user typed stay
+    const old = cleanStage({ runes: { T1: { max: 3 }, T3: { max: 2 }, T5: { max: 1 }, T6: { max: 4 }, D2: { rarity: 'legend', max: 1 }, F1: { rarity: 'common', max: 1 } }, custom: [{ id: 'C1', eff: 'atk', rarity: 'rare', max: 1 }, { id: 'C2', eff: 'atk', max: 5 }] });
+    eq([old.runes.T1.max, old.runes.T5.max, old.runes.T6.max, old.runes.D2.max, old.runes.F1.max], [3, RUNE_COPIES[old.runes.T5.rarity], 4, 1, 3], 'เซฟเก่า: ค่าเดิม → ตามความหายาก · ค่าที่พิมพ์เองคงไว้');
+    eq(old.runes.T3.max, RUNE_COPIES[old.runes.T3.rarity], 'T3 ค่าเดิม 2 → ตามความหายาก');
+    eq([old.custom[0].max, old.custom[1].max], [2, 5], 'รูนที่สร้างเอง เซฟเก่า');
+    // new save: every number is the user's
+    const nw = cleanStage({ copiesRule: 'rarity', runes: { T5: { max: 1 } }, custom: [{ id: 'C1', eff: 'atk', max: 1 }] });
+    eq([nw.runes.T5.max, nw.custom[0].max], [1, 1], 'เซฟใหม่: ตัวเลขที่ผู้ใช้ตั้งคงไว้');
+    eq(cleanStage({ copiesRule: 'rarity', runes: { T5: { rarity: 'legend' } } }).runes.T5.max, 1, 'ไม่มีจำนวน → ตามความหายากที่เซฟ');
   }],
 ];

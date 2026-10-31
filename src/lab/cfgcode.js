@@ -29,7 +29,18 @@ export function parseCfgCode(text) {
     const e = o.measured.edits;
     measured = { at: typeof o.measured.at === 'string' ? o.measured.at : null, edits: isObj(e) ? { chars: isObj(e.chars) ? e.chars : {}, tribes: isObj(e.tribes) ? e.tribes : {} } : null };
   }
-  return { config: { ...cfg, chars, tribes }, measured };
+  // set 61: open ideas from the page (optional) · text only, length-capped · unknown keys dropped
+  let ideas = [];
+  if (o.ideas != null) {
+    if (!Array.isArray(o.ideas)) throw new Error('ideas must be a list');
+    const str = (v, n) => (typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').slice(0, n) : '');
+    ideas = o.ideas.slice(0, 50).filter(isObj).map(x => {
+      const d = { id: str(x.id, 40), char: str(x.char, 60), text: str(x.text, 1000), status: str(x.status, 20) || 'รอ Claude', at: str(x.at, 30) };
+      const reply = str(x.reply, 1000); if (reply) d.reply = reply;
+      return d;
+    }).filter(x => x.text.trim());
+  }
+  return { config: { ...cfg, chars, tribes }, measured, ideas };
 }
 
 const cfgCanon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(q => [q, x[q]])) : x));
