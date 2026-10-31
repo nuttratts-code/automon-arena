@@ -9,6 +9,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 - Next step: step 5.5 economy — plan + questions sent 31 Oct in **claude/review-2026-10-31-economy.md** (Q1–Q4, waiting for user); after answers start on branch claude/economy. **Set 63 (rune ideas → 5 new special effects in core/stage.js) MERGED to main 31 Oct (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes). Balance room publish PENDING (owner account, paste-message given to user).** Details: claude/review-2026-10-31-rune-ideas.md. Phase 2a rune + boss battle code = parked (ask before starting) · user 31 Oct: "บอสยังไม่ได้ทำ" → offer boss work (fight vs boss, Q5/Q6 in review-2026-10-29-stage-phase2.md unanswered) as a next-set option.
 - **Set 64 boss phases MERGED to main 31 Oct** (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS []): boss `phases` (≤3, by bars lost, ≤2 rules each, fx X1–X4 + spot) + rules R1–R30 · editor in Balance Room boss card · **balance room published v130** · rules have no battle effect until the boss battle engine (2a). Details claude/review-2026-10-31-boss-phases.md.
 - **31 Oct ui_smoke fix MERGED** (cbf4d0b): battle perm test used `when:'set'` → ~1.3% random-seed fails; now `matchStart` (0/300). Game code unchanged. No open WIP branch (claude/fix-perm-smoke merged).
+- **31 Oct system test (report only, no code change):** GATE PASS on 05d26d1 + fuzz (1.5k runs / 454k shop actions / 35k battles) found no logic bugs; 1 tiny display bug (check page tribe-bonus line) + nits + economy signals + workflow tips → **claude/review-2026-10-31-system-test.md** (user picks).
 - Open: config/main NOT cleared · user may still re-edit stage runes (wait for a new AMCFG1 paste).
 - Publish: game v63 · balance room **v130 (set 64 + smoke fix, 31 Oct, main cbf4d0b, GATE PASS: tests 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS [])** · check v64. Set 63 publish done.
 - Artifact access: 31 Oct the Artifact tool read the balance room as "owned by you" in this chat and published v130 directly → always try `Artifact read` on the Links URL first; only fall back to the paste-message if it says not found / not writer.
@@ -25,6 +26,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Pending bundle ("งานรอรวม")
 - MVP1 target 28 Nov 2026 · step 5.5 economy ~14 Nov (proposed) · step 6 polish/mobile 28 Nov → warn if behind.
+- B1 check page: drop stale "tribe bonus no effect" line (review-2026-10-31-system-test.md).
 - Optional: remove the `simSummary` table fold (kept in ชุด 37) — only if user asks.
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.
 
