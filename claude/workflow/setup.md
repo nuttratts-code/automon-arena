@@ -7,6 +7,7 @@ V1.27 · 27 Oct 2026 · rewritten for the GitHub repo (was: fetch code from the 
 - Layout: `src/core` (pure deterministic battle/shop/bot logic) · `src/lab` (measure/analyze tools; the Balance Room page = small shell `balance.template.html` + fragments in `src/lab/balance/{css,js}/` and `body.html` — see its README.md, open only the fragment you need) · `src/game` · `src/tests` · `src/tools` · `claude/` docs.
 - Setup check: `cd src && node tools/bootstrap.mjs setup` → builds the 3 pages and runs all tests (expect ✅ build + all tests pass). package.json is at the repo root (`"type":"module"`).
 - Built pages (`src/game.html`, `balance.html`, `system-check.html`) are git-ignored build output. The published artifacts are built from these.
+- **`bootstrap.mjs gate` (31 Oct):** merge/publish gate = build + tests + ui_smoke on built pages (no balance measure, ~4 min). Cloud container: auto `pip install playwright` if missing; ui_smoke uses /opt/pw-browsers/chromium (CHROMIUM_PATH overrides); needs an absolute dir (the command handles it). Test `build: ทุกไฟล์ใน core/…` fails fast when a core file is missing from CORE in build.mjs.
 - Other tools used on demand: `tests/ui_smoke.py` + `lab/measure.mjs` (full check, section 9) · `lab/formula.mjs` (tuning) · `tools/csv.mjs` `tools/apply-tune.mjs` `tools/apply-config.mjs` · `lab/try-skill.mjs` `lab/power.mjs` `lab/cost.mjs`.
 - Proving "old code = new code" (measure.md): `git worktree add ../old <commit>` (or `git stash`/checkout into another folder) instead of extracting old pages.
 
