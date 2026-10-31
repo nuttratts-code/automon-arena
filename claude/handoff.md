@@ -15,6 +15,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 - Open: MVP1 step 5.5 pending (28 Nov at risk) · config/main NOT cleared
 - Publish: game v63 · balance room **v126 (set 61, 31 Oct 11:44)** · check v64 (not republished)
 - Artifact access: a cloud session using the Artifact tool may be "writer" (set 59 published v124 from a new chat). **Try publishing from the current chat first; fall back to the old Balance Room chat only if `Artifact read` is not writer — CLAUDE.md "Publish workflow" (V3.1).**
+- **31 Oct (2nd account, new chat):** this chat had the `mcp__claude-artifacts__*` tools (not the old `Artifact` tool). They return "not found" for all 3 Links artifacts (URL, decoded UUID, shared list empty) although the user sees them as can-edit; the guide says artifacts of another organization are refused. A test page made here ("ทดสอบการมองเห็น (ลบได้)", https://claude.ai/artifact/MP8KPjK3QLL4KUsizMvZZW) IS visible to the user → tool bound to this account; the owner account's artifacts count as another org. If a chat has only these tools → publish via the old Balance Room chat (publish pending).
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 90, hash 521fadbf
