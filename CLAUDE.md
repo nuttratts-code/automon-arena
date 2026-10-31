@@ -33,6 +33,8 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - handoff.md says "บาลานซ์: กำลังปรับ" = do not import, do not measure. Overrides everything.
 - Validate external data before use · no innerHTML with external text, no eval, no scripts from other sites.
 - Never fix before the cause is known with evidence. Tests/page failing or untestable = do not publish, tell the user immediately.
+- **Merge gate (rule 31 Oct, after set 62 shipped a broken build):** before merging to main, run BOTH `node tools/bootstrap.mjs setup` AND ui_smoke on the BUILT pages (`python3 -I tests/ui_smoke.py <ABSOLUTE src dir> <shots dir>`; FAILS [] ERRORS [] required). Unit tests alone are not enough — they run on source, not on the built html. If ui_smoke cannot run: set it up first (cloud: `pip install playwright`; ui_smoke uses /opt/pw-browsers/chromium); if still impossible, tell the user in Thai and wait for their decision — never merge or publish silently untested.
+- New file in src/core or src/game = add it to `CORE` in src/build.mjs in the same commit (a missing entry only breaks the built page, not the tests).
 
 ## Git workflow
 - Work on a branch; merge to main only after tests pass (and the user agrees). Gemini/Jules PRs are reviewed + tested by Claude before merge. See GEMINI.md for what Jules may/may not touch.

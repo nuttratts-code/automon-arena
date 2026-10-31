@@ -1,4 +1,4 @@
-# ops-rules.md — balance & publishing rules (v1.1 · English)
+# ops-rules.md — balance & publishing rules (v1.2 · English)
 Read when importing values, measuring balance, editing code, or publishing. Moved from Project instructions; content unchanged. Repo version: code lives in git (see workflow/setup.md).
 
 ## Balance
@@ -19,3 +19,4 @@ Read when importing values, measuring balance, editing code, or publishing. Move
 - All data from outside the code (player input, saves, imported files/values) must be validated before use · no innerHTML with external text, no eval, no scripts from other sites.
 - Keep the battle core separate from the UI so it can move to a server in MVP2.
 - On a problem: never fix before the real cause is known with evidence (tests/scripts may be run to gather it), then tell the user the cause.
+- **Merge gate (v1.2, 31 Oct):** merge to main only after `bootstrap.mjs setup` AND ui_smoke on the built pages pass (FAILS [] ERRORS []). Source-level tests do not catch build breakage (set 62: `stage-user.js` missing from `CORE` in build.mjs → balance page blank, v127 published broken). ui_smoke needs an ABSOLUTE dir path; cloud setup = `pip install playwright` (script auto-uses /opt/pw-browsers/chromium). Cannot run it = tell the user and wait; never merge/publish untested. Every new core/game file goes into `CORE` in build.mjs in the same commit.
