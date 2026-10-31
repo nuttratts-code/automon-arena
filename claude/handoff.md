@@ -3,7 +3,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Relay (two accounts take turns — rules in CLAUDE.md)
 - **บาลานซ์: เสร็จแล้ว** (HARD RULE 4 reads this line; set to "กำลังปรับ" while the user is tuning → no import, no measure)
-- Account active now: **second account (rattanakon.ns), 31 Oct, workflow-review set** · branch `claude/modest-wozniak-antecb` (docs + CI only, no game code) — merge after GATE PASS + user OK
+- Account active now: **second account (rattanakon.ns), 31 Oct, workflow-review set** · **no open WIP branch** — `claude/modest-wozniak-antecb` (docs + CI only) MERGED to main 31 Oct (user OK · GATE: PASS 232/232 · ui_smoke 231/231 both sizes FAILS [] ERRORS [] · Actions gate success)
 - Last done: set 62 (stage defaults from user AMCFG1 → `core/stage-user.js`) merged + balance room **v128** published (v127 was broken) · process fixes (gate, CORE check) · workflow review 31 Oct: CI now runs the full gate (build + tests + ui_smoke), publish.md rewritten for the new artifact tools, stale docs fixed/archived, Jules docs archived. Older notes: archive/relay-sets-54-61.md.
 - **Decisions 31 Oct (user):** (a) publishing stays with the owner (first) account — 2nd account publishes only if `get_artifact` works on the Links URL, else "publish pending" + paste-message for the old Balance Room chat · (b) **pause Balance Room/rune tooling work; next focus = MVP1 step 5.5 economy** (28 Nov at risk).
 - Next step: start MVP1 step 5.5 (economy) — read build-plan step 5.5, propose the plan + questions to the user first. 4 ideas from the 31 Oct paste still 'รอ Claude' (answer in chat when the user pastes AMCFG1 again). Phase 2a rune battle code = parked (ask before starting).
