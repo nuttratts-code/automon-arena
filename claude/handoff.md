@@ -3,7 +3,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Relay (two accounts take turns — rules in CLAUDE.md · full pre-trim block: archive/relay-2026-10-31.md)
 - **บาลานซ์: เสร็จแล้ว** (HARD RULE 4 reads this line; set to "กำลังปรับ" while the user is tuning → no import, no measure)
-- Account: second (rattanakon.ns), 31 Oct · **no open WIP branch** (claude/system-test-fixes merged).
+- Account: second (rattanakon.ns), 31 Oct · **open WIP branch claude/vigilant-meitner-aq2l7w = set 65 boss tab** (not merged): boss card UI cleanup (section cards, phases side by side, add-phase button not stretched, mobile header) + boss spot = any slots (mini board 3 rows × 2 lanes, presets front/mid/back/combos/lanes, "move" = 1 slot jumping among picked slots, ≥2). Data: old spot ids still valid, or code 'c'/'m' + 6 bits (core/stage.js spotInfo/spotCode/spotShort); phase spot = switch "เปลี่ยนที่ยืน" + same picker. Next: user checks → OK → merge + publish balance room.
 - Last done: sets 62–64 merged · 31 Oct full system test (claude/review-2026-10-31-system-test.md, no logic bugs) → fixes merged to main 5a5220f (B1 check-page stale line · N1 maxBoard · N2 cleanStage boss fallback = user defaults · N3 buy/sell/reroll refuse after run end · W3 shop fuzz test) · GATE PASS tests 233/233 · ui_smoke 232/232 both sizes FAILS [] ERRORS [] · published.
 - Next step: user picks the next set (economy Q1–Q4 when ready · boss battle engine 2a · other).
 - **Economy 5.5 Q1–Q4 POSTPONED by user (31 Oct)** — claude/review-2026-10-31-economy.md; do not push for answers until the user returns to it. Probe data in review-2026-10-31-system-test.md.
