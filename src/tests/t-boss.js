@@ -157,7 +157,7 @@ export const TESTS_BOSS = [
     ok(ev(van, 'set', e => e.target === null).length > 0, 'ช่วงหายตัว ผู้เล่นไม่มีเป้า');
   }],
   ['บอส R28: ตีแถบไม่หมดในเวลา แถบเต็มกลับ (ไม่กระตุ้น "ศัตรู down" ซ้ำ)', () => {
-    const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [
+    const h = mk('H', { atk: L3(10), cdMs: L3(3000), hp: L3(5000), skills: [ // ชุด 70: ส่วนเกินไม่ทะลุแถบ → ฮิตปกติทีหลังทำให้แถบ 2 ลดจริง
       { when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) },
       { when: 'enemyDown', do: 'atkUp', to: 'self', v: L3(1) },
     ] });
@@ -232,7 +232,8 @@ export const TESTS_BOSS = [
       { when: 'matchStart', do: 'dmgTakenUp', to: 'allEnemies', v: L3(50) },
       { when: 'matchStart', do: 'maxHpCut', to: 'allEnemies', v: L3(10) },
     ] });
-    const r = bossFight([d, hitter('H', 250)], [u('D', 0, 0), u('H', 0, 1)], boss({ hp: 1000 }));
+    const h = mk('H', { atk: L3(250), cdMs: 40000, hp: L3(5000) }); // ชุด 70: ตีปกติครั้งแรก (หลังดีบัฟเริ่มแมตช์) · ดีบัฟที่มาใน tick เดียวกับที่แถบแตกจะหายไปเหมือนม่อน down
+    const r = bossFight([d, h], [u('D', 0, 0), u('H', 0, 1)], boss({ hp: 1000 }));
     const b = bossUid(r), bar1 = ev(r, 'bar', e => e.who === b)[0];
     ok(bar1, 'แถบแรกหมด');
     const cl = ev(r, 'cleanse', e => e.to === b && e.what === 'bar');
@@ -250,5 +251,16 @@ export const TESTS_BOSS = [
     eq(ev(r, 'bar').length, 1, 'หมดแค่ 1 แถบ');
     const one = bossFight([hitter('H', 900)], [u('H', 0, 0)], boss({ bars: 1 }));
     eq(ev(one, 'dmg', e => e.why === 'skill')[0].amount, 900, 'บอสแถบเดียว = ไม่จำกัด');
+  }],
+  ['บอส: แถบแตก = เหมือนม่อน down ใน tick นั้น · ฮิตที่เหลือของมัลติฮิต/สกิลอื่นใน tick เดียวกันหายไป (ชุด 70)', () => {
+    const mh = mk('M', { atk: L3(150), cdMs: L3(1000), multi: 3, hp: L3(5000) });
+    const r = bossFight([mh], [u('M', 0, 0)], boss({ atk: 0, cdMs: NEVER }));
+    const b = bossUid(r);
+    const first = ev(r, 'dmg', e => e.to === b && e.why === 'hit');
+    const t0 = first[0].t;
+    eq(first.filter(e => e.t === t0).map(e => e.amount), [150, 50], 'ชุดแรก: 150 + 50 (เต็มแถบ) แล้วฮิตที่ 3 หาย');
+    const two = bossFight([hitter('H', 300), hitter('K', 300)], [u('H', 0, 0), u('K', 0, 1)], boss());
+    eq(ev(two, 'dmg', e => e.to === bossUid(two) && e.why === 'skill').length, 1, 'สกิลตัวที่ 2 ใน tick เดียวกันไม่เข้า');
+    eq(ev(two, 'bar').length, 1, 'หมดแค่ 1 แถบ');
   }],
 ];

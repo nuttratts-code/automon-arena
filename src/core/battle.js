@@ -125,7 +125,7 @@ export function simulate(teamA, teamB, opts = {}) {
 
   // ---------- ตัวช่วย ----------
   let standMode = false; // ชุด 21: ระหว่างหาเพื่อนที่จะพาไปตี นับ "ยังไม่ down" เป็นยืนอยู่ (ไม่ขึ้นกับลำดับฝั่ง)
-  const up = f => !f.down && (standMode || f.hp > 0);
+  const up = f => !f.down && (standMode || (f.hp > 0 && !f.barBreak)); // ชุด 70: บอสแถบแตกใน tick นี้ = เหมือนม่อน down (ฮิต/สกิลที่เหลือใน tick หายไป)
   const enemies = f => F.filter(x => x.side !== f.side && up(x));
   const allies = f => F.filter(x => x.side === f.side && up(x));
   const byFront = (a, b) => a.row - b.row || a.lane - b.lane;
@@ -307,7 +307,7 @@ export function simulate(teamA, teamB, opts = {}) {
   function hurt(target, amount, src, pierce, why, det) {
     amount = Math.floor(amount);
     if (BOSS) amount = ruleDmg(target, amount, src, why);
-    if (amount <= 0 || target.down) return 0;
+    if (amount <= 0 || target.down || target.barBreak) return 0;
     // รูนสายสัมพันธ์ (X6): คู่ที่เลือกรับดาเมจแทน % · รับแทนต่อไม่ได้
     if (target.linkPct > 0 && why !== 'link') {
       const p = F.find(x => x.side === target.side && x !== target && x.row === target.linkSlot[0] && x.lane === target.linkSlot[1]);
@@ -334,11 +334,12 @@ export function simulate(teamA, teamB, opts = {}) {
     }
     let loss = amount - absorbed;
     if (target.boss && target.bars > 1 && loss > 0) { // ชุด 70: 1 ฮิตเข้า HP ได้ไม่เกินที่เหลือในแถบปัจจุบัน (ส่วนเกินหาย ไม่ทะลุแถบถัดไป · ทุกชนิดดาเมจ)
-      const left = target.hp - (Math.ceil(target.hp / target.barHp) - 1) * target.barHp;
+      const left = target.hp - (Math.min(target.bars, Math.ceil(target.hp / target.barHp)) - 1) * target.barHp; // แถบบนสุดรวมเศษ HP ที่หารไม่ลงตัว
       if (loss > left) { loss = Math.max(0, left); amount = absorbed + loss; }
     }
     const wasAbove = target.hp * 2 >= target.maxHp;
     target.hp -= loss;
+    if (target.boss && target.bars > 1 && loss > 0 && target.hp > 0 && target.hp <= (target.bars - 1) * target.barHp && target.hp % target.barHp === 0) target.barBreak = true; // แถบแตก → ดาเมจ/สกิลที่เหลือใน tick นี้ไม่เข้า (ปลดตอนต้น tick ถัดไป)
     target.taken += amount;
     if (src) src.dealt += amount;
     if (BOSS && target.boss && amount > 0) { // R8 ดูดเลือด (ไม่เกินแถบปัจจุบัน) · E7 สะท้อนดาเมจกลับ (ของที่สะท้อนไม่สะท้อนต่อ)
@@ -670,7 +671,8 @@ export function simulate(teamA, teamB, opts = {}) {
   }
   // แถบเลือดหมด 1 แถบ = "ศัตรู down" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
   function bossBars() {
-    if (!BOSS || !up(BOSS)) return;
+    if (!BOSS || BOSS.down) return;
+    BOSS.barBreak = false; // ฮิต/สกิลของ tick นี้จบแล้ว · ผลตอนเปลี่ยนแถบ/เฟส และสกิล "ศัตรู down" เจอแถบใหม่ได้ (เหมือนม่อนตัวใหม่)
     const gone = Math.max(0, Math.min(BOSS.bars, BOSS.bars - Math.ceil(Math.max(0, BOSS.hp) / BOSS.barHp)));
     let changed = false;
     while (barsGone < gone && barsGone < BOSS.bars) {
@@ -790,6 +792,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // ---------- วนทีละ tick ----------
   for (;;) {
     t += R.tickMs;
+    if (BOSS) BOSS.barBreak = false;
     for (const f of F) if (up(f)) {
       if (f.stunLeft > 0) f.stunLeft = Math.max(0, f.stunLeft - R.tickMs); else f.cdLeft -= R.tickMs;
       for (const s of f.skills) if (s.cdLeft > 0) s.cdLeft -= R.tickMs; // คูลดาวน์สกิลนับตามเวลาจริง ไม่สนมึนงง/แช่แข็ง/บัฟคูลดาวน์
