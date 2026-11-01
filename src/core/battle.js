@@ -18,6 +18,9 @@ export const armorSnapSkill = s => !!(ARMOR_PCT[s.do] || (s.of && s.of.stat === 
 // (u.dealt), the match tab (mxRecords) and the game's run stats (addMatchStats) so all three agree. Fed with events
 // (k + data): burn adds the applier's part after scaling old parts to the burn left before it (decay/partial cleanse
 // keep shares); full cleanse / down clear it. split(uid) = [[from uid or -1 (no source), fraction], ...].
+// ดีบัฟที่ศัตรูใส่ให้บอส (เก็บไว้คืนค่าตอนขึ้นแถบใหม่ ชุด 69)
+const dbZero = () => ({ cd: 1, armor: 0, heal: 0, burnT: 0, shockT: 0, dmgT: 0, maxHp: 0 });
+
 export function burnShares() {
   const share = new Map();
   return {
@@ -80,7 +83,7 @@ export function simulate(teamA, teamB, opts = {}) {
     taunt: !!u.taunt, avoidLeft: u.avoidLeft || 0, downDmgPct: u.downDmgPct || 0, bossDmgPct: u.bossDmgPct || 0,
     lastStandDmg: u.lastStandDmg || 0, lastStandCd: u.lastStandCd || 0, shareTribePct: u.shareTribePct || 0, shareTribeN: u.shareTribeN || 0,
     linkSlot: u.linkSlot || null, linkPct: u.linkPct || 0, silenceUntil: 0, avoidedAt: -1, avoidedBy: null,
-    boss: !!u.boss, bars: u.bars || 0, barHp: u.barHp || 0, move: !!u.move, moveSec: u.moveSec || 0,
+    boss: !!u.boss, bars: u.bars || 0, barHp: u.barHp || 0, db: u.boss ? dbZero() : null, move: !!u.move, moveSec: u.moveSec || 0,
     cells: u.boss ? (u.move ? [u.slots[0]] : u.slots.slice()) : null, slots: u.boss ? u.slots.slice() : null, phases: u.phases || null,
   });
   [teamA, teamB].forEach((team, side) => team.forEach(u => F.push(mkFighter(u, side))));
@@ -402,7 +405,7 @@ export function simulate(teamA, teamB, opts = {}) {
         const g = by[0]; // ผู้สะท้อน (นับเครดิตให้ตัวนี้) · from = เพื่อนที่ถูกปกป้อง
         // F1 (28 Oct, user A): from = PT-8 ที่สะท้อน (ได้เครดิต) · ally/si = เพื่อนที่ถูกปกป้อง + ลำดับสกิล (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-8)
         log('reflectDebuff', { to: src.uid, from: g.u.uid, kind, amount, ...(detailOn ? { ally: from.uid, si: g.si } : {}) });
-        if (kind === 'cdSlowPct') { src.cdMult *= 1 + amount / 100; buff(src, 'cdSlowPct', amount); }
+        if (kind === 'cdSlowPct') { src.cdMult *= 1 + amount / 100; if (src.db) src.db.cd *= 1 + amount / 100; buff(src, 'cdSlowPct', amount); }
         else addStatus(src, kind, amount, 'reflect', null, g.u);
       }
     }
@@ -484,7 +487,8 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'maxHpCut': for (const x of T()) if (up(x)) {
         const cut = Math.floor(x.maxHp * v / 100);
         if (cut <= 0) continue;
-        x.maxHp = Math.max(1, x.maxHp - cut); x.hp = Math.min(x.hp, x.maxHp);
+        const was = x.maxHp; x.maxHp = Math.max(1, x.maxHp - cut); x.hp = Math.min(x.hp, x.maxHp);
+        if (x.db) x.db.maxHp += was - x.maxHp;
         log('maxhp', { to: x.uid, amount: cut, maxHp: x.maxHp, hp: x.hp });
       } break;
       case 'cleanse': for (const x of T()) if (up(x)) { // ล้าง ไฟ ช็อต ไฟไม่ลด มึนงง และแช่แข็งที่ยังไม่หมด
@@ -536,7 +540,7 @@ export function simulate(teamA, teamB, opts = {}) {
       } break;
       case 'burn': case 'shock': for (const x of T()) addStatus(x, s.do, v, why, u); break;
       case 'freeze': for (const x of T()) if (up(x)) { x.cdLeft += v; x.frozen += v; buff(x, 'freeze', v); } break;
-      case 'cdSlowPct': for (const x of T()) if (up(x)) { x.cdMult *= 1 + v / 100; buff(x, 'cdSlowPct', v); if (x.side !== u.side) reflectBack(x, u, 'cdSlowPct', v); } break; // ชุด 16: มีผลกับคูลดาวน์รอบถัดไป
+      case 'cdSlowPct': for (const x of T()) if (up(x)) { x.cdMult *= 1 + v / 100; if (x.db) x.db.cd *= 1 + v / 100; buff(x, 'cdSlowPct', v); if (x.side !== u.side) reflectBack(x, u, 'cdSlowPct', v); } break; // ชุด 16: มีผลกับคูลดาวน์รอบถัดไป
       case 'stun': for (const x of T()) if (up(x)) { const vv = s.bossPct != null && x.boss ? Math.floor(v * s.bossPct / 100) : v; if (vv > 0) { x.stunLeft = Math.max(x.stunLeft, vv); buff(x, 'stun', vv); } } break; // bossPct = รูนหยุดศัตรู (บอสหยุดสั้นกว่า)
       case 'noDecay': for (const x of T()) if (up(x)) x.noDecay += v; break;
       case 'spreadBurn': if (ctx.burn > 0) for (const x of T()) addStatus(x, 'burn', ctx.burn * v / 100, why, u); break;
@@ -564,11 +568,11 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'healAmp': for (const x of T()) { x.healAmp += v; statNote(x, 'healAmp', v); permRec(u, s, x, v); } break;
       case 'hitAmp': for (const x of T()) { x.hitAmp += v; statNote(x, 'hitAmp', v); permRec(u, s, x, v); } break;
       case 'burnAmp': for (const x of T()) { x.burnAmp += v; statNote(x, 'burnAmp', v); permRec(u, s, x, v); } break;
-      case 'burnTakenUp': for (const x of T()) if (up(x)) { x.burnTaken += v; buff(x, 'burnTakenUp', v); } break;
-      case 'shockTakenUp': for (const x of T()) if (up(x)) { x.shockTaken += v; buff(x, 'shockTakenUp', v); } break;
-      case 'dmgTakenUp': for (const x of T()) if (up(x)) { x.dmgTakenAmp += v; buff(x, 'dmgTakenUp', v); } break;
-      case 'armorGainCut': for (const x of T()) if (up(x)) { x.armorAmp -= v; buff(x, 'armorGainCut', v); } break;
-      case 'healCut': for (const x of T()) if (up(x)) { x.healAmp -= v; buff(x, 'healCut', v); } break;
+      case 'burnTakenUp': for (const x of T()) if (up(x)) { x.burnTaken += v; if (x.db) x.db.burnT += v; buff(x, 'burnTakenUp', v); } break;
+      case 'shockTakenUp': for (const x of T()) if (up(x)) { x.shockTaken += v; if (x.db) x.db.shockT += v; buff(x, 'shockTakenUp', v); } break;
+      case 'dmgTakenUp': for (const x of T()) if (up(x)) { x.dmgTakenAmp += v; if (x.db) x.db.dmgT += v; buff(x, 'dmgTakenUp', v); } break;
+      case 'armorGainCut': for (const x of T()) if (up(x)) { x.armorAmp -= v; if (x.db) x.db.armor += v; buff(x, 'armorGainCut', v); } break;
+      case 'healCut': for (const x of T()) if (up(x)) { x.healAmp -= v; if (x.db) x.db.heal += v; buff(x, 'healCut', v); } break;
     }
   }
   // ฮิต 1 ครั้ง (แยกออกมาชุด 20 ให้ฮิตที่ถูกพาไปใช้ร่วม): n = จำนวนเป้าที่แบ่ง · first = ฮิตแรกของชุด (โบนัสเผ่า) · carried = ฮิตที่ถูกพาไป
@@ -648,6 +652,18 @@ export function simulate(teamA, teamB, opts = {}) {
     barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = t;
     log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id), ...(p.spot && spotCells(p.spot) ? { cells: BOSS.cells.slice() } : {}) });
   }
+  // ชุด 69 (user 1 Nov): บอสขึ้นแถบใหม่ = ล้างดีบัฟทุกอย่างที่ศัตรูใส่ไว้ (ไฟ ช็อต ไฟไม่ลด มึนงง แช่แข็ง คูลดาวน์ช้าลง
+  // เกราะ/ฟื้นได้น้อยลง โดนไฟ/ช็อต/ดาเมจเพิ่ม และ HP สูงสุดที่ถูกตัด) · ไม่แตะกฎของบอสเอง (เช่น R30 จุดอ่อนหลังย้ายที่)
+  function bossBarCleanse() {
+    const b = BOSS, d = b.db;
+    b.burn = b.shock = b.noDecay = 0; b.noDecayPerm = false; b.stunLeft = 0;
+    if (b.frozen > 0) { b.cdLeft = Math.max(0, b.cdLeft - b.frozen); b.frozen = 0; }
+    b.cdMult /= d.cd; b.armorAmp += d.armor; b.healAmp += d.heal;
+    b.burnTaken -= d.burnT; b.shockTaken -= d.shockT; b.dmgTakenAmp -= d.dmgT;
+    if (d.maxHp > 0) { b.maxHp += d.maxHp; log('maxhp', { to: b.uid, amount: -d.maxHp, maxHp: b.maxHp, hp: b.hp }); }
+    b.db = dbZero();
+    log('cleanse', { to: b.uid, what: 'bar' });
+  }
   // แถบเลือดหมด 1 แถบ = "ศัตรู down" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
   function bossBars() {
     if (!BOSS || !up(BOSS)) return;
@@ -657,6 +673,7 @@ export function simulate(teamA, teamB, opts = {}) {
       barsGone++; barT = t; changed = true;
       log('bar', { who: BOSS.uid, gone: barsGone, left: BOSS.bars - barsGone });
       const ctx = { downed: BOSS, burn: BOSS.burn, shock: BOSS.shock, attacker: BOSS.lastHitBy };
+      bossBarCleanse();
       for (const x of F.filter(x => !x.boss && up(x))) trigger(x, 'enemyDown', ctx);
       if (BOSS.lastHitBy && up(BOSS.lastHitBy)) trigger(BOSS.lastHitBy, 'kill', ctx);
     }
@@ -713,7 +730,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const tbv = (side, tr, k) => { const x = TB(side, tr); return x && x.b[k] ? x.b[k][x.idx] || 0 : 0; };
   const burnDmgOn = [tbv(1, 'เพลิงเผา', 'burnDmgPct'), tbv(0, 'เพลิงเผา', 'burnDmgPct')]; // ดาเมจไฟบนตัวฝั่ง s +% จากโบนัสเพลิงเผาของอีกฝั่ง
   if (detailOn) for (const f of F) iniStats.set(f.uid, snapStats(f)); // ชุด 37: ค่าก่อนโบนัสเผ่า/สกิลเริ่มแมตช์
-  log('start', { tribes: steps.map(o => Object.fromEntries(Object.entries(o).map(([k, i]) => [k, R.tribeSteps[i]]))), units: F.map(f => ({ uid: f.uid, side: f.side, id: f.id, name: f.name, level: f.level, row: f.row, lane: f.lane, hp: f.hp, maxHp: f.maxHp, armor: f.armor, ...(f.cells ? { cells: f.cells.slice() } : {}) })) }); // cells = ช่องที่บอสยืน (หน้าภาพใส่ชื่อทุกช่อง)
+  log('start', { tribes: steps.map(o => Object.fromEntries(Object.entries(o).map(([k, i]) => [k, R.tribeSteps[i]]))), units: F.map(f => ({ uid: f.uid, side: f.side, id: f.id, name: f.name, level: f.level, row: f.row, lane: f.lane, hp: f.hp, maxHp: f.maxHp, armor: f.armor, ...(f.cells ? { cells: f.cells.slice() } : {}), ...(f.boss && f.bars > 1 ? { bars: f.bars, barHp: f.barHp } : {}) })) }); // cells = ช่องที่บอสยืน (หน้าภาพใส่ชื่อทุกช่อง)
   for (const f of F) {
     const steel = TB(f.side, 'เหล็กกล้า'), fire = TB(f.side, 'เพลิงเผา'), bolt = TB(f.side, 'สายฟ้า'), wind = TB(f.side, 'วายุ'), spirit = TB(f.side, 'ภูติ');
     if (steel) {

@@ -225,4 +225,22 @@ export const TESTS_BOSS = [
     eq(out.skipped.length, 2, 'รูน run-flow ถูกข้าม');
     eq(out.units[0].skills.filter(s => s.src === 'rune').length, 0, 'ไม่มีสกิลรูนติดตัว');
   }],
+  ['บอส ชุด 69: ขึ้นแถบใหม่ → ล้างดีบัฟทุกอย่าง (ไฟ ช็อต โดนดาเมจเพิ่ม HP สูงสุดที่ถูกตัด) · แถบยังไม่หมด = ยังติดอยู่', () => {
+    const d = mk('D', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [
+      { when: 'matchStart', do: 'burn', to: 'allEnemies', v: L3(10) },
+      { when: 'matchStart', do: 'shock', to: 'allEnemies', v: L3(5) },
+      { when: 'matchStart', do: 'dmgTakenUp', to: 'allEnemies', v: L3(50) },
+      { when: 'matchStart', do: 'maxHpCut', to: 'allEnemies', v: L3(10) },
+    ] });
+    const r = bossFight([d, hitter('H', 250)], [u('D', 0, 0), u('H', 0, 1)], boss({ hp: 1000 }));
+    const b = bossUid(r), bar1 = ev(r, 'bar', e => e.who === b)[0];
+    ok(bar1, 'แถบแรกหมด');
+    const cl = ev(r, 'cleanse', e => e.to === b && e.what === 'bar');
+    eq(cl.length, 1, 'ล้างดีบัฟ 1 ครั้งต่อแถบ');
+    eq(cl[0].t, bar1.t, 'ล้างตอนแถบหมด');
+    const back = ev(r, 'maxhp', e => e.to === b && e.amount < 0);
+    eq(back.length, 1, 'คืน HP สูงสุดที่ถูกตัด'); eq(back[0].maxHp, 1000, 'HP สูงสุดกลับเป็น 1000');
+    const r2 = bossFight([d], [u('D', 0, 0)], boss({ hp: 1000 }));
+    eq(ev(r2, 'cleanse', e => e.what === 'bar').length, 0, 'แถบไม่หมด = ไม่ล้าง');
+  }],
 ];

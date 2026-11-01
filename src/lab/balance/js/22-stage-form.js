@@ -214,7 +214,7 @@ function bossVerdict(tKill, tDie) {
 }
 function bossBar(bs) {
   const bar = el('div', 'hpbar', ''); bar.title = `${bs.bars} แถบ × ${bossAt(bs, 1).barHp} HP`; bar.setAttribute('aria-hidden', 'true');
-  for (let i = 0; i < bs.bars; i++) bar.append(document.createElement('i'));
+  for (let i = 0; i < bs.bars; i++) { const c = document.createElement('i'); c.style.background = barColor(bs.bars - i); bar.append(c); } // ชุด 69: สีเดียวกับหลอดบอสในภาพการต่อสู้ (ซ้ายสุด = แถบแรกที่โดนตี)
   return bar;
 }
 function bossVsTable(bs) {

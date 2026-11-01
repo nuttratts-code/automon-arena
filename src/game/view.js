@@ -23,6 +23,8 @@ export function el(tag, cls, text) {
 // รูปทรง + สีตามเผ่า (เดิม) · ลวดลายเรขาคณิตด้านในตามเลขท้าย ID (ไม่ซ้ำกันภายในเผ่า) · ขอบตามความหายาก
 // ภาพชั่วคราว รอผู้ใช้ทำอาร์ตจริง · สร้างด้วย createElementNS เท่านั้น (ไม่ใช้ innerHTML)
 export const RARITY_RING = { 'ธรรมดา': 0, 'ไม่ธรรมดา': 1, 'หายาก': 2, 'หายากมาก': 3, 'ตำนาน': 4 };
+// ชุด 69: สีหลอดเลือดบอสแต่ละแถบ (แถบ 1 = แถบสุดท้าย สีแดงเหมือนหลอดปกติ) · หมุนสีทีละ ~137° ให้แถบติดกันต่างกันชัด รองรับถึง 20 แถบ
+export const barColor = k => k === 1 ? 'var(--hp)' : `hsl(${Math.round(((k - 1) * 137.5) % 360)} ${k % 2 ? 70 : 60}% ${k % 3 ? 52 : 42}%)`;
 export const SVGNS = 'http://www.w3.org/2000/svg';
 export const star = (cx, cy, R, r) => Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, d = i % 2 ? r : R; return `${(cx + d * Math.cos(a)).toFixed(1)},${(cy + d * Math.sin(a)).toFixed(1)}`; }).join(' ');
 // ลวดลายในกรอบ 100×100 · จุดกลาง (50,58) ให้อยู่ในรูปสามเหลี่ยม/ห้าเหลี่ยมได้ · [ชนิดแท็ก, คุณสมบัติ, เส้นขอบ?]
@@ -113,7 +115,9 @@ export class BattleView {
       hpBar.append(hpFill, armorFill);
       const nums = el('div', 'nums');
       const hpText = el('span', 'hp-text'), armorText = el('span', 'armor-text');
+      const barText = el('span', 'bar-text');
       nums.append(hpText, armorText);
+      if (u.bars > 1) nums.append(barText);
       const chips = el('div', 'chips');
       const multi = el('span', 'chip c-multi'), burn = el('span', 'chip c-burn'), shock = el('span', 'chip c-shock');
       multi.title = 'มัลติฮิต (ตีกี่ทีต่อชุด)';
@@ -122,7 +126,7 @@ export class BattleView {
       const cell = this.root.querySelector(`[data-key="${u.side}:${u.row}:${u.lane}"]`);
       cell.append(card);
       const m0 = c && Array.isArray(c.multi) ? c.multi[(u.level || 1) - 1] : 1;
-      const v = { ...u, hp: u.hp, armor: u.armor, burn: 0, shock: 0, multi: Number.isInteger(m0) ? m0 : 1, down: false, card, cell, hpFill, armorFill, hpText, armorText, burnEl: burn, shockEl: shock, multiEl: multi };
+      const v = { ...u, hp: u.hp, armor: u.armor, burn: 0, shock: 0, multi: Number.isInteger(m0) ? m0 : 1, down: false, card, cell, hpBar, barText, hpFill, armorFill, hpText, armorText, burnEl: burn, shockEl: shock, multiEl: multi };
       this.units.set(u.uid, v);
       if (u.cells) this.placeCells(v, u.cells);
       this.paint(v);
@@ -146,7 +150,13 @@ export class BattleView {
 
   paint(v) {
     const hp = Math.max(0, v.hp);
-    v.hpFill.style.width = `${(hp / v.maxHp) * 100}%`;
+    if (v.bars > 1 && v.barHp > 0) { // ชุด 69: บอสหลายแถบ → หลอดแสดงแถบที่อยู่ตอนนี้ สีต่างกันทุกแถบ (ใต้หลอด = สีแถบถัดไป)
+      const k = Math.max(1, Math.min(v.bars, Math.ceil(hp / v.barHp)));
+      v.hpFill.style.width = `${hp > 0 ? Math.min(100, ((hp - (k - 1) * v.barHp) / v.barHp) * 100) : 0}%`;
+      v.hpFill.style.background = barColor(k);
+      v.hpBar.style.background = k > 1 ? barColor(k - 1) : '';
+      v.barText.textContent = `แถบ ${hp > 0 ? k : 0}/${v.bars}`;
+    } else v.hpFill.style.width = `${(hp / v.maxHp) * 100}%`;
     v.armorFill.style.width = `${Math.min(100, (v.armor / v.maxHp) * 100)}%`;
     v.hpText.textContent = `${hp}/${v.maxHp}`;
     v.armorText.textContent = v.armor > 0 ? `เกราะ ${v.armor}` : '';
@@ -245,10 +255,10 @@ export class BattleView {
       case 'bossMove': { const v = this.units.get(e.who); if (v) this.placeCells(v, [e.slot]); break; }
       case 'phase': { const v = this.units.get(e.who); if (v && e.cells) this.placeCells(v, e.cells); break; }
       case 'proc': if (this.onProc) this.onProc(e, s, this.name(e.who)); break; // หน้าที่รู้จักสกิลเขียนข้อความเอง
-      case 'maxhp': { const v = this.units.get(e.to); v.maxHp = e.maxHp; v.hp = Math.min(v.hp, e.hp); this.float(v, `HP สูงสุด −${e.amount}`, 'n-hit'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด −${e.amount} (เหลือ ${e.maxHp})`); break; }
+      case 'maxhp': { const v = this.units.get(e.to); v.maxHp = e.maxHp; v.hp = Math.min(v.hp, e.hp); this.float(v, e.amount < 0 ? `HP สูงสุด +${-e.amount}` : `HP สูงสุด −${e.amount}`, e.amount < 0 ? 'n-heal' : 'n-hit'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด ${e.amount < 0 ? `+${-e.amount} (คืนเป็น ${e.maxHp})` : `−${e.amount} (เหลือ ${e.maxHp})`}`); break; }
       case 'carry': this.wantLog && this.onLog(`${s} ${this.name(e.by)} พา ${this.name(e.who)} ไปตี ${this.name(e.target)}`); break; // ชุด 20
       case 'reflectDebuff': this.wantLog && this.onLog(`${s} ${this.name(e.from)} สะท้อน${e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'} กลับไปหา ${this.name(e.to)}`); break;
-      case 'cleanse': if (e.what === 'pct') { const v = this.units.get(e.to); v.burn = e.burn; v.shock = e.shock; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]}`); break; } { const v = this.units.get(e.to); v.burn = 0; if (e.what !== 'burn') v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ${e.what === 'burn' ? 'ไฟดับ' : 'ล้างสถานะ'}`); break; }
+      case 'cleanse': if (e.what === 'pct') { const v = this.units.get(e.to); v.burn = e.burn; v.shock = e.shock; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]}`); break; } if (e.what === 'bar') { const v = this.units.get(e.to); v.burn = v.shock = 0; this.float(v, 'ขึ้นแถบใหม่ ล้างดีบัฟ', 'n-heal'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ขึ้นแถบเลือดใหม่ ล้างดีบัฟทั้งหมด`); break; } { const v = this.units.get(e.to); v.burn = 0; if (e.what !== 'burn') v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ${e.what === 'burn' ? 'ไฟดับ' : 'ล้างสถานะ'}`); break; }
       case 'buff': if (e.what === 'hpUp') { const v = this.units.get(e.to); v.maxHp += e.amount; v.hp += e.amount; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด +${e.amount}`); } break;
       case 'down': { const v = this.units.get(e.who); v.down = true; v.hp = 0; v.armor = v.burn = v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.who)} down`); break; }
       case 'revive': { const v = this.units.get(e.who); v.hp = e.hp; v.armor = v.burn = v.shock = 0; v.down = false; this.float(v, 'ลุกกลับมา', 'n-heal'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.who)} ลุกกลับมา HP ${e.hp}`); break; }
