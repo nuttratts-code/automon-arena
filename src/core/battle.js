@@ -1,5 +1,6 @@
 import { makeRng } from './rng.js';
 import { DO_INFO, RULES, atMatch } from './rules.js';
+import { phaseIndexAt, ruleMap, fxMap, spotCells } from './boss.js';
 // ตัวคำนวณการต่อสู้ตาม combat-rules V1.4
 // - ใส่ทีมเดิม + เมล็ดสุ่มเดิม ได้ผลเดิมทุกครั้ง (เซิร์ฟเวอร์ MVP2 จำลองซ้ำเพื่อตรวจได้) · ไม่อ่านเวลาเครื่อง
 //   เลขสุ่มใช้เฉพาะสกิลที่มี "โอกาส %" หรือเป้าแบบสุ่ม · เมล็ดตั้งต้นคำนวณจากทีม
@@ -75,6 +76,12 @@ export function simulate(teamA, teamB, opts = {}) {
     skills: (u.skills || []).map(s => ({ ...s, uses: 0, cdLeft: s.cd || 0 })), dealt: 0, taken: 0,
     tribes: [u.tribe, ...(u.extraTribes || [])], tb: {}, restoreLeft: 0, restoreAmt: 0,
     reflDebuff: [], // ชุด 20: ผู้ปกป้องที่สะท้อนดีบัฟให้ตัวนี้ [{ by, pct }]
+    // ชุด 66 (บอส + รูน): ค่าที่รูนตั้งไว้ (core/runes.js) และค่าของบอส (core/boss.js) · ทีมปกติไม่มี = 0/null ผลเหมือนเดิมทุกประการ
+    taunt: !!u.taunt, avoidLeft: u.avoidLeft || 0, downDmgPct: u.downDmgPct || 0, bossDmgPct: u.bossDmgPct || 0,
+    lastStandDmg: u.lastStandDmg || 0, lastStandCd: u.lastStandCd || 0, shareTribePct: u.shareTribePct || 0, shareTribeN: u.shareTribeN || 0,
+    linkSlot: u.linkSlot || null, linkPct: u.linkPct || 0, silenceUntil: 0, avoidedAt: -1, avoidedBy: null,
+    boss: !!u.boss, bars: u.bars || 0, barHp: u.barHp || 0, move: !!u.move, moveSec: u.moveSec || 0,
+    cells: u.boss ? (u.move ? [u.slots[0]] : u.slots.slice()) : null, slots: u.boss ? u.slots.slice() : null, phases: u.phases || null,
   });
   [teamA, teamB].forEach((team, side) => team.forEach(u => F.push(mkFighter(u, side))));
   F.sort((a, b) => a.side - b.side || a.row - b.row || a.lane - b.lane);
@@ -91,6 +98,8 @@ export function simulate(teamA, teamB, opts = {}) {
 
   // ---------- โบนัสเผ่า (tribe-rules): นับตัวไม่ซ้ำชื่อบนบอร์ด ให้ผลทั้งทีม ----------
   const tribeOn = [0, 1].map(s => R.tribesOn !== false && !(opts.tribesOff && opts.tribesOff[s]));
+  const tExtra = Object.create(null); // ชุด 66: นับเผ่าเพิ่มจากรูนธงเผ่า (ฝั่งผู้เล่น) [{ tribe, count, maxTier }]
+  for (const x of opts.tribeExtra || []) if (x && x.count > 0) tExtra[x.tribe] = { count: (tExtra[x.tribe] ? tExtra[x.tribe].count : 0) + x.count, maxTier: Math.max(tExtra[x.tribe] ? tExtra[x.tribe].maxTier : 0, x.maxTier || 6) };
   const steps = [0, 1].map(side => {
     const out = {};
     if (!tribeOn[side]) return out;
@@ -99,7 +108,10 @@ export function simulate(teamA, teamB, opts = {}) {
       for (const tr of F.find(f => f.side === side && f.id === id).tribes) counts[tr] = (counts[tr] || 0) + 1;
     }
     for (const [tr, n] of Object.entries(counts)) {
-      const idx = R.tribeSteps.filter(x => n >= x).length - 1;
+      let idx = R.tribeSteps.filter(x => n >= x).length - 1;
+      // รูนธงเผ่า (T8 · ชุด 66): เผ่าที่เลือกนับเพิ่ม N ตัว แต่พาไปได้ไม่เกินขั้นที่รูนกำหนด · ใช้กับเผ่าที่ทีมมีอยู่แล้ว
+      const e = side === 0 ? tExtra[tr] : null;
+      if (e) idx = Math.max(idx, Math.min(R.tribeSteps.filter(x => n + e.count >= x).length - 1, e.maxTier - 1));
       const only = opts.tribeOnly && opts.tribeOnly[side]; // ใช้ทดสอบบาลานซ์: เปิดเฉพาะเผ่าเดียว
       if (idx >= 0 && R.tribeBonus && R.tribeBonus[tr] && (!only || only === tr)) out[tr] = idx;
     }
@@ -114,23 +126,68 @@ export function simulate(teamA, teamB, opts = {}) {
   const enemies = f => F.filter(x => x.side !== f.side && up(x));
   const allies = f => F.filter(x => x.side === f.side && up(x));
   const byFront = (a, b) => a.row - b.row || a.lane - b.lane;
-  const effCd = f => Math.max(R.minCooldownMs, Math.round(f.cdMs * f.cdMult));
-  const atkOf = f => f.atk + f.atkBonus;
   const amp = p => Math.max(0, 1 + (p || 0) / 100); // ตัวคูณจาก +% (ลดได้ไม่ต่ำกว่า 0)
   const pickN = (list, n, side) => { const r = rngOf(side), l = list.slice(), out = []; while (l.length && out.length < n) out.push(l.splice(Math.floor(r.next() * l.length), 1)[0]); return out; };
 
+  // ---------- บอส + รูน (ชุด 66 · phase 2a) ----------
+  // บอส = นักสู้ตัวเดียวที่ยืนหลายช่อง (ผู้ใช้เลือก Q1 A) · สกิลที่เล็งแถว/เลนเจอบอสเมื่อช่องใดช่องหนึ่งตรง และโดนครั้งเดียวต่อการใช้สกิล
+  // กฎของเฟสปัจจุบันอยู่ใน BR (id → { v, v2, tribe }) · ทีมปกติไม่มีบอส = ทุกตัวช่วยคืนค่ากลาง ผลเหมือนเดิมทุกประการ
+  const BOSS = F.find(f => f.boss) || null;
+  let BR = Object.create(null), phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, curseQ = null, stormAt = R.stormStartMs;
+  const TICKSK = F.some(f => f.skills.some(s => s.when === 'tick')); // รูนที่ทำงานทุก x วินาที (ฮีลเป็นช่วง) · ไม่มี = ข้ามทั้งก้อน
+  const rule = id => (BOSS ? BR[id] : null);
+  const inLane = (f, lane) => (f.cells ? f.cells.some(i => (i & 1) === lane) : f.lane === lane);
+  const inRow = (f, row) => (f.cells ? f.cells.some(i => (i >> 1) === row) : f.row === row);
+  const hittable = f => !(f.boss && f.noHitUntil > t); // R27 หายตัว / X3 ตีไม่โดนชั่วคราว
+  const foes = f => enemies(f).filter(hittable);
+  const alone = f => allies(f).length === 1; // T10 คนสุดท้าย
+  const sideDown = side => F.some(x => x.side === side && x.down);
+  // ดาเมจตี +% ตอนนี้ (รูนที่เปลี่ยนไปตามสถานการณ์ + ค่าติดตัว)
+  const hitAmpOf = f => f.hitAmp + (f.downDmgPct && sideDown(f.side) ? f.downDmgPct : 0) + (f.lastStandDmg && alone(f) ? f.lastStandDmg : 0);
+  function cdExtra(f) { // ตัวคูณคูลดาวน์จากกฎบอส/รูน (ไม่มี = 1)
+    let m = 1;
+    if (f.lastStandCd && alone(f)) m *= Math.max(0.1, 1 - f.lastStandCd / 100);
+    if (BOSS) {
+      if (f.boss && BR.fastAtk) m *= Math.max(0.1, 1 - BR.fastAtk.v / 100);
+      if (!f.boss && BR.cdSlow) m *= 1 + BR.cdSlow.v / 100;
+    }
+    return m;
+  }
+  const effCd = f => Math.max(R.minCooldownMs, Math.round(f.cdMs * f.cdMult * cdExtra(f)));
+  const atkOf = f => { // R1 บอสตีแรงขึ้น · R13 คลั่ง (×2)
+    const a = f.atk + f.atkBonus;
+    if (!BOSS || !f.boss) return a;
+    return Math.floor(a * (BR.atkUp ? 1 + BR.atkUp.v / 100 : 1) * (BR.desperate ? 2 : 1));
+  };
+  // ปิดสกิล: E2 แถวหลังเงียบช่วงแรก · R15 สุ่มปิดสกิลเป็นช่วง
+  const silenced = f => !!BOSS && !f.boss && ((BR.backSilence && f.row === 2 && t <= BR.backSilence.v * 1000) || f.silenceUntil > t);
+  // เพดานฟื้นเลือดของบอส: ไม่เกินยอดของแถบปัจจุบัน (กันลูป "ศัตรู down" ซ้ำ)
+  // ยอดของแถบที่บอสอยู่ตอนนี้ · ไม่เกินยอดของแถบที่ยังไม่หมด (แถบที่หมดไปแล้วไม่เต็มกลับ)
+  const bossCap = () => Math.min(BOSS.maxHp, (BOSS.bars - barsGone) * BOSS.barHp, Math.ceil(Math.max(0, BOSS.hp) / BOSS.barHp) * BOSS.barHp);
+  function bossHeal(v) {
+    v = Math.floor(v); if (!(v > 0) || !up(BOSS)) return;
+    const h = Math.min(v, bossCap() - BOSS.hp);
+    if (h > 0) { BOSS.hp += h; log('heal', { to: BOSS.uid, amount: h }); }
+  }
+
   function normalTarget(f) {
-    const es = enemies(f);
-    const same = es.filter(e => e.lane === f.lane).sort(byFront);
+    const es = foes(f);
+    if (BOSS && f.boss) { // R5 ตีตัวเลือดน้อยสุด · R6 ตีแถวหลังก่อน
+      if (BR.hunter) return es.slice().sort((a, b) => a.hp - b.hp || byFront(a, b))[0] || null;
+      if (BR.backStrike) { const bk = es.filter(e => e.row === 2).sort(byFront); if (bk.length) return bk[0]; }
+    }
+    const pull = es.filter(e => e.taunt).sort(byFront); // รูนโล่ (U4): ศัตรูต้องตีตัวนี้ก่อน · บอสก็ถูกดึง (ผู้ใช้เลือก Q5 U4)
+    if (pull.length) return pull[0];
+    const same = es.filter(e => inLane(e, f.lane)).sort(byFront);
     if (same.length) return same[0];
     return es.sort(byFront)[0] || null;
   }
   // ศัตรูแถวหลัง (combat-rules V1.19): เฉพาะแถวหลังจริง (row 2) · เลนเดียวกันก่อน แล้วอีกเลน · ไม่มีตัวแถวหลัง = ไม่มีเป้า (ผู้เล่นหลบได้ด้วยการไม่วางแถวหลัง)
   function backTarget(f) {
-    const back = enemies(f).filter(e => e.row === 2);
-    return back.find(e => e.lane === f.lane) || null; // 22 ต.ค. ชุด 10: เลนเดียวกันเท่านั้น ไม่มี = ไม่มีผล (ไม่ย้ายเลน)
+    const back = foes(f).filter(e => inRow(e, 2));
+    return back.find(e => inLane(e, f.lane)) || null; // 22 ต.ค. ชุด 10: เลนเดียวกันเท่านั้น ไม่มี = ไม่มีผล (ไม่ย้ายเลน)
   }
-  const lowestEnemy = f => enemies(f).sort((a, b) => a.hp - b.hp || byFront(a, b))[0] || null;
+  const lowestEnemy = f => foes(f).sort((a, b) => a.hp - b.hp || byFront(a, b))[0] || null;
 
   // ชุด 14: ผู้รับของสกิล = เป้าตามช่อง to + เพื่อนตามตำแหน่ง (allyAt) + กรองเผ่าเดียวกัน (sameTribe · นับเผ่าเพิ่ม · ตัวเองผ่านเสมอถ้าเป้าเดิมรวมตัวเอง)
   const RAND_N = { allyRandom: 1, allyRandom2: 2 };
@@ -157,12 +214,12 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'attacker': return ctx.attacker && !ctx.attacker.down ? [ctx.attacker] : [];
       case 'enemyFront': return [normalTarget(f)].filter(Boolean);
       case 'enemyBackRow': return [backTarget(f)].filter(Boolean);
-      case 'enemyLane': return enemies(f).filter(e => e.lane === f.lane).sort(byFront); // ศัตรูทั้งเลนเดียวกัน · ชุด 10: เลนนั้นหมด = ไม่มีผล (ไม่ย้ายเลน)
-      case 'enemyFrontRow': return enemies(f).filter(e => e.row === 0).sort(byFront); // แถวหน้าทั้ง 2 เลน · ไม่มีใครแถวหน้า = ไม่มีเป้า
-      case 'enemyMidRow': return enemies(f).filter(e => e.lane === f.lane && e.row === 1); // แถวกลางเลนเดียวกัน · ชุด 10: ไม่มี = ไม่มีผล (เปลี่ยนเป้า: ตีเป้าปกติต่อ)
+      case 'enemyLane': return foes(f).filter(e => inLane(e, f.lane)).sort(byFront); // ศัตรูทั้งเลนเดียวกัน · ชุด 10: เลนนั้นหมด = ไม่มีผล (ไม่ย้ายเลน)
+      case 'enemyFrontRow': return foes(f).filter(e => inRow(e, 0)).sort(byFront); // แถวหน้าทั้ง 2 เลน · ไม่มีใครแถวหน้า = ไม่มีเป้า
+      case 'enemyMidRow': return foes(f).filter(e => inLane(e, f.lane) && inRow(e, 1)); // แถวกลางเลนเดียวกัน · ชุด 10: ไม่มี = ไม่มีผล (เปลี่ยนเป้า: ตีเป้าปกติต่อ)
       case 'lowestHp': return [lowestEnemy(f)].filter(Boolean);
-      case 'enemyRandom': return pickN(enemies(f), 1, f.side);
-      case 'allEnemies': return enemies(f);
+      case 'enemyRandom': return pickN(foes(f), 1, f.side);
+      case 'allEnemies': return foes(f);
       case 'frontAlly': return others.filter(x => x.lane === f.lane && x.row === f.row - 1);
       case 'backAlly': return others.filter(x => x.lane === f.lane && x.row === f.row + 1);
       case 'frontBackAlly': return others.filter(x => x.lane === f.lane && Math.abs(x.row - f.row) === 1);
@@ -204,6 +261,7 @@ export function simulate(teamA, teamB, opts = {}) {
   }
   // ทำงานเมื่อเงื่อนไขตรง · คืนสกิลที่ทำงาน (ใช้กับผลที่ปรับชุดทันที)
   function trigger(u, when, ctx, filter) {
+    if (BOSS && when !== 'passive' && when !== 'matchStart' && silenced(u)) return; // E2 / R15 ใช้สกิลไม่ได้
     for (const s of u.skills) {
       if (s.when !== when || !usable(s) || (filter && !filter(s))) continue;
       if (s.do === 'allyStrike' && ctx.carried) continue; // ชุด 20: ฮิตที่ถูกพาไปไม่พาต่อ (กันวน · ไม่ใช้คูลดาวน์สกิล)
@@ -225,9 +283,42 @@ export function simulate(teamA, teamB, opts = {}) {
   // ดาเมจ: หักเกราะก่อน HP (ไม่มีการลดดาเมจ) · pierce = เข้า HP ตรง
   const restoreQ = [];
   let subHit = false; // ชุด 33: ฮิตตีแบ่ง (SF-8) เป้าที่ 2 เป็นต้นไป = ส่วนของฮิตเดิม ไม่นับเป็นฮิตใหม่ในสรุปรายตัว
+  // กฎบอสที่ปรับดาเมจ (ชุด 66) · ไม่มีบอส = ไม่ถูกเรียก
+  function ruleDmg(target, amount, src, why) {
+    if (target.boss) {
+      if (!hittable(target) && why !== 'burn' && why !== 'storm') return 0; // R27 หายตัว / X3 ตีไม่โดน (ไฟ/พายุยังเข้า)
+      if (src && !src.boss) {
+        if (BR.frontOnly && src.row !== 0) return 0; // R26
+        if (BR.backOnly && src.row !== 2) return 0;
+        if (BR.minHit && amount < BR.minHit.v) return 0; // R23
+        if (src.bossDmgPct) amount *= 1 + src.bossDmgPct / 100; // รูนล่าบอส (T9)
+        if (BR.tribeWeak && src.tribes.includes(BR.tribeWeak.tribe)) amount *= 1 + BR.tribeWeak.v / 100; // R25
+        if (BR.tribeResist && src.tribes.includes(BR.tribeResist.tribe)) amount *= Math.max(0, 1 - BR.tribeResist.v / 100);
+      }
+      if (BR.desperate) amount *= 1 + BR.desperate.v / 100; // R13 คลั่ง: โดนดาเมจเพิ่ม
+      if (BR.weakSpot && target.weakUntil > t) amount *= 1 + BR.weakSpot.v / 100; // R30 หลังย้ายที่
+      if (BR.hitCap) amount = Math.min(amount, BOSS.barHp * BR.hitCap.v / 100); // R22 ตี 1 ครั้งเข้าไม่เกิน
+    } else if (BR.frontBreak && target.row === 0) amount *= 1 + BR.frontBreak.v / 100; // R18
+    return Math.floor(amount);
+  }
   function hurt(target, amount, src, pierce, why, det) {
     amount = Math.floor(amount);
+    if (BOSS) amount = ruleDmg(target, amount, src, why);
     if (amount <= 0 || target.down) return 0;
+    // รูนสายสัมพันธ์ (X6): คู่ที่เลือกรับดาเมจแทน % · รับแทนต่อไม่ได้
+    if (target.linkPct > 0 && why !== 'link') {
+      const p = F.find(x => x.side === target.side && x !== target && x.row === target.linkSlot[0] && x.lane === target.linkSlot[1]);
+      if (p && up(p)) {
+        const share = Math.floor(amount * target.linkPct / 100);
+        if (share > 0) { hurt(p, share, src, pierce, 'link', det); amount -= share; if (amount <= 0) return 0; }
+      }
+    }
+    // รูนเลี่ยงจุดตาย (X4): ฮิตที่จะทำให้ down ถูกยกเลิกทั้งฮิต (ไฟ/ช็อตของฮิตนั้นด้วย ดู strike)
+    if (target.avoidLeft > 0 && (why === 'hit' || why === 'shock') && (pierce ? amount : Math.max(0, amount - target.armor)) >= target.hp) {
+      target.avoidLeft--; target.avoidedAt = t; target.avoidedBy = src || null;
+      log('avoid', { to: target.uid, from: src ? src.uid : null });
+      return 0;
+    }
     let absorbed = 0;
     if (!pierce && target.armor > 0) {
       const before = target.armor;
@@ -243,6 +334,10 @@ export function simulate(teamA, teamB, opts = {}) {
     target.hp -= loss;
     target.taken += amount;
     if (src) src.dealt += amount;
+    if (BOSS && target.boss && amount > 0) { // R8 ดูดเลือด (ไม่เกินแถบปัจจุบัน) · E7 สะท้อนดาเมจกลับ (ของที่สะท้อนไม่สะท้อนต่อ)
+      if (BR.lifesteal) bossHeal(amount * BR.lifesteal.v / 100);
+      if (BR.reflect && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect' }, ctx: { attacker: src } });
+    }
     target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำ down = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
     if (detailOn) { const dd = { ...(dCur || {}), ...(det || {}) }; if (target.hp < 0) dd.over = Math.min(loss, -target.hp); log('dmg', { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, ...(subHit && why === 'hit' ? { sub: 1 } : {}), d: dd }); } else
     log('dmg', subHit && why === 'hit' ? { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, sub: 1 } : { to: target.uid, from: src ? src.uid : null, amount, absorbed, why });
@@ -254,12 +349,18 @@ export function simulate(teamA, teamB, opts = {}) {
   }
   function addArmor(f, v, why) {
     v = Math.floor(v * amp(f.armorAmp)); // เกราะที่ได้รับ +% (ศัตรูลดได้ด้วย "ได้เกราะน้อยลง" · ต่ำสุด 0)
+    if (BOSS && !f.boss) { // R17 ผู้เล่นได้เกราะไม่ได้ · E4 เกราะผู้เล่นลดลง
+      if (BR.noArmor) return;
+      if (BR.armorCut) v = Math.floor(v * Math.max(0, 1 - BR.armorCut.v / 100));
+    }
     if (!(v > 0 && up(f))) return;
     f.armor += v; log('armor', { to: f.uid, amount: v, why });
     // แบ่งเกราะ (HL-8): เพื่อนทั้งทีมได้ % ของเกราะที่ตัวนี้ได้ · เกราะที่ได้จากการแบ่งไม่แบ่งต่อ (กันวนไม่จบ)
     if (why !== 'share') { // แบ่งเกราะ (ชุด 7): แยกตามผู้รับ · shareArmor = ทั้งทีม
       if (f.shareArmor > 0) for (const x of allies(f)) if (x !== f) addArmor(x, v * f.shareArmor / 100, 'share');
       for (const [to, pct] of Object.entries(f.shareTo)) if (pct > 0) for (const x of targetsOf(f, to, {})) if (x !== f) addArmor(x, v * pct / 100, 'share');
+      // รูนแบ่งเกราะให้เพื่อนเผ่าเดียวกัน (ชุด 66): สุ่ม N ตัว · เกราะที่แบ่งไปไม่แบ่งต่อ
+      if (f.shareTribePct > 0) for (const x of pickN(allies(f).filter(x => x !== f && x.tribes.some(tr => f.tribes.includes(tr))), f.shareTribeN, f.side)) addArmor(x, v * f.shareTribePct / 100, 'share');
     }
   }
   // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค. ผู้ใช้เลือก A: ไฟ/ช็อตที่สะท้อน นับเป็นของ PT-8 ที่สะท้อน · ไม่ใช้ค่า +% ของมัน · ถ้ามี PT-8 หลายตัวปกป้องเพื่อนคนเดียวกัน นับให้ตัวแรก)
@@ -267,6 +368,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (kind === 'burn' && src && src.side !== f.side && src.burnAmp) v *= amp(src.burnAmp); // ไฟที่ทำให้ติด +% (ชุด 6)
     v = Math.floor(v);
     if (v <= 0 || f.down) return;
+    if (BOSS && f.boss && BR.statusImmune) return; // R24 บอสไม่ติดไฟ/ช็อต
     const by = src || credit;
     f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
     if (kind === 'burn' && src && src.burnNoDecay) f.noDecayPerm = true;
@@ -308,6 +410,7 @@ export function simulate(teamA, teamB, opts = {}) {
   function cutCd(f, ms) { if (up(f)) { ms = Math.floor(ms * (1 + f.cdAmp / 100)); f.cdLeft = Math.max(0, f.cdLeft - ms); log('cdCut', { to: f.uid, ms }); } }
   function heal(f, v, src, why) {
     v = Math.floor(v * amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
+    if (BOSS && !f.boss && BR.healCut) v = Math.floor(v * Math.max(0, 1 - BR.healCut.v / 100)); // E3 ผู้เล่นฟื้นได้น้อยลง
     if (!up(f) || v <= 0) return; // ฟื้น HP ไม่ช่วยตัวที่ HP ถึง 0 แล้ว (ต้องใช้สกิลลุกกลับมา)
     const h = Math.min(v, f.maxHp - f.hp);
     if (h > 0) {
@@ -333,8 +436,8 @@ export function simulate(teamA, teamB, opts = {}) {
     if (who === 'allEnemies') return enemies(u).reduce((a, f) => a + one(f), 0);
     if (who === 'allAllies') return allies(u).reduce((a, f) => a + one(f), 0);
     // ชุด 12: เลนเดียวกัน = เลนของตัวนี้ · แถวเดียวกัน = แถวของตัวนี้ ทั้ง 2 เลน · รวมเฉพาะตัวที่ยืนอยู่ (ไม่มี = 0) · ฝั่งเพื่อนนับตัวนี้ด้วย
-    if (who === 'laneEnemies') return enemies(u).filter(f => f.lane === u.lane).reduce((a, f) => a + one(f), 0);
-    if (who === 'rowEnemies') return enemies(u).filter(f => f.row === u.row).reduce((a, f) => a + one(f), 0);
+    if (who === 'laneEnemies') return enemies(u).filter(f => inLane(f, u.lane)).reduce((a, f) => a + one(f), 0);
+    if (who === 'rowEnemies') return enemies(u).filter(f => inRow(f, u.row)).reduce((a, f) => a + one(f), 0);
     if (who === 'laneAllies') return allies(u).filter(f => f.lane === u.lane).reduce((a, f) => a + one(f), 0);
     if (who === 'rowAllies') return allies(u).filter(f => f.row === u.row).reduce((a, f) => a + one(f), 0);
     return 0;
@@ -434,7 +537,7 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'burn': case 'shock': for (const x of T()) addStatus(x, s.do, v, why, u); break;
       case 'freeze': for (const x of T()) if (up(x)) { x.cdLeft += v; x.frozen += v; buff(x, 'freeze', v); } break;
       case 'cdSlowPct': for (const x of T()) if (up(x)) { x.cdMult *= 1 + v / 100; buff(x, 'cdSlowPct', v); if (x.side !== u.side) reflectBack(x, u, 'cdSlowPct', v); } break; // ชุด 16: มีผลกับคูลดาวน์รอบถัดไป
-      case 'stun': for (const x of T()) if (up(x)) { x.stunLeft = Math.max(x.stunLeft, v); buff(x, 'stun', v); } break;
+      case 'stun': for (const x of T()) if (up(x)) { const vv = s.bossPct != null && x.boss ? Math.floor(v * s.bossPct / 100) : v; if (vv > 0) { x.stunLeft = Math.max(x.stunLeft, vv); buff(x, 'stun', vv); } } break; // bossPct = รูนหยุดศัตรู (บอสหยุดสั้นกว่า)
       case 'noDecay': for (const x of T()) if (up(x)) x.noDecay += v; break;
       case 'spreadBurn': if (ctx.burn > 0) for (const x of T()) addStatus(x, 'burn', ctx.burn * v / 100, why, u); break;
       case 'moveShock': if (ctx.shock > 0) for (const x of T()) addStatus(x, 'shock', ctx.shock * v / 100, why, u); break;
@@ -469,11 +572,14 @@ export function simulate(teamA, teamB, opts = {}) {
     }
   }
   // ฮิต 1 ครั้ง (แยกออกมาชุด 20 ให้ฮิตที่ถูกพาไปใช้ร่วม): n = จำนวนเป้าที่แบ่ง · first = ฮิตแรกของชุด (โบนัสเผ่า) · carried = ฮิตที่ถูกพาไป
-  function strike(a, tg, n, first, carried) {
+  function strike(a, tg, n, first, carried, pow) {
     const part = x => Math.floor(x / n);
     const atk0 = n > 1 ? Math.max(1, part(atkOf(a))) : atkOf(a);
-    const atk = a.hitAmp || tg.dmgTakenAmp ? Math.floor(atk0 * amp(a.hitAmp) * amp(tg.dmgTakenAmp)) : atk0; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
-    const absorbed = hurt(tg, atk, a, false, 'hit', detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: a.hitAmp, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
+    const atkP = pow != null && pow !== 100 ? Math.max(1, Math.floor(atk0 * pow / 100)) : atk0; // R4 ตีโดนทุกตัว % · รูนคู่หู % ของการโจมตีปกติ
+    const ha = hitAmpOf(a); // ชุด 66: รูนที่เปลี่ยนตามสถานการณ์ (เพื่อน down / เหลือตัวเดียว)
+    const atk = ha || tg.dmgTakenAmp ? Math.floor(atkP * amp(ha) * amp(tg.dmgTakenAmp)) : atkP; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
+    const absorbed = hurt(tg, atk, a, false, 'hit', detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: ha, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
+    if (tg.avoidedAt === t && tg.avoidedBy === a) return; // รูนเลี่ยงจุดตาย: ยกเลิกทั้งฮิต (ดาเมจ ไฟ ช็อต)
     let taken = atk;
     if (tg.shock > 0 && up(tg)) { const sd = Math.floor(tg.shock * amp(a.shockAmp) * amp(tg.shockTaken)); hurt(tg, sd, a, true, 'shock', detailOn ? { shock: tg.shock, amp: a.shockAmp, tribeAmp: a.shockAmpT || 0, takenAmp: tg.shockTaken } : null); taken += Math.max(0, sd); } // ช็อต: ดาเมจจริงเต็มค่าทุกฮิต · ชุด 34: ตีแบ่งหารเฉพาะค่าของผู้ตี ช็อตบนเป้าแตกเต็มค่า
     if (first) { // โบนัสเผ่า: ฮิตแรกของชุด (ฮิตที่ถูกพาไปไม่นับ)
@@ -484,6 +590,8 @@ export function simulate(teamA, teamB, opts = {}) {
     if (part(a.shockHit) > 0) Q.S.push({ u: a, s: { do: 'shock', to: 'target', value: part(a.shockHit) }, ctx: { target: tg } });
     if (part(a.armorHit) > 0) Q.L.push({ u: a, s: { do: 'armor', to: 'self', value: part(a.armorHit), why: 'armorHit' }, ctx: {} }); // เกราะ/ฮิต: ได้หลังดาเมจ
     if (part(a.healHit) > 0) Q.H.push({ u: a, s: { do: 'heal', to: 'self', value: part(a.healHit), why: 'healHit' }, ctx: {} }); // ฟื้น/ฮิต (ชุด 18): ฟื้นตัวเอง ขั้นฟื้น HP ท้าย tick · ทุกเผ่า
+    // R7 ตีจนเลือดต่ำกว่าเกณฑ์ = down ทันที (เฉพาะบอส)
+    if (BOSS && a.boss && BR.execute && up(tg) && tg.hp > 0 && tg.hp * 100 < tg.maxHp * BR.execute.v) hurt(tg, tg.hp, a, true, 'execute');
     trigger(a, 'hit', carried ? { target: tg, dealt: taken, carried: true } : { target: tg, dealt: taken });
     trigger(tg, 'hitTaken', { attacker: a, amount: absorbed, taken });
   }
@@ -497,7 +605,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (aborted || !up(tg) || x.down) return; // ชุด 21: เพื่อนยังไม่ down = ตีได้ (ดูหมายเหตุใน skillTargetsOf)
       if (++hitN > R.hitCapPerMatch) { aborted = 'hits'; return; }
       log('carry', { who: x.uid, by: u.uid, target: tg.uid });
-      strike(x, tg, 1, false, true);
+      strike(x, tg, 1, false, true, s.pow); // pow = รูนคู่หู (% ของการโจมตีปกติ) · สกิลปกติไม่มี = เต็มแรง
     }
   }
   // ชุด 17: ทำผลในคิวจนหมดใน tick นั้น (เดิมทำได้ 2,000 ผล ที่เกินเลื่อนไป tick ถัดไปเงียบๆ) · ตัวตัดนิรภัย: ผลรวมทั้งแมตช์เกินเพดาน → หยุด แล้วจบเสมอ
@@ -521,6 +629,82 @@ export function simulate(teamA, teamB, opts = {}) {
   const drainS = () => drainSorted(Q.S, sTier), drainH = () => drainSorted(Q.H, hKey);
   function drainAll() { drain(Q.A); drain(Q.D); drain(Q.L); restoreArmor(); drainS(); flushRefl(); drainH(); flushRefl(); flushRevive(); }
   function restoreArmor() { while (restoreQ.length) { const f = restoreQ.shift(); addArmor(f, f.restoreAmt, 'tribe'); } }
+
+  // ---------- เฟสบอส + กฎที่ทำงานตามเวลา (ชุด 66) ----------
+  // เฟสเปลี่ยนตามจำนวนแถบเลือดที่หมดไป (ผู้ใช้เลือก Q1 A) · กฎของเฟสใหม่แทนที่กฎเก่าทั้งหมด (Q3 A)
+  function enterPhase(i) {
+    phIdx = i;
+    const p = BOSS.phases[i] || { rules: [], fx: [], spot: '' };
+    BR = ruleMap(p);
+    const fx = fxMap(p);
+    if (fx.armorBar != null) addArmor(BOSS, BOSS.barHp * fx.armorBar / 100, 'boss'); // X1
+    if ('cleanse' in fx) { BOSS.burn = BOSS.shock = BOSS.noDecay = 0; BOSS.noDecayPerm = false; log('cleanse', { to: BOSS.uid }); } // X2
+    if (fx.untargetable) BOSS.noHitUntil = Math.max(BOSS.noHitUntil || 0, t + fx.untargetable * 1000); // X3
+    if (fx.stunAll) for (const x of enemies(BOSS)) { x.stunLeft = Math.max(x.stunLeft, fx.stunAll * 1000); buff(x, 'stun', fx.stunAll * 1000); } // X4
+    if (p.spot) { const c = spotCells(p.spot); if (c) { BOSS.slots = c.slots; BOSS.cells = c.cells; BOSS.move = c.move; BOSS.row = c.cells[0] >> 1; BOSS.lane = c.cells[0] & 1; } } // X5
+    if (BR.rowSwap) for (const x of F) if (!x.boss) { if (x.row === 0) x.row = 2; else if (x.row === 2) x.row = 0; } // R19
+    if (BR.earlyStorm) stormAt = Math.min(stormAt, t); // R21
+    if (BR.tribeOff) for (const x of F) if (!x.boss) x.tb = {}; // E5 ปิดโบนัสเผ่าที่ทำงานระหว่างสู้ (ค่าที่ได้ตอนเริ่มยังอยู่)
+    barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = t;
+    log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id) });
+  }
+  // แถบเลือดหมด 1 แถบ = "ศัตรู down" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
+  function bossBars() {
+    if (!BOSS || !up(BOSS)) return;
+    const gone = Math.max(0, Math.min(BOSS.bars, BOSS.bars - Math.ceil(Math.max(0, BOSS.hp) / BOSS.barHp)));
+    let changed = false;
+    while (barsGone < gone && barsGone < BOSS.bars) {
+      barsGone++; barT = t; changed = true;
+      log('bar', { who: BOSS.uid, gone: barsGone, left: BOSS.bars - barsGone });
+      const ctx = { downed: BOSS, burn: BOSS.burn, shock: BOSS.shock, attacker: BOSS.lastHitBy };
+      for (const x of F.filter(x => !x.boss && up(x))) trigger(x, 'enemyDown', ctx);
+      if (BOSS.lastHitBy && up(BOSS.lastHitBy)) trigger(BOSS.lastHitBy, 'kill', ctx);
+    }
+    const i = phaseIndexAt(BOSS.phases, barsGone);
+    if (i !== phIdx) { enterPhase(i); changed = true; }
+    if (changed) drainAll();
+  }
+  function moveBoss() {
+    const next = pickN(BOSS.slots.filter(i => i !== BOSS.cells[0]), 1, BOSS.side)[0];
+    if (next == null) return;
+    BOSS.cells = [next]; BOSS.row = next >> 1; BOSS.lane = next & 1;
+    if (BR.weakSpot) BOSS.weakUntil = t + 3000; // R30 หลังย้ายที่ โดนดาเมจเพิ่ม 3 วิ
+    log('bossMove', { who: BOSS.uid, slot: next });
+  }
+  function bossTick() {
+    if (!up(BOSS)) return;
+    if (BR.enrage && t - enrageT >= 10000) { enrageT = t; const a = Math.floor(BOSS.atk * BR.enrage.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } } // E6
+    if (BR.regen && t % 1000 === 0) bossHeal(BOSS.barHp * BR.regen.v / 100); // R9
+    if (BR.armorGrow && t - growT >= 10000) { growT = t; addArmor(BOSS, BR.armorGrow.v, 'boss'); } // R10
+    if (BR.burnAura && t - auraT >= 5000) { auraT = t; for (const x of enemies(BOSS)) addStatus(x, 'burn', BR.burnAura.v, 'boss', BOSS); } // R11
+    if (BR.shockAura && t - shockT >= 5000) { shockT = t; for (const x of pickN(enemies(BOSS), 1, BOSS.side)) addStatus(x, 'shock', BR.shockAura.v, 'boss', BOSS); } // R12
+    if (BR.randomSilence && t - silT >= BR.randomSilence.v * 1000) { // R15
+      silT = t;
+      for (const x of pickN(enemies(BOSS), 1, BOSS.side)) { x.silenceUntil = t + BR.randomSilence.v2 * 1000; buff(x, 'silence', BR.randomSilence.v2 * 1000); }
+    }
+    if (BR.freezeRow && t - frzT >= BR.freezeRow.v * 1000) { // R16
+      frzT = t;
+      const row = Math.floor(rngOf(BOSS.side).next() * 3), ms = BR.freezeRow.v2 * 1000;
+      for (const x of enemies(BOSS).filter(e => e.row === row)) { x.cdLeft += ms; x.frozen += ms; buff(x, 'freeze', ms); }
+    }
+    if (BR.vanish && t - vanT >= BR.vanish.v * 1000) { vanT = t; BOSS.noHitUntil = t + BR.vanish.v2 * 1000; log('vanish', { who: BOSS.uid, ms: BR.vanish.v2 * 1000 }); } // R27
+    if (BR.dpsCheck && t - barT >= BR.dpsCheck.v * 1000) { // R28 ตีแถบไม่หมดในเวลา → แถบเต็มกลับ (ไม่กระตุ้น "ศัตรู down" ซ้ำ)
+      barT = t;
+      const top = bossCap();
+      if (BOSS.hp < top) { BOSS.hp = top; log('barRefill', { who: BOSS.uid, hp: top }); }
+    }
+    if (BR.curse) { // R29 สาป: ลงโทษถ้าทีมตีบอสไม่ถึงเป้าใน 5 วิ
+      if (curseQ && t >= curseQ.until) {
+        if (up(curseQ.u) && BOSS.taken - curseQ.base < BOSS.barHp * BR.curse.v2 / 100) { log('curse', { to: curseQ.u.uid, done: 0 }); hurt(curseQ.u, curseQ.u.hp, BOSS, true, 'execute'); }
+        curseQ = null; curseT = t;
+      }
+      if (!curseQ && t - curseT >= BR.curse.v * 1000) {
+        const x = pickN(enemies(BOSS), 1, BOSS.side)[0];
+        if (x) { curseQ = { u: x, until: t + 5000, base: BOSS.taken }; log('curse', { to: x.uid, ms: 5000 }); }
+      }
+    }
+    if (BOSS.move && BOSS.slots.length > 1 && t - moveT >= BOSS.moveSec * 1000) { moveT = t; moveBoss(); }
+  }
 
   // ---------- เริ่มแมตช์ ----------
   for (const f of F) f.armor = f.startArmor;
@@ -549,6 +733,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (fiend) f.tb.blast = fiend.b.blastPct[fiend.idx];
   }
   stage = 'start';
+  if (BOSS) enterPhase(0); // กฎของเฟสแรกทำงานตั้งแต่ก่อนสกิล "เริ่มแมตช์"
   for (const f of F) trigger(f, 'passive', {});
   drainAll();
   for (const f of F) { // ชุด 32: ติดไฟ/ช็อตศัตรูทุกตัวตอนเริ่มแมตช์ (โบนัสเพลิงเผา/สายฟ้าของอีกฝั่ง)
@@ -563,6 +748,7 @@ export function simulate(teamA, teamB, opts = {}) {
   drainAll();
   for (const f of F) f.cdLeft = Math.max(0, (f.tb.instant ? 0 : effCd(f)) + (f.cdLeft - f.cd0) - f.cdStart); // cdStart = ลดคูลดาวน์ตอนเริ่มแบบถาวร (22 ต.ค.)
   resolveDowns(); // ผลตอนเริ่มทำให้ down ได้ (เช่น down ทันที WN-8)
+  if (BOSS) bossBars(); // ดาเมจตอนเริ่มแมตช์อาจทำแถบแรกหมดไปแล้ว
 
   const finish = winner => {
     log('end', aborted ? { winner, aborted } : { winner });
@@ -597,17 +783,19 @@ export function simulate(teamA, teamB, opts = {}) {
       if (f.noDecayPerm) continue;
       if (f.noDecay > 0) f.noDecay--; else { f.burn = Math.max(0, f.burn - R.burnDecay); log('burnLeft', { to: f.uid, total: f.burn }); } // ให้หน้าจอรู้ว่าไฟลดลงแล้ว
     }
-    if (t > R.stormStartMs && (t - R.stormStartMs) % R.stormIntervalMs === 0) {
-      const k = (t - R.stormStartMs) / R.stormIntervalMs;
+    if (t > stormAt && (t - stormAt) % R.stormIntervalMs === 0) { // stormAt = R.stormStartMs ปกติ · R21 เลื่อนให้เริ่มทันทีตอนเข้าเฟส
+      const k = (t - stormAt) / R.stormIntervalMs;
       const dmg = Math.min(1e12, R.stormDmgStart * R.stormDmgMult ** (k - 1)); // ชุด 24: ดาเมจตายตัว ×2 ทุกวิ ไม่ขึ้นกับ HP สูงสุด (เพดานกันเลขล้น)
       for (const f of F.filter(up)) hurt(f, dmg, null, !!R.stormPierce, 'storm', detailOn ? { k, pierce: R.stormPierce ? 1 : 0 } : null);
     }
 
     // 1) เริ่มชุด: เลือกเป้าตอนต้น tick ทุกตัวพร้อมกัน แล้วใช้สกิลที่ปรับชุด (ฮิตเพิ่ม กระจาย เปลี่ยนเป้า)
     stage = 'pre';
+    if (BOSS) bossTick(); // กฎบอสที่ทำงานตามเวลา (ฟื้นเลือด ออร่า ปิดสกิล หายตัว ย้ายที่ ฯลฯ)
+    if (TICKSK) for (const f of F) if (up(f)) trigger(f, 'tick', {}); // รูนฮีลเป็นช่วง
     const plans = F.filter(f => up(f) && f.cdLeft <= 0).map(a => {
       a.sets++;
-      const plan = { a, target: normalTarget(a), hits: a.multi + a.multiBonus, spread: false, landed: 0 };
+      const plan = { a, target: normalTarget(a), hits: a.multi + a.multiBonus + (BOSS && a.boss && BR.multiUp ? BR.multiUp.v : 0), spread: false, landed: 0 };
       trigger(a, 'set', plan, s => PRE[s.do]);
       if (a.tb.hit && a.sets % a.tb.hit[1] === 0) plan.hits += a.tb.hit[0];
       if (plan.spread) plan.spread = enemies(a).sort((x, y) => x.hp - y.hp || byFront(x, y)); // ฮิตละตัว เริ่มจาก HP ต่ำสุด
@@ -629,16 +817,18 @@ export function simulate(teamA, teamB, opts = {}) {
       for (let h = 0; h < p.hits; h++) {
         if (++hitN > R.hitCapPerMatch) { aborted = 'hits'; break; } // ตัวตัดนิรภัย (ชุด 17): ฮิตรวมทั้งแมตช์เกินเพดาน
         let tgs;
-        if (p.split) tgs = enemies(a).sort(byFront); // ตีแบ่งทุกตัว (SF-8): ทุกค่าของฮิตหารเท่ากันตามจำนวนศัตรูที่ยังยืน
+        const aoePow = BOSS && a.boss && BR.aoe ? BR.aoe.v : null; // R4 บอสตีโดนทุกตัว (ดาเมจต่อตัว %)
+        if (aoePow) tgs = foes(a).sort(byFront);
+        else if (p.split) tgs = enemies(a).sort(byFront); // ตีแบ่งทุกตัว (SF-8): ทุกค่าของฮิตหารเท่ากันตามจำนวนศัตรูที่ยังยืน
         else {
           let tg = p.target;
           if (p.spread) { const live = p.spread.filter(up); tg = live.length ? live[h % live.length] : null; }
           tgs = tg && up(tg) ? [tg] : [];
         }
         if (!tgs.length) break; // เป้า down → รอบที่เหลือหายไป
-        const n = tgs.length; // ตีแบ่ง: ค่าที่แบ่ง ปัดลง (ค่าเสนอ) · พลังโจมตีอย่างน้อย 1
+        const n = aoePow ? 1 : tgs.length; // ตีแบ่ง: ค่าที่แบ่ง ปัดลง (ค่าเสนอ) · พลังโจมตีอย่างน้อย 1 · R4 ไม่ใช่การแบ่ง (ทุกตัวโดนเท่ากัน %)
         p.landed++;
-        tgs.forEach((tg, j) => { subHit = j > 0; if (up(tg)) strike(a, tg, n, p.landed === 1 && j === 0, false); });
+        tgs.forEach((tg, j) => { subHit = j > 0; if (up(tg)) strike(a, tg, n, p.landed === 1 && j === 0, false, aoePow); });
         subHit = false;
       }
       if (p.landed >= 3) trigger(a, 'hits3', { target: p.target });
@@ -655,6 +845,7 @@ export function simulate(teamA, teamB, opts = {}) {
     drainS(); flushRefl(); drainH(); flushRefl(); flushRevive();
     // 8) เช็ก down และผลจากการ down (วนจนนิ่ง)
     resolveDowns();
+    if (BOSS) bossBars(); // แถบเลือดที่หมดไป → "ศัตรู down" + เปลี่ยนเฟส
 
     res = endCheck();
     if (res) return res;
@@ -676,7 +867,9 @@ export function simulate(teamA, teamB, opts = {}) {
         for (const x of F.filter(x => x.side === f.side && x !== f && up(x))) trigger(x, 'allyDown', ctx);
         for (const x of F.filter(x => x.side !== f.side && up(x))) trigger(x, 'enemyDown', ctx);
         if (f.lastHitBy && up(f.lastHitBy)) trigger(f.lastHitBy, 'kill', ctx);
-        const rv = f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
+        // R20 ชุบชีวิตไม่ได้ (เฉพาะฝั่งผู้เล่น ระหว่างเฟสนั้น) · รูนชุบ (U2) จำกัดครั้งด้วย s.lim และทำงานก่อนการลุกของเผ่าอสูร (ผู้ใช้เลือก Q5 U2)
+        const noRev = !!(BOSS && !f.boss && BR.noRevive);
+        const rv = noRev ? null : f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (!s.lim || s.uses < s.lim) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
         if (rv) { // สกิลลุกกลับมา: เกิดแทนการ down (ผลตอน down ด้านบนทำงานไปแล้ว)
           fire(f, rv, 'selfDown');
           reviveUnit(f, rv.value, 'skill', f, rv);
@@ -684,7 +877,7 @@ export function simulate(teamA, teamB, opts = {}) {
         }
         // ชุบเพื่อน (WN-4): เพื่อนที่ยังยืนอยู่ใช้ได้ v ครั้ง/แมตช์ · ฟื้นด้วย HP reviveAllyHpPct%
         let healer = null, ra = null;
-        for (const x of F) {
+        for (const x of noRev ? [] : F) {
           if (x === f || x.side !== f.side || !up(x)) continue;
           ra = x.skills.find(s => s.do === 'reviveAlly' && s.when === 'allyDown' && s.uses < s.value && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(x.side).next() * 100 < s.chance));
           if (ra) { healer = x; break; }
@@ -694,7 +887,7 @@ export function simulate(teamA, teamB, opts = {}) {
           reviveUnit(f, R.reviveAllyHpPct, 'ally', healer, ra);
           continue;
         }
-        if (reviveLeft[f.side] > 0) { // โบนัสอสูร: ตัวที่ down ก่อนลุกกลับมา
+        if (!noRev && reviveLeft[f.side] > 0) { // โบนัสอสูร: ตัวที่ down ก่อนลุกกลับมา
           const x = TB(f.side, 'อสูร');
           reviveLeft[f.side]--;
           reviveUnit(f, x.b.revivePct[x.idx], 'tribe');
@@ -702,6 +895,7 @@ export function simulate(teamA, teamB, opts = {}) {
         }
         f.down = true; f.hp = 0; f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false; f.cdLeft = Infinity;
         log('down', { who: f.uid });
+        if (BOSS && !f.boss && BR.feedOnDown) bossHeal(BOSS.barHp * BR.feedOnDown.v / 100); // R14 (ไม่เกินแถบปัจจุบัน)
         // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): down จริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
         // ตัวที่ถูกเรียก: ไม่นับเผ่า ไม่ได้โบนัสเผ่า ไม่มีค่าถาวร สกิลติดตัวทำงานทันที (ค่าเสนอ)
         const sm = f.skills.find(s => s.do === 'summon' && s.when === 'selfDown' && s.unit && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));

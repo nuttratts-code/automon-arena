@@ -1,6 +1,6 @@
 // รวมแกนกลางเป็นสคริปต์เดียวใส่ในหน้าเว็บ (ไม่โหลดโค้ดจากที่อื่น เล่นออฟไลน์ได้)
 import { readFileSync, writeFileSync } from 'fs';
-const CORE = ['core/rules.js', 'core/characters.js', 'core/rng.js', 'core/validate.js', 'core/team.js', 'core/battle.js', 'core/shop.js', 'core/bot.js', 'core/power.js', 'core/save.js', 'core/botdata.js', 'core/botteams.js', 'core/stage-user.js', 'core/stage.js'];
+const CORE = ['core/rules.js', 'core/characters.js', 'core/rng.js', 'core/validate.js', 'core/team.js', 'core/battle.js', 'core/shop.js', 'core/bot.js', 'core/power.js', 'core/save.js', 'core/botdata.js', 'core/botteams.js', 'core/stage-user.js', 'core/stage.js', 'core/boss.js', 'core/runes.js'];
 const bundle = files => files.map(f => `// ---- ${f} ----\n` + readFileSync(f, 'utf8')
   .replace(/^import[^;]*;\s*$/gm, '').replace(/^export\s+(?=(const|function|let|class|async))/gm, '')).join('\n');
 // <!--@include path--> in a template = paste that fragment file as it is (path relative to src/, one level, no nesting).
@@ -14,7 +14,7 @@ const expand = tpl => {
   return out;
 };
 // Test files bundled into the system-check page: helpers first, then the topic files, then mechanics.js (it joins them into TESTS).
-const TESTS = ['tests/helpers.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/t-skill-calc.js', 'tests/mechanics.js'];
+const TESTS = ['tests/helpers.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/t-skill-calc.js', 'tests/t-boss.js', 'tests/mechanics.js'];
 const pages = [
   ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'lab/matchcode.js', 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],

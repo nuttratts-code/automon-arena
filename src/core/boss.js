@@ -29,6 +29,14 @@ export function bossUnit(b, k = 1) {
   };
 }
 
+// A spot id → the slots the boss stands on right now ({ cells, move }); a moving boss starts on its first slot.
+export function spotCells(spot) {
+  const si = spotInfo(spot); if (!si) return null;
+  const slots = slotsOf(si.bits);
+  if (!slots.length) return null;
+  return { slots, cells: si.move ? [slots[0]] : slots.slice(), move: si.move };
+}
+
 // Which phase is live after `gone` bars have been emptied (phases are sorted by `at`, phase 1 is always at 0)
 export function phaseIndexAt(phases, gone) {
   let i = 0;
