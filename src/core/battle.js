@@ -646,7 +646,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (BR.earlyStorm) stormAt = Math.min(stormAt, t); // R21
     if (BR.tribeOff) for (const x of F) if (!x.boss) x.tb = {}; // E5 ปิดโบนัสเผ่าที่ทำงานระหว่างสู้ (ค่าที่ได้ตอนเริ่มยังอยู่)
     barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = t;
-    log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id) });
+    log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id), ...(p.spot && spotCells(p.spot) ? { cells: BOSS.cells.slice() } : {}) });
   }
   // แถบเลือดหมด 1 แถบ = "ศัตรู down" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
   function bossBars() {
@@ -713,7 +713,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const tbv = (side, tr, k) => { const x = TB(side, tr); return x && x.b[k] ? x.b[k][x.idx] || 0 : 0; };
   const burnDmgOn = [tbv(1, 'เพลิงเผา', 'burnDmgPct'), tbv(0, 'เพลิงเผา', 'burnDmgPct')]; // ดาเมจไฟบนตัวฝั่ง s +% จากโบนัสเพลิงเผาของอีกฝั่ง
   if (detailOn) for (const f of F) iniStats.set(f.uid, snapStats(f)); // ชุด 37: ค่าก่อนโบนัสเผ่า/สกิลเริ่มแมตช์
-  log('start', { tribes: steps.map(o => Object.fromEntries(Object.entries(o).map(([k, i]) => [k, R.tribeSteps[i]]))), units: F.map(f => ({ uid: f.uid, side: f.side, id: f.id, name: f.name, level: f.level, row: f.row, lane: f.lane, hp: f.hp, maxHp: f.maxHp, armor: f.armor })) });
+  log('start', { tribes: steps.map(o => Object.fromEntries(Object.entries(o).map(([k, i]) => [k, R.tribeSteps[i]]))), units: F.map(f => ({ uid: f.uid, side: f.side, id: f.id, name: f.name, level: f.level, row: f.row, lane: f.lane, hp: f.hp, maxHp: f.maxHp, armor: f.armor, ...(f.cells ? { cells: f.cells.slice() } : {}) })) }); // cells = ช่องที่บอสยืน (หน้าภาพใส่ชื่อทุกช่อง)
   for (const f of F) {
     const steel = TB(f.side, 'เหล็กกล้า'), fire = TB(f.side, 'เพลิงเผา'), bolt = TB(f.side, 'สายฟ้า'), wind = TB(f.side, 'วายุ'), spirit = TB(f.side, 'ภูติ');
     if (steel) {
