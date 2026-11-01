@@ -279,17 +279,23 @@ function runSim(auto, fromTeamSeed) {
   simFromTeam = !!fromTeamSeed;
   const v = validateConfig(chars, rulesNow());
   if (!v.ok) { $('simMsg').textContent = 'แก้ค่าที่ผิดก่อน (ดูรายการสีแดงด้านบน)'; return; }
-  const m = makeCharMap(chars), A = simEntries(0), B = simEntries(1);
-  for (const [e, name] of [[A, 'ซ้าย'], [B, 'ขวา']]) {
+  const m = makeCharMap(chars), A = simEntries(0), B = simFoeBoss ? [] : simEntries(1); // ชุด 66: ฝั่งขวาเป็นบอสได้ (บอสไม่ใช่ทีม ไม่ต้องตรวจกฎทีม)
+  for (const [e, name] of simFoeBoss ? [[A, 'ซ้าย']] : [[A, 'ซ้าย'], [B, 'ขวา']]) {
     const t = validateTeam(e, m, RULES);
     if (!t.ok) { $('simMsg').textContent = `ทีม${name}: ${t.errors[0]}`; return; }
   }
-  if (!A.length || !B.length) { $('simMsg').textContent = 'ใส่ตัวละครทั้ง 2 ฝั่งอย่างน้อยฝั่งละ 1 ตัว'; return; }
+  if (!A.length || (!simFoeBoss && !B.length)) { $('simMsg').textContent = simFoeBoss ? 'ใส่ตัวละครในทีมซ้ายอย่างน้อย 1 ตัว' : 'ใส่ตัวละครทั้ง 2 ฝั่งอย่างน้อยฝั่งละ 1 ตัว'; return; }
+  if (simFoeBoss && !simBossOf()) { $('simMsg').textContent = 'ยังไม่มีบอสที่เปิดใช้ · เปิดในแท็บ "รูน / บอส"'; return; }
   const seed = Math.max(1, Math.min(999999, Math.round(+$('simSeed').value) || 1));
-  const r = simulate(buildTeam(A, m), buildTeam(B, m), { rules: rulesNow(), ...(fromTeamSeed ? {} : { seed }), tribesOff: [$('simOffL').checked, $('simOffR').checked], detail: true }); // ชุด 36: จดส่วนประกอบดาเมจให้แท็บวิเคราะห์แมตช์
+  // ชุด 66: รูนของทีมซ้าย (ถ้าใส่ไว้) แปลงเป็นสกิล/ค่าติดตัวก่อนสู้ · บอสเป็นนักสู้ตัวเดียวที่ยืนหลายช่อง
+  const eq = simRunes.length ? simEquip(buildTeam(A, m)) : null;
+  const teamA = eq ? eq.units : buildTeam(A, m);
+  const teamB = simFoeBoss ? [bossUnit(simBossOf(), simBossK)] : buildTeam(B, m);
+  if (simFoeBoss) m[simBossId] = simBossChar();
+  const r = simulate(teamA, teamB, { rules: rulesNow(), ...(fromTeamSeed ? {} : { seed }), tribesOff: [$('simOffL').checked, $('simOffR').checked], ...(eq ? { tribeExtra: eq.tribeExtra } : {}), detail: true }); // ชุด 36: จดส่วนประกอบดาเมจให้แท็บวิเคราะห์แมตช์
   const prev = simLast && simLast.r;
-  simLast = { r, m, teamKey: JSON.stringify(simTeam),
-    code: makeMatchCode({ base: BASE_FP, seed: fromTeamSeed ? 0 : seed, A, B, tribesOff: [$('simOffL').checked, $('simOffR').checked], diff: diffs(), result: r }) }; // set 39: match code for bug reports
+  simLast = { r, m, teamKey: JSON.stringify(simTeam), bossMode: simFoeBoss,
+    code: simFoeBoss ? null : makeMatchCode({ base: BASE_FP, seed: fromTeamSeed ? 0 : seed, A, B, tribesOff: [$('simOffL').checked, $('simOffR').checked], diff: diffs(), result: r }) }; // set 39: match code for bug reports
   $('simCodeBox').hidden = true;
   const wasStale = $('simRun').classList.contains('stale'); clearSimStale();
   // จำลองใหม่หลังแก้ค่า: บอกผลก่อนแก้เทียบกับตอนนี้ ให้เห็นทันทีว่าแรงขึ้นหรืออ่อนลง
@@ -303,6 +309,7 @@ function runSim(auto, fromTeamSeed) {
 $('simRun').addEventListener('click', () => runSim(false));
 // set 39: copy the code of the last simulated match (user pastes it in chat → Claude replays it with lab/replay.mjs --code)
 $('simCode').addEventListener('click', () => {
+  if (simLast && simLast.bossMode) { $('simMsg').textContent = 'รหัสแมตช์ยังใช้กับการสู้บอสไม่ได้ (เล่นซ้ำได้เฉพาะทีม vs ทีม)'; return; }
   if (!simLast || !simLast.code) { $('simMsg').textContent = 'กด "จำลอง" ก่อน แล้วค่อยคัดลอกรหัสแมตช์'; return; }
   const code = simLast.code, box = $('simCodeBox');
   const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); $('simMsg').textContent = 'คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง'; };

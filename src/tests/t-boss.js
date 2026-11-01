@@ -27,7 +27,7 @@ function bossFight(chars, A, b, { runes, tribes, ...opts } = {}) {
 const bossUid = r => r.events[0].units.find(x => x.side === 1).uid;
 const sumDmg = (r, uid) => ev(r, 'dmg', e => e.to === uid && e.why === 'skill').reduce((a, e) => a + e.amount, 0);
 // รูนสำหรับเทสต์ (รูปร่างเดียวกับที่ cleanStage คืนมา)
-const rune = (eff, o = {}) => ({ id: 'T0', on: true, del: false, name: 'รูนทดสอบ', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: 'เหล็กกล้า', eff, ...o });
+const mkRune = (eff, o = {}) => ({ id: 'T0', on: true, del: false, name: 'รูนทดสอบ', max: 1, rarity: 'common', theme: '', scope: 'team', tribe: 'เหล็กกล้า', eff, ...o });
 // ตัวตีที่ปล่อยดาเมจครั้งเดียวตอนเริ่มแมตช์ (ควบคุมดาเมจได้แน่นอน)
 const hitter = (id, v, to = 'allEnemies', o = {}) => mk(id, { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'matchStart', do: 'dmg', to, v: L3(v) }], ...o });
 
@@ -83,17 +83,17 @@ export const TESTS_BOSS = [
   ['รูน: ค่าพลังทั้งทีม/ตัวเดียว · รูนเผ่า (DNA) นับเป็นเผ่าจริง', () => {
     const cs = [dummy('A'), dummy('B')];
     const m = makeCharMap(cs), team = buildTeam([u('A', 0, 0), u('B', 1, 0)], m);
-    const one = equipRunes(team, [{ r: rune('atk', { mode: 'flat', v: 3, scope: 'one' }), slot: [0, 0] }]).units;
+    const one = equipRunes(team, [{ r: mkRune('atk', { mode: 'flat', v: 3, scope: 'one' }), slot: [0, 0] }]).units;
     eq(one.map(x => x.skills.filter(s => s.src === 'rune').length), [1, 0], 'รูนตัวเดียวเข้าเฉพาะช่องที่เลือก');
-    const all = equipRunes(team, [{ r: rune('atk', { mode: 'flat', v: 3, scope: 'team' }), n: 2 }]).units;
+    const all = equipRunes(team, [{ r: mkRune('atk', { mode: 'flat', v: 3, scope: 'team' }), n: 2 }]).units;
     eq(all[0].skills.find(s => s.src === 'rune').value, 6, 'รูนซ้อน 2 ชิ้น = ค่า ×2');
-    const dna = equipRunes(team, [{ r: rune('addTribe', { gain: 'วายุ', scope: 'one' }), slot: [1, 0] }]).units;
+    const dna = equipRunes(team, [{ r: mkRune('addTribe', { gain: 'วายุ', scope: 'one' }), slot: [1, 0] }]).units;
     eq(dna.map(x => x.extraTribes), [[], ['วายุ']], 'รูนเผ่าเข้าเฉพาะตัวที่เลือก');
   }],
   ['รูนโล่ (U4): ศัตรูต้องตีตัวนี้ก่อน · บอสก็ถูกดึงเหมือนกัน', () => {
     const cs = [dummy('A'), dummy('B')];
     const r = bossFight(cs, [u('A', 0, 0), u('B', 2, 1)], boss({ atk: 10, cdMs: 1000 }), {
-      runes: [{ r: rune('taunt', { armorPct: 0, scope: 'one' }), slot: [2, 1] }],
+      runes: [{ r: mkRune('taunt', { armorPct: 0, scope: 'one' }), slot: [2, 1] }],
     });
     const tgt = r.events[0].units.find(x => x.side === 0 && x.id === 'B').uid;
     const hits = ev(r, 'dmg', e => e.why === 'hit');
@@ -102,7 +102,7 @@ export const TESTS_BOSS = [
   ['รูนเลี่ยงจุดตาย (X4): ฮิตที่จะทำให้ down ถูกยกเลิกทั้งฮิต · ครบจำนวนครั้งแล้วตายตามปกติ', () => {
     const cs = [dummy('A', { hp: L3(15) })];
     const r = bossFight(cs, [u('A', 0, 0)], boss({ atk: 100, cdMs: 1000 }), {
-      runes: [{ r: rune('avoidDeath', { times: 1, scope: 'one' }), slot: [0, 0] }],
+      runes: [{ r: mkRune('avoidDeath', { times: 1, scope: 'one' }), slot: [0, 0] }],
     });
     eq(ev(r, 'avoid').length, 1, 'ยกเลิกฮิตมรณะ 1 ครั้ง');
     eq(ev(r, 'down').length, 1, 'ครั้งต่อไป down ตามปกติ');
@@ -110,7 +110,7 @@ export const TESTS_BOSS = [
   ['รูนชุบ (U2): ลุกกลับมาได้ตามจำนวนครั้งที่ตั้งเท่านั้น', () => {
     const cs = [dummy('A', { hp: L3(30) })];
     const r = bossFight(cs, [u('A', 0, 0)], boss({ atk: 100, cdMs: 1000 }), {
-      runes: [{ r: rune('revive', { times: 1, hpPct: 50, scope: 'one' }), slot: [0, 0] }],
+      runes: [{ r: mkRune('revive', { times: 1, hpPct: 50, scope: 'one' }), slot: [0, 0] }],
     });
     eq(ev(r, 'revive').length, 1, 'ลุกได้ครั้งเดียว');
     eq(ev(r, 'down').length, 1, 'หลังจากนั้น down จริง');
@@ -118,7 +118,7 @@ export const TESTS_BOSS = [
   ['รูนหยุดศัตรู: บอสหยุดสั้นกว่าตามที่ตั้ง (% ของเวลาปกติ)', () => {
     const cs = [dummy('A')];
     const r = bossFight(cs, [u('A', 0, 0)], boss(), {
-      runes: [{ r: rune('freeze', { sec: 4, bossPct: 50, scope: 'enemy' }) }],
+      runes: [{ r: mkRune('freeze', { sec: 4, bossPct: 50, scope: 'enemy' }) }],
     });
     const st = ev(r, 'buff', e => e.what === 'stun');
     eq(st.length, 1, 'มีผลหยุด 1 ครั้ง');
@@ -185,37 +185,37 @@ export const TESTS_BOSS = [
   ['รูน: คู่รับดาเมจแทน · ฮีลเป็นช่วง · เหลือตัวเดียวแรงขึ้น', () => {
     const cs = [dummy('A', { hp: L3(1000) }), dummy('B', { hp: L3(1000) })];
     const link = bossFight(cs, [u('A', 0, 0), u('B', 1, 0)], boss({ atk: 100 }), {
-      runes: [{ r: rune('link', { pct: 50, scope: 'one' }), slot: [0, 0], partner: [1, 0] }],
+      runes: [{ r: mkRune('link', { pct: 50, scope: 'one' }), slot: [0, 0], partner: [1, 0] }],
     });
     const share = ev(link, 'dmg', e => e.why === 'link');
     ok(share.length > 0 && share[0].amount === 50, 'คู่รับแทนครึ่งหนึ่ง');
     const regen = bossFight([dummy('A', { hp: L3(1000) })], [u('A', 0, 0)], boss({ atk: 200 }), { // ดาเมจมากกว่าที่ฮีล ไม่งั้นฮีลถูกตัดเพราะ HP ไม่ได้หาย
-      runes: [{ r: rune('regen', { sec: 1, pct: 10, scope: 'team' }) }],
+      runes: [{ r: mkRune('regen', { sec: 1, pct: 10, scope: 'team' }) }],
     });
     eq(ev(regen, 'heal')[0].amount, 100, 'ฮีล 10% ของ HP สูงสุด ทุก 1 วิ');
     const solo = [mk('K', { atk: L3(50), cdMs: 1000, hp: L3(5000) })];
     const plain = bossFight(solo, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }));
     const last = bossFight(solo, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }), {
-      runes: [{ r: rune('lastStand', { dmgPct: 100, cdPct: 0, scope: 'team' }) }],
+      runes: [{ r: mkRune('lastStand', { dmgPct: 100, cdPct: 0, scope: 'team' }) }],
     });
     eq([ev(plain, 'dmg', e => e.why === 'hit')[0].amount, ev(last, 'dmg', e => e.why === 'hit')[0].amount], [50, 100], 'เหลือตัวเดียว ดาเมจ +100%');
   }],
   ['รูน: ล่าบอส (+% ใส่บอส) · ป้อมปราการ/แก้วบาง (แลกค่าพลัง) · แลก HP เป็นเกราะ/ฮิต', () => {
     const cs = [mk('K', { atk: L3(50), cdMs: 1000, hp: L3(1000) })];
     const bd = bossFight(cs, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }), {
-      runes: [{ r: rune('bossDmg', { dmgPct: 100, scope: 'team' }) }],
+      runes: [{ r: mkRune('bossDmg', { dmgPct: 100, scope: 'team' }) }],
     });
     eq(ev(bd, 'dmg', e => e.why === 'hit')[0].amount, 100, 'ดาเมจใส่บอส ×2');
     const m = makeCharMap(cs), team = buildTeam([u('K', 0, 0)], m);
-    const fort = equipRunes(team, [{ r: rune('fortress', { hpPct: 30, atkPct: 20, scope: 'team' }) }]).units[0];
+    const fort = equipRunes(team, [{ r: mkRune('fortress', { hpPct: 30, atkPct: 20, scope: 'team' }) }]).units[0];
     eq([fort.maxHp, fort.atk], [1300, 40], 'ป้อมปราการ: HP +30% พลังโจมตี −20%');
-    const hta = equipRunes(team, [{ r: rune('hpToArmorHit', { hpPct: 50, rate: 2, scope: 'one' }), slot: [0, 0] }]).units[0];
+    const hta = equipRunes(team, [{ r: mkRune('hpToArmorHit', { hpPct: 50, rate: 2, scope: 'one' }), slot: [0, 0] }]).units[0];
     eq([hta.maxHp, hta.armorHit], [500, 10], 'แลก HP 50% เป็นเกราะ/ฮิต 2% ของที่ลด');
   }],
   ['รูนที่เป็นเรื่องของ run (เงิน/ร้าน/ส่องทีม) ไม่มีผลในสนามรบ และถูกรายงานกลับ', () => {
     const cs = [dummy('A')];
     const m = makeCharMap(cs), team = buildTeam([u('A', 0, 0)], m);
-    const out = equipRunes(team, [{ r: rune('gold', { id: 'T1', gold: 2 }) }, { r: rune('scout', { id: 'X9' }) }]);
+    const out = equipRunes(team, [{ r: mkRune('gold', { id: 'T1', gold: 2 }) }, { r: mkRune('scout', { id: 'X9' }) }]);
     eq(out.skipped.length, 2, 'รูน run-flow ถูกข้าม');
     eq(out.units[0].skills.filter(s => s.src === 'rune').length, 0, 'ไม่มีสกิลรูนติดตัว');
   }],

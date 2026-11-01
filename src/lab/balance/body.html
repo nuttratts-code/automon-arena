@@ -143,6 +143,19 @@
             <label class="status" for="simSeed">เลขสุ่ม</label><input type="number" inputmode="numeric" id="simSeed" value="1" min="1" max="999999" style="width:90px">
             <button id="simCode" type="button">คัดลอกรหัสแมตช์</button>
           </div>
+          <div class="row simteamrow" id="simBossRow">
+            <span class="status">ฝั่งขวา</span>
+            <div class="seg" role="group" aria-label="ฝั่งขวาเป็นอะไร"><button type="button" id="simFoeTeam" aria-pressed="true">ทีม</button><button type="button" id="simFoeBoss" aria-pressed="false">บอส</button></div>
+            <select id="simBossPick" aria-label="เลือกบอส" hidden></select>
+            <label class="status" for="simBossK" id="simBossKLab" hidden>เจอครั้งที่</label>
+            <select id="simBossK" aria-label="เจอบอสครั้งที่" hidden><option value="1">1 (บอสตัวแรกของ run)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+            <span class="status" id="simBossInfo"></span>
+          </div>
+          <details class="dock" id="simRuneBox">
+            <summary><span class="status">รูนของทีมซ้าย</span> <span class="hint dk-hint">ใส่รูนแล้วกด "จำลอง" · รูนเงิน/ร้าน/ส่องทีม ไม่มีผลในการต่อสู้ (เป็นเรื่องของ run)</span><span class="dk-toggle" aria-hidden="true"></span></summary>
+            <div class="dk-tools" id="simRuneTools"></div>
+            <div class="dk-list" id="simRuneList"></div>
+          </details>
           <textarea id="simCodeBox" readonly hidden rows="3" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px" aria-label="รหัสแมตช์"></textarea>
           <div class="benchrow" id="simLvAll"><span class="status">เลเวลทุกตัว</span>
             <select id="simLvSide" aria-label="ใช้กับทีมไหน"><option value="both">ทั้งสองทีม</option><option value="0">ทีมซ้าย</option><option value="1">ทีมขวา</option></select>
