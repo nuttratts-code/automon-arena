@@ -3,13 +3,15 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Relay (two accounts take turns — rules in CLAUDE.md · full pre-trim block: archive/relay-2026-10-31.md)
 - **บาลานซ์: เสร็จแล้ว** (HARD RULE 4 reads this line; set to "กำลังปรับ" while the user is tuning → no import, no measure)
-- Account: second (rattanakon.ns), 31 Oct · **no open WIP branch** — set 65 boss tab (claude/vigilant-meitner-aq2l7w) MERGED to main f1f6335 (user OK · GATE: PASS 232/232 · ui_smoke 232/232 both sizes FAILS [] ERRORS []): boss card UI cleanup + boss spot = any slots (mini board 3 rows × 2 lanes, presets, "move" = 1 slot jumping among picked slots ≥2; data: old ids or 'c'/'m' + 6 bits, core/stage.js spotInfo/spotCode/spotShort; phase spot via "เปลี่ยนที่ยืน"). **Balance room published v132 (31 Oct 18:30, main 3f569bd, GATE: PASS tests 233/233 · ui_smoke 232/232 both sizes FAILS [] ERRORS []).**
-- Last done: sets 62–64 merged · 31 Oct full system test (claude/review-2026-10-31-system-test.md, no logic bugs) → fixes merged to main 5a5220f (B1 check-page stale line · N1 maxBoard · N2 cleanStage boss fallback = user defaults · N3 buy/sell/reroll refuse after run end · W3 shop fuzz test) · GATE PASS tests 233/233 · ui_smoke 232/232 both sizes FAILS [] ERRORS [] · published.
-- Next step: user picks the next set (economy Q1–Q4 when ready · boss battle engine 2a · other).
+- Account: second (rattanakon.ns), 1 Nov · **no open WIP branch** — set 66 BOSS BATTLE ENGINE + RUNES IN BATTLE (claude/boss-engine) MERGED to main 0588d72 (user OK · GATE: PASS tests 254/254 · ui_smoke 253/253 both sizes FAILS [] ERRORS []). **Balance room published v133 (1 Nov, main 0588d72, same GATE PASS).**
+- Set 66 what shipped (phase 2a): `core/runes.js` turns equipped runes into ordinary skills/unit fields (no per-rune engine code) · `core/boss.js` boss record → fighter + phase helpers · `core/battle.js` boss = ONE fighter on several slots (Q1 A), HP bars = "enemy down" once per bar (high-water mark, refills never re-trigger), phases by bars lost with rules replacing (Q3 A), all 38 rules E1–E8 + R1–R30, phase fx X1–X5, moving spot · rune rules as decided: U2 ชุบ rune-first + limited uses, U4 โล่ pulls the boss too · Balance Room "ลองสู้" tab: ฝั่งขวา ทีม/บอส + rune panel for the left team (`lab/balance/js/42-sim-boss.js`) · tests `tests/t-boss.js` (23).
+- Bug found + fixed in set 66: boss lifesteal/regen healed past the bar it was in, so a bar that should have emptied never did → heal is now capped at the top of the bar the boss is in right now.
+- Not in the engine (phase 2b, run flow): eco/shop/drop/scout runes (RUNE_RUN_ONLY in core/runes.js), รูนเติบโต stacks (needs win streak), permUp · match code (AMATCH1) does not cover boss fights yet.
+- Next step: user picks (2b run flow: difficulty pick, rune drops, rune shop · write the boss/rune rules into combat-rules + tribe-rules for the user to read · measure boss fights · economy Q1–Q4 when ready).
 - **Economy 5.5 Q1–Q4 POSTPONED by user (31 Oct)** — claude/review-2026-10-31-economy.md; do not push for answers until the user returns to it. Probe data in review-2026-10-31-system-test.md.
-- Parked (ask first): phase 2a rune + boss battle engine (Q5/Q6 in review-2026-10-29-stage-phase2.md) · user may re-edit stage runes (wait for AMCFG1 paste) · config/main NOT cleared.
-- Publish: game v65 · balance room v132 (set 65, 31 Oct 18:30, GATE PASS) · check v65 (31 Oct, main 5a5220f, GATE PASS 233/233 · ui_smoke 232/232). Always `Artifact read` the Links URL first; publish directly if writer, else "publish pending" + paste-message (CLAUDE.md).
-- User-side todo: W1 add `pip install playwright` to the cloud environment setup script · W5 delete 13 merged claude/* branches on github.com.
+- Parked (ask first): user may re-edit stage runes (wait for AMCFG1 paste) · config/main NOT cleared.
+- Publish: game v65 · balance room v133 (set 66, 1 Nov, GATE PASS) · check v65 (31 Oct, main 5a5220f). Always `Artifact read` the Links URL first; publish directly if writer, else "publish pending" + paste-message (CLAUDE.md).
+- User-side todo: W1 add `pip install playwright` to the cloud environment setup script (still needed every gate run) · W5 delete merged claude/* branches on github.com (now 11).
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 90, hash 521fadbf
@@ -23,6 +25,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## Pending bundle ("งานรอรวม")
 - MVP1 target 28 Nov 2026 · step 5.5 economy ~14 Nov (proposed) · step 6 polish/mobile 28 Nov → warn if behind.
+- Boss/rune rules are only in review files + code so far: write them into combat-rules (C) / tribe-rules (T) when the user next touches those docs.
 - Optional: remove the `simSummary` table fold (kept in ชุด 37) — only if user asks.
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.
 
