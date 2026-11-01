@@ -124,6 +124,94 @@ export const TESTS_BOSS = [
     eq(st.length, 1, 'มีผลหยุด 1 ครั้ง');
     eq(st[0].amount, 2000, 'บอสหยุดครึ่งเดียวของ 4 วินาที');
   }],
+  ['บอส R4/R5: ตีโดนทุกตัวตาม % ที่ตั้ง · ตีตัวเลือดน้อยสุดก่อน', () => {
+    const cs = [dummy('A', { hp: L3(1000) }), dummy('B', { hp: L3(100) })];
+    const aoe = bossFight(cs, [u('A', 0, 0), u('B', 1, 0)], boss({ atk: 100, phases: [ph(0, [rl('aoe', 50)])] }));
+    const first = ev(aoe, 'dmg', e => e.why === 'hit' && e.t === 1000);
+    eq(first.length, 2, 'ฮิตเดียวโดนทั้ง 2 ตัว');
+    eq(first.map(e => e.amount), [50, 50], 'ตัวละ 50% ของพลังโจมตี');
+    const hunt = bossFight(cs, [u('A', 0, 0), u('B', 2, 1)], boss({ atk: 10, phases: [ph(0, [rl('hunter')])] }));
+    const low = hunt.events[0].units.find(x => x.side === 0 && x.id === 'B').uid;
+    eq(ev(hunt, 'dmg', e => e.why === 'hit' && e.t === 1000)[0].to, low, 'ตีตัวเลือดน้อยสุด ไม่ใช่ตัวหน้าเลนเดียวกัน');
+  }],
+  ['บอส E6/R11: คลั่งตีแรงขึ้นทุก 10 วิ · ออร่าไฟทุก 5 วิ', () => {
+    const cs = [dummy('A', { hp: L3(5000) })];
+    const rage = bossFight(cs, [u('A', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('enrage', 100)])] }));
+    const bu = bossUid(rage);
+    const ups = ev(rage, 'atkUp', e => e.to === bu);
+    eq(ups.length, 6, 'ทุก 10 วิ ใน 60 วิ = 6 ครั้ง');
+    eq(ups[0].amount, 10, 'ครั้งละ 100% ของพลังโจมตีตั้งต้น');
+    const aura = bossFight(cs, [u('A', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('burnAura', 4)])] }));
+    const burns = ev(aura, 'burn', e => e.why === 'boss');
+    eq(burns.length, 12, 'ทุก 5 วิ ใน 60 วิ = 12 ครั้ง');
+    eq(burns[0].amount, 4, 'ไฟตามค่าที่ตั้ง');
+  }],
+  ['บอส R15/R27: ปิดสกิลผู้เล่นเป็นช่วง · หายตัวแล้วตีไม่โดน (ไม่มีเป้า)', () => {
+    const react = mk('R', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'hitTaken', do: 'atkUp', to: 'self', v: L3(1) }] });
+    const sil = bossFight([react], [u('R', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('randomSilence', 5, 5)])] }));
+    ok(ev(sil, 'buff', e => e.what === 'silence').length > 0, 'มีการปิดสกิล');
+    const hitAt = t => ev(sil, 'dmg', e => e.why === 'hit' && e.t === t).length > 0;
+    ok(hitAt(6000) && ev(sil, 'proc', e => e.t === 6000).length === 0, 'ช่วงถูกปิดสกิล โดนตีแต่สกิลไม่ทำงาน');
+    const atk = mk('K', { atk: L3(50), cdMs: 1000, hp: L3(5000) });
+    const van = bossFight([atk], [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('vanish', 10, 3)])] }));
+    ok(ev(van, 'set', e => e.target === null).length > 0, 'ช่วงหายตัว ผู้เล่นไม่มีเป้า');
+  }],
+  ['บอส R28: ตีแถบไม่หมดในเวลา แถบเต็มกลับ (ไม่กระตุ้น "ศัตรู down" ซ้ำ)', () => {
+    const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [
+      { when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) },
+      { when: 'enemyDown', do: 'atkUp', to: 'self', v: L3(1) },
+    ] });
+    const r = bossFight([h], [u('H', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('dpsCheck', 5)])] }));
+    const fill = ev(r, 'barRefill');
+    ok(fill.length > 0, 'มีแถบเต็มกลับ');
+    eq(fill[0].hp, 800, 'เต็มกลับถึงยอดของแถบปัจจุบัน');
+    eq(ev(r, 'proc', e => e.when === 'enemyDown').length, 1, '"ศัตรู down" ยังทำงานครั้งเดียว');
+  }],
+  ['บอส: ผลตอนเปลี่ยนเฟส (เกราะ/ล้างสถานะ/ตีไม่โดน/ผู้เล่นมึนงง) ทำงานครบ', () => {
+    const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) }] });
+    const b = boss({ atk: 0, cdMs: NEVER, phases: [ph(0), ph(1, [], [{ id: 'armorBar', v: 50 }, { id: 'cleanse', v: 0 }, { id: 'untargetable', v: 2 }, { id: 'stunAll', v: 2 }])] });
+    const r = bossFight([h], [u('H', 0, 0)], b);
+    const bu = bossUid(r);
+    eq(ev(r, 'armor', e => e.to === bu && e.why === 'boss').map(e => e.amount), [100], 'X1 เกราะ 50% ของ 1 แถบ');
+    eq(ev(r, 'buff', e => e.what === 'stun').map(e => e.amount), [2000], 'X4 ผู้เล่นมึนงง 2 วิ');
+  }],
+  ['บอสแบบย้ายที่: ย้ายตามเวลา · R30 หลังย้ายที่โดนดาเมจเพิ่มชั่วคราว', () => {
+    const atk = mk('K', { atk: L3(50), cdMs: 1000, hp: L3(5000) });
+    const r = bossFight([atk], [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, spot: 'move', moveSec: 10, phases: [ph(0, [rl('weakSpot', 100)])] }));
+    ok(ev(r, 'bossMove').length >= 5, 'ย้ายที่ทุก 10 วิ');
+    const amts = new Set(ev(r, 'dmg', e => e.why === 'hit').map(e => e.amount));
+    ok(amts.has(50) && amts.has(100), 'มีทั้งฮิตปกติและฮิตช่วงที่โดนเพิ่ม');
+  }],
+  ['รูน: คู่รับดาเมจแทน · ฮีลเป็นช่วง · เหลือตัวเดียวแรงขึ้น', () => {
+    const cs = [dummy('A', { hp: L3(1000) }), dummy('B', { hp: L3(1000) })];
+    const link = bossFight(cs, [u('A', 0, 0), u('B', 1, 0)], boss({ atk: 100 }), {
+      runes: [{ r: rune('link', { pct: 50, scope: 'one' }), slot: [0, 0], partner: [1, 0] }],
+    });
+    const share = ev(link, 'dmg', e => e.why === 'link');
+    ok(share.length > 0 && share[0].amount === 50, 'คู่รับแทนครึ่งหนึ่ง');
+    const regen = bossFight([dummy('A', { hp: L3(1000) })], [u('A', 0, 0)], boss({ atk: 200 }), { // ดาเมจมากกว่าที่ฮีล ไม่งั้นฮีลถูกตัดเพราะ HP ไม่ได้หาย
+      runes: [{ r: rune('regen', { sec: 1, pct: 10, scope: 'team' }) }],
+    });
+    eq(ev(regen, 'heal')[0].amount, 100, 'ฮีล 10% ของ HP สูงสุด ทุก 1 วิ');
+    const solo = [mk('K', { atk: L3(50), cdMs: 1000, hp: L3(5000) })];
+    const plain = bossFight(solo, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }));
+    const last = bossFight(solo, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }), {
+      runes: [{ r: rune('lastStand', { dmgPct: 100, cdPct: 0, scope: 'team' }) }],
+    });
+    eq([ev(plain, 'dmg', e => e.why === 'hit')[0].amount, ev(last, 'dmg', e => e.why === 'hit')[0].amount], [50, 100], 'เหลือตัวเดียว ดาเมจ +100%');
+  }],
+  ['รูน: ล่าบอส (+% ใส่บอส) · ป้อมปราการ/แก้วบาง (แลกค่าพลัง) · แลก HP เป็นเกราะ/ฮิต', () => {
+    const cs = [mk('K', { atk: L3(50), cdMs: 1000, hp: L3(1000) })];
+    const bd = bossFight(cs, [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000 }), {
+      runes: [{ r: rune('bossDmg', { dmgPct: 100, scope: 'team' }) }],
+    });
+    eq(ev(bd, 'dmg', e => e.why === 'hit')[0].amount, 100, 'ดาเมจใส่บอส ×2');
+    const m = makeCharMap(cs), team = buildTeam([u('K', 0, 0)], m);
+    const fort = equipRunes(team, [{ r: rune('fortress', { hpPct: 30, atkPct: 20, scope: 'team' }) }]).units[0];
+    eq([fort.maxHp, fort.atk], [1300, 40], 'ป้อมปราการ: HP +30% พลังโจมตี −20%');
+    const hta = equipRunes(team, [{ r: rune('hpToArmorHit', { hpPct: 50, rate: 2, scope: 'one' }), slot: [0, 0] }]).units[0];
+    eq([hta.maxHp, hta.armorHit], [500, 10], 'แลก HP 50% เป็นเกราะ/ฮิต 2% ของที่ลด');
+  }],
   ['รูนที่เป็นเรื่องของ run (เงิน/ร้าน/ส่องทีม) ไม่มีผลในสนามรบ และถูกรายงานกลับ', () => {
     const cs = [dummy('A')];
     const m = makeCharMap(cs), team = buildTeam([u('A', 0, 0)], m);
