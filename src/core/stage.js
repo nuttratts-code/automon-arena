@@ -295,19 +295,13 @@ export const BOSS_PHASE_FX = [
 export const BOSS_MAX_PHASES = 20, BOSS_MAX_RULES = 99;
 // Rule groups for the "+ เพิ่มกฎ" picker (same order as BOSS_RULES)
 export const BOSS_RULE_GROUPS = [['กฎพื้นฐาน', 1, 8], ['บอสแรงขึ้น', 8, 22], ['ผู้เล่นอ่อนลง', 22, 29], ['บอสป้องกัน', 29, 37], ['ไขปริศนา', 37, 40]].map(([label, a, b]) => [label, BOSS_RULES.slice(a, b).map(r => r[0])]);
-// Bar sizes (set 71, user 1 Nov): barPct = % of HP per bar, first bar hit first · [] = equal bars · must have `bars` whole numbers ≥ 1 that add up to 100
-export function validBarPct(a, bars) { return Array.isArray(a) && a.length === bars && a.every(v => Number.isInteger(v) && v >= 1 && v <= 100) && a.reduce((x, y) => x + y, 0) === 100; }
-export const barPctOf = b => (b.bars > 1 && validBarPct(b.barPct, b.bars) ? b.barPct : null);
-// HP of each bar at total hp (first bar hit first) · equal bars = HP ÷ bars, the first bar also holds the remainder
-export function barSizes(b, hp) {
-  const n = Math.max(1, Math.floor(b.bars) || 1), pct = barPctOf(b);
-  if (!pct) { const e = Math.floor(hp / n); return Array.from({ length: n }, (_, i) => (i ? e : hp - e * (n - 1))); }
-  const cuts = [hp]; let acc = 0;
-  for (let i = 0; i < n; i++) { acc += pct[i]; cuts.push(i === n - 1 ? 0 : Math.max(n - 1 - i, Math.min(cuts[i] - 1, Math.round(hp * (100 - acc) / 100)))); }
-  return pct.map((_, i) => cuts[i] - cuts[i + 1]);
-}
 export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
-export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '' });
+export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '', stats: {} });
+// Set 71 (user 1 Nov): from phase 2 a phase may set new boss stats · [key in the boss record, label, min, max, whole number?]
+// value = at the boss's first appearance (atk grows with the stage like the base atk) · a stat a phase does not set = keeps the previous phase's value
+export const BOSS_PHASE_STATS = [['atk', 'พลังโจมตี', 0, 1e5, false], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000, true], ['multi', 'มัลติฮิต', 1, 10, true], ['burn', 'ไฟ/ฮิต', 0, 1e4, false], ['shock', 'ช็อต/ฮิต', 0, 1e4, false], ['armorHit', 'เกราะ/ฮิต', 0, 1e4, false], ['healHit', 'ฟื้น/ฮิต', 0, 1e4, false]];
+// Boss stats live in phase i (phase stats carried over from earlier phases)
+export function phaseStatsAt(b, i) { const o = {}; for (const [k] of BOSS_PHASE_STATS) o[k] = b[k] || 0; for (let j = 1; j <= i && j < b.phases.length; j++) Object.assign(o, b.phases[j].stats || {}); return o; }
 // Warnings for risky combos (review Q-warnings): returns Thai strings, empty = fine
 export function bossPhaseWarn(b, p) {
   const has = id => p.rules.some(r => r.id === id), w = [];
@@ -360,7 +354,7 @@ export const BOSS_SPOTS = [...BOSS_SPOT_PRESETS.map(p => [p[0], spotLabel(p[0])]
 // bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
 // Set 71: armorHit / healHit = เกราะ/ฮิต · ฟื้น/ฮิต of the boss's normal hit (same as a unit's; heal never refills past the bar it is in)
 export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4], ['armorHit', 'เกราะ/ฮิต', 0, 1e4], ['healHit', 'ฟื้น/ฮิต', 0, 1e4]];
-const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, barPct: [], spot, moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
+const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
 // Sized from the stage baseline (median player at stage 5: ~7 dmg/s, team HP ~756) → boss lasts ~60 s, kills the team in ~60 s.
 export const STAGE_BOSSES = [
   stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50, 'all'),
@@ -411,7 +405,6 @@ function cleanStageOn(o, out) {
       if (TRIBES.includes(x.tribe)) b.tribe = x.tribe;
       if (validSpot(x.spot)) b.spot = x.spot;
       for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi) && (!['bars', 'moveSec', 'multi'].includes(k) || Number.isInteger(x[k]))) b[k] = x[k];
-      b.barPct = validBarPct(x.barPct, b.bars) ? x.barPct.slice() : validBarPct(b.barPct, b.bars) ? b.barPct.slice() : [];
       b.phases = cleanPhases(x, b, num, isObj);
       if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
       if (num(x.endlessPct, 0, 500)) b.endlessPct = x.endlessPct;
@@ -446,6 +439,7 @@ function cleanPhases(x, b, num, isObj) {
     if (out.length) {
       if (Array.isArray(p.fx)) for (const f of p.fx) { const q = isObj(f) && BOSS_PHASE_FX.find(z => z[0] === f.id); if (q && !ph.fx.some(o => o.id === q[0])) ph.fx.push({ id: q[0], v: q[4] ? (num(f.v, q[3], q[4]) ? f.v : q[2]) : 0 }); }
       if (validSpot(p.spot)) ph.spot = p.spot;
+      if (isObj(p.stats)) for (const [k, , lo, hi, int] of BOSS_PHASE_STATS) if (num(p.stats[k], lo, hi) && (!int || Number.isInteger(p.stats[k]))) ph.stats[k] = p.stats[k];
     }
     out.push(ph);
   }
@@ -453,8 +447,8 @@ function cleanPhases(x, b, num, isObj) {
 }
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
+export const bossMult = (b, k) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2));
 export function bossAt(b, k) {
-  const m = k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2);
-  const hp = Math.round(b.hp * m);
-  return { hp, barHp: Math.round(b.hp * m / b.bars), barHps: barSizes(b, hp), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
+  const m = bossMult(b, k);
+  return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
 }

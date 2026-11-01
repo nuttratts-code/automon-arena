@@ -213,8 +213,8 @@ function bossVerdict(tKill, tDie) {
   return r < 0.9 ? ['บอสชนะ', 'bad'] : r <= 1.1 ? ['สูสี', 'mid'] : ['ทีมชนะ', 'good'];
 }
 function bossBar(bs) {
-  const sz = bossAt(bs, 1).barHps, bar = el('div', 'hpbar', ''); bar.title = `${bs.bars} แถบ · HP ${sz.join(' / ')}`; bar.setAttribute('aria-hidden', 'true');
-  for (let i = 0; i < bs.bars; i++) { const c = document.createElement('i'); c.style.background = barColor(bs.bars - i); c.style.flex = `${sz[i]} 1 0`; bar.append(c); } // ชุด 69: สีเดียวกับหลอดบอสในภาพการต่อสู้ (ซ้ายสุด = แถบแรกที่โดนตี)
+  const bar = el('div', 'hpbar', ''); bar.title = `${bs.bars} แถบ × ${bossAt(bs, 1).barHp} HP`; bar.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < bs.bars; i++) { const c = document.createElement('i'); c.style.background = barColor(bs.bars - i); bar.append(c); } // ชุด 69: สีเดียวกับหลอดบอสในภาพการต่อสู้ (ซ้ายสุด = แถบแรกที่โดนตี)
   return bar;
 }
 function bossVsTable(bs) {
@@ -223,7 +223,7 @@ function bossVsTable(bs) {
   t.append(hr);
   for (const k of [1, 2, 3, 4]) {
     const stg = k * stageCfg.settings.bossEvery, s = bossAt(bs, k), ref = STAGE_MEDIAN[stg], tr = document.createElement('tr');
-    const hpC = el('td', 'n', String(s.hp)); hpC.append(el('span', 'bk', barPctOf(bs) ? ` (แถบ ${s.barHps.join('/')})` : ` (${bs.bars} × ${s.barHp})`));
+    const hpC = el('td', 'n', String(s.hp)); hpC.append(el('span', 'bk', ` (${bs.bars} × ${s.barHp})`));
     const kC = el('td', '', ''); kC.append(el('span', 'bk', `${k} · `), `ด่าน ${stg}`);
     tr.append(kC, hpC, el('td', 'n', fmt(s.dps)));
     if (ref) {
@@ -268,7 +268,7 @@ function spotPicker(id, spot, set) {
 // "+ เพิ่มกฎ" picker: rules grouped by kind, rules already in the phase left out
 function bossRuleAdd(id, used, add) {
   const sel = document.createElement('select'); sel.id = id; sel.className = 'rule-add';
-  sel.append(new Option(`+ เพิ่มกฎ… (เลือกได้ไม่จำกัด)`, ''));
+  sel.append(new Option('+ เพิ่มกฎ… (ไม่จำกัด)', ''));
   for (const [label, ids] of BOSS_RULE_GROUPS) {
     const g = document.createElement('optgroup'); g.label = label;
     for (const rid of ids) if (!used.includes(rid)) g.append(new Option(BOSS_RULES.find(q => q[0] === rid)[1], rid));
@@ -278,41 +278,32 @@ function bossRuleAdd(id, used, add) {
   sel.addEventListener('change', () => { if (sel.value) add(sel.value); });
   return sel;
 }
-// Set 71 (user 1 Nov): bar sizes · % per bar (whole numbers) · the last bar (or the one before it, when the last is edited) takes what is left so the total stays 100
-const equalPct = n => Array.from({ length: n }, (_, i) => Math.floor(100 / n) + (i < 100 % n ? 1 : 0));
-const barPctNow = bs => barPctOf(bs) || equalPct(bs.bars);
-function phaseShare(bs, i) {
-  const pct = barPctNow(bs), sz = bossAt(bs, 1).barHps, a = bs.phases[i].at, b = i + 1 < bs.phases.length ? bs.phases[i + 1].at : bs.bars;
-  const sum = arr => arr.slice(a, b).reduce((x, y) => x + y, 0);
-  return { pct: barPctOf(bs) ? sum(pct) : Math.round((b - a) * 1000 / bs.bars) / 10, hp: sum(sz), from: a + 1, to: b };
-}
-function setBarPct(bs, i, v) {
-  const n = bs.bars, a = barPctNow(bs).slice(), j = i === n - 1 ? n - 2 : n - 1;
-  a[i] = Math.max(1, Math.min(100 - (n - 1), Math.round(v)));
-  const rest = 100 - a.reduce((x, y, k) => (k === j ? x : x + y), 0);
-  if (rest >= 1) a[j] = rest; else { a[j] = 1; let over = 1 - rest; for (let k = n - 1; k >= 0 && over > 0; k--) if (k !== i && k !== j) { const d = Math.min(over, a[k] - 1); a[k] -= d; over -= d; } if (over > 0) a[i] -= over; }
-  bs.barPct = a;
-}
-function bossBarForms(bs, base, grp) {
-  const n = bs.bars, pct = barPctNow(bs), sz = bossAt(bs, 1).barHps, uneven = !!barPctOf(bs);
-  const strip = el('div', 'bar-strip', ''); strip.setAttribute('role', 'img');
-  strip.setAttribute('aria-label', `แถบเลือด ${n} แถบ: ${pct.map((p, i) => `แถบ ${i + 1} ${p}%`).join(', ')}`);
-  for (let i = 0; i < n; i++) {
-    const seg = el('div', 'bar-seg', ''); seg.style.flex = `${sz[i]} 1 0`; seg.style.background = barColor(n - i);
-    const ph = bs.phases.findIndex(p => p.at === i); if (ph >= 0) { seg.classList.add('ph-start'); seg.append(el('span', 'ph-tag', `เฟส ${ph + 1}`)); }
-    seg.append(el('span', 'seg-n', `${i + 1}`)); seg.title = `แถบ ${i + 1}: ${pct[i]}% · HP ${sz[i]}`; strip.append(seg);
+// Set 71 (user 1 Nov): from phase 2 the boss can get new stats · one box per changed stat (value + ✕) · "+ เปลี่ยนค่าบอส" picker
+// a stat not set here keeps the previous phase's value (shown as "เดิม")
+function bossPhaseStats(bs, p, i, id) {
+  const kids = [], before = phaseStatsAt(bs, i - 1), cd = k => k === 'cdMs';
+  const show = (k, v) => (cd(k) ? fmt(v / 1000) + ' วิ' : fmt(v));
+  for (const [k, label, lo, hi, int] of BOSS_PHASE_STATS) {
+    if (!(k in p.stats)) continue;
+    const box = el('div', 'rule-box stat-box', ''), head = el('div', 'rule-head', '');
+    const x = el('button', 'rule-x', '✕'); x.type = 'button'; x.id = `${id}-st-${k}-del`; x.title = 'ไม่เปลี่ยนค่านี้'; x.setAttribute('aria-label', `ไม่เปลี่ยน${label}`);
+    x.addEventListener('click', () => { delete p.stats[k]; stageChanged(); renderStage(); });
+    const v = p.stats[k], up = v > before[k], dn = v < before[k];
+    head.append(el('span', 'rule-n', '⇅'), el('span', 'rule-name', `${cd(k) ? 'คูลดาวน์' : label}: ${show(k, before[k])} → ${show(k, v)}`), x);
+    if (up || dn) head.lastChild.previousSibling.append(el('span', `vtag ${(cd(k) ? dn : up) ? 'bad' : 'good'}`, (cd(k) ? dn : up) ? ' บอสแรงขึ้น' : ' บอสเบาลง'));
+    const inp = cd(k) ? stageNum(`${id}-st-${k}`, v / 1000, before[k] / 1000, lo / 1000, hi / 1000, y => { p.stats[k] = Math.round(y * 10) * 100; }, 0.1)
+      : stageNum(`${id}-st-${k}`, v, before[k], lo, hi, y => { p.stats[k] = int ? Math.round(y) : y; });
+    inp.addEventListener('change', () => renderStage());
+    box.append(head, fgrid(fld(cd(k) ? 'คูลดาวน์ใหม่ (วิ)' : `${label} ใหม่`, inp)));
+    kids.push(box);
   }
-  const inputs = pct.map((p, i) => {
-    const inp = numInput(`stg-${bs.id}-bar${i}`, p, barPctOf(base) ? (base.barPct[i] ?? p) : equalPct(n)[i], v => { setBarPct(bs, i, v); stageChanged(); renderStage(); });
-    inp.min = 1; inp.max = 100 - (n - 1);
-    const f = fld(`แถบ ${i + 1} (%)`, inp); f.append(el('span', 'bk', ` HP ${sz[i]}`)); f.style.borderLeft = `4px solid ${barColor(n - i)}`; return f;
-  });
-  const eq = el('button', '', 'แบ่งเท่ากัน'); eq.type = 'button'; eq.id = `stg-${bs.id}-bareq`; eq.disabled = !uneven;
-  eq.addEventListener('click', () => { bs.barPct = []; stageChanged(); renderStage(); });
-  const sum = bs.phases.map((p, i) => { const s = phaseShare(bs, i); return `เฟส ${i + 1}: แถบ ${s.from}${s.to > s.from ? `–${s.to}` : ''} = ${s.pct}% (HP ${s.hp})`; }).join(' · ');
-  const g = grp('ขนาดแถบสีเลือด (แต่ละแถบ % ของ HP)', strip, ...inputs, eq,
-    el('p', 'fld full hint-txt', `แก้แถบไหน แถบสุดท้ายจะปรับให้รวมครบ 100% เอง (แก้แถบสุดท้าย = แถบก่อนหน้าปรับแทน) · ${sum}`));
-  g.classList.add('boss-bars'); return g;
+  const sel = document.createElement('select'); sel.id = `${id}-st-add`; sel.className = 'rule-add';
+  sel.append(new Option('+ เปลี่ยนค่าบอส… (เช่น ตีแรงขึ้น)', ''));
+  for (const [k, label] of BOSS_PHASE_STATS) if (!(k in p.stats)) sel.append(new Option(`${label} (ตอนนี้ ${show(k, before[k])})`, k));
+  sel.disabled = sel.options.length <= 1;
+  sel.addEventListener('change', () => { const k = sel.value; if (!k) return; p.stats[k] = before[k] || (k === 'multi' ? 1 : 0); stageChanged(); renderStage(); });
+  kids.push(fld('', sel, 'full'));
+  return kids;
 }
 // Set 64 boss phases (user 31 Oct): phase 1 at fight start · phase 2–3 start after N bars are gone · new phase rules replace old ones · ≤ 2 rules per phase
 function bossPhaseForms(bs, base, grp) {
@@ -336,6 +327,8 @@ function bossPhaseForms(bs, base, grp) {
       const sl = el('label', 'sw', ''); sl.append(sc, el('span', '', 'เปลี่ยนที่ยืน'));
       kids.push(fld('ที่ยืน', sl, 'full'));
       if (p.spot) kids.push(spotPicker(`${id}-spot`, p.spot, v => { p.spot = v; }));
+      if (!p.stats) p.stats = {};
+      kids.push(el('p', 'fld full sub-h', 'ค่าบอสในเฟสนี้'), ...bossPhaseStats(bs, p, i, id), el('p', 'fld full sub-h', 'กฎพิเศษของเฟสนี้'));
     }
     // Set 71 (user 1 Nov): rules per phase no longer limited · one box per rule (name + its values + ✕) · "+ เพิ่มกฎ" picker grouped, used rules hidden
     p.rules.forEach((r, k) => {
@@ -361,7 +354,7 @@ function bossPhaseForms(bs, base, grp) {
     });
     for (const w of bossPhaseWarn(bs, p)) kids.push(el('p', 'fld full warn-txt', '⚠️ ' + w));
     if (i) { const d = el('button', 'rune-del', 'ลบเฟสนี้'); d.type = 'button'; d.addEventListener('click', () => { bs.phases.splice(i, 1); stageChanged(); renderStage(); }); kids.push(d); }
-    const share = phaseShare(bs, i), tail = ` · ${share.pct}% ของ HP (${share.hp}) · กฎ ${p.rules.length} ข้อ`;
+    const nSt = Object.keys(p.stats || {}).length, tail = ` · กฎ ${p.rules.length} ข้อ${nSt ? ` · เปลี่ยนค่า ${nSt}` : ''}`;
     const f = grp((i ? `เฟส ${i + 1} · หลังแถบหาย ${p.at} แถบ` : 'เฟส 1 (เริ่มสู้)') + tail, ...kids); f.className = 'phase-card'; out.push(f);
   });
   const last = bs.phases[bs.phases.length - 1];
@@ -401,13 +394,13 @@ function renderStageBosses(box) {
       const cdF = fld('คูลดาวน์ (วิ)', stageNum(`stg-${bs.id}-cdMs`, bs.cdMs / 1000, base.cdMs / 1000, 0.3, 60, v => { bs.cdMs = Math.round(v * 10) * 100; }, 0.1));
       body.append(
         grp('ตัวบอส', fld('ชื่อ', nm, 'wide'), fld('เผ่า', selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); })),
-          n('bars', 'แถบสีเลือด', 1, 20, v => { if (Math.round(v) !== bs.bars) bs.barPct = []; bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
+          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
         grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4), n('armorHit', 'เกราะ/ฮิต', 0, 1e4), n('healHit', 'ฟื้น/ฮิต (ไม่เกินแถบที่อยู่)', 0, 1e4)),
         grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500)));
       const spotG = grp('ที่ยืน (กดช่องเพื่อเลือก/เอาออก)', spotPicker(`stg-${bs.id}-spot`, bs.spot, v => { bs.spot = v; }),
         ...((spotInfo(bs.spot) || {}).move ? [n('moveSec', 'ย้ายที่ทุก (วิ)', 1, 60, v => { bs.moveSec = Math.round(v); })] : []));
       spotG.classList.add('boss-spot');
-      body.append(spotG, ...(bs.bars > 1 ? [bossBarForms(bs, base, grp)] : []), bossPhaseForms(bs, base, grp));
+      body.append(spotG, bossPhaseForms(bs, base, grp));
       const vs = el('div', 'bvs-wrap', ''); stageSayEls.push([vs, () => [bossVsTable(bs)]]);
       const del = el('button', 'rune-del', 'ลบบอสนี้'); del.type = 'button'; del.disabled = stageCfg.bosses.length <= 1;
       del.addEventListener('click', () => { stageCfg.bosses.splice(idx, 1); bossOpen = null; stageChanged(); renderStage(); });

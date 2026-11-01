@@ -263,14 +263,19 @@ export const TESTS_BOSS = [
     eq(ev(two, 'dmg', e => e.to === bossUid(two) && e.why === 'skill').length, 1, 'สกิลตัวที่ 2 ใน tick เดียวกันไม่เข้า');
     eq(ev(two, 'bar').length, 1, 'หมดแค่ 1 แถบ');
   }],
-  ['บอส: แถบยาวไม่เท่ากัน (ชุด 71) · ฮิตเข้าไม่เกินแถบที่อยู่ · เฟสเปลี่ยนตามแถบ · กฎ "% ของ 1 แถบ" ใช้แถบปัจจุบัน', () => {
-    const b = boss({ bars: 3, barPct: [50, 30, 20], phases: [ph(0), ph(1, [rl('noArmor')])] });
-    eq(bossUnit(b, 1).barCuts, [1000, 500, 200, 0], 'ขอบแถบ 50/30/20%');
-    const r = bossFight([hitter('H', 900)], [u('H', 0, 0)], b);
-    eq(ev(r, 'dmg', e => e.to === bossUid(r) && e.why === 'skill')[0].amount, 500, 'ฮิต 900 เข้าแค่ 500 (แถบแรก 50%)');
-    eq(ev(r, 'bar').length, 1, 'หมด 1 แถบ'); eq(ev(r, 'phase').pop().rules, ['noArmor'], 'เข้าเฟส 2');
-    const cap = bossFight([hitter('H', 900)], [u('H', 0, 0)], boss({ bars: 2, barPct: [80, 20], phases: [ph(0, [rl('hitCap', 10)])] }));
-    eq(ev(cap, 'dmg', e => e.why === 'skill')[0].amount, 80, 'R22 10% ของแถบแรก (800) = 80');
+  ['บอส: เฟสใหม่ตั้งค่าบอสใหม่ได้ (ชุด 71) · พลังโจมตี/มัลติฮิต เปลี่ยนตอนเข้าเฟส · ค่าที่ไม่ตั้งใช้ค่าเฟสก่อน', () => {
+    const tank = mk('T', { atk: L3(0), cdMs: NEVER, hp: L3(50000) });
+    const b = boss({ atk: 10, cdMs: 1000, phases: [ph(0), { ...ph(1), stats: { atk: 30, multi: 2 } }, { ...ph(2), stats: { cdMs: 500 } }] });
+    const slow = mk('S', { atk: L3(200), cdMs: L3(5000), hp: L3(50000) }); // แถบ 1 หมดตอนเริ่ม (เฟส 2) · ตีปกติ 5 วิ ทำแถบ 2 หมด (เฟส 3)
+    const r = bossFight([hitter('H', 200), slow, tank], [u('H', 0, 0), u('S', 0, 1), u('T', 1, 0)], b);
+    const bu = bossUid(r), hits = ev(r, 'dmg', e => e.from === bu && e.why === 'hit');
+    const p2 = ev(r, 'phase', e => e.i === 1)[0], p3 = ev(r, 'phase', e => e.i === 2)[0];
+    ok(p2 && p3, 'เข้าเฟส 2 และ 3'); eq(p2.stats, { atk: 30, multi: 2 }, 'บันทึกค่าใหม่ของเฟส');
+    const after = hits.filter(e => e.t > p3.t);
+    ok(after.length >= 4 && after.every(e => e.amount === 30), 'เฟส 3 ยังตี 30 (ใช้ค่าเฟส 2)');
+    const times = [...new Set(after.map(e => e.t))]; ok(times.length >= 2 && times[1] - times[0] === 500, 'เฟส 3 คูลดาวน์ 0.5 วิ');
+    eq(after.filter(e => e.t === times[0]).length, 2, 'มัลติฮิต 2 ยังอยู่');
+    const k2 = bossUnit(b, 2).phases[1].stats; eq(k2.atk, 60, 'ด่าน 10: พลังโจมตีเฟสคูณตามด่าน (× 2)');
   }],
   ['บอส: เกราะ/ฮิต + ฟื้น/ฮิต ของบอส (ชุด 71) · ฟื้นไม่เกินแถบที่อยู่', () => {
     const tank = mk('T', { atk: L3(0), cdMs: NEVER, hp: L3(5000) });

@@ -1,4 +1,5 @@
 # ทดสอบหน้าเว็บจริงด้วย Chromium (Playwright): python3 -I tests/ui_smoke.py <โฟลเดอร์ที่มีไฟล์ .html> <โฟลเดอร์รูป>
+import json
 import sys, json, os
 from playwright.sync_api import sync_playwright
 D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
@@ -384,6 +385,16 @@ with sync_playwright() as p:
         hb=pg.evaluate("(()=>{const v=[...simView.units.values()].find(x=>x.cells); return v && v.bars>1 ? [v.barText.textContent.startsWith('แถบ '), !!v.hpFill.style.background, v.hpFill.style.background!==v.hpBar.style.background] : null;})()")
         chk(hb is None or all(hb),'boss bar colour per bar '+str(hb))
         pg.evaluate("document.getElementById('simFoeTeam').click()")
+        # ชุด 71: ห้องบอส = กฎไม่จำกัดต่อเฟส (กล่องละกฎ + ✕) · เฟส 2+ เปลี่ยนค่าบอสได้ (เช่น พลังโจมตี)
+        bk=pg.evaluate("JSON.stringify(stageCfg.bosses)")
+        pg.evaluate("document.getElementById('tab-stage').click(); document.getElementById('stg-bosses').click(); stageCfg.bosses[0].phases=[bossPhase(0),bossPhase(1)]; bossOpen=stageCfg.bosses[0].id; renderStage()")
+        bid=pg.evaluate("stageCfg.bosses[0].id")
+        for r in ['atkUp','regen','aoe']: pg.select_option('#stg-%s-p1-add'%bid, r)
+        pg.select_option('#stg-%s-p1-st-add'%bid, 'atk'); pg.fill('#stg-%s-p1-st-atk'%bid, '77'); pg.press('#stg-%s-p1-st-atk'%bid, 'Tab')
+        bf=pg.evaluate("(()=>{const p=stageCfg.bosses[0].phases[1]; return [p.rules.length, document.querySelectorAll('.phase-card .rule-box:not(.stat-box)').length, p.stats.atk, bossUnit(stageCfg.bosses[0],1).phases[1].stats.atk];})()")
+        chk(bf==[3,3,77,77],'boss phase: 3 rules + phase atk '+str(bf))
+        pg.click('#stg-%s-p1-r0-del'%bid); chk(pg.evaluate("stageCfg.bosses[0].phases[1].rules.map(r=>r.id).join()")=='regen,aoe','boss rule delete')
+        pg.evaluate("stageCfg.bosses=JSON.parse(%s); bossOpen=null; stageChanged(); renderStage(); document.getElementById('tab-sim').click()" % json.dumps(bk))
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
         pg.evaluate("simTeam=emptySim(); simTeam[1][0][0]={id:'HL-1',level:1}; saveSim(); renderSimTeams(); dock.side=0; renderDock()")
         pg.fill('#dockQ','PL-3'); chk(pg.eval_on_selector_all('#dockList .dk-item','e=>e.length')==1,'dock search filters')

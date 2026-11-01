@@ -1,7 +1,7 @@
 // Boss fights (phase 2a, set 66) — turns a boss record from the Balance Room into a unit the battle engine can fight,
 // plus the phase state machine (which rules are live right now). Pure data: no randomness, no battle logic here.
 // Rules R1–R30 + E1–E8 live in BOSS_RULES (core/stage.js); battle.js reads the live rule map this file produces.
-import { spotInfo, bossAt, barSizes } from './stage.js';
+import { spotInfo, bossAt, bossMult } from './stage.js';
 
 // A boss is ONE fighter that stands on several slots (user Q1 A): row/lane below = its front-most slot, `slots` = all of them.
 // Skills that aim at a row/lane find the boss when any of its slots match, and it is hit once per skill use (one object in F).
@@ -23,12 +23,19 @@ export function bossUnit(b, k = 1) {
     multi: Math.max(1, Math.floor(b.multi) || 1), cdMs: Math.max(1, Math.round(b.cdMs)),
     skills: [],
     // boss extras read by battle.js
-    boss: true, bars, barHp: Math.max(1, Math.floor(at.hp / bars)), barCuts: cutsOf(barSizes({ ...b, bars }, at.hp)),
+    boss: true, bars, barHp: Math.max(1, Math.floor(at.hp / bars)),
     slots: slots.length ? slots : [0], move: si.move, moveSec: Math.max(1, Math.floor(b.moveSec) || 8),
-    phases: (b.phases || []).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '' })),
+    phases: (b.phases || []).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '', stats: phaseUnitStats(p.stats, bossMult(b, k)) })),
   };
 }
 
+// Set 71: phase stats (boss-record keys) → unit fields · atk grows with the stage like the base atk
+const PHASE_FIELD = { atk: 'atk', cdMs: 'cdMs', multi: 'multi', burn: 'burnHit', shock: 'shockHit', armorHit: 'armorHit', healHit: 'healHit' };
+function phaseUnitStats(st, m) {
+  const o = {};
+  for (const [k, f] of Object.entries(PHASE_FIELD)) if (st && typeof st[k] === 'number') o[f] = k === 'atk' ? Math.round(st[k] * m) : k === 'cdMs' ? Math.max(1, Math.round(st[k])) : k === 'multi' ? Math.max(1, Math.floor(st[k])) : st[k];
+  return o;
+}
 // A spot id → the slots the boss stands on right now ({ cells, move }); a moving boss starts on its first slot.
 export function spotCells(spot) {
   const si = spotInfo(spot); if (!si) return null;
@@ -56,7 +63,3 @@ export function fxMap(phase) {
   return m;
 }
 
-// Bar edges (set 71, bars may differ in size): cuts[k] = HP left when k bars are gone · cuts[0] = full HP · cuts[bars] = 0
-export function cutsOf(sizes) { const c = [sizes.reduce((a, x) => a + x, 0)]; for (const x of sizes) c.push(c[c.length - 1] - x); return c; }
-// Bars gone at this HP (HP exactly on an edge = that bar is gone)
-export function goneAt(cuts, hp) { let g = 0; for (let k = 1; k < cuts.length; k++) if (hp <= cuts[k]) g = k; return g; }
