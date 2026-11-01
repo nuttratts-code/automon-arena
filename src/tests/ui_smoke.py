@@ -380,6 +380,9 @@ with sync_playwright() as p:
         pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:1}; renderSimTeams(); document.getElementById('simFoeBoss').click(); document.getElementById('simRun').click()")
         bc=pg.evaluate("(()=>{const v=[...simView.units.values()].find(x=>x.cells); return v ? [v.cells.length, document.querySelectorAll('#simArena .boss-tag').length, [...document.querySelectorAll('#simArena .boss-tag .uname')].every(t=>t.textContent===v.name)] : null;})()")
         chk(bc is not None and bc[0]>1 and bc[1]==bc[0]-1 and bc[2],'boss name on every cell '+str(bc))
+        # ชุด 69: หลอดเลือดบอสหลายแถบ = สีต่างกันต่อแถบ + ข้อความ "แถบ k/n"
+        hb=pg.evaluate("(()=>{const v=[...simView.units.values()].find(x=>x.cells); return v && v.bars>1 ? [v.barText.textContent.startsWith('แถบ '), !!v.hpFill.style.background, v.hpFill.style.background!==v.hpBar.style.background] : null;})()")
+        chk(hb is None or all(hb),'boss bar colour per bar '+str(hb))
         pg.evaluate("document.getElementById('simFoeTeam').click()")
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
         pg.evaluate("simTeam=emptySim(); simTeam[1][0][0]={id:'HL-1',level:1}; saveSim(); renderSimTeams(); dock.side=0; renderDock()")
