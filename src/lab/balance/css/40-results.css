@@ -234,6 +234,20 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .boss-phases > .phase-card > legend { padding: 0 4px; margin: 0; font-weight: 600; font-size: .86rem; }
 .boss-phases > button { justify-self: start; align-self: start; }
 .phase-card .rune-del { grid-column: 1 / -1; }
+/* set 71: rule boxes (unlimited rules) + bar size editor */
+.phase-card .rule-box { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; display: grid; gap: 6px; }
+.rule-head { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+.rule-head .rule-n { flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: .75rem; font-weight: 700; }
+.rule-head .rule-name { flex: 1; min-width: 0; font-weight: 600; }
+.rule-head .rule-x { flex: none; min-width: 32px; min-height: 32px; padding: 0 8px; }
+.rule-add { width: 100%; }
+.boss-body > .boss-bars { grid-column: 1 / -1; }
+.bar-strip { grid-column: 1 / -1; display: flex; gap: 2px; height: 34px; margin: 14px 0 2px; }
+.bar-seg { position: relative; min-width: 14px; border-radius: 3px; display: grid; place-items: center; color: #fff; font-size: .75rem; font-weight: 700; text-shadow: 0 1px 2px #0008; }
+.bar-seg.ph-start { box-shadow: inset 3px 0 0 #000a; }
+.bar-seg .ph-tag { position: absolute; left: 0; top: -15px; font-size: .68rem; color: var(--ink); text-shadow: none; white-space: nowrap; font-weight: 600; }
+.boss-bars .fld { padding-left: 6px; }
+.hint-txt { font-size: .8rem; opacity: .85; }
 .spot-pick { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; }
 .spot-board { display: grid; grid-template-columns: auto repeat(3, 52px); gap: 4px; align-items: center; }
 .spot-board .sb-h { font-size: .74rem; color: var(--mute); text-align: center; white-space: nowrap; padding-right: 4px; }

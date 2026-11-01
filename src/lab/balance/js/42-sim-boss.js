@@ -38,7 +38,7 @@ function renderSimBoss() {
   else if (!b) $('simBossInfo').textContent = 'ยังไม่มีบอสที่เปิดใช้ (เปิดในแท็บ "รูน / บอส")';
   else {
     const at = bossAt(b, simBossK);
-    $('simBossInfo').textContent = `HP ${at.hp} · ${b.bars} แถบ (แถบละ ${at.barHp}) · พลังโจมตี ${at.atk} ทุก ${fmt(b.cdMs / 1000)} วิ · ${spotShort(b.spot)} · ${b.phases.length} เฟส`;
+    $('simBossInfo').textContent = `HP ${at.hp} · ${b.bars} แถบ (${barPctOf(b) ? `HP ${at.barHps.join('/')}` : `แถบละ ${at.barHp}`}) · พลังโจมตี ${at.atk} ทุก ${fmt(b.cdMs / 1000)} วิ · ${spotShort(b.spot)} · ${b.phases.length} เฟส`;
   }
 }
 function renderSimRunes() {

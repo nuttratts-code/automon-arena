@@ -1,4 +1,5 @@
 import { pause } from '../lab/analyze.js';
+import { goneAt } from '../core/boss.js';
 // หน้าจอสู้: เล่นบันทึกเหตุการณ์จากตัวคำนวณเป็นภาพ ไม่คำนวณกฎเอง
 // ใช้ textContent เท่านั้น (ไม่ใช้ innerHTML กับข้อมูล) กันโค้ดแปลกปลอมจากชื่อ/ไฟล์เซฟ
 export const TRIBE_STYLE = {
@@ -151,8 +152,10 @@ export class BattleView {
   paint(v) {
     const hp = Math.max(0, v.hp);
     if (v.bars > 1 && v.barHp > 0) { // ชุด 69: บอสหลายแถบ → หลอดแสดงแถบที่อยู่ตอนนี้ สีต่างกันทุกแถบ (ใต้หลอด = สีแถบถัดไป)
-      const k = Math.max(1, Math.min(v.bars, Math.ceil(hp / v.barHp)));
-      v.hpFill.style.width = `${hp > 0 ? Math.min(100, ((hp - (k - 1) * v.barHp) / v.barHp) * 100) : 0}%`;
+      // ชุด 71: แถบยาวไม่เท่ากันได้ → ใช้ขอบแถบ barCuts (k = แถบที่เหลือ นับรวมแถบที่อยู่)
+      const c = v.barCuts || Array.from({ length: v.bars + 1 }, (_, i) => (i ? (v.bars - i) * v.barHp : v.maxHp));
+      const g = Math.min(v.bars - 1, goneAt(c, hp)), k = v.bars - g, top = Math.max(c[g], hp), size = top - c[g + 1];
+      v.hpFill.style.width = `${hp > 0 ? Math.min(100, ((hp - c[g + 1]) / size) * 100) : 0}%`;
       v.hpFill.style.background = barColor(k);
       v.hpBar.style.background = k > 1 ? barColor(k - 1) : '';
       v.barText.textContent = `แถบ ${hp > 0 ? k : 0}/${v.bars}`;
