@@ -263,4 +263,55 @@ export const TESTS_BOSS = [
     eq(ev(two, 'dmg', e => e.to === bossUid(two) && e.why === 'skill').length, 1, 'สกิลตัวที่ 2 ใน tick เดียวกันไม่เข้า');
     eq(ev(two, 'bar').length, 1, 'หมดแค่ 1 แถบ');
   }],
+  ['บอส: เฟสใหม่ตั้งค่าบอสใหม่ได้ (ชุด 71) · พลังโจมตี/มัลติฮิต เปลี่ยนตอนเข้าเฟส · ค่าที่ไม่ตั้งใช้ค่าเฟสก่อน', () => {
+    const tank = mk('T', { atk: L3(0), cdMs: NEVER, hp: L3(50000) });
+    const b = boss({ atk: 10, cdMs: 1000, phases: [ph(0), { ...ph(1), stats: { atk: 30, multi: 2 } }, { ...ph(2), stats: { cdMs: 500 } }] });
+    const slow = mk('S', { atk: L3(200), cdMs: L3(5000), hp: L3(50000) }); // แถบ 1 หมดตอนเริ่ม (เฟส 2) · ตีปกติ 5 วิ ทำแถบ 2 หมด (เฟส 3)
+    const r = bossFight([hitter('H', 200), slow, tank], [u('H', 0, 0), u('S', 0, 1), u('T', 1, 0)], b);
+    const bu = bossUid(r), hits = ev(r, 'dmg', e => e.from === bu && e.why === 'hit');
+    const p2 = ev(r, 'phase', e => e.i === 1)[0], p3 = ev(r, 'phase', e => e.i === 2)[0];
+    ok(p2 && p3, 'เข้าเฟส 2 และ 3'); eq(p2.stats, { atk: 30, multi: 2 }, 'บันทึกค่าใหม่ของเฟส');
+    const after = hits.filter(e => e.t > p3.t);
+    ok(after.length >= 4 && after.every(e => e.amount === 30), 'เฟส 3 ยังตี 30 (ใช้ค่าเฟส 2)');
+    const times = [...new Set(after.map(e => e.t))]; ok(times.length >= 2 && times[1] - times[0] === 500, 'เฟส 3 คูลดาวน์ 0.5 วิ');
+    eq(after.filter(e => e.t === times[0]).length, 2, 'มัลติฮิต 2 ยังอยู่');
+    const k2 = bossUnit(b, 2).phases[1].stats; eq(k2.atk, 60, 'ด่าน 10: พลังโจมตีเฟสคูณตามด่าน (× 2)');
+  }],
+  ['บอส: เกราะ/ฮิต + ฟื้น/ฮิต ของบอส (ชุด 71) · ฟื้นไม่เกินแถบที่อยู่', () => {
+    const tank = mk('T', { atk: L3(0), cdMs: NEVER, hp: L3(5000) });
+    const r = bossFight([tank], [u('T', 0, 0)], boss({ atk: 10, cdMs: 1000, armorHit: 7 }), { hardStopMs: 3500 });
+    const b = bossUid(r);
+    eq(ev(r, 'armor', e => e.to === b).map(e => e.amount).slice(0, 3), [7, 7, 7], 'บอสได้เกราะ 7 ทุกฮิต');
+    const hr = bossFight([hitter('H', 150), tank], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 10, cdMs: 1000, healHit: 500 }));
+    const healed = ev(hr, 'heal', e => e.to === bossUid(hr));
+    ok(healed.length > 0, 'บอสฟื้นตอนตี');
+    eq(healed[0].amount, 150, 'ฟื้นเต็มแถบที่อยู่ ไม่เกิน (HP 850 → 1000)');
+    const hb = bossFight([hitter('H', 250), tank], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 10, cdMs: 1000, healHit: 500 }));
+    eq(ev(hb, 'heal', e => e.to === bossUid(hb)).length, 0, 'แถบแรกหมดแล้ว (HP 800) ฟื้นกลับไม่ได้');
+  }],
+  ['บอส: กฎใหม่ชุด 71 (R31–R38) ทำงานตามที่เขียน', () => {
+    const tank = (id, o = {}) => mk(id, { atk: L3(0), cdMs: NEVER, hp: L3(50000), ...o });
+    // R31 ทะลุเกราะ: เป้ามีเกราะ แต่ดาเมจเข้า HP เต็ม
+    const pr = bossFight([tank('T', { armor: L3(1000) })], [u('T', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('pierce')])] }));
+    const ph1 = ev(pr, 'dmg', e => e.why === 'hit')[0]; ok(ph1 && ph1.absorbed === 0 && ph1.amount === 10, 'R31 ไม่โดนเกราะกัน ' + JSON.stringify(ph1));
+    // R32 หนาม: ตีบอสด้วยฮิตปกติ โดนกลับ 3
+    const hitMe = mk('A', { atk: L3(5), cdMs: L3(1000), hp: L3(5000) });
+    const th = bossFight([hitMe], [u('A', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('thorns', 3)])] }));
+    const aU = th.events[0].units.find(x => x.side === 0).uid;
+    ok(ev(th, 'dmg', e => e.to === aU && e.why === 'reflect' && e.amount === 3).length >= 2, 'R32 หนาม 3 ต่อฮิต');
+    // R33 มึนงง · R34 ตีเบาลง · R35 คูลดาวน์เพิ่ม
+    const pl = bossFight([tank('T')], [u('T', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('stunPulse', 5, 2), rl('atkDrain', 5, 10), rl('cdPulse', 5, 1)])] }));
+    eq(ev(pl, 'buff', e => e.what === 'stun' && e.t <= 10000).map(e => [e.t, e.amount]), [[5000, 2000], [10000, 2000]], 'R33 ทุก 5 วิ มึนงง 2 วิ');
+    eq(ev(pl, 'buff', e => e.what === 'atkDrain' && e.t <= 10000).map(e => e.amount), [10, 10], 'R34 ตีเบาลง 10% ทุก 5 วิ');
+    eq(ev(pl, 'buff', e => e.what === 'freeze' && e.t <= 10000).map(e => e.amount), [1000, 1000], 'R35 คูลดาวน์ +1 วิ ทุก 5 วิ');
+    // R36 เกราะเป็นจังหวะ (% ของ 1 แถบ = 200) · R37 ล้างไฟ
+    const burner = mk('B', { atk: L3(1), cdMs: L3(1000), hp: L3(5000), burn: L3(5) });
+    const sh = bossFight([burner], [u('B', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('shieldPulse', 5, 10), rl('cleansePulse', 4)])] }));
+    const bu = bossUid(sh);
+    eq(ev(sh, 'armor', e => e.to === bu && e.t <= 6000).map(e => [e.t, e.amount]), [[5000, 20]], 'R36 เกราะ 10% ของแถบ (200) ที่ 5 วิ');
+    ok(ev(sh, 'cleanse', e => e.to === bu && e.t === 4000).length === 1, 'R37 ล้างไฟที่ 4 วิ');
+    // R38 แถบหาย = ระเบิดใส่ผู้เล่นทุกตัว
+    const bl = bossFight([hitter('H', 200), tank('T')], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('barBlast', 25)])] }));
+    eq(ev(bl, 'dmg', e => e.from === bossUid(bl) && e.why === 'skill').map(e => e.amount), [25, 25], 'R38 ระเบิด 25 ใส่ทุกตัว');
+  }],
 ];

@@ -281,6 +281,15 @@ export const BOSS_RULES = [
   ['dpsCheck', 'R28 ตีแถบไม่หมดในเวลานี้ แถบนั้นเต็มกลับ', 20, 3, 120, 'วิ'],
   ['curse', 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า', 15, 3, 60, 'วิ', ['เป้า (% ของ 1 แถบ)', 50, 1, 100, '%']],
   ['weakSpot', 'R30 หลังย้ายที่ บอสโดนดาเมจเพิ่ม 3 วิ (ใช้กับแบบย้ายที่)', 50, 1, 300, '%'],
+  // Set 71 (user 1 Nov "เพิ่มสิ่งที่บอสควรทำได้"): R31–R38 · all numbers ค่าเสนอ
+  ['pierce', 'R31 บอสตีทะลุเกราะ (ฮิตปกติไม่โดนเกราะกัน)', 0, 0, 0, ''],
+  ['thorns', 'R32 หนาม: ผู้เล่นตีบอส (ฮิตปกติ) โดนดาเมจกลับทุกฮิต', 3, 1, 1000, 'ดาเมจ'],
+  ['stunPulse', 'R33 ทุก X วิ สุ่มผู้เล่น 1 ตัวมึนงง', 10, 2, 60, 'วิ', ['มึนงงนาน', 2, 1, 10, 'วิ']],
+  ['atkDrain', 'R34 ทุก X วิ ผู้เล่นทุกตัวตีเบาลง (สะสม)', 10, 2, 60, 'วิ', ['เบาลงครั้งละ', 10, 1, 50, '%']],
+  ['cdPulse', 'R35 ทุก X วิ คูลดาวน์ผู้เล่นทุกตัวเพิ่ม', 12, 2, 60, 'วิ', ['เพิ่ม', 1, 1, 20, 'วิ']],
+  ['shieldPulse', 'R36 ทุก X วิ บอสได้เกราะ (% ของ 1 แถบ)', 15, 2, 60, 'วิ', ['เกราะ', 10, 1, 300, '%']],
+  ['cleansePulse', 'R37 ทุก X วิ บอสล้างไฟ/ช็อตที่ติดตัว', 8, 2, 60, 'วิ'],
+  ['barBlast', 'R38 แถบหาย 1 แถบ บอสระเบิดใส่ผู้เล่นทุกตัว', 20, 1, 10000, 'ดาเมจ'],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
@@ -290,10 +299,32 @@ export const BOSS_PHASE_FX = [
   ['stunAll', 'X4 ผู้เล่นทุกตัวมึนงง', 2, 1, 10, 'วิ'],
 ];
 // Phases (set 64, user 31 Oct: Q1 A by bars lost · Q2 A max 3 · Q3 A new rules replace old · Q4 B max 2 rules per phase)
-// phase = { at: bars lost when it starts (phase 1 = 0), rules: [{ id, v, v2?, tribe? }] ≤ 2, fx: [{ id, v }], spot: '' (keep) or a spot (see spotInfo) }
-export const BOSS_MAX_PHASES = 3, BOSS_MAX_RULES = 2;
+// phase = { at: bars lost when it starts (phase 1 = 0), rules: [{ id, v, v2?, tribe? }] (each id once), fx: [{ id, v }], spot: '' (keep) or a spot (see spotInfo) }
+// Set 71 (user 1 Nov): rules per phase no longer limited (each rule at most once per phase) · phases up to the bar count (≤ 20)
+export const BOSS_MAX_PHASES = 20, BOSS_MAX_RULES = 99;
+// Rule groups for the "+ เพิ่มกฎ" picker (same order as BOSS_RULES)
+// Picker categories (set 71: by what the rule does · every rule except 'none' sits in exactly one group — test checks)
+export const BOSS_RULE_GROUPS = [
+  ['⚔️ บอสตีแรงขึ้น', ['atkUp', 'fastAtk', 'multiUp', 'enrage', 'desperate', 'pierce']],
+  ['🎯 เลือกเป้า / ตีหลายตัว', ['aoe', 'hunter', 'backStrike', 'execute']],
+  ['⏱️ ทำเป็นจังหวะ ทุก X วิ', ['burnAura', 'shockAura', 'randomSilence', 'freezeRow', 'stunPulse', 'atkDrain', 'cdPulse']],
+  ['⬇️ ผู้เล่นอ่อนลงตลอดเฟส', ['backSilence', 'healCut', 'armorCut', 'cdSlow', 'tribeOff', 'noArmor', 'frontBreak', 'noRevive']],
+  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'statusImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse']],
+  ['❤️ บอสฟื้นเลือด', ['lifesteal', 'regen', 'feedOnDown']],
+  ['↩️ ตอบโต้', ['reflect', 'thorns', 'barBlast']],
+  ['🌀 เปลี่ยนสนาม', ['rowSwap', 'earlyStorm']],
+  ['🧩 ไขปริศนา', ['dpsCheck', 'curse', 'weakSpot']],
+];
+export const bossRuleGroup = id => (BOSS_RULE_GROUPS.find(g => g[1].includes(id)) || [''])[0];
+// Phase-stat picker groups
+export const BOSS_STAT_GROUPS = [['⚔️ การโจมตี', ['atk', 'cdMs', 'multi']], ['🔥 ติดสถานะต่อฮิต', ['burn', 'shock']], ['🛡️ เกราะ / ฟื้นต่อฮิต', ['armorHit', 'healHit']]];
 export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
-export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '' });
+export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '', stats: {} });
+// Set 71 (user 1 Nov): from phase 2 a phase may set new boss stats · [key in the boss record, label, min, max, whole number?]
+// value = at the boss's first appearance (atk grows with the stage like the base atk) · a stat a phase does not set = keeps the previous phase's value
+export const BOSS_PHASE_STATS = [['atk', 'พลังโจมตี', 0, 1e5, false], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000, true], ['multi', 'มัลติฮิต', 1, 10, true], ['burn', 'ไฟ/ฮิต', 0, 1e4, false], ['shock', 'ช็อต/ฮิต', 0, 1e4, false], ['armorHit', 'เกราะ/ฮิต', 0, 1e4, false], ['healHit', 'ฟื้น/ฮิต', 0, 1e4, false]];
+// Boss stats live in phase i (phase stats carried over from earlier phases)
+export function phaseStatsAt(b, i) { const o = {}; for (const [k] of BOSS_PHASE_STATS) o[k] = b[k] || 0; for (let j = 1; j <= i && j < b.phases.length; j++) Object.assign(o, b.phases[j].stats || {}); return o; }
 // Warnings for risky combos (review Q-warnings): returns Thai strings, empty = fine
 export function bossPhaseWarn(b, p) {
   const has = id => p.rules.some(r => r.id === id), w = [];
@@ -344,8 +375,9 @@ export function spotShort(spot) {
 export const BOSS_SPOTS = [...BOSS_SPOT_PRESETS.map(p => [p[0], spotLabel(p[0])]), ['move', spotLabel('move')]];
 // Boss stats = at its first appearance (stage 5) · stage 10 = × mult10 · after stage 10 each boss + endlessPct%
 // bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
-export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4]];
-const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
+// Set 71: armorHit / healHit = เกราะ/ฮิต · ฟื้น/ฮิต of the boss's normal hit (same as a unit's; heal never refills past the bar it is in)
+export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4], ['armorHit', 'เกราะ/ฮิต', 0, 1e4], ['healHit', 'ฟื้น/ฮิต', 0, 1e4]];
+const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
 // Sized from the stage baseline (median player at stage 5: ~7 dmg/s, team HP ~756) → boss lasts ~60 s, kills the team in ~60 s.
 export const STAGE_BOSSES = [
   stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50, 'all'),
@@ -422,7 +454,7 @@ function cleanPhases(x, b, num, isObj) {
     return [bossPhase(0, rules([{ id: x.rule, v: x.ruleV }], b.phases[0].rules))];
   }
   const out = [];
-  for (const p of x.phases.slice(0, 12)) {
+  for (const p of x.phases.slice(0, BOSS_MAX_PHASES)) {
     if (!isObj(p) || out.length >= BOSS_MAX_PHASES) continue;
     const at = out.length ? p.at : 0;
     if (out.length && !(Number.isInteger(at) && at > out[out.length - 1].at && at < b.bars)) continue;
@@ -430,6 +462,7 @@ function cleanPhases(x, b, num, isObj) {
     if (out.length) {
       if (Array.isArray(p.fx)) for (const f of p.fx) { const q = isObj(f) && BOSS_PHASE_FX.find(z => z[0] === f.id); if (q && !ph.fx.some(o => o.id === q[0])) ph.fx.push({ id: q[0], v: q[4] ? (num(f.v, q[3], q[4]) ? f.v : q[2]) : 0 }); }
       if (validSpot(p.spot)) ph.spot = p.spot;
+      if (isObj(p.stats)) for (const [k, , lo, hi, int] of BOSS_PHASE_STATS) if (num(p.stats[k], lo, hi) && (!int || Number.isInteger(p.stats[k]))) ph.stats[k] = p.stats[k];
     }
     out.push(ph);
   }
@@ -437,7 +470,8 @@ function cleanPhases(x, b, num, isObj) {
 }
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
+export const bossMult = (b, k) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2));
 export function bossAt(b, k) {
-  const m = k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2);
+  const m = bossMult(b, k);
   return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
 }

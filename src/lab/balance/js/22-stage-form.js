@@ -265,9 +265,53 @@ function spotPicker(id, spot, set) {
   box.lastChild.append(pre, ml, el('p', 'spot-say', 'ตอนนี้: ' + spotLabel(spotCode(si.bits, si.move))));
   return box;
 }
+// "+ เพิ่มกฎ" picker: rules grouped by kind, rules already in the phase left out
+function bossRuleAdd(id, used, add) {
+  const sel = document.createElement('select'); sel.id = id; sel.className = 'rule-add';
+  sel.append(new Option('+ เพิ่มกฎ… (ไม่จำกัด)', ''));
+  for (const [label, ids] of BOSS_RULE_GROUPS) {
+    const g = document.createElement('optgroup'); g.label = label;
+    for (const rid of ids) if (!used.includes(rid)) g.append(new Option(BOSS_RULES.find(q => q[0] === rid)[1], rid));
+    if (g.children.length) sel.append(g);
+  }
+  sel.disabled = sel.options.length <= 1;
+  sel.addEventListener('change', () => { if (sel.value) add(sel.value); });
+  return sel;
+}
+// Set 71 (user 1 Nov): from phase 2 the boss can get new stats · one box per changed stat (value + ✕) · "+ เปลี่ยนค่าบอส" picker
+// a stat not set here keeps the previous phase's value (shown as "เดิม")
+function bossPhaseStats(bs, p, i, id) {
+  const kids = [], before = phaseStatsAt(bs, i - 1), cd = k => k === 'cdMs';
+  const show = (k, v) => (cd(k) ? fmt(v / 1000) + ' วิ' : fmt(v));
+  for (const [k, label, lo, hi, int] of BOSS_PHASE_STATS) {
+    if (!(k in p.stats)) continue;
+    const box = el('div', 'rule-box stat-box', ''), head = el('div', 'rule-head', '');
+    const x = el('button', 'rule-x', '✕'); x.type = 'button'; x.id = `${id}-st-${k}-del`; x.title = 'ไม่เปลี่ยนค่านี้'; x.setAttribute('aria-label', `ไม่เปลี่ยน${label}`);
+    x.addEventListener('click', () => { delete p.stats[k]; stageChanged(); renderStage(); });
+    const v = p.stats[k], up = v > before[k], dn = v < before[k];
+    head.append(el('span', 'rule-n', '⇅'), el('span', 'rule-name', `${cd(k) ? 'คูลดาวน์' : label}: ${show(k, before[k])} → ${show(k, v)}`), x);
+    if (up || dn) head.lastChild.previousSibling.append(el('span', `vtag ${(cd(k) ? dn : up) ? 'bad' : 'good'}`, (cd(k) ? dn : up) ? ' บอสแรงขึ้น' : ' บอสเบาลง'));
+    const inp = cd(k) ? stageNum(`${id}-st-${k}`, v / 1000, before[k] / 1000, lo / 1000, hi / 1000, y => { p.stats[k] = Math.round(y * 10) * 100; }, 0.1)
+      : stageNum(`${id}-st-${k}`, v, before[k], lo, hi, y => { p.stats[k] = int ? Math.round(y) : y; });
+    inp.addEventListener('change', () => renderStage());
+    box.append(head, fgrid(fld(cd(k) ? 'คูลดาวน์ใหม่ (วิ)' : `${label} ใหม่`, inp)));
+    kids.push(box);
+  }
+  const sel = document.createElement('select'); sel.id = `${id}-st-add`; sel.className = 'rule-add';
+  sel.append(new Option('+ เปลี่ยนค่าบอส… (เช่น ตีแรงขึ้น)', ''));
+  for (const [glabel, ks] of BOSS_STAT_GROUPS) {
+    const g = document.createElement('optgroup'); g.label = glabel;
+    for (const [k, label] of BOSS_PHASE_STATS) if (ks.includes(k) && !(k in p.stats)) g.append(new Option(`${label} (ตอนนี้ ${show(k, before[k])})`, k));
+    if (g.children.length) sel.append(g);
+  }
+  sel.disabled = sel.options.length <= 1;
+  sel.addEventListener('change', () => { const k = sel.value; if (!k) return; p.stats[k] = before[k] || (k === 'multi' ? 1 : 0); stageChanged(); renderStage(); });
+  kids.push(fld('', sel, 'full'));
+  return kids;
+}
 // Set 64 boss phases (user 31 Oct): phase 1 at fight start · phase 2–3 start after N bars are gone · new phase rules replace old ones · ≤ 2 rules per phase
 function bossPhaseForms(bs, base, grp) {
-  const ruleOpts = BOSS_RULES.map(r => [r[0], r[1]]), out = [];
+  const out = [];
   bs.phases.forEach((p, i) => {
     const bp = (base.phases || [])[i], id = `stg-${bs.id}-p${i}`, kids = [];
     if (i) {
@@ -287,17 +331,32 @@ function bossPhaseForms(bs, base, grp) {
       const sl = el('label', 'sw', ''); sl.append(sc, el('span', '', 'เปลี่ยนที่ยืน'));
       kids.push(fld('ที่ยืน', sl, 'full'));
       if (p.spot) kids.push(spotPicker(`${id}-spot`, p.spot, v => { p.spot = v; }));
+      if (!p.stats) p.stats = {};
+      kids.push(el('p', 'fld full sub-h', 'ค่าบอสในเฟสนี้'), ...bossPhaseStats(bs, p, i, id), el('p', 'fld full sub-h', 'กฎพิเศษของเฟสนี้'));
     }
-    for (let k = 0; k < BOSS_MAX_RULES; k++) {
-      const r = p.rules[k], q = r && BOSS_RULES.find(z => z[0] === r.id), br = bp && r && bp.rules.find(z => z.id === r.id);
-      kids.push(fld(`กฎ ${k + 1}`, selectInput(`${id}-r${k}`, ruleOpts, r ? r.id : 'none', v => {
-        if (v === 'none') p.rules.splice(k, 1); else if (!p.rules.some((z, j) => j !== k && z.id === v)) p.rules[k] = bossRule(v);
-        stageChanged(); renderStage();
-      }), 'full'));
-      if (!q) break;
-      if (q[4]) kids.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-r${k}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
-      if (Array.isArray(q[6])) kids.push(fld(`${q[6][0]} (${q[6][4]})`, stageNum(`${id}-r${k}-v2`, r.v2, br ? br.v2 : q[6][1], q[6][2], q[6][3], v => { r.v2 = v; })));
-      if (q[6] === 'tribe') kids.push(fld('เผ่า', selectInput(`${id}-r${k}-tribe`, TRIBES.map(t => [t, t]), r.tribe, v => { r.tribe = v; stageChanged(); renderStage(); })));
+    // Set 71 (user 1 Nov): rules per phase no longer limited · one box per rule (name + its values + ✕) · "+ เพิ่มกฎ" picker grouped, used rules hidden
+    p.rules.forEach((r, k) => {
+      const q = BOSS_RULES.find(z => z[0] === r.id); if (!q) return;
+      const br = bp && bp.rules.find(z => z.id === r.id), box = el('div', 'rule-box', ''), head = el('div', 'rule-head', '');
+      const x = el('button', 'rule-x', '✕'); x.type = 'button'; x.id = `${id}-r${k}-del`; x.title = 'เอากฎนี้ออก'; x.setAttribute('aria-label', `เอากฎ ${q[1]} ออก`);
+      x.addEventListener('click', () => { p.rules.splice(k, 1); stageChanged(); renderStage(); });
+      const nm = el('span', 'rule-name', ''); nm.append(el('span', 'rule-cat', bossRuleGroup(r.id)), document.createElement('br'), q[1]);
+      head.append(el('span', 'rule-n', String(k + 1)), nm, x);
+      const vals = [];
+      if (q[4]) vals.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-r${k}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
+      if (Array.isArray(q[6])) vals.push(fld(`${q[6][0]} (${q[6][4]})`, stageNum(`${id}-r${k}-v2`, r.v2, br ? br.v2 : q[6][1], q[6][2], q[6][3], v => { r.v2 = v; })));
+      if (q[6] === 'tribe') vals.push(fld('เผ่า', selectInput(`${id}-r${k}-tribe`, TRIBES.map(t => [t, t]), r.tribe, v => { r.tribe = v; stageChanged(); renderStage(); })));
+      box.append(head); if (vals.length) box.append(fgrid(...vals));
+      kids.push(box);
+    });
+    if (!p.rules.length) kids.push(el('p', 'fld full mute', 'ยังไม่มีกฎในเฟสนี้'));
+    kids.push(fld('', bossRuleAdd(`${id}-add`, p.rules.map(r => r.id), v => { p.rules.push(bossRule(v)); stageChanged(); renderStage(); }), 'full'));
+    if (i) { // เฟสใหม่ใช้กฎของตัวเองแทนกฎเดิม → ปุ่มคัดลอกกฎเฟสก่อนมาก่อน แล้วค่อยแก้/เพิ่ม
+      const prev = bs.phases[i - 1].rules.filter(r => !p.rules.some(z => z.id === r.id));
+      const cp = el('button', 'rule-copy', `คัดลอกกฎจากเฟส ${i}${prev.length ? ` (${prev.length} ข้อ)` : ''}`); cp.type = 'button'; cp.id = `${id}-copy`; cp.disabled = !prev.length;
+      cp.title = 'กฎของเฟสใหม่แทนกฎเดิมทั้งหมด · อยากให้กฎเดิมยังอยู่ ให้คัดลอกมา';
+      cp.addEventListener('click', () => { for (const r of prev) p.rules.push({ ...r }); stageChanged(); renderStage(); });
+      kids.push(cp);
     }
     if (i) BOSS_PHASE_FX.forEach((f, j) => {
       const on = p.fx.find(z => z.id === f[0]), c = document.createElement('input'); c.type = 'checkbox'; c.id = `${id}-fx-${f[0]}`; c.checked = !!on;
@@ -307,7 +366,8 @@ function bossPhaseForms(bs, base, grp) {
     });
     for (const w of bossPhaseWarn(bs, p)) kids.push(el('p', 'fld full warn-txt', '⚠️ ' + w));
     if (i) { const d = el('button', 'rune-del', 'ลบเฟสนี้'); d.type = 'button'; d.addEventListener('click', () => { bs.phases.splice(i, 1); stageChanged(); renderStage(); }); kids.push(d); }
-    const f = grp(i ? `เฟส ${i + 1} · หลังแถบหาย ${p.at} แถบ` : 'เฟส 1 (เริ่มสู้)', ...kids); f.className = 'phase-card'; out.push(f);
+    const nSt = Object.keys(p.stats || {}).length, tail = ` · กฎ ${p.rules.length} ข้อ${nSt ? ` · เปลี่ยนค่า ${nSt}` : ''}`;
+    const f = grp((i ? `เฟส ${i + 1} · หลังแถบหาย ${p.at} แถบ` : 'เฟส 1 (เริ่มสู้)') + tail, ...kids); f.className = 'phase-card'; out.push(f);
   });
   const last = bs.phases[bs.phases.length - 1];
   if (bs.phases.length < BOSS_MAX_PHASES) {
@@ -316,7 +376,7 @@ function bossPhaseForms(bs, base, grp) {
     add.addEventListener('click', () => { bs.phases.push(bossPhase(last.at + 1)); stageChanged(); renderStage(); });
     out.push(add);
   }
-  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎใหม่แทนกฎเดิม'), ...out);
+  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎใหม่แทนกฎเดิม · เพิ่มเฟสได้ถึงจำนวนแถบ'), ...out);
   return sec;
 }
 function renderStageBosses(box) {
@@ -347,7 +407,7 @@ function renderStageBosses(box) {
       body.append(
         grp('ตัวบอส', fld('ชื่อ', nm, 'wide'), fld('เผ่า', selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); })),
           n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
-        grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4)),
+        grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4), n('armorHit', 'เกราะ/ฮิต', 0, 1e4), n('healHit', 'ฟื้น/ฮิต (ไม่เกินแถบที่อยู่)', 0, 1e4)),
         grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500)));
       const spotG = grp('ที่ยืน (กดช่องเพื่อเลือก/เอาออก)', spotPicker(`stg-${bs.id}-spot`, bs.spot, v => { bs.spot = v; }),
         ...((spotInfo(bs.spot) || {}).move ? [n('moveSec', 'ย้ายที่ทุก (วิ)', 1, 60, v => { bs.moveSec = Math.round(v); })] : []));

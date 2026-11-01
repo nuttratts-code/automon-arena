@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, phaseStatsAt, BOSS_RULE_GROUPS, BOSS_STAT_GROUPS, BOSS_PHASE_STATS } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -31,12 +31,19 @@ export const TESTS_VALIDATE = [
       { at: 3, rules: [{ id: 'atkUp', v: 40 }, { id: 'atkUp', v: 10 }, { id: 'regen', v: 999 }, { id: 'aoe' }], fx: [{ id: 'cleanse' }], spot: 'one' },
       { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 99 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }, { id: 'armorBar' }, { id: 'evil' }], spot: 'fly' },
       { at: 2, rules: [] }, { at: 5, rules: [] }, { at: 4, rules: [{ id: 'none' }, { id: 'curse', tribe: 'x' }] }, { at: 4.5 } ] }] }).bosses[0].phases;
-    eq(ph.map(p => p.at), [0, 2, 4], 'phase at: first = 0, rising, < bars, max 3');
-    eq(ph[0], { at: 0, rules: [{ id: 'atkUp', v: 40 }, { id: 'regen', v: 3 }], fx: [], spot: '' }, 'phase 1: dup dropped, max 2, bad value → default, no fx/spot');
-    eq(ph[1], { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 4 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }], spot: '' }, 'phase 2: v2 clamp, tribe, fx dedup, bad spot');
+    eq(ph.map(p => p.at), [0, 2, 4], 'phase at: first = 0, rising, < bars');
+    eq(ph[0], { at: 0, rules: [{ id: 'atkUp', v: 40 }, { id: 'regen', v: 3 }, { id: 'aoe', v: 40 }], fx: [], spot: '', stats: {} }, 'phase 1: dup dropped, no rule limit (set 71), bad value → default, no fx/spot');
+    eq(ph[1], { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 4 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }], spot: '', stats: {} }, 'phase 2: v2 clamp, tribe, fx dedup, bad spot');
     eq(ph[2].rules, [{ id: 'curse', v: 15, v2: 50 }], 'phase 3: none dropped, defaults');
+    // Set 71: more than 3 phases (≤ bars) · boss armorHit/healHit · phase stats (phase 2+ only, range/whole-number checked)
+    { const b = cleanStage({ bosses: [{ id: 'B1', bars: 6, armorHit: 5, healHit: 3, atk: 20, phases: [{ at: 0, stats: { atk: 99 } }, ...[1, 2, 3, 4, 5].map(at => ({ at, rules: [], stats: at === 1 ? { atk: 40, cdMs: 1500.5, multi: 2, burn: -1, evil: 3 } : at === 3 ? { atk: 60 } : {} }))] }] }).bosses[0];
+      eq([b.phases.length, b.armorHit, b.healHit], [6, 5, 3], 'many phases + armor/heal per hit');
+      eq(b.phases.map(p => p.stats), [{}, { atk: 40, multi: 2 }, {}, { atk: 60 }, {}, {}], 'phase stats: phase 1 none, bad values dropped');
+      eq([phaseStatsAt(b, 0).atk, phaseStatsAt(b, 2).atk, phaseStatsAt(b, 2).multi, phaseStatsAt(b, 4).atk], [20, 40, 2, 60], 'phase stats carry over'); }
     for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
     eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
+    { const all = BOSS_RULE_GROUPS.flatMap(g => g[1]); eq(all.slice().sort(), BOSS_RULES.map(r => r[0]).filter(x => x !== 'none').sort(), 'every rule in exactly one picker group');
+      eq(BOSS_STAT_GROUPS.flatMap(g => g[1]).sort(), BOSS_PHASE_STATS.map(q => q[0]).sort(), 'every phase stat in a group'); }
     { const c = cleanStage({ bosses: [{ id: 'B1', spot: 'c100001' }, { id: 'B2', spot: 'm110000' }, { id: 'B3', spot: 'm100000' }, { id: 'B4', spot: 'c000000' }] });
       eq(c.bosses.map(b => b.spot), ['c100001', 'm110000', 'four', 'front'], 'custom spot codes: valid kept, 1-slot move / empty rejected'); }
     eq([spotCode('110000', false), spotCode('111111', true), spotCode('100001', false), spotCode('000011', true)], ['front', 'move', 'c100001', 'm000011'], 'spotCode presets');
