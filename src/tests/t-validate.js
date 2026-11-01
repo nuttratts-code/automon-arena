@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, barSizes } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -31,10 +31,17 @@ export const TESTS_VALIDATE = [
       { at: 3, rules: [{ id: 'atkUp', v: 40 }, { id: 'atkUp', v: 10 }, { id: 'regen', v: 999 }, { id: 'aoe' }], fx: [{ id: 'cleanse' }], spot: 'one' },
       { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 99 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }, { id: 'armorBar' }, { id: 'evil' }], spot: 'fly' },
       { at: 2, rules: [] }, { at: 5, rules: [] }, { at: 4, rules: [{ id: 'none' }, { id: 'curse', tribe: 'x' }] }, { at: 4.5 } ] }] }).bosses[0].phases;
-    eq(ph.map(p => p.at), [0, 2, 4], 'phase at: first = 0, rising, < bars, max 3');
-    eq(ph[0], { at: 0, rules: [{ id: 'atkUp', v: 40 }, { id: 'regen', v: 3 }], fx: [], spot: '' }, 'phase 1: dup dropped, max 2, bad value → default, no fx/spot');
+    eq(ph.map(p => p.at), [0, 2, 4], 'phase at: first = 0, rising, < bars');
+    eq(ph[0], { at: 0, rules: [{ id: 'atkUp', v: 40 }, { id: 'regen', v: 3 }, { id: 'aoe', v: 40 }], fx: [], spot: '' }, 'phase 1: dup dropped, no rule limit (set 71), bad value → default, no fx/spot');
     eq(ph[1], { at: 2, rules: [{ id: 'randomSilence', v: 5, v2: 4 }, { id: 'tribeWeak', v: 60, tribe: 'อสูร' }], fx: [{ id: 'armorBar', v: 80 }], spot: '' }, 'phase 2: v2 clamp, tribe, fx dedup, bad spot');
     eq(ph[2].rules, [{ id: 'curse', v: 15, v2: 50 }], 'phase 3: none dropped, defaults');
+    // Set 71: more than 3 phases (≤ bars) · bar sizes % (whole numbers, add up to 100, one per bar) · boss armorHit/healHit
+    { const b = cleanStage({ bosses: [{ id: 'B1', bars: 6, barPct: [40, 20, 10, 10, 10, 10], armorHit: 5, healHit: 3, phases: [0, 1, 2, 3, 4, 5].map(at => ({ at, rules: [] })) }] }).bosses[0];
+      eq([b.phases.length, b.barPct, b.armorHit, b.healHit], [6, [40, 20, 10, 10, 10, 10], 5, 3], 'many phases + bar % + armor/heal per hit');
+      eq(barSizes(b, 1000), [400, 200, 100, 100, 100, 100], 'bar sizes from %');
+      eq(barSizes({ bars: 3, barPct: [] }, 100), [34, 33, 33], 'equal bars: first holds remainder');
+      for (const bad of [[50, 50], [50, 30, 10, 10, 0, 0], [60, 20, 10, 10, 10, -10], [40.5, 19.5, 10, 10, 10, 10], 'x'])
+        eq(cleanStage({ bosses: [{ id: 'B1', bars: 6, barPct: bad }] }).bosses[0].barPct, [], 'bad bar % → equal'); }
     for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
     eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
     { const c = cleanStage({ bosses: [{ id: 'B1', spot: 'c100001' }, { id: 'B2', spot: 'm110000' }, { id: 'B3', spot: 'm100000' }, { id: 'B4', spot: 'c000000' }] });
