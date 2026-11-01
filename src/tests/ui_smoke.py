@@ -370,6 +370,11 @@ with sync_playwright() as p:
         pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-5',level:1}; simTeam[1][0][0]={id:'HL-6',level:3}; renderSimTeams()")
         pg.click('#simRun'); pg.click('#simSkip')
         chk('เรียก' in pg.text_content('#simLog'),'summon shown in log')
+        # ชุด 67: บอสยืนหลายช่อง = ชื่อบอสขึ้นทุกช่องที่ยืน (การ์ด 1 ช่อง + ป้ายชื่อช่องที่เหลือ) · แตะป้าย = เลือกบอส
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:1}; renderSimTeams(); document.getElementById('simFoeBoss').click(); document.getElementById('simRun').click()")
+        bc=pg.evaluate("(()=>{const v=[...simView.units.values()].find(x=>x.cells); return v ? [v.cells.length, document.querySelectorAll('#simArena .boss-tag').length, [...document.querySelectorAll('#simArena .boss-tag .uname')].every(t=>t.textContent===v.name)] : null;})()")
+        chk(bc is not None and bc[0]>1 and bc[1]==bc[0]-1 and bc[2],'boss name on every cell '+str(bc))
+        pg.evaluate("document.getElementById('simFoeTeam').click()")
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
         pg.evaluate("simTeam=emptySim(); simTeam[1][0][0]={id:'HL-1',level:1}; saveSim(); renderSimTeams(); dock.side=0; renderDock()")
         pg.fill('#dockQ','PL-3'); chk(pg.eval_on_selector_all('#dockList .dk-item','e=>e.length')==1,'dock search filters')

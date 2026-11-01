@@ -212,6 +212,12 @@ export const TESTS_BOSS = [
     const hta = equipRunes(team, [{ r: mkRune('hpToArmorHit', { hpPct: 50, rate: 2, scope: 'one' }), slot: [0, 0] }]).units[0];
     eq([hta.maxHp, hta.armorHit], [500, 10], 'แลก HP 50% เป็นเกราะ/ฮิต 2% ของที่ลด');
   }],
+  ['ชุด 67: ช่องที่บอสยืนอยู่ในเหตุการณ์เริ่ม (หน้าภาพใส่ชื่อทุกช่อง) · ตัวปกติไม่มี', () => {
+    const r = bossFight([dummy('A')], [u('A', 0, 0)], boss());
+    const st = r.events[0].units;
+    eq(st.find(x => x.side === 1).cells, [0, 1, 2, 3, 4, 5], 'บอส spot all = 6 ช่อง');
+    eq(st.find(x => x.side === 0).cells, undefined, 'ตัวปกติไม่มี cells');
+  }],
   ['รูนที่เป็นเรื่องของ run (เงิน/ร้าน/ส่องทีม) ไม่มีผลในสนามรบ และถูกรายงานกลับ', () => {
     const cs = [dummy('A')];
     const m = makeCharMap(cs), team = buildTeam([u('A', 0, 0)], m);

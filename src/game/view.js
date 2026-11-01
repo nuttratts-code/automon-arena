@@ -124,8 +124,23 @@ export class BattleView {
       const m0 = c && Array.isArray(c.multi) ? c.multi[(u.level || 1) - 1] : 1;
       const v = { ...u, hp: u.hp, armor: u.armor, burn: 0, shock: 0, multi: Number.isInteger(m0) ? m0 : 1, down: false, card, cell, hpFill, armorFill, hpText, armorText, burnEl: burn, shockEl: shock, multiEl: multi };
       this.units.set(u.uid, v);
+      if (u.cells) this.placeCells(v, u.cells);
       this.paint(v);
       return v;
+    }
+  }
+
+  // ชุด 67: บอสยืนหลายช่อง → การ์ดอยู่ช่องแรก ช่องที่เหลือมีป้ายชื่อบอส (ย้ายที่/เปลี่ยนจุดยืน = วางใหม่)
+  placeCells(v, cells) {
+    for (const t of v.tags || []) t.remove();
+    v.tags = []; v.cells = cells.slice();
+    const at = i => this.root.querySelector(`[data-key="${v.side}:${i >> 1}:${i & 1}"]`);
+    const first = at(cells[0]);
+    if (first && first !== v.cell) { first.append(v.card); v.cell = first; v.row = cells[0] >> 1; v.lane = cells[0] & 1; this.pos = null; }
+    for (const i of cells.slice(1)) {
+      const c = at(i); if (!c) continue;
+      const tag = el('div', 'boss-tag'); tag.append(el('div', 'uname', v.name));
+      c.append(tag); v.tags.push(tag);
     }
   }
 
@@ -140,6 +155,7 @@ export class BattleView {
     v.burnEl.hidden = !(v.burn > 0); v.shockEl.hidden = !(v.shock > 0);
     v.multiEl.textContent = v.multi > 1 ? `×${v.multi}` : ''; v.multiEl.hidden = !(v.multi > 1); // ×1 ไม่แสดง
     v.card.classList.toggle('down', v.down);
+    for (const t of v.tags || []) t.classList.toggle('down', v.down);
   }
 
   // ชุด 30.4: มัลติฮิตแสดงเป็นการพุ่ง 1 ครั้ง + ตัวเลขดาเมจรวม 1 อัน (เลข HP ยังตรงตามจริงทุกฮิต)
@@ -226,6 +242,8 @@ export class BattleView {
       case 'atkUp': this.wantLog && this.onLog(`${s} ${this.name(e.to)} พลังโจมตี +${e.amount}`); break;
       case 'cdCut': this.wantLog && this.onLog(`${s} ${this.name(e.to)} คูลดาวน์ลด ${e.ms / 1000} วิ`); break;
       case 'cdPct': this.wantLog && this.onLog(`${s} ${this.name(e.to)} คูลดาวน์ −${e.pct}% ทั้งแมตช์`); break;
+      case 'bossMove': { const v = this.units.get(e.who); if (v) this.placeCells(v, [e.slot]); break; }
+      case 'phase': { const v = this.units.get(e.who); if (v && e.cells) this.placeCells(v, e.cells); break; }
       case 'proc': if (this.onProc) this.onProc(e, s, this.name(e.who)); break; // หน้าที่รู้จักสกิลเขียนข้อความเอง
       case 'maxhp': { const v = this.units.get(e.to); v.maxHp = e.maxHp; v.hp = Math.min(v.hp, e.hp); this.float(v, `HP สูงสุด −${e.amount}`, 'n-hit'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด −${e.amount} (เหลือ ${e.maxHp})`); break; }
       case 'carry': this.wantLog && this.onLog(`${s} ${this.name(e.by)} พา ${this.name(e.who)} ไปตี ${this.name(e.target)}`); break; // ชุด 20

@@ -93,3 +93,6 @@ td.wrap { white-space: normal; min-width: 240px; }
 .stage .float { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font: 600 .8rem var(--f-mono); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px var(--arena), 0 0 3px var(--arena); z-index: 2; }
 .stage .float.n-skill { font: 600 .68rem var(--f-body); color: var(--accent); top: 6%; }
 .n-hit { color: var(--n-hit); } .n-shock { color: var(--n-shock); } .n-burn { color: var(--n-burn); } .n-heal { color: var(--n-heal); } .n-armor { color: var(--n-armor); } .n-storm { color: var(--n-storm); }
+/* ชุด 67: ช่องที่บอสยืนเพิ่ม (นอกจากช่องการ์ด) แสดงชื่อบอส */
+.stage .boss-tag { display: grid; justify-items: center; cursor: pointer; width: 100%; box-sizing: border-box; align-content: center; min-height: 100%; border: 1px dashed currentColor; border-radius: 6px; opacity: .8; padding: 4px; }
+.stage .boss-tag.down { opacity: .35; filter: grayscale(1); }

@@ -245,7 +245,7 @@ makeDraggable($('simStageBox'), '#simArena .cell, #simBench .bcell', 'key', c =>
     simPick = null;
     if (!isBench(k)) $('presetSide').value = String(k.side); // ชุด 30.2: ทีมที่เซฟเลือกฝั่งตามตัวที่แตะ
     if (!isBench(k) && dock.side !== k.side) { dock.side = k.side; saveDock(); renderDock(); } // ชุด 35: แผงค้นหาลงฝั่งเดียวกับช่องที่แตะ
-    if (simShowingBattle && !isBench(k)) { const u = unitsOf(simLast.r).filter(y => y.side === k.side && y.row === k.row && y.lane === k.lane).pop(); simPick = u ? u.uid : null; }
+    if (simShowingBattle && !isBench(k)) { const ix = k.row * 2 + k.lane, u = unitsOf(simLast.r).filter(y => y.side === k.side && y.row === k.row && y.lane === k.lane).pop() || [...simView.units.values()].find(y => y.side === k.side && y.cells && y.cells.includes(ix)); simPick = u ? u.uid : null; }
     if (x && current !== x.id) setCurrent(x.id); // ชุด 30.1: แตะตัวในหน้าลองสู้ → ตัวที่แก้เปลี่ยนตามเสมอ
     renderSimInfo();
   },
