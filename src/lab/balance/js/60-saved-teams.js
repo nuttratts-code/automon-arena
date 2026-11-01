@@ -28,6 +28,7 @@ function renderPresets() {
     for (const sd of [0, 1]) {
       const b = el('button', '', `ใส่ทีม${sd ? 'ขวา' : 'ซ้าย'}`); b.type = 'button'; b.dataset.load = String(sd);
       b.addEventListener('click', () => {
+        if (sd === 1 && simFoeBoss) { simFoeBoss = false; renderSimBoss(); } // set 68: ใส่ทีมขวา = กลับเป็นโหมดทีม vs ทีม
         simTeam[sd] = [0, 1, 2].map(() => [null, null]);
         for (const u of p.units) simTeam[sd][u.row][u.lane] = { id: u.id, level: u.level };
         simSel = null; saveSim(); renderSimTeams(); simChanged(); presetMsg(`ใส่ "${p.name || `ทีม ${i + 1}`}" ลงทีม${sd ? 'ขวา' : 'ซ้าย'}แล้ว`);

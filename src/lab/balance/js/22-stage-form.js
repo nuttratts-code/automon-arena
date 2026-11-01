@@ -271,8 +271,17 @@ function bossPhaseForms(bs, base, grp) {
   bs.phases.forEach((p, i) => {
     const bp = (base.phases || [])[i], id = `stg-${bs.id}-p${i}`, kids = [];
     if (i) {
-      const lo = bs.phases[i - 1].at + 1, hi = (bs.phases[i + 1] ? bs.phases[i + 1].at : bs.bars) - 1;
-      kids.push(fld('เริ่มเมื่อแถบหายไป', stageNum(`${id}-at`, p.at, bp ? bp.at : p.at, lo, hi, v => { p.at = Math.round(v); })));
+      // set 68 fix: เดิมเพดาน = เฟสถัดไป − 1 → พิมพ์ 10 แล้วถูกตัดเหลือเลขเล็ก (เหมือน 0 หาย) · ตอนนี้เพดาน = แถบทั้งหมดที่เหลือพอให้เฟสหลังๆ
+      // เฟสถัดไปที่ชนกันจะเลื่อนตามให้เอง · ใส่เกินแถบที่มี = บอกว่าต้องเพิ่มจำนวนแถบก่อน
+      const lo = bs.phases[i - 1].at + 1, hi = bs.bars - (bs.phases.length - i);
+      const atIn = numInput(`${id}-at`, p.at, bp ? bp.at : p.at, x => {
+        const y = Math.min(hi, Math.max(lo, Math.round(x)));
+        p.at = y; for (let j = i + 1; j < bs.phases.length; j++) bs.phases[j].at = Math.max(bs.phases[j].at, bs.phases[j - 1].at + 1);
+        stageChanged(); renderStage();
+        if (y !== Math.round(x)) { const n = $(`${id}-at`); if (n) { const say = n.closest('.fld') || n.parentNode; say.append(el('span', 'was', x > hi ? ` ใส่ได้สูงสุด ${hi} · บอสมี ${bs.bars} แถบ${bs.phases.length - i > 1 ? ` และต้องเหลือแถบให้อีก ${bs.phases.length - i - 1} เฟสถัดไป` : ''} · อยากได้มากกว่านี้ให้เพิ่ม "แถบสีเลือด" ก่อน` : ` ต้องมากกว่าเฟสก่อน (${lo - 1})`)); } }
+      });
+      atIn.min = lo; atIn.max = hi;
+      kids.push(fld('เริ่มเมื่อแถบหายไป', atIn));
       const sc = document.createElement('input'); sc.type = 'checkbox'; sc.id = `${id}-spoton`; sc.checked = !!p.spot;
       sc.addEventListener('change', () => { p.spot = sc.checked ? bs.spot : ''; stageChanged(); renderStage(); });
       const sl = el('label', 'sw', ''); sl.append(sc, el('span', '', 'เปลี่ยนที่ยืน'));

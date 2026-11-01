@@ -1,6 +1,6 @@
 // ---------- ลองสู้บอส + ใส่รูนให้ทีมซ้าย (ชุด 66 · phase 2a) ----------
 // ใช้ข้อมูลบอส/รูนที่กำลังแก้อยู่ในแท็บ "รูน / บอส" (stageCfg) ทันที ไม่ต้องบันทึกก่อน
-let simFoeBoss = false, simBossId = '', simBossK = 1, simRunes = [], simRunePickId = '', simRuneSlotKey = '', simRunePartnerKey = '', simRuneN = 1;
+let simBossId = '', simBossK = 1, simRunes = [], simRunePickId = '', simRuneSlotKey = '', simRunePartnerKey = '', simRuneN = 1;
 const simBossOf = () => stageCfg.bosses.find(b => b.id === simBossId) || stageCfg.bosses.find(b => b.on) || stageCfg.bosses[0] || null;
 const simRuneAll = () => [...Object.entries(stageCfg.runes).map(([id, r]) => ({ ...r, id })), ...stageCfg.custom.map(r => ({ ...r }))].filter(runeActive);
 const simRuneOf = id => simRuneAll().find(r => r.id === id) || null;
@@ -83,9 +83,11 @@ function renderSimRunes() {
     return line;
   }) : [cell('ยังไม่ได้ใส่รูน', 'was')]));
 }
-$('simFoeTeam').addEventListener('click', () => { if (!simFoeBoss) return; simFoeBoss = false; markSimStale(); renderSimBoss(); });
-$('simFoeBoss').addEventListener('click', () => { if (simFoeBoss) return; simFoeBoss = true; markSimStale(); renderSimBoss(); });
-$('simBossPick').addEventListener('change', () => { simBossId = $('simBossPick').value; markSimStale(); renderSimBoss(); });
-$('simBossK').addEventListener('change', () => { simBossK = Math.max(1, Math.round(+$('simBossK').value) || 1); markSimStale(); renderSimBoss(); });
+// เปลี่ยนฝั่งขวา/บอส/ด่าน → สนามกลับเป็นหน้าจัดทีม แสดงบอสตัวที่เลือกจริง (เดิมยังโชว์ทีมขวาที่ซ่อนอยู่)
+const simFoeChanged = () => { markSimStale(); renderSimBoss(); if (simFoeBoss && simSel && simSel.side === 1) simSel = null; renderSimPreview(); markSimSel(); renderSimSlotBar(); };
+$('simFoeTeam').addEventListener('click', () => { if (!simFoeBoss) return; simFoeBoss = false; simFoeChanged(); });
+$('simFoeBoss').addEventListener('click', () => { if (simFoeBoss) return; simFoeBoss = true; simFoeChanged(); });
+$('simBossPick').addEventListener('change', () => { simBossId = $('simBossPick').value; simFoeChanged(); });
+$('simBossK').addEventListener('change', () => { simBossK = Math.max(1, Math.round(+$('simBossK').value) || 1); simFoeChanged(); });
 $('tab-sim').addEventListener('click', () => { renderSimBoss(); renderSimRunes(); });
 renderSimBoss(); renderSimRunes();
