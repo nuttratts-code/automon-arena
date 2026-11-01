@@ -41,13 +41,17 @@ function renderSimPreview() {
   const m = makeCharMap(chars); ensureSimView(m);
   if (simView.playing) simView.pause();
   const units = []; let uid = 0;
-  for (const side of [0, 1]) for (let row = 0; row < 3; row++) for (let lane = 0; lane < 2; lane++) {
+  for (const side of simFoeBoss ? [0] : [0, 1]) for (let row = 0; row < 3; row++) for (let lane = 0; lane < 2; lane++) {
     const x = simTeam[side][row][lane]; const c = x && m[x.id]; if (!c) continue;
     const hp = c.hp[x.level - 1]; units.push({ uid: uid++, side, row, lane, id: c.id, name: c.name, level: x.level, hp, maxHp: hp, armor: 0 });
   }
+  // set 68: โหมดบอส = ฝั่งขวาวาดบอสตัวที่เลือก (ทุกช่องที่ยืน) แทนทีมขวาที่เก็บไว้
+  const bs = simFoeBoss ? simBossOf() : null;
+  if (bs) { const bu = bossUnit(bs, simBossK), bc = simBossChar(); m[bs.id] = bc; simView.charMap = m;
+    units.push({ uid: uid++, side: 1, row: bu.row, lane: bu.lane, id: bs.id, name: bc.name, level: 1, hp: bu.hp, maxHp: bu.maxHp, armor: bu.startArmor || 0, cells: bu.move ? [bu.slots[0]] : bu.slots.slice() }); }
   simView.onProc = null;
   simView.load({ events: [{ t: 0, k: 'start', units, tribes: [{}, {}] }], timeMs: 0, winner: null, units: [] });
-  for (const cellEl of $('simArena').querySelectorAll('.cell')) if (!cellEl.querySelector('.unit')) cellEl.append(el('span', 'tplus', '+'));
+  for (const cellEl of $('simArena').querySelectorAll('.cell')) if (!cellEl.querySelector('.unit, .boss-tag') && !(simFoeBoss && cellEl.dataset.key && cellEl.dataset.key[0] === '1')) cellEl.append(el('span', 'tplus', '+'));
   simShowingBattle = false;
   $('simArena').closest('.stage').classList.add('setup');
   $('simOver').hidden = true; $('simPlay').disabled = true; $('simPlay').textContent = 'เล่น'; $('simClock').textContent = '0.0 วิ';
@@ -159,7 +163,7 @@ function makeDraggable(root, selector, keyAttr, canDrag, onTap, onDrop) {
 function dragToSlot(src, itemSel, idOf, allowed) {
   const TGT = '#simArena .cell, #simBench .bcell';
   let st = null;
-  const keyIn = c => { const k = keyOf(c.dataset.slot || c.dataset.key || ''); return validKey(k) ? k : null; };
+  const keyIn = c => { const k = keyOf(c.dataset.slot || c.dataset.key || ''); return validKey(k) && !simBossSide(k) ? k : null; };
   const reset = () => { if (!st) return; clearTimeout(st.timer); document.body.classList.remove('nosel'); st.c.classList.remove('lifted'); if (st.over) st.over.classList.remove('dropok'); if (st.ghost) st.ghost.remove(); st = null; };
   src.addEventListener('pointerdown', e => {
     const c = itemSel ? e.target.closest(itemSel) : src;
@@ -240,6 +244,13 @@ renderDock();
 makeDraggable($('simStageBox'), '#simArena .cell, #simBench .bcell', 'key', c => !!c.querySelector('.unit, .tunit'),
   k => {
     if (!validKey(k)) return;
+    if (simBossSide(k)) { // set 68: ฝั่งขวาเป็นบอส · ไม่เลือกช่อง/ไม่เปลี่ยนตัวที่แก้ตามทีมขวาที่ซ่อนอยู่
+      simSel = null; markSimSel(); renderSimSlotBar();
+      const ix = k.row * 2 + k.lane, u = simShowingBattle ? [...simView.units.values()].find(y => y.side === 1 && (y.cells ? y.cells.includes(ix) : y.row === k.row && y.lane === k.lane)) : null;
+      simPick = u ? u.uid : null; renderSimInfo();
+      if (!simShowingBattle) $('simMsg').textContent = 'ฝั่งขวาเป็นบอส · เปลี่ยนบอส/ด่านที่ปุ่มด้านบน หรือกด "ทีม" เพื่อจัดทีมขวา';
+      return;
+    }
     simSel = k; markSimSel(); renderSimSlotBar();
     const x = slotGet(k);
     simPick = null;
@@ -249,7 +260,7 @@ makeDraggable($('simStageBox'), '#simArena .cell, #simBench .bcell', 'key', c =>
     if (x && current !== x.id) setCurrent(x.id); // ชุด 30.1: แตะตัวในหน้าลองสู้ → ตัวที่แก้เปลี่ยนตามเสมอ
     renderSimInfo();
   },
-  (a, b) => { if (validKey(a) && validKey(b) && simSwap(a, b)) { simSel = b; slotEdited(a, b); } });
+  (a, b) => { if (validKey(a) && validKey(b) && !simBossSide(a) && !simBossSide(b) && simSwap(a, b)) { simSel = b; slotEdited(a, b); } });
 $('simClear').addEventListener('click', () => { simTeam = emptySim(); simTeam[0][0][0] = { id: current, level: 1 }; saveSim(); renderSimTeams(); $('simRes').hidden = true; $('simSum').hidden = true; });
 $('simRand').addEventListener('click', () => {
   const rng = makeRng((Date.now() & 0xffff) + 7);
@@ -319,6 +330,7 @@ $('simCode').addEventListener('click', () => {
 // ใส่ตัวลงช่องว่างแรกของฝั่ง (เริ่มจากแถวที่แนะนำ) · คืนช่องที่ใส่ หรือ null ถ้าเต็ม
 function addToSide(id, side) {
   const c = charOf(id); if (!c || !chars.some(x => x.id === id)) return null;
+  if (simFoeBoss && side === 1) { $('simMsg').textContent = 'ฝั่งขวาเป็นบอสอยู่ · กด "ทีม" ก่อนถ้าจะใส่ตัวฝั่งขวา'; return null; }
   const r0 = rowsOfHint(c.rowHint).length < 3 ? rowsOfHint(c.rowHint)[0] ?? 0 : 0;
   const free = [[r0, 0], [r0, 1], ...[0, 1, 2].flatMap(x => [[x, 0], [x, 1]])].find(([a, b]) => !simTeam[side][a][b]);
   if (!free) { $('simMsg').textContent = `ทีม${side ? 'ขวา' : 'ซ้าย'}เต็มแล้ว`; return null; }
