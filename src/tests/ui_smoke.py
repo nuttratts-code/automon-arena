@@ -1,5 +1,4 @@
 # ทดสอบหน้าเว็บจริงด้วย Chromium (Playwright): python3 -I tests/ui_smoke.py <โฟลเดอร์ที่มีไฟล์ .html> <โฟลเดอร์รูป>
-import json
 import sys, json, os
 from playwright.sync_api import sync_playwright
 D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
