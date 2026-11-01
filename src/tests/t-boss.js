@@ -243,4 +243,12 @@ export const TESTS_BOSS = [
     const r2 = bossFight([d], [u('D', 0, 0)], boss({ hp: 1000 }));
     eq(ev(r2, 'cleanse', e => e.what === 'bar').length, 0, 'แถบไม่หมด = ไม่ล้าง');
   }],
+  ['บอส: ตี 1 ครั้งเข้า HP ได้ไม่เกินที่เหลือในแถบปัจจุบัน (ส่วนเกินหาย ไม่ทะลุแถบถัดไป · ชุด 70)', () => {
+    const r = bossFight([hitter('H', 900)], [u('H', 0, 0)], boss());
+    const d = ev(r, 'dmg', e => e.to === bossUid(r) && e.why === 'skill');
+    eq(d[0].amount, 200, 'ฮิต 900 เข้าแค่ 200 (เต็มแถบแรก)');
+    eq(ev(r, 'bar').length, 1, 'หมดแค่ 1 แถบ');
+    const one = bossFight([hitter('H', 900)], [u('H', 0, 0)], boss({ bars: 1 }));
+    eq(ev(one, 'dmg', e => e.why === 'skill')[0].amount, 900, 'บอสแถบเดียว = ไม่จำกัด');
+  }],
 ];

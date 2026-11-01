@@ -332,7 +332,11 @@ export function simulate(teamA, teamB, opts = {}) {
         trigger(target, 'armorBreak', { amount: before, attacker: src && src.side !== target.side ? src : null });
       }
     }
-    const loss = amount - absorbed;
+    let loss = amount - absorbed;
+    if (target.boss && target.bars > 1 && loss > 0) { // ชุด 70: 1 ฮิตเข้า HP ได้ไม่เกินที่เหลือในแถบปัจจุบัน (ส่วนเกินหาย ไม่ทะลุแถบถัดไป · ทุกชนิดดาเมจ)
+      const left = target.hp - (Math.ceil(target.hp / target.barHp) - 1) * target.barHp;
+      if (loss > left) { loss = Math.max(0, left); amount = absorbed + loss; }
+    }
     const wasAbove = target.hp * 2 >= target.maxHp;
     target.hp -= loss;
     target.taken += amount;
