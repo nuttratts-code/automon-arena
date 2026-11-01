@@ -299,7 +299,11 @@ function bossPhaseStats(bs, p, i, id) {
   }
   const sel = document.createElement('select'); sel.id = `${id}-st-add`; sel.className = 'rule-add';
   sel.append(new Option('+ เปลี่ยนค่าบอส… (เช่น ตีแรงขึ้น)', ''));
-  for (const [k, label] of BOSS_PHASE_STATS) if (!(k in p.stats)) sel.append(new Option(`${label} (ตอนนี้ ${show(k, before[k])})`, k));
+  for (const [glabel, ks] of BOSS_STAT_GROUPS) {
+    const g = document.createElement('optgroup'); g.label = glabel;
+    for (const [k, label] of BOSS_PHASE_STATS) if (ks.includes(k) && !(k in p.stats)) g.append(new Option(`${label} (ตอนนี้ ${show(k, before[k])})`, k));
+    if (g.children.length) sel.append(g);
+  }
   sel.disabled = sel.options.length <= 1;
   sel.addEventListener('change', () => { const k = sel.value; if (!k) return; p.stats[k] = before[k] || (k === 'multi' ? 1 : 0); stageChanged(); renderStage(); });
   kids.push(fld('', sel, 'full'));
@@ -336,7 +340,8 @@ function bossPhaseForms(bs, base, grp) {
       const br = bp && bp.rules.find(z => z.id === r.id), box = el('div', 'rule-box', ''), head = el('div', 'rule-head', '');
       const x = el('button', 'rule-x', '✕'); x.type = 'button'; x.id = `${id}-r${k}-del`; x.title = 'เอากฎนี้ออก'; x.setAttribute('aria-label', `เอากฎ ${q[1]} ออก`);
       x.addEventListener('click', () => { p.rules.splice(k, 1); stageChanged(); renderStage(); });
-      head.append(el('span', 'rule-n', String(k + 1)), el('span', 'rule-name', q[1]), x);
+      const nm = el('span', 'rule-name', ''); nm.append(el('span', 'rule-cat', bossRuleGroup(r.id)), document.createElement('br'), q[1]);
+      head.append(el('span', 'rule-n', String(k + 1)), nm, x);
       const vals = [];
       if (q[4]) vals.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-r${k}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
       if (Array.isArray(q[6])) vals.push(fld(`${q[6][0]} (${q[6][4]})`, stageNum(`${id}-r${k}-v2`, r.v2, br ? br.v2 : q[6][1], q[6][2], q[6][3], v => { r.v2 = v; })));
@@ -346,6 +351,13 @@ function bossPhaseForms(bs, base, grp) {
     });
     if (!p.rules.length) kids.push(el('p', 'fld full mute', 'ยังไม่มีกฎในเฟสนี้'));
     kids.push(fld('', bossRuleAdd(`${id}-add`, p.rules.map(r => r.id), v => { p.rules.push(bossRule(v)); stageChanged(); renderStage(); }), 'full'));
+    if (i) { // เฟสใหม่ใช้กฎของตัวเองแทนกฎเดิม → ปุ่มคัดลอกกฎเฟสก่อนมาก่อน แล้วค่อยแก้/เพิ่ม
+      const prev = bs.phases[i - 1].rules.filter(r => !p.rules.some(z => z.id === r.id));
+      const cp = el('button', 'rule-copy', `คัดลอกกฎจากเฟส ${i}${prev.length ? ` (${prev.length} ข้อ)` : ''}`); cp.type = 'button'; cp.id = `${id}-copy`; cp.disabled = !prev.length;
+      cp.title = 'กฎของเฟสใหม่แทนกฎเดิมทั้งหมด · อยากให้กฎเดิมยังอยู่ ให้คัดลอกมา';
+      cp.addEventListener('click', () => { for (const r of prev) p.rules.push({ ...r }); stageChanged(); renderStage(); });
+      kids.push(cp);
+    }
     if (i) BOSS_PHASE_FX.forEach((f, j) => {
       const on = p.fx.find(z => z.id === f[0]), c = document.createElement('input'); c.type = 'checkbox'; c.id = `${id}-fx-${f[0]}`; c.checked = !!on;
       c.addEventListener('change', () => { if (c.checked) p.fx.push({ id: f[0], v: f[2] }); else p.fx = p.fx.filter(z => z.id !== f[0]); stageChanged(); renderStage(); });

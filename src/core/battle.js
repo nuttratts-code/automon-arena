@@ -136,7 +136,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // บอส = นักสู้ตัวเดียวที่ยืนหลายช่อง (ผู้ใช้เลือก Q1 A) · สกิลที่เล็งแถว/เลนเจอบอสเมื่อช่องใดช่องหนึ่งตรง และโดนครั้งเดียวต่อการใช้สกิล
   // กฎของเฟสปัจจุบันอยู่ใน BR (id → { v, v2, tribe }) · ทีมปกติไม่มีบอส = ทุกตัวช่วยคืนค่ากลาง ผลเหมือนเดิมทุกประการ
   const BOSS = F.find(f => f.boss) || null;
-  let BR = Object.create(null), phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, curseQ = null, stormAt = R.stormStartMs;
+  let BR = Object.create(null), phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, stunT = 0, drainT = 0, cdpT = 0, shieldT = 0, cleanT = 0, curseQ = null, stormAt = R.stormStartMs;
   const TICKSK = F.some(f => f.skills.some(s => s.when === 'tick')); // รูนที่ทำงานทุก x วินาที (ฮีลเป็นช่วง) · ไม่มี = ข้ามทั้งก้อน
   const rule = id => (BOSS ? BR[id] : null);
   const inLane = (f, lane) => (f.cells ? f.cells.some(i => (i & 1) === lane) : f.lane === lane);
@@ -344,6 +344,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (src) src.dealt += amount;
     if (BOSS && target.boss && amount > 0) { // R8 ดูดเลือด (ไม่เกินแถบปัจจุบัน) · E7 สะท้อนดาเมจกลับ (ของที่สะท้อนไม่สะท้อนต่อ)
       if (BR.lifesteal) bossHeal(amount * BR.lifesteal.v / 100);
+      if (BR.thorns && src && !src.boss && why === 'hit' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: BR.thorns.v, why: 'reflect' }, ctx: { attacker: src } }); // R32 หนาม
       if (BR.reflect && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect' }, ctx: { attacker: src } });
     }
     target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำ down = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
@@ -587,7 +588,8 @@ export function simulate(teamA, teamB, opts = {}) {
     const atkP = pow != null && pow !== 100 ? Math.max(1, Math.floor(atk0 * pow / 100)) : atk0; // R4 ตีโดนทุกตัว % · รูนคู่หู % ของการโจมตีปกติ
     const ha = hitAmpOf(a); // ชุด 66: รูนที่เปลี่ยนตามสถานการณ์ (เพื่อน down / เหลือตัวเดียว)
     const atk = ha || tg.dmgTakenAmp ? Math.floor(atkP * amp(ha) * amp(tg.dmgTakenAmp)) : atkP; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
-    const absorbed = hurt(tg, atk, a, false, 'hit', detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: ha, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
+    const absorbed = hurt(tg, atk, a, !!(BOSS && a.boss && BR.pierce), 'hit', // R31 บอสตีทะลุเกราะ
+      detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: ha, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
     if (tg.avoidedAt === t && tg.avoidedBy === a) return; // รูนเลี่ยงจุดตาย: ยกเลิกทั้งฮิต (ดาเมจ ไฟ ช็อต)
     let taken = atk;
     if (tg.shock > 0 && up(tg)) { const sd = Math.floor(tg.shock * amp(a.shockAmp) * amp(tg.shockTaken)); hurt(tg, sd, a, true, 'shock', detailOn ? { shock: tg.shock, amp: a.shockAmp, tribeAmp: a.shockAmpT || 0, takenAmp: tg.shockTaken } : null); taken += Math.max(0, sd); } // ช็อต: ดาเมจจริงเต็มค่าทุกฮิต · ชุด 34: ตีแบ่งหารเฉพาะค่าของผู้ตี ช็อตบนเป้าแตกเต็มค่า
@@ -655,7 +657,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (BR.rowSwap) for (const x of F) if (!x.boss) { if (x.row === 0) x.row = 2; else if (x.row === 2) x.row = 0; } // R19
     if (BR.earlyStorm) stormAt = Math.min(stormAt, t); // R21
     if (BR.tribeOff) for (const x of F) if (!x.boss) x.tb = {}; // E5 ปิดโบนัสเผ่าที่ทำงานระหว่างสู้ (ค่าที่ได้ตอนเริ่มยังอยู่)
-    barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = t;
+    barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = stunT = drainT = cdpT = shieldT = cleanT = t;
     log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id), ...(p.stats && Object.keys(p.stats).length ? { stats: { ...p.stats } } : {}), ...(p.spot && spotCells(p.spot) ? { cells: BOSS.cells.slice() } : {}) });
   }
   // ชุด 69 (user 1 Nov): บอสขึ้นแถบใหม่ = ล้างดีบัฟทุกอย่างที่ศัตรูใส่ไว้ (ไฟ ช็อต ไฟไม่ลด มึนงง แช่แข็ง คูลดาวน์ช้าลง
@@ -681,6 +683,7 @@ export function simulate(teamA, teamB, opts = {}) {
       log('bar', { who: BOSS.uid, gone: barsGone, left: BOSS.bars - barsGone });
       const ctx = { downed: BOSS, burn: BOSS.burn, shock: BOSS.shock, attacker: BOSS.lastHitBy };
       bossBarCleanse();
+      if (BR.barBlast) for (const x of enemies(BOSS)) hurt(x, BR.barBlast.v, BOSS, false, 'skill'); // R38 แถบหาย = บอสระเบิด (กฎของเฟสที่แถบนั้นหาย)
       for (const x of F.filter(x => !x.boss && up(x))) trigger(x, 'enemyDown', ctx);
       if (BOSS.lastHitBy && up(BOSS.lastHitBy)) trigger(BOSS.lastHitBy, 'kill', ctx);
     }
@@ -711,6 +714,11 @@ export function simulate(teamA, teamB, opts = {}) {
       const row = Math.floor(rngOf(BOSS.side).next() * 3), ms = BR.freezeRow.v2 * 1000;
       for (const x of enemies(BOSS).filter(e => e.row === row)) { x.cdLeft += ms; x.frozen += ms; buff(x, 'freeze', ms); }
     }
+    if (BR.stunPulse && t - stunT >= BR.stunPulse.v * 1000) { stunT = t; const ms = BR.stunPulse.v2 * 1000; for (const x of pickN(enemies(BOSS), 1, BOSS.side)) { x.stunLeft = Math.max(x.stunLeft, ms); buff(x, 'stun', ms); } } // R33
+    if (BR.atkDrain && t - drainT >= BR.atkDrain.v * 1000) { drainT = t; for (const x of enemies(BOSS)) { const d = Math.min(BR.atkDrain.v2, Math.max(0, x.hitAmp + 90)); if (d > 0) { x.hitAmp -= d; buff(x, 'atkDrain', d); } } } // R34 ตีเบาลงสะสม (ต่ำสุด −90%)
+    if (BR.cdPulse && t - cdpT >= BR.cdPulse.v * 1000) { cdpT = t; const ms = BR.cdPulse.v2 * 1000; for (const x of enemies(BOSS)) { x.cdLeft += ms; x.frozen += ms; buff(x, 'freeze', ms); } } // R35
+    if (BR.shieldPulse && t - shieldT >= BR.shieldPulse.v * 1000) { shieldT = t; addArmor(BOSS, BOSS.barHp * BR.shieldPulse.v2 / 100, 'boss'); } // R36
+    if (BR.cleansePulse && t - cleanT >= BR.cleansePulse.v * 1000) { cleanT = t; if (BOSS.burn || BOSS.shock) { BOSS.burn = BOSS.shock = BOSS.noDecay = 0; BOSS.noDecayPerm = false; log('cleanse', { to: BOSS.uid }); } } // R37
     if (BR.vanish && t - vanT >= BR.vanish.v * 1000) { vanT = t; BOSS.noHitUntil = t + BR.vanish.v2 * 1000; log('vanish', { who: BOSS.uid, ms: BR.vanish.v2 * 1000 }); } // R27
     if (BR.dpsCheck && t - barT >= BR.dpsCheck.v * 1000) { // R28 ตีแถบไม่หมดในเวลา → แถบเต็มกลับ (ไม่กระตุ้น "ศัตรู down" ซ้ำ)
       barT = t;

@@ -7,7 +7,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
-import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, phaseStatsAt } from '../core/stage.js';
+import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, phaseStatsAt, BOSS_RULE_GROUPS, BOSS_STAT_GROUPS, BOSS_PHASE_STATS } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
@@ -42,6 +42,8 @@ export const TESTS_VALIDATE = [
       eq([phaseStatsAt(b, 0).atk, phaseStatsAt(b, 2).atk, phaseStatsAt(b, 2).multi, phaseStatsAt(b, 4).atk], [20, 40, 2, 60], 'phase stats carry over'); }
     for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
     eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
+    { const all = BOSS_RULE_GROUPS.flatMap(g => g[1]); eq(all.slice().sort(), BOSS_RULES.map(r => r[0]).filter(x => x !== 'none').sort(), 'every rule in exactly one picker group');
+      eq(BOSS_STAT_GROUPS.flatMap(g => g[1]).sort(), BOSS_PHASE_STATS.map(q => q[0]).sort(), 'every phase stat in a group'); }
     { const c = cleanStage({ bosses: [{ id: 'B1', spot: 'c100001' }, { id: 'B2', spot: 'm110000' }, { id: 'B3', spot: 'm100000' }, { id: 'B4', spot: 'c000000' }] });
       eq(c.bosses.map(b => b.spot), ['c100001', 'm110000', 'four', 'front'], 'custom spot codes: valid kept, 1-slot move / empty rejected'); }
     eq([spotCode('110000', false), spotCode('111111', true), spotCode('100001', false), spotCode('000011', true)], ['front', 'move', 'c100001', 'm000011'], 'spotCode presets');

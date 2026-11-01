@@ -281,6 +281,15 @@ export const BOSS_RULES = [
   ['dpsCheck', 'R28 ตีแถบไม่หมดในเวลานี้ แถบนั้นเต็มกลับ', 20, 3, 120, 'วิ'],
   ['curse', 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า', 15, 3, 60, 'วิ', ['เป้า (% ของ 1 แถบ)', 50, 1, 100, '%']],
   ['weakSpot', 'R30 หลังย้ายที่ บอสโดนดาเมจเพิ่ม 3 วิ (ใช้กับแบบย้ายที่)', 50, 1, 300, '%'],
+  // Set 71 (user 1 Nov "เพิ่มสิ่งที่บอสควรทำได้"): R31–R38 · all numbers ค่าเสนอ
+  ['pierce', 'R31 บอสตีทะลุเกราะ (ฮิตปกติไม่โดนเกราะกัน)', 0, 0, 0, ''],
+  ['thorns', 'R32 หนาม: ผู้เล่นตีบอส (ฮิตปกติ) โดนดาเมจกลับทุกฮิต', 3, 1, 1000, 'ดาเมจ'],
+  ['stunPulse', 'R33 ทุก X วิ สุ่มผู้เล่น 1 ตัวมึนงง', 10, 2, 60, 'วิ', ['มึนงงนาน', 2, 1, 10, 'วิ']],
+  ['atkDrain', 'R34 ทุก X วิ ผู้เล่นทุกตัวตีเบาลง (สะสม)', 10, 2, 60, 'วิ', ['เบาลงครั้งละ', 10, 1, 50, '%']],
+  ['cdPulse', 'R35 ทุก X วิ คูลดาวน์ผู้เล่นทุกตัวเพิ่ม', 12, 2, 60, 'วิ', ['เพิ่ม', 1, 1, 20, 'วิ']],
+  ['shieldPulse', 'R36 ทุก X วิ บอสได้เกราะ (% ของ 1 แถบ)', 15, 2, 60, 'วิ', ['เกราะ', 10, 1, 300, '%']],
+  ['cleansePulse', 'R37 ทุก X วิ บอสล้างไฟ/ช็อตที่ติดตัว', 8, 2, 60, 'วิ'],
+  ['barBlast', 'R38 แถบหาย 1 แถบ บอสระเบิดใส่ผู้เล่นทุกตัว', 20, 1, 10000, 'ดาเมจ'],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
@@ -294,7 +303,21 @@ export const BOSS_PHASE_FX = [
 // Set 71 (user 1 Nov): rules per phase no longer limited (each rule at most once per phase) · phases up to the bar count (≤ 20)
 export const BOSS_MAX_PHASES = 20, BOSS_MAX_RULES = 99;
 // Rule groups for the "+ เพิ่มกฎ" picker (same order as BOSS_RULES)
-export const BOSS_RULE_GROUPS = [['กฎพื้นฐาน', 1, 8], ['บอสแรงขึ้น', 8, 22], ['ผู้เล่นอ่อนลง', 22, 29], ['บอสป้องกัน', 29, 37], ['ไขปริศนา', 37, 40]].map(([label, a, b]) => [label, BOSS_RULES.slice(a, b).map(r => r[0])]);
+// Picker categories (set 71: by what the rule does · every rule except 'none' sits in exactly one group — test checks)
+export const BOSS_RULE_GROUPS = [
+  ['⚔️ บอสตีแรงขึ้น', ['atkUp', 'fastAtk', 'multiUp', 'enrage', 'desperate', 'pierce']],
+  ['🎯 เลือกเป้า / ตีหลายตัว', ['aoe', 'hunter', 'backStrike', 'execute']],
+  ['⏱️ ทำเป็นจังหวะ ทุก X วิ', ['burnAura', 'shockAura', 'randomSilence', 'freezeRow', 'stunPulse', 'atkDrain', 'cdPulse']],
+  ['⬇️ ผู้เล่นอ่อนลงตลอดเฟส', ['backSilence', 'healCut', 'armorCut', 'cdSlow', 'tribeOff', 'noArmor', 'frontBreak', 'noRevive']],
+  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'statusImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse']],
+  ['❤️ บอสฟื้นเลือด', ['lifesteal', 'regen', 'feedOnDown']],
+  ['↩️ ตอบโต้', ['reflect', 'thorns', 'barBlast']],
+  ['🌀 เปลี่ยนสนาม', ['rowSwap', 'earlyStorm']],
+  ['🧩 ไขปริศนา', ['dpsCheck', 'curse', 'weakSpot']],
+];
+export const bossRuleGroup = id => (BOSS_RULE_GROUPS.find(g => g[1].includes(id)) || [''])[0];
+// Phase-stat picker groups
+export const BOSS_STAT_GROUPS = [['⚔️ การโจมตี', ['atk', 'cdMs', 'multi']], ['🔥 ติดสถานะต่อฮิต', ['burn', 'shock']], ['🛡️ เกราะ / ฟื้นต่อฮิต', ['armorHit', 'healHit']]];
 export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
 export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '', stats: {} });
 // Set 71 (user 1 Nov): from phase 2 a phase may set new boss stats · [key in the boss record, label, min, max, whole number?]
