@@ -7,7 +7,10 @@ import { RULES } from '../core/rules.js';
 import { REPLAY_MAX, SAVE_MAX_CHARS, addMatchStats, checkPlayRecord, checkReplay, dataHash, historyEntry, makeReplays, makeSave, newStats, playRecord, pushHistory, readHistory, readReplays, readSave, replayEntry, validateRunState } from '../core/save.js';
 import { buy, endMatch, move, newRun, reroll, sell, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { applyMatchDiff, baseFingerprint, makeMatchCode, parseMatchCode } from '../lab/matchcode.js';
+import { applyMatchDiff, baseFingerprint, makeMatchCode, matchFightParts, parseMatchCode } from '../lab/matchcode.js';
+import { cleanStage, stageDefaults } from '../core/stage.js';
+import { equipRunes } from '../core/runes.js';
+import { bossUnit } from '../core/boss.js';
 import { eq, ok, randomTeam } from './helpers.js';
 export const TESTS_SAVE = [
   ['ชุด 22: เซฟ run ผ่านตัวตรวจทุกรอบ · เล่นต่อแล้วได้ร้านเดิม', () => {
@@ -160,6 +163,41 @@ export const TESTS_SAVE = [
     for (const d of [{ chars: { 'XX-1': { atk: [1, 1, 1] } }, tribes: {} }, { chars: { 'WY-4': { atk: 5 } }, tribes: {} }, { chars: { 'WY-4': { evil: 1 } }, tribes: {} }, { chars: { 'WY-4': JSON.parse('{"__proto__":{"x":1}}') }, tribes: {} }, { chars: {}, tribes: { nope: {} } }]) {
       let threw = false; try { applyMatchDiff(base, bt, d); } catch (e) { threw = true; } ok(threw, 'ค่าที่แก้แปลกต้องถูกปฏิเสธ ' + JSON.stringify(d).slice(0, 40));
     }
+  }],
+  ['set 72: match code covers boss fights + runes · replay gives the same hits · bad boss/rune parts rejected', () => {
+    const base = buildCharacterList(), bt = JSON.parse(JSON.stringify(RULES.tribeBonus)), fp = baseFingerprint(base, bt), m = makeCharMap(base);
+    const st = stageDefaults(), rec = JSON.parse(JSON.stringify(st.bosses[0]));
+    rec.bars = 6; rec.healHit = 50; rec.phases = [{ at: 0, fx: [], rules: [{ id: 'backStrike', v: 0 }], spot: '', stats: {} }, { at: 3, fx: [{ id: 'stunAll', v: 2 }], rules: [{ id: 'cdSlow', v: 40 }], spot: '', stats: { cdMs: 1500 } }];
+    const recClean = cleanStage({ bosses: [rec] }).bosses[0]; // the page holds cleaned records (stageCfg)
+    const all = [...Object.entries(st.runes).map(([id, r]) => ({ ...r, id })), ...st.custom.map(r => ({ ...r }))].filter(r => r.on && !r.del);
+    const one = all.find(r => r.scope === 'one' && r.eff !== 'link' && r.eff !== 'buddy'), wide = all.find(r => r.scope !== 'one' && r.id !== (one && one.id));
+    ok(one && wide, 'default stage has runes to equip');
+    const A = [{ id: 'WY-6', level: 3, row: 2, lane: 1 }, { id: 'WY-4', level: 3, row: 2, lane: 0 }, { id: 'PT-7', level: 2, row: 1, lane: 0 }];
+    const runes = [{ r: one, n: 1, slot: [2, 1], partner: null }, { r: wide, n: 1, slot: null, partner: null }];
+    for (const k of [1, 2]) {
+      const b = JSON.parse(JSON.stringify(recClean)), eqA = equipRunes(buildTeam(A, m), runes);
+      const r = simulate(eqA.units, [bossUnit(b, k)], { rules: RULES, seed: 9, tribesOff: [false, false], tribeExtra: eqA.tribeExtra });
+      const code = makeMatchCode({ base: fp, seed: 9, A, B: [], tribesOff: [false, false], diff: { chars: {}, tribes: {} }, result: r, boss: { rec: b, k }, runes });
+      const mc = parseMatchCode(code); eq([mc.bossK, mc.B, mc.runes.length], [k, [], 2], 'boss + runes read back');
+      const parts = matchFightParts(mc); eq(parts.boss, b, 'boss record survives the round trip');
+      eq(parts.equips.map(e => e.r), runes.map(e => e.r), 'rune records survive the round trip');
+      const eq2 = equipRunes(buildTeam(mc.A, m), parts.equips);
+      const r2 = simulate(eq2.units, [bossUnit(parts.boss, parts.k)], { rules: RULES, seed: mc.seed, tribesOff: mc.tribesOff, tribeExtra: eq2.tribeExtra });
+      eq([r2.winner, r2.timeMs, r2.events.length], [r.winner, r.timeMs, r.events.length], 'boss replay same result k ' + k);
+    }
+    // team vs team with runes only (no boss)
+    const B = [{ id: 'PL-1', level: 2, row: 1, lane: 1 }], eqT = equipRunes(buildTeam(A, m), runes);
+    const rt = simulate(eqT.units, buildTeam(B, m), { rules: RULES, seed: 4, tribeExtra: eqT.tribeExtra, tribesOff: [false, false] });
+    const mt = parseMatchCode(makeMatchCode({ base: fp, seed: 4, A, B, tribesOff: [false, false], diff: { chars: {}, tribes: {} }, result: rt, runes }));
+    const pt = matchFightParts(mt); eq([mt.bossK, pt.boss, mt.B], [0, null, B], 'runes-only code keeps the right team');
+    const good = makeMatchCode({ base: fp, seed: 1, A, B: [], tribesOff: [true, true], diff: { chars: {}, tribes: {} }, result: { winner: 0, timeMs: 1000 }, boss: { rec, k: 2 }, runes });
+    const o = JSON.parse(good.slice(8));
+    const bads = [x => { x.k = -1; }, x => { x.k = 1.5; }, x => { x.B = [['PL-1', 1, 0, 0]]; }, x => { delete x.st; }, x => { x.st.bosses = []; }, x => { x.ru = [['S1', 0, null, null]]; }, x => { x.ru = [['S1', 1, [5, 0], null]]; }, x => { x.ru = [['<x>', 1, null, null]]; }, x => { x.ru = 'S1'; }];
+    bads.forEach((f, i) => { const y = JSON.parse(JSON.stringify(o)); f(y); let threw = false; try { parseMatchCode('AMATCH1 ' + JSON.stringify(y)); } catch (e) { threw = true; } ok(threw, 'bad boss/rune code ' + (i + 1) + ' rejected'); });
+    const y = JSON.parse(JSON.stringify(o)); y.ru = [['C99', 1, null, null]];
+    let threw = false; try { matchFightParts(parseMatchCode('AMATCH1 ' + JSON.stringify(y))); } catch (e) { threw = true; } ok(threw, 'unknown rune rejected');
+    const z = JSON.parse(JSON.stringify(o)); z.st.bosses = [{ id: 'evil' }];
+    threw = false; try { matchFightParts(parseMatchCode('AMATCH1 ' + JSON.stringify(z))); } catch (e) { threw = true; } ok(threw, 'bad boss id rejected');
   }],
   ['31 Oct fuzz: random shop actions + fights · failed action never changes state · gold ≥ 0 · state/save valid every step', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars), R = makeRng(31102026), ri = n => R.int(n);
