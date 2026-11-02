@@ -306,7 +306,8 @@ function runSim(auto, fromTeamSeed) {
   const r = simulate(teamA, teamB, { rules: rulesNow(), ...(fromTeamSeed ? {} : { seed }), tribesOff: [$('simOffL').checked, $('simOffR').checked], ...(eq ? { tribeExtra: eq.tribeExtra } : {}), detail: true }); // ชุด 36: จดส่วนประกอบดาเมจให้แท็บวิเคราะห์แมตช์
   const prev = simLast && simLast.r;
   simLast = { r, m, teamKey: JSON.stringify(simTeam), bossMode: simFoeBoss,
-    code: simFoeBoss ? null : makeMatchCode({ base: BASE_FP, seed: fromTeamSeed ? 0 : seed, A, B, tribesOff: [$('simOffL').checked, $('simOffR').checked], diff: diffs(), result: r }) }; // set 39: match code for bug reports
+    code: makeMatchCode({ base: BASE_FP, seed: fromTeamSeed ? 0 : seed, A, B, tribesOff: [$('simOffL').checked, $('simOffR').checked], diff: diffs(), result: r,
+      boss: simFoeBoss ? { rec: simBossOf(), k: simBossK } : null, runes: eq ? simEquipList() : [] }) }; // set 39: match code for bug reports · set 72: boss + runes too
   $('simCodeBox').hidden = true;
   const wasStale = $('simRun').classList.contains('stale'); clearSimStale();
   // จำลองใหม่หลังแก้ค่า: บอกผลก่อนแก้เทียบกับตอนนี้ ให้เห็นทันทีว่าแรงขึ้นหรืออ่อนลง
@@ -320,7 +321,6 @@ function runSim(auto, fromTeamSeed) {
 $('simRun').addEventListener('click', () => runSim(false));
 // set 39: copy the code of the last simulated match (user pastes it in chat → Claude replays it with lab/replay.mjs --code)
 $('simCode').addEventListener('click', () => {
-  if (simLast && simLast.bossMode) { $('simMsg').textContent = 'รหัสแมตช์ยังใช้กับการสู้บอสไม่ได้ (เล่นซ้ำได้เฉพาะทีม vs ทีม)'; return; }
   if (!simLast || !simLast.code) { $('simMsg').textContent = 'กด "จำลอง" ก่อน แล้วค่อยคัดลอกรหัสแมตช์'; return; }
   const code = simLast.code, box = $('simCodeBox');
   const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); $('simMsg').textContent = 'คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง'; };

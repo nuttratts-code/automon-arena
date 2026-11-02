@@ -12,8 +12,12 @@ const simRuneNeedsPartner = r => !!r && (r.eff === 'link' || r.eff === 'buddy');
 
 // ทีมซ้ายหลังใส่รูน (ใช้ตอนจำลอง) → { units, tribeExtra, skipped }
 function simEquip(team) {
+  return equipRunes(team, simEquipList());
+}
+// equipped runes with their records (also goes into the match code, set 72)
+function simEquipList() {
   const byId = Object.fromEntries(simRuneAll().map(r => [r.id, r]));
-  return equipRunes(team, simRunes.map(x => ({ r: byId[x.id], n: x.n, slot: x.slot, partner: x.partner })).filter(x => x.r));
+  return simRunes.map(x => ({ r: byId[x.id], n: x.n, slot: x.slot, partner: x.partner })).filter(x => x.r);
 }
 // ตัวละครจำลองของบอส (ให้แผงรายละเอียด/ภาพการต่อสู้แสดงชื่อและค่าพลังได้)
 function simBossChar() {

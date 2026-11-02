@@ -9,7 +9,9 @@ import { simulate } from '../core/battle.js';
 import { makeRng } from '../core/rng.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig } from '../core/validate.js';
-import { baseFingerprint, parseMatchCode, applyMatchDiff } from './matchcode.js';
+import { baseFingerprint, parseMatchCode, applyMatchDiff, matchFightParts } from './matchcode.js';
+import { equipRunes } from '../core/runes.js';
+import { bossUnit } from '../core/boss.js';
 import fs from 'fs';
 
 const args = process.argv.slice(2);
@@ -23,7 +25,12 @@ if (args[0] === '--code') {
   if (!v.ok) throw new Error('edited values invalid: ' + v.errors.slice(0, 3).join(' | '));
   const map = makeCharMap(chars);
   ({ A, B } = mc);
-  r = simulate(buildTeam(A, map), buildTeam(B, map), { rules, ...(mc.seed ? { seed: mc.seed } : {}), tribesOff: mc.tribesOff, detail: true });
+  const fp = matchFightParts(mc); // set 72: boss fight + runes on team A
+  const eq = mc.runes.length ? equipRunes(buildTeam(A, map), fp.equips) : null;
+  const teamB = fp.boss ? [bossUnit(fp.boss, fp.k)] : buildTeam(B, map);
+  if (fp.boss) console.log(`boss ${fp.boss.id} ${fp.boss.name} · appearance ${fp.k} · bars ${fp.boss.bars} · phases ${fp.boss.phases.length}`);
+  if (eq) console.log('runes: ' + fp.equips.map(e => `${e.r.id} ${e.r.name} x${e.n}`).join(' · ') + (eq.skipped.length ? ` (run-only, skipped: ${eq.skipped.join(' ')})` : ''));
+  r = simulate(eq ? eq.units : buildTeam(A, map), teamB, { rules, ...(mc.seed ? { seed: mc.seed } : {}), tribesOff: mc.tribesOff, ...(eq ? { tribeExtra: eq.tribeExtra } : {}), detail: true });
   const same = r.winner === mc.result.winner && r.timeMs === mc.result.timeMs;
   console.log(`edited chars: ${Object.keys(mc.diff.chars).join(' ') || '-'} · tribes: ${Object.keys(mc.diff.tribes).join(' ') || '-'} · seed ${mc.seed || 'from teams'} · replay ${same ? 'MATCHES' : 'DIFFERS from'} the page result`);
 } else {
@@ -51,6 +58,8 @@ for (const e of r.events) if (e.k === 'dmg' && e.from != null) {
 for (const [b, v] of Object.entries(bucket)) console.log(`${b}s`, Object.entries(v).map(([k, x]) => `${k}=${x}`).join(' '));
 const fx = r.events.filter(e => ['heal', 'armor'].includes(e.k)).map(e => `${(e.t / 1000).toFixed(1)}s ${e.k} ${e.from != null ? nm[e.from] : '?'}→${nm[e.to]} +${e.amount}`);
 if (args.includes('--fx')) console.log('heal/armor events:\n' + fx.join('\n'));
+const bossLine = r.events.filter(e => e.k === 'bar' || e.k === 'phase').map(e => (e.k === 'bar' ? `${(e.t / 1000).toFixed(1)}s bar gone ${e.gone} left ${e.left}` : `${(e.t / 1000).toFixed(1)}s phase ${e.i + 1} [${(e.rules || []).join(' ')}]`));
+if (bossLine.length) console.log('boss timeline: ' + bossLine.join(' · ')); // set 72
 console.log('by attacker+type:', Object.entries(kind).sort((a, b) => b[1] - a[1]).slice(0, 8));
 console.log('damage past 0 HP (overkill, from hp loss only):', overkill);
 for (const u of r.units) console.log(`${nm[u.uid]} hp ${u.hp}/${u.maxHp} down ${u.down} dealt ${u.dealt} atk ${u.fin.atk} shock/hit ${u.fin.shockHit}`);
