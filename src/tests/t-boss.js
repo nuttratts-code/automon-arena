@@ -5,6 +5,7 @@ import { bossUnit } from '../core/boss.js';
 import { equipRunes } from '../core/runes.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { NEVER, mk, L3, dummy, u, NT, ev, eq, ok } from './helpers.js';
+import { simLine, bossRuleText } from '../game/labels.js';
 
 // กติกาสำหรับเทสต์บอส: ปิดพายุทราย (ไม่งั้นดาเมจพายุไปโดนบอสด้วย ทำให้นับแถบ/ดาเมจไม่ตรง) · จบแมตช์ที่ 60 วิ
 const BR_RULES = { ...NT, stormStartMs: 10000000, hardStopMs: 60000 };
@@ -504,5 +505,28 @@ export const TESTS_BOSS = [
     const run = rules => bossFight(cs, [u('F1', 0, 0), u('F2', 0, 1)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, rules)] }), { rules: tr });
     ok(ev(run([]), 'burn', e => e.why === 'tribe').length > 0, 'ไม่มีกฎ: เผ่าเพลิงเผาทำให้บอสติดไฟ');
     eq(ev(run([rl('tribeOff')]), 'burn', e => e.why === 'tribe').length, 0, 'มีกฎ: ไม่ติดไฟจากเผ่า');
+  }],
+  ['บันทึกการต่อสู้ (ชุด 75): กฎบอสลงบันทึก — เฟส/ค่ากฎ · ผลของกฎมีป้ายกฎ · ฮิตที่กฎกันไว้ · ปิด detail = เหตุการณ์เหมือนเดิม', () => {
+    const a = mk('A', { atk: L3(5), cdMs: L3(1000), hp: L3(5000) }), b2 = mk('B', { atk: L3(5), cdMs: L3(1000), hp: L3(5000) });
+    const b = boss({ atk: 5, cdMs: 2000, hp: 100000, phases: [ph(0, [rl('burnAura', 4), rl('frontOnly'), rl('atkUp', 30), rl('curse', 5, 10)])] });
+    const run = detail => bossFight([a, b2], [u('A', 0, 0), u('B', 2, 0)], b, { detail });
+    const r = run(true), off = run(false);
+    const strip = e => { const { r: _r, rr: _rr, rd: _rd, fx: _fx, d: _d, ...x } = e; return x; };
+    const noDetail = ev => ev.filter(e => e.k !== 'ruleBlock').map(strip);
+    eq(JSON.stringify(noDetail(r.events).map(e => [e.t, e.k, e.to ?? e.who, e.amount ?? null])), JSON.stringify(noDetail(off.events).map(e => [e.t, e.k, e.to ?? e.who, e.amount ?? null])), 'ผลต่อสู้เหมือนกันทั้งเปิด/ปิด detail');
+    ok(off.events.every(e => !('r' in e) && !('rr' in e) && e.k !== 'ruleBlock'), 'ปิด detail: ไม่มีป้ายกฎ');
+    const p0 = ev(r, 'phase')[0];
+    eq(p0.rd.find(x => x.id === 'burnAura').v, 4, 'เฟสจดค่าของกฎ');
+    ok(simLine(p0, new Map(), new Map(), {}).some(x => x && x.t && x.t.includes('R11 ทุก 5 วิ ผู้เล่นทุกตัวติดไฟ (4 ไฟ)')), 'บรรทัดเฟสบอกกฎพร้อมค่า');
+    eq(bossRuleText(rl('curse', 5, 10)), 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า (5 วิ · เป้า (% ของ 1 แถบ) 10%)', 'ข้อความกฎ 2 ค่า');
+    ok(ev(r, 'burn', e => e.why === 'boss').every(e => e.r === 'burnAura'), 'ไฟจาก R11 มีป้าย burnAura');
+    ok(ev(r, 'curse').length > 0 && ev(r, 'curse').every(e => e.r === 'curse'), 'คำสาปมีป้าย curse');
+    const blk = ev(r, 'ruleBlock');
+    ok(blk.length > 0 && blk.every(e => e.rule === 'frontOnly' && e.from != null), 'แถวหลังตีบอส = ไม่โดน (R26) ลงบันทึก');
+    const bu = bossUid(r);
+    ok(ev(r, 'dmg', e => e.from === bu && e.why === 'hit').every(e => e.rr && e.rr.includes('atkUp')), 'ฮิตของบอสบอกว่า R1 ทำงาน');
+    const tag = simLine(ev(r, 'burn', e => e.why === 'boss')[0], new Map(), new Map(), {});
+    ok(tag.some(x => x && x.c === 'lg-rule' && x.t.includes('R11')), 'บรรทัดไฟมีป้าย [กฎบอส R11]');
+    ok(ev(r, 'proc').every(e => !e.r), 'สกิลผู้เล่นไม่ติดป้ายกฎบอส');
   }],
 ];

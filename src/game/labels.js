@@ -1,4 +1,5 @@
 import { CTX_WHEN, DO_INFO, LEGACY_OF, RULES, SHARE_TO, SHOP_PAIR, WHEN_KIND, cleanTags } from '../core/rules.js';
+import { BOSS_RULES, BOSS_PHASE_FX } from '../core/stage.js';
 // คำอธิบายภาษาไทยของสกิล (ใช้แสดงผลเท่านั้น) · ใช้ร่วมกันทุกหน้า
 
 export const WHEN_TH = {
@@ -276,7 +277,31 @@ export const unitsOf = r => [...r.events[0].units, ...r.events.filter(e => e.k =
 export const WHY_SIM = { hit: 'ฮิต', shock: 'ช็อต', burn: 'ไฟ', storm: 'พายุทราย', counter: 'สวนกลับ', reflect: 'สะท้อน', armorBreak: 'เกราะแตก', downSkill: 'สกิลตอน down', skill: 'ดาเมจเพิ่มจากสกิล', execute: 'down ทันที', tribe: 'โบนัสเผ่า', share: 'แบ่งเกราะ' };
 export const logEl = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 // ชิ้นส่วนบรรทัด: string = ข้อความ · { u } = ชื่อตัวละคร · { t, c } = ข้อความมีสี · cm = ตารางตัวละครของแมตช์นั้น
+// ---- set 75: boss rules in the battle log ----
+// bossRuleName('burnAura') → 'R11 ทุก 5 วิ ผู้เล่นทุกตัวติดไฟ' · short = code only when the label has one (R11 / X1), else the full label
+const bossRuleRow = id => BOSS_RULES.find(q => q[0] === id) || BOSS_PHASE_FX.find(q => q[0] === id);
+export function bossRuleName(id, short = false) {
+  if (id === 'untargetable') return 'X3 บอสตีไม่โดนชั่วคราว';
+  const q = bossRuleRow(id); if (!q) return String(id);
+  const m = /^([RX]\d+) /.exec(q[1]);
+  return short && m ? m[1] : q[1];
+}
+// one rule with its numbers, e.g. 'R15 ทุก X วิ สุ่มผู้เล่น 1 ตัวใช้สกิลไม่ได้ (8 วิ · ใช้ไม่ได้นาน 4 วิ)'
+export function bossRuleText(r) {
+  const q = bossRuleRow(r.id); if (!q) return String(r.id);
+  const vals = [];
+  if (q[4] && r.v != null) vals.push(`${r.v}${q[5] === '%' ? '%' : ' ' + q[5]}`);
+  if (Array.isArray(q[6]) && r.v2 != null) vals.push(`${q[6][0]} ${r.v2}${q[6][4] === '%' ? '%' : ' ' + q[6][4]}`);
+  if (q[6] === 'tribe' && r.tribe) vals.push(`เผ่า${r.tribe}`);
+  return vals.length ? `${q[1]} (${vals.join(' · ')})` : q[1];
+}
+const BOSS_STAT_TH = { atk: 'พลังโจมตี', cdMs: 'คูลดาวน์ (มิลลิวิ)', multi: 'มัลติฮิต', burn: 'ไฟ/ฮิต', shock: 'ช็อต/ฮิต', armorHit: 'เกราะ/ฮิต', healHit: 'ฟื้น/ฮิต' };
+const ruleTagPart = e => { const ids = [...(e.r ? [e.r] : []), ...(e.rr || [])]; return ids.length ? [{ t: `  [กฎบอส ${ids.map(id => bossRuleName(id, true)).join(', ')}]`, c: 'lg-rule' }] : []; };
 export function simLine(e, S, U, cm) {
+  const P0 = simLine0(e, S, U, cm);
+  return P0 && (e.r || e.rr) ? [...P0, ...ruleTagPart(e)] : P0;
+}
+function simLine0(e, S, U, cm) {
   const P = [], who = uid => ({ u: uid }), st = uid => { const x = S.get(uid); return x ? `HP ${Math.max(0, x.hp)}/${x.maxHp}${x.armor > 0 ? ` · เกราะ ${x.armor}` : ''}` : ''; };
   switch (e.k) {
     case 'start': return ['เริ่มแมตช์'];
@@ -291,7 +316,7 @@ export function simLine(e, S, U, cm) {
       P.push({ t: `HP −${e.amount - e.absorbed}`, c: 'lg-hp' }, { t: `  (เหลือ ${st(e.to)})`, c: 'lg-st' });
       return P;
     }
-    case 'armor': return [who(e.to), ' ได้เกราะ ', { t: `+${e.amount}`, c: 'lg-arm' }, e.why === 'share' ? ' (แบ่งเกราะ)' : e.why === 'tribe' ? ' (โบนัสเผ่า)' : e.why === 'armorHit' ? ' (เกราะ/ฮิต)' : '', { t: `  (${st(e.to)})`, c: 'lg-st' }];
+    case 'armor': return [who(e.to), ' ได้เกราะ ', { t: `+${e.amount}`, c: 'lg-arm' }, e.why === 'share' ? ' (แบ่งเกราะ)' : e.why === 'tribe' ? ' (โบนัสเผ่า)' : e.why === 'armorHit' ? ' (เกราะ/ฮิต)' : e.why === 'boss' ? ' (กฎบอส)' : '', { t: `  (${st(e.to)})`, c: 'lg-st' }];
     case 'burn': return [who(e.to), ' ติดไฟ ', { t: `+${e.amount}`, c: 'lg-burn' }, ` (รวม ${e.total})${e.why === 'tribe' ? ' (โบนัสเผ่า)' : ''}`];
     case 'shock': return [who(e.to), ' ติดช็อต ', { t: `+${e.amount}`, c: 'lg-shock' }, ` (รวม ${e.total})${e.why === 'tribe' ? ' (โบนัสเผ่า)' : ''}`];
     case 'heal': return [who(e.to), ' ฟื้น HP ', { t: `+${e.amount}`, c: 'lg-heal' }, { t: `  (${st(e.to)})`, c: 'lg-st' }];
@@ -299,16 +324,33 @@ export function simLine(e, S, U, cm) {
     case 'cdCut': return [who(e.to), ` คูลดาวน์ที่เหลือ −${e.ms / 1000} วิ`];
     case 'cdPct': return [who(e.to), ` คูลดาวน์ −${e.pct}% (ระหว่างสู้)`];
     case 'maxhp': return [who(e.to), ` HP สูงสุด −${e.amount} (ระหว่างสู้)`, { t: `  (${st(e.to)})`, c: 'lg-st' }];
-    case 'cleanse': return e.what === 'pct' ? [who(e.to), ` ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]} (เหลือไฟ ${e.burn} ช็อต ${e.shock})`] : [who(e.to), e.what === 'burn' ? ' ไฟถูกดับ' : ' ถูกล้างสถานะ'];
+    case 'cleanse': return e.what === 'pct' ? [who(e.to), ` ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]} (เหลือไฟ ${e.burn} ช็อต ${e.shock})`] : [who(e.to), e.what === 'burn' ? ' ไฟถูกดับ' : e.what === 'bar' ? ' ขึ้นแถบเลือดใหม่ ล้างดีบัฟทั้งหมด' : ' ถูกล้างสถานะ'];
     case 'carry': return ['➜ ', who(e.by), ' พา ', who(e.who), ' ไปตี ', who(e.target)]; // ชุด 20
     case 'reflectDebuff': return ['↩ ', who(e.from), ` สะท้อน${e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'} `, { t: e.kind === 'cdSlowPct' ? `+${Math.round(e.amount * 10) / 10}%` : `+${e.amount}`, c: e.kind === 'burn' ? 'lg-burn' : e.kind === 'shock' ? 'lg-shock' : 'lg-skill' }, ' กลับไปหา ', who(e.to), ...(e.ally != null ? [' (สะท้อนให้ ', who(e.ally), ')'] : [])];
-    case 'buff': return [who(e.to), ` ${{ freeze: 'แช่แข็ง +', cdSlowPct: 'คูลดาวน์ช้าลง +', stun: 'มึนงง ', hpUp: 'HP สูงสุด +', multiUp: 'มัลติฮิต +', burnHitUp: 'ไฟต่อฮิต +', shockHitUp: 'ช็อตต่อฮิต +', armorHitUp: 'เกราะ/ฮิต +', healHitUp: 'ฟื้น/ฮิต +', cdMsDown: 'คูลดาวน์ −', burnTakenUp: 'ดาเมจไฟที่โดน +', shockTakenUp: 'ดาเมจช็อตที่โดน +', dmgTakenUp: 'ดาเมจตีที่โดน +', armorGainCut: 'เกราะที่ได้รับ −', healCut: 'ฟื้น HP ที่ได้รับ −', reflectDebuff: 'สะท้อนดีบัฟ ', hitAmp: 'ดาเมจตี +', burnAmp: 'ดาเมจไฟ +', shockAmp: 'ดาเมจช็อต +', healAmp: 'ฟื้น HP ที่ได้รับ +', armorAmp: 'เกราะที่ได้รับ +', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +', healToAtk: 'ฟื้นเป็นพลัง +', atkDrain: 'ตีเบาลง −' }[e.what] || e.what + ' '}${['freeze', 'stun', 'cdMsDown'].includes(e.what) ? `${e.amount / 1000} วิ` : Math.round(e.amount * 10) / 10}${/Taken|Cut|Pct|Amp|healToAtk|reflectDebuff|atkDrain/.test(e.what) ? '%' : ''}`];
+    case 'buff': return [who(e.to), ` ${{ freeze: 'แช่แข็ง +', cdSlowPct: 'คูลดาวน์ช้าลง +', stun: 'มึนงง ', hpUp: 'HP สูงสุด +', multiUp: 'มัลติฮิต +', burnHitUp: 'ไฟต่อฮิต +', shockHitUp: 'ช็อตต่อฮิต +', armorHitUp: 'เกราะ/ฮิต +', healHitUp: 'ฟื้น/ฮิต +', cdMsDown: 'คูลดาวน์ −', silence: 'ใช้สกิลไม่ได้ ', burnTakenUp: 'ดาเมจไฟที่โดน +', shockTakenUp: 'ดาเมจช็อตที่โดน +', dmgTakenUp: 'ดาเมจตีที่โดน +', armorGainCut: 'เกราะที่ได้รับ −', healCut: 'ฟื้น HP ที่ได้รับ −', reflectDebuff: 'สะท้อนดีบัฟ ', hitAmp: 'ดาเมจตี +', burnAmp: 'ดาเมจไฟ +', shockAmp: 'ดาเมจช็อต +', healAmp: 'ฟื้น HP ที่ได้รับ +', armorAmp: 'เกราะที่ได้รับ +', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +', healToAtk: 'ฟื้นเป็นพลัง +', atkDrain: 'ตีเบาลง −' }[e.what] || e.what + ' '}${['freeze', 'stun', 'cdMsDown', 'silence'].includes(e.what) ? `${e.amount / 1000} วิ` : Math.round(e.amount * 10) / 10}${/Taken|Cut|Pct|Amp|healToAtk|reflectDebuff|atkDrain/.test(e.what) ? '%' : ''}`];
     case 'down': return ['✖ ', who(e.who), ' down'];
     case 'summon': return ['✚ ', who(e.from), ' เรียก ', who(e.who), ` มาสู้แทน `, { t: `HP ${e.unit.hp}`, c: 'lg-heal' }];
     case 'perm': return ['◆ ', who(e.to), ' ได้ ', { t: permText(e.key, e.amount), c: 'lg-skill' }, ' ถาวร (ติดไปแมตช์ถัดไป)'];
     case 'steal': return [who(e.from), ' ดูดช็อต ', { t: String(e.amount), c: 'lg-shock' }, ' จาก ', who(e.to), ` (เหลือ ${e.total})`];
     case 'revive': return e.why === 'ally' && e.from != null ? ['✚ ', who(e.who), ' ถูก ', who(e.from), ' ชุบ ', { t: `HP ${e.hp}`, c: 'lg-heal' }] // G2: shows who revived (detail on)
       : ['✚ ', who(e.who), ` ${e.why === 'ally' ? 'ถูกเพื่อนชุบ' : e.why === 'tribe' ? 'ลุกกลับมา (โบนัสเผ่า)' : 'ลุกกลับมา'} `, { t: `HP ${e.hp}`, c: 'lg-heal' }];
+    case 'phase': {
+      const P2 = ['◆◆ ', who(e.who), ` เข้าเฟส ${e.i + 1}`];
+      const rules = e.rd ? e.rd.map(bossRuleText) : (e.rules || []).map(id => bossRuleName(id));
+      const fx = (e.fx || []).map(bossRuleText);
+      if (fx.length) P2.push(' · ผลตอนเข้าเฟส: ', { t: fx.join(' · '), c: 'lg-rule' });
+      P2.push(' · กฎเฟสนี้: ', { t: rules.length ? rules.join(' · ') : 'ไม่มี', c: 'lg-rule' });
+      if (e.stats) P2.push(' · ค่าบอสใหม่: ', { t: Object.entries(e.stats).map(([k, v]) => `${BOSS_STAT_TH[k] || k} ${v}`).join(' · '), c: 'lg-skill' });
+      if (e.cells) P2.push(` · ย้ายไปช่อง ${e.cells.map(c => `${ROW_TH[c >> 1]}${(c & 1) + 1}`).join(', ')}`);
+      return P2;
+    }
+    case 'bar': return ['▮ ', who(e.who), ` เสียแถบเลือด 1 แถบ (หมดไป ${e.gone} · เหลือ ${e.left})`, ...(e.left > 0 ? [' → ล้างดีบัฟทั้งหมด'] : [])];
+    case 'barRefill': return ['↺ ', who(e.who), ' ตีแถบไม่หมดในเวลา แถบเต็มกลับ ', { t: `HP ${e.hp}`, c: 'lg-heal' }];
+    case 'bossMove': return ['⇄ ', who(e.who), ` ย้ายไปช่อง ${ROW_TH[e.slot >> 1]}${(e.slot & 1) + 1}`];
+    case 'vanish': return ['◌ ', who(e.who), ` หายตัว ${e.ms / 1000} วิ (ตีไม่โดน ไฟ/พายุยังเข้า)`];
+    case 'curse': return e.done === 0 ? ['☠ ', who(e.to), ' โดนคำสาป: ทีมตีบอสไม่ถึงเป้า → down'] : ['☠ ', who(e.to), ` ถูกสาป: ทีมต้องตีบอสให้ถึงเป้าใน ${e.ms / 1000} วิ ไม่งั้น down`];
+    case 'ruleBlock': return [who(e.to), ` ไม่โดน${WHY_SIM[e.why] || ''}`, ...(e.from != null ? [' จาก ', who(e.from)] : []), { t: `  (${bossRuleName(e.rule)})`, c: 'lg-rule' }];
+    case 'avoid': return ['🛡 ', who(e.to), ' เลี่ยงจุดตาย (ฮิตนี้ไม่เข้า)', ...(e.from != null ? [' จาก ', who(e.from)] : [])];
     case 'end': return [`จบแมตช์: ${e.winner === 0 ? 'ทีมซ้ายชนะ' : e.winner === 1 ? 'ทีมขวาชนะ' : 'เสมอ'}`];
     default: return null;
   }
@@ -333,6 +375,7 @@ export function battleLogLines(r, cm, opts = {}) {
       case 'buff': if (e.what === 'hpUp') { x.maxHp += e.amount; x.hp += e.amount; } break;
       case 'down': x.hp = 0; x.armor = 0; break;
       case 'revive': x.hp = e.hp; x.armor = 0; break;
+      case 'barRefill': x.hp = e.hp; break;
     }
     if (onlyProc && e.k !== 'proc') continue;
     if (hideSet && e.k === 'set') continue;
@@ -342,7 +385,7 @@ export function battleLogLines(r, cm, opts = {}) {
     if (!parts) continue;
     total++;
     if (out.length >= limit && !(keep && keep.has(ei))) continue; // ชุด 37: บรรทัดเป้าหมายของลิงก์ต้องแสดงแม้เกินลิมิต
-    const li = logEl('li', e.k === 'proc' ? 'proc' : ['down', 'revive', 'end', 'start'].includes(e.k) ? 'big' : e.k === 'set' ? 'set' : '');
+    const li = logEl('li', e.k === 'proc' ? 'proc' : ['down', 'revive', 'end', 'start', 'phase', 'bar'].includes(e.k) ? 'big' : e.k === 'set' ? 'set' : '');
     li.dataset.ev = String(ei);
     if (hi === ei) li.classList.add('lg-hi');
     li.append(logEl('span', 'lg-t', secT(e.t)));
