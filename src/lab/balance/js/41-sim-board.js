@@ -457,7 +457,7 @@ function renderSimLog() {
   mxLogApply();
 }
 // ชุด UX: ค้นหา/กรองบันทึกตามชนิด (ใช้เลขเหตุการณ์ในแต่ละบรรทัด ไม่ต้องแก้โค้ดเกม)
-const MX_LOG_KINDS = [['', 'ทั้งหมด'], ['hit', 'ฮิต'], ['burn', 'ไฟ'], ['shock', 'ช็อต'], ['skill', 'สกิล'], ['armor', 'เกราะ'], ['heal', 'ฟื้น']];
+const MX_LOG_KINDS = [['', 'ทั้งหมด'], ['hit', 'ฮิต'], ['burn', 'ไฟ'], ['shock', 'ช็อต'], ['skill', 'สกิล'], ['armor', 'เกราะ'], ['heal', 'ฟื้น'], ['boss', 'กฎบอส']];
 let mxLogKind = '';
 function mxLogKindOf(e) {
   if (!e) return 'other';
@@ -465,6 +465,9 @@ function mxLogKindOf(e) {
   if (e.k === 'burn' || e.k === 'shock' || e.k === 'heal' || e.k === 'armor') return e.k;
   return 'skill';
 }
+// set 75: boss-rule lines (phase/bar/rule effects, or a hit a boss rule changed) · its own chip, so the other chips stay as before
+const MX_BOSS_KINDS = new Set(['phase', 'bar', 'barRefill', 'bossMove', 'vanish', 'curse', 'ruleBlock']);
+const mxIsBoss = e => !!e && (MX_BOSS_KINDS.has(e.k) || !!e.r || !!(e.rr && e.rr.length) || (e.k === 'cleanse' && e.what === 'bar'));
 function mxLogApply() {
   if (!simLast) return;
   const q = ($('mxLogQ') ? $('mxLogQ').value : '').trim().toLowerCase(), kinds = $('mxLogKinds');
@@ -479,7 +482,7 @@ function mxLogApply() {
   for (const li of $('simLog').querySelectorAll('li[data-ev]')) {
     const ev = simLast.r.events[+li.dataset.ev];
     const okQ = !q || li.textContent.toLowerCase().includes(q);
-    const okK = !mxLogKind || mxLogKindOf(ev) === mxLogKind;
+    const okK = !mxLogKind || (mxLogKind === 'boss' ? mxIsBoss(ev) : mxLogKindOf(ev) === mxLogKind);
     li.hidden = !(okQ && okK); if (!li.hidden) shown++;
   }
   const cnt = $('mxLogCount'); if (cnt) cnt.textContent = `${shown} บรรทัด`;
@@ -498,7 +501,16 @@ function mxJump({ ev = null, pair = null, inc = null }) {
   $('simLogFold').open = true;
   renderSimLog();
   const li = ev != null ? $('simLog').querySelector(`li[data-ev="${ev}"]`) : null;
+  if (li) li.hidden = false; // the line asked for always shows, even if the search/kind chips would hide it
   const target = li || $('simPairBar') || $('simLogFold');
-  target.scrollIntoView({ block: li ? 'center' : 'start', behavior: 'smooth' });
+  // set 75 (iPad): smooth scrollIntoView on a line inside the log's own scroll box did not move to it in Safari →
+  // scroll the box and the page by hand, instantly, after the opened fold has its layout
+  requestAnimationFrame(() => {
+    if (li) { const box = $('simLog'), b = box.getBoundingClientRect(), r = li.getBoundingClientRect(); box.scrollTop += r.top - b.top - (box.clientHeight - r.height) / 2; }
+    const bar = document.querySelector('.topbar'), barH = bar && getComputedStyle(bar).position === 'sticky' ? bar.offsetHeight : 0;
+    const r = target.getBoundingClientRect();
+    const y = window.scrollY + r.top - (li ? Math.max(barH + 8, (window.innerHeight - r.height) / 2) : barH + 8);
+    window.scrollTo(0, Math.max(0, y));
+  });
 }
 

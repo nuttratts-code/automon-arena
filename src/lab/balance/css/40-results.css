@@ -134,6 +134,7 @@ body.nosel { user-select: none; -webkit-user-select: none; }
 .simlog .lg-heal { color: var(--n-heal); font-weight: 600; } .simlog .lg-burn { color: var(--n-burn); font-weight: 600; } .simlog .lg-shock { color: var(--n-shock); font-weight: 600; }
 .simlog .lg-pos { font-weight: 400; font-size: .7rem; opacity: .75; }
 .simlog .lg-st { color: var(--mute); font-family: var(--f-mono); font-size: .76rem; } .simlog .lg-skill { color: var(--accent); }
+.simlog .lg-rule { color: var(--accent); font-weight: 600; } /* set 75: boss rule tag */
 /* ชุด 13: แท็บไม่ตัดคำ เลื่อนแนวนอนได้บนจอแคบ · แถบบันทึกสรุปตัวที่แก้ · ส่วนย่อยในแท็บ · คำอธิบายยาวพับไว้ */
 .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
 .tabs button { white-space: nowrap; flex: none; }
