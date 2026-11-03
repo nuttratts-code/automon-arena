@@ -395,4 +395,114 @@ export const TESTS_BOSS = [
     const cap = bossFight([hitter('H', 900)], [u('H', 0, 0)], b);
     eq(ev(cap, 'dmg', e => e.why === 'reflect').map(e => e.amount), [20], 'ฮิต 900 เข้าจริง 200 (เพดานแถบ) → สะท้อน 20');
   }],
+  // ชุด 74: เทสกฎบอสที่เหลือ 15 ข้อ (E2 E3 E4 E5 R1 R2 R3 R6 R12 R18 R19 R20 R21 R25 R29)
+  ['บอส R1/R2/R3: ตีแรงขึ้น % · คูลดาวน์เร็วขึ้น % · มัลติฮิตเพิ่ม', () => {
+    const tank = dummy('T', { hp: L3(50000) });
+    const hits = r => ev(r, 'dmg', e => e.from === bossUid(r) && e.why === 'hit');
+    const up = bossFight([tank], [u('T', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('atkUp', 30)])] }));
+    eq(hits(up)[0].amount, 13, 'R1 ตี 10 → 13 (+30%)');
+    const fast = bossFight([tank], [u('T', 0, 0)], boss({ atk: 10, cdMs: 2000, phases: [ph(0, [rl('fastAtk', 50)])] }));
+    eq(hits(fast).slice(0, 3).map(e => e.t), [1000, 2000, 3000], 'R2 คูลดาวน์ 2 วิ −50% = ตีทุก 1 วิ (รวมรอบแรก)');
+    const plain = bossFight([tank], [u('T', 0, 0)], boss({ atk: 10, cdMs: 2000 }));
+    eq(hits(plain).slice(0, 2).map(e => e.t), [2000, 4000], 'ไม่มีกฎ = ทุก 2 วิ');
+    const multi = bossFight([tank], [u('T', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('multiUp', 2)])] }));
+    eq(hits(multi).filter(e => e.t === 1000).length, 3, 'R3 มัลติฮิต 1 + 2 = 3 ฮิตต่อชุด');
+  }],
+  ['บอส R6: ตีแถวหลังก่อน (แม้มีตัวแถวหน้าเลนเดียวกัน) · ไม่มีแถวหลัง = ตีตามปกติ', () => {
+    const cs = [dummy('A', { hp: L3(5000) }), dummy('B', { hp: L3(5000) })];
+    const r = bossFight(cs, [u('A', 0, 0), u('B', 2, 0)], boss({ atk: 10, phases: [ph(0, [rl('backStrike')])] }));
+    const uid = id => r.events[0].units.find(x => x.side === 0 && x.id === id).uid;
+    ok(ev(r, 'dmg', e => e.why === 'hit').every(e => e.to === uid('B')), 'ตีตัวแถวหลังเท่านั้น');
+    const plain = bossFight(cs, [u('A', 0, 0), u('B', 2, 0)], boss({ atk: 10 }));
+    ok(ev(plain, 'dmg', e => e.why === 'hit').every(e => e.to === uid('A')), 'ไม่มีกฎ = ตีตัวหน้า');
+    const noBack = bossFight(cs, [u('A', 0, 0), u('B', 1, 0)], boss({ atk: 10, phases: [ph(0, [rl('backStrike')])] }));
+    ok(ev(noBack, 'dmg', e => e.why === 'hit').length > 0, 'ไม่มีแถวหลัง = ยังตีตัวอื่นได้');
+  }],
+  ['บอส R12: ทุก 5 วิ สุ่มผู้เล่น 1 ตัวติดช็อต', () => {
+    const r = bossFight([dummy('A', { hp: L3(5000) })], [u('A', 0, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('shockAura', 3)])] }));
+    const sh = ev(r, 'shock', e => e.why === 'boss');
+    eq(sh.length, 12, 'ทุก 5 วิ ใน 60 วิ = 12 ครั้ง');
+    eq(sh.slice(0, 2).map(e => [e.t, e.amount]), [[5000, 3], [10000, 3]], 'ช็อต 3 ที่ 5 วิ และ 10 วิ');
+  }],
+  ['บอส R18: แถวหน้าผู้เล่นโดนดาเมจเพิ่ม % · แถวกลางไม่โดนเพิ่ม', () => {
+    const b = boss({ atk: 10, phases: [ph(0, [rl('frontBreak', 50)])] });
+    const front = bossFight([dummy('A', { hp: L3(5000) })], [u('A', 0, 0)], b);
+    eq(ev(front, 'dmg', e => e.why === 'hit')[0].amount, 15, 'แถวหน้า 10 → 15');
+    const mid = bossFight([dummy('A', { hp: L3(5000) })], [u('A', 1, 0)], b);
+    eq(ev(mid, 'dmg', e => e.why === 'hit')[0].amount, 10, 'แถวกลาง 10 เท่าเดิม');
+  }],
+  ['บอส R19: สลับแถวหน้ากับแถวหลังของผู้เล่นตอนเข้าเฟส · แถวกลางอยู่ที่เดิม', () => {
+    const b = boss({ phases: [ph(0, [rl('rowSwap'), rl('backOnly')])] }); // ตีบอสได้เฉพาะแถวหลัง = ตรวจว่าย้ายแถวจริง
+    const fr = bossFight([hitter('H', 100)], [u('H', 0, 0)], b);
+    eq(sumDmg(fr, bossUid(fr)), 100, 'แถวหน้าถูกย้ายไปแถวหลัง → ตีเข้า');
+    const bk = bossFight([hitter('H', 100)], [u('H', 2, 0)], b);
+    eq(sumDmg(bk, bossUid(bk)), 0, 'แถวหลังถูกย้ายไปแถวหน้า → ตีไม่เข้า');
+    const md = bossFight([hitter('H', 100)], [u('H', 1, 0)], b);
+    eq(sumDmg(md, bossUid(md)), 0, 'แถวกลางอยู่ที่เดิม → ตีไม่เข้า');
+  }],
+  ['บอส R20: ชุบชีวิตไม่ได้ (รูนชุบไม่ทำงาน)', () => {
+    const run = rules => bossFight([dummy('A', { hp: L3(30) })], [u('A', 0, 0)], boss({ atk: 100, phases: [ph(0, rules)] }), {
+      runes: [{ r: mkRune('revive', { times: 1, hpPct: 50, scope: 'one' }), slot: [0, 0] }],
+    });
+    const r = run([rl('noRevive')]);
+    eq(ev(r, 'revive').length, 0, 'ไม่ลุก');
+    eq(ev(r, 'down').map(e => e.t), [1000], 'down ตั้งแต่ฮิตแรก');
+    eq(ev(run([]), 'revive').length, 1, 'ไม่มีกฎ = รูนชุบทำงาน');
+  }],
+  ['บอส R21: พายุทรายเริ่มทันทีเมื่อเข้าเฟส', () => {
+    const tank = dummy('T', { hp: L3(50000) });
+    const b = boss({ atk: 0, cdMs: NEVER, phases: [ph(0), ph(1, [rl('earlyStorm')])] });
+    const r = bossFight([hitter('H', 200), tank], [u('H', 0, 0), u('T', 1, 0)], b);
+    const p1 = ev(r, 'phase', e => e.i === 1)[0];
+    ok(p1, 'เข้าเฟส 2');
+    const st = ev(r, 'dmg', e => e.why === 'storm');
+    ok(st.length > 0, 'มีพายุ');
+    eq(st[0].t, p1.t + 1000, 'พายุครั้งแรก 1 วิหลังเข้าเฟส');
+    const plain = bossFight([hitter('H', 200), tank], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0), ph(1)] }));
+    eq(ev(plain, 'dmg', e => e.why === 'storm').length, 0, 'ไม่มีกฎ = ไม่มีพายุ (เทสต์ปิดพายุไว้)');
+  }],
+  ['บอส R25 (เผ่าตีเบา): เผ่าที่เลือกตีบอสเบาลง % · เผ่าอื่นเท่าเดิม', () => {
+    const b = boss({ phases: [ph(0, [rl('tribeResist', 50, null, 'เหล็กกล้า')])] });
+    const st = bossFight([hitter('H', 100)], [u('H', 0, 0)], b);
+    eq(sumDmg(st, bossUid(st)), 50, 'เหล็กกล้า 100 → 50');
+    const wy = bossFight([hitter('H', 100, 'allEnemies', { tribe: 'วายุ' })], [u('H', 0, 0)], b);
+    eq(sumDmg(wy, bossUid(wy)), 100, 'วายุ 100 เท่าเดิม');
+  }],
+  ['บอส R29 สาป: ทีมตีบอสไม่ถึงเป้าใน 5 วิ = ตัวที่ถูกสาป down · ถึงเป้า = รอด', () => {
+    const b = boss({ atk: 0, cdMs: NEVER, hp: 100000, bars: 100, phases: [ph(0, [rl('curse', 5, 10)])] }); // แถบละ 1000 · เป้า 10% = 100
+    const weak = bossFight([mk('K', { atk: L3(10), cdMs: L3(1000), hp: L3(5000) })], [u('K', 0, 0)], b);
+    eq(ev(weak, 'curse', e => e.ms).map(e => e.t)[0], 5000, 'สาปที่ 5 วิ');
+    eq(ev(weak, 'down').map(e => e.t), [10000], 'ตีได้ 50 < 100 → down ที่ 10 วิ');
+    const strong = bossFight([mk('K', { atk: L3(30), cdMs: L3(1000), hp: L3(5000) })], [u('K', 0, 0)], b);
+    ok(ev(strong, 'curse', e => e.ms).length >= 2, 'สาปซ้ำเป็นรอบ');
+    eq(ev(strong, 'down').length, 0, 'ตีได้ 150 ≥ 100 → รอดทุกรอบ');
+  }],
+  ['บอส E2: แถวหลังผู้เล่นใช้สกิลไม่ได้ช่วงแรก · แถวอื่นใช้ได้', () => {
+    const react = mk('R', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'hitTaken', do: 'atkUp', to: 'self', v: L3(1) }] });
+    const b = boss({ atk: 1, phases: [ph(0, [rl('backSilence', 10)])] });
+    const bk = bossFight([react], [u('R', 2, 0)], b);
+    eq(ev(bk, 'proc', e => e.t <= 10000).length, 0, 'แถวหลัง: 10 วิแรกสกิลไม่ทำงาน');
+    eq(ev(bk, 'proc', e => e.t === 11000).length, 1, 'หลัง 10 วิ ทำงาน');
+    const fr = bossFight([react], [u('R', 0, 0)], b);
+    eq(ev(fr, 'proc', e => e.t === 1000).length, 1, 'แถวหน้าทำงานตั้งแต่ฮิตแรก');
+  }],
+  ['บอส E3: ผู้เล่นฟื้นเลือดได้น้อยลง %', () => {
+    const h = mk('M', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'hitTaken', do: 'heal', to: 'self', v: L3(20) }] });
+    const heals = rules => { const r = bossFight([h], [u('M', 0, 0)], boss({ atk: 50, phases: [ph(0, rules)] })); return ev(r, 'heal', e => e.to !== bossUid(r)).map(e => e.amount); };
+    eq(heals([rl('healCut', 50)])[0], 10, 'ฟื้น 20 → 10');
+    eq(heals([])[0], 20, 'ไม่มีกฎ = 20');
+  }],
+  ['บอส E4: คูลดาวน์ผู้เล่นช้าลง %', () => {
+    const k = mk('K', { atk: L3(1), cdMs: L3(1000), hp: L3(5000) });
+    const times = rules => { const r = bossFight([k], [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, rules)] })); return ev(r, 'dmg', e => e.why === 'hit').slice(0, 2).map(e => e.t); };
+    eq(times([rl('cdSlow', 100)]), [2000, 4000], 'คูลดาวน์ 1 วิ +100% = ทุก 2 วิ (รวมรอบแรก)');
+    eq(times([]), [1000, 2000], 'ไม่มีกฎ = ทุก 1 วิ');
+  }],
+  ['บอส E5: ปิดโบนัสเผ่าผู้เล่นที่ทำงานระหว่างสู้ (ติดไฟจากเผ่า) · ไม่มีกฎ = ทำงาน', () => {
+    const tr = { ...BR_RULES, tribesOn: true, tribeBonus: { ...structuredClone(BR_RULES.tribeBonus), 'เพลิงเผา': { burn: [3, 3, 3], every: [1, 1, 1], startBurn: [0, 0, 0], burnDmgPct: [0, 0, 0] } } };
+    const cs = ['F1', 'F2'].map(id => mk(id, { tribe: 'เพลิงเผา', atk: L3(1), cdMs: L3(1000), hp: L3(5000) }));
+    const run = rules => bossFight(cs, [u('F1', 0, 0), u('F2', 0, 1)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, rules)] }), { rules: tr });
+    ok(ev(run([]), 'burn', e => e.why === 'tribe').length > 0, 'ไม่มีกฎ: เผ่าเพลิงเผาทำให้บอสติดไฟ');
+    eq(ev(run([rl('tribeOff')]), 'burn', e => e.why === 'tribe').length, 0, 'มีกฎ: ไม่ติดไฟจากเผ่า');
+  }],
 ];
