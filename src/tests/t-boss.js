@@ -314,4 +314,85 @@ export const TESTS_BOSS = [
     const bl = bossFight([hitter('H', 200), tank('T')], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('barBlast', 25)])] }));
     eq(ev(bl, 'dmg', e => e.from === bossUid(bl) && e.why === 'skill').map(e => e.amount), [25, 25], 'R38 ระเบิด 25 ใส่ทุกตัว');
   }],
+  // ชุด 73: เทส 8 กฎที่เสี่ยงผิดเงียบ ๆ (R7, R9, R10, R13, R14, R16, R26, E7 สะท้อน)
+  ['บอส R7: ฮิตบอสทำเลือดเหลือต่ำกว่าเกณฑ์ = down ทันที · เหลือเท่าเกณฑ์ขึ้นไป = ไม่ down', () => {
+    const v = dummy('V', { hp: L3(100) });
+    const ex = bossFight([v], [u('V', 0, 0)], boss({ atk: 90, phases: [ph(0, [rl('execute', 15)])] }));
+    eq(ev(ex, 'down').map(e => e.t), [1000], 'เหลือ 10% (< 15%) → down ตั้งแต่ฮิตแรก');
+    const safe = bossFight([v], [u('V', 0, 0)], boss({ atk: 85, phases: [ph(0, [rl('execute', 15)])] }));
+    eq(ev(safe, 'down').map(e => e.t), [2000], 'เหลือ 15% พอดี → ไม่ execute (down ฮิตที่ 2 ตามปกติ)');
+    const plain = bossFight([v], [u('V', 0, 0)], boss({ atk: 90 }));
+    eq(ev(plain, 'down').map(e => e.t), [2000], 'ไม่มีกฎ → down ฮิตที่ 2');
+  }],
+  ['บอส R9: ฟื้นทุก 1 วิ (% ของ 1 แถบ) · ไม่เกินแถบที่อยู่ · แถบที่หมดแล้วไม่เต็มกลับ', () => {
+    const b = boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('regen', 3)])] });
+    const r = bossFight([hitter('H', 150)], [u('H', 0, 0)], b);
+    const hs = ev(r, 'heal', e => e.to === bossUid(r));
+    eq(hs.slice(0, 3).map(e => [e.t, e.amount]), [[1000, 6], [2000, 6], [3000, 6]], 'ฟื้น 6 (3% ของ 200) ทุกวิ');
+    eq(hs.reduce((a, e) => a + e.amount, 0), 150, 'ฟื้นรวมแค่ที่หายไป (850 → 1000) ไม่เกิน');
+    const gone = bossFight([hitter('H', 250)], [u('H', 0, 0)], b);
+    eq(ev(gone, 'heal', e => e.to === bossUid(gone)).length, 0, 'แถบแรกหมด (HP 800) → ไม่ฟื้นกลับ');
+    eq(gone.units.find(x => x.side === 1).hp, 800, 'HP บอสค้างที่ 800');
+  }],
+  ['บอส R10: ได้เกราะเพิ่มทุก 10 วิ · เกราะกันฮิตผู้เล่นจริง', () => {
+    const k = mk('K', { atk: L3(5), cdMs: L3(1000), hp: L3(5000) });
+    const r = bossFight([k], [u('K', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('armorGrow', 20)])] }));
+    const bu = bossUid(r);
+    const ar = ev(r, 'armor', e => e.to === bu && e.why === 'boss');
+    eq(ar.map(e => e.t), [10000, 20000, 30000, 40000, 50000, 60000], 'ทุก 10 วิ ใน 60 วิ = 6 ครั้ง');
+    eq(ar[0].amount, 20, 'ครั้งละ 20');
+    const hits = ev(r, 'dmg', e => e.to === bu && e.why === 'hit');
+    ok(hits.filter(e => e.t < 10000).every(e => e.absorbed === 0), 'ก่อน 10 วิ ไม่มีเกราะกัน');
+    eq(hits.find(e => e.t === 11000)?.absorbed, 5, 'หลัง 10 วิ เกราะกันฮิต 5');
+  }],
+  ['บอส R13 คลั่ง: บอสตีแรง ×2 · บอสโดนดาเมจเพิ่ม %', () => {
+    const tank = dummy('T', { hp: L3(5000) });
+    const r = bossFight([hitter('H', 100), tank], [u('H', 2, 0), u('T', 0, 0)], boss({ atk: 10, phases: [ph(0, [rl('desperate', 50)])] }));
+    const bu = bossUid(r);
+    eq(ev(r, 'dmg', e => e.from === bu && e.why === 'hit')[0].amount, 20, 'ตี 10 → 20');
+    eq(sumDmg(r, bu), 150, 'โดน 100 → 150 (+50%)');
+  }],
+  ['บอส R14: ผู้เล่น down → บอสฟื้น % ของ 1 แถบ · ไม่เกินแถบที่อยู่ · แถบที่หมดแล้วไม่เต็มกลับ', () => {
+    const w = dummy('W', { hp: L3(10) }), h = hitter('H', 150, 'allEnemies', { hp: L3(50000) });
+    const b = boss({ atk: 100, phases: [ph(0, [rl('feedOnDown', 50)])] });
+    const r = bossFight([w, h], [u('W', 0, 0), u('H', 2, 0)], b);
+    const bu = bossUid(r), d1 = ev(r, 'down')[0];
+    const hs = ev(r, 'heal', e => e.to === bu);
+    eq(hs.map(e => [e.t, e.amount]), [[d1.t, 100]], 'ฟื้น 100 (50% ของ 200) ตอนผู้เล่น down · HP 850 → 950');
+    const r2 = bossFight([w, hitter('H', 50, 'allEnemies', { hp: L3(50000) })], [u('W', 0, 0), u('H', 2, 0)], b);
+    eq(ev(r2, 'heal', e => e.to === bossUid(r2)).map(e => e.amount), [50], 'HP 950 → ฟื้นแค่ 50 ถึงยอดแถบ');
+    const gone = bossFight([w, hitter('H', 250, 'allEnemies', { hp: L3(50000) })], [u('W', 0, 0), u('H', 2, 0)], b);
+    eq(ev(gone, 'heal', e => e.to === bossUid(gone)).length, 0, 'แถบแรกหมด (HP 800) → ไม่ฟื้นกลับ');
+    eq(ev(gone, 'bar').length, 1, 'ไม่มี "ศัตรู down" ซ้ำ');
+  }],
+  ['บอส R16: ทุก X วิ แช่แข็งผู้เล่นทั้งแถว (คูลดาวน์ +วิ) · ตีช้าลงจริง', () => {
+    const ks = ['A', 'B', 'C'].map(id => mk(id, { atk: L3(1), cdMs: L3(1000), hp: L3(5000) }));
+    const r = bossFight(ks, [u('A', 0, 0), u('B', 1, 0), u('C', 2, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('freezeRow', 10, 2)])] }));
+    const fz = ev(r, 'buff', e => e.what === 'freeze');
+    eq(fz.map(e => [e.t, e.amount]), [10000, 20000, 30000, 40000, 50000, 60000].map(t => [t, 2000]), 'ทุก 10 วิ แถวละ 1 ตัว · คูลดาวน์ +2 วิ');
+    const f0 = fz[0], bu = bossUid(r);
+    const hitT = uid => ev(r, 'dmg', e => e.from === uid && e.to === bu && e.why === 'hit').map(e => e.t);
+    const mine = hitT(f0.to);
+    eq(mine.filter(t => t >= 9000 && t <= 13000), [9000, 12000, 13000], 'ตัวที่โดนแช่: ฮิตที่ถึงรอบตอน 10 วิ เลื่อนไป 12 วิ (ช้า 2 วิ)');
+    const other = r.events[0].units.find(x => x.side === 0 && x.uid !== f0.to).uid;
+    eq(hitT(other).filter(t => t >= 9000 && t <= 13000), [9000, 10000, 11000, 12000, 13000], 'ตัวแถวอื่นตีตามปกติ');
+  }],
+  ['บอส R26 (แถวหลัง): ตีบอสได้เฉพาะตัวแถวหลัง · แถวหน้า/กลางไม่เข้า', () => {
+    const b = boss({ phases: [ph(0, [rl('backOnly')])] });
+    for (const row of [0, 1]) {
+      const r = bossFight([hitter('H', 100)], [u('H', row, 0)], b);
+      eq(ev(r, 'dmg', e => e.why === 'skill').length, 0, `แถว ${row} ตีไม่เข้า`);
+    }
+    const back = bossFight([hitter('H', 100)], [u('H', 2, 0)], b);
+    eq(sumDmg(back, bossUid(back)), 100, 'แถวหลังตีเข้าเต็ม');
+  }],
+  ['บอส E7 สะท้อน: ตีบอสโดนกลับ % ของดาเมจที่เข้าจริง · ของที่สะท้อนไม่สะท้อนต่อ', () => {
+    const b = boss({ atk: 0, cdMs: NEVER, phases: [ph(0, [rl('reflect', 10)])] });
+    const r = bossFight([hitter('H', 150)], [u('H', 0, 0)], b);
+    const hu = r.events[0].units.find(x => x.side === 0).uid, bu = bossUid(r);
+    eq(ev(r, 'dmg', e => e.to === hu && e.why === 'reflect').map(e => e.amount), [15], 'โดนกลับ 15 (10% ของ 150) ครั้งเดียว');
+    eq(ev(r, 'dmg', e => e.to === bu && e.why === 'reflect').length, 0, 'บอสไม่โดนสะท้อนต่อ');
+    const cap = bossFight([hitter('H', 900)], [u('H', 0, 0)], b);
+    eq(ev(cap, 'dmg', e => e.why === 'reflect').map(e => e.amount), [20], 'ฮิต 900 เข้าจริง 200 (เพดานแถบ) → สะท้อน 20');
+  }],
 ];
