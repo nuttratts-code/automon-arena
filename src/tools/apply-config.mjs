@@ -4,7 +4,8 @@
 // ชุด 19: ความหายาก (rarity) → ราคาตาม RULES.shop.prices · ชุด 18: ค่าพลัง healHit (ฟื้น/ฮิต) → คอลัมน์ที่ 15 ของแถว · ชุด 17: ช่องสกิลใหม่ skipSameId (ไม่ให้ผลกับตัวอื่นที่ ID เดียวกัน) · cdGrow (คูลดาวน์สกิลเพิ่ม % ทุกครั้งที่ใช้)
 import fs from 'fs';
 import { ROWS, SKILLS } from '../core/characters.js';
-import { RULES } from '../core/rules.js';
+import { RULES, cleanRuleEdits, setRuleEdits } from '../core/rules.js';
+import { RULES_USER } from '../core/rules-user.js';
 const cfg = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const ov = process.argv[3] ? JSON.parse(fs.readFileSync(process.argv[3], 'utf8')) : {};
 const q = s => `'${String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
@@ -17,6 +18,16 @@ const sk = s => {
   for (const k of Object.keys(s)) if (!KEYS.includes(k)) throw new Error('ช่องสกิลไม่รู้จัก ' + k);
   return `{ ${KEYS.filter(k => s[k] !== undefined).map(k => `${k}: ${val(k, s[k])}`).join(', ')} }`;
 };
+// set 76: game-rule edits (กฎเกม tab) → core/rules-user.js (merged onto the saved user values) · prices below follow the new values
+if (cfg.rules && Object.keys(cfg.rules).length) {
+  const good = cleanRuleEdits(cfg.rules), bad = Object.keys(cfg.rules).filter(k => !(k in good));
+  if (bad.length) throw new Error('ค่ากฎเกมผิด: ' + bad.join(', '));
+  const all = { ...cleanRuleEdits(RULES_USER), ...good };
+  const head = fs.readFileSync('core/rules-user.js', 'utf8').split('export const RULES_USER')[0];
+  const body = Object.keys(all).length ? `{\n${Object.entries(all).map(([k, v]) => `  ${q(k)}: ${v},`).join('\n')}\n}` : '{}';
+  fs.writeFileSync('core/rules-user.js', `${head}export const RULES_USER = ${body};\n`);
+  setRuleEdits(RULES, good); console.log('กฎเกม', Object.keys(good).length, 'ค่า:', Object.keys(good).join(' '));
+}
 const src = fs.readFileSync('core/characters.js', 'utf8');
 let out = src;
 const chars = { ...cfg.chars };

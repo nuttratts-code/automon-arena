@@ -2,7 +2,7 @@
 // Usage: node lab/replay.mjs <level: mix|1|2|3> <match index i> [seed=4242]
 //        node lab/replay.mjs --code <file with a match code from the try-fight tab (set 39)>
 // Output: teams, damage per attacker per 10 s, damage by attacker+type, final stats. Changes nothing.
-import { RULES } from '../core/rules.js';
+import { RULES, setRuleEdits } from '../core/rules.js';
 import { buildCharacterList } from '../core/characters.js';
 import { randomTeam } from './analyze.js';
 import { simulate } from '../core/battle.js';
@@ -21,7 +21,9 @@ if (args[0] === '--code') {
   const baseChars = buildCharacterList(), baseTribes = JSON.parse(JSON.stringify(RULES.tribeBonus));
   if (mc.base !== baseFingerprint(baseChars, baseTribes)) console.log('⚠ base values differ from this repo (page built from other values) — replay may not match');
   const { chars, tribes } = applyMatchDiff(baseChars, baseTribes, mc.diff);
-  const rules = { ...RULES, tribeBonus: tribes }, v = validateConfig(chars, rules);
+  const rules = setRuleEdits({ ...JSON.parse(JSON.stringify(RULES)), tribeBonus: tribes }, mc.diff.rules); // set 76: game-rule edits from the page
+  for (const c of chars) c.price = rules.shop.prices[c.rarity];
+  const v = validateConfig(chars, rules);
   if (!v.ok) throw new Error('edited values invalid: ' + v.errors.slice(0, 3).join(' | '));
   const map = makeCharMap(chars);
   ({ A, B } = mc);
@@ -32,7 +34,7 @@ if (args[0] === '--code') {
   if (eq) console.log('runes: ' + fp.equips.map(e => `${e.r.id} ${e.r.name} x${e.n}`).join(' · ') + (eq.skipped.length ? ` (run-only, skipped: ${eq.skipped.join(' ')})` : ''));
   r = simulate(eq ? eq.units : buildTeam(A, map), teamB, { rules, ...(mc.seed ? { seed: mc.seed } : {}), tribesOff: mc.tribesOff, ...(eq ? { tribeExtra: eq.tribeExtra } : {}), detail: true });
   const same = r.winner === mc.result.winner && r.timeMs === mc.result.timeMs;
-  console.log(`edited chars: ${Object.keys(mc.diff.chars).join(' ') || '-'} · tribes: ${Object.keys(mc.diff.tribes).join(' ') || '-'} · seed ${mc.seed || 'from teams'} · replay ${same ? 'MATCHES' : 'DIFFERS from'} the page result`);
+  console.log(`edited chars: ${Object.keys(mc.diff.chars).join(' ') || '-'} · tribes: ${Object.keys(mc.diff.tribes).join(' ') || '-'} · rules: ${Object.keys(mc.diff.rules).join(' ') || '-'} · seed ${mc.seed || 'from teams'} · replay ${same ? 'MATCHES' : 'DIFFERS from'} the page result`);
 } else {
   const [lvArg, idxArg, seedArg] = args;
   const lv = lvArg === 'mix' ? 'mix' : +lvArg, idx = +idxArg, seed = +(seedArg || 4242);

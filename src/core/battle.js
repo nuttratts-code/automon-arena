@@ -362,7 +362,7 @@ export function simulate(teamA, teamB, opts = {}) {
     target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำ down = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
     if (detailOn) { const dd = { ...(dCur || {}), ...(det || {}) }; if (target.hp < 0) dd.over = Math.min(loss, -target.hp); log('dmg', { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, ...(subHit && why === 'hit' ? { sub: 1 } : {}), ...(hitRules ? { rr: hitRules } : {}), d: dd }); } else
     log('dmg', subHit && why === 'hit' ? { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, sub: 1 } : { to: target.uid, from: src ? src.uid : null, amount, absorbed, why });
-    if (!target.lowFired && wasAbove && target.hp > 0 && target.hp * 2 < target.maxHp) {
+    if (!target.lowFired && wasAbove && target.hp > 0 && target.hp * 100 < target.maxHp * R.lowHpPct) {
       target.lowFired = true;
       trigger(target, 'lowHp', { attacker: src && src.side !== target.side ? src : null });
     }
@@ -708,16 +708,16 @@ export function simulate(teamA, teamB, opts = {}) {
     const next = pickN(BOSS.slots.filter(i => i !== BOSS.cells[0]), 1, BOSS.side)[0];
     if (next == null) return;
     BOSS.cells = [next]; BOSS.row = next >> 1; BOSS.lane = next & 1;
-    if (BR.weakSpot) BOSS.weakUntil = t + 3000; // R30 หลังย้ายที่ โดนดาเมจเพิ่ม 3 วิ
+    if (BR.weakSpot) BOSS.weakUntil = t + R.bossTimers.weakSpotMs; // R30 หลังย้ายที่ โดนดาเมจเพิ่ม (RULES.bossTimers · เดิม 3 วิ)
     log('bossMove', { who: BOSS.uid, slot: next });
   }
   function bossTick() {
     if (!up(BOSS)) return;
-    ruleTag = 'enrage'; if (BR.enrage && t - enrageT >= 10000) { enrageT = t; const a = Math.floor(BOSS.atk * BR.enrage.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } } // E6
+    ruleTag = 'enrage'; if (BR.enrage && t - enrageT >= R.bossTimers.enrageMs) { enrageT = t; const a = Math.floor(BOSS.atk * BR.enrage.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } } // E6
     ruleTag = 'regen'; if (BR.regen && t % 1000 === 0) bossHeal(BOSS.barHp * BR.regen.v / 100); // R9
-    ruleTag = 'armorGrow'; if (BR.armorGrow && t - growT >= 10000) { growT = t; addArmor(BOSS, BR.armorGrow.v, 'boss'); } // R10
-    ruleTag = 'burnAura'; if (BR.burnAura && t - auraT >= 5000) { auraT = t; for (const x of enemies(BOSS)) addStatus(x, 'burn', BR.burnAura.v, 'boss', BOSS); } // R11
-    ruleTag = 'shockAura'; if (BR.shockAura && t - shockT >= 5000) { shockT = t; for (const x of pickN(enemies(BOSS), 1, BOSS.side)) addStatus(x, 'shock', BR.shockAura.v, 'boss', BOSS); } // R12
+    ruleTag = 'armorGrow'; if (BR.armorGrow && t - growT >= R.bossTimers.armorGrowMs) { growT = t; addArmor(BOSS, BR.armorGrow.v, 'boss'); } // R10
+    ruleTag = 'burnAura'; if (BR.burnAura && t - auraT >= R.bossTimers.burnAuraMs) { auraT = t; for (const x of enemies(BOSS)) addStatus(x, 'burn', BR.burnAura.v, 'boss', BOSS); } // R11
+    ruleTag = 'shockAura'; if (BR.shockAura && t - shockT >= R.bossTimers.shockAuraMs) { shockT = t; for (const x of pickN(enemies(BOSS), 1, BOSS.side)) addStatus(x, 'shock', BR.shockAura.v, 'boss', BOSS); } // R12
     ruleTag = 'randomSilence'; if (BR.randomSilence && t - silT >= BR.randomSilence.v * 1000) { // R15
       silT = t;
       for (const x of pickN(enemies(BOSS), 1, BOSS.side)) { x.silenceUntil = t + BR.randomSilence.v2 * 1000; buff(x, 'silence', BR.randomSilence.v2 * 1000); }
@@ -745,7 +745,7 @@ export function simulate(teamA, teamB, opts = {}) {
       }
       if (!curseQ && t - curseT >= BR.curse.v * 1000) {
         const x = pickN(enemies(BOSS), 1, BOSS.side)[0];
-        if (x) { curseQ = { u: x, until: t + 5000, base: BOSS.taken }; log('curse', { to: x.uid, ms: 5000 }); }
+        if (x) { curseQ = { u: x, until: t + R.bossTimers.curseWindowMs, base: BOSS.taken }; log('curse', { to: x.uid, ms: R.bossTimers.curseWindowMs }); }
       }
     }
     ruleTag = null;

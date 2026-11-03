@@ -3,6 +3,14 @@ const BASE_CHARS = buildCharacterList();
 const BASE_TRIBES = JSON.parse(JSON.stringify(RULES.tribeBonus));
 const BASE_FP = baseFingerprint(BASE_CHARS, BASE_TRIBES); // set 39: match code base check
 const clone = x => JSON.parse(JSON.stringify(x));
+// set 76: game rules (กฎเกม tab) · RULES itself is edited live so every part of the page (fights, shop prices, power budget, labels) uses the same values
+const RULES_BASE = clone(RULES);
+let ruleEdits = {};
+function applyRulesLive() {
+  for (const [path, , , , , , op] of RULE_SPEC) if (!op.lock) setRuleEdits(RULES, { [path]: op.bool ? (ruleGet(RULES_BASE, path) ? 1 : 0) : ruleGet(RULES_BASE, path) });
+  setRuleEdits(RULES, ruleEdits);
+  for (const c of chars) c.price = RULES.shop.prices[c.rarity];
+}
 let chars = clone(BASE_CHARS);
 let tribes = clone(BASE_TRIBES);
 let current = BASE_CHARS[0].id;
@@ -23,7 +31,7 @@ const TRIBE_LABEL = {
   dmgPct: 'ดาเมจตีปกติ +%', startSets: `เริ่มแมตช์ ทั้งทีมปล่อยทันที (ชุด · สูงสุด ${RULES.startSetsMax})`, // ชุด 32
 };
 const rulesNow = () => ({ ...RULES, tribeBonus: tribes });
-const rulesBase = () => ({ ...RULES, tribeBonus: BASE_TRIBES });
+const rulesBase = () => ({ ...RULES_BASE, tribeBonus: BASE_TRIBES });
 // ชุด 35: เทียบโดยเรียงชื่อช่องก่อน (สกิลที่ผ่าน cleanSkill ลำดับช่องต่างจากในเกม 16 ตัว → เคยขึ้นสีเหลืองค้างแม้ค่าเท่ากัน)
 const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(q => [q, x[q]])) : x));
 const same = (a, b) => canon(a) === canon(b);

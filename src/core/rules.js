@@ -1,3 +1,4 @@
+import { RULES_USER } from './rules-user.js';
 // ค่ากฎทั้งหมดอยู่ที่นี่ที่เดียว (อ้างอิง combat-rules V1.1 / tribe-rules / shop-merge-rules)
 // ค่าที่เอกสารยังไม่กำหนด ติดป้าย "เสนอ" ปรับได้ตอนบาลานซ์
 export const TRIBES = ['เหล็กกล้า', 'เพลิงเผา', 'สายฟ้า', 'วายุ', 'ภูติ', 'อสูร'];
@@ -72,6 +73,9 @@ export const RULES = {
   power: { burnStack: 1.5, shockStack: 3, armorLifeSec: 15, // ไฟ 1 หน่วย ≈ ดาเมจ 1.5 · ช็อต 1 หน่วย ≈ 3 · เกราะ/ฮิต นับช่วงยืนได้ ~15 วิ
     // งบแต้มรวม (พื้นฐาน + สกิล) ที่ Lv1 ตามความหายาก · วัดด้วย lab/power.mjs 21 ต.ค. จากกฎ 5% ต่อราคา (1 แต้ม ≈ อัตราชนะ 0.43%)
     budget: { 'ธรรมดา': 16, 'ไม่ธรรมดา': 28, 'หายาก': 36, 'หายากมาก': 51, 'ตำนาน': 74 } },
+  lowHpPct: 50,                // set 76 (was fixed 50 in battle.js): "HP ต่ำกว่า" trigger fires once when HP drops below this % of max HP
+  // set 76: boss rule timers that were fixed in battle.js (E6 enrage, R10 armorGrow, R11 burnAura, R12 shockAura, R30 weakSpot, R29 curse window)
+  bossTimers: { enrageMs: 10000, armorGrowMs: 10000, burnAuraMs: 5000, shockAuraMs: 5000, weakSpotMs: 3000, curseWindowMs: 5000 },
   reviveAllyHpPct: 20,         // ตัดสิน 19 ต.ค.: ชุบเพื่อนฟื้นด้วย HP 20% ของ HP สูงสุด
   skillCdMaxMs: 120000,        // คูลดาวน์สกิลสูงสุดที่ตั้งได้ (กันค่าผิดปกติ)
   // ร้านค้า (shop-merge-rules) · ราคาตัวละครอยู่ที่ตัวละครแต่ละตัว
@@ -86,6 +90,103 @@ export const RULES = {
     mergeCount: 3,                                  // เอกสาร
   },
 };
+
+// ---------- set 76: "กฎเกม" tab in the Balance Room ----------
+// Every rule value: [path in RULES, Thai label, lo, hi, unit, group, opts]
+// opts.scale = stored ÷ scale is shown (ms → วิ) · opts.step = input step (shown units) · opts.int = whole numbers only
+// opts.bool = 0/1 switch · opts.lock = reason (shown, not editable: structure of the game or a safety stop)
+// The user's confirmed edits live in core/rules-user.js (RULES_USER) and are merged into RULES right below.
+export const RULE_GROUPS = [
+  ['storm', 'พายุทราย'], ['burn', 'ไฟ'], ['fight', 'การสู้ทั่วไป'], ['boss', 'จังหวะกฎบอส'],
+  ['shop', 'ร้านค้าและ run'], ['power', 'งบค่าพลัง (ใช้แสดงผลและเช็กงบเท่านั้น)'], ['lock', 'ล็อกไว้ (ไม่ควรปรับ)'],
+];
+const SEC = { scale: 1000, step: 0.1 };
+const RAR_RULES = (key, label, lo, hi, unit, group, opts = {}) => RARITIES.map(r => [`${key}.${r}`, `${label} ${r}`, lo, hi, unit, group, opts]);
+export const RULE_SPEC = [
+  ['stormStartMs', 'พายุทรายเริ่มที่', 10, 280, 'วิ', 'storm', SEC],
+  ['stormIntervalMs', 'พายุทรายตีทุก', 0.1, 30, 'วิ', 'storm', SEC],
+  ['stormDmgStart', 'ดาเมจพายุครั้งแรก', 0, 100000, 'ดาเมจ', 'storm', { int: true }],
+  ['stormDmgMult', 'ดาเมจพายุคูณเพิ่มทุกครั้ง', 1, 10, 'เท่า', 'storm', { step: 0.05 }],
+  ['stormPierce', 'พายุทะลุเกราะ (1 = ทะลุ · 0 = เกราะกันได้)', 0, 1, '', 'storm', { bool: true }],
+  ['burnIntervalMs', 'ไฟทำดาเมจทุก', 0.1, 10, 'วิ', 'burn', SEC],
+  ['burnDecay', 'ไฟลดลงทุกครั้งที่ทำดาเมจ', 0, 1000, 'หน่วย', 'burn', { int: true }],
+  ['minCooldownMs', 'คูลดาวน์ต่ำสุด', 0.1, 10, 'วิ', 'fight', SEC],
+  ['lowHpPct', 'สกิล "HP ต่ำกว่า" ทำงานเมื่อ HP ต่ำกว่า', 1, 99, '% ของ HP สูงสุด', 'fight', { int: true }],
+  ['reviveAllyHpPct', 'ชุบเพื่อนฟื้นด้วย HP', 1, 100, '% ของ HP สูงสุด', 'fight', { int: true }],
+  ['startSetsMax', 'เพดาน "เริ่มแมตช์ ปล่อยทันที" (โบนัสภูติ)', 0, 10, 'ชุด', 'fight', { int: true }],
+  ['bossTimers.enrageMs', 'E6 บอสตีแรงขึ้นทุก', 1, 120, 'วิ', 'boss', SEC],
+  ['bossTimers.armorGrowMs', 'R10 บอสได้เกราะเพิ่มทุก', 1, 120, 'วิ', 'boss', SEC],
+  ['bossTimers.burnAuraMs', 'R11 ผู้เล่นทุกตัวติดไฟทุก', 1, 120, 'วิ', 'boss', SEC],
+  ['bossTimers.shockAuraMs', 'R12 สุ่มผู้เล่นติดช็อตทุก', 1, 120, 'วิ', 'boss', SEC],
+  ['bossTimers.weakSpotMs', 'R30 หลังบอสย้ายที่ โดนดาเมจเพิ่มนาน', 0.1, 60, 'วิ', 'boss', SEC],
+  ['bossTimers.curseWindowMs', 'R29 สาป: เวลาให้ทีมตีบอสให้ถึงเป้า', 1, 60, 'วิ', 'boss', SEC],
+  ['shop.startGold', 'เงินตอนเริ่ม run', 0, 100, 'เงิน', 'shop', { int: true }],
+  ['shop.goldPerRound', 'เงินต่อรอบ', 0, 100, 'เงิน', 'shop', { int: true }],
+  ['shop.winBonus', 'โบนัสเงินเมื่อชนะ', 0, 50, 'เงิน', 'shop', { int: true }],
+  ['shop.rerollCost', 'ค่าสุ่มร้านใหม่', 0, 20, 'เงิน', 'shop', { int: true }],
+  ['shop.hearts', 'หัวใจตอนเริ่ม', 1, 50, 'ดวง', 'shop', { int: true }],
+  ['shop.winsToFinish', 'ชนะกี่ครั้งถึงจบ run', 1, 50, 'ครั้ง', 'shop', { int: true }],
+  ...RAR_RULES('shop.prices', 'ราคา', 1, 30, 'เงิน', 'shop', { int: true }),
+  ...RAR_RULES('shop.weights', 'โอกาสสุ่มเจอ', 0, 100, 'น้ำหนัก', 'shop', { int: true }),
+  ...RAR_RULES('shop.unlockWins', 'ชนะกี่ครั้งถึงเริ่มเจอ', 0, 50, 'ครั้ง', 'shop', { int: true }),
+  ...RAR_RULES('power.budget', 'งบแต้ม', 1, 1000, 'แต้ม', 'power'),
+  ['power.burnStack', 'ไฟ 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],
+  ['power.shockStack', 'ช็อต 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],
+  ['power.armorLifeSec', 'เกราะ/ฮิต อยู่ได้นาน (ใช้คิดแต้ม)', 0, 300, 'วิ', 'power', { step: 1 }],
+  // locked: shown so the user sees every number, not editable
+  ['tickMs', 'ความละเอียดเวลา (1 tick)', 0, 0, 'มิลลิวิ', 'lock', { lock: 'ทุกตัวจับเวลาในเกมนับเป็นช่วงละ 0.1 วิ เปลี่ยนแล้วกฎหลายข้อคิดผิด' }],
+  ['rows', 'จำนวนแถว', 0, 0, 'แถว', 'lock', { lock: 'โครงกระดาน (หน้า/กลาง/หลัง) เป้าโจมตีและสกิลผูกกับแถว' }],
+  ['lanes', 'จำนวนช่องต่อแถว', 0, 0, 'ช่อง', 'lock', { lock: 'โครงกระดาน 3×2' }],
+  ['maxBoard', 'ตัวในสนามสูงสุด', 0, 0, 'ตัว', 'lock', { lock: 'โครงกระดาน 3×2' }],
+  ['maxLevel', 'เลเวลสูงสุด', 0, 0, '', 'lock', { lock: 'ค่าพลังและสกิลทุกตัวมี 3 เลเวล' }],
+  ['shop.mergeCount', 'รวมร่างใช้กี่ตัว', 0, 0, 'ตัว', 'lock', { lock: 'กติการวมร่างหลักของเกม' }],
+  ['shop.slots', 'ช่องในร้าน', 0, 0, 'ช่อง', 'lock', { lock: 'เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้ + หน้าจอร้านจัดไว้สำหรับจำนวนนี้' }],
+  ['shop.bench', 'ช่องม้านั่ง', 0, 0, 'ช่อง', 'lock', { lock: 'เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้ + หน้าจอจัดไว้ 6 ช่อง' }],
+  ['tribeSteps', 'ขั้นเผ่า', 0, 0, 'ตัว', 'lock', { lock: 'โบนัสเผ่าทั้งหมดตั้งไว้เป็น 3 ขั้น' }],
+  ['minPerTribe', 'ตัวละครต่อเผ่าอย่างน้อย', 0, 0, 'ตัว', 'lock', { lock: 'ตัวเช็กข้อมูลตัวละคร' }],
+  ['hardStopMs', 'ตัดจบแมตช์ที่', 0, 0, 'มิลลิวิ', 'lock', { lock: 'ตัวกันแมตช์วนไม่จบ (พายุทรายต้องเริ่มก่อนค่านี้)' }],
+  ['hitCapPerMatch', 'เพดานฮิตต่อแมตช์', 0, 0, 'ฮิต', 'lock', { lock: 'ตัวกันวนไม่จบ' }],
+  ['effectCapPerMatch', 'เพดานผลสกิลต่อแมตช์', 0, 0, 'ครั้ง', 'lock', { lock: 'ตัวกันวนไม่จบ' }],
+  ['skillCdMaxMs', 'คูลดาวน์สกิลสูงสุดที่ตั้งได้', 0, 0, 'มิลลิวิ', 'lock', { lock: 'ตัวกันค่าผิดในฟอร์มสกิล' }],
+  ['cdGrowMax', 'คูลดาวน์สกิลเพิ่มได้สูงสุดต่อครั้ง', 0, 0, '%', 'lock', { lock: 'ตัวกันค่าผิดในฟอร์มสกิล' }],
+  ['reflectDebuffMaxPct', 'สะท้อนดีบัฟรวมสูงสุด', 0, 0, '%', 'lock', { lock: 'ตัวกันสะท้อนเกิน 100%' }],
+  ['permSanityMax', 'ค่าถาวรสูงสุดต่อตัว', 0, 0, '', 'lock', { lock: 'ตัวกันค่าผิดปกติในเซฟ' }],
+];
+const ruleSpecOf = path => RULE_SPEC.find(x => x[0] === path);
+export const ruleGet = (R, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), R);
+function ruleSet(R, path, v) { const ks = path.split('.'), last = ks.pop(); let o = R; for (const k of ks) o = o[k]; o[last] = v; }
+const ruleOwn = (o, k) => o && typeof o === 'object' && Object.prototype.hasOwnProperty.call(o, k);
+// External data (database / pasted code / rules-user.js) → only editable paths, numbers in range (stored units). Unknown or bad = dropped.
+export function cleanRuleEdits(o) {
+  const out = {};
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return out;
+  for (const [path, , lo, hi, , , op] of RULE_SPEC) {
+    if (op.lock || !ruleOwn(o, path)) continue;
+    let v = o[path];
+    if (op.bool) { if (v === true || v === false) v = v ? 1 : 0; if (v !== 0 && v !== 1) continue; out[path] = v; continue; }
+    const sc = op.scale || 1;
+    if (typeof v !== 'number' || !Number.isFinite(v) || v < lo * sc - 1e-9 || v > hi * sc + 1e-9) continue;
+    if (op.int && !Number.isInteger(v)) continue;
+    out[path] = sc > 1 ? Math.round(v) : v;
+  }
+  return out;
+}
+// Put edits onto a rules object (in place). bool paths are stored as true/false like the code values.
+export function setRuleEdits(R, edits) {
+  for (const [path, v] of Object.entries(cleanRuleEdits(edits))) ruleSet(R, path, ruleSpecOf(path)[6].bool ? v === 1 : v);
+  return R;
+}
+// Edits = paths whose value differs from base (both rules objects).
+export function ruleEditsOf(R, base) {
+  const out = {};
+  for (const [path, , , , , , op] of RULE_SPEC) {
+    if (op.lock) continue;
+    const a = ruleGet(R, path), b = ruleGet(base, path);
+    if (a !== b) out[path] = op.bool ? (a ? 1 : 0) : a;
+  }
+  return out;
+}
+setRuleEdits(RULES, RULES_USER); // user's confirmed values (Balance Room import) win over the code values above
 
 // ---------- คำศัพท์สกิล (ครบตาม Automon Lab เดิม ยกเว้น "ทริกเกอร์" ที่กฎพักไว้) ----------
 // ตัวละคร 1 ตัวมีได้หลายสกิล · สกิล = { when, do, to, v:[Lv1,Lv2,Lv3], cd?, lv?, chance?, tags? } · ไม่มีเพดานครั้ง

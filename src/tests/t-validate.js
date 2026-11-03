@@ -2,10 +2,12 @@
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { makeRng } from '../core/rng.js';
+import { RULE_SPEC, cleanRuleEdits, ruleEditsOf, ruleGet, setRuleEdits } from '../core/rules.js';
+import { makeMatchCode, parseMatchCode } from '../lab/matchcode.js';
 import { CTX_WHEN, DO_INFO, RULES, SKILL_KINDS, SKILL_SPEC, WHEN_KIND, cleanTags, pickHintRow, rowsOfHint, sameTribeOk } from '../core/rules.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
-import { mk, L3, u, eq, ok, randomTeam } from './helpers.js';
+import { mk, L3, u, eq, ok, randomTeam, dummy, fight, ev, NT } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
 import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, rarityOdds, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, phaseStatsAt, BOSS_RULE_GROUPS, BOSS_STAT_GROUPS, BOSS_PHASE_STATS } from '../core/stage.js';
 export const TESTS_VALIDATE = [
@@ -199,5 +201,37 @@ export const TESTS_VALIDATE = [
     const nw = cleanStage({ copiesRule: 'rarity', runes: { T5: { max: 1 } }, custom: [{ id: 'C1', eff: 'atk', max: 1 }] });
     eq([nw.runes.T5.max, nw.custom[0].max], [1, 1], 'เซฟใหม่: ตัวเลขที่ผู้ใช้ตั้งคงไว้');
     eq(cleanStage({ copiesRule: 'rarity', runes: { T5: { rarity: 'legend' } } }).runes.T5.max, 1, 'ไม่มีจำนวน → ตามความหายากที่เซฟ');
+  }],
+  ['ชุด 76: กฎเกม — ค่าในเกมทุกข้อที่ปรับได้อยู่ในช่วง · ค่าล็อก/ไม่รู้จัก/นอกช่วงถูกตัด · ราคาตัวละครตามกฎ', () => {
+    const ed = {};
+    for (const [path, , , , , , op] of RULE_SPEC) { const v = ruleGet(RULES, path); ok(v !== undefined, `${path} ไม่มีใน RULES`); if (!op.lock) ed[path] = op.bool ? (v ? 1 : 0) : v; }
+    eq(Object.keys(cleanRuleEdits(ed)).length, Object.keys(ed).length, 'ค่าในเกมทุกข้อผ่านตัวตรวจ (กดคืนค่าได้)');
+    eq(cleanRuleEdits({ tickMs: 50, 'shop.slots': 9, stormStartMs: 999999, burnDecay: 1.5, nope: 1, 'shop.prices.ธรรมดา': 4, stormPierce: true }), { stormPierce: 1, 'shop.prices.ธรรมดา': 4 }, 'ล็อก/นอกช่วง/ไม่ใช่จำนวนเต็ม/ไม่รู้จัก = ตัด');
+    eq(cleanRuleEdits(null), {}, 'null'); eq(cleanRuleEdits([1]), {}, 'array');
+    const R = setRuleEdits(structuredClone(RULES), { stormDmgMult: 1.5, 'bossTimers.enrageMs': 4000, stormPierce: 1 });
+    eq([R.stormDmgMult, R.bossTimers.enrageMs, R.stormPierce, RULES.stormDmgMult], [1.5, 4000, true, 2], 'ตั้งค่าบนสำเนา ไม่แตะ RULES');
+    eq(ruleEditsOf(R, RULES), { stormDmgMult: 1.5, stormPierce: 1, 'bossTimers.enrageMs': 4000 }, 'หาค่าที่ต่าง');
+    for (const c of buildCharacterList()) eq(c.price, RULES.shop.prices[c.rarity], `${c.id} ราคาตามกฎ`);
+  }],
+  ['ชุด 76: กฎเกม — พายุทราย/HP ต่ำ ใช้ค่าที่ตั้ง', () => {
+    const chars = [dummy('A'), dummy('B')];
+    const R = setRuleEdits({ ...structuredClone(NT) }, { stormStartMs: 10000, stormIntervalMs: 500, stormDmgStart: 7, stormDmgMult: 1 });
+    const st = ev(fight(chars, [u('A')], [u('B')], { rules: R, detail: true }), 'dmg', e => e.why === 'storm').slice(0, 8);
+    eq(st.map(e => e.t), [10500, 10500, 11000, 11000, 11500, 11500, 12000, 12000], 'เริ่ม 10 วิ ตีทุก 0.5 วิ');
+    ok(st.every(e => e.amount === 7), 'ตัวคูณ 1 = ดาเมจเท่าเดิม');
+    const L = dummy('L', { hp: L3(100), skills: [{ when: 'lowHp', do: 'armor', to: 'self', v: L3(30) }] }), E = mk('E', { atk: L3(30) });
+    eq(ev(fight([L, E], [u('L')], [u('E')]), 'armor', e => e.why === 'L').map(e => e.t), [2000], 'ค่าเดิม 50%: HP 40 ที่ 2 วิ');
+    eq(ev(fight([L, E], [u('L')], [u('E')], { rules: setRuleEdits(structuredClone(NT), { lowHpPct: 75 }) }), 'armor', e => e.why === 'L').map(e => e.t), [1000], '75%: HP 70 ที่ 1 วิ');
+  }],
+  ['ชุด 76: กฎเกม — รหัสแมตช์และรหัส AMCFG1 พาค่ากฎไปด้วย · ค่าผิดถูกปฏิเสธ', () => {
+    const A = [u('SF-1')], B = [u('SF-1')], mc = d => makeMatchCode({ base: '0000abcd', seed: 1, A, B, tribesOff: [false, false], diff: d, result: { winner: 0, timeMs: 1000 } });
+    eq(parseMatchCode(mc({ chars: {}, tribes: {}, rules: { stormDmgMult: 1.5 } })).diff.rules, { stormDmgMult: 1.5 }, 'รหัสแมตช์มีค่ากฎ');
+    eq(parseMatchCode(mc({ chars: {}, tribes: {} })).diff.rules, {}, 'รหัสเก่าไม่มีค่ากฎ');
+    let bad = false; try { parseMatchCode(mc({ chars: {}, tribes: {}, rules: { tickMs: 50 } })); } catch (e) { bad = true; } ok(bad, 'ค่าล็อกในรหัสแมตช์ = ปฏิเสธ');
+    const cfg = { chars: {}, tribes: {}, rules: { 'shop.goldPerRound': 12 } };
+    const r = parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured: { edits: cfg } }));
+    eq(r.config.rules, { 'shop.goldPerRound': 12 }, 'AMCFG1 มีค่ากฎ'); ok(preImportCheck(r).ok, 'ผลวัดตรง');
+    ok(!preImportCheck(parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured: { edits: { chars: {}, tribes: {} } } }))).ok, 'วัดก่อนแก้กฎ = ไม่ตรง');
+    bad = false; try { parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: { rules: { 'shop.goldPerRound': 999 } } })); } catch (e) { bad = true; } ok(bad, 'ค่ากฎนอกช่วงใน AMCFG1 = ปฏิเสธ');
   }],
 ];

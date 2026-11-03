@@ -18,6 +18,7 @@
       <button role="tab" id="tab-chars" aria-selected="true" type="button">แก้ตัวละคร</button>
       <button role="tab" id="tab-tribes" aria-selected="false" type="button" hidden>โบนัสเผ่า</button>
       <button role="tab" id="tab-sim" aria-selected="false" type="button" title="จัดทีมลองสู้ 1 แมตช์ (จำลองสกิล)">ลองสู้</button>
+      <button role="tab" id="tab-rules" aria-selected="false" type="button" title="ค่ากฎทั้งเกม: พายุทราย ไฟ ร้านค้า จังหวะกฎบอส ฯลฯ">กฎเกม</button>
       <button role="tab" id="tab-match" aria-selected="false" type="button" title="ดาเมจทุกครั้งของแมตช์ที่จำลองล่าสุด แยกตามที่มา">ดูแมตช์</button>
       <button role="tab" id="tab-stage" aria-selected="false" type="button" title="โหมดด่าน (demo): รูน บอส และค่าของโหมด · ยังไม่มีผลในการต่อสู้">รูน / บอส</button>
       <span class="grow"></span>
@@ -76,6 +77,12 @@
       <div class="row" id="tribePick" role="group" aria-label="เลือกเผ่า"></div>
       <p class="hint">ตัวเลขโบนัสเผ่า ขั้น 2 / 4 / 6 ตัว · ให้ผลกับทั้งทีม</p>
       <div id="tform" style="display:grid;gap:14px"></div>
+    </div>
+
+    <div id="pane-rules" hidden style="display:grid;gap:14px">
+      <div class="row"><span class="status grow" id="ruleDirty"></span><button type="button" id="ruleReset">คืนค่ากฎทั้งหมด</button></div>
+      <p class="status" id="ruleMsg" role="status"></p>
+      <div id="rform" style="display:grid;gap:14px"></div>
     </div>
 
     <div id="pane-stage" hidden style="display:grid;gap:14px">
