@@ -1,3 +1,4 @@
+import { RULES } from './rules.js';
 // ข้อมูลตัวละคร Automon Arena ร่าง 2: 48 ตัว 5 ความหายาก (claude/characters.csv เป็นสำเนาให้คนอ่าน)
 // 24 ต.ค. ชุด 19: นำค่าห้องบาลานซ์ (config v71 · ภูติ/อสูร + 4 เผ่า) + ค่า 4 ตัวจากรอบก่อน · ปรับค่าพื้นฐาน 14 ตัวด้วย lab/formula.mjs/มือ · WN-3 สกิลฟื้น 30→15% (ผู้ใช้เลือก 1A) · วัด 24,000 ผ่านครบ
 // นำเข้าค่าที่ผู้ใช้แก้ใน Automon Lab (18 ต.ค.): ชื่อ 7 ตัว · HL-3 HP 100/200/400 · HL-4 ร้านค้า 10/20/40 · HL-2/HL-3 ไม่มีเพดาน · HL-4/PL-2 เหลือสกิลร้านค้า · HL-6 สะท้อนดาเมจ · WY-2 ฮิตเพิ่ม 1/1/1
@@ -123,7 +124,7 @@ export const SKILLS = {
 export function buildCharacterList() {
   return ROWS.map(r => ({
     id: r[0], name: r[1], tribe: r[2], extraTribes: r[3] ? [r[3]] : [],
-    rarity: r[4], price: r[5], rowHint: r[6],
+    rarity: r[4], price: RULES.shop.prices[r[4]] ?? r[5], rowHint: r[6], // set 76: price follows RULES.shop.prices (กฎเกม tab can change it)
     hp: r[7].slice(), atk: r[8].slice(), cdMs: (Array.isArray(r[9]) ? r[9] : [r[9], r[9], r[9]]).map(x => Math.round(x * 1000)), multi: r[10].slice(), // คูลดาวน์แยกเลเวล (20 ต.ค.) ตัวเลขเดียว = ทุกเลเวล
     burn: r[11].slice(), shock: r[12].slice(), armorHit: (r[13] || [0, 0, 0]).slice(), healHit: (r[14] || [0, 0, 0]).slice(), // r[14] = ฟื้น/ฮิต (ชุด 18)
     skills: (SKILLS[r[0]] || []).map(s => ({ ...s, v: s.v.slice(), ...(s.lv ? { lv: s.lv.slice() } : {}), ...(s.tags ? { tags: s.tags.slice() } : {}), ...(s.of ? { of: { ...s.of } } : {}) })),

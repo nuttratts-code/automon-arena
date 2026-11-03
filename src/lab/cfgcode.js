@@ -1,7 +1,7 @@
 // set 48: pure decoder for the Balance Room "คัดลอกค่าให้ Claude" code (AMCFG1 {json}) · no node imports, so the
 // system-check page can bundle it · CLI wrapper: tools/cfgcode.mjs · input is external data: validated, never evaluated.
 import { ROWS } from '../core/characters.js';
-import { TRIBES } from '../core/rules.js';
+import { TRIBES, cleanRuleEdits } from '../core/rules.js';
 
 export function parseCfgCode(text) {
   if (typeof text !== 'string') throw new Error('code must be text');
@@ -23,11 +23,16 @@ export function parseCfgCode(text) {
     if (!TRIBES.includes(t)) throw new Error('unknown tribe ' + t);
     if (!isObj(v)) throw new Error('tribe entry is not an object: ' + t);
   }
+  // set 76: game-rule edits (กฎเกม tab) · optional · every key must be an editable rule with a value in range
+  const rules = cfg.rules === undefined ? {} : cfg.rules;
+  if (!isObj(rules)) throw new Error('config.rules must be an object');
+  const goodRules = cleanRuleEdits(rules), badRules = Object.keys(rules).filter(k => !(k in goodRules));
+  if (badRules.length) throw new Error('bad game-rule value(s): ' + badRules.join(', '));
   let measured = null;
   if (o.measured != null) {
     if (!isObj(o.measured)) throw new Error('measured must be an object');
     const e = o.measured.edits;
-    measured = { at: typeof o.measured.at === 'string' ? o.measured.at : null, edits: isObj(e) ? { chars: isObj(e.chars) ? e.chars : {}, tribes: isObj(e.tribes) ? e.tribes : {} } : null };
+    measured = { at: typeof o.measured.at === 'string' ? o.measured.at : null, edits: isObj(e) ? { chars: isObj(e.chars) ? e.chars : {}, tribes: isObj(e.tribes) ? e.tribes : {}, rules: isObj(e.rules) ? e.rules : {} } : null };
   }
   // set 61: open ideas from the page (optional) · text only, length-capped · unknown keys dropped
   let ideas = [];
@@ -40,7 +45,7 @@ export function parseCfgCode(text) {
       return d;
     }).filter(x => x.text.trim());
   }
-  return { config: { ...cfg, chars, tribes }, measured, ideas };
+  return { config: { ...cfg, chars, tribes, rules: goodRules }, measured, ideas };
 }
 
 const cfgCanon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(q => [q, x[q]])) : x));
@@ -48,8 +53,8 @@ const cfgCanon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' &&
 export function preImportCheck({ config, measured }) {
   if (!measured || !measured.edits) return { ok: false, why: 'no measured result (press วิเคราะห์ then 💾)', diff: [] };
   const diff = [];
-  for (const part of ['chars', 'tribes']) {
-    const a = config[part], b = measured.edits[part];
+  for (const part of ['chars', 'tribes', 'rules']) {
+    const a = config[part] || {}, b = measured.edits[part] || {};
     for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) if (cfgCanon(a[k]) !== cfgCanon(b[k])) diff.push(part + ':' + k);
   }
   return { ok: diff.length === 0, why: diff.length ? 'measured values differ from saved values' : '', diff };

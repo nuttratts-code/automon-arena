@@ -14,7 +14,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'main.json'), JSON.stringify(r.config, null, 2));
   const chk = preImportCheck(r);
-  console.log(`saved ${r.config.savedAt || '?'} · chars ${Object.keys(r.config.chars).join(' ') || '-'} · tribes ${Object.keys(r.config.tribes).join(' ') || '-'}`);
+  console.log(`saved ${r.config.savedAt || '?'} · chars ${Object.keys(r.config.chars).join(' ') || '-'} · tribes ${Object.keys(r.config.tribes).join(' ') || '-'} · rules ${Object.keys(r.config.rules).join(' ') || '-'}`);
   console.log(`measured ${r.measured && r.measured.at || '-'} · pre-import check: ${chk.ok ? 'MATCH' : 'DIFFERS — ' + chk.why + (chk.diff.length ? ' [' + chk.diff.join(', ') + ']' : '')}`);
   console.log('wrote ' + path.join(out, 'main.json'));
   console.log(`ideas ${r.ideas.length}` + (r.ideas.length ? ':' : ''));

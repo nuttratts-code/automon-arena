@@ -179,6 +179,8 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .fld > input, .fld > select { width: 100%; min-width: 0; height: 36px; box-sizing: border-box; margin: 0; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-body); font-size: .9rem; }
 .fld > input[type=number] { font-family: var(--f-mono); text-align: right; }
 .fld > input.changed, .fld > select.changed { background: var(--edit); border-color: var(--lo); }
+.rgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); align-items: start; }
+.rlock { padding: 6px 8px; border-radius: 6px; background: var(--soft, transparent); border: 1px dashed var(--line); } .rlock > b { color: var(--ink, inherit); } .rlock > small { font-size: .72rem; }
 .fld.wide { grid-column: span 2; } .fld.full { grid-column: 1 / -1; }
 .stg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .stg-bar input[type=search] { flex: 1 1 180px; min-width: 0; height: 36px; box-sizing: border-box; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; }

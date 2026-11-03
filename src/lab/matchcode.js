@@ -4,6 +4,7 @@
 // Set 72: boss fights + runes too — optional k (boss appearance), st (only the stage records used: the boss + equipped runes), ru (rune equips).
 // Pure functions, no DOM. Bundled into balance.html and imported by lab/replay.mjs.
 import { cleanStage, runeActive } from '../core/stage.js';
+import { cleanRuleEdits } from '../core/rules.js';
 export const MATCH_CODE_TAG = 'AMATCH1';
 const MC_MAX_LEN = 200000;
 
@@ -53,7 +54,9 @@ export function parseMatchCode(text) {
   if (typeof o.b !== 'string' || !/^[0-9a-f]{8}$/.test(o.b)) throw new Error('bad base fingerprint');
   if (!Number.isInteger(o.s) || o.s < 0 || o.s > 999999) throw new Error('bad seed');
   if (!Array.isArray(o.off) || o.off.length !== 2 || !o.off.every(x => x === 0 || x === 1)) throw new Error('bad tribe switches');
-  if (!mcIsObj(o.d) || !mcIsObj(o.d.chars || {}) || !mcIsObj(o.d.tribes || {})) throw new Error('bad edited values');
+  if (!mcIsObj(o.d) || !mcIsObj(o.d.chars || {}) || !mcIsObj(o.d.tribes || {}) || !mcIsObj(o.d.rules || {})) throw new Error('bad edited values');
+  const ruleD = o.d.rules || {}; // set 76: game-rule edits (กฎเกม tab) · every key must be an editable rule with a value in range
+  if (Object.keys(cleanRuleEdits(ruleD)).length !== Object.keys(ruleD).length) throw new Error('bad game-rule edits');
   if (!Array.isArray(o.r) || o.r.length !== 2 || ![-1, 0, 1].includes(o.r[0]) || !Number.isInteger(o.r[1])) throw new Error('bad result');
   const bossK = o.k === undefined ? 0 : o.k;
   if (!Number.isInteger(bossK) || bossK < 0 || bossK > 99) throw new Error('bad boss appearance');
@@ -68,7 +71,7 @@ export function parseMatchCode(text) {
     return { id: x[0], n: x[1], slot: x[2], partner: x[3] };
   });
   return { base: o.b, seed: o.s, A: mcEntries(o.A, 'A'), B: bossK ? [] : mcEntries(o.B, 'B'), tribesOff: o.off.map(x => x === 1),
-    diff: { chars: o.d.chars || {}, tribes: o.d.tribes || {} }, result: { winner: o.r[0] === -1 ? null : o.r[0], timeMs: o.r[1] },
+    diff: { chars: o.d.chars || {}, tribes: o.d.tribes || {}, rules: cleanRuleEdits(ruleD) }, result: { winner: o.r[0] === -1 ? null : o.r[0], timeMs: o.r[1] },
     bossK, stage: o.st || null, runes };
 }
 

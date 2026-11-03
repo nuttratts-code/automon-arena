@@ -1,7 +1,8 @@
 // Stage mode (demo) data — phase 1 (29 Oct 2026; set 52 added rune name/max, boss spot/bars/moveSec, endless settings; set 53 runes v2): runes, bosses, stage settings that the Balance Room edits.
 // The battle engine does NOT use these yet (phase 2). Every number = proposal (ค่าเสนอ) until the user confirms.
 // Design notes: claude/backlog.md "Stage mode" · claude/review-2026-10-28-runes.md · claude/review-2026-10-29-stage-baseline.md
-import { TRIBES, DO_INFO, BATTLE_WHEN, skillTargets } from './rules.js';
+import { TRIBES, DO_INFO, BATTLE_WHEN, skillTargets, RULES } from './rules.js';
+const BT = k => +(RULES.bossTimers[k] / 1000).toFixed(1); // set 76: boss rule timers live in RULES.bossTimers (กฎเกม tab)
 import { STAGE_USER } from './stage-user.js';
 
 // ---------- Runes v2 (user 29 Oct, set 53 · claude/review-2026-10-29-runes-v2.md) ----------
@@ -242,7 +243,7 @@ export const BOSS_RULES = [
   ['healCut', 'ผู้เล่นฟื้นเลือดได้น้อยลง', 50, 1, 100, '%'],
   ['armorCut', 'เกราะผู้เล่นลดลง', 50, 1, 100, '%'],
   ['tribeOff', 'ปิดโบนัสเผ่าของผู้เล่น', 0, 0, 0, ''],
-  ['enrage', 'บอสตีแรงขึ้นทุก 10 วิ', 20, 1, 200, '%'],
+  ['enrage', `บอสตีแรงขึ้นทุก ${BT('enrageMs')} วิ`, 20, 1, 200, '%'],
   ['reflect', 'สะท้อนดาเมจกลับ', 10, 1, 100, '%'],
   ['cdSlow', 'คูลดาวน์ผู้เล่นช้าลง', 20, 1, 200, '%'],
   // บอสแรงขึ้น
@@ -255,9 +256,9 @@ export const BOSS_RULES = [
   ['execute', 'R7 ตีจนเลือดเหลือต่ำกว่านี้ = down ทันที', 15, 1, 50, '%'],
   ['lifesteal', 'R8 บอสดูดเลือดจากดาเมจที่ทำ (ไม่เกินแถบปัจจุบัน)', 30, 1, 200, '%'],
   ['regen', 'R9 บอสฟื้นเลือดทุกวิ (% ของ 1 แถบ · ไม่เกินแถบปัจจุบัน)', 3, 1, 50, '%'],
-  ['armorGrow', 'R10 บอสได้เกราะเพิ่มทุก 10 วิ', 20, 1, 10000, 'เกราะ'],
-  ['burnAura', 'R11 ทุก 5 วิ ผู้เล่นทุกตัวติดไฟ', 4, 1, 100, 'ไฟ'],
-  ['shockAura', 'R12 ทุก 5 วิ สุ่มผู้เล่น 1 ตัวติดช็อต', 2, 1, 100, 'ช็อต'],
+  ['armorGrow', `R10 บอสได้เกราะเพิ่มทุก ${BT('armorGrowMs')} วิ`, 20, 1, 10000, 'เกราะ'],
+  ['burnAura', `R11 ทุก ${BT('burnAuraMs')} วิ ผู้เล่นทุกตัวติดไฟ`, 4, 1, 100, 'ไฟ'],
+  ['shockAura', `R12 ทุก ${BT('shockAuraMs')} วิ สุ่มผู้เล่น 1 ตัวติดช็อต`, 2, 1, 100, 'ช็อต'],
   ['desperate', 'R13 คลั่ง: บอสตีแรง ×2 แต่โดนดาเมจเพิ่ม', 50, 0, 300, '%'],
   ['feedOnDown', 'R14 ผู้เล่น down 1 ตัว บอสฟื้นเลือด (% ของ 1 แถบ · ไม่เกินแถบปัจจุบัน)', 50, 1, 100, '%'],
   // ผู้เล่นอ่อนลง
@@ -279,8 +280,8 @@ export const BOSS_RULES = [
   ['vanish', 'R27 ทุก X วิ บอสหายตัว (ตีไม่โดน)', 12, 2, 60, 'วิ', ['หายนาน', 2, 1, 10, 'วิ']],
   // ไขปริศนา
   ['dpsCheck', 'R28 ตีแถบไม่หมดในเวลานี้ แถบนั้นเต็มกลับ', 20, 3, 120, 'วิ'],
-  ['curse', 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า', 15, 3, 60, 'วิ', ['เป้า (% ของ 1 แถบ)', 50, 1, 100, '%']],
-  ['weakSpot', 'R30 หลังย้ายที่ บอสโดนดาเมจเพิ่ม 3 วิ (ใช้กับแบบย้ายที่)', 50, 1, 300, '%'],
+  ['curse', `R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน ${BT('curseWindowMs')} วิ ถ้าทีมตีบอสไม่ถึงเป้า`, 15, 3, 60, 'วิ', ['เป้า (% ของ 1 แถบ)', 50, 1, 100, '%']],
+  ['weakSpot', `R30 หลังย้ายที่ บอสโดนดาเมจเพิ่ม ${BT('weakSpotMs')} วิ (ใช้กับแบบย้ายที่)`, 50, 1, 300, '%'],
   // Set 71 (user 1 Nov "เพิ่มสิ่งที่บอสควรทำได้"): R31–R38 · all numbers ค่าเสนอ
   ['pierce', 'R31 บอสตีทะลุเกราะ (ฮิตปกติไม่โดนเกราะกัน)', 0, 0, 0, ''],
   ['thorns', 'R32 หนาม: ผู้เล่นตีบอส (ฮิตปกติ) โดนดาเมจกลับทุกฮิต', 3, 1, 1000, 'ดาเมจ'],

@@ -4,7 +4,7 @@ import { BOSS_RULES, BOSS_PHASE_FX } from '../core/stage.js';
 
 export const WHEN_TH = {
   passive: 'ติดตัว', matchStart: 'เริ่มแมตช์', set: 'ทุกครั้งที่โจมตี (ชุด)', hit: 'ทุกฮิตที่ตีโดน', hits3: 'ชุดที่ตีโดนครบ 3 ฮิต',
-  hitTaken: 'เมื่อโดนตี (จากศัตรูตัวไหนก็ได้)', lowHp: 'HP ต่ำกว่าครึ่ง (ครั้งแรก)', armorBreak: 'เกราะตัวเองแตก', selfDown: 'ตัวเอง down', allyDown: 'เพื่อน down',
+  hitTaken: 'เมื่อโดนตี (จากศัตรูตัวไหนก็ได้)', get lowHp() { return RULES.lowHpPct === 50 ? 'HP ต่ำกว่าครึ่ง (ครั้งแรก)' : `HP ต่ำกว่า ${RULES.lowHpPct}% (ครั้งแรก)`; }, armorBreak: 'เกราะตัวเองแตก', selfDown: 'ตัวเอง down', allyDown: 'เพื่อน down',
   enemyDown: 'ศัตรู down', kill: 'ตัวเองทำศัตรู down',
   buy: 'ร้านค้า: เมื่อซื้อตัวนี้', sell: 'ร้านค้า: เมื่อขายตัวนี้', merge: 'ร้านค้า: เมื่อรวมร่าง', matchEnd: 'หลังสู้: จบแมตช์ (แพ้หรือชนะ)',
   matchWin: 'หลังสู้: ชนะแมตช์', shopStart: 'ร้านค้า: เริ่มรอบร้าน',

@@ -11,6 +11,7 @@ function diffs() {
     if (Object.keys(d).length) out.chars[c.id] = d;
   });
   for (const t of Object.keys(tribes)) if (!same(tribes[t], BASE_TRIBES[t])) out.tribes[t] = tribes[t];
+  if (Object.keys(ruleEdits).length) out.rules = { ...ruleEdits }; // set 76: only when edited (keeps old saves/drafts the same shape)
   return out;
 }
 // ชื่อจากผู้ใช้/ที่เก็บ: ตัดอักขระควบคุมและ < > ออก ตัดช่องว่างหัวท้าย ยาวไม่เกิน NAME_MAX · ว่าง = ไม่รับ
@@ -45,6 +46,7 @@ function cleanSkills(list) {
 // ข้อมูลจากที่เก็บถือว่าไม่น่าเชื่อถือ: รับเฉพาะช่องที่รู้จักและตัวเลขในช่วงที่สมเหตุสมผล
 function applyDiffs(d) {
   chars = clone(BASE_CHARS); tribes = clone(BASE_TRIBES);
+  ruleEdits = d && typeof d === 'object' ? cleanRuleEdits(d.rules) : {}; applyRulesLive();
   if (!d || typeof d !== 'object') return;
   for (const [id, o] of Object.entries(d.chars || {})) {
     const c = chars.find(x => x.id === id);
@@ -63,7 +65,7 @@ function applyDiffs(d) {
     for (const k of Object.keys(tribes[t])) if (arr3(o[k], 0, 1000)) tribes[t][k] = o[k].slice();
   }
 }
-function countEdits(d) { return Object.values(d.chars).reduce((a, o) => a + Object.keys(o).length, 0) + Object.keys(d.tribes).length; }
+function countEdits(d) { return Object.values(d.chars).reduce((a, o) => a + Object.keys(o).length, 0) + Object.keys(d.tribes).length + Object.keys(d.rules || {}).length; }
 function refreshDirty() {
   const d = diffs(), n = countEdits(d);
   const ids = Object.keys(d.chars).filter(id => Object.keys(d.chars[id]).length), tN = Object.keys(d.tribes).length;
@@ -72,6 +74,7 @@ function refreshDirty() {
     const parts = [];
     if (ids.length) parts.push(`${ids.length} ตัว (${ids.slice(0, 6).join(' ')}${ids.length > 6 ? ' …' : ''})`);
     if (tN) parts.push(`โบนัสเผ่า ${tN} ค่า`);
+    if (d.rules) parts.push(`กฎเกม ${Object.keys(d.rules).length} ค่า`);
     $('dirty').replaceChildren('แก้แล้ว ', el('b', '', parts.join(' · ')), ` · รวม ${n} จุด · ยังไม่ได้ส่งจนกว่าจะกด "บันทึกให้ Claude"`);
   }
   const v = validateConfig(chars, rulesNow());

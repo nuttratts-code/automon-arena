@@ -26,7 +26,7 @@ renderCharForm(); renderTribeForm(); refreshDirty();
     const clean = draft === '{"chars":{},"tribes":{}}' || (sync && sync.draft === draft) && (!stageEdited() || same(stageCfg, cleanStage(cfg && cfg.stage))); // stage mode: unsaved rune/boss edits also block the load
     if (at && (!sync || at > sync.at)) {
       if (clean) {
-        if (cfg) { applyDiffs(cfg); renderCharForm(); renderTribeForm(); refreshDirty(); stageCfg = cleanStage(cfg.stage); if (!$('pane-stage').hidden) renderStage(); else stageChanged(); }
+        if (cfg) { applyDiffs(cfg); renderCharForm(); renderTribeForm(); if (!$('pane-rules').hidden) renderRulesForm(); refreshDirty(); stageCfg = cleanStage(cfg.stage); if (!$('pane-stage').hidden) renderStage(); else stageChanged(); }
         if (ui) applyUi(ui);
         markSynced(at); saveMsg('โหลดสิ่งที่บันทึกไว้แล้ว');
       } else saveMsg('เครื่องนี้มีค่าที่แก้แต่ยังไม่บันทึก จึงใช้ของในเครื่อง · กด 💾 เพื่อบันทึกทับ');

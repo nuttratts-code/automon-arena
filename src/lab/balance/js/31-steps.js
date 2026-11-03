@@ -1,5 +1,5 @@
 // ---------- ชุด 29: 4 ขั้น เลือกตัว → แก้ → ดูผล → บันทึก ----------
-const STEP_OF = { grid: 'pick', list: 'pick', chars: 'edit', tribes: 'edit', sim: 'edit', match: 'edit', stage: 'edit', analysis: 'result' }; // ชุด 36: แท็บวิเคราะห์แมตช์ // ชุด 30: บันทึกย้ายมาท้ายขั้นแก้ (3 ขั้น)
+const STEP_OF = { grid: 'pick', list: 'pick', chars: 'edit', tribes: 'edit', sim: 'edit', match: 'edit', stage: 'edit', rules: 'edit', analysis: 'result' }; // ชุด 36: แท็บวิเคราะห์แมตช์ // ชุด 30: บันทึกย้ายมาท้ายขั้นแก้ (3 ขั้น)
 var curTab = 'grid', lastPick = 'grid', lastEdit = 'chars', tribeSel = TRIBES[0]; // var: ฟอร์มเผ่าอ่านได้ตั้งแต่เริ่มหน้า
 function showTab(which) {
   if (which === 'save') which = 'chars'; // ค่าเก่าที่จำไว้ (ก่อนชุด 30)
@@ -19,6 +19,7 @@ function showTab(which) {
   $('tab-sim').setAttribute('aria-selected', String(which === 'sim'));
   $('tab-match').setAttribute('aria-selected', String(which === 'match'));
   $('tab-stage').setAttribute('aria-selected', String(which === 'stage'));
+  $('tab-rules').setAttribute('aria-selected', String(which === 'rules'));
   // โหมดทำไปลองไป: แก้ตัวละคร/ลองสู้ แสดงทั้งสองส่วนพร้อมกัน (จอกว้างอยู่ข้างกัน จอแคบอยู่ต่อกัน)
   const both = comboOn && (which === 'chars' || which === 'sim');
   $('editor').classList.toggle('combo', both);
@@ -29,9 +30,10 @@ function showTab(which) {
   $('pane-sim').hidden = !(which === 'sim' || both);
   $('pane-analysis').hidden = which !== 'analysis';
   $('pane-stage').hidden = which !== 'stage'; if (which === 'stage') renderStage();
-  document.querySelector('#editor > details.gloss').hidden = which === 'stage'; // set 56: skill glossary is not about runes/bosses
+  $('pane-rules').hidden = which !== 'rules'; if (which === 'rules') renderRulesForm();
+  document.querySelector('#editor > details.gloss').hidden = which === 'stage' || which === 'rules'; // set 56: skill glossary is not about runes/bosses
   $('pane-match').hidden = which !== 'match'; if (which === 'match') renderMatch();
-  $('saveBox').hidden = $('pane-chars').hidden && $('pane-tribes').hidden && $('pane-stage').hidden; $('ideaBox').hidden = which === 'stage'; // stage tab has its own idea box // ส่วนบันทึกอยู่ใต้ส่วนแก้ตัวละคร/โบนัสเผ่า
+  $('saveBox').hidden = $('pane-chars').hidden && $('pane-tribes').hidden && $('pane-stage').hidden && $('pane-rules').hidden; $('ideaBox').hidden = which === 'stage'; // stage tab has its own idea box // ส่วนบันทึกอยู่ใต้ส่วนแก้ตัวละคร/โบนัสเผ่า
   if (which === 'grid') renderGrid();
   if (which === 'list') renderList();
   if (which === 'tribes') renderTribePick();
@@ -50,6 +52,7 @@ $('tab-tribes').addEventListener('click', () => showTab('tribes'));
 $('tab-sim').addEventListener('click', () => showTab('sim'));
 $('tab-match').addEventListener('click', () => showTab('match'));
 $('tab-stage').addEventListener('click', () => showTab('stage'));
+$('tab-rules').addEventListener('click', () => showTab('rules'));
 function editedIds(d) { return Object.keys(d.chars).filter(id => Object.keys(d.chars[id]).length); }
 // Batch 31: measured result per character/tribe for the step-1 grid · source = this page's last "วิเคราะห์" (lastRun) or the saved results/latest (savedRes, validated on load)
 let savedRes = null;

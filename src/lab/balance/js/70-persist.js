@@ -75,7 +75,7 @@ function applyUi(o) {
 $('reset').addEventListener('click', () => {
   if ($('reset').dataset.confirm !== '1') { $('reset').dataset.confirm = '1'; $('reset').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('reset').dataset.confirm = ''; $('reset').textContent = 'กลับค่าตั้งต้น'; }, 3000); return; }
   $('reset').dataset.confirm = ''; $('reset').textContent = 'กลับค่าตั้งต้น';
-  applyDiffs(null); renderCharForm(); renderTribeForm(); refreshDirty();
+  applyDiffs(null); renderCharForm(); renderTribeForm(); if (!$('pane-rules').hidden) renderRulesForm(); refreshDirty();
 });
 
 // set 48: copy the saved values (config/main) + the edits the last "วิเคราะห์" measured (results/latest) as one code.
@@ -94,7 +94,7 @@ $('cfgCopy').addEventListener('click', async () => {
     const ideas = ideaDocs.map(d => ({ id: d.id, x: d.data() || {} })).filter(({ x }) => IDEA_OPEN.has(typeof x.status === 'string' ? x.status : 'รอ Claude') && typeof x.text === 'string' && x.text)
       .slice(0, 50).map(({ id, x }) => ({ id, char: typeof x.char === 'string' ? x.char.slice(0, 60) : '', text: x.text.slice(0, 1000), status: typeof x.status === 'string' ? x.status : 'รอ Claude', at: typeof x.at === 'string' ? x.at : '', ...(typeof x.reply === 'string' && x.reply ? { reply: x.reply.slice(0, 1000) } : {}) }));
     const code = 'AMCFG1 ' + JSON.stringify({ v: 1, config: cfg, measured, ideas });
-    const unsaved = canon(diffs()) !== canon({ chars: cfg.chars || {}, tribes: cfg.tribes || {} });
+    const unsaved = canon(diffs()) !== canon({ chars: cfg.chars || {}, tribes: cfg.tribes || {}, ...(cfg.rules && Object.keys(cfg.rules).length ? { rules: cfg.rules } : {}) });
     const note = (unsaved ? ' · ⚠ มีค่าที่แก้หลังกด 💾 (ค่านั้นไม่อยู่ในรหัส)' : '') + (ideas.length ? ` · มีไอเดียที่รอ Claude ${ideas.length} ข้อในรหัสด้วย` : '');
     const box = $('cfgBox');
     const showBox = () => { box.value = code; box.hidden = false; box.focus(); box.select(); msg('คัดลอกอัตโนมัติไม่ได้ · กดค้างในกล่องด้านล่างแล้วคัดลอกเอง' + note); };
