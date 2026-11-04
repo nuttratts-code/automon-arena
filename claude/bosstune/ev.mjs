@@ -26,8 +26,8 @@ export function evalBoss(raw,NS=4,ks=[1,2]){
 export function score(b,out){ let s=0,ok=0,n=0;
   for(const k in out) for(const tr in out[k]){ const x=out[k][tr]; n++;
     const own=tr===b.tribe; let pen;
-    if(own) pen=(1-x.w)*6+Math.max(0,2-x.bl)+Math.max(0,x.bl-3.5)*0.5;
-    else pen=(1-x.w)*6+Math.max(0,x.bl-1)+(x.bl<0.15?0.3:0);
+    if(own) pen=(1-x.w)*20+Math.max(0,2-x.bl)+Math.max(0,x.bl-3.5)*0.5;
+    else pen=(1-x.w)*20+Math.max(0,x.bl-1)+(x.bl<0.15?0.3:0);
     if(pen<0.05)ok++; s+=pen; }
   return {pen:s,ok,n}; }
 export function show(b,out){ for(const k in out){ console.log(` ด่าน${k==1?5:10} Lv${k}: `+TR.map(tr=>{const x=out[k][tr];return `${tr}${tr===b.tribe?'*':''} ${Math.round(x.w*100)}%/${x.bl.toFixed(1)}/${x.t.toFixed(0)}s`;}).join(' | ')); } }

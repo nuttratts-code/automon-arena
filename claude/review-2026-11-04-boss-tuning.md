@@ -25,3 +25,7 @@ B1 โกเลม เหล็กกล้า: reflect + armorCut (→ noArmor 
 - Boss wins 100% of runs except B6 vs ภูติ Lv1 (90%). Own tribe always loses by ≥2.3 bars (target met). On target (others in phase 3) 4–7 of 12 cases per boss; **B3 0/12: beats every team by 2.6–3.7 bars** — the win/lose edge is a cliff (atk 50 → team wins, 55 → boss wins big); B3 = hardest boss for now.
 - Still true: fire and lightning teams die in 30–55 s vs any boss strong enough to beat the others (lightning team's skills need several enemies/"enemy down"); a tribeWeak helps their damage, not their survival.
 - PT-6 still grows each hit (smaller now) — no cap.
+
+## Set 78c (4 Nov) — user picked B: themed weaknesses, one per tribe (config/main v282)
+B1 โกเลม weak สายฟ้า 300% (atk 80, cd 6 s, enrage 5) · B2 จอมเวทย์ดำ weak เพลิงเผา 300% (atk 90, cd 6 s, enrage 10) · B3 อสุรกายคลั่ง weak ภูติ 100% (atk 80, cd 5 s) · B4 กระจกสะท้อน weak เหล็กกล้า 100% (atk 95, cd 5 s) · B5 จ้าวพายุ weak อสูร 50% (atk 55, cd 5 s, multi 2) · B6 ปีศาจเพลิง weak วายุ 200% (atk 95, cd 4 s).
+Result (final_out.txt, 10 seeds): every tribe's closest fight is against the boss weak to it (สายฟ้า 1.2–1.3 bars left vs B1, เพลิงเผา 1.3–1.9 vs B2, ภูติ 1.1–2.0 vs B3, เหล็กกล้า 0.2–0.7 vs B4, อสูร 0.4 vs B5, วายุ 1.0 vs B6). Boss wins 100% except B4: วายุ Lv1 90%, เหล็กกล้า Lv2 90%. Own tribe always loses by ≥2.9 bars. Against non-weak bosses, fire/lightning still lose by ~2–3 bars. Wind team vs B4 is very sensitive (small changes flip win/lose).
