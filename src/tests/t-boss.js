@@ -94,6 +94,12 @@ export const TESTS_BOSS = [
     ok(ev(r, 'phase').some(e => e.t > d1.t), 'เข้าเฟส 2 (ไม่มีกฎนี้) หลังผู้เล่น down');
     const later = ev(r, 'dmg', e => e.from === bu && e.why === 'hit' && e.t > d1.t);
     ok(later.length > 0 && later.every(e => e.amount + (e.absorbed || 0) === 120), 'หลัง down บอสตี 120 ตลอด แม้เฟส 2 ไม่มีกฎนี้');
+    // user picked B: HP hits 0 and the unit revives at once (own revive skill) → still counts
+    const rv = dummy('V', { hp: L3(10), skills: [{ when: 'selfDown', do: 'revive', to: 'self', v: L3(100) }] });
+    const r2 = bossFight([rv, t], [u('V', 0, 0), u('T', 0, 1)], boss({ atk: 100, phases: [ph(0, [rl('downAtk', 20)])] }));
+    const ups = ev(r2, 'atkUp', e => e.to === bossUid(r2));
+    ok(ups.length >= 1 && ups[0].amount === 20, 'ลุกกลับมาทันที ก็ยังนับ (+20)');
+    eq(ev(r2, 'down', e => e.who === r2.events[0].units.find(x => x.id === 'V').uid).length, 0, 'ตัวที่ลุกเองไม่มีเหตุการณ์ down จริง');
   }],
   ['บอส R8: ดูดเลือดฟื้นได้ไม่เกินยอดของแถบปัจจุบัน (กันแถบที่หมดแล้วเต็มกลับ)', () => {
     const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(60), skills: [{ when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) }] });

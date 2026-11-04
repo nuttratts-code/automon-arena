@@ -919,6 +919,8 @@ export function simulate(teamA, teamB, opts = {}) {
         for (const x of F.filter(x => x.side === f.side && x !== f && up(x))) trigger(x, 'allyDown', ctx);
         for (const x of F.filter(x => x.side !== f.side && up(x))) trigger(x, 'enemyDown', ctx);
         if (f.lastHitBy && up(f.lastHitBy)) trigger(f.lastHitBy, 'kill', ctx);
+        // R39 (set 77, user picked B): every time a player unit's HP hits 0 — counts even when it is revived right away · permanent, stays after the phase ends
+        if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = Math.floor(BOSS.atk * BR.downAtk.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } });
         // R20 ชุบชีวิตไม่ได้ (เฉพาะฝั่งผู้เล่น ระหว่างเฟสนั้น) · รูนชุบ (U2) จำกัดครั้งด้วย s.lim และทำงานก่อนการลุกของเผ่าอสูร (ผู้ใช้เลือก Q5 U2)
         const noRev = !!(BOSS && !f.boss && BR.noRevive);
         const rv = noRev ? null : f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (!s.lim || s.uses < s.lim) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
@@ -948,7 +950,6 @@ export function simulate(teamA, teamB, opts = {}) {
         f.down = true; f.hp = 0; f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false; f.cdLeft = Infinity;
         log('down', { who: f.uid });
         if (BOSS && !f.boss && BR.feedOnDown) byRule('feedOnDown', () => bossHeal(BOSS.barHp * BR.feedOnDown.v / 100)); // R14 (ไม่เกินแถบปัจจุบัน)
-        if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = Math.floor(BOSS.atk * BR.downAtk.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } }); // R39 (set 77): permanent, stays after the phase ends
         // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): down จริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
         // ตัวที่ถูกเรียก: ไม่นับเผ่า ไม่ได้โบนัสเผ่า ไม่มีค่าถาวร สกิลติดตัวทำงานทันที (ค่าเสนอ)
         const sm = f.skills.find(s => s.do === 'summon' && s.when === 'selfDown' && s.unit && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
