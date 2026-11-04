@@ -5,7 +5,7 @@ import { RULES } from './rules.js';
 import { endMatch, newRun, startRound, teamEntries } from './shop.js';
 import { buildTeam, makeCharMap } from './team.js';
 import { validateTeam } from './validate.js';
-import { runBossAt, runBossTeam } from './runboss.js';
+import { RUN_STAGE, runBossAt, runBossTeam } from './runboss.js';
 // ทีมบอทเตรียมไว้ล่วงหน้า (ชุด 23 · ผู้ใช้เลือก 24 ต.ค.) · ข้อมูลล้วน ไม่แตะหน้าจอ (ย้ายไปเซิร์ฟเวอร์ได้)
 // - 10 ขั้นตามจำนวนชนะของผู้เล่น (0–9) × 3 ช่วงรอบ × ง่าย/กลาง/ยาก = 90 ทีม (ผู้ใช้เลือก 24 ต.ค.)
 // - ช่วงรอบ = จำนวนแพ้ก่อนแมตช์ (รอบ − 1 − ขั้น): ต้น 0–2 · กลาง 3–5 · ปลาย 6–9 (ผู้ใช้เลือก · ค่าเสนอ)
@@ -27,23 +27,24 @@ export function spanOf(losses) {
 
 // ---------- run จำลอง 1 รอบ (ผู้เล่น = บอท) · ใช้ทั้งสร้างทีมและวัดความยาวแมตช์ ----------
 // opponent(P, B, round) → entries ของคู่แข่ง หรือ null = ใช้บอทซื้อสด B · onMatch(info) เรียกทุกแมตช์
-export function simRun(chars, rules, seed, opponent, onMatch) {
+// stage = boss settings (default = the game's; the Balance Room passes the stage it is editing) · info.res = full battle result
+export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE) {
   const cm = makeCharMap(chars);
   const P = newRun(chars, seed >>> 0, rules), B = newRun(chars, ((seed ^ 0xA5A5A5A5) >>> 0), rules);
   for (let guard = 0; guard < 40 && !P.over; guard++) {
     startRound(P, chars, rules); startRound(B, chars, rules, { unlockWins: P.wins });
     botShop(P, chars, rules);
     // set 85: boss rounds (core/runboss.js) — same as the game: the boss replaces the bot team, the spare bot B sits out
-    const rb = runBossAt(P.round, P.seed);
+    const rb = runBossAt(P.round, P.seed, stage);
     const preset = rb ? null : opponent ? opponent(P) : null;
     if (!preset && !rb) botShop(B, chars, rules, { unlockWins: P.wins });
     const mine = teamEntries(P), theirs = rb ? null : preset || teamEntries(B);
     const res = simulate(buildTeam(mine, cm, rules), rb ? runBossTeam(rb.boss, rb.k) : buildTeam(theirs, cm, rules), { rules, log: false });
-    const stage = P.wins, round = P.round, gold = P.gold;
+    const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts;
     const gain = side => (res.perm || []).filter(g => g.side === side);
     endMatch(P, res.winner !== 1, chars, rules, gain(0));
     if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; }
-    if (onMatch) onMatch({ stage, round, gold, team: mine, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0 });
+    if (onMatch) onMatch({ stage: wins, round, gold, hearts, team: mine, foe: theirs, res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0 });
   }
   return P;
 }

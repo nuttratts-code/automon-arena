@@ -93,4 +93,12 @@ export const TESTS_BOTS = [
     const ids = new Set(); for (let seed = 1; seed <= 60; seed++) ids.add(runBossAt(S.bossEvery, seed).boss.id);
     ok(ids.size >= Math.min(3, on.length), 'สุ่มบอสหลายตัว');
   }],
+  ['set 86: simRun ใช้ค่าด่านที่ส่งมา (ห้องบาลานซ์ "รันจริง") · ไม่มีบอส = ไม่เจอบอส · บอสทุก 3 รอบ = เจอรอบ 3', () => {
+    const chars = buildCharacterList(), pick = p => pickBotTeam(BOT_TEAMS, p.wins, p.seed, p.round).team;
+    const st = (every, max) => ({ ...RUN_STAGE, settings: { ...RUN_STAGE.settings, bossEvery: every, bossesPerRun: max } });
+    const none = []; simRun(chars, RULES, 7, pick, m => { if (m.boss) none.push(m.round); }, st(5, 0));
+    eq(none.length, 0, 'bossesPerRun 0 = ไม่มีบอส');
+    const at = []; simRun(chars, RULES, 7, pick, m => { ok(m.res && Array.isArray(m.res.units), 'ส่งผลแมตช์เต็มมาด้วย'); if (m.boss) at.push(`${m.round}:${m.k}`); }, st(3, 1));
+    eq(at.join(','), '3:1', 'บอสทุก 3 รอบ ไม่เกิน 1 ตัว');
+  }],
 ];

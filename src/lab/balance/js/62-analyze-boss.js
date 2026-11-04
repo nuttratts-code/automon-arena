@@ -9,12 +9,13 @@ const anaBossKVal = () => Math.max(1, Math.min(30, Math.round(+$('anaBossK').val
 const anaBossIds = () => ($('anaBossPick').value ? [$('anaBossPick').value] : stageCfg.bosses.filter(b => b.on).map(b => b.id));
 
 function renderAnaMode() {
-  const boss = anaFoe === 'boss';
-  $('anaFoeBot').setAttribute('aria-pressed', String(!boss)); $('anaFoeBoss').setAttribute('aria-pressed', String(boss));
+  const boss = anaFoe === 'boss', run = anaFoe === 'run';
+  $('anaFoeBot').setAttribute('aria-pressed', String(anaFoe === 'bot')); $('anaFoeBoss').setAttribute('aria-pressed', String(boss)); $('anaFoeRun').setAttribute('aria-pressed', String(run));
+  $('anaRunTools').hidden = !run; $('anaRuneRow').hidden = run; $('mN').hidden = run; $('mNLab').hidden = run;
   $('anaBossTools').hidden = !boss;
   for (const [id, v] of [['anaRuneNone', 'none'], ['anaRuneRand', 'random'], ['anaRunePick', 'pick']]) $(id).setAttribute('aria-pressed', String(anaRune === v));
   $('anaRuneRandBox').hidden = anaRune !== 'random';
-  $('anaRunePickBox').hidden = anaRune !== 'pick';
+  $('anaRunePickBox').hidden = run || anaRune !== 'pick';
   // บอสที่เปิดใช้
   const sel = $('anaBossPick'), keep = sel.value, list = stageCfg.bosses.filter(b => b.on);
   sel.replaceChildren(new Option('ทุกตัว', ''), ...list.map(b => new Option(`${b.id} ${b.name}`, b.id)));
@@ -32,14 +33,15 @@ function renderAnaMode() {
   const o = $('mN').options;
   o[0].textContent = boss ? `${ANA_BOSS_N[12000][0].toLocaleString()} ต่อบอส (เร็ว)` : '12,000 ต่อเลเวล (ระหว่างปรับ)';
   o[1].textContent = boss ? `${ANA_BOSS_N[24000][0].toLocaleString()} ต่อบอส (ละเอียด)` : '24,000 ต่อเลเวล (ยืนยันก่อนส่ง)';
-  $('anaBoss').hidden = !boss || !anaBossRun; $('anaBot').hidden = boss;
-  $('anaRuneRes').hidden = !anaRuneRun || anaRuneRun.foe !== (boss ? 'boss' : 'team');
-  $('anaModeHint').textContent = boss
+  $('anaBoss').hidden = !boss || !anaBossRun; $('anaBot').hidden = anaFoe !== 'bot'; $('anaRun').hidden = !run || !anaPlayRun;
+  $('anaRuneRes').hidden = run || !anaRuneRun || anaRuneRun.foe !== (boss ? 'boss' : 'team');
+  $('anaModeHint').textContent = run ? anaRunHint() : boss
     ? 'ทีมสุ่ม 6 ตัว (เลเวลที่เลือก) สู้บอสที่เปิดใช้ · ใช้ค่าบอส/รูนที่กำลังแก้ในแท็บ "รูน / บอส" · รูนใส่ฝั่งผู้เล่นเท่านั้น · สุ่มรูนตามน้ำหนักความหายากในแท็บ "รูน / บอส" · ผลนี้เก็บแยก ไม่ทับผลวัดปกติ'
     : 'วัดแบบเดิม (ทีมสุ่มสู้ทีมสุ่ม) · เลือกรูน "สุ่ม" หรือ "เลือกเอง" = วัดเพิ่มว่ารูนแต่ละอันเพิ่มอัตราชนะเท่าไร (ผลวัดตัวละครไม่ใส่รูน เหมือนเดิม)';
 }
 $('anaFoeBot').addEventListener('click', () => { anaFoe = 'bot'; renderAnaMode(); });
 $('anaFoeBoss').addEventListener('click', () => { anaFoe = 'boss'; renderAnaMode(); });
+$('anaFoeRun').addEventListener('click', () => { anaFoe = 'run'; renderAnaMode(); });
 $('anaRuneNone').addEventListener('click', () => { anaRune = 'none'; renderAnaMode(); });
 $('anaRuneRand').addEventListener('click', () => { anaRune = 'random'; renderAnaMode(); });
 $('anaRunePick').addEventListener('click', () => { anaRune = 'pick'; renderAnaMode(); });
