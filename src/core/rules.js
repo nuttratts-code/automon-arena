@@ -80,7 +80,7 @@ export const RULES = {
   skillCdMaxMs: 120000,        // คูลดาวน์สกิลสูงสุดที่ตั้งได้ (กันค่าผิดปกติ)
   // ร้านค้า (shop-merge-rules) · ราคาตัวละครอยู่ที่ตัวละครแต่ละตัว
   shop: {
-    startGold: 10, goldPerRound: 10, winBonus: 2,   // เอกสาร
+    startGold: 25, goldPerRound: 25, winBonus: 2,   // เอกสาร (ชุด 83: ผู้ใช้เลือก 25/25)
     slots: 5, rerollCost: 1, bench: 6,              // เอกสาร
     hearts: 10, winsToFinish: 10,                   // เอกสาร
     // 5 ระดับ แบบ A (ตัดสิน 19 ต.ค.) · ราคาอยู่ที่ตัวละคร: 3 / 4 / 5 / 6 / 8
