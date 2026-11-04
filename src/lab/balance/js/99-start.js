@@ -24,12 +24,15 @@ renderCharForm(); renderTribeForm(); refreshDirty();
     const at = [ui && ui.at, cfg && cfg.savedAt].filter(x => typeof x === 'string').sort().pop();
     const sync = readSynced(), draft = JSON.stringify(diffs());
     const clean = draft === '{"chars":{},"tribes":{}}' || (sync && sync.draft === draft) && (!stageEdited() || same(stageCfg, cleanStage(cfg && cfg.stage))); // stage mode: unsaved rune/boss edits also block the load
+    const sAt = cfg && typeof cfg.savedAt === 'string' ? cfg.savedAt : '', sRev = cleanRev(cfg && cfg.rev);
+    if (sync) { cfgRev = sync.rev || (sAt && sAt <= sync.at ? sRev : 0); showCfgVer(cfgRev, sync.at); }
     if (at && (!sync || at > sync.at)) {
       if (clean) {
+        cfgRev = sRev; showCfgVer(sRev, sAt);
         if (cfg) { applyDiffs(cfg); renderCharForm(); renderTribeForm(); if (!$('pane-rules').hidden) renderRulesForm(); refreshDirty(); stageCfg = cleanStage(cfg.stage); if (!$('pane-stage').hidden) renderStage(); else stageChanged(); }
         if (ui) applyUi(ui);
         markSynced(at); saveMsg('โหลดสิ่งที่บันทึกไว้แล้ว');
-      } else saveMsg('เครื่องนี้มีค่าที่แก้แต่ยังไม่บันทึก จึงใช้ของในเครื่อง · กด 💾 เพื่อบันทึกทับ');
+      } else { if (sAt) showCfgVer(sync && sync.rev, sync && sync.at, { rev: sRev, at: sAt }); saveMsg('เครื่องนี้มีค่าที่แก้แต่ยังไม่บันทึก จึงใช้ของในเครื่อง · กด 💾 เพื่อบันทึกทับ'); }
     }
   } catch (e) {}
 })();

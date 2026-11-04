@@ -23,10 +23,10 @@ $('save').addEventListener('click', async () => {
   if (!db) { saveMsg('บันทึกไม่ได้ในมุมมองนี้ (ต้องเปิดหน้าขณะล็อกอิน) · ค่าที่แก้ยังเก็บเป็นร่างในเครื่องนี้'); return; }
   $('save').disabled = true;
   try {
-    const at = new Date().toISOString();
-    await db.doc('config/main').set({ ...diffs(), stage: stageCfg, savedAt: at }); // stage = runes/bosses/settings (stage mode phase 1)
+    const at = new Date().toISOString(), rev = cfgRev + 1;
+    await db.doc('config/main').set({ ...diffs(), stage: stageCfg, savedAt: at, rev }); // stage = runes/bosses/settings (stage mode phase 1)
     await db.doc('ui/main').set(uiState(at)); // ชุด 35: สิ่งที่เลือก/เปิดค้างไว้ทั้งหมด (เปิดใหม่หรือเปลี่ยนเครื่องก็กลับมาครบ)
-    markSynced(at);
+    cfgRev = rev; markSynced(at); showCfgVer(rev, at);
     saveMsg('บันทึกแล้ว (ค่าที่แก้ + ทีมในสนาม + สิ่งที่เลือกไว้) · บอก Claude ในแชทได้เลยว่าให้นำค่าไปใช้');
   } catch (e) {
     saveMsg('บันทึกไม่สำเร็จ: ' + (e && e.message ? e.message : 'ลองใหม่อีกครั้ง'));
@@ -43,8 +43,16 @@ function uiState(at) {
   for (const id of UI_CTRLS) { const e = $(id); ctrls[id] = e.type === 'checkbox' ? e.checked : e.value; }
   return { v: 1, at, tab: curTab, current, tribeSel, simTeam, simBench, simSel, comboOn, simSpeed, listEdit, listFilter, catFilter, dock, presetOpen: $('presetBox').open, ctrls };
 }
-function markSynced(at) { try { localStorage.setItem(SYNC_KEY, JSON.stringify({ at, draft: JSON.stringify(diffs()) })); } catch (e) {} }
-function readSynced() { try { const o = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); return o && typeof o.at === 'string' && typeof o.draft === 'string' ? o : null; } catch (e) { return null; } }
+// ชุด 81: บรรทัด "ค่าที่ใช้อยู่" ใต้หัวหน้า · ครั้งที่ = rev ใน config/main (+1 ทุกครั้งที่บันทึก · Claude เขียนเองก็ +1) · newer = มีค่าบันทึกใหม่กว่าที่ยังไม่โหลด
+let cfgRev = 0;
+const cleanRev = x => (Number.isInteger(x) && x > 0 && x < 1e7 ? x : 0);
+const thaiTime = at => { const d = new Date(at); return isNaN(d) ? '' : d.toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+function showCfgVer(rev, at, newer) {
+  const v = (r, a) => (r ? 'บันทึกครั้งที่ ' + r : 'บันทึก') + (a ? ' · ' + thaiTime(a) : '');
+  $('cfgVer').textContent = 'ค่าที่ใช้อยู่: ' + v(rev, at) + (newer ? ' · ⚠ มีค่าใหม่กว่า (' + v(newer.rev, newer.at) + ') แต่หน้านี้ใช้ค่าที่แก้ค้างในเครื่อง' : '');
+}
+function markSynced(at) { try { localStorage.setItem(SYNC_KEY, JSON.stringify({ at, rev: cfgRev, draft: JSON.stringify(diffs()) })); } catch (e) {} }
+function readSynced() { try { const o = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); return o && typeof o.at === 'string' && typeof o.draft === 'string' ? { at: o.at, draft: o.draft, rev: cleanRev(o.rev) } : null; } catch (e) { return null; } }
 function applyUi(o) {
   if (!o || typeof o !== 'object' || o.v !== 1) return;
   const t = cleanSimTeam(o.simTeam), b = cleanBench(o.simBench);
