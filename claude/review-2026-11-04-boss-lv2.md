@@ -1,5 +1,17 @@
 # Boss #1 fit for all-Lv2 teams (set 81, 4 Nov 2026)
 
+## UPDATE 2 — boss identity by tribe (user ask: golem should be tanky, อสุรกายคลั่ง hits hardest, จ้าวพายุ atk not tiny)
+Rule: HP = 1000 × tribe HP mult × s, atk = 100 × tribe atk mult × s (T-3.1 mults: เหล็กกล้า 1.4/0.6 · ภูติ 0.9/0.7 · อสูร 1.0/1.4 · สายฟ้า 0.9/0.8 · วายุ 0.8/0.5 · เพลิงเผา 0.9/0.8); s fitted per boss for ~55% (Lv2 random teams, k1, v286 chars). Phase atk keeps today's ratio to base (B5 vs its old base 55). cd/multi/rules unchanged. Script src/lab/bossidfit.mjs. All ค่าเสนอ.
+| boss | s | HP | atk | phase atk p2/p3 | win % | worst tribe | best |
+|---|---|---|---|---|---|---|---|
+| B1 โกเลม (ถึก) | 0.95 | 1350 | 57 | 74 / 103 | 55 | เหล็กกล้า 48 | สายฟ้า 71 |
+| B2 จอมเวทย์ดำ | 1.0 | 900 | 70 | 91 / 126 | 58 | ภูติ 52 | เพลิงเผา 80 |
+| B3 อสุรกายคลั่ง (ตีแรง) | 0.62 | 600 | 87 | 113 / 157 | 55 | อสูร 45 | เหล็กกล้า 60 |
+| B4 กระจกสะท้อน | 0.95 | 850 | 76 | 114 / 167 | 52 | สายฟ้า 39 | เหล็กกล้า 70 |
+| B5 จ้าวพายุ (×2 ฮิต) | 0.75 | 600 | 38 | 50 / 68 | 51 | สายฟ้า 41 | เหล็กกล้า 64 |
+| B6 ปีศาจเพลิง | 0.95 | 850 | 76 | 114 / 167 | 53 | เพลิงเผา 40 | วายุ 62 |
+Average ~54%. Note B3 is steep: s 0.58 → 60%, 0.66 → 43%.
+
 ## UPDATE — re-measured on the user's save config/main v286 (19:33 Thai, chars HL-6 HL-7 HL-8 PT-6 WN-6 WY-4 WY-5 WY-6 WY-8 edited, B5 atk 20, B1 endlessPct 15). Supersedes the tables below.
 Today (×1): average 34% (B1 50 · B2 38 · B3 33 · B4 27 · B5 25 · B6 32) — matches the user's "30-something".
 Option A v2 (recommended, ค่าเสนอ, rules unchanged) → average ~55%:
