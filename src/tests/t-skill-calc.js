@@ -154,21 +154,16 @@ const SC_SKILL = [
     eq(x.res.get(me).fin.armorHit, c.armorHit[i], 'HL-2 itself unchanged');
     return x;
   }],
-  ['PT-6', 'ตีโดน → ภูติสุ่ม 2 ตัว (ไม่ใช่ PT-6) ฟื้น/ฮิต +v · ตีโดน → พลังโจมตี +v% ของ ฟื้น/ฮิต ตัวเอง', (c, L, i) => {
-    const sp = id => mk(id, { tribe: 'ภูติ', atk: L3(1), cdMs: NEVER, hp: L3(100000) }), st = mk('ZT-2', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
-    const x = scRun([[c, L, 0, 0], [sp('ZT-1'), 1, 0, 1], [sp('ZT-3'), 1, 1, 0], [st, 1, 1, 1], [c, 1, 2, 0]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 0, 0);
-    const v0 = sk('PT-6').v[i], v1 = sk('PT-6', 1).v[i], hits = scHits(x.r, me).length, want = [x.uid(0, 0, 1), x.uid(0, 1, 0)].sort();
+  // set 82 (import 4 Nov, config rev 293): new PT-6 kit (old kit kept below as retired test 'PT-6@2')
+  ['PT-6', 'ตีโดน → ฟื้น/ฮิต ตัวเอง +v · ตีโดน → พลังโจมตี +v% ของ ฟื้น/ฮิต ตัวเอง (หลังเพิ่มของฮิตนั้น)', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 0, 0);
+    const v0 = sk('PT-6').v[i], v1 = sk('PT-6', 1).v[i], hits = scHits(x.r, me).length;
     ok(hits >= 3, `PT-6 hit ${hits} times`);
     const g = scSk(x.r, me, 0, 'buff').filter(e => e.what === 'healHitUp');
-    eq(g.length, 2 * hits, '2 receivers per hit');
-    for (const p of [...new Set(g.map(e => e.t))]) eq(g.filter(e => e.t === p).map(e => e.to).sort(), want, `t ${p}: the 2 spirit allies (never steel, never the other PT-6)`);
-    ok(g.every(e => e.amount === v0), 'heal/hit +v each');
-    const allUp = x.r.events.filter(e => e.k === 'buff' && e.what === 'healHitUp' && want.includes(e.to)).reduce((a, e) => a + e.amount, 0); // both PT-6 feed them
-    eq(x.res.get(want[0]).fin.healHit + x.res.get(want[1]).fin.healHit, allUp, 'receivers heal/hit at end (stat tab) = every +v they got');
-    eq(x.res.get(me).fin.healHit, c.healHit[i], 'PT-6 own heal/hit unchanged (skipSameId: the other PT-6 does not feed it)');
+    eq(g.map(e => [e.to, e.amount]), Array(hits).fill([me, v0]), 'heal/hit +v to itself on every hit');
+    eq(x.res.get(me).fin.healHit, c.healHit[i] + v0 * hits, 'own heal/hit at end (stat tab) = base + v per hit');
     const a = scSk(x.r, me, 1, 'atkUp');
-    eq(a.map(e => e.amount), Array(hits).fill(Math.floor(c.healHit[i] * v1 / 100)), 'attack +v% of own heal/hit per hit (rounded down)');
-    eq(x.res.get(me).fin.atk, c.atk[i] + a.reduce((s, e) => s + e.amount, 0), 'attack at end (stat tab)');
+    eq(a.map(e => e.amount), Array.from({ length: hits }, (_, k) => Math.floor((c.healHit[i] + v0 * (k + 1)) * v1 / 100)), 'attack +v% of own heal/hit per hit (heal/hit already raised by that hit, rounded down)');
     return x;
   }],
   ['PT-8', 'โดนตี → ภูติทั้งทีม (ไม่ใช่ PT-8) คูลดาวน์ −v% · ตีโดน → ภูติแถวหลังทั้ง 2 เลน ฟื้น/ฮิต +v', (c, L, i) => {
@@ -212,13 +207,15 @@ const SC_SKILL = [
     eq(x.r.perm.filter(g => g.key && g.id === 'HL-1').map(g => g.amount), [v], 'kept as permanent');
     return x;
   }],
-  ['HL-8', 'แบ่งเกราะ 30% ให้ทั้งทีมทุกครั้งที่ได้เกราะ', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0], [scC('PT-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('HL-8').v[i];
+  // set 82: HL-8 now shares only to allies of its own tribe (old kit 'HL-8@1' = whole team, kept below)
+  ['HL-8', 'แบ่งเกราะ 30% ให้เพื่อนเผ่าเดียวกันทุกครั้งที่ได้เกราะ', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scC('HL-1'), 1, 1, 0], [scC('PT-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), steel = x.uid(0, 1, 0), v = sk('HL-8').v[i];
     const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share');
     ok(own.length > 2, 'HL-8 got armor');
     for (const e of own) {
       const sh = x.r.events.filter(s => s.k === 'armor' && s.why === 'share' && s.t === e.t && s.to !== me);
-      eq(sh.map(s => s.amount), Array(2).fill(Math.floor(e.amount * v / 100)).flatMap(a => a > 0 ? [a] : []), `t ${e.t}: share of ${e.amount}`);
+      const want = Math.floor(e.amount * v / 100);
+      eq(sh.map(s => [s.to, s.amount]), want > 0 ? [[steel, want]] : [], `t ${e.t}: share of ${e.amount} to the steel ally only (not the fire ally)`);
     }
     const row = x.model.fxGiven.get(me).get('share'), tab = row ? row.list.reduce((a, q) => a + q.e.amount, 0) : 0;
     eq(tab, x.r.events.filter(s => s.k === 'armor' && s.why === 'share').reduce((a, s) => a + s.amount, 0), "tab 'แบ่งเกราะ' row total");
@@ -519,7 +516,11 @@ const SC_TESTS = SC_SKILL.map(([id, what, fn]) => [`สกิล+แท็บว
 }]);
 // ---- Retired skills (no character uses these kits since the 28 Oct import) · mechanics still exist, so their tests stay on a frozen copy of the old kit ----
 const SC_OLD = { 'HL-2': [{ when: 'hitTaken', do: 'armor', to: 'self', v: [2, 4, 8] }], 'PT-8': [{ when: 'passive', do: 'reflectDebuff', to: 'allAllies', v: [40, 40, 40] }], 'PT-6': [{ when: 'hit', do: 'healOf', of: { stat: 'hpLost', who: 'self' }, sameTribe: true, skipSameId: true, to: 'allAllies', v: [15, 30, 60] },
-           { when: 'hitTaken', do: 'hpPct', to: 'self', v: [2, 2, 2] }] };
+           { when: 'hitTaken', do: 'hpPct', to: 'self', v: [2, 2, 2] }],
+  // set 82 (import 4 Nov): kits replaced that day · key 'ID@n' = n-th old kit of that character
+  'PT-6@2': [{ when: 'hit', do: 'healHitUp', sameTribe: true, skipSameId: true, to: 'allyRandom2', v: [30, 30, 30] },
+             { when: 'hit', do: 'atkOf', of: { stat: 'healHit', who: 'self' }, to: 'self', v: [10, 10, 10] }],
+  'HL-8@1': [{ when: 'passive', do: 'shareArmor', to: 'allAllies', v: [30, 30, 30] }] };
 const SC_RETIRED = [
   ['HL-2', 'โดนตี → ได้เกราะ v', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
@@ -566,9 +567,38 @@ const SC_RETIRED = [
     ok(!x.model.per.get(ally).out.some(q => q.why === 'burn'), 'the protected ally is not credited');
     return x;
   }],
+  ['PT-6@2', 'ตีโดน → ภูติสุ่ม 2 ตัว (ไม่ใช่ PT-6) ฟื้น/ฮิต +v · ตีโดน → พลังโจมตี +v% ของ ฟื้น/ฮิต ตัวเอง', (c, L, i) => {
+    const sp = id => mk(id, { tribe: 'ภูติ', atk: L3(1), cdMs: NEVER, hp: L3(100000) }), st = mk('ZT-2', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
+    const x = scRun([[c, L, 0, 0], [sp('ZT-1'), 1, 0, 1], [sp('ZT-3'), 1, 1, 0], [st, 1, 1, 1], [c, 1, 2, 0]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 0, 0);
+    const v0 = c.skills[0].v[i], v1 = c.skills[1].v[i], hits = scHits(x.r, me).length, want = [x.uid(0, 0, 1), x.uid(0, 1, 0)].sort();
+    ok(hits >= 3, `PT-6 hit ${hits} times`);
+    const g = scSk(x.r, me, 0, 'buff').filter(e => e.what === 'healHitUp');
+    eq(g.length, 2 * hits, '2 receivers per hit');
+    for (const p of [...new Set(g.map(e => e.t))]) eq(g.filter(e => e.t === p).map(e => e.to).sort(), want, `t ${p}: the 2 spirit allies (never steel, never the other PT-6)`);
+    ok(g.every(e => e.amount === v0), 'heal/hit +v each');
+    const allUp = x.r.events.filter(e => e.k === 'buff' && e.what === 'healHitUp' && want.includes(e.to)).reduce((a, e) => a + e.amount, 0); // both PT-6 feed them
+    eq(x.res.get(want[0]).fin.healHit + x.res.get(want[1]).fin.healHit, allUp, 'receivers heal/hit at end (stat tab) = every +v they got');
+    eq(x.res.get(me).fin.healHit, c.healHit[i], 'PT-6 own heal/hit unchanged (skipSameId: the other PT-6 does not feed it)');
+    const a = scSk(x.r, me, 1, 'atkUp');
+    eq(a.map(e => e.amount), Array(hits).fill(Math.floor(c.healHit[i] * v1 / 100)).filter(n => n > 0), 'attack +v% of own heal/hit per hit (rounded down · a +0 is not logged)');
+    eq(x.res.get(me).fin.atk, c.atk[i] + a.reduce((s, e) => s + e.amount, 0), 'attack at end (stat tab)');
+    return x;
+  }],
+  ['HL-8@1', 'แบ่งเกราะ 30% ให้ทั้งทีมทุกครั้งที่ได้เกราะ', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0], [scC('PT-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share');
+    ok(own.length > 2, 'HL-8 got armor');
+    for (const e of own) {
+      const sh = x.r.events.filter(s => s.k === 'armor' && s.why === 'share' && s.t === e.t && s.to !== me);
+      eq(sh.map(s => s.amount), Array(2).fill(Math.floor(e.amount * v / 100)).flatMap(a => a > 0 ? [a] : []), `t ${e.t}: share of ${e.amount}`);
+    }
+    const row = x.model.fxGiven.get(me).get('share'), tab = row ? row.list.reduce((a, q) => a + q.e.amount, 0) : 0;
+    eq(tab, x.r.events.filter(s => s.k === 'armor' && s.why === 'share').reduce((a, s) => a + s.amount, 0), "tab 'แบ่งเกราะ' row total");
+    return x;
+  }],
 ];
 const SC_RETIRED_TESTS = SC_RETIRED.map(([id, what, fn]) => [`สกิลเลิกใช้ (กลไกยังอยู่)+แท็บวิเคราะห์: ${id} ชุดเดิม Lv1–3 ${what}`, () => {
-  const c = { ...scC(id), skills: SC_OLD[id] };
+  const c = { ...scC(id.split('@')[0]), skills: SC_OLD[id] };
   for (const [L, i] of scLv(c)) {
     let x;
     try { x = fn(c, L, i); } catch (e) { throw new Error(`Lv${L}: ${e.message}`); }
