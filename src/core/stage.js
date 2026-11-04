@@ -293,7 +293,7 @@ export const BOSS_RULES = [
   ['cleansePulse', 'R37 ทุก X วิ บอสล้างไฟ/ช็อตที่ติดตัว', 8, 2, 60, 'วิ'],
   ['barBlast', 'R38 แถบหาย 1 แถบ บอสระเบิดใส่ผู้เล่นทุกตัว', 20, 1, 10000, 'ดาเมจ'],
   // Set 77 (user 4 Nov): number ค่าเสนอ
-  ['downAtk', 'R39 ผู้เล่น down 1 ตัว บอสตีแรงขึ้นถาวร (% ของพลังโจมตีบอส · อยู่ถึงจบเกม)', 10, 1, 500, '%'],
+  ['downAtk', 'R39 ผู้เล่นเลือดหมด 1 ครั้ง บอสตีแรงขึ้นจนจบแมตช์ (% ของพลังโจมตีบอส · นับแม้ถูกชุบทันที)', 10, 1, 500, '%'],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
