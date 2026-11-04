@@ -435,7 +435,9 @@ function mergeTargets(u) { // ตัวชนิดเดียวกัน เ�
 
 // B3: top chips are refreshed when a round starts (render) and again when the result popup shows (not during the fight, so the result is not spoiled)
 function renderChips() {
-  $('sRound').textContent = `รอบ ${P.round}`;
+  const rb = runBossAt(P.round, P.seed); // set 85: boss rounds
+  $('sRound').textContent = rb ? `รอบ ${P.round} · บอส!` : `รอบ ${P.round}`;
+  $('fight').textContent = rb ? `สู้บอส: ${rb.boss.name}` : 'เริ่มสู้';
   $('sHearts').textContent = `หัวใจ ${P.hearts}`;
   $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('sGold').textContent = `เงิน ${P.gold}`;
@@ -654,11 +656,13 @@ $('fight').addEventListener('click', () => {
   if (P.over) return;
   if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; render(); return; }
   confirmEmpty = false; sel = null;
-  const foe = BOT_OK ? pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round) : null;
-  if (!foe) botShop(B, chars, RULES, { unlockWins: P.wins });
-  const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = foe ? foe.team : teamEntries(B);
+  // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
+  const rb = runBossAt(P.round, P.seed);
+  const foe = rb ? null : BOT_OK ? pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round) : null;
+  if (!foe && !rb) botShop(B, chars, RULES, { unlockWins: P.wins });
+  const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = rb ? { boss: rb.boss.id, k: rb.k } : foe ? foe.team : teamEntries(B);
   let result;
-  try { result = simulate(buildTeam(teamA, CM), buildTeam(teamB, CM)); }
+  try { result = simulate(buildTeam(teamA, CM), foeUnits(teamB)); }
   catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
   lastResult = result;
   const shown = showResult(teamA, teamB, result);
@@ -666,22 +670,28 @@ $('fight').addEventListener('click', () => {
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
   const r = endMatch(P, won, chars, RULES, gain(0));
-  if (!foe) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
+  if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
   addMatchStats(stats, result);
   replays.push(replayEntry(round, teamA, teamB, result)); saveReplays(); // ชุด 25
-  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB, foe }));
+  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null }));
   pendingEnd = { r, w }; replayMode = null;
   if (P.over) { store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, Date.now())))); store.del(SAVE_KEY); }
   else saveRun();
   showNotice('');
   showScreen('battle'); $('result').hidden = true;
-  $('battleTitle').textContent = `แมตช์รอบ ${P.round}` + (foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
+  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
   view.speed = speed; view.load(shown); resetLog(); view.play();
 });
 // set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
+// enemy side: a team (array of entries) or a boss { boss: id, k } (set 85) · unknown boss id → throws (replay shows a notice)
+function foeUnits(b) {
+  if (Array.isArray(b)) return buildTeam(b, CM);
+  const rec = runBossById(b.boss); if (!rec) throw new Error('ไม่พบบอส ' + b.boss);
+  return runBossTeam(rec, b.k);
+}
 function showResult(teamA, teamB, result) {
   let r = null;
-  try { r = simulate(buildTeam(teamA, CM), buildTeam(teamB, CM), { detail: true, live: true }); } catch (e) { r = null; }
+  try { r = simulate(buildTeam(teamA, CM), foeUnits(teamB), { detail: true, live: true }); } catch (e) { r = null; }
   return r && r.winner === result.winner && r.timeMs === result.timeMs ? r : result;
 }
 // ---------- รีเพลย์ (ชุด 25) ----------
@@ -695,7 +705,7 @@ function renderReplays(list, back) {
 function watchReplay(i, back) {
   const x = replays[i]; if (!x) return;
   let result;
-  try { result = simulate(buildTeam(x.a, CM), buildTeam(x.b, CM)); } catch (e) { result = null; }
+  try { result = simulate(buildTeam(x.a, CM), foeUnits(x.b)); } catch (e) { result = null; }
   // จำลองซ้ำแล้วต้องได้ผลและเวลาเดิม · ไม่ตรง = ระบบต่อสู้เปลี่ยนหลังเล่นแมตช์นั้น → ไม่เล่น แจ้งแทน
   if (!result || result.winner !== x.w || Math.floor(result.timeMs) !== x.t) { showNotice(`รีเพลย์รอบ ${x.r} ใช้ไม่ได้: เกมอัปเดตระบบการต่อสู้หลังแมตช์นี้ ผลจึงไม่ตรงกับที่เล่นจริง`); return; }
   showNotice(''); sel = null; pendingEnd = null; replayMode = { back, x };
@@ -705,7 +715,7 @@ function watchReplay(i, back) {
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {
-  const c = CM[u.id], s = el('span', u.side === 0 ? 'lg-L' : 'lg-R'), dot = el('i');
+  const c = CM[u.id] || { id: u.id, name: u.name || u.id, tribe: u.tribe }, s = el('span', u.side === 0 ? 'lg-L' : 'lg-R'), dot = el('i'); // boss = not in CM
   dot.style.setProperty('--tc', (TRIBE_STYLE[c.tribe] || {}).color || 'var(--mute)');
   s.append(dot, c.name, el('span', 'lg-pos', ` ${ROW_TH[u.row]}${u.lane + 1}`));
   s.title = `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} · ${c.id} Lv${u.level}`;
@@ -715,7 +725,7 @@ function resetLog() {
   bPick = null; renderBInfo(); $('mxFold').hidden = true; $('mxFold').open = false; simLast = null; mxKey = null; mxOpen.clear(); mxCellSel = null; mxHi = null;
   $('logBox').open = false; $('logList').replaceChildren();
   const r = view.result, sw = $('logWho');
-  sw.replaceChildren(el('option', '', 'ทุกตัว'), ...unitsOf(r).map(u => { const o = el('option', '', `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[u.row]}${u.lane + 1} · ${CM[u.id].name} Lv${u.level}`); o.value = String(u.uid); return o; }));
+  sw.replaceChildren(el('option', '', 'ทุกตัว'), ...unitsOf(r).map(u => { const o = el('option', '', `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[u.row]}${u.lane + 1} · ${(CM[u.id] || u).name || u.id}${CM[u.id] ? ` Lv${u.level}` : ''}`); o.value = String(u.uid); return o; }));
   sw.firstChild.value = '';
 }
 function renderLog() {

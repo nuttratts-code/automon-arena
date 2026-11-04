@@ -164,8 +164,10 @@ export function makeReplays(runSeed, hash, list) {
 export function checkReplay(x, cm, rules = RULES) {
   if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
-  return validateTeam(x.a, cm, rules).ok && validateTeam(x.b, cm, rules).ok;
+  return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }
+// set 85: enemy side of a boss round = { boss: id, k } (core/runboss.js) · shape only, the game looks the boss up when replaying
+export const isBossFoe = b => svObj(b) && svOnlyKeys(b, ['boss', 'k']) && typeof b.boss === 'string' && /^[A-Za-z0-9_-]{1,16}$/.test(b.boss) && svIntIn(b.k, 1, 100);
 // คืน { status: 'ok' | 'none' | 'data' | 'other' | 'bad', list } · other = ของ run อื่น (ทิ้งเงียบๆ) · ไม่เชื่อข้อมูล ตรวจทุกช่อง
 export function readReplays(text, cm, rules, hash, runSeed) {
   if (text == null || text === '') return { status: 'none', list: [] };
@@ -180,24 +182,26 @@ export function readReplays(text, cm, rules, hash, runSeed) {
 // ---- บันทึกข้อมูลการเล่นจริง (ชุด 25 · ผู้ใช้เลือก 8A) ----
 // สรุป 1 แถวต่อแมตช์ ส่งลงฐานข้อมูลของหน้าเกม · สร้างจากสถานะที่ผ่านตัวตรวจแล้ว และตรวจซ้ำทุกช่องก่อนเขียน (checkPlayRecord)
 // ไม่มีข้อมูลระบุตัวผู้เล่น · run = เมล็ดของ run ใช้จัดกลุ่มแมตช์เท่านั้น
-export const PLAY_VERSION = 1;
+export const PLAY_VERSION = 2; // set 85: + boss (null or { boss, k }) · foeSrc 'boss'
 export const playTeam = t => t.map(e => ({ id: e.id, level: e.level, row: e.row, lane: e.lane, perm: e.perm ? Object.keys(e.perm).length : 0 }));
-export function playRecord({ at, hash, runSeed, round, winsBefore, heartsBefore, result, teamA, teamB, foe }, rules = RULES) {
+export function playRecord({ at, hash, runSeed, round, winsBefore, heartsBefore, result, teamA, teamB, foe, boss = null }, rules = RULES) {
   return {
     v: PLAY_VERSION, at: Math.floor(at), data: hash, run: runSeed >>> 0, round, winsBefore, heartsBefore,
     res: result.winner === 0 ? 'w' : result.winner === 1 ? 'l' : 'd',
     timeMs: Math.floor(result.timeMs), storm: result.timeMs > rules.stormStartMs, aborted: result.aborted || null,
-    team: playTeam(teamA), foe: playTeam(teamB), foeSrc: foe ? 'set' : 'live', foeStage: foe ? foe.stage : null, foeSpan: foe ? foe.span : null,
+    team: playTeam(teamA), foe: boss ? [] : playTeam(teamB), foeSrc: boss ? 'boss' : foe ? 'set' : 'live', foeStage: foe && !boss ? foe.stage : null, foeSpan: foe && !boss ? foe.span : null,
+    boss: boss ? { boss: boss.boss, k: boss.k } : null,
   };
 }
 export function checkPlayRecord(x, cm, rules = RULES) {
-  const KEYS = ['v', 'at', 'data', 'run', 'round', 'winsBefore', 'heartsBefore', 'res', 'timeMs', 'storm', 'aborted', 'team', 'foe', 'foeSrc', 'foeStage', 'foeSpan'];
+  const KEYS = ['v', 'at', 'data', 'run', 'round', 'winsBefore', 'heartsBefore', 'res', 'timeMs', 'storm', 'aborted', 'team', 'foe', 'foeSrc', 'foeStage', 'foeSpan', 'boss'];
   if (!svObj(x) || !svOnlyKeys(x, KEYS) || !KEYS.every(k => svOwn(x, k))) return false;
   const S = rules.shop, team = t => Array.isArray(t) && t.length <= rules.maxBoard && t.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level', 'row', 'lane', 'perm'])
     && typeof u.id === 'string' && svOwn(cm, u.id) && svIntIn(u.level, 1, rules.maxLevel) && svIntIn(u.row, 0, rules.rows - 1) && svIntIn(u.lane, 0, rules.lanes - 1) && svIntIn(u.perm, 0, 100));
   return x.v === PLAY_VERSION && svIntIn(x.at, 0, 1e15) && typeof x.data === 'string' && /^[0-9a-f]{8}$/.test(x.data) && svIntIn(x.run, 0, 0xFFFFFFFF)
     && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, S.winsToFinish) && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
-    && team(x.team) && team(x.foe) && ['set', 'live'].includes(x.foeSrc)
-    && (x.foeSrc === 'live' ? x.foeStage === null && x.foeSpan === null : svIntIn(x.foeStage, 0, 100) && svIntIn(x.foeSpan, 0, 10));
+    && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
+    && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)
+    && (x.foeSrc !== 'set' ? x.foeStage === null && x.foeSpan === null : svIntIn(x.foeStage, 0, 100) && svIntIn(x.foeSpan, 0, 10));
 }
