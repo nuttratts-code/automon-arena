@@ -3,6 +3,9 @@ import { makeRng } from '../core/rng.js';
 import { TRIBES, pickHintRow } from '../core/rules.js';
 import { done } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
+import { bossUnit } from '../core/boss.js';
+import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
+import { rarityOdds, runeActive, runeKind, RUNE_RARITY } from '../core/stage.js';
 // ตัววิเคราะห์บาลานซ์: ใช้ตัวคำนวณเดียวกับเกม · เมล็ดสุ่มเดิม = ทีมชุดเดิม จึงเทียบก่อน/หลังแก้ได้ตรงๆ
 
 
@@ -155,3 +158,103 @@ export const TARGETS = {
   maxShareOfWinners: 50,       // tribe-rules: ไม่มีเผ่าไหนอยู่ในทีมที่ชนะเกินครึ่ง
 };
 
+
+// ---------- ชุด 80: วิเคราะห์ VS บอส + รูน (แท็บดูผล) ----------
+// ทีมสุ่ม 6 ตัว (เลเวลที่เลือก) สู้บอส · ชนะ = ฆ่าบอสได้ (หมดเวลา/เสมอ = ไม่ชนะ) · รูนใส่ฝั่งผู้เล่นเท่านั้น
+// runeMode: 'none' | 'random' (สุ่มตามน้ำหนักความหายาก runeCount อัน) | 'pick' (pickIds ทุกทีม ทีมละ 1 อันต่อ id)
+// รูนที่ใส่ตัวเดียว/ต้องเลือกคู่ = สุ่มตัว · รูนเผ่าที่ทีมไม่มีเผ่านั้น = เสียเปล่าเหมือนของจริง · ไม่สุ่มรูนเงิน/ร้าน + รูนเติบโต (ไม่มีผลในการต่อสู้นี้)
+export const BOSS_MEASURE = { seed: 5151, n: 2000, runeN: 300 };
+export function battleRunes(stage) {
+  const all = [...Object.entries(stage.runes || {}).map(([id, r]) => ({ ...r, id })), ...(stage.custom || []).map(r => ({ ...r }))];
+  return all.filter(r => runeActive(r) && runeKind(r.eff) && !RUNE_RUN_ONLY.includes(r.eff) && r.eff !== 'growth');
+}
+const brSlot = (rng, team) => { const e = team[rng.int(team.length)]; return [e.row, e.lane]; };
+function brEquip(rng, team, r) {
+  const slot = r.scope === 'one' ? brSlot(rng, team) : null;
+  let partner = null;
+  if (r.eff === 'link' || r.eff === 'buddy') { const o = team.filter(e => !slot || e.row !== slot[0] || e.lane !== slot[1]); if (o.length) { const e = o[rng.int(o.length)]; partner = [e.row, e.lane]; } }
+  return { r, n: 1, slot, partner };
+}
+// สุ่ม count รูน: ความหายากตามน้ำหนัก → รูนในความหายากนั้น · ได้ซ้ำ = จำนวนเพิ่ม (ไม่เกิน max) · เต็มแล้วสุ่มใหม่
+export function randomRunes(rng, team, pool, st, count) {
+  const odds = rarityOdds(st), out = [];
+  for (let c = 0, guard = 0; c < count && guard < count * 20; guard++) {
+    let x = rng.next() * 100, rar = RUNE_RARITY[RUNE_RARITY.length - 1][0];
+    for (const [k] of RUNE_RARITY) { if (x < odds[k]) { rar = k; break; } x -= odds[k]; }
+    const list = pool.filter(r => r.rarity === rar && (out.find(e => e.r.id === r.id)?.n || 0) < (r.max || 1));
+    if (!list.length) continue;
+    const r = list[rng.int(list.length)], had = out.find(e => e.r.id === r.id);
+    if (had) had.n++; else out.push(brEquip(rng, team, r));
+    c++;
+  }
+  return out;
+}
+const bossWin = r => (r.winner === 0 ? 1 : 0);
+const bossBarsGone = (r, b) => { const u = r.units.find(x => x.side === 1); if (!u) return 0; const bh = Math.max(1, Math.floor(u.maxHp / b.bars)); return Math.max(0, Math.min(b.bars, b.bars - Math.ceil(u.hp / bh))); };
+// stage = cleanStage() object · bossIds = บอสที่วัด · k = บอสครั้งที่ · level = 1|2|3|'mix'
+export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level = 1, n = BOSS_MEASURE.n, seed = BOSS_MEASURE.seed, runeMode = 'none', runeCount = 1, pickIds = [], onProgress } = {}) {
+  const map = makeCharMap(chars), pool = battleRunes(stage);
+  const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
+  const picked = pickIds.map(id => pool.find(r => r.id === id)).filter(Boolean);
+  const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0 }]));
+  const per = {}; // ต่อบอส: ชนะ แถบ เวลา + ต่อเผ่า
+  const top = [], TOP = 10;
+  let total = 0, aborted = 0;
+  for (const b of bosses) {
+    const rng = makeRng(seed + b.id.charCodeAt(1) * 7919 + k * 131);
+    const P = per[b.id] = { id: b.id, name: b.name, tribe: b.tribe, games: 0, wins: 0, bars: 0, time: 0, tr: Object.fromEntries(TRIBES.map(t => [t, { teams: 0, wins: 0 }])) };
+    for (let i = 0; i < n; i++) {
+      const A = randomTeam(rng, chars, level);
+      const eqs = runeMode === 'random' ? randomRunes(rng, A, pool, stage.settings, runeCount) : runeMode === 'pick' ? picked.map(r => brEquip(rng, A, r)) : [];
+      const eq = equipRunes(buildTeam(A, map, rules), eqs);
+      const r = simulate(eq.units, [bossUnit(b, k)], { rules, log: false, tribeExtra: eq.tribeExtra });
+      const w = bossWin(r), bars = bossBarsGone(r, b);
+      if (r.aborted) aborted++;
+      P.games++; P.wins += w; P.bars += bars; P.time += r.timeMs; total++;
+      for (const id of new Set(A.map(e => e.id))) { stat[id].games++; stat[id].wins += w; }
+      for (const u of r.units.filter(u => u.side === 0)) stat[u.id].dealt += u.dealt;
+      for (const t of activeTribes(A, map, rules)) { P.tr[t].teams++; P.tr[t].wins += w; }
+      { const dA = Math.round(r.units.filter(u => u.side === 0).reduce((s, u) => s + u.dealt, 0)), dB = Math.round(r.units.filter(u => u.side === 1).reduce((s, u) => s + u.dealt, 0));
+        const hpT = r.units.reduce((s, u) => s + (u.maxHp || 0), 0), dmgTotal = dA + dB, dmgPerHp = +(dmgTotal / Math.max(1, hpT)).toFixed(2);
+        if (top.length < TOP || dmgPerHp > top[top.length - 1].dmgPerHp) {
+          top.push({ level, i, winner: r.winner, timeMs: r.timeMs, dmgTotal, dmgA: dA, dmgB: dB, hpTotal: hpT, dmgPerHp, bars, boss: { id: b.id, k },
+            runes: eqs.map(e => ({ id: e.r.id, n: e.n, slot: e.slot, partner: e.partner })), teamA: A.map(e => ({ id: e.id, level: e.level, row: e.row, lane: e.lane })), teamB: [], aborted: r.aborted || null });
+          top.sort((x, y) => y.dmgPerHp - x.dmgPerHp); if (top.length > TOP) top.pop();
+        } }
+      if (i % 50 === 49) { onProgress && onProgress((bosses.indexOf(b) + (i + 1) / n) / bosses.length); await pause(); }
+    }
+  }
+  const rows = chars.map(c => ({ id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, games: stat[c.id].games,
+    win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0 }));
+  const bossRows = Object.values(per).map(P => ({ id: P.id, name: P.name, tribe: P.tribe, win: P.games ? P.wins / P.games * 100 : 0, bars: P.games ? P.bars / P.games : 0, time: P.games ? P.time / P.games / 1000 : 0,
+    tribeWin: Object.fromEntries(TRIBES.map(t => [t, { teams: P.tr[t].teams, win: P.tr[t].teams ? P.tr[t].wins / P.tr[t].teams * 100 : null }])) }));
+  const winAll = total ? bossRows.reduce((a, x) => a + x.win, 0) / bossRows.length : 0;
+  return { rows, bossRows, winAll, n, k, level, runeMode, runeCount, aborted, top };
+}
+// รูนแต่ละอันเพิ่มอัตราชนะเท่าไร: ทีมเดิม คู่เดิม ใส่รูนนี้ 1 อัน กับไม่ใส่ · foe = 'boss' (บอสตามรายการ สลับกัน) หรือ 'team' (ทีมสุ่ม)
+export async function runeUplift(chars, rules, stage, { foe = 'boss', bossIds, k = 1, level = 1, n = BOSS_MEASURE.runeN, seed = BOSS_MEASURE.seed + 1, onProgress } = {}) {
+  const map = makeCharMap(chars), pool = battleRunes(stage);
+  const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
+  if (foe === 'boss' && !bosses.length) return [];
+  const out = [];
+  for (let j = 0; j < pool.length; j++) {
+    const ru = pool[j], rng = makeRng(seed + j * 977);
+    let on = 0, off = 0;
+    for (let i = 0; i < n; i++) {
+      const A = randomTeam(rng, chars, level), base = buildTeam(A, map, rules);
+      const eq = equipRunes(base, [brEquip(rng, A, ru)]);
+      if (foe === 'boss') {
+        const b = bosses[i % bosses.length];
+        on += bossWin(simulate(eq.units, [bossUnit(b, k)], { rules, log: false, tribeExtra: eq.tribeExtra }));
+        off += bossWin(simulate(buildTeam(A, map, rules), [bossUnit(b, k)], { rules, log: false }));
+      } else {
+        const B = randomTeam(rng, chars, level);
+        on += winScore(simulate(eq.units, buildTeam(B, map, rules), { rules, log: false, tribeExtra: eq.tribeExtra }), 0);
+        off += winScore(simulate(buildTeam(A, map, rules), buildTeam(B, map, rules), { rules, log: false }), 0);
+      }
+    }
+    out.push({ id: ru.id, name: ru.name, rarity: ru.rarity, on: on / n * 100, off: off / n * 100, uplift: (on - off) / n * 100 });
+    onProgress && onProgress((j + 1) / pool.length); await pause();
+  }
+  return out.sort((a, b) => b.uplift - a.uplift);
+}
