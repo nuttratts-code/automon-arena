@@ -272,7 +272,8 @@ export const BOSS_RULES = [
   // บอสป้องกัน
   ['hitCap', 'R22 ตี 1 ครั้งเข้าได้ไม่เกิน (% ของ 1 แถบ)', 25, 1, 100, '%'],
   ['minHit', 'R23 ฮิตที่ดาเมจต่ำกว่านี้ไม่เข้า', 3, 1, 1000, 'ดาเมจ'],
-  ['statusImmune', 'R24 บอสไม่ติดไฟ/ช็อต', 0, 0, 0, ''],
+  ['burnImmune', 'R24 บอสไม่ติดไฟ (% ที่กันได้ · 100 = ไม่ติดเลย)', 100, 1, 100, '%'],
+  ['shockImmune', 'R24 บอสไม่ติดช็อต (% ที่กันได้ · 100 = ไม่ติดเลย)', 100, 1, 100, '%'],
   ['tribeWeak', 'R25 บอสโดนเผ่าที่เลือกตีแรงขึ้น', 50, 1, 300, '%', 'tribe'],
   ['tribeResist', 'R25 บอสโดนเผ่าที่เลือกตีเบาลง', 50, 1, 100, '%', 'tribe'],
   ['frontOnly', 'R26 ตีบอสได้เฉพาะแถวหน้าของผู้เล่น', 0, 0, 0, ''],
@@ -291,6 +292,8 @@ export const BOSS_RULES = [
   ['shieldPulse', 'R36 ทุก X วิ บอสได้เกราะ (% ของ 1 แถบ)', 15, 2, 60, 'วิ', ['เกราะ', 10, 1, 300, '%']],
   ['cleansePulse', 'R37 ทุก X วิ บอสล้างไฟ/ช็อตที่ติดตัว', 8, 2, 60, 'วิ'],
   ['barBlast', 'R38 แถบหาย 1 แถบ บอสระเบิดใส่ผู้เล่นทุกตัว', 20, 1, 10000, 'ดาเมจ'],
+  // Set 77 (user 4 Nov): number ค่าเสนอ
+  ['downAtk', 'R39 ผู้เล่น down 1 ตัว บอสตีแรงขึ้นถาวร (% ของพลังโจมตีบอส · อยู่ถึงจบเกม)', 10, 1, 500, '%'],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
@@ -306,11 +309,11 @@ export const BOSS_MAX_PHASES = 20, BOSS_MAX_RULES = 99;
 // Rule groups for the "+ เพิ่มกฎ" picker (same order as BOSS_RULES)
 // Picker categories (set 71: by what the rule does · every rule except 'none' sits in exactly one group — test checks)
 export const BOSS_RULE_GROUPS = [
-  ['⚔️ บอสตีแรงขึ้น', ['atkUp', 'fastAtk', 'multiUp', 'enrage', 'desperate', 'pierce']],
+  ['⚔️ บอสตีแรงขึ้น', ['atkUp', 'fastAtk', 'multiUp', 'enrage', 'desperate', 'pierce', 'downAtk']],
   ['🎯 เลือกเป้า / ตีหลายตัว', ['aoe', 'hunter', 'backStrike', 'execute']],
   ['⏱️ ทำเป็นจังหวะ ทุก X วิ', ['burnAura', 'shockAura', 'randomSilence', 'freezeRow', 'stunPulse', 'atkDrain', 'cdPulse']],
   ['⬇️ ผู้เล่นอ่อนลงตลอดเฟส', ['backSilence', 'healCut', 'armorCut', 'cdSlow', 'tribeOff', 'noArmor', 'frontBreak', 'noRevive']],
-  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'statusImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse']],
+  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'burnImmune', 'shockImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse']],
   ['❤️ บอสฟื้นเลือด', ['lifesteal', 'regen', 'feedOnDown']],
   ['↩️ ตอบโต้', ['reflect', 'thorns', 'barBlast']],
   ['🌀 เปลี่ยนสนาม', ['rowSwap', 'earlyStorm']],
@@ -449,9 +452,11 @@ function cleanPhases(x, b, num, isObj) {
     if (q[6] === 'tribe') o.tribe = TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];
     return o;
   };
-  const rules = (list, defs = []) => { const out = []; if (Array.isArray(list)) for (const r of list) { if (!isObj(r) || out.length >= BOSS_MAX_RULES || out.some(o => o.id === r.id)) continue; const o = rule1(r, defs.find(d => d.id === r.id)); if (o) out.push(o); } return out; };
+  // set 77: old R24 statusImmune (burn + shock together) → burnImmune 100% + shockImmune 100%
+  const split = list => Array.isArray(list) ? list.flatMap(r => isObj(r) && r.id === 'statusImmune' ? [{ id: 'burnImmune', v: 100 }, { id: 'shockImmune', v: 100 }] : [r]) : list;
+  const rules = (list, defs = []) => { const out = []; list = split(list); if (Array.isArray(list)) for (const r of list) { if (!isObj(r) || out.length >= BOSS_MAX_RULES || out.some(o => o.id === r.id)) continue; const o = rule1(r, defs.find(d => d.id === r.id)); if (o) out.push(o); } return out; };
   if (!Array.isArray(x.phases)) {
-    if (!BOSS_RULES.some(q => q[0] === x.rule)) return b.phases.map(p => ({ ...p, rules: p.rules.map(r => ({ ...r })), fx: p.fx.map(f => ({ ...f })) }));
+    if (!BOSS_RULES.some(q => q[0] === x.rule) && x.rule !== 'statusImmune') return b.phases.map(p => ({ ...p, rules: p.rules.map(r => ({ ...r })), fx: p.fx.map(f => ({ ...f })) }));
     return [bossPhase(0, rules([{ id: x.rule, v: x.ruleV }], b.phases[0].rules))];
   }
   const out = [];

@@ -68,12 +68,32 @@ export const TESTS_BOSS = [
   }],
   ['บอส R24/R25/R26: ไม่ติดไฟ · โดนเผ่าที่เลือกแรงขึ้น · ตีได้เฉพาะแถวหน้า', () => {
     const burner = mk('B', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'matchStart', do: 'burn', to: 'allEnemies', v: L3(10) }] });
-    const imm = bossFight([burner], [u('B', 0, 0)], boss({ phases: [ph(0, [rl('statusImmune')])] }));
+    const imm = bossFight([burner], [u('B', 0, 0)], boss({ phases: [ph(0, [rl('burnImmune', 100)])] }));
     eq(ev(imm, 'burn').length, 0, 'บอสไม่ติดไฟ');
     const weak = bossFight([hitter('H', 100, 'allEnemies', { tribe: 'วายุ' })], [u('H', 0, 0)], boss({ phases: [ph(0, [rl('tribeWeak', 100, null, 'วายุ')])] }));
     eq(ev(weak, 'dmg', e => e.why === 'skill')[0].amount, 200, 'เผ่าที่บอสกลัว ดาเมจ ×2');
     const back = bossFight([hitter('H', 100)], [u('H', 2, 0)], boss({ phases: [ph(0, [rl('frontOnly')])] }));
     eq(ev(back, 'dmg', e => e.why === 'skill').length, 0, 'ตัวแถวหลังตีบอสไม่เข้า');
+  }],
+  ['บอส R24 (ชุด 77): ไม่ติดไฟ / ไม่ติดช็อต แยกกัน · กันได้ตาม % ที่ตั้ง', () => {
+    const st = (kind, v) => mk('S', { atk: L3(0), cdMs: NEVER, hp: L3(5000), skills: [{ when: 'matchStart', do: kind, to: 'allEnemies', v: L3(v) }] });
+    const got = (r, kind) => ev(r, kind, e => e.to === bossUid(r)).map(e => e.amount);
+    const f = (kind, v, rules) => bossFight([st(kind, v)], [u('S', 0, 0)], boss({ phases: [ph(0, rules)] }), { detail: true });
+    eq(got(f('burn', 10, [rl('burnImmune', 50)]), 'burn'), [5], 'กันไฟ 50% → ไฟ 10 เหลือ 5');
+    eq(got(f('burn', 10, [rl('shockImmune', 100)]), 'burn'), [10], 'กันช็อตอย่างเดียว ไฟยังติดเต็ม');
+    eq(got(f('shock', 10, [rl('shockImmune', 100)]), 'shock'), [], 'กันช็อต 100% → ไม่ติดช็อต');
+    eq(got(f('shock', 10, [rl('burnImmune', 100)]), 'shock'), [10], 'กันไฟอย่างเดียว ช็อตยังติดเต็ม');
+    eq(got(f('shock', 9, [rl('shockImmune', 30)]), 'shock'), [6], 'กันช็อต 30% → 9 เหลือ 6 (ปัดลง)');
+  }],
+  ['บอส R39 (ชุด 77): ผู้เล่น down 1 ตัว บอสตีแรงขึ้นถาวร (อยู่ต่อแม้เปลี่ยนเฟส)', () => {
+    const w = dummy('W', { hp: L3(10) }), t = dummy('T', { hp: L3(50000) });
+    const h = mk('H', { atk: L3(250), cdMs: L3(1500), hp: L3(50000) }); // first hit at 1.5 s empties bar 1 → phase 2 (after W is down at 1 s)
+    const r = bossFight([w, t, h], [u('W', 0, 0), u('T', 0, 1), u('H', 2, 0)], boss({ atk: 100, phases: [ph(0, [rl('downAtk', 20)]), ph(1, [])] }));
+    const bu = bossUid(r), d1 = ev(r, 'down')[0];
+    eq(ev(r, 'atkUp', e => e.to === bu).map(e => [e.t, e.amount]), [[d1.t, 20]], 'down 1 ตัว → +20 (20% ของ 100) ครั้งเดียว');
+    ok(ev(r, 'phase').some(e => e.t > d1.t), 'เข้าเฟส 2 (ไม่มีกฎนี้) หลังผู้เล่น down');
+    const later = ev(r, 'dmg', e => e.from === bu && e.why === 'hit' && e.t > d1.t);
+    ok(later.length > 0 && later.every(e => e.amount + (e.absorbed || 0) === 120), 'หลัง down บอสตี 120 ตลอด แม้เฟส 2 ไม่มีกฎนี้');
   }],
   ['บอส R8: ดูดเลือดฟื้นได้ไม่เกินยอดของแถบปัจจุบัน (กันแถบที่หมดแล้วเต็มกลับ)', () => {
     const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(60), skills: [{ when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) }] });

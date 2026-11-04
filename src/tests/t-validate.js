@@ -44,6 +44,7 @@ export const TESTS_VALIDATE = [
       eq([phaseStatsAt(b, 0).atk, phaseStatsAt(b, 2).atk, phaseStatsAt(b, 2).multi, phaseStatsAt(b, 4).atk], [20, 40, 2, 60], 'phase stats carry over'); }
     for (const r of BOSS_RULES) { ok(r[2] >= r[3] && r[2] <= r[4], `${r[0]} default in range`); if (Array.isArray(r[6])) ok(r[6][1] >= r[6][2] && r[6][1] <= r[6][3], `${r[0]} v2 default`); }
     eq(new Set(BOSS_RULES.map(r => r[0])).size, BOSS_RULES.length, 'rule ids unique');
+    { const b = cleanStage({ bosses: [{ ...stageDefaults().bosses[0], phases: [{ at: 0, rules: [{ id: 'statusImmune', v: 0 }, { id: 'burnImmune', v: 40 }] }] }] }).bosses[0]; eq(b.phases[0].rules, [{ id: 'burnImmune', v: 100 }, { id: 'shockImmune', v: 100 }], 'set 77: old statusImmune → burnImmune 100 + shockImmune 100'); }
     { const all = BOSS_RULE_GROUPS.flatMap(g => g[1]); eq(all.slice().sort(), BOSS_RULES.map(r => r[0]).filter(x => x !== 'none').sort(), 'every rule in exactly one picker group');
       eq(BOSS_STAT_GROUPS.flatMap(g => g[1]).sort(), BOSS_PHASE_STATS.map(q => q[0]).sort(), 'every phase stat in a group'); }
     { const c = cleanStage({ bosses: [{ id: 'B1', spot: 'c100001' }, { id: 'B2', spot: 'm110000' }, { id: 'B3', spot: 'm100000' }, { id: 'B4', spot: 'c000000' }] });
