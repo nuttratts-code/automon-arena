@@ -23,6 +23,7 @@ async function runAll(cs, rules, n, from, span) {
 }
 
 $('analyze').addEventListener('click', async () => {
+  if (anaFoe === 'boss') return runBossAnalysis(); // ชุด 80: VS บอส (62-analyze-boss.js)
   const btn = $('analyze'); btn.disabled = true;
   const n = $('mN').value === '24000' ? MEASURE.fullN : MEASURE.quickN;
   try {
@@ -36,6 +37,7 @@ $('analyze').addEventListener('click', async () => {
     { const ab = Object.values(now.aborted || {}).reduce((a, b) => a + b, 0); // ชุด 17: ตัวตัดนิรภัย
       if (ab) $('msg').textContent += ` · ⚠ ${ab} แมตช์ผิดปกติ ถูกตัวตัดนิรภัยหยุด (ฮิต/ผลสกิลมากเกิน ผลนับเป็นเสมอ) เช่น ทีม ${((now.abortSample || {}).A || []).join(' ')} — ตรวจสกิลที่พอกกันเอง`; }
     saveResults();
+    if (anaRune !== 'none') { $('msg').textContent += ' · กำลังวัดผลรูนแต่ละอัน…'; const m0 = $('msg').textContent; await anaRunRunes(0, 1); $('msg').textContent = m0.replace(' · กำลังวัดผลรูนแต่ละอัน…', ' · วัดผลรูนแล้ว (ตารางผลรูน)'); }
     if (!$('pane-chars').hidden || comboOn) renderCharForm();
   } catch (e) {
     $('msg').textContent = 'วิเคราะห์ไม่สำเร็จ: ' + e.message;

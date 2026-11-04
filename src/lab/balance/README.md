@@ -15,6 +15,6 @@
 | `js/30-tabs-overview` `31-steps` | tabs, overview, 4-step flow |
 | `js/40-sim-skill` `41-sim-board` | skill simulation, simulation team board |
 | `js/50-match-analysis` `51-match-units` `52-battle-view` | match analysis tab (`mx*`, `renderMatch`, `mxUnitBody`), per-unit tabs, battle view |
-| `js/60-saved-teams` `61-analyze` | saved teams, analysis |
+| `js/60-saved-teams` `61-analyze` `62-analyze-boss` | saved teams, analysis (ดูผล) · VS บอส + rune analysis (set 80) |
 | `js/70-persist` `71-ideas-library` | data saved for Claude, page state, skill ideas / library |
 | `js/99-start` | page start |

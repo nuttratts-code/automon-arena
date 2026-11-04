@@ -286,6 +286,25 @@
   <section id="view-result" class="view" hidden>
     <h2>ดูผล</h2>
     <div id="pane-analysis" hidden style="display:grid;gap:12px">
+    <div class="row" id="anaFoeRow">
+      <span class="status">คู่ต่อสู้</span>
+      <button type="button" id="anaFoeBot" aria-pressed="true">VS Bot</button>
+      <button type="button" id="anaFoeBoss" aria-pressed="false">VS บอส</button>
+      <span id="anaBossTools" class="row" hidden>
+        <label class="status" for="anaBossPick">บอส</label><select id="anaBossPick"></select>
+        <label class="status" for="anaBossK">บอสครั้งที่</label><input id="anaBossK" type="number" min="1" max="30" value="1" style="width:4em">
+        <label class="status" for="anaLevel">เลเวลทีม</label><select id="anaLevel"><option value="mix">ผสม</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select>
+      </span>
+    </div>
+    <div class="row" id="anaRuneRow">
+      <span class="status">รูน</span>
+      <button type="button" id="anaRuneNone" aria-pressed="true">ไม่มี</button>
+      <button type="button" id="anaRuneRand" aria-pressed="false">สุ่ม</button>
+      <button type="button" id="anaRunePick" aria-pressed="false">เลือกเอง</button>
+      <span id="anaRuneRandBox" hidden><label class="status" for="anaRuneN">จำนวนรูนต่อทีม</label> <input id="anaRuneN" type="number" min="1" max="12" value="2" style="width:4em"></span>
+    </div>
+    <div class="row" id="anaRunePickBox" hidden></div>
+    <p class="hint" id="anaModeHint"></p>
     <div class="row">
       <button class="primary" id="analyze" type="button">วิเคราะห์</button>
       <label class="status" for="mN">จำนวนแมตช์</label>
@@ -293,6 +312,43 @@
       <span class="status" id="msg">กด "วิเคราะห์" เพื่อวัดผล</span>
     </div>
     <div class="progress" aria-hidden="true"><div id="prog"></div></div>
+    <div id="anaRuneRes" hidden style="display:grid;gap:8px">
+    <h3 id="anaRuneTitle">ผลรูนแต่ละอัน</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>รูน</th><th>ความหายาก</th><th class="n">ชนะ ใส่รูน</th><th class="n">ชนะ ไม่ใส่</th><th class="n">เพิ่มชนะ</th></tr></thead>
+      <tbody id="anaRuneTbl"></tbody>
+    </table></div>
+    <p class="hint">ทีมสุ่มทีมเดิม คู่เดิม สู้ 2 รอบ: ใส่รูนนี้ 1 อัน กับไม่ใส่ · รูนตัวเดียว/คู่ = สุ่มตัว · รูนเผ่าที่ทีมไม่มีเผ่านั้นเสียเปล่า (เหมือนของจริง) · ไม่รวมรูนเงิน/ร้านและรูนเติบโต (ไม่มีผลในแมตช์เดียว)</p>
+    </div>
+    <div id="anaBoss" hidden style="display:grid;gap:12px">
+    <div class="cards" id="bossCards">
+      <div class="card"><b>–</b><span>ชนะบอสเฉลี่ย</span></div>
+      <div class="card"><b>–</b><span>แถบเลือดที่ลดได้เฉลี่ย</span></div>
+      <div class="card"><b>–</b><span>เวลาเฉลี่ยต่อแมตช์</span></div>
+    </div>
+    <h3>ผลต่อบอส</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>บอส</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th></tr></thead>
+      <tbody id="bossPer"></tbody>
+    </table></div>
+    <h3>อันดับตัวละคร VS บอส (แตะเพื่อเปิดแก้)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ตัวละคร</th><th>ความหายาก</th><th class="n">ชนะบอส %</th><th class="n">ต่างจากค่าเฉลี่ย</th><th class="n">ดาเมจ/แมตช์</th></tr></thead>
+      <tbody id="bossRank"></tbody>
+    </table></div>
+    <p class="hint">ชนะบอส % = อัตราชนะของทีมที่มีตัวนี้ · ยังไม่มีเป้าสำหรับบอส จึงไม่มีป้าย "หลุด/ใกล้ขอบ" · ชนะ = ฆ่าบอสได้ หมดเวลา = ไม่ชนะ</p>
+    <h3>ผลเผ่า VS บอส (ชนะ % ของทีมที่เปิดโบนัสเผ่านั้น)</h3>
+    <div class="tbl"><table>
+      <thead id="bossTribeHead"></thead>
+      <tbody id="bossTribe"></tbody>
+    </table></div>
+    <h3>แมตช์ต้องสงสัย VS บอส (ดาเมจรวม ÷ HP รวม · สูงสุด 10 อันดับ)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>Lv</th><th>บอส</th><th class="n">เท่า</th><th class="n">แถบ</th><th class="n">เวลา</th><th>ผล</th><th>ทีม</th><th>รูน</th><th></th></tr></thead>
+      <tbody id="bossTop"></tbody>
+    </table></div>
+    </div>
+    <div id="anaBot" style="display:grid;gap:12px">
     <div class="cards" id="cards">
       <div class="card"><b>–</b><span>หลุดเกณฑ์</span></div>
       <div class="card"><b>–</b><span>ใกล้ขอบ</span></div>
@@ -319,6 +375,7 @@
       <tbody id="tribeRes"><tr><td colspan="6" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
     </table></div>
     <p class="hint">เป้าจาก tribe-rules: ขั้น 2 โบนัสเพิ่มอัตราชนะ +5 ถึง +15% · ขั้น 6 ชนะทีมผสมไม่เกิน 70% · ไม่มีเผ่าไหนอยู่ในทีมที่ชนะเกิน 50% · ขั้น 4 ยังไม่มีเป้า</p>
+    </div>
     </div>
   </section>
 
