@@ -18,3 +18,10 @@ B1 โกเลม เหล็กกล้า: reflect + armorCut (→ noArmor 
 - A: fix teams first — PT-6 cap (e.g. healHitUp only up to X) and look at why fire/lightning teams die in ~40 s; then retune bosses.
 - B: accept the spread — tune each boss so the strongest team (ภูติ) loses narrowly; the others lose by 2–3 bars.
 - C: give each boss a weakness to 1–2 tribes (tribeWeak) so weak teams get closer.
+
+## Set 78b (4 Nov) — user re-tuned PT-6 (cd 7 s, healHitUp +3, atkOf 10%) and picked C
+- Written into Balance Room config/main (v281, stage.bosses only; chars untouched). Results: claude/bosstune/final_out.txt (10 seeds, Lv1 @stage 5, Lv2 @stage 10). Each boss: 5 bars × 200 HP, phase 2 after 2 bars (60% HP — half of 5 bars rounds down), phase 3 on the last bar, phase atk ×1.3–1.6 then ×1.8–2.4, tribeResist 30% vs own tribe, one tribeWeak (only one tribe allowed per phase):
+  B1 โกเลม weak วายุ 50% · B2 จอมเวทย์ดำ weak วายุ 100% + enrage 5% · B3 อสุรกายคลั่ง no weak · B4 กระจกสะท้อน weak วายุ 150% · B5 จ้าวพายุ (new name) weak สายฟ้า 300% · B6 ปีศาจเพลิง (new name) weak สายฟ้า 150%.
+- Boss wins 100% of runs except B6 vs ภูติ Lv1 (90%). Own tribe always loses by ≥2.3 bars (target met). On target (others in phase 3) 4–7 of 12 cases per boss; **B3 0/12: beats every team by 2.6–3.7 bars** — the win/lose edge is a cliff (atk 50 → team wins, 55 → boss wins big); B3 = hardest boss for now.
+- Still true: fire and lightning teams die in 30–55 s vs any boss strong enough to beat the others (lightning team's skills need several enemies/"enemy down"); a tribeWeak helps their damage, not their survival.
+- PT-6 still grows each hit (smaller now) — no cap.

@@ -13,9 +13,9 @@ export const KITS={
    ph(half(p),[r('healCut',70),r('cdSlow',30),r('randomSilence',8,{v2:4}),r('tribeResist',p.tr??30,{tribe:'ภูติ'})],[],{atk:at(p,p.m2)}),
    ph(last(p),[r('healCut',90),r('cdSlow',50),r('hunter'),r('randomSilence',6,{v2:4}),r('tribeResist',p.tr??30,{tribe:'ภูติ'})],[fx('stunAll',3)],{atk:at(p,p.m3)})]}),
  B3:p=>base('B3','อสุรกายคลั่ง','อสูร',p,{spot:'back',phases:[
-   ph(0,[r('lifesteal',30),r('downAtk',20),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})]),
-   ph(half(p),[r('lifesteal',50),r('downAtk',30),r('feedOnDown',50),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})],[],{atk:at(p,p.m2)},'mid'),
-   ph(last(p),[r('lifesteal',70),r('downAtk',40),r('enrage',20),r('healCut',50),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})],[fx('untargetable',3)],{atk:at(p,p.m3)},'front')]}),
+   ph(0,[r('lifesteal',p.ls??20),r('downAtk',15),r('healCut',p.hc??60),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})]),
+   ph(half(p),[r('lifesteal',(p.ls??20)+10),r('downAtk',15),r('feedOnDown',p.fd??10),r('healCut',p.hc??60),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})],[],{atk:at(p,p.m2)},'mid'),
+   ph(last(p),[r('lifesteal',(p.ls??20)+20),r('downAtk',20),r('healCut',Math.min(100,(p.hc??60)+20)),r('noRevive'),r('tribeResist',p.tr??30,{tribe:'อสูร'})],[fx('untargetable',3)],{atk:at(p,p.m3)},'front')]}),
  B4:p=>base('B4','กระจกสะท้อน','สายฟ้า',p,{spot:'front',phases:[
    ph(0,[r('shockImmune',50),r('shockAura',2),r('tribeResist',p.tr??30,{tribe:'สายฟ้า'})]),
    ph(half(p),[r('shockImmune',60),r('shockAura',3),r('stunPulse',10,{v2:2}),r('tribeResist',p.tr??30,{tribe:'สายฟ้า'})],[],{atk:at(p,p.m2)}),
@@ -30,3 +30,4 @@ export const KITS={
    ph(last(p),[r('burnImmune',80),r('burnAura',5),r('aoe',40),r('enrage',20),r('tribeResist',p.tr??30,{tribe:'เพลิงเผา'})],[fx('cleanse')],{atk:at(p,p.m3)})]}),
 };
 export function withRamp(b,E){ if(!E) return b; for(const [i,p] of b.phases.entries()){ p.rules=p.rules.filter(x=>x.id!=='enrage'); p.rules.push({id:'enrage',v:Math.round(E*(i===2?1.5:1))}); } return b; }
+export function withWeak(b,tribe,pct){ if(!tribe||!pct) return b; for(const p of b.phases){ p.rules=p.rules.filter(x=>x.id!=='tribeWeak'); p.rules.push({id:'tribeWeak',v:pct,tribe}); } return b; }
