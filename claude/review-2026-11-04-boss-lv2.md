@@ -1,5 +1,22 @@
 # Boss #1 fit for all-Lv2 teams (set 81, 4 Nov 2026)
 
+## UPDATE 3 — identity bosses (UPDATE 2 values) across levels / boss # / runes (v286 chars, n 300 per boss, avg B1–B6 win %)
+boss # k → stage 5k; mult: k1 ×1 · k2 ×2 · k3 ×2.3 · k4 ×2.6 · k6 ×3.5 · k8 ×4.6 · k10 (stage 50) ×6.1 · k11+ endless.
+| team | k1 | k2 | k3 | k4 | k6 | k8 | k10 | k11 | k13 |
+|---|---|---|---|---|---|---|---|---|---|
+| all Lv1 | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| all Lv2 | 54 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Lv2 + 25% Lv3 | 75 | 11 | 7 | 3 | 0 | 0 | 0 | 0 | 0 |
+| Lv2 + 50% Lv3 | 89 | 24 | 15 | 9 | 2 | 0 | 0 | 0 | 0 |
+| Lv2 + 75% Lv3 | 96 | 41 | 26 | 16 | 4 | 0 | 0 | 0 | 0 |
+| all Lv3 | 98 | 56 | 42 | 28 | 7 | 1 | 0 | 0 | 0 |
+| Lv2 + 2 random runes | 56 | 4 | 2 | 0 | 0 | 0 | 0 | 0 | 0 |
+| Lv2 + 5 random runes | 68 | 6 | 3 | 1 | 0 | 0 | 0 | 0 | 0 |
+| Lv3 + 5 random runes | 100 | 68 | 55 | 38 | 13 | 3 | 1 | 0 | 0 |
+Bosses are even (B1–B6 within ~±5 at each cell). Lv3 is max level → from boss #4 on nothing in the game today beats them (perm stats not modelled).
+Economy sim (bot plays, hearts/wins unlimited, goldPerRound 10/15/20/25): stage 5 avg Lv 1.36/1.68/1.89/1.92, full-Lv2 teams 0/8/58/78% → full Lv2 at stage 5 needs ~20–25 gold/round. But the bot never builds Lv3 (≤ 9% units Lv3 even at stage 40) → bot cannot answer when Lv3 comes. Estimate by hand: Lv3 = 9 copies (3× Lv2); at ~20 gold/round ≈ 10 more rounds → full Lv3 ~stage 15–20 at best (legend units much later).
+Next decision for user: lower boss growth after #1 (mult10 2 → ~1.2–1.3 and smaller endlessPct) so Lv3 teams meet ~50% at the stage they reach; and bot Lv3 logic if real-run measures are wanted.
+
 ## UPDATE 2 — boss identity by tribe (user ask: golem should be tanky, อสุรกายคลั่ง hits hardest, จ้าวพายุ atk not tiny)
 Rule: HP = 1000 × tribe HP mult × s, atk = 100 × tribe atk mult × s (T-3.1 mults: เหล็กกล้า 1.4/0.6 · ภูติ 0.9/0.7 · อสูร 1.0/1.4 · สายฟ้า 0.9/0.8 · วายุ 0.8/0.5 · เพลิงเผา 0.9/0.8); s fitted per boss for ~55% (Lv2 random teams, k1, v286 chars). Phase atk keeps today's ratio to base (B5 vs its old base 55). cd/multi/rules unchanged. Script src/lab/bossidfit.mjs. All ค่าเสนอ.
 | boss | s | HP | atk | phase atk p2/p3 | win % | worst tribe | best |
