@@ -29,3 +29,17 @@ B1 โกเลม เหล็กกล้า: reflect + armorCut (→ noArmor 
 ## Set 78c (4 Nov) — user picked B: themed weaknesses, one per tribe (config/main v282)
 B1 โกเลม weak สายฟ้า 300% (atk 80, cd 6 s, enrage 5) · B2 จอมเวทย์ดำ weak เพลิงเผา 300% (atk 90, cd 6 s, enrage 10) · B3 อสุรกายคลั่ง weak ภูติ 100% (atk 80, cd 5 s) · B4 กระจกสะท้อน weak เหล็กกล้า 100% (atk 95, cd 5 s) · B5 จ้าวพายุ weak อสูร 50% (atk 55, cd 5 s, multi 2) · B6 ปีศาจเพลิง weak วายุ 200% (atk 95, cd 4 s).
 Result (final_out.txt, 10 seeds): every tribe's closest fight is against the boss weak to it (สายฟ้า 1.2–1.3 bars left vs B1, เพลิงเผา 1.3–1.9 vs B2, ภูติ 1.1–2.0 vs B3, เหล็กกล้า 0.2–0.7 vs B4, อสูร 0.4 vs B5, วายุ 1.0 vs B6). Boss wins 100% except B4: วายุ Lv1 90%, เหล็กกล้า Lv2 90%. Own tribe always loses by ≥2.9 bars. Against non-weak bosses, fire/lightning still lose by ~2–3 bars. Wind team vs B4 is very sensitive (small changes flip win/lose).
+
+## Set 79 (4 Nov) — bosses imported + analysis for asks (2) and (3) · user must pick
+Imported: config/main v282 stage (bosses B1–B6 of set 78c + custom runes C2 theme→armor, new C7 ข่ายแสง, C8 สตั้น) → src/core/stage-user.js. GATE: PASS on 655590b → main → published balance room v145, game v71, check v70.
+**Char edits in config/main (HL-7, PT-6, WN-6, WY-5, WY-6, WY-8) NOT imported:** pre-import check DIFFERS — results/latest (2 Nov) measured only WN-6/WY-5/WY-8. Boss tuning (set 78) used these edits, so the game's bosses fight the OLD chars (e.g. wind team beats B4 96% Lv1 with old chars, 1% with the edits). To import them: user re-runs วิเคราะห์ then 💾.
+Tools (scratch, not in repo): dist.mjs / var.mjs / tbl.mjs / soft.mjs / weak.mjs / log.mjs — same as claude/bosstune harness, read bosses from stageDefaults().
+
+### (3) Wind team vs B4 กระจกสะท้อน swings (with the user's char edits)
+Cause (evidence, 100 seeds, Lv1): B4's **stunPulse (R33, stuns 1 random unit 2 s every 10 s / 6 s)** picks a random target; stunning the wind carry (WY-6) or the armour stacker (WY-5) costs a whole hit cycle. Bars left: mean 1.76 sd 0.47 (0–2) · without stunPulse sd 0.08 · without stunPulse and shockAura (R12, random shock target) sd 0.00. Lv2 is already stable (2.0 bars every seed).
+Options: A (recommended) R33 + R12 pick a fixed target (e.g. the enemy with highest atk; tie = front, left) → same result every fight; only B4 uses them now · B: keep random, user lowers stun 2 s → 1 s in Balance Room (no code, still swings) · C: remove stunPulse from B4, rely on phase-3 stunAll (stable, B4 weaker → retune).
+
+### (2) Fire / lightning teams vs bosses
+Cause: boss hits (80–209) one-shot their units (80–150 HP, no armour/heal) → one unit dies per boss hit → team dead in 40–55 s. Lightning damage is shock + multi-target skills (splitAll, stealShock) that do little vs one boss; R25 tribeWeak already multiplies shock damage too.
+Tested (10 seeds, with char edits): halve boss atk + cd (same dps) → no help (fire 2.0→2.0, lightning 1.3→2.0 bars). Boss atk −30% vs that team → fire B2 1.9→1.0 bars (Lv2 wins 20%), lightning B1 1.3→0.9. tribeWeak 300→500/800 → lightning B1 1.0, fire B2 1.3/0.9 (Lv2 0.5, wins 10% at 800). Both together → lightning Lv1 flips to 100% team win (cliff).
+Options: A (recommended) raise R25 tribeWeak max 300 → 800 (range only, user tunes B1/B2 numbers in Balance Room) · B: new rule R40 "boss hits tribe X −Y%" (default 30% ค่าเสนอ) for B1 vs สายฟ้า, B2 vs เพลิงเผา — helps fire survive, lightning less · C: A + B (closest, but needs careful tuning — cliff).
