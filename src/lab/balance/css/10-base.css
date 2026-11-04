@@ -76,3 +76,4 @@ tr.click { cursor: pointer; } tr.click:hover td { background: var(--soft); }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
 .tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--mute); }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.cfgver { margin: 2px 0 0; font-weight: 600; }
