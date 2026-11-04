@@ -126,7 +126,7 @@ export class BattleView {
       const cell = this.root.querySelector(`[data-key="${u.side}:${u.row}:${u.lane}"]`);
       cell.append(card);
       const m0 = c && Array.isArray(c.multi) ? c.multi[(u.level || 1) - 1] : 1;
-      const v = { ...u, hp: u.hp, armor: u.armor, burn: 0, shock: 0, multi: Number.isInteger(m0) ? m0 : 1, down: false, card, cell, hpBar, barText, hpFill, armorFill, hpText, armorText, burnEl: burn, shockEl: shock, multiEl: multi };
+      const v = { ...u, hp: u.hp, armor: u.armor, burn: 0, shock: 0, stat: null, procs: new Map(), multi: Number.isInteger(m0) ? m0 : 1, down: false, card, cell, hpBar, barText, hpFill, armorFill, hpText, armorText, burnEl: burn, shockEl: shock, multiEl: multi };
       this.units.set(u.uid, v);
       if (u.cells) this.placeCells(v, u.cells);
       this.paint(v);
@@ -220,7 +220,9 @@ export class BattleView {
 
   apply(e) {
     const s = sec(e.t);
+    this.ver = (this.ver || 0) + 1; // set 84: anything changed → live info panel repaints
     switch (e.k) {
+      case 'stat': { const v = this.units.get(e.to); if (v) v.stat = { ...(v.stat || {}), ...e.s }; break; } // set 84: live stats (simulate opts.live)
       case 'set': {
         const a = this.units.get(e.who);
         if (!this.reduced && !this.fast) {
@@ -254,7 +256,7 @@ export class BattleView {
       case 'cdPct': this.wantLog && this.onLog(`${s} ${this.name(e.to)} คูลดาวน์ −${e.pct}% ทั้งแมตช์`); break;
       case 'bossMove': { const v = this.units.get(e.who); if (v) this.placeCells(v, [e.slot]); break; }
       case 'phase': { const v = this.units.get(e.who); if (v && e.cells) this.placeCells(v, e.cells); break; }
-      case 'proc': if (this.onProc) this.onProc(e, s, this.name(e.who)); break; // หน้าที่รู้จักสกิลเขียนข้อความเอง
+      case 'proc': { const v = this.units.get(e.who); if (v && e.si != null) v.procs.set(e.si, (v.procs.get(e.si) || 0) + 1); } if (this.onProc) this.onProc(e, s, this.name(e.who)); break; // หน้าที่รู้จักสกิลเขียนข้อความเอง
       case 'maxhp': { const v = this.units.get(e.to); v.maxHp = e.maxHp; v.hp = Math.min(v.hp, e.hp); this.float(v, e.amount < 0 ? `HP สูงสุด +${-e.amount}` : `HP สูงสุด −${e.amount}`, e.amount < 0 ? 'n-heal' : 'n-hit'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด ${e.amount < 0 ? `+${-e.amount} (คืนเป็น ${e.maxHp})` : `−${e.amount} (เหลือ ${e.maxHp})`}`); break; }
       case 'carry': this.wantLog && this.onLog(`${s} ${this.name(e.by)} พา ${this.name(e.who)} ไปตี ${this.name(e.target)}`); break; // ชุด 20
       case 'reflectDebuff': this.wantLog && this.onLog(`${s} ${this.name(e.from)} สะท้อน${e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'} กลับไปหา ${this.name(e.to)}`); break;

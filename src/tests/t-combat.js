@@ -106,6 +106,24 @@ export const TESTS_COMBAT = [
       ok(JSON.stringify(r1.events) === JSON.stringify(r2.events), `แมตช์ ${i} ผลไม่ตรงกัน`);
     }
   }],
+  // set 84: live stats for the game's tap-to-inspect panel
+  ['live stats (opts.live): same result + same other events · last stat values = end-of-match stats', () => {
+    const chars = buildCharacterList(), m = makeCharMap(chars), rng = makeRng(84);
+    for (let i = 0; i < 40; i++) {
+      const A = randomTeam(rng, chars, 6, 'mix'), B = randomTeam(rng, chars, 6, 'mix');
+      const d = simulate(buildTeam(A, m), buildTeam(B, m), { detail: true }), l = simulate(buildTeam(A, m), buildTeam(B, m), { detail: true, live: true });
+      eq([l.winner, l.timeMs], [d.winner, d.timeMs], `match ${i}: result`);
+      ok(JSON.stringify(l.events.filter(e => e.k !== 'stat')) === JSON.stringify(d.events), `match ${i}: other events unchanged`);
+      const now = new Map();
+      for (const e of l.events) if (e.k === 'stat') now.set(e.to, { ...(now.get(e.to) || {}), ...e.s });
+      for (const x of l.units) {
+        const s = now.get(x.uid); ok(!!s, `match ${i}: uid ${x.uid} has live stats`);
+        for (const k of Object.keys(x.fin)) eq(s[k], x.fin[k], `match ${i} uid ${x.uid} ${k}`);
+      }
+    }
+    const plain = simulate(buildTeam(randomTeam(makeRng(1), chars, 6, 'mix'), m), buildTeam(randomTeam(makeRng(2), chars, 6, 'mix'), m));
+    ok(!plain.events.some(e => e.k === 'stat'), 'no stat events without opts.live');
+  }],
   ['ไม่มีฝั่งได้เปรียบ: สลับฝั่งแล้วผลกลับด้านตรงกัน (300 แมตช์)', () => {
     const chars = buildCharacterList(), m = makeCharMap(chars), rng = makeRng(11);
     let bad = 0;

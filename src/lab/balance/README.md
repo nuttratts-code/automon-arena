@@ -14,7 +14,7 @@
 | `js/20-char-form` `21-tribe-form` `22-stage-form` | character / tribe forms · rune / boss / stage-mode settings tab (data in core/stage.js, saved as config/main.stage) |
 | `js/30-tabs-overview` `31-steps` | tabs, overview, 4-step flow |
 | `js/40-sim-skill` `41-sim-board` | skill simulation, simulation team board |
-| `js/50-match-analysis` `51-match-units` `52-battle-view` | match analysis tab (`mx*`, `renderMatch`, `mxUnitBody`), per-unit tabs, battle view |
+| `js/50-match-analysis` `51-match-units` `52-battle-view` `53-match-wire` | match analysis tab (`mx*`, `renderMatch`, `mxUnitBody`), per-unit tabs, battle view · 50 + 51 (and `css/55-match.css` + `60-units.css`) are ALSO included in the game page (set 84 "ดูรายละเอียดแมตช์") → keep them free of Balance-Room-only top-level code; that wiring lives in 53 |
 | `js/60-saved-teams` `61-analyze` `62-analyze-boss` | saved teams, analysis (ดูผล) · VS บอส + rune analysis (set 80) |
 | `js/70-persist` `71-ideas-library` | data saved for Claude, page state, skill ideas / library |
 | `js/99-start` | page start |

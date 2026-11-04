@@ -280,7 +280,7 @@ function renderMatch() {
   $('mxEmpty').hidden = has; $('mxBody').hidden = !has;
   if (!has) return;
   const { r, m } = simLast;
-  const stale = $('simRun').classList.contains('stale');
+  const runBtn = $('simRun'), stale = !!runBtn && runBtn.classList.contains('stale'); // set 84: game page has no simRun
   $('mxStale').hidden = !stale; $('mxStale').textContent = stale ? 'มีการแก้ค่าหรือทีมหลังจำลอง · ตัวเลขด้านล่างยังเป็นของแมตช์เดิม (กด "จำลองใหม่" ในแท็บลองสู้)' : '';
   const key = r; if (mxKey === key && $('mxUnits').childElementCount) return; mxKey = key;
   const all = unitsOf(r), res = new Map(r.units.map(u => [u.uid, u]));
@@ -296,7 +296,7 @@ function renderMatch() {
     chip('ขวาทำ', nf(tot[1]), 'รวมส่วนที่เกราะกันด้วย · อาจเกิน HP รวมของอีกฝั่ง'),
     chip('รอด', `${alive[0]} / ${alive[1]}`, 'จำนวนตัวที่ยังไม่ down (ซ้าย / ขวา)'),
     chip('พายุเริ่ม', `${((RULES.stormStartMs || 0) / 1000).toFixed(1)} วิ`),
-    chip('เลขสุ่ม', simSeedLabel()));
+    ...(simSeedLabel() != null ? [chip('เลขสุ่ม', simSeedLabel())] : [])); // game page: no seed → null
 
   mxCtx = { r, m, U, recs, per, act, res, fxTot, fxGiven, maxOut: 1, maxIn: 1, maxFx: 1 };
   const sum = mxBySrc;
@@ -450,15 +450,3 @@ function renderChart(all, r, m) {
   }
   paintHi();
 }
-// ปุ่มเครื่องมือในส่วนวิเคราะห์แมตช์
-$('mxLogQ').addEventListener('input', () => mxLogApply());
-$('mxLogCopy').addEventListener('click', async () => {
-  const txt = mxLogText(), msg = $('mxLogCount');
-  try { await navigator.clipboard.writeText(txt); if (msg) msg.textContent = `คัดลอก ${txt.split('\n').length} บรรทัดแล้ว`; }
-  catch (e) { if (msg) msg.textContent = 'คัดลอกไม่ได้ในหน้านี้ — เลือกข้อความเองได้'; }
-});
-// ย้ายตารางสรุปรายตัวมาเป็น "มุมมองตาราง" ของส่วนรายตัว (ไม่ซ้ำซ้อนกับ folded section อีก)
-(() => { const fold = $('simSumFold'); if (fold) { const tbl = fold.querySelector('.tbl'); if (tbl) $('mxTableBox').append(tbl); fold.remove(); } })();
-$('mxGoSim').addEventListener('click', () => showTab('sim'));
-$('toMatch').addEventListener('click', () => { showTab('match'); $('editor').scrollIntoView({ block: 'start', behavior: 'smooth' }); });
-

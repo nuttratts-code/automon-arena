@@ -144,8 +144,11 @@ function scHpUp(x, me, si, v) {
 const sk = (id, si = 0) => scC(id).skills[si];
 const SC_SKILL = [
   // set 49 (import 28 Oct): new kits for HL-2 / PT-6 / PT-8 (old kits kept below as retired-skill tests)
-  ['HL-2', 'ตีโดน → เพื่อนข้างหน้า เกราะ/ฮิต +v', (c, L, i) => {
-    const fr = mk('ZA-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
+  // set 84: HL-2 gives only to a front ally of its own tribe (old kit 'HL-2@2' = any front ally, kept below)
+  ['HL-2', 'ตีโดน → เพื่อนข้างหน้า (เผ่าเดียวกัน) เกราะ/ฮิต +v · ต่างเผ่าไม่ได้', (c, L, i) => {
+    const other = scRun([[c, L, 1, 0], [mk('ZA-2', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) }), 1, 0, 0]], [[scBag('ZB-1'), 1, 0, 0]]);
+    eq(scSk(other.r, other.uid(0, 1, 0), 0, 'buff').filter(e => e.what === 'armorHitUp').length, 0, 'front ally of another tribe gets nothing');
+    const fr = mk('ZA-1', { tribe: 'เหล็กกล้า', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
     const x = scRun([[c, L, 1, 0], [fr, 1, 0, 0]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 1, 0), front = x.uid(0, 0, 0), v = sk('HL-2').v[i];
     const hits = scHits(x.r, me).length, got = scSk(x.r, me, 0, 'buff').filter(e => e.what === 'armorHitUp');
     ok(hits >= 3, `HL-2 hit ${hits} times`);
@@ -520,7 +523,9 @@ const SC_OLD = { 'HL-2': [{ when: 'hitTaken', do: 'armor', to: 'self', v: [2, 4,
   // set 82 (import 4 Nov): kits replaced that day · key 'ID@n' = n-th old kit of that character
   'PT-6@2': [{ when: 'hit', do: 'healHitUp', sameTribe: true, skipSameId: true, to: 'allyRandom2', v: [30, 30, 30] },
              { when: 'hit', do: 'atkOf', of: { stat: 'healHit', who: 'self' }, to: 'self', v: [10, 10, 10] }],
-  'HL-8@1': [{ when: 'passive', do: 'shareArmor', to: 'allAllies', v: [30, 30, 30] }] };
+  'HL-8@1': [{ when: 'passive', do: 'shareArmor', to: 'allAllies', v: [30, 30, 30] }],
+  // set 84: HL-2 before the own-tribe filter
+  'HL-2@2': [{ when: 'hit', do: 'armorHitUp', to: 'frontAlly', v: [3, 6, 12] }] };
 const SC_RETIRED = [
   ['HL-2', 'โดนตี → ได้เกราะ v', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
@@ -594,6 +599,13 @@ const SC_RETIRED = [
     }
     const row = x.model.fxGiven.get(me).get('share'), tab = row ? row.list.reduce((a, q) => a + q.e.amount, 0) : 0;
     eq(tab, x.r.events.filter(s => s.k === 'armor' && s.why === 'share').reduce((a, s) => a + s.amount, 0), "tab 'แบ่งเกราะ' row total");
+    return x;
+  }],  ['HL-2@2', 'ตีโดน → เพื่อนข้างหน้า (ทุกเผ่า) เกราะ/ฮิต +v', (c, L, i) => {
+    const fr = mk('ZA-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
+    const x = scRun([[c, L, 1, 0], [fr, 1, 0, 0]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 1, 0), front = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const hits = scHits(x.r, me).length, got = scSk(x.r, me, 0, 'buff').filter(e => e.what === 'armorHitUp');
+    ok(hits >= 3, `HL-2 hit ${hits} times`);
+    eq(got.map(e => [e.to, e.amount]), Array(hits).fill([front, v]), 'armor/hit +v to the front ally on every hit');
     return x;
   }],
 ];

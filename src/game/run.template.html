@@ -12,6 +12,8 @@
   --tg-start: #2f6f8f; --tg-ongoing: #b5531c; --tg-once: #7a5a00; --tg-down: #a92f48; --tg-shop: #3d7a3a;
   --t-steel: #6e7d8c; --t-fire: #d9542b; --t-bolt: #d6a11a; --t-wind: #2f9c7b; --t-spirit: #7d62c6; --t-fiend: #a92f48;
   --n-hit: #b3261e; --n-shock: #a77a00; --n-burn: #d9542b; --n-heal: #2a8a52; --n-armor: #4f6478; --n-storm: #8a6b3c;
+  --sideL: #1d5fb8; --sideR: #b3261e; --hi: #b3261e; --hi-bg: #fbe3e1; --lo: #8a5a00; --lo-bg: #fbefd4; --ok-bg: #e2f2e7;
+  --n-reflect: #0ca678; --n-down: #364fc7; --n-abrk: #d6336c; --n-skill: #1c7ed6; --n-cnt: #7048e8; --n-exec: #868e96;
   --f-display: "Mitr", "IBM Plex Sans Thai", Tahoma, sans-serif;
   --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -23,6 +25,8 @@
   --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
   --tg-start: #8cc6e4; --tg-ongoing: #f39a6a; --tg-once: #e8c25e; --tg-down: #ef7f95; --tg-shop: #8fd48a;
   --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --sideL: #7fb2f0; --sideR: #ff8a80; --hi: #ff8f86; --hi-bg: #3a1a18; --lo: #f0c46a; --lo-bg: #352b14; --ok-bg: #16301f;
+  --n-reflect: #38d9a9; --n-down: #748ffc; --n-abrk: #f06595; --n-skill: #4dabf7; --n-cnt: #9775fa; --n-exec: #adb5bd;
   --n-hit: #ff8a80; --n-shock: #f5cf5a; --n-burn: #ff9a6b; --n-heal: #7be0a2; --n-armor: #b5c7da; --n-storm: #d8b67a; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
@@ -31,6 +35,8 @@
   --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
   --tg-start: #8cc6e4; --tg-ongoing: #f39a6a; --tg-once: #e8c25e; --tg-down: #ef7f95; --tg-shop: #8fd48a;
   --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --sideL: #7fb2f0; --sideR: #ff8a80; --hi: #ff8f86; --hi-bg: #3a1a18; --lo: #f0c46a; --lo-bg: #352b14; --ok-bg: #16301f;
+  --n-reflect: #38d9a9; --n-down: #748ffc; --n-abrk: #f06595; --n-skill: #4dabf7; --n-cnt: #9775fa; --n-exec: #adb5bd;
   --n-hit: #ff8a80; --n-shock: #f5cf5a; --n-burn: #ff9a6b; --n-heal: #7be0a2; --n-armor: #b5c7da; --n-storm: #d8b67a; color-scheme: dark }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
 .wrap { max-width: 920px; margin: 0 auto; padding-block: 12px 40px;
@@ -190,6 +196,34 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .simlog .lg-st { color: var(--mute); font-family: var(--f-mono); font-size: .76rem; } .simlog .lg-skill { color: var(--accent); }
 .simlog .lg-rule { color: var(--accent); font-weight: 600; } /* set 75: boss rule tag */
 [hidden] { display: none !important; } /* ซ่อนจริงเสมอ แม้ CSS ตั้ง display ไว้ */
+/* set 84: tap a unit during battle → live skills + stats */
+.uinfo { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: start; }
+.uinfo .live { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .82rem; }
+.uinfo .live b { font: 600 .82rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.lstats { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 4px; }
+.lstat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; padding: 2px 6px; border: 1px solid var(--line); border-left: 4px solid var(--c, var(--line)); border-radius: 6px; background: var(--panel); font-size: .72rem; color: var(--mute); }
+.lstat b { font: 600 .86rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.lstat .up { color: var(--ok); font: 600 .72rem var(--f-mono); } .lstat .dn { color: var(--bad); font: 600 .72rem var(--f-mono); }
+.uinfo .skill { font-size: .82rem; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; }
+.uinfo .skill .cnt { font: 600 .72rem var(--f-mono); color: var(--accent); white-space: nowrap; }
+.uinfo .skill .cnt.zero { color: var(--mute); font-weight: 400; }
+.uinfo .skill.off { opacity: .5; }
+#arena .cell { cursor: pointer; } #arena .cell.picked { outline: 3px solid var(--sel); outline-offset: 1px; }
+/* match detail (shared Balance Room match tab: lab/balance/css/55-match.css + 60-units.css) */
+.status { font-size: .85rem; color: var(--mute); }
+.pill { font-size: .75rem; font-weight: 600; padding: 1px 9px; border-radius: 99px; white-space: nowrap; display: inline-block; border: 1px solid transparent; }
+.p-ok { color: var(--ok); background: var(--ok-bg); }
+.tbl { overflow-x: auto; }
+.tb { display: inline-flex; gap: 2px; vertical-align: -2px; margin-right: 6px; }
+.tb i { display: inline-block; width: 13px; height: 13px; background: var(--tc); }
+.tb i.s-square { border-radius: 3px; } .tb i.s-circle { border-radius: 50%; }
+.tb i.s-triangle { clip-path: polygon(50% 4%, 97% 94%, 3% 94%); } .tb i.s-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.tb i.s-hexagon { clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%); } .tb i.s-pentagon { clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%); }
+.tb i.extra { width: 9px; height: 9px; align-self: flex-end; }
+#mxFold .mx-sec { display: grid; gap: 8px; margin-top: 10px; } #mxFold h3 { margin: 0; font-size: .95rem; }
+#mxFold .mx-sec > details > summary { font-size: .88rem; }
+<!--@include lab/balance/css/55-match.css-->
+<!--@include lab/balance/css/60-units.css-->
 </style>
 
 <div class="wrap">
@@ -280,8 +314,28 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
         <div><span class="team">คู่แข่ง (บอท)</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
       </div>
       <div class="arena" id="arena"></div>
-      <div class="result" id="result" hidden><div><strong id="resultTitle"></strong><span class="hint" id="resultSub"></span><ul class="msgs" id="endMsgs"></ul><button class="primary" id="next" type="button">ไปรอบถัดไป</button></div></div>
+      <div class="result" id="result" hidden><div><strong id="resultTitle"></strong><span class="hint" id="resultSub"></span><ul class="msgs" id="endMsgs"></ul><div class="row" style="justify-content:center"><button id="toMx" type="button">ดูรายละเอียดแมตช์</button><button class="primary" id="next" type="button">ไปรอบถัดไป</button></div></div></div>
     </div>
+    <div class="panel" id="bInfo"><span class="hint">แตะตัวละครในสนามเพื่อดูสกิลและค่าทุกค่าแบบเรียลไทม์ (ตัวเลข +/− = เปลี่ยนจากค่าตอนเริ่มแมตช์)</span></div>
+    <details class="panel" id="mxFold" hidden>
+      <summary>ดูรายละเอียดแมตช์</summary>
+      <div id="mxEmpty" hidden></div>
+      <div id="mxBody" hidden style="display:grid;gap:12px;margin-top:10px">
+        <div class="mx-head" id="mxHead"></div>
+        <p class="status" id="mxStale" hidden></p>
+        <div class="mx-sec">
+          <div class="mx-sechead"><h3>รายตัว</h3><div class="mx-tabs" id="mxTabs" role="tablist" aria-label="เลือกว่าจะดูค่าอะไรของแต่ละตัว"></div></div>
+          <p class="hint">ตัวละ 1 แถว · แท็บข้าง "รายตัว" เปลี่ยนทั้งแผนภูมิและรายละเอียดของทุกตัว: ทำดาเมจ · โดนทำดาเมจ · อื่นๆ (ฟื้น เกราะ ล้างสถานะ ฯลฯ) · สเตตัส (ค่าตอนจบแมตช์) · แตะแถวเพื่อกาง · ปุ่มเวลา = ไปบรรทัดนั้นในบันทึกการต่อสู้</p>
+          <div class="mx-legend" id="mxLegend"></div>
+          <div id="mxUnits" style="display:grid;gap:12px"></div>
+          <div id="mxTableBox" hidden></div>
+        </div>
+        <div class="mx-sec">
+          <details id="mxMatFold"><summary>ใครตีใคร</summary><p class="hint">แถว = ผู้ทำดาเมจ · คอลัมน์ = ผู้โดน · แตะช่องเพื่อดูแยกตามที่มา</p><div class="mx-mat" id="mxMat"></div></details>
+          <details id="mxChartFold"><summary>กราฟตามเวลา</summary><p class="hint">เส้น = HP % ของแต่ละตัว · จุด = ดาเมจครั้งเดียวที่มากกว่า 20% ของ HP สูงสุด · แตะชื่อเพื่อเน้นเส้นตัวนั้น</p><div class="mx-chart" id="mxChart"></div></details>
+        </div>
+      </div>
+    </details>
     <details class="panel logbox" id="logBox">
       <summary>บันทึกการต่อสู้ละเอียด</summary>
       <div class="row">
@@ -296,6 +350,18 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 
 <script>
 /*__CORE__*/const $ = id => document.getElementById(id);
+// ---- set 84: match detail = the Balance Room match tab (lab/balance/js/50 + 51, shared) · shims for the names it takes from other Balance Room fragments ----
+const TB_STYLE = Object.fromEntries(Object.entries(TRIBE_STYLE).map(([t, st]) => [t, [st.color, st.shape]]));
+function tribeBadge(tribe, extras = []) {
+  const box = el('span', 'tb'); box.setAttribute('aria-hidden', 'true');
+  [tribe, ...extras].forEach((t, i) => { const st = TB_STYLE[t]; if (!st) return; const dot = el('i', `s-${st[1]}${i ? ' extra' : ''}`); dot.style.setProperty('--tc', st[0]); box.append(dot); });
+  return box;
+}
+const pill = (text, cls) => el('span', `pill ${cls}`, text);
+let simLast = null; // { r, m } of the match shown (detail result)
+const simSeedLabel = () => null;
+<!--@include lab/balance/js/50-match-analysis.js-->
+<!--@include lab/balance/js/51-match-units.js-->
 const chars = buildCharacterList(), CM = makeCharMap(chars);
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
@@ -581,7 +647,7 @@ $('newRun').addEventListener('click', () => {
 // ---------- สู้ ----------
 let lastResult = null;
 const view = new BattleView($('arena'), CM, {
-  onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; },
+  onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; if (bPick != null) renderBInfo(); },
   onEnd: () => finishMatch(),
 });
 $('fight').addEventListener('click', () => {
@@ -595,6 +661,7 @@ $('fight').addEventListener('click', () => {
   try { result = simulate(buildTeam(teamA, CM), buildTeam(teamB, CM)); }
   catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
   lastResult = result;
+  const shown = showResult(teamA, teamB, result);
   // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
@@ -609,8 +676,14 @@ $('fight').addEventListener('click', () => {
   showNotice('');
   showScreen('battle'); $('result').hidden = true;
   $('battleTitle').textContent = `แมตช์รอบ ${P.round}` + (foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
-  view.speed = speed; view.load(result); resetLog(); view.play();
+  view.speed = speed; view.load(shown); resetLog(); view.play();
 });
+// set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
+function showResult(teamA, teamB, result) {
+  let r = null;
+  try { r = simulate(buildTeam(teamA, CM), buildTeam(teamB, CM), { detail: true, live: true }); } catch (e) { r = null; }
+  return r && r.winner === result.winner && r.timeMs === result.timeMs ? r : result;
+}
 // ---------- รีเพลย์ (ชุด 25) ----------
 const resTh = w => (w === 0 ? 'ชนะ' : w === 1 ? 'แพ้' : 'เสมอ');
 function renderReplays(list, back) {
@@ -628,7 +701,7 @@ function watchReplay(i, back) {
   showNotice(''); sel = null; pendingEnd = null; replayMode = { back, x };
   showScreen('battle'); $('result').hidden = true;
   $('battleTitle').textContent = `รีเพลย์รอบ ${x.r}`;
-  view.speed = speed; view.load(result); resetLog(); view.play();
+  view.speed = speed; view.load(showResult(x.a, x.b, result)); resetLog(); view.play();
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {
@@ -639,6 +712,7 @@ function logNameEl(u) {
   return s;
 }
 function resetLog() {
+  bPick = null; renderBInfo(); $('mxFold').hidden = true; $('mxFold').open = false; simLast = null; mxKey = null; mxOpen.clear(); mxCellSel = null; mxHi = null;
   $('logBox').open = false; $('logList').replaceChildren();
   const r = view.result, sw = $('logWho');
   sw.replaceChildren(el('option', '', 'ทุกตัว'), ...unitsOf(r).map(u => { const o = el('option', '', `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[u.row]}${u.lane + 1} · ${CM[u.id].name} Lv${u.level}`); o.value = String(u.uid); return o; }));
@@ -651,7 +725,77 @@ function renderLog() {
 }
 $('logBox').addEventListener('toggle', renderLog);
 for (const id of ['logWho', 'logProc', 'logNoSet']) $(id).addEventListener('change', renderLog);
+// ---------- set 84: tap a unit during the match → its skills (times used so far) + every stat live, +/− vs start ----------
+let bPick = null, bVer = -1, bAt = 0;
+// [key, label, colour, format, lower is better]
+const LIVE_STATS = [['atk', 'พลังโจมตี', 'var(--n-hit)'], ['cd', 'คูลดาวน์', 'var(--n-skill)', v => `${(v / 1000).toFixed(2)} วิ`, 1], ['multi', 'มัลติฮิต', 'var(--n-cnt)', v => `×${v}`],
+  ['burnHit', 'ไฟ/ฮิต', 'var(--n-burn)'], ['shockHit', 'ช็อต/ฮิต', 'var(--n-shock)'], ['armorHit', 'เกราะ/ฮิต', 'var(--n-armor)'], ['healHit', 'ฟื้น/ฮิต', 'var(--n-heal)'], ['maxHp', 'HP สูงสุด', 'var(--hp)'],
+  ['hitAmp', 'ดาเมจตี', 'var(--n-hit)', v => `${v}%`], ['shockAmp', 'ดาเมจช็อต', 'var(--n-shock)', v => `${v}%`], ['burnAmp', 'ไฟที่ทำ', 'var(--n-burn)', v => `${v}%`],
+  ['healAmp', 'ฟื้นแรงขึ้น', 'var(--n-heal)', v => `${v}%`], ['armorAmp', 'เกราะที่ได้', 'var(--n-armor)', v => `${v}%`], ['cdAmp', 'ลดคูลดาวน์แรงขึ้น', 'var(--n-skill)', v => `${v}%`], ['healToAtk', 'ฟื้น → พลังโจมตี', 'var(--n-heal)', v => `${v}%`],
+  ['dmgTaken', 'โดนดาเมจ', 'var(--n-hit)', v => `${v}%`, 1], ['burnTaken', 'โดนไฟ', 'var(--n-burn)', v => `${v}%`, 1], ['shockTaken', 'โดนช็อต', 'var(--n-shock)', v => `${v}%`, 1]];
+const LIVE_ALWAYS = new Set(['atk', 'cd', 'multi', 'burnHit', 'shockHit', 'armorHit', 'healHit', 'maxHp']);
+const r2 = v => Math.round(v * 100) / 100;
+function bUnitAt(cell) { for (const v of view.units.values()) if (v.card.isConnected && (v.cell === cell || (v.tags || []).some(t => t.parentNode === cell))) return v; return null; }
+$('arena').addEventListener('click', ev => {
+  const cell = ev.target.closest('.cell'); if (!cell || !view.units) return;
+  const v = bUnitAt(cell); bPick = v ? v.uid : null; renderBInfo(true);
+});
+function renderBInfo(force) {
+  const box = $('bInfo');
+  if (!force && (view.ver === bVer || performance.now() - bAt < 150)) return; // repaint ≤ ~7 times/sec while playing
+  bVer = view.ver; bAt = performance.now();
+  document.querySelectorAll('#arena .cell.picked').forEach(x => x.classList.remove('picked'));
+  let v = bPick != null && view.units ? view.units.get(bPick) : null;
+  if (v && !v.card.isConnected) { v = bUnitAt(v.cell); if (v) bPick = v.uid; } // replaced by a summon → show the one standing there now
+  if (!v) { box.replaceChildren(el('span', 'hint', 'แตะตัวละครในสนามเพื่อดูสกิลและค่าทุกค่าแบบเรียลไทม์ (ตัวเลข +/− = เปลี่ยนจากค่าตอนเริ่มแมตช์)')); return; }
+  v.cell.classList.add('picked');
+  const c = CM[v.id] || { id: v.id, name: v.name, tribe: '', extraTribes: [], skills: [] }, L = (v.level || 1) - 1;
+  const res = (view.result.units || []).find(x => x.uid === v.uid), ini = res && res.ini;
+  const right = el('div'); right.style.cssText = 'display:grid;gap:6px;min-width:0';
+  const extra = (c.extraTribes || []).length ? ` + ${c.extraTribes.join(', ')}` : '';
+  right.append(el('h2', '', `${v.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[v.row]}${v.lane + 1} · ${c.id} ${c.name}${v.level ? ` · เลเวล ${v.level}` : ''}`), el('span', 'hint', `${c.tribe}${extra}`));
+  const live = el('div', 'live');
+  for (const [k, val] of [['HP', `${Math.max(0, v.hp)}/${v.maxHp}`], ['เกราะ', v.armor], ['ไฟบนตัว', v.burn], ['ช็อตบนตัว', v.shock]]) { const d = el('span', '', `${k} `); d.append(el('b', '', String(val))); live.append(d); }
+  if (v.down) live.append(el('b', '', 'down'));
+  right.append(live);
+  const st = v.stat;
+  if (st) {
+    const base = ini ? { ...ini, cd: Math.max(RULES.minCooldownMs || 0, Math.round(ini.cdMs * ini.cdMult)) } : null;
+    const g = el('div', 'lstats');
+    for (const [k, lab, color, fmt = x => String(x), low] of LIVE_STATS) {
+      const val = st[k]; if (val == null) continue;
+      const b0 = base ? base[k] : null, d = b0 == null ? 0 : r2(val - b0);
+      if (!LIVE_ALWAYS.has(k) && !val && !d) continue;
+      const t = el('div', 'lstat'); t.style.setProperty('--c', color);
+      t.append(el('span', '', lab), el('b', '', fmt(r2(val))));
+      if (d) { const good = low ? d < 0 : d > 0, ds = k === 'cd' ? `${(Math.abs(d) / 1000).toFixed(2)} วิ` : String(Math.abs(d)) + (fmt(1).endsWith('%') ? '%' : ''); t.append(el('span', good ? 'up' : 'dn', `${d > 0 ? '+' : '−'}${ds} จากเริ่ม`)); }
+      g.append(t);
+    }
+    right.append(g);
+  } else right.append(el('span', 'hint', 'ไม่มีค่าเรียลไทม์ของแมตช์นี้'));
+  (c.skills || []).forEach((sk, si) => {
+    const on = !sk.lv || sk.lv.includes(L + 1), shop = isShopWhen(sk.when), n = v.procs.get(si) || 0;
+    const line = el('div', on ? 'skill' : 'skill off'); line.append(skillTags(sk), skillLineEl(sk, on ? L + 1 : 0));
+    if (!shop) line.append(el('span', 'cnt' + (!n && on ? ' zero' : ''), !on ? `ไม่ใช้ที่ Lv${L + 1}` : `ทำงาน ${n} ครั้ง`)); // shop/after-match skills: tag already says so
+    right.append(line);
+  });
+  if (!(c.skills || []).length) right.append(el('span', 'hint', 'ไม่มีสกิล'));
+  const wrap = el('div', 'uinfo'); wrap.append(CM[v.id] ? unitShape(c, v.level) : el('span'), right);
+  box.replaceChildren(wrap);
+}
+// match detail: opens on demand (built when first opened) · time buttons jump to that line in the battle log below
+function openMx() { $('mxFold').hidden = false; $('mxFold').open = true; $('mxFold').scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+$('mxFold').addEventListener('toggle', () => { if (!$('mxFold').open || !view.result) return; if (!simLast || simLast.r !== view.result) { simLast = { r: view.result, m: CM }; mxKey = null; } renderMatch(); });
+$('toMx').addEventListener('click', openMx);
+MX_TABS.forEach((nm, i) => { const b = el('button', '', nm); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === mxTabSel)); b.addEventListener('click', () => mxSetTab(i)); $('mxTabs').append(b); });
+function mxJump({ ev = null }) {
+  $('logWho').value = ''; $('logProc').checked = false; $('logNoSet').checked = false;
+  $('logBox').open = true; renderLog();
+  const li = ev != null ? $('logList').querySelector(`li[data-ev="${ev}"]`) : null;
+  if (li) { $('logList').querySelectorAll('.lg-hi').forEach(x => x.classList.remove('lg-hi')); li.classList.add('lg-hi'); li.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+}
 function finishMatch() {
+  $('mxFold').hidden = false; renderBInfo(true);
   if (replayMode) { // ชุด 25: รีเพลย์ แสดงผลอย่างเดียว ไม่แตะสถานะ run
     const x = replayMode.x;
     $('resultTitle').textContent = `รีเพลย์รอบ ${x.r}: ${resTh(x.w)}`;

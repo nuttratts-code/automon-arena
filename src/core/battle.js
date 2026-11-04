@@ -60,6 +60,17 @@ export function simulate(teamA, teamB, opts = {}) {
   };
   // ชุด 36: opts.detail = จดส่วนประกอบของดาเมจ (ช่อง d ในเหตุการณ์ dmg) ให้แท็บวิเคราะห์แมตช์ · จดอย่างเดียว ไม่เปลี่ยนผล · ปิดอยู่ตอนวัด/บอท/เกม
   const detailOn = logOn && !!opts.detail;
+  // set 84: opts.live = also log 'stat' events (k 'stat', to, s = stat fields that changed) so the game can show live stats while the match plays · log only, never changes results
+  const liveOn = logOn && !!opts.live;
+  const liveLast = new Map();
+  const liveStat = () => {
+    for (const f of F) {
+      const now = { ...snapStats(f), cd: effCd(f) }, old = liveLast.get(f.uid), ch = {};
+      let any = false;
+      for (const k in now) if (!old || old[k] !== now[k]) { ch[k] = now[k]; any = true; }
+      if (any) { liveLast.set(f.uid, now); events.push({ t, k: 'stat', to: f.uid, s: ch }); }
+    }
+  };
   let muteLog = false; // F2: true ระหว่างทำผลถาวรของตัวที่ down จริง (ดู apply)
   let dCur = null; // สกิลที่กำลังทำผล (ลำดับสกิล + ชนิดผล) ให้ดาเมจที่เกิดจากสกิลรู้ที่มา
   let ruleTag = null; // set 75: boss rule id while its effect runs (log adds it as r, detail only · never changes results)
@@ -814,6 +825,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (t >= R.hardStopMs) return finish(null);
     return null;
   };
+  if (liveOn) liveStat();
   let res = endCheck();
   if (res) return res;
 
@@ -899,6 +911,7 @@ export function simulate(teamA, teamB, opts = {}) {
     resolveDowns();
     if (BOSS) bossBars(); // แถบเลือดที่หมดไป → "ศัตรู down" + เปลี่ยนเฟส
 
+    if (liveOn) liveStat();
     res = endCheck();
     if (res) return res;
   }
