@@ -1,6 +1,6 @@
 // ชุด 83: วัดเศรษฐกิจของ run (ผู้เล่น = บอท core/bot.js · คู่แข่ง = ทีมบอทใน core/botdata.js)
 // รัน: node lab/econ.mjs [run=1000] [เมล็ด=4242] [เงินเริ่ม/ต่อรอบ เช่น 25,25]
-// พิมพ์ตามขั้นชนะ: เงินเหลือหลังซื้อ · ขนาดทีม · เลเวลเฉลี่ย · % ตัว Lv2/Lv3 · % ทีม Lv2 ครบ · ผู้เล่นชนะ %
+// พิมพ์ตามขั้นชนะ: เงินเหลือหลังซื้อ · ขนาดทีม · เลเวลเฉลี่ย · % ตัว Lv2/Lv3 · % ทีม Lv2 ครบ · ผู้เล่นชนะ % · BYROUND=1 = จัดกลุ่มตามรอบแทนขั้นชนะ
 import { RULES } from '../core/rules.js';
 import { buildCharacterList } from '../core/characters.js';
 import { BOT_TEAMS } from '../core/botdata.js';
@@ -12,7 +12,7 @@ const rules = sg ? { ...RULES, shop: { ...RULES.shop, startGold: sg, goldPerRoun
 const by = {}, end = { won: 0, rounds: 0 };
 for (let r = 0; r < N; r++) {
   const P = simRun(chars, rules, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.wins, p.seed, p.round).team, m => {
-    const x = (by[m.stage] ||= { n: 0, gold: 0, size: 0, lv: 0, u: 0, l2: 0, l3: 0, full2: 0, win: 0 });
+    const x = (by[process.env.BYROUND ? m.round : m.stage] ||= { n: 0, gold: 0, size: 0, lv: 0, u: 0, l2: 0, l3: 0, full2: 0, win: 0 });
     const lvs = m.team.map(e => e.level || 1);
     x.n++; x.gold += m.gold; x.size += lvs.length; x.u += lvs.length; x.lv += lvs.reduce((a, b) => a + b, 0);
     x.l2 += lvs.filter(v => v >= 2).length; x.l3 += lvs.filter(v => v >= 3).length;
