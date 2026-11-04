@@ -16,6 +16,7 @@ function stageCount() {
 function stageChanged() {
   try { localStorage.setItem(STAGE_DRAFT_KEY, JSON.stringify(stageCfg)); } catch (e) {}
   const n = stageCount();
+  if ($('stgReset')) $('stgReset').disabled = !n;
   $('stgDirty').textContent = n ? `แก้แล้ว ${n} จุด · ยังไม่ได้ส่งจนกว่าจะกด 💾 บันทึกให้ Claude` : 'ยังไม่ได้แก้ (ค่าที่แสดง = ค่าเสนอเริ่มต้น)';
 }
 const stageNum = (id, v, base, lo, hi, set, step = 1) => {
@@ -466,4 +467,13 @@ $('stgIdeaSend').addEventListener('click', async () => {
     $('stgIdeaText').value = ''; msg('ส่งแล้ว · บอก Claude ในแชทได้เลยว่ามีไอเดียใหม่');
   } catch (e) { msg('ส่งไม่สำเร็จ: ' + (e && e.message ? e.message : 'ลองใหม่อีกครั้ง')); }
   $('stgIdeaSend').disabled = false;
+});
+
+// set 79: drop the local rune/boss draft and go back to the page defaults (= values Claude imported).
+// Without it an old local draft blocks loading config/main forever (99-start: unsaved stage edits win). Two taps, like 'reset'.
+$('stgReset').addEventListener('click', () => {
+  const b = $('stgReset');
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'คืนค่าด่านทั้งหมด'; }, 3000); return; }
+  b.dataset.confirm = ''; b.textContent = 'คืนค่าด่านทั้งหมด';
+  stageCfg = cleanStage(null); renderStage(); stageChanged();
 });

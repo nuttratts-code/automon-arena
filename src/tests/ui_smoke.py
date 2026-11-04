@@ -153,6 +153,8 @@ with sync_playwright() as p:
         pg.click('#simArena [data-key="0:0:0"]')
         pg.click('#simInfo .lvtabs [data-lv="3"]'); hp3=pg.evaluate("String(chars.find(c=>c.id==='PL-3').hp[2])")
         chk(('HP '+hp3) in pg.inner_text('#simInfo .stats2'),'sim info level toggle')
+        # set 79: stage tab reset button drops an old local rune/boss draft (two taps)
+        chk(pg.evaluate("(()=>{stageCfg.bosses[0].hp=999; stageChanged(); const e1=stageEdited(); const b=document.getElementById('stgReset'); b.click(); const mid=stageEdited(); b.click(); return e1 && mid && !stageEdited() && b.disabled && JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY)).bosses[0].hp===STAGE_BASE.bosses[0].hp})()"),'stage reset button')
         # set 68: boss mode preview draws the boss (not the hidden right team) · empty teams are never refilled with the sample team
         pg.evaluate("simFoeBoss=true; renderSimBoss(); simLast=null; renderSimTeams()")
         chk('(บอส)' in pg.evaluate("[...document.querySelectorAll('#simArena [data-key^=\"1:\"]')].map(u=>u.innerText).join()") and 'WY-3' not in pg.evaluate("[...document.querySelectorAll('#simArena .unit')].map(u=>u.textContent).join()"),'boss mode preview shows boss')
