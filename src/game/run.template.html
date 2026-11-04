@@ -311,7 +311,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
       <div class="heads">
         <div><span class="team">ทีมคุณ</span><span>หลัง</span><span>กลาง</span><span>หน้า</span></div>
         <div></div>
-        <div><span class="team">คู่แข่ง (บอท)</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
+        <div><span class="team" id="foeHead">คู่แข่ง (บอท)</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
       </div>
       <div class="arena" id="arena"></div>
       <div class="result" id="result" hidden><div><strong id="resultTitle"></strong><span class="hint" id="resultSub"></span><ul class="msgs" id="endMsgs"></ul><div class="row" style="justify-content:center"><button id="toMx" type="button">ดูรายละเอียดแมตช์</button><button class="primary" id="next" type="button">ไปรอบถัดไป</button></div></div></div>
@@ -680,7 +680,7 @@ $('fight').addEventListener('click', () => {
   showNotice('');
   showScreen('battle'); $('result').hidden = true;
   $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
-  view.speed = speed; view.load(shown); resetLog(); view.play();
+  viewMap(teamB); view.speed = speed; view.load(shown); resetLog(); view.play();
 });
 // set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
 // enemy side: a team (array of entries) or a boss { boss: id, k } (set 85) · unknown boss id → throws (replay shows a notice)
@@ -689,6 +689,8 @@ function foeUnits(b) {
   const rec = runBossById(b.boss); if (!rec) throw new Error('ไม่พบบอส ' + b.boss);
   return runBossTeam(rec, b.k);
 }
+// battle view card data: the boss is not a character → add its card (set 85)
+function viewMap(b) { const rec = !Array.isArray(b) && b ? runBossById(b.boss) : null; $('foeHead').textContent = rec ? 'บอส' : 'คู่แข่ง (บอท)'; view.charMap = rec ? { ...CM, [rec.id]: runBossChar(rec, b.k) } : CM; }
 function showResult(teamA, teamB, result) {
   let r = null;
   try { r = simulate(buildTeam(teamA, CM), foeUnits(teamB), { detail: true, live: true }); } catch (e) { r = null; }
@@ -711,7 +713,7 @@ function watchReplay(i, back) {
   showNotice(''); sel = null; pendingEnd = null; replayMode = { back, x };
   showScreen('battle'); $('result').hidden = true;
   $('battleTitle').textContent = `รีเพลย์รอบ ${x.r}`;
-  view.speed = speed; view.load(showResult(x.a, x.b, result)); resetLog(); view.play();
+  viewMap(x.b); view.speed = speed; view.load(showResult(x.a, x.b, result)); resetLog(); view.play();
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {
