@@ -1,6 +1,7 @@
 // ชุดทดสอบ: ทีมบอท 90 ทีม ขั้นชนะ × ช่วงรอบ เลือกคู่แข่ง บอทซื้อของ · แยกจาก mechanics.js (ชุด D) · ตัวช่วยอยู่ helpers.js
 import { simulate } from '../core/battle.js';
 import { botShop } from '../core/bot.js';
+import { runBossAt, RUN_STAGE } from '../core/runboss.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { BOT_SPANS, BOT_TIERS, genBotTeams, pickBotTeam, simRun, spanOf, spanPool, validateBotTeams } from '../core/botteams.js';
 import { buildCharacterList } from '../core/characters.js';
@@ -78,5 +79,18 @@ export const TESTS_BOTS = [
       return JSON.stringify(P);
     };
     for (let i = 0; i < 20; i++) eq(play(50 + i) === play(50 + i), true, `run ${i} ผลไม่ตรงกัน`);
+  }],
+  ['set 85: บอสใน run ทุก bossEvery รอบ ไม่เกิน bossesPerRun ตัว · เมล็ดเดิมได้บอสเดิม · บอส 2 ตัวไม่ซ้ำกัน', () => {
+    const S = RUN_STAGE.settings, on = RUN_STAGE.bosses.filter(b => b.on);
+    for (let seed = 1; seed <= 30; seed++) {
+      const hits = [];
+      for (let r = 1; r <= 30; r++) { const x = runBossAt(r, seed); if (x) hits.push([r, x.k, x.boss.id]); }
+      eq(hits.map(h => h[0]).join(','), Array.from({ length: Math.min(S.bossesPerRun, Math.floor(30 / S.bossEvery)) }, (_, i) => (i + 1) * S.bossEvery).join(','), 'รอบบอส');
+      hits.forEach((h, i) => eq(h[1], i + 1, 'ครั้งที่ k'));
+      if (on.length >= 2 && hits.length >= 2) ok(hits[0][2] !== hits[1][2], 'บอสซ้ำกันใน run เดียว');
+      eq(JSON.stringify(runBossAt(S.bossEvery, seed)), JSON.stringify(runBossAt(S.bossEvery, seed)), 'เมล็ดเดิมได้บอสเดิม');
+    }
+    const ids = new Set(); for (let seed = 1; seed <= 60; seed++) ids.add(runBossAt(S.bossEvery, seed).boss.id);
+    ok(ids.size >= Math.min(3, on.length), 'สุ่มบอสหลายตัว');
   }],
 ];

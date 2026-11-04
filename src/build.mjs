@@ -1,6 +1,6 @@
 // รวมแกนกลางเป็นสคริปต์เดียวใส่ในหน้าเว็บ (ไม่โหลดโค้ดจากที่อื่น เล่นออฟไลน์ได้)
 import { readFileSync, writeFileSync } from 'fs';
-const CORE = ['core/rules-user.js', 'core/rules.js', 'core/characters.js', 'core/rng.js', 'core/validate.js', 'core/team.js', 'core/battle.js', 'core/shop.js', 'core/bot.js', 'core/power.js', 'core/save.js', 'core/botdata.js', 'core/botteams.js', 'core/stage-user.js', 'core/stage.js', 'core/boss.js', 'core/runes.js'];
+const CORE = ['core/rules-user.js', 'core/rules.js', 'core/characters.js', 'core/rng.js', 'core/validate.js', 'core/team.js', 'core/battle.js', 'core/shop.js', 'core/bot.js', 'core/power.js', 'core/save.js', 'core/botdata.js', 'core/botteams.js', 'core/stage-user.js', 'core/stage.js', 'core/boss.js', 'core/runboss.js', 'core/runes.js'];
 const bundle = files => files.map(f => `// ---- ${f} ----\n` + readFileSync(f, 'utf8')
   .replace(/^import[^;]*;\s*$/gm, '').replace(/^export\s+(?=(const|function|let|class|async))/gm, '')).join('\n');
 // <!--@include path--> in a template = paste that fragment file as it is (path relative to src/, one level, no nesting).

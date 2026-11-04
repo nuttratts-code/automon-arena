@@ -127,6 +127,8 @@ export const TESTS_SAVE = [
     ];
     bads.forEach((f, i) => { const y = JSON.parse(JSON.stringify(o)); f(y); eq(readReplays(JSON.stringify(y), m, RULES, H, 77).status, 'bad', `รีเพลย์ผิดแบบที่ ${i + 1}`); });
     ok(!checkReplay(null, m) && !checkReplay([], m), 'รีเพลย์ไม่ใช่วัตถุ');
+    { const x = JSON.parse(JSON.stringify(o.list[0])); x.b = { boss: 'B2', k: 1 }; ok(checkReplay(x, m), 'รีเพลย์รอบบอส (set 85)');
+      for (const b of [{ boss: 'B2' }, { boss: 'B2', k: 0 }, { boss: '<x>', k: 1 }, { boss: 'B2', k: 1, z: 1 }]) { x.b = b; ok(!checkReplay(x, m), 'รีเพลย์บอสผิดรูปแบบ'); } }
   }],
   ['ชุด 25: บันทึกข้อมูลการเล่น สรุปรายแมตช์ ผ่านตัวตรวจ · ข้อมูลผิดถูกปฏิเสธ', () => {
     const chars = buildCharacterList(), m = makeCharMap(chars), H = dataHash(chars), rng = makeRng(2526);
@@ -138,7 +140,12 @@ export const TESTS_SAVE = [
     ok(checkPlayRecord(rec, m) && checkPlayRecord(live, m), 'บันทึกที่สร้างจากเกมต้องผ่านตัวตรวจ');
     eq(rec.team[1].perm, 2, 'นับชนิดค่าถาวร'); eq(rec.storm, r.timeMs > RULES.stormStartMs, 'ถึงพายุทราย');
     eq(rec.res, r.winner === 0 ? 'w' : r.winner === 1 ? 'l' : 'd', 'ผล');
-    eq(Object.keys(JSON.parse(JSON.stringify(rec))).length, 16, 'ช่องครบ (ไม่มีข้อมูลระบุตัวผู้เล่น)');
+    eq(Object.keys(JSON.parse(JSON.stringify(rec))).length, 17, 'ช่องครบ (ไม่มีข้อมูลระบุตัวผู้เล่น)');
+    // set 85: boss round record = foeSrc 'boss', no foe team, boss { boss, k }
+    const br = playRecord({ ...base, teamB: [], foe: null, boss: { boss: 'B1', k: 2 } });
+    ok(checkPlayRecord(br, m) && br.foeSrc === 'boss' && br.foe.length === 0 && br.boss.k === 2, 'บันทึกรอบบอสผ่านตัวตรวจ');
+    for (const f of [x => { x.boss = null; }, x => { x.boss.k = 0; }, x => { x.boss.boss = '<b>'; }, x => { x.foeStage = 1; }, x => { x.boss.evil = 1; }]) { const y = JSON.parse(JSON.stringify(br)); f(y); ok(!checkPlayRecord(y, m), 'บันทึกรอบบอสผิดต้องถูกปฏิเสธ'); }
+    { const y = JSON.parse(JSON.stringify(rec)); y.boss = { boss: 'B1', k: 1 }; ok(!checkPlayRecord(y, m), 'แมตช์ปกติห้ามมีบอส'); }
     const bads = [x => { x.res = 'x'; }, x => { x.round = 0; }, x => { x.team[0].id = 'ZZ-1'; }, x => { x.timeMs = 1.5; }, x => { x.data = '<b>'; },
       x => { x.foeSrc = 'live'; }, x => { x.storm = 'yes'; }, x => { x.extra = 1; }, x => { x.winsBefore = 99; }, x => { x.team = Array(7).fill(x.team[0]); }];
     bads.forEach((f, i) => { const y = JSON.parse(JSON.stringify(rec)); f(y); ok(!checkPlayRecord(y, m), `บันทึกผิดแบบที่ ${i + 1} ต้องถูกปฏิเสธ`); });
