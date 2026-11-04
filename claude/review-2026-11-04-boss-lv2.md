@@ -1,5 +1,14 @@
 # Boss #1 fit for all-Lv2 teams (set 81, 4 Nov 2026)
 
+## UPDATE 4 — option A: boss growth after #1 (identity bosses, v286 chars, n 200 per boss, avg win % (min–max boss))
+Assumed team at boss #k (Claude's model, not measured from play): #1 all Lv2 no runes · #2 Lv2 + 50% Lv3 + 2 random runes · #3 75% Lv3 + 3 runes · #4 all Lv3 + 4 runes · #5+ all Lv3 + 5 runes. Perm stats not modelled.
+| mult10 / endlessPct | #1 st5 | #2 st10 | #3 st15 | #4 st20 | #5 st25 | #6 st30 | #8 st40 | #10 st50 |
+|---|---|---|---|---|---|---|---|---|
+| today 2 / 15 | 54 | 30 | 34 | 35 | 25 | 14 | 3 | 1 |
+| A1 1.55 / 18 (recommended) | 54 | 56 | 59 | 58 | 42 | 24 | 6 | 1 |
+| A2 1.55 / 12 | 54 | 56 | 65 | 72 | 60 | 45 | 27 | 10 |
+Player power stops at Lv3 + runes, so any growth makes late bosses a wall; A1 = 50–60% through #4 then steep, A2 = easier mid, gentler end. Lv3 + 8 runes at ×3.8 (A2 #10) = 15%. B1 endlessPct was 30 in code / 15 in v286 → set all to the chosen value.
+
 ## UPDATE 3 — identity bosses (UPDATE 2 values) across levels / boss # / runes (v286 chars, n 300 per boss, avg B1–B6 win %)
 boss # k → stage 5k; mult: k1 ×1 · k2 ×2 · k3 ×2.3 · k4 ×2.6 · k6 ×3.5 · k8 ×4.6 · k10 (stage 50) ×6.1 · k11+ endless.
 | team | k1 | k2 | k3 | k4 | k6 | k8 | k10 | k11 | k13 |
