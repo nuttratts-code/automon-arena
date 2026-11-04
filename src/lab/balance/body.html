@@ -291,6 +291,11 @@
       <span class="status">คู่ต่อสู้</span>
       <button type="button" id="anaFoeBot" aria-pressed="true">VS Bot</button>
       <button type="button" id="anaFoeBoss" aria-pressed="false">VS บอส</button>
+      <button type="button" id="anaFoeRun" aria-pressed="false">รันจริง (บอท)</button>
+      <span id="anaRunTools" class="row" hidden>
+        <label class="status" for="anaRunOpp">คู่แข่ง</label><select id="anaRunOpp"><option value="teams">ทีมบอทในเกม (90 ทีม)</option><option value="live">บอทเล่นสด (ทีมใหม่ทุกแมตช์)</option></select>
+        <label class="status" for="anaRunN">จำนวนรัน</label><select id="anaRunN"><option value="300">300 รัน (เร็ว ~1 นาที)</option><option value="1000">1,000 รัน (ละเอียด ~3 นาที)</option><option value="3000">3,000 รัน (ละเอียดมาก ~8 นาที)</option></select>
+      </span>
       <span id="anaBossTools" class="row" hidden>
         <label class="status" for="anaBossPick">บอส</label><select id="anaBossPick"></select>
         <label class="status" for="anaBossK">บอสครั้งที่</label><input id="anaBossK" type="number" min="1" max="30" value="1" style="width:4em">
@@ -308,7 +313,7 @@
     <p class="hint" id="anaModeHint"></p>
     <div class="row">
       <button class="primary" id="analyze" type="button">วิเคราะห์</button>
-      <label class="status" for="mN">จำนวนแมตช์</label>
+      <label class="status" for="mN" id="mNLab">จำนวนแมตช์</label>
       <select id="mN"><option value="12000">12,000 ต่อเลเวล (ระหว่างปรับ)</option><option value="24000">24,000 ต่อเลเวล (ยืนยันก่อนส่ง)</option></select>
       <span class="status" id="msg">กด "วิเคราะห์" เพื่อวัดผล</span>
     </div>
@@ -347,6 +352,48 @@
     <div class="tbl"><table>
       <thead><tr><th>#</th><th>Lv</th><th>บอส</th><th class="n">เท่า</th><th class="n">แถบ</th><th class="n">เวลา</th><th>ผล</th><th>ทีม</th><th>รูน</th><th></th></tr></thead>
       <tbody id="bossTop"></tbody>
+    </table></div>
+    </div>
+    <div id="anaRun" hidden style="display:grid;gap:12px">
+    <div class="cards" id="runCards">
+      <div class="card"><b>–</b><span>ชนะครบ 10</span></div>
+      <div class="card"><b>–</b><span>ชนะเฉลี่ยต่อรัน</span></div>
+      <div class="card"><b>–</b><span>เล่นเฉลี่ย (รอบ)</span></div>
+      <div class="card"><b>–</b><span>ตัว Lv3 ในทีมสุดท้าย</span></div>
+      <div class="card"><b>–</b><span>เวลาเฉลี่ยต่อแมตช์</span></div>
+    </div>
+    <p class="hint" id="runInfo"></p>
+    <h3>บอสในรัน (แยกตามบอส × ครั้งที่)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>บอส</th><th class="n">ครั้งที่</th><th class="n">รอบ</th><th class="n">เจอ (แมตช์)</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th><th class="n">เลเวลรวมทีม</th><th class="n">ตัว Lv3</th><th>เผ่าหลักที่ชนะบอสนี้ได้ดีสุด / แย่สุด</th></tr></thead>
+      <tbody id="runBoss"></tbody>
+    </table></div>
+    <p class="hint">เลเวลรวมทีม = ผลรวมเลเวล 6 ตัวตอนสู้ (6 = Lv1 ทั้งทีม · 18 = Lv3 ทั้งทีม) · เผ่าหลัก = เผ่าที่เปิดโบนัสและมีตัวมากสุดในทีม (นับเมื่อเจอบอสนั้น ≥ 5 ครั้ง)</p>
+    <h3>ตามรอบ</h3>
+    <div class="tbl"><table>
+      <thead><tr><th class="n">รอบ</th><th class="n">ยังเล่นอยู่</th><th class="n">ชนะ %</th><th class="n">ตัวในทีม</th><th class="n">เลเวลรวมทีม</th><th class="n">ตัว Lv3</th><th class="n">เวลา</th><th>คู่แข่ง</th></tr></thead>
+      <tbody id="runRound"></tbody>
+    </table></div>
+    <h3>จบรันด้วยกี่ชนะ</h3>
+    <div class="tbl"><table>
+      <thead><tr><th class="n">ชนะ</th><th class="n">รัน</th><th class="n">%</th></tr></thead>
+      <tbody id="runEnds"></tbody>
+    </table></div>
+    <h3>เผ่าหลักของทีมสุดท้าย</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>เผ่า</th><th class="n">ใช้ %</th><th class="n">ชนะครบ 10 %</th><th class="n">ชนะเฉลี่ย</th></tr></thead>
+      <tbody id="runTribe"></tbody>
+    </table></div>
+    <h3>ตัวละครที่บอทใช้ (แตะเพื่อเปิดแก้)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ตัวละคร</th><th>ความหายาก</th><th class="n">อยู่ในทีมสุดท้าย %</th><th class="n">เลเวลเฉลี่ย</th><th class="n">ชนะครบ 10 %</th><th class="n">ชนะเฉลี่ย</th><th class="n">ชนะแมตช์ % (ตอนลงสนาม)</th></tr></thead>
+      <tbody id="runChars"></tbody>
+    </table></div>
+    <p class="hint">ทีมสุดท้าย = ทีมแมตช์สุดท้ายของรัน · ชนะครบ 10 % / ชนะเฉลี่ย = ของรันที่ทีมสุดท้ายมีตัวนี้ · ชนะแมตช์ % = ทุกแมตช์ที่ตัวนี้ลงสนาม (รวมบอส) · บอทเลือกตัวจากค่าพลังพื้นฐาน (ไม่อ่านสกิล) เหมือนผู้เล่นที่ดูการ์ด จึงตัวที่สกิลเก่งแต่ค่าพื้นฐานต่ำอาจถูกใช้น้อยกว่าคนจริง</p>
+    <h3>ทีมที่ชนะครบ 10 บ่อยสุด (ตัวละครในทีมสุดท้าย)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>ทีม</th><th class="n">ครั้ง</th><th class="n">% ของรันที่ชนะครบ</th><th class="n">เลเวลรวมเฉลี่ย</th></tr></thead>
+      <tbody id="runCombos"></tbody>
     </table></div>
     </div>
     <div id="anaBot" style="display:grid;gap:12px">

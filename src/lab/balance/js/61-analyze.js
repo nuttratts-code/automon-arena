@@ -24,6 +24,7 @@ async function runAll(cs, rules, n, from, span) {
 
 $('analyze').addEventListener('click', async () => {
   if (anaFoe === 'boss') return runBossAnalysis(); // ชุด 80: VS บอส (62-analyze-boss.js)
+  if (anaFoe === 'run') return runPlayAnalysis(); // set 86: full runs with the human-like bot (63-analyze-run.js)
   const btn = $('analyze'); btn.disabled = true;
   const n = $('mN').value === '24000' ? MEASURE.fullN : MEASURE.quickN;
   try {
