@@ -14,7 +14,7 @@ import { basePower } from './power.js';
 // Value = base stat power (core/power.js, skills not counted) — what a player can read off the character cards.
 
 export const BOT_HINT = { 'หน้า': 0, 'กลาง': 1, 'ที่ไหนก็ได้': 1, 'หลัง': 2 };
-export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5 }; // set 85 sweep vs the old bot: this mix won 81% head to head // ค่าเสนอ (internal bot tuning)
+export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6 }; // set 85 sweep vs the old bot: this mix won 81% head to head // ค่าเสนอ (internal bot tuning)
 export const value = (u, cm) => cm[u.id].price * Math.pow(3, u.level - 1);
 
 export function mainTribes(st, cm) {
@@ -56,8 +56,9 @@ function groupValue(pw, id, copies, rules) {
   return (1 - BOT_AI.potW) * p[top - 1] + BOT_AI.potW * potV;
 }
 // best 6 different characters (greedy, tribe bonus included) → { score, ids }
-export function teamStrength(copies, cm, pw, rules) {
-  const ids = Object.keys(copies), gv = Object.fromEntries(ids.map(id => [id, groupValue(pw, id, copies[id], rules)]));
+// focus (set 87, bot team variety): a tribe this bot "likes" — its characters count focusW more, like a player going for one tribe
+export function teamStrength(copies, cm, pw, rules, focus = null) {
+  const ids = Object.keys(copies), gv = Object.fromEntries(ids.map(id => [id, groupValue(pw, id, copies[id], rules) * (focus && (cm[id].tribe === focus || cm[id].extraTribes.includes(focus)) ? 1 + BOT_AI.focusW : 1)]));
   // carry: the character with most copies on its way to Lv3 (ties → stronger at Lv3) gets its Lv3 path valued extra — a player commits to one carry
   if (BOT_AI.carryW) {
     let c = null;
@@ -83,19 +84,19 @@ export function teamStrength(copies, cm, pw, rules) {
   return { score: base + tribeScore(), ids: pick };
 }
 const unitsNow = st => allUnits(st).map(x => x.u);
-function strengthWith(st, cm, pw, rules, add = null, drop = null) {
+function strengthWith(st, cm, pw, rules, add = null, drop = null, focus = null) {
   const us = unitsNow(st).filter(u => u !== drop);
   if (add) us.push({ id: add, level: 1 });
-  return teamStrength(copiesOf(us), cm, pw, rules).score;
+  return teamStrength(copiesOf(us), cm, pw, rules, focus).score;
 }
 
 // จัดบอร์ด (set 85): the best 6 different characters at their highest level, extra copies fill empty slots,
 // rows by the character's suggested row (front first)
-export function arrange(st, cm, chars = null, rules = RULES) {
+export function arrange(st, cm, chars = null, rules = RULES, focus = null) {
   const all = unitsNow(st).sort((a, b) => b.level - a.level || value(b, cm) - value(a, cm) || a.uid - b.uid);
   let chosen;
   if (chars) {
-    const pw = powers(chars, rules), plan = teamStrength(copiesOf(all), cm, pw, rules).ids;
+    const pw = powers(chars, rules), plan = teamStrength(copiesOf(all), cm, pw, rules, focus).ids;
     chosen = plan.map(id => all.find(u => u.id === id));
     for (const u of all) if (chosen.length < SLOT_ORDER.length && !chosen.includes(u)) chosen.push(u);
   } else chosen = all.slice(0, SLOT_ORDER.length);
@@ -110,16 +111,16 @@ export function arrange(st, cm, chars = null, rules = RULES) {
 
 export function botShop(st, chars, rules = RULES, opts = {}) {
   const cm = Object.fromEntries(chars.map(c => [c.id, c])), pw = powers(chars, rules);
-  const maxRerolls = opts.maxRerolls ?? BOT_AI.maxRerolls, cap = rules.maxBoard + st.bench.length;
+  const maxRerolls = opts.maxRerolls ?? BOT_AI.maxRerolls, F = opts.focus || null, cap = rules.maxBoard + st.bench.length;
   let rerolls = 0;
   for (let guard = 0; guard < 200; guard++) {
     tryMerges(st, chars, rules);
-    const now = strengthWith(st, cm, pw, rules);
+    const now = strengthWith(st, cm, pw, rules, null, null, F);
     // best affordable buy by strength gain
     let best = null;
     st.shop.forEach((s, i) => {
       if (!s.id || cm[s.id].price > st.gold) return;
-      const g = strengthWith(st, cm, pw, rules, s.id) - now;
+      const g = strengthWith(st, cm, pw, rules, s.id, null, F) - now;
       if (g > BOT_AI.minGain && (!best || g > best.g)) best = { i, g, id: s.id };
     });
     if (best) {
@@ -131,9 +132,8 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
         // full: sell the unit whose loss hurts least, if the new one is worth more (full refund → only the swap matters)
         let worst = null;
         for (const { u, ref } of allUnits(st)) {
-          const loss = now - strengthWith(st, cm, pw, rules, best.id, u) + best.g; // strength lost by removing u (with the buy done)
-          const net = best.g - (now - strengthWith(st, cm, pw, rules, null, u));
-          if (!worst || net > worst.net || (net === worst.net && u.uid < worst.u.uid)) worst = { u, ref, net, loss };
+                    const net = best.g - (now - strengthWith(st, cm, pw, rules, null, u, F));
+          if (!worst || net > worst.net || (net === worst.net && u.uid < worst.u.uid)) worst = { u, ref, net };
         }
         if (worst && worst.net > BOT_AI.minGain) { sell(st, worst.ref, chars, rules); continue; }
       }
@@ -142,5 +142,5 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
     break;
   }
   tryMerges(st, chars, rules);
-  arrange(st, cm, chars, rules);
+  arrange(st, cm, chars, rules, F);
 }

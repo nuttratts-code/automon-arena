@@ -3,7 +3,7 @@ import { simulate } from '../core/battle.js';
 import { botShop } from '../core/bot.js';
 import { runBossAt, RUN_STAGE } from '../core/runboss.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { BOT_SPANS, BOT_TIERS, genBotTeams, pickBotTeam, simRun, spanOf, spanPool, validateBotTeams } from '../core/botteams.js';
+import { BOT_PER, BOT_SPANS, BOT_TIERS, genBotTeams, teamTribe, tribeList, pickBotTeam, simRun, spanOf, spanPool, validateBotTeams } from '../core/botteams.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { dataHash } from '../core/save.js';
@@ -12,23 +12,32 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateTeam } from '../core/validate.js';
 import { eq, ok } from './helpers.js';
 export const TESTS_BOTS = [
-  ['ชุด 23: ทีมบอท 90 ทีม (ขั้น × ช่วงรอบ) ผ่านตัวตรวจและตรงกับค่าเกม', () => {
+  ['ชุด 23: ทีมบอท 360 ทีม (ขั้น × ช่วงรอบ × 4 ทีมต่อระดับ) ผ่านตัวตรวจและตรงกับค่าเกม', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars);
     const v = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars));
     ok(v.ok, 'ทีมบอทใช้ไม่ได้ (ค่าตัวละคร/กฎเปลี่ยน → รัน node lab/botgen.mjs ใหม่): ' + v.errors.slice(0, 3).join(' | '));
-    eq(BOT_TEAMS.stages.map(sp => sp.map(l => l.map(t => t.tier))), Array.from({ length: 10 }, () => BOT_SPANS.map(() => BOT_TIERS)), '10 ขั้น × 3 ช่วง × ง่าย/กลาง/ยาก');
+    const tiers = BOT_TIERS.flatMap(t => Array(BOT_PER).fill(t));
+    eq(BOT_TEAMS.stages.map(sp => sp.map(l => l.map(t => t.tier))), Array.from({ length: 10 }, () => BOT_SPANS.map(() => tiers)), '10 ขั้น × 3 ช่วง × ง่าย/กลาง/ยาก × 4');
+  }],
+  ['set 87: bot teams spread over tribes (every cell ≥ 5 main tribes · every tribe ≥ 12% of all teams)', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), all = {};
+    BOT_TEAMS.stages.forEach((sp, k) => sp.forEach((l, b) => {
+      const ts = l.map(t => teamTribe(t.team, cm)); ts.forEach(t => { all[t] = (all[t] || 0) + 1; });
+      ok(new Set(ts).size >= 5, `ขั้น ${k} ช่วง ${b}: เผ่าหลักแค่ ${new Set(ts).size} เผ่า`);
+    }));
+    for (const t of tribeList(chars)) ok((all[t] || 0) >= 0.12 * 360, `${t}: ${all[t] || 0} ทีม`);
   }],
   ['ชุด 23: ทีมบอทถูกแก้/ผิดรูปแบบ ถูกปฏิเสธ', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = 'abc';
     const team = [{ id: chars[0].id, level: 1, row: 0, lane: 0 }];
-    const good = { v: 3, hash: H, stages: Array.from({ length: 10 }, (_, k) => BOT_SPANS.map((__, b) => BOT_TIERS.map(tier => ({ tier, span: b, from: k, round: 1, power: 50, team: structuredClone(team) })))) };
+    const good = { v: 4, hash: H, stages: Array.from({ length: 10 }, (_, k) => BOT_SPANS.map((__, b) => BOT_TIERS.flatMap(t => Array(BOT_PER).fill(t)).map(tier => ({ tier, span: b, from: k, round: 1, power: 50, team: structuredClone(team) })))) };
     ok(validateBotTeams(good, cm, RULES, H).ok, 'ข้อมูลปกติผ่าน');
     const bad = f => { const o = structuredClone(good); f(o); return validateBotTeams(o, cm, RULES, H).ok; };
     eq([bad(o => { o.hash = 'zzz'; }), bad(o => { o.stages.pop(); }), bad(o => { o.stages[2].pop(); }), bad(o => { o.stages[2][1].pop(); }), bad(o => { o.stages[1][0][0].team[0].id = 'ZZ-9'; }),
       bad(o => { o.stages[1][0][0].team[0].level = 4; }), bad(o => { o.stages[1][0][0].team[0].perm = { multi: 1e9 }; }), bad(o => { o.stages[1][0][0].team[0].perm = { hack: 1 }; }),
       bad(o => { o.stages[1][0][0].evil = 1; }), bad(o => { o.stages[1][0][0].team = []; }), bad(o => { o.stages[1][0][1].tier = 'ยาก'; }), bad(o => { o.stages[0][0][0].round = 1.5; }),
       bad(o => { o.stages[0][2][0].span = 1; }), bad(o => { o.stages[0][1][0].from = 1; }), bad(o => { o.stages[2][0][0].round = 4; }), bad(o => { o.stages[0][2][0].power = 'x'; }),
-      bad(o => { o.stages[3][1][2].team.push({ ...team[0] }); }), bad(o => { o.v = 2; })].every(x => x === false), true, 'ทุกแบบที่ผิดถูกปฏิเสธ');
+      bad(o => { o.stages[3][1][2].team.push({ ...team[0] }); }), bad(o => { o.v = 3; })].every(x => x === false), true, 'ทุกแบบที่ผิดถูกปฏิเสธ');
     ok(!validateBotTeams(null, cm, RULES, H).ok && !validateBotTeams('x', cm, RULES, H).ok, 'ไม่ใช่วัตถุ = ปฏิเสธ');
   }],
   ['ชุด 24: ช่วงรอบจากจำนวนแพ้ · ทีมบอทมาจากรอบไม่เกินรอบผู้เล่น', () => {
@@ -57,7 +66,7 @@ export const TESTS_BOTS = [
     }
     const seen = new Set(); for (let s = 1; s <= 40; s++) seen.add(pickBotTeam(BOT_TEAMS, 4, s, 9).tier);
     eq(seen.size, 3, 'สุ่มได้ครบ 3 ระดับ');
-    const o = { runs: 3, perStage: 6, refOpp: 3 };
+    const o = { runs: 3, perTribe: 2, refOpp: 3 };
     const g1 = genBotTeams(chars, RULES, o);
     eq(JSON.stringify(g1), JSON.stringify(genBotTeams(chars, RULES, o)), 'สร้างซ้ำได้ผลเดิม');
     eq(JSON.stringify(genBotTeams(chars, RULES, { ...o, stages: [0, 1] }).stages.slice(0, 2)), JSON.stringify(g1.stages.slice(0, 2)), 'แบ่งขั้นให้หลายโปรเซสได้ผลเดิม');

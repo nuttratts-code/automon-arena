@@ -4,7 +4,7 @@
 let anaPlayRun = null;
 function anaRunHint() {
   const fit = botTeamsFit(chars, rulesNow());
-  return 'บอทเล่นทั้งรันเหมือนคนจริง (ซื้อ/ขาย/สุ่มร้านเอง · เจอบอสตามตั้งค่าด่าน · หัวใจหมด = จบ) · ใช้ค่าตัวละคร/กฎ/บอสที่กำลังแก้ · ยังไม่มีรูนในเกมจึงไม่ใส่รูน · ผลนี้เก็บแยก ไม่ทับผลวัดปกติ'
+  return 'บอทเล่นทั้งรันเหมือนคนจริง (ซื้อ/ขาย/สุ่มร้านเอง · แต่ละรันเอนไปเผ่าหนึ่งวนครบ 6 เผ่า · เจอบอสตามตั้งค่าด่าน · หัวใจหมด = จบ) · ใช้ค่าตัวละคร/กฎ/บอสที่กำลังแก้ · ยังไม่มีรูนในเกมจึงไม่ใส่รูน · ผลนี้เก็บแยก ไม่ทับผลวัดปกติ'
     + (fit ? '' : ' · ⚠ ค่าที่แก้ต่างจากค่าที่สร้างทีมบอทในเกม → "ทีมบอทในเกม" จะใช้บอทเล่นสดแทน');
 }
 $('anaRunOpp').addEventListener('change', renderAnaMode);
@@ -35,7 +35,7 @@ function renderPlayRun() {
   cards[2].firstChild.textContent = fmt(R.avgRounds);
   cards[3].firstChild.textContent = fmt(R.lv3Final);
   cards[4].firstChild.textContent = `${fmt(R.avgTime)} วิ`;
-  $('runInfo').textContent = `${R.n.toLocaleString()} รัน · คู่แข่ง: ${R.opp === 'teams' ? 'ทีมบอทในเกม 90 ทีม (เลือกตามจำนวนชนะ/แพ้ เหมือนในเกม)' : 'บอทเล่นสด ทีมใหม่ทุกแมตช์'}`
+  $('runInfo').textContent = `${R.n.toLocaleString()} รัน · คู่แข่ง: ${R.opp === 'teams' ? 'ทีมบอทในเกม 360 ทีม (เลือกตามจำนวนชนะ/แพ้ เหมือนในเกม)' : 'บอทเล่นสด ทีมใหม่ทุกแมตช์'}`
     + (R.askedTeams && R.opp !== 'teams' ? ' (ค่าที่แก้ไม่ตรงกับทีมบอทในเกม จึงใช้บอทเล่นสดแทน)' : '');
   // bosses
   $('runBoss').replaceChildren(...(R.bosses.length ? R.bosses.map(b => {

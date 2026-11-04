@@ -369,7 +369,7 @@ let P = null, B = null, sel = null, msgs = [], speed = 2, confirmEmpty = false;
 // ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
 const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
 let stats = newStats(), startedAt = Date.now(), pendingEnd = null;
-// ชุด 23: ทีมบอทเตรียมไว้ล่วงหน้า 90 ทีม ตามขั้นชนะ × ช่วงรอบ (core/botdata.js) · ตรวจตอนเปิดเกม · ผิด/ค่าเกมไม่ตรง = กลับไปใช้บอทซื้อสด
+// ชุด 23: ทีมบอทเตรียมไว้ล่วงหน้า 360 ทีม (set 87) ตามขั้นชนะ × ช่วงรอบ (core/botdata.js) · ตรวจตอนเปิดเกม · ผิด/ค่าเกมไม่ตรง = กลับไปใช้บอทซื้อสด
 const BOT_OK = validateBotTeams(BOT_TEAMS, CM, RULES, DATA_HASH).ok;
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },

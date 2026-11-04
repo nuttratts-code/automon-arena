@@ -18,7 +18,10 @@ import { RUN_STAGE, runBossAt, runBossTeam } from './runboss.js';
 export const BOT_TIERS = ['ง่าย', 'กลาง', 'ยาก'];
 export const BOT_SPANS = [[0, 2], [3, 5], [6, 9]]; // จำนวนแพ้ก่อนแมตช์ (ค่าเสนอ · ผู้ใช้เลือก)
 export const BOT_SPAN_TH = ['ต้น', 'กลาง', 'ปลาย'];
-export const BOT_GEN = { runs: 1000, seed: 2310, perStage: 120, refOpp: 30, pct: [25, 50, 75] }; // ค่าเสนอ (ชุด 23 · ชุด 24 เลิกใช้ minPool)
+export const BOT_GEN = { runs: 1200, seed: 2310, perTribe: 40, refOpp: 30, pct: [25, 50, 75], near: 5 }; // ค่าเสนอ (ชุด 23 · ชุด 24 เลิกใช้ minPool · set 87: perTribe/near replace perStage)
+// set 87 (user ask: more + more varied bot teams): each tier holds BOT_PER teams → 10 × 3 × 3 × 4 = 360 teams,
+// the 12 teams of a cell cover all 6 tribes twice (main tribe = most units), each as close to the tier's strength as that tribe has
+export const BOT_PER = 4;
 export function spanOf(losses) {
   const n = Math.max(0, losses | 0);
   const i = BOT_SPANS.findIndex(([a, b]) => n >= a && n <= b);
@@ -28,16 +31,17 @@ export function spanOf(losses) {
 // ---------- run จำลอง 1 รอบ (ผู้เล่น = บอท) · ใช้ทั้งสร้างทีมและวัดความยาวแมตช์ ----------
 // opponent(P, B, round) → entries ของคู่แข่ง หรือ null = ใช้บอทซื้อสด B · onMatch(info) เรียกทุกแมตช์
 // stage = boss settings (default = the game's; the Balance Room passes the stage it is editing) · info.res = full battle result
-export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE) {
+// opts.focus / opts.foeFocus (set 87) = tribe the player bot / spare bot B leans toward (core/bot.js teamStrength) · none = plain bot
+export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE, opts = {}) {
   const cm = makeCharMap(chars);
   const P = newRun(chars, seed >>> 0, rules), B = newRun(chars, ((seed ^ 0xA5A5A5A5) >>> 0), rules);
   for (let guard = 0; guard < 40 && !P.over; guard++) {
     startRound(P, chars, rules); startRound(B, chars, rules, { unlockWins: P.wins });
-    botShop(P, chars, rules);
+    botShop(P, chars, rules, opts.focus ? { focus: opts.focus } : {});
     // set 85: boss rounds (core/runboss.js) — same as the game: the boss replaces the bot team, the spare bot B sits out
     const rb = runBossAt(P.round, P.seed, stage);
     const preset = rb ? null : opponent ? opponent(P) : null;
-    if (!preset && !rb) botShop(B, chars, rules, { unlockWins: P.wins });
+    if (!preset && !rb) botShop(B, chars, rules, { unlockWins: P.wins, focus: opts.foeFocus || null });
     const mine = teamEntries(P), theirs = rb ? null : preset || teamEntries(B);
     const res = simulate(buildTeam(mine, cm, rules), rb ? runBossTeam(rb.boss, rb.k) : buildTeam(theirs, cm, rules), { rules, log: false });
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts;
@@ -50,15 +54,26 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE)
 }
 
 // ---------- สร้างชุดทีม (รันใน node ผ่าน lab/botgen.mjs) ----------
+export const tribeList = chars => [...new Set(chars.map(c => c.tribe))];
+// main tribe of a team = the tribe most units belong to (extra tribes count) · tie → pref if tied, else the first in list order
+export function teamTribe(team, cm, pref = null) {
+  const n = {};
+  for (const e of team) for (const t of [cm[e.id].tribe, ...cm[e.id].extraTribes]) n[t] = (n[t] || 0) + 1;
+  const top = Math.max(...Object.values(n));
+  return pref && n[pref] === top ? pref : Object.keys(n).find(t => n[t] === top);
+}
 // เก็บทีมจาก run จำลองแยกตาม ขั้น × จำนวนแพ้ก่อนแมตช์ (0 ถึง หัวใจ − 1)
 export function gatherBotPool(chars, rules = RULES, opt = {}) {
   const g = { ...BOT_GEN, ...opt }, n = rules.shop.winsToFinish, L = rules.shop.hearts;
   const pool = Array.from({ length: n }, () => Array.from({ length: L }, () => []));
+  const tribes = tribeList(chars), cm = makeCharMap(chars);
   for (let r = 0; r < g.runs; r++) {
+    // set 87: every run's bot leans toward one tribe in turn (and its sparring bot toward another) → every tribe gets sample teams
+    const focus = tribes[r % tribes.length], foeFocus = tribes[(r + 3) % tribes.length];
     simRun(chars, rules, (g.seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, null, m => {
       const loss = m.round - 1 - m.stage;
-      if (m.team.length && loss >= 0 && loss < L) pool[m.stage][loss].push({ team: m.team, round: m.round });
-    });
+      if (m.team.length && loss >= 0 && loss < L) pool[m.stage][loss].push({ team: m.team, round: m.round, tribe: teamTribe(m.team, cm, focus) });
+    }, RUN_STAGE, { focus, foeFocus });
   }
   return pool;
 }
@@ -84,19 +99,38 @@ export function genBotTeams(chars, rules = RULES, opt = {}, pool = null) {
       if (!list.length) return [];
       const rng = makeRng((g.seed ^ Math.imul(k + 1, 0x85EBCA6B) ^ Math.imul(b + 1, 0xC2B2AE35)) >>> 0);
       const pick = (arr, m) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rng.int(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, m); };
-      const cand = pick(list, g.perStage).map(x => ({ ...x })), ref = pick(list, g.refOpp).map(x => buildTeam(x.team, cm, rules));
+      const tribes = tribeList(chars), shuffled = pick(list, list.length), byT = {};
+      for (const x of shuffled) { const l = byT[x.tribe] || (byT[x.tribe] = []); if (l.length < g.perTribe) l.push({ ...x }); }
+      const cand = tribes.flatMap(t => byT[t] || []), ref = pick(list, g.refOpp).map(x => buildTeam(x.team, cm, rules));
       // ความแรง = อัตราชนะ (เสมอ = ครึ่ง) เมื่อสู้กับทีมอ้างอิงชุดเดียวกันของขั้น+ช่วงนั้น
       for (const c of cand) {
         const mine = buildTeam(c.team, cm, rules); let s = 0;
         for (const o of ref) { const w = simulate(mine, o, { rules, log: false }).winner; s += w === 0 ? 1 : w == null ? 0.5 : 0; }
         c.power = Math.round((s / ref.length) * 1000) / 10;
       }
-      cand.sort((a, b2) => a.power - b2.power || a.round - b2.round);
-      return g.pct.map((p, i) => { const c = cand[Math.min(cand.length - 1, Math.floor((p / 100) * cand.length))]; return { tier: BOT_TIERS[i], span: b, from, round: c.round, power: c.power, team: structuredClone(c.team) }; });
+      const sorted = cand.slice().sort((a, b2) => a.power - b2.power || a.round - b2.round);
+      const target = g.pct.map(p => sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))].power);
+      const rot = (k * BOT_SPANS.length + b) % tribes.length, order = tribes.map((_, i) => tribes[(i + rot) % tribes.length]);
+      const used = new Set(), useN = {}, perT = {}, out = [];
+      for (let j = 0; j < BOT_TIERS.length * BOT_PER; j++) {
+        const ti = Math.floor(j / BOT_PER), want = order[j % order.length], tg = target[ti];
+        let pool2 = cand.filter(c => !used.has(c) && c.tribe === want);
+        if (!pool2.length) { // this tribe has no sample left → the tribe picked least so far
+          const left = cand.filter(c => !used.has(c)); if (!left.length) break;
+          const lo = Math.min(...left.map(c => perT[c.tribe] || 0)); pool2 = left.filter(c => (perT[c.tribe] || 0) === lo);
+        }
+        // nearest strength; among those within `near` points, the team whose characters were used least in this cell
+        const d = c => Math.abs(c.power - tg), best = Math.min(...pool2.map(d));
+        const score = c => c.team.reduce((a, e) => a + (useN[e.id] || 0), 0);
+        const c = pool2.filter(x => d(x) <= best + g.near).sort((x, y) => score(x) - score(y) || d(x) - d(y) || x.round - y.round)[0];
+        used.add(c); perT[c.tribe] = (perT[c.tribe] || 0) + 1; for (const e of c.team) useN[e.id] = (useN[e.id] || 0) + 1;
+        out.push({ tier: BOT_TIERS[ti], span: b, from, round: c.round, power: c.power, team: structuredClone(c.team) });
+      }
+      return out;
     });
   });
   const sizes = pool.map((_, k) => BOT_SPANS.map((__, b) => spanPool(pool, k, b).list.length));
-  return { v: 3, gen: { ...g, spans: BOT_SPANS }, sizes, stages };
+  return { v: 4, gen: { ...g, spans: BOT_SPANS, per: BOT_PER }, sizes, stages };
 }
 
 // ---------- ตรวจข้อมูลทีมบอทตอนโหลด ----------
@@ -104,17 +138,17 @@ export const btOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 export const btObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 export function validateBotTeams(data, cm, rules = RULES, hash = null) {
   const errors = [], n = rules.shop.winsToFinish;
-  if (!btObj(data) || data.v !== 3 || !Array.isArray(data.stages)) return { ok: false, errors: ['ข้อมูลทีมบอทผิดรูปแบบ'] };
+  if (!btObj(data) || data.v !== 4 || !Array.isArray(data.stages)) return { ok: false, errors: ['ข้อมูลทีมบอทผิดรูปแบบ'] };
   if (hash != null && data.hash !== hash) return { ok: false, errors: ['ทีมบอทสร้างจากค่าเกมชุดเก่า (แฮชไม่ตรง) ต้องสร้างใหม่'] };
   if (data.stages.length !== n) errors.push(`ต้องมี ${n} ขั้น`);
   data.stages.forEach((spans, k) => {
     if (!Array.isArray(spans) || spans.length !== BOT_SPANS.length) { errors.push(`ขั้น ${k}: ต้องมี ${BOT_SPANS.length} ช่วงรอบ`); return; }
     spans.forEach((list, b) => {
-      if (!Array.isArray(list) || list.length !== BOT_TIERS.length) { errors.push(`ขั้น ${k} ช่วง ${b + 1}: ต้องมี ${BOT_TIERS.length} ทีม`); return; }
+      if (!Array.isArray(list) || list.length !== BOT_TIERS.length * BOT_PER) { errors.push(`ขั้น ${k} ช่วง ${b + 1}: ต้องมี ${BOT_TIERS.length * BOT_PER} ทีม`); return; }
       list.forEach((t, i) => {
         const at = `ขั้น ${k} ช่วง ${b + 1} ทีม ${i + 1}`;
         if (!btObj(t) || !Object.keys(t).every(x => ['tier', 'span', 'from', 'round', 'power', 'team'].includes(x))) { errors.push(`${at}: ผิดรูปแบบ`); return; }
-        if (t.tier !== BOT_TIERS[i]) errors.push(`${at}: ระดับผิด`);
+        if (t.tier !== BOT_TIERS[Math.floor(i / BOT_PER)]) errors.push(`${at}: ระดับผิด`);
         if (t.span !== b) errors.push(`${at}: ช่วงผิด`);
         if (!Number.isInteger(t.from) || t.from < 0 || t.from > k) errors.push(`${at}: ขั้นที่มาผิด`);
         // ชุด 24: รอบของทีมต้องไม่เกินรอบแรกของช่วงนี้ (ผู้เล่นในช่วงนี้อยู่รอบนี้หรือหลังกว่า)

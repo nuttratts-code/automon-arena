@@ -1,4 +1,4 @@
-// สร้างทีมบอท 90 ทีม (ชุด 23 · 10 ขั้น × 3 ช่วงรอบ × ง่าย/กลาง/ยาก) · รัน: node lab/botgen.mjs [run จำลอง=1000] [จำนวนโปรเซส=2]
+// สร้างทีมบอท 360 ทีม (ชุด 23 · set 87: 10 ขั้น × 3 ช่วงรอบ × ง่าย/กลาง/ยาก × 4 ทีม เผ่าหลากหลาย) · รัน: node lab/botgen.mjs [run จำลอง=1000] [จำนวนโปรเซส=2]
 // → เขียน core/botdata.js (BOT_TEAMS + แฮชค่าเกม) · ค่าตัวละคร/กฎเปลี่ยน = เทสต์ "ชุด 23" แจ้งให้รันใหม่
 // แบ่งขั้นให้หลายโปรเซสคำนวณพร้อมกัน (ทุกโปรเซสเก็บทีมจาก run จำลองชุดเดียวกัน ผลเหมือนรันโปรเซสเดียว)
 import { writeFileSync } from 'fs';
@@ -7,7 +7,7 @@ import { RULES } from '../core/rules.js';
 import { buildCharacterList } from '../core/characters.js';
 import { makeCharMap } from '../core/team.js';
 import { dataHash } from '../core/save.js';
-import { BOT_GEN, BOT_SPAN_TH, BOT_SPANS, genBotTeams, validateBotTeams } from '../core/botteams.js';
+import { BOT_GEN, BOT_PER, BOT_SPAN_TH, BOT_SPANS, genBotTeams, teamTribe, validateBotTeams } from '../core/botteams.js';
 
 const chars = buildCharacterList(), n = RULES.shop.winsToFinish;
 if (process.argv[2] === '--part') { // โปรเซสลูก: คำนวณเฉพาะขั้นที่ได้รับ แล้วพิมพ์ JSON
@@ -24,13 +24,14 @@ if (process.argv[2] === '--part') { // โปรเซสลูก: คำนว
   })));
   const stages = Array.from({ length: n }, (_, k) => outs.find((o, p) => parts[p].includes(k)).stages[k]);
   const { stages: _s, ...gen } = outs[0].gen;
-  const data = { v: 3, gen, sizes: outs[0].sizes, stages, hash: dataHash(chars) };
+  const data = { v: 4, gen, sizes: outs[0].sizes, stages, hash: dataHash(chars) };
   const v = validateBotTeams(data, makeCharMap(chars), RULES, data.hash);
   if (!v.ok) { console.log('❌ ทีมบอทไม่ผ่านตัวตรวจ:', v.errors.slice(0, 5).join(' | ')); process.exit(1); }
   writeFileSync('core/botdata.js', `// สร้างอัตโนมัติด้วย lab/botgen.mjs (ชุด 23) · ห้ามแก้มือ · ${runs} run จำลอง เมล็ด ${gen.seed}\nexport const BOT_TEAMS = ${JSON.stringify(data)};\n`);
-  console.log(`✅ ทีมบอท ${n * BOT_SPANS.length * 3} ทีม · ${runs} run จำลอง · ${Math.round((Date.now() - t0) / 1000)} วิ · แฮช ${data.hash}`);
+  console.log(`✅ ทีมบอท ${n * BOT_SPANS.length * 3 * BOT_PER} ทีม · ${runs} run จำลอง · ${Math.round((Date.now() - t0) / 1000)} วิ · แฮช ${data.hash}`);
+  const cm = makeCharMap(chars);
   data.stages.forEach((sp, k) => sp.forEach((l, b) => {
     const borrowed = l[0].from !== k ? ` (ไม่มีตัวอย่าง ใช้ขั้น ${l[0].from} · ${data.sizes[k][b]})` : ` (ตัวอย่าง ${data.sizes[k][b]} · รอบ ≤ ${k + 1 + BOT_SPANS[b][0]})`;
-    console.log(`ขั้น ${k} ช่วง${BOT_SPAN_TH[b]}${borrowed}: ` + l.map(t => `${t.tier} รอบ ${t.round} แรง ${t.power}% Lv${t.team.reduce((a, e) => a + e.level, 0)}`).join(' · '));
+    console.log(`ขั้น ${k} ช่วง${BOT_SPAN_TH[b]}${borrowed}: ` + l.map(t => `${t.tier} ${teamTribe(t.team, cm)} ${t.power}%`).join(' · '));
   }));
 }

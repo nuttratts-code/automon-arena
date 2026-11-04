@@ -6,7 +6,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { bossUnit } from '../core/boss.js';
 import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
 import { rarityOdds, runeActive, runeKind, RUNE_RARITY } from '../core/stage.js';
-import { pickBotTeam, simRun } from '../core/botteams.js';
+import { pickBotTeam, simRun, tribeList } from '../core/botteams.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { dataHash } from '../core/save.js';
 // ตัววิเคราะห์บาลานซ์: ใช้ตัวคำนวณเดียวกับเกม · เมล็ดสุ่มเดิม = ทีมชุดเดิม จึงเทียบก่อน/หลังแก้ได้ตรงๆ
@@ -277,6 +277,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
   const pick = useTeams ? (P => pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round).team) : null;
+  const tribes = tribeList(chars);
   const ends = Array(W + 1).fill(0), byRound = {}, boss = {}, ch = {}, tr = {}, combos = {};
   for (const c of chars) ch[c.id] = { runs: 0, lvSum: 0, won: 0, winsSum: 0, mGames: 0, mWins: 0 };
   let won = 0, rounds = 0, winsSum = 0, matches = 0, aborted = 0, timeSum = 0, lv3Final = 0;
@@ -295,7 +296,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
         const t = mainTribeOf(m.team, map, rules) || '-'; const T = (B.tribe[t] ||= { games: 0, wins: 0 }); T.games++; T.wins += w;
       }
       last = m;
-    }, stage);
+    }, stage, { focus: tribes[r % tribes.length] }); // set 87: each run's bot leans toward one tribe in turn (players differ)
     const fin = P.wins >= W; if (fin) won++;
     ends[Math.min(W, P.wins)]++; rounds += P.round; winsSum += P.wins;
     if (last) {
