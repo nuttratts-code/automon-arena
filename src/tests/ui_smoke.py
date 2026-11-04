@@ -20,7 +20,7 @@ with sync_playwright() as p:
         mm=re.search(r'(\d+)\s*/\s*(\d+)', t); chk(mm and mm.group(1)==mm.group(2), 'check page')
         # 2 game: play 12 rounds buying stuff
         pg.goto(f'file://{D}/game.html')
-        res=[]; maxBoard=0
+        res=[]; maxBoard=0; titles=[]  # set 87: every round's title (the last match can be a boss round)
         for rnd in range(14):
             if pg.evaluate('P.over'): break
             pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
@@ -29,13 +29,13 @@ with sync_playwright() as p:
             maxBoard=max(maxBoard,pg.evaluate('teamEntries(P).length'))
             pg.click('#fight');
             if pg.is_visible('#fightHint') and 'ยืนยัน' in pg.inner_text('#fightHint'): pg.click('#fight')
-            pg.click('#skip'); res.append(pg.inner_text('#resultTitle').split('\n')[0])
+            pg.click('#skip'); res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
             pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน (แมตช์ยาวขึ้น เครื่องช้าอาจยังไม่ขึ้น)
             pg.click('#next')
         print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
         chk(len(res)>=3,'game rounds')
         # ชุด 23: ทีมบอทเตรียมไว้ผ่านตัวตรวจ และหัวแมตช์บอกขั้น/ระดับคู่แข่ง
-        chk(pg.evaluate('BOT_OK') and 'คู่แข่ง: ทีมขั้นชนะ' in pg.text_content('#battleTitle'),'preset bot teams active')
+        chk(pg.evaluate('BOT_OK') and any('คู่แข่ง: ทีมขั้นชนะ' in t for t in titles),'preset bot teams active')
         chk(maxBoard>=3,'units moved from bench to board')
         # ชุด 24: ปุ่มความเร็ว 8× 16× · ร้านไฮไลต์ตัวที่มีแล้ว · คำอธิบายสกิลครบ 3 เลเวล
         chk(pg.eval_on_selector_all('[data-speed]','e=>e.map(b=>b.dataset.speed)')==['1','2','4','8','16'],'speed buttons 1-16')
