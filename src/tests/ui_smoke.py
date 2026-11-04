@@ -155,7 +155,7 @@ with sync_playwright() as p:
         chk(('HP '+hp3) in pg.inner_text('#simInfo .stats2'),'sim info level toggle')
         # set 68: boss mode preview draws the boss (not the hidden right team) · empty teams are never refilled with the sample team
         pg.evaluate("simFoeBoss=true; renderSimBoss(); simLast=null; renderSimTeams()")
-        chk('(บอส)' in pg.inner_text('#simArena [data-key="1:0:0"]') and 'WY-3' not in pg.evaluate("[...document.querySelectorAll('#simArena .unit')].map(u=>u.textContent).join()"),'boss mode preview shows boss')
+        chk('(บอส)' in pg.evaluate("[...document.querySelectorAll('#simArena [data-key^=\"1:\"]')].map(u=>u.innerText).join()") and 'WY-3' not in pg.evaluate("[...document.querySelectorAll('#simArena .unit')].map(u=>u.textContent).join()"),'boss mode preview shows boss')
         pg.evaluate("simTeam=emptySim(); saveSim(); renderSimTeams()")
         chk(pg.evaluate("simTeam.flat(2).every(x=>!x)"),'empty team not refilled with sample team')
         pg.evaluate("simFoeBoss=false; renderSimBoss(); simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; saveSim(); renderSimTeams()")
