@@ -85,7 +85,7 @@ export const TESTS_BOSS = [
     eq(got(f('shock', 10, [rl('burnImmune', 100)]), 'shock'), [10], 'กันไฟอย่างเดียว ช็อตยังติดเต็ม');
     eq(got(f('shock', 9, [rl('shockImmune', 30)]), 'shock'), [6], 'กันช็อต 30% → 9 เหลือ 6 (ปัดลง)');
   }],
-  ['บอส R39 (ชุด 77): ผู้เล่น down 1 ตัว บอสตีแรงขึ้นถาวร (อยู่ต่อแม้เปลี่ยนเฟส)', () => {
+  ['บอส R39 (ชุด 77): ผู้เล่นเลือดหมด บอสตีแรงขึ้นจนจบแมตช์ (อยู่ต่อแม้เปลี่ยนเฟส · แมตช์ใหม่เริ่มจากค่าเดิม)', () => {
     const w = dummy('W', { hp: L3(10) }), t = dummy('T', { hp: L3(50000) });
     const h = mk('H', { atk: L3(250), cdMs: L3(1500), hp: L3(50000) }); // first hit at 1.5 s empties bar 1 → phase 2 (after W is down at 1 s)
     const r = bossFight([w, t, h], [u('W', 0, 0), u('T', 0, 1), u('H', 2, 0)], boss({ atk: 100, phases: [ph(0, [rl('downAtk', 20)]), ph(1, [])] }));
@@ -100,6 +100,9 @@ export const TESTS_BOSS = [
     const ups = ev(r2, 'atkUp', e => e.to === bossUid(r2));
     ok(ups.length >= 1 && ups[0].amount === 20, 'ลุกกลับมาทันที ก็ยังนับ (+20)');
     eq(ev(r2, 'down', e => e.who === r2.events[0].units.find(x => x.id === 'V').uid).length, 0, 'ตัวที่ลุกเองไม่มีเหตุการณ์ down จริง');
+    const again = bossFight([rv, t], [u('V', 0, 0), u('T', 0, 1)], boss({ atk: 100, phases: [ph(0, [])] }));
+    eq(ev(again, 'atkUp', e => e.to === bossUid(again)).length, 0, 'แมตช์ใหม่ (บอสเดิม ไม่มีกฎ) ไม่มีพลังที่ได้จากแมตช์ก่อน');
+    eq(ev(again, 'dmg', e => e.from === bossUid(again) && e.why === 'hit')[0].amount, 100, 'แมตช์ใหม่บอสตี 100 ตามค่าเดิม');
   }],
   ['บอส R8: ดูดเลือดฟื้นได้ไม่เกินยอดของแถบปัจจุบัน (กันแถบที่หมดแล้วเต็มกลับ)', () => {
     const h = mk('H', { atk: L3(0), cdMs: NEVER, hp: L3(60), skills: [{ when: 'matchStart', do: 'dmg', to: 'allEnemies', v: L3(250) }] });

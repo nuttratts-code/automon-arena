@@ -919,7 +919,7 @@ export function simulate(teamA, teamB, opts = {}) {
         for (const x of F.filter(x => x.side === f.side && x !== f && up(x))) trigger(x, 'allyDown', ctx);
         for (const x of F.filter(x => x.side !== f.side && up(x))) trigger(x, 'enemyDown', ctx);
         if (f.lastHitBy && up(f.lastHitBy)) trigger(f.lastHitBy, 'kill', ctx);
-        // R39 (set 77, user picked B): every time a player unit's HP hits 0 — counts even when it is revived right away · permanent, stays after the phase ends
+        // R39 (set 77, user picked B): every time a player unit's HP hits 0 — counts even when it is revived right away · lasts to the end of this match only (also after a phase change), the boss record is not changed
         if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = Math.floor(BOSS.atk * BR.downAtk.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } });
         // R20 ชุบชีวิตไม่ได้ (เฉพาะฝั่งผู้เล่น ระหว่างเฟสนั้น) · รูนชุบ (U2) จำกัดครั้งด้วย s.lim และทำงานก่อนการลุกของเผ่าอสูร (ผู้ใช้เลือก Q5 U2)
         const noRev = !!(BOSS && !f.boss && BR.noRevive);
