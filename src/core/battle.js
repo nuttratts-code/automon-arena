@@ -389,9 +389,14 @@ export function simulate(teamA, teamB, opts = {}) {
     if (kind === 'burn' && src && src.side !== f.side && src.burnAmp) v *= amp(src.burnAmp); // ไฟที่ทำให้ติด +% (ชุด 6)
     v = Math.floor(v);
     if (v <= 0 || f.down) return;
-    if (BOSS && f.boss && BR.statusImmune) return; // R24 บอสไม่ติดไฟ/ช็อต
     const by = src || credit;
-    f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
+    // R24 (set 77, user 4 Nov: split burn/shock, % set per rule): boss takes (100 − X)% of burn/shock · 100% = fully immune
+    const imm = BOSS && f.boss && (kind === 'burn' ? BR.burnImmune : kind === 'shock' ? BR.shockImmune : null);
+    if (imm) {
+      v = Math.floor(v * Math.max(0, 1 - imm.v / 100));
+      if (v <= 0) { if (detailOn) log('ruleBlock', { to: f.uid, from: by ? by.uid : null, why: kind, rule: imm.id }); return; }
+    }
+    f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null, ...(imm && detailOn ? { rr: [imm.id] } : {}) }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
     if (kind === 'burn' && src && src.burnNoDecay) f.noDecayPerm = true;
     if (why !== 'reflect' && src && src.side !== f.side) reflectBack(f, src, kind, v);
   }
@@ -943,6 +948,7 @@ export function simulate(teamA, teamB, opts = {}) {
         f.down = true; f.hp = 0; f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false; f.cdLeft = Infinity;
         log('down', { who: f.uid });
         if (BOSS && !f.boss && BR.feedOnDown) byRule('feedOnDown', () => bossHeal(BOSS.barHp * BR.feedOnDown.v / 100)); // R14 (ไม่เกินแถบปัจจุบัน)
+        if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = Math.floor(BOSS.atk * BR.downAtk.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } }); // R39 (set 77): permanent, stays after the phase ends
         // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): down จริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
         // ตัวที่ถูกเรียก: ไม่นับเผ่า ไม่ได้โบนัสเผ่า ไม่มีค่าถาวร สกิลติดตัวทำงานทันที (ค่าเสนอ)
         const sm = f.skills.find(s => s.do === 'summon' && s.when === 'selfDown' && s.unit && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
