@@ -69,7 +69,7 @@ export const ROWS = [
 // v = ค่า Lv1/2/3 · cd = คูลดาวน์สกิล (มิลลิวินาที นับจากเริ่มแมตช์) · lv = เลเวลที่ใช้ได้ · chance = โอกาส % · tags = แท็กเพิ่ม
 // หน่วยของ cdCut / freeze / stun เป็นมิลลิวินาที · ไม่มีเพดานครั้งต่อแมตช์
 export const SKILLS = {
-  'HL-2': [{ when: 'hit', do: 'armorHitUp', to: 'frontAlly', v: [3, 6, 12] }],
+  'HL-2': [{ when: 'hit', do: 'armorHitUp', sameTribe: true, to: 'frontAlly', v: [3, 6, 12] }], // set 84: own tribe only (user ask)
   'HL-3': [{ when: 'hit', do: 'armorHitUp', to: 'self', v: [5, 10, 20] }],
   'HL-7': [{ when: 'hitTaken', do: 'atkOf', of: { stat: 'armor', who: 'self' }, to: 'self', v: [30, 30, 30] }],
   'HL-4': [{ when: 'matchEnd', do: 'permArmor', sameTribe: true, to: 'frontAlly', v: [5, 10, 20] }],

@@ -18,7 +18,7 @@ const TESTS = ['tests/helpers.js', 'tests/t-combat.js', 'tests/t-skills.js', 'te
 const pages = [
   ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', 'game/labels.js', ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'lab/matchcode.js', 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],
-  ['game/run.template.html', 'game.html', [...CORE, 'game/view.js', 'game/labels.js']],
+  ['game/run.template.html', 'game.html', [...CORE, 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],
 ];
 for (const [tpl, out, files] of pages) {
   const page = expand(readFileSync(tpl, 'utf8')).replace('/*__CORE__*/', () => bundle(files));

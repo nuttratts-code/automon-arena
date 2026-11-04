@@ -1,0 +1,78 @@
+/* ชุด 36: แท็บวิเคราะห์แมตช์ · ตัวละ 1 แถว กางลึกได้ 3 ชั้น (ตัว → แหล่งดาเมจ → ส่วนประกอบ) · สีฝั่งเป็นแถบซ้ายของแถว สีแหล่งดาเมจเป็นแท่ง */
+/* กันตารางดันกริดจนหน้าล้นแนวนอน (มือถือ) */
+#mxBody > *, #pane-match .foldsec, #pane-match .tbl { min-width: 0; }
+/* PC: ล็อกความกว้างของส่วนวิเคราะห์แมตช์ให้อยู่กลางหน้า */
+#pane-match { width: 100%; max-width: 1000px; margin-inline: auto; }
+/* สรุปแมตช์ด้านบน */
+.mx-sum { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: .84rem; color: var(--mute); }
+.mx-sum .win { font-size: 1.04rem; color: var(--ink); }
+.mx-sum .mx-sumchip { display: inline-flex; gap: 5px; align-items: baseline; white-space: nowrap; }
+.mx-sum .mx-sumchip > small { font-size: .74rem; }
+.mx-sum .mx-sumchip > b { color: var(--ink); font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+/* ตารางแมตช์ต้องสงสัย: คอลัมน์ทีมตัดบรรทัดได้ จะได้ไม่ดันตารางจนปุ่มหลุดจอ */
+.mxt-team { white-space: normal !important; max-width: 190px; font-size: .76rem; line-height: 1.3; overflow-wrap: anywhere; }
+.mxt-act { white-space: nowrap; }
+/* แท็บสเตตัส: ค่าสุดท้ายแบบช่องเล็ก ๆ (ประหยัดพื้นที่) */
+.mx-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 6px 8px; }
+.mx-stat { display: grid; gap: 1px; padding: 5px 8px; border: 1px solid var(--line); border-left: 4px solid var(--c, var(--line)); border-radius: 7px; background: color-mix(in srgb, var(--c, transparent) 12%, var(--bg)); min-width: 0; }
+/* สเตตัสในแถว (เห็นเลยไม่ต้องกาง): 1 ช่อง = 1 สี · ตัวหนังสือใช้สีปกติ ให้อ่านออกทั้งโหมดสว่าง/มืด สีอยู่ที่แถบซ้าย+พื้นอ่อน */
+.mx-fin { display: flex; flex-wrap: wrap; gap: 4px 5px; justify-content: flex-end; white-space: normal; }
+.mx-fc { display: inline-flex; align-items: baseline; gap: 4px; padding: 1px 7px 1px 5px; border-left: 3px solid var(--c); border-radius: 5px; background: color-mix(in srgb, var(--c) 14%, var(--bg)); font: 400 .7rem var(--f-body); }
+.mx-fc > small { font: 400 .66rem var(--f-body); color: var(--mute); }
+.mx-fc > b { font: 600 .74rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.mx-stat > small { font: 400 .68rem var(--f-body); color: var(--mute); }
+.mx-stat > b { font: 600 .86rem var(--f-mono); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 560px) { .mx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }/* แถบเครื่องมือรายตัว: การ์ด/ตาราง · เรียง · ซ่อน down */
+.mx-tools { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: .8rem; }
+.mx-seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+.mx-seg button { font-size: .78rem; padding: 4px 10px; min-height: 28px; border-radius: 999px; background: transparent; }
+.mx-seg button[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: var(--on-accent); }
+.mx-tools select, #mxLogQ { font-size: .8rem; padding: 4px 8px; min-height: 32px; border-radius: 6px; }
+#mxLogQ { flex: 1 1 180px; max-width: 280px; }
+.pill.mx-down { background: var(--soft); color: var(--mute); border-color: var(--line); }
+.mx-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; font-size: .86rem; color: var(--mute); }
+.mx-head b { color: var(--ink); font-size: 1rem; }
+.mx-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .76rem; color: var(--mute); }
+.mx-legend .off { opacity: .35; }
+.mx-dots { display: inline-flex; gap: 2px; align-items: center; }
+.mx-dots .mx-dot { margin-right: 0; }
+.mx-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--c); vertical-align: -1px; margin-right: 4px; flex: none; }
+.mx-side { display: grid; gap: 6px; }
+.mx-side > h4 { margin: 4px 0 0; font-size: .9rem; }
+.mx-side.sL > h4 { color: var(--sideL); } .mx-side.sR > h4 { color: var(--sideR); }
+details.mxu { border: 1px solid var(--line); border-left: 4px solid var(--sc); border-radius: 8px; background: var(--panel); min-width: 0; }
+details.mxu[open] { box-shadow: 0 2px 10px rgb(0 0 0 / .06); }
+details.mxu > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; grid-template-rows: auto auto auto; gap: 2px 10px; align-items: center; padding: 8px 10px; }
+details.mxu > summary::-webkit-details-marker, details.mxs > summary::-webkit-details-marker { display: none; }
+details.mxu > summary::after, details.mxs > summary::after { content: '▸'; color: var(--mute); justify-self: end; }
+details.mxu > summary::after { justify-self: end; grid-column: 3; grid-row: 1 / 3; }
+details.mxu[open] > summary::after, details.mxs[open] > summary::after { content: '▾'; }
+.mx-name { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: .86rem; font-weight: 600; grid-column: 1; grid-row: 1; }
+.mx-name > span.nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mx-name .pill { margin-left: 2px; }
+.mx-head > * + *::before { content: '·'; margin-right: 14px; color: var(--mute); }
+.mx-num { display: grid; gap: 4px; min-width: 0; grid-column: 2; grid-row: 1; justify-self: end; font: 500 .82rem var(--f-mono); font-variant-numeric: tabular-nums; }
+/* แท่งกราฟอยู่บรรทัดที่ 2 กินเต็มความกว้างแถว: ตัวมากสุด = 100% ถึงขอบขวา */
+details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 2; }
+details.mxu > summary > .mx-fin { grid-column: 1 / 3; grid-row: 3; justify-content: flex-start; margin-top: 3px; }
+/* B7: mobile rules must come AFTER the base .mx-num / .mx-bar rules, or the base grid-column wins (number overlapped ▸) */
+@media (max-width: 560px) {
+  details.mxu > summary::after { grid-column: 2; grid-row: 1 / 3; }
+  details.mxu > summary { display: grid; grid-template-columns: minmax(0, 1fr) 14px; grid-template-rows: auto auto auto auto; gap: 2px 8px; padding: 8px 8px; }
+  .mx-name { grid-column: 1; grid-row: 1; min-width: 0; }
+  .mx-name > span.nm { font-size: .8rem; }
+  .mx-num { grid-column: 1; grid-row: 2; justify-self: start; }
+  details.mxu > summary > .mx-bar { grid-column: 1 / 3; grid-row: 3; }
+  details.mxu > summary > .mx-fin { grid-column: 1 / 3; grid-row: 4; }
+  .mx-line > .mx-sep, .mx-line > .mx-sub { display: none; }
+}
+/* บรรทัดเดียว: ทำ 141 | 47 ฮิต · ไฟ 0 · ช็อต 0 */
+.mx-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
+.mx-line > small { flex: none; font: 400 .7rem var(--f-body); color: var(--mute); }
+.mx-line > .mx-val { flex: none; font-weight: 600; }
+.mx-line > .mx-sep { flex: none; color: var(--mute); opacity: .55; }
+.mx-line > .mx-sub { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 400 .68rem var(--f-body); color: var(--mute); }
+.mx-bar { display: flex; height: 7px; border-radius: 4px; overflow: hidden; background: var(--soft); }
+.mx-bar i { display: block; height: 100%; background: var(--c); }
+.mx-bar i + i { box-sizing: border-box; border-left: 1px solid var(--panel); }
+.mx-body { display: grid; gap: 10px; padding: 8px 10px 12px; border-top: 1px dashed var(--line); }
