@@ -394,6 +394,10 @@ export const TESTS_BOSS = [
     const gone = bossFight([w, hitter('H', 250, 'allEnemies', { hp: L3(50000) })], [u('W', 0, 0), u('H', 2, 0)], b);
     eq(ev(gone, 'heal', e => e.to === bossUid(gone)).length, 0, 'แถบแรกหมด (HP 800) → ไม่ฟื้นกลับ');
     eq(ev(gone, 'bar').length, 1, 'ไม่มี "ศัตรู down" ซ้ำ');
+    // set 77b: unit revived at once (own revive skill) still counts
+    const rv = dummy('V', { hp: L3(10), skills: [{ when: 'selfDown', do: 'revive', to: 'self', v: L3(100) }] });
+    const r3 = bossFight([rv, hitter('H', 150, 'allEnemies', { hp: L3(50000) })], [u('V', 0, 0), u('H', 2, 0)], b);
+    eq(ev(r3, 'heal', e => e.to === bossUid(r3)).map(e => e.amount)[0], 100, 'ลุกกลับมาทันที บอสก็ยังฟื้น 100');
   }],
   ['บอส R16: ทุก X วิ แช่แข็งผู้เล่นทั้งแถว (คูลดาวน์ +วิ) · ตีช้าลงจริง', () => {
     const ks = ['A', 'B', 'C'].map(id => mk(id, { atk: L3(1), cdMs: L3(1000), hp: L3(5000) }));
