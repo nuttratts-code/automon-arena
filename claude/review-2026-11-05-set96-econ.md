@@ -24,3 +24,12 @@ Common patterns: (1) early rounds are TIGHT (1–3 buys) and income RAMPS up; (2
 - **C Sell refund 50%** (rounded down; merged units = half of total paid). Keeps 25/25 but every buy/pivot costs. Can combine with A.
 
 Any option → afterwards: regenerate bot teams + re-tune bosses (`lab/runerun.mjs ... --write`) + check normal-round win 85/70/55 per difficulty; risk = bot (no merge planning) gets weaker than humans at low gold → may need bot merge logic first. `lab/econ.mjs` can show the round-by-round effect before deciding.
+
+## Option A measured (scratch patch, repo unchanged · `lab/econ.mjs 600` BYROUND, player = bot, no runes, foes = CURRENT bot teams built at 25/25)
+Column = player LOSS % (econ.mjs counts winner 1 = foe). now 25/25 → A (10, +3/round, max 25):
+- round 1: team 5.8 → 3.0 units · loss 45% → 97%
+- rounds 2–4: loss 18–26% → 30–37% · Lv2+ units r4 80% → 32%
+- round 5 (boss 1): loss 30% → 68% · Lv2+ 87% → 53% (A is ~2–3 rounds behind here)
+- round 10 (boss 2): 60% → 65% · round 8 full-Lv2 team 66% → 42% · catches up by ~round 13
+- run clear 93% → 91% (10 hearts absorb early losses) · avg rounds 14.7 → 15.7 · leftover gold ~0.5 both (bot spends all)
+Caveat: foes not regenerated; with A the bot teams get weaker early too, so after regen round 1–5 losses drop back part of the way. Boss 1 needs re-tune regardless.
