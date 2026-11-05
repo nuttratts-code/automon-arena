@@ -26,7 +26,7 @@ export const TESTS_RUNRUN = [
     eq(mix('ง่าย'), 'common,common,common', 'easy');
     eq(mix('กลาง'), 'common,rare,rare', 'normal');
     eq(mix('ยาก'), 'legend,rare,rare', 'hard');
-    eq(mix('boss'), 'legend,rare,rare', 'boss (Claude default)');
+    eq(mix('boss'), 'legend,legend', 'boss = pick 1 of 2 legend (user 5 Nov set 95)');
     const id = P.rn.offer.ids[0], r = rnTakeOffer(P, 0);
     ok(r.ok && P.rn.bag[id] === 1 && P.rn.offer === null, 'take → bag, offer cleared');
     ok(!rnTakeOffer(P, 0).ok, 'no offer → fail');
