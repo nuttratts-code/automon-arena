@@ -36,11 +36,11 @@ with sync_playwright() as p:
         noscroll('prep')
         chk(len(pg.query_selector_all('#bench .cell'))==5 and pg.evaluate('P.bench.length')==5,'bench has 5 cells')
         chk(len(pg.query_selector_all('#board .cell'))==6 and pg.is_hidden('#arena'),'prep shows only my 3x2 (enemy hidden)')
-        # set 89/96: shop level follows the round · next-round income on the dock · odds in the shop popup · reroll costs 2
+        # set 89/96: shop level follows the round · next-round income on the dock · odds in the shop popup · reroll costs 1 (set 98)
         chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and '→ 2' in pg.inner_text('#shopLv') and ('+%d' % pg.evaluate('baseIncomeAt(2)')) in pg.inner_text('#shopLv'),'shop level + next-round income on dock')
         pg.click('#shopLv'); chk(pg.is_visible('#dlg') and 'ธรรมดา' in pg.inner_text('#shopOdds') and 'รอบหน้า Lv 2' in pg.inner_text('#pop'),'shop popup: odds + next level')
         pg.keyboard.press('Escape'); chk(pg.is_hidden('#dlg'),'Esc closes popup')
-        chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
+        chk('−1' in pg.inner_text('#reroll'),'reroll cost 1 (set 98)')
         # set 94/95: runes (HUD bag popup → detail) · difficulty in HUD + "?" popup · win offer = blocking popup
         chk(pg.query_selector('#rShop') is None and pg.query_selector('#rReroll') is None,'no rune shop')
         g0=pg.evaluate('P.gold'); pg.evaluate("P.rn.bag={T4:1};render()")
@@ -100,7 +100,12 @@ with sync_playwright() as p:
                 chk(pg.inner_text('#resultTitle')==t0 and pg.inner_text('#clock')==c0 and pg.evaluate('P.round')==rnd0,'replay this match = same result, run unchanged')
                 pg.click('#toMx'); chk(pg.is_visible('#mxDlg') and pg.is_visible('#mxBody'),'match details popup'); pg.click('#mxClose')
                 first=False
+            rnd1=pg.evaluate('P.round'); over1=pg.evaluate('P.over')
             pg.click('#next')
+            if not over1:  # set 98: result card closes, a second press cannot start another round
+                chk(pg.is_hidden('#result'),'next round: result card closes')
+                pg.evaluate("document.getElementById('next').click()")
+                chk(pg.evaluate('P.round')==rnd1+1,'next round: pressing again does not skip a round')
         print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
         chk(len(res)>=3,'game rounds')
         chk(offers>0 or not any(x.startswith('ชนะ') or x.startswith('เสมอ') for x in res[:-1]),'win offers a rune (%d)' % offers)
