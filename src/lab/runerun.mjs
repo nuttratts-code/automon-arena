@@ -51,6 +51,7 @@ function buyRunes(P) {
 }
 
 const goldLog = Array.from({ length: 16 }, () => []);
+const normal = [0, 0];
 const out = { 1: [0, 0], 2: [0, 0], 3: [0, 0] }, teams = { 1: [], 2: [], 3: [] }, finish = { wins: 0, runs: 0 }, held = [];
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
@@ -69,6 +70,7 @@ for (let r = 0; r < runs; r++) {
     const opts = { rules: RULES, log: false, ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}) };
     const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : buildTeam(foe.team, cm, RULES), opts);
     const won = res.winner !== 1;
+    if (!rb) { normal[0]++; normal[1] += won ? 1 : 0; }
     if (rb && out[rb.k]) { out[rb.k][0]++; out[rb.k][1] += won ? 1 : 0; teams[rb.k].push({ units: e.units, opts }); }
     streak = won ? streak + 1 : 0;
     endMatch(P, won, chars, RULES, (res.perm || []).filter(x => x.side === 0));
@@ -82,6 +84,7 @@ for (let r = 0; r < runs; r++) {
 }
 const pct = (a, b) => (b ? (a / b * 100).toFixed(1) : '-');
 console.log(`diff ${DIFF} · runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(finish.wins, finish.runs)}%${RUNES ? ` · runes held at end avg ${(held.reduce((a, b) => a + b, 0) / held.length).toFixed(1)}` : ''}`);
+console.log(`normal rounds won ${pct(normal[1], normal[0])}%`);
 for (const k of [1, 2, 3]) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
 
 if (WRITE) {
