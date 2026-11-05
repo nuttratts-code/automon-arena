@@ -41,17 +41,17 @@ export const TESTS_RUNRUN = [
     const o = rnMakeOffer(Q, 'ยาก');
     eq(o.ids.length, 3, 'legend pool empty → still 3 cards'); ok(!rarOf(o.ids).includes('legend'), 'no legend left');
   }],
-  ['set 95: rune shop removed · difficulty scales enemy hp/atk (100/105/145 %) · boss / กลาง unchanged · summons too', () => {
+  ['set 95: rune shop removed · difficulty scales enemy hp/atk (set 96: 95/105/145 %) · boss unchanged · summons too', () => {
     const P = fresh(14);
     ok(!('shop' in P.rn), 'no rune shop state');
-    const S = RUN_STAGE.settings; eq([S.diffEasy, S.diffNorm, S.diffHard], [100, 105, 145], 'difficulty %');
-    eq([rnDiffPct('ง่าย'), rnDiffPct('กลาง'), rnDiffPct('ยาก'), rnDiffPct(null)], [100, 105, 145, 100], 'pct by tier');
+    const S = RUN_STAGE.settings; eq([S.diffEasy, S.diffNorm, S.diffHard], [95, 105, 145], 'difficulty %');
+    eq([rnDiffPct('ง่าย'), rnDiffPct('กลาง'), rnDiffPct('ยาก'), rnDiffPct(null)], [95, 105, 145, 100], 'pct by tier');
     const sumId = chars.find(c => c.skills.some(k => k.do === 'summon'))?.id;
     const ents = [{ id: commonId, level: 2, row: 0, lane: 0 }, ...(sumId ? [{ id: sumId, level: 1, row: 1, lane: 0 }] : [])];
     const base = buildTeam(ents, cm), hard = rnFoeScale(base, 'ยาก'), easy = rnFoeScale(base, 'ง่าย');
     eq(hard[0].maxHp, Math.floor(base[0].maxHp * 145 / 100), 'hard hp'); eq(hard[0].atk, Math.floor(base[0].atk * 145 / 100), 'hard atk');
     eq(rnFoeScale(base, 'กลาง')[0].maxHp, Math.floor(base[0].maxHp * 105 / 100), 'normal hp');
-    ok(easy === base && rnFoeScale(base, null) === base, 'easy (100%) / boss untouched');
+    eq(easy[0].maxHp, Math.floor(base[0].maxHp * 95 / 100), 'easy hp 95%'); ok(rnFoeScale(base, null) === base, 'boss untouched');
     eq(base[0].maxHp, buildTeam(ents, cm)[0].maxHp, 'input not mutated');
     if (sumId) { const k0 = base[1].skills.find(k => k.unit), k1 = hard[1].skills.find(k => k.unit); ok(k0 && k1 && k1.unit.maxHp === Math.floor(k0.unit.maxHp * 145 / 100), 'summon scaled'); }
     const foe = [{ id: commonId, level: 1, row: 0, lane: 0 }];
