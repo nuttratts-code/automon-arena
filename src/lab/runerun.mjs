@@ -1,8 +1,7 @@
 // Set 95: boss win % when the player collects runes (phase 2b run flow) · node lab/runerun.mjs [runs] [diff ง่าย|กลาง|ยาก|off] [--write t1 t2 t3]
 // The player bot (core/bot.js, focus rotating over the 6 tribes) plays real runs against the game's bot teams at the picked difficulty
-// (pickBotTeamAt, like the game) and handles runes with a simple greedy policy (harness only, not game rules):
-//   offer → highest rarity, battle runes before run-only ones · rune shop → buys the highest-rarity card it can afford before the unit shop
-//   when gold ≥ price + RESERVE · "one" runes sit on the strongest unit (level, then rarity), partner on the 2nd strongest.
+// (pickBotTeamAt + enemy hp/atk × difficulty %, like the game · set 95: no rune shop) and handles runes with a simple greedy policy (harness only, not game rules):
+//   offer → highest rarity, battle runes before run-only ones · "one" runes sit on the strongest unit (level, then rarity), partner on the 2nd strongest.
 // diff "off" = no runes, opponents by wins (pickBotTeam) = the lab/bossrun.mjs baseline.
 // Prints boss win % per boss round (k1 round 5 · k2 round 10 · k3 round 15) and run results.
 // --write: like lab/bossrun.mjs but the collected boss-round teams carry their runes → re-tunes core/stage-user.js bosses.
@@ -16,7 +15,7 @@ import { pickBotTeam, pickBotTeamAt, tribeList, validateBotTeams } from '../core
 import { dataHash } from '../core/save.js';
 import { RUN_STAGE, runBossAt, runBossTeam } from '../core/runboss.js';
 import { RUNE_RUN_ONLY, equipRunes } from '../core/runes.js';
-import { RN_RARS, rnBuy, rnEquips, rnMakeOffer, rnPlace, rnPrice, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
+import { RN_RARS, rnEquips, rnFoeScale, rnMakeOffer, rnPlace, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
 import { endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 
@@ -24,7 +23,6 @@ const argv = process.argv.slice(2), WRITE = argv.includes('--write');
 const args = argv.filter(a => !a.startsWith('--'));
 const runs = +args[0] || 600, DIFF = args[1] || 'กลาง', RUNES = DIFF !== 'off';
 const T1 = +(args[2] || 75), T2 = +(args[3] || 62), T3 = +(args[4] || 50);
-const RESERVE = +(process.env.RESERVE ?? 6), NOSHOP = !!process.env.NOSHOP; // harness: gold kept for the unit shop when buying a rune · NOSHOP = offers only
 const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
 const RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
@@ -42,13 +40,6 @@ function placeRunes(P) {
     if (rnNeedsPartner(r)) rnPlace(P, id, units[1] ? units[1].s : null, RULES, true);
   }
 }
-function buyRunes(P) {
-  for (;;) {
-    let best = -1, bi = -1;
-    P.rn.shop.forEach((s, i) => { const r = rnRec(s.id); if (r && P.gold >= rnPrice(r) + RESERVE && (P.rn.bag[r.id] | 0) < (r.max || 1) && rRank(r) > best) { best = rRank(r); bi = i; } });
-    if (bi < 0 || !rnBuy(P, bi).ok) return;
-  }
-}
 
 const goldLog = Array.from({ length: 16 }, () => []);
 const normal = [0, 0];
@@ -60,7 +51,6 @@ for (let r = 0; r < runs; r++) {
   let streak = 0;
   for (let g = 0; g < 40 && !P.over; g++) {
     startRound(P, chars, RULES); if (P.round < 16) goldLog[P.round].push(P.gold);
-    if (RUNES && !NOSHOP) buyRunes(P);
     botShop(P, chars, RULES, { focus });
     if (RUNES) placeRunes(P);
     const rb = runBossAt(P.round, P.seed);
@@ -68,7 +58,7 @@ for (let r = 0; r < runs; r++) {
     const mine = teamEntries(P);
     const e = equipRunes(buildTeam(mine, cm, RULES), RUNES ? rnEquips(P) : [], { winStreak: streak });
     const opts = { rules: RULES, log: false, ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}) };
-    const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : buildTeam(foe.team, cm, RULES), opts);
+    const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : rnFoeScale(buildTeam(foe.team, cm, RULES), RUNES ? DIFF : null), opts);
     const won = res.winner !== 1;
     if (!rb) { normal[0]++; normal[1] += won ? 1 : 0; }
     if (rb && out[rb.k]) { out[rb.k][0]++; out[rb.k][1] += won ? 1 : 0; teams[rb.k].push({ units: e.units, opts }); }

@@ -7,7 +7,7 @@ import { rnValidate, rnCompactOk } from './runrunes.js';
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
 // - ตรวจทุกช่องตอนโหลด: ชนิด ช่วงค่า จำนวนเต็ม เวอร์ชัน · ตัวละครมีจริง · ค่าถาวรรู้จักและไม่เกินเพดาน · ประจุ SF-7 · ผิด = ไม่โหลด (ล้างแล้วแจ้ง)
-export const SAVE_VERSION = 3; // set 89: run state v3 (shop level follows the round · no streak / interest fields)
+export const SAVE_VERSION = 3; // set 95: kept 3 (in dataHash → bumping would void bot teams) · run v5 old saves caught by P.v check · set 89: run state v3 (shop level follows the round · no streak / interest fields)
 export const SAVE_MAX_CHARS = 200000;   // เซฟยาวเกินนี้ = ผิดปกติ (ค่าเสนอ)
 export const HISTORY_MAX = 20;          // ประวัติ run เก็บล่าสุด 20 รายการ (ค่าเสนอ)
 
@@ -46,7 +46,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
   const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 4) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn)
+  if (st.v !== 5) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -122,7 +122,7 @@ export function readSave(text, cm, rules, hash) {
   let o; try { o = JSON.parse(text); } catch (e) { return { status: 'bad', errors: ['เซฟอ่านไม่ได้'] }; }
   if (!svObj(o) || !svOnlyKeys(o, ['sv', 'data', 'P', 'B', 'stats', 'startedAt'])) return { status: 'bad', errors: ['เซฟผิดรูปแบบ'] };
   if (o.sv !== SAVE_VERSION) return { status: 'data', errors: ['เวอร์ชันเซฟไม่ตรง'] };
-  if (svObj(o.P) && o.P.v === 3) return { status: 'data', errors: ['เซฟก่อนมีระบบรูน (set 94)'] };
+  if (svObj(o.P) && (o.P.v === 3 || o.P.v === 4)) return { status: 'data', errors: ['เซฟเวอร์ชันเก่า (ก่อนรูน set 94 / มีร้านรูน set 94)'] };
   if (o.data !== hash) return { status: 'data', errors: ['ค่าตัวละคร/กฎเปลี่ยนแล้ว'] };
   const a = validateRunState(o.P, cm, rules), b = validateRunState(o.B, cm, rules, { bot: true });
   const errors = [...a.errors.map(e => 'ผู้เล่น: ' + e), ...b.errors.map(e => 'บอท: ' + e)];
@@ -159,19 +159,22 @@ export const REPLAY_VERSION = 1;
 export const REPLAY_MAX = 40;            // แมตช์ต่อ run สูงสุดจริง = ชนะ 10 + แพ้ 10 − 1 = 19 · เผื่อ (ค่าเสนอ)
 // set 94: n = the player's runes at that match (rnCompact) · only written when there are runes (older entries stay valid)
 // g = win streak before the match (rune เติบโต reads it)
-export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0) {
+// d = picked difficulty (set 95: enemy team hp/atk scale) · only written for a scaled team fight
+export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0, d = null) {
   const copy = t => JSON.parse(JSON.stringify(t));
   const x = { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
   if (runes.length) { x.n = copy(runes); x.g = streak | 0; }
+  if (d && Array.isArray(teamB)) x.d = d;
   return x;
 }
 export function makeReplays(runSeed, hash, list) {
   return JSON.stringify({ rv: REPLAY_VERSION, data: hash, run: runSeed, list: list.slice(-REPLAY_MAX) });
 }
 export function checkReplay(x, cm, rules = RULES) {
-  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g', 'd']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
   if (svOwn(x, 'n') && !rnCompactOk(x.n, rules)) return false;
   if (svOwn(x, 'g') && !svIntIn(x.g, 0, 10000)) return false;
+  if (svOwn(x, 'd') && !['ง่าย', 'กลาง', 'ยาก'].includes(x.d)) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }

@@ -24,10 +24,11 @@ with sync_playwright() as p:
         chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and 'รอบหน้า Lv 2' in pg.inner_text('#shopLv') and 'ธรรมดา' in pg.inner_text('#shopOdds'),'shop level chip round 1')
         chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
         # set 94: rune shop · difficulty pick · win offer blocks the fight until picked
-        chk(len(pg.query_selector_all('#rShop .rcard'))==3 and '27 ทอง' in pg.inner_text('#rOdds'),'rune shop 3 cards + prices')
-        g0=pg.evaluate('P.gold'); pg.evaluate("P.gold=60;render()"); pg.click('#rShop .rcard button')
-        chk(pg.evaluate('Object.keys(P.rn.bag).length')==1 and pg.evaluate('P.gold')<60 and len(pg.query_selector_all('#rBag .rcard'))==1,'buy rune → bag')
-        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint'),'difficulty pick + reward line')
+        # set 95: rune shop removed · difficulty = enemy power %
+        chk(pg.query_selector('#rShop') is None and pg.query_selector('#rReroll') is None,'no rune shop')
+        g0=pg.evaluate('P.gold'); pg.evaluate("P.rn.bag={T4:1};render()")
+        chk(len(pg.query_selector_all('#rBag .rcard'))==1,'rune bag shows held rune')
+        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint') and '125%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line')
         pg.click('[data-diff="กลาง"]'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune')
         pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerPanel') and len(pg.query_selector_all('#offer .rcard'))==3,'offer 3 cards')
         pg.click('#fight'); chk(pg.is_visible('#prep') and 'เลือกรูน' in pg.inner_text('#msgs'),'fight blocked until offer picked')

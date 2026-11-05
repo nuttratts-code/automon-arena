@@ -9,7 +9,7 @@ import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { pickBotTeamAt } from '../core/botteams.js';
 import { RUN_STAGE } from '../core/runboss.js';
-import { rnMakeOffer, rnTakeOffer, rnRec, rnBuy, rnReroll, rnLock, rnRefill, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest } from '../core/runrunes.js';
+import { rnMakeOffer, rnTakeOffer, rnRec, rnDiffPct, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest } from '../core/runrunes.js';
 import { eq, ok } from './helpers.js';
 
 const chars = buildCharacterList(), cm = makeCharMap(chars);
@@ -31,33 +31,38 @@ export const TESTS_RUNRUN = [
     ok(r.ok && P.rn.bag[id] === 1 && P.rn.offer === null, 'take → bag, offer cleared');
     ok(!rnTakeOffer(P, 0).ok, 'no offer → fail');
   }],
-  ['set 94: copies per run cap offers + shop (maxed rune never shows) · pool empty → filled from other rarities / no offer', () => {
+  ['set 94: copies per run cap offers (maxed rune never shows) · pool empty → filled from other rarities / no offer', () => {
     const P = fresh(12);
     give(P, 'X9', 1); // legend max 1
-    for (let i = 0; i < 40; i++) { rnMakeOffer(P, 'ยาก'); ok(!P.rn.offer.ids.includes('X9'), 'maxed X9 never offered'); rnRefill(P); ok(!P.rn.shop.some(s => s.id === 'X9'), 'maxed X9 never in shop'); }
+    for (let i = 0; i < 40; i++) { rnMakeOffer(P, 'ยาก'); ok(!P.rn.offer.ids.includes('X9'), 'maxed X9 never offered'); }
     const Q = fresh(13);
     for (const [id, r] of Object.entries(RUN_STAGE.runes)) if (rnRec(id) && r.rarity === 'legend') give(Q, id, r.max);
     for (const c of RUN_STAGE.custom) if (rnRec(c.id) && c.rarity === 'legend') give(Q, c.id, c.max);
     const o = rnMakeOffer(Q, 'ยาก');
     eq(o.ids.length, 3, 'legend pool empty → still 3 cards'); ok(!rarOf(o.ids).includes('legend'), 'no legend left');
   }],
-  ['set 94: rune shop — 3 cards · price 3/9/27 · buy takes gold · lock survives refill/new round · reroll costs 2', () => {
+  ['set 95: rune shop removed · difficulty scales enemy hp/atk (85/100/125 %) · boss / กลาง unchanged · summons too', () => {
     const P = fresh(14);
-    eq(P.rn.shop.length, 3, '3 cards'); ok(P.rn.shop.every(s => s.id), 'filled');
-    const S = RUN_STAGE.settings; eq([S.rsCommon, S.rsRare, S.rsLegend, S.rsReroll], [3, 9, 27, 2], 'prices');
-    P.gold = 100;
-    const i = 0, r = rnRec(P.rn.shop[i].id), price = { common: 3, rare: 9, legend: 27 }[r.rarity];
-    ok(rnBuy(P, i).ok && P.gold === 100 - price && P.rn.bag[r.id] === 1 && P.rn.shop[i].id === null, 'buy');
-    ok(!rnBuy(P, i).ok, 'empty slot');
-    rnRefill(P); ok(rnLock(P, 1).ok, 'lock'); const kept = P.rn.shop[1].id;
-    for (let k = 0; k < 5; k++) { ok(rnReroll(P).ok, 'reroll'); eq(P.rn.shop[1].id, kept, 'locked card kept'); }
-    eq(P.gold, 100 - price - 10, 'reroll 2 each');
-    startRound(P, chars); eq(P.rn.shop[1].id, kept, 'locked card kept next round');
-    P.gold = 1; ok(!rnReroll(P).ok, 'no gold'); P.gold = 2; P.rn.shop[2] = { id: 'T4', locked: false }; ok(!rnBuy(P, 2).ok && P.gold === 2, 'buy without gold fails');
+    ok(!('shop' in P.rn), 'no rune shop state');
+    const S = RUN_STAGE.settings; eq([S.diffEasy, S.diffNorm, S.diffHard], [85, 100, 125], 'difficulty %');
+    eq([rnDiffPct('ง่าย'), rnDiffPct('กลาง'), rnDiffPct('ยาก'), rnDiffPct(null)], [85, 100, 125, 100], 'pct by tier');
+    const sumId = chars.find(c => c.skills.some(k => k.do === 'summon'))?.id;
+    const ents = [{ id: commonId, level: 2, row: 0, lane: 0 }, ...(sumId ? [{ id: sumId, level: 1, row: 1, lane: 0 }] : [])];
+    const base = buildTeam(ents, cm), hard = rnFoeScale(base, 'ยาก'), easy = rnFoeScale(base, 'ง่าย');
+    eq(hard[0].maxHp, Math.floor(base[0].maxHp * 1.25), 'hard hp'); eq(hard[0].atk, Math.floor(base[0].atk * 1.25), 'hard atk');
+    eq(easy[0].maxHp, Math.floor(base[0].maxHp * 0.85), 'easy hp');
+    ok(rnFoeScale(base, 'กลาง') === base && rnFoeScale(base, null) === base, 'normal / boss untouched');
+    eq(base[0].maxHp, buildTeam(ents, cm)[0].maxHp, 'input not mutated');
+    if (sumId) { const k0 = base[1].skills.find(k => k.unit), k1 = hard[1].skills.find(k => k.unit); ok(k0 && k1 && k1.unit.maxHp === Math.floor(k0.unit.maxHp * 1.25), 'summon scaled'); }
+    const foe = [{ id: commonId, level: 1, row: 0, lane: 0 }];
+    const res = simulate(buildTeam(foe, cm), rnFoeScale(buildTeam(foe, cm), 'ยาก'), {});
+    const x = replayEntry(3, foe, foe, res, [], 0, 'ยาก'); eq(x.d, 'ยาก', 'replay keeps difficulty'); ok(checkReplay(x, cm, RULES), 'replay with d valid');
+    ok(!checkReplay({ ...x, d: 'xx' }, cm, RULES), 'bad d rejected');
+    eq(replayEntry(5, foe, { boss: 'B1', k: 1 }, res, [], 0, 'ยาก').d, undefined, 'boss replay has no d');
   }],
   ['set 94: rune rolls use their own random stream (unit shop rolls unchanged)', () => {
     const A = fresh(15), B = fresh(15);
-    B.gold = 999; for (let k = 0; k < 6; k++) rnReroll(B);
+    for (let k = 0; k < 6; k++) rnMakeOffer(B, 'ยาก');
     startRound(A, chars); startRound(B, chars);
     eq(JSON.stringify(B.shop), JSON.stringify(A.shop), 'unit shop same');
   }],
@@ -119,9 +124,9 @@ export const TESTS_RUNRUN = [
     eq(bad(X => { X.rn.bag.T1 = 9; }), 'bad', 'over max copies');
     eq(bad(X => { X.rn.bag.ZZ9 = 1; }), 'bad', 'unknown rune');
     eq(bad(X => { X.rn.at.T4 = [0, 0]; }), 'bad', 'slot for a rune not held');
-    eq(bad(X => { X.rn.shop.push({ id: null, locked: false }); }), 'bad', 'rune shop size');
+    eq(bad(X => { X.rn.shop = []; }), 'bad', 'old rune shop field');
     eq(bad(X => { X.rn.evil = 1; }), 'bad', 'extra field');
-    eq(bad(X => { X.v = 3; delete X.rn; }), 'data', 'old v3 save → game updated');
+    eq(bad(X => { X.v = 4; }), 'data', 'old v4 save → game updated');
   }],
   ['set 94: difficulty pick = bot team of that tier from the same cell · same seed → same team', () => {
     for (const tier of ['ง่าย', 'กลาง', 'ยาก']) {

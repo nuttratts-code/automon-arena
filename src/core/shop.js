@@ -1,5 +1,5 @@
 import { makeRng } from './rng.js';
-import { newRunes, rnFx, rnInterest, rnPermMul, rnRefill } from './runrunes.js';
+import { newRunes, rnFx, rnInterest, rnPermMul } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
 // ร้านค้าและรวมร่าง (shop-merge-rules) · ใช้ร่วมกันระหว่างผู้เล่น บอท และห้องบาลานซ์
 // - สถานะเป็นข้อมูลล้วน (ไม่มีฟังก์ชัน) เซฟเป็น JSON ได้ · เลขสุ่มเก็บในสถานะ ใส่เมล็ดเดิมได้ผลเดิม
@@ -16,7 +16,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 4, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 5, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -213,7 +213,6 @@ export function startRound(st, chars, rules = RULES) {
   const lv = shopLvOf(st, rules);
   if (lv > lvBefore && st.round > 1) msgs.push(`ร้านขึ้นเป็นระดับ ${lv} (ขึ้นเองตามรอบ)`);
   refill(st, chars, rules);
-  rnRefill(st);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'shopStart', chars, rules, msgs);
   return done(msgs);
 }

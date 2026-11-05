@@ -1,9 +1,9 @@
 // Phase 2b — runes inside the normal run (set 94 · user 5 Nov 2026, claude/review-2026-11-05-set94-2b.md)
 // - every normal-round WIN offers 1 free rune out of a fixed rarity mix per difficulty (ง่าย/กลาง/ยาก) · boss win = offBoss* mix
-// - own rune shop (rsSlots cards, fixed rarity odds wCommon/wRare/wLegend, price by rarity, lock, reroll) · same gold as the unit shop
+// - set 95 (user 5 Nov): rune shop REMOVED (runes come only from win offers) · difficulty = enemy team hp/atk × diffEasy/diffNorm/diffHard %
 // - every held rune is active (Q4 A) · a rune with scope "ตัวเดียว" works on the board slot it is placed on · link/buddy also need a partner slot
 // - run-only runes (gold, interest, shop slots, free reroll, heart trade, lure, fast merge, shadow, perm up, scout) are read by core/shop.js + the game page
-// - copies per run (rune.max) cap both offers and the shop
+// - copies per run (rune.max) cap the offers
 // State lives in st.rn (pure data, saved with the run) · randomness = the run seed (draw) · every number comes from the stage config.
 import { RUN_STAGE } from './runboss.js';
 import { RUNE_RARITY, RUNE_SPEC, runeActive } from './stage.js';
@@ -15,14 +15,13 @@ export const RN_TIERS = ['ง่าย', 'กลาง', 'ยาก']; // = BOT_
 export const RN_OFFER_KEY = { 'ง่าย': 'Easy', 'กลาง': 'Norm', 'ยาก': 'Hard', boss: 'Boss' };
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
-const RN_PRICE_KEY = { common: 'rsCommon', rare: 'rsRare', legend: 'rsLegend' };
+export const RN_DIFF_KEY = { 'ง่าย': 'diffEasy', 'กลาง': 'diffNorm', 'ยาก': 'diffHard' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
 
 // own random stream (st.rn.n) so rune rolls never shift the unit shop's rolls
 function rnDraw(st) { return makeRng((st.seed ^ 0x52554E45 ^ Math.imul(++st.rn.n, 0x85EBCA77)) >>> 0).next(); }
-export function newRunes(stage = RUN_STAGE) {
-  const n = Math.max(1, stage.settings.rsSlots | 0 || 3);
-  return { n: 0, bag: {}, at: {}, pt: {}, shop: Array.from({ length: n }, () => ({ id: null, locked: false })), offer: null, free: 0, traded: false, shadow: 0 };
+export function newRunes() {
+  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, shadow: 0 };
 }
 // rune record with its id · null = unknown / switched off / deleted
 export function rnRec(id, stage = RUN_STAGE) {
@@ -34,7 +33,6 @@ export function rnAll(stage = RUN_STAGE) {
   return [...Object.keys(stage.runes || {}), ...(stage.custom || []).map(c => c.id)].map(id => rnRec(id, stage)).filter(Boolean);
 }
 export const rnHeld = (st, id) => (st.rn && st.rn.bag[id]) | 0;
-export const rnPrice = (r, stage = RUN_STAGE) => stage.settings[RN_PRICE_KEY[r.rarity]] | 0;
 const rnSpecNum = (r, q) => (typeof r[q] === 'number' ? r[q] : ((RUNE_SPEC[r.eff] && RUNE_SPEC[r.eff].f.find(f => f[0] === q)) || [, , 0])[2]);
 export const rnNeedsSlot = r => !!r && r.scope === 'one';
 export const rnNeedsPartner = r => !!r && (r.eff === 'link' || r.eff === 'buddy');
@@ -44,14 +42,6 @@ function rnPool(st, rarity, stage, skip) {
   return rnAll(stage).filter(r => (!rarity || r.rarity === rarity) && rnHeld(st, r.id) < (r.max || 1) && !skip.has(r.id));
 }
 function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) * list.length)] : null; }
-function rnRollRarity(st, stage) {
-  const S = stage.settings, w = { common: S.wCommon | 0, rare: S.wRare | 0, legend: S.wLegend | 0 };
-  const sum = w.common + w.rare + w.legend;
-  if (sum <= 0) return null;
-  let x = rnDraw(st) * sum;
-  for (const k of RN_RARS) { x -= w[k]; if (x < 0) return k; }
-  return 'legend';
-}
 
 // ---------- reward after a win (offer: pick 1 of N) ----------
 // kind = 'ง่าย' | 'กลาง' | 'ยาก' | 'boss' · a rarity with nothing left is filled from any rarity · nothing at all = no offer
@@ -78,42 +68,15 @@ export function rnTakeOffer(st, i, stage = RUN_STAGE) {
 export function rnSkipOffer(st) { if (st.rn) st.rn.offer = null; return done(); }
 function rnAdd(st, r) { st.rn.bag[r.id] = rnHeld(st, r.id) + 1; }
 
-// ---------- rune shop ----------
-function rnRollShop(st, stage, skip) {
-  const rar = rnRollRarity(st, stage);
-  const r = (rar && rnPickFrom(st, rnPool(st, rar, stage, skip))) || rnPickFrom(st, rnPool(st, null, stage, skip));
-  return r ? r.id : null;
-}
-export function rnRefill(st, stage = RUN_STAGE) {
-  if (!st.rn) return;
-  const n = Math.max(1, stage.settings.rsSlots | 0 || 3);
-  while (st.rn.shop.length < n) st.rn.shop.push({ id: null, locked: false });
-  if (st.rn.shop.length > n) st.rn.shop.length = n;
-  const skip = new Set(st.rn.shop.filter(s => s.locked && s.id).map(s => s.id));
-  for (const s of st.rn.shop) if (!s.locked || !s.id) { s.id = rnRollShop(st, stage, skip); s.locked = false; if (s.id) skip.add(s.id); }
-}
-export function rnBuy(st, i, stage = RUN_STAGE) {
-  if (st.over || !st.rn) return fail('run จบแล้ว');
-  if (!Number.isInteger(i) || i < 0 || i >= st.rn.shop.length) return fail('ช่องร้านรูนไม่ถูกต้อง');
-  const s = st.rn.shop[i], r = rnRec(s.id, stage);
-  if (!r) return fail('ช่องนี้ว่าง');
-  if (rnHeld(st, r.id) >= (r.max || 1)) return fail(`รูน ${r.name} มีครบ ${r.max || 1} อันแล้ว`);
-  const price = rnPrice(r, stage);
-  if (st.gold < price) return fail(`เงินไม่พอ (ต้องใช้ ${price})`);
-  st.gold -= price; rnAdd(st, r); s.id = null; s.locked = false;
-  return done([`ซื้อรูน ${r.name} −${price}`]);
-}
-export function rnReroll(st, stage = RUN_STAGE) {
-  if (st.over || !st.rn) return fail('run จบแล้ว');
-  const cost = stage.settings.rsReroll | 0;
-  if (st.gold < cost) return fail(`เงินไม่พอ (รีโรลร้านรูนใช้ ${cost})`);
-  st.gold -= cost; rnRefill(st, stage);
-  return done();
-}
-export function rnLock(st, i) {
-  if (!st.rn || !Number.isInteger(i) || i < 0 || i >= st.rn.shop.length || !st.rn.shop[i].id) return fail('ล็อกช่องว่างไม่ได้');
-  st.rn.shop[i].locked = !st.rn.shop[i].locked;
-  return done();
+// ---------- difficulty (set 95, user A) ----------
+// enemy % for a picked difficulty (100 = as the bot team is) · boss rounds are never scaled
+export const rnDiffPct = (tier, stage = RUN_STAGE) => (RN_DIFF_KEY[tier] ? stage.settings[RN_DIFF_KEY[tier]] ?? 100 : 100);
+// enemy units (buildTeam output) with max hp and atk × pct/100 (rounded down, hp ≥ 1) · summons scale the same way
+export function rnFoeScale(units, tier, stage = RUN_STAGE) {
+  const p = rnDiffPct(tier, stage);
+  if (p === 100) return units;
+  const sc = u => ({ ...u, maxHp: Math.max(1, Math.floor(u.maxHp * p / 100)), atk: Math.floor(u.atk * p / 100), skills: (u.skills || []).map(k => (k && k.unit ? { ...k, unit: sc(k.unit) } : k)) });
+  return units.map(sc);
 }
 
 // ---------- place a "one" rune on a board slot / pick the partner ----------
@@ -204,7 +167,7 @@ export function rnCompactOk(list, rules) {
 // ---------- save check (st.rn) ----------
 export function rnValidate(rn, rules, stage = RUN_STAGE) {
   const errors = [], isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
-  const KEYS = ['n', 'bag', 'at', 'pt', 'shop', 'offer', 'free', 'traded', 'shadow'];
+  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'shadow'];
   if (!isObj(rn) || !Object.keys(rn).every(k => KEYS.includes(k)) || !KEYS.every(k => k in rn)) return ['รูน: ผิดรูปแบบ'];
   if (!isObj(rn.bag) || Object.keys(rn.bag).length > RN_MAX_HELD) errors.push('รูน: กระเป๋าผิด');
   else for (const [id, n] of Object.entries(rn.bag)) { const r = rnRec(id, stage); if (!r || !Number.isInteger(n) || n < 1 || n > (r.max || 1)) errors.push(`รูน ${id}: ผิด`); }
@@ -212,8 +175,6 @@ export function rnValidate(rn, rules, stage = RUN_STAGE) {
     if (!isObj(rn[k])) { errors.push('รูน: ช่องวางผิด'); continue; }
     for (const [id, s] of Object.entries(rn[k])) if (!isObj(rn.bag) || !rn.bag[id] || !rnSlotOk(s, rules)) errors.push(`รูน ${id}: ช่องวางผิด`);
   }
-  const n = Math.max(1, stage.settings.rsSlots | 0 || 3);
-  if (!Array.isArray(rn.shop) || rn.shop.length !== n || !rn.shop.every(s => isObj(s) && Object.keys(s).every(k => k === 'id' || k === 'locked') && typeof s.locked === 'boolean' && (s.id === null || !!rnRec(s.id, stage)))) errors.push('ร้านรูนผิด');
   if (rn.offer !== null && !(isObj(rn.offer) && Object.keys(rn.offer).every(k => k === 'kind' || k === 'ids') && RN_OFFER_KEY[rn.offer.kind]
     && Array.isArray(rn.offer.ids) && rn.offer.ids.length >= 1 && rn.offer.ids.length <= 15 && rn.offer.ids.every(id => !!rnRec(id, stage)))) errors.push('รูนรางวัลผิด');
   if (!Number.isInteger(rn.n) || rn.n < 0 || rn.n > 1e9) errors.push('รูน: ตัวนับสุ่มผิด');

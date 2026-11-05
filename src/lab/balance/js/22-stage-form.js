@@ -154,7 +154,6 @@ function renderStageRunes(box) {
   addM.append(pop);
   bar.append(q, th, grp, addM); box.append(bar);
   const list = el('div', 'rune-list', ''); box.append(list);
-  const odds = (boss) => rarityOdds(stageCfg.settings, boss);
   function drawList() {
     list.replaceChildren();
     const qq = runeQuery.trim().toLowerCase();
@@ -168,7 +167,6 @@ function renderStageRunes(box) {
       const sec = document.createElement('details'); sec.className = 'rune-sec'; sec.open = true;
       const sum = document.createElement('summary');
       sum.append(byTheme ? el('span', 'pill rune-theme', rt) : el('span', `rar ${RUNE_RAR_CLASS[rk]}`, rt), el('span', 'sec-n', `${items.length} รูน · ใช้ ${items.filter(([, x]) => x.on).length}`));
-      if (!byTheme) sum.append(el('span', 'sec-odds', `โอกาสขึ้นในร้านรูน ${fmt(odds(false)[rk])}%`));
       sec.append(sum);
       for (const [d, x, custom] of items) {
         const id = x.id || d.id, scope = x.scope, open = runeOpen.has(id);
