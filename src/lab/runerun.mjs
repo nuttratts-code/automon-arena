@@ -23,6 +23,7 @@ const argv = process.argv.slice(2), WRITE = argv.includes('--write');
 const args = argv.filter(a => !a.startsWith('--'));
 const runs = +args[0] || 600, DIFF = args[1] || 'กลาง', RUNES = DIFF !== 'off';
 const T1 = +(args[2] || 75), T2 = +(args[3] || 62), T3 = +(args[4] || 50);
+if (process.env.DIFFPCT && RUNES) RUN_STAGE.settings[{ 'ง่าย': 'diffEasy', 'กลาง': 'diffNorm', 'ยาก': 'diffHard' }[DIFF]] = +process.env.DIFFPCT; // try a % without editing the stage
 const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
 const RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
@@ -82,9 +83,9 @@ if (WRITE) {
   const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),
     phases: b.phases.map(p => ({ ...p, stats: typeof p.stats?.atk === 'number' ? { ...p.stats, atk: Math.max(1, Math.round(p.stats.atk * s)) } : p.stats })) });
   const winPct = (b, k, list) => { let w = 0; for (const t of list) w += simulate(t.units, runBossTeam(b, k), t.opts).winner !== 1 ? 1 : 0; return w / list.length * 100; };
-  const search = (lo, hi, f, target, up) => { for (let i = 0; i < 14; i++) { const m = (lo + hi) / 2; (up ? f(m) > target : f(m) < target) ? (up ? lo = m : hi = m) : (up ? hi = m : lo = m); } return (lo + hi) / 2; };
+  const search = (lo, hi, f, target, up) => { for (let i = 0; i < 10; i++) { const m = (lo + hi) / 2; (up ? f(m) > target : f(m) < target) ? (up ? lo = m : hi = m) : (up ? hi = m : lo = m); } return (lo + hi) / 2; };
   const S = RUN_STAGE.settings, K3 = (S.bossesPerRun | 0) >= 3;
-  const res = RUN_STAGE.bosses.map(b0 => {
+  const res = RUN_STAGE.bosses.filter(x => x.on).map(b0 => {
     const s = search(0.3, 4, x => winPct(scale(b0, x), 1, teams[1]), T1, true);
     let b = scale(b0, s);
     const m10 = search(1, 6, x => winPct({ ...b, mult10: x }, 2, teams[2]), T2, true);
@@ -93,6 +94,16 @@ if (WRITE) {
     console.log(`${b0.id}: s ${s.toFixed(2)} hp ${b0.hp}→${b.hp} atk ${b0.atk}→${b.atk} mult10 ${b0.mult10}→${b.mult10}${K3 ? ` endless ${b0.endlessPct}→${b.endlessPct}` : ''} · k1 ${winPct(b, 1, teams[1]).toFixed(1)} k2 ${winPct(b, 2, teams[2]).toFixed(1)}${K3 ? ` k3 ${winPct(b, 3, teams[3]).toFixed(1)}` : ''}`);
     return b;
   });
-  console.log('write: reuse lab/bossrun.mjs write code after review', res.length);
+  // same writer as lab/bossrun.mjs
+  const f = new URL('../core/stage-user.js', import.meta.url);
+  let src = readFileSync(f, 'utf8');
+  for (const nb of res) {
+    const m = src.match(new RegExp(`(\\{[^\\n]*id: '${nb.id}'[^\\n]*\\},?)\\n`)); if (!m) { console.log('not found', nb.id); continue; }
+    let line = m[1].replace(/ atk: \d+(\.\d+)?, bars:/, ` atk: ${nb.atk}, bars:`).replace(/ hp: \d+, id:/, ` hp: ${nb.hp}, id:`).replace(/mult10: [\d.]+/, `mult10: ${nb.mult10}`).replace(/endlessPct: -?\d+/, `endlessPct: ${nb.endlessPct}`);
+    let i = 0; line = line.replace(/stats: \{ atk: \d+ \}/g, () => { while (i < nb.phases.length && typeof nb.phases[i].stats?.atk !== 'number') i++; return `stats: { atk: ${nb.phases[i++].stats.atk} }`; });
+    src = src.replace(m[1], line);
+  }
+  writeFileSync(f, src);
+  console.log('core/stage-user.js written');
 }
 if (process.env.GOLD) console.log('gold per round start avg', JSON.stringify(goldLog.map(a => a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : 0)));
