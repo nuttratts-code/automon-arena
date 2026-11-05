@@ -81,11 +81,13 @@ export const RULES = {
   // ร้านค้า (shop-merge-rules) · ราคาตัวละครอยู่ที่ตัวละครแต่ละตัว
   shop: {
     startGold: 25, goldPerRound: 25, winBonus: 2,   // เอกสาร (ชุด 83: ผู้ใช้เลือก 25/25)
-    slots: 5, rerollCost: 1, bench: 6,              // เอกสาร
+    slots: 5, rerollCost: 2, bench: 6,              // เอกสาร (set 89: reroll 1 → 2)
     hearts: 10, winsToFinish: 10,                   // เอกสาร
-    // set 88 (user 5 Nov, claude/review-2026-11-05-shop.md): shop level replaces the win unlock · 15 levels, start at 1
-    // upgrade to level n costs levelCostStep × (n − 1) → 2, 4 … 28 · odds per level (% , used as weights) (ค่าเสนอ · user accepted the table)
-    levels: 15, levelCostStep: 2,                  // levels = levelOdds length (locked)
+    // set 88: 15 shop levels, odds per level (% , used as weights) (ค่าเสนอ · user accepted the table)
+    // set 89 (user 5 Nov, claude/review-2026-11-05-set89-spec.md): no upgrade — level follows the round played (win or lose)
+    // roundLevels[i] = shop level in round i + 1 · rounds past the table keep the last entry · default round n = level n
+    levels: 15,                                    // levels = levelOdds length (locked)
+    roundLevels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     levelOdds: [
       { 'ธรรมดา': 90, 'ไม่ธรรมดา': 10, 'หายาก': 0, 'หายากมาก': 0, 'ตำนาน': 0 }, // Lv1
       { 'ธรรมดา': 80, 'ไม่ธรรมดา': 18, 'หายาก': 2, 'หายากมาก': 0, 'ตำนาน': 0 }, // Lv2
@@ -103,8 +105,7 @@ export const RULES = {
       { 'ธรรมดา': 2, 'ไม่ธรรมดา': 3, 'หายาก': 7, 'หายากมาก': 33, 'ตำนาน': 55 }, // Lv14
       { 'ธรรมดา': 1, 'ไม่ธรรมดา': 3, 'หายาก': 6, 'หายากมาก': 20, 'ตำนาน': 70 }, // Lv15
     ],
-    interestPer: 5, interestCap: 0,                 // set 88: start of each round +1 per 5 gold held · 0 = no cap (user: try uncapped)
-    streakFrom: 3, streakBonus: 10,                 // set 88: 3rd+ win in a row = +10 instead of winBonus · 3rd+ loss in a row = +10 · tie = win
+    // set 89: interest and win/lose streak bonus removed (user) · unspent gold carries over
     prices: { 'ธรรมดา': 3, 'ไม่ธรรมดา': 4, 'หายาก': 5, 'หายากมาก': 6, 'ตำนาน': 8 },   // ราคาตามความหายาก (ตัวตรวจค่าเช็กให้ตรงกัน)
     mergeCount: 3,                                  // เอกสาร
   },
@@ -117,7 +118,7 @@ export const RULES = {
 // The user's confirmed edits live in core/rules-user.js (RULES_USER) and are merged into RULES right below.
 export const RULE_GROUPS = [
   ['storm', 'พายุทราย'], ['burn', 'ไฟ'], ['fight', 'การสู้ทั่วไป'], ['boss', 'จังหวะกฎบอส'],
-  ['shop', 'ร้านค้าและ run'], ['shopOdds', 'โอกาสเจอแต่ละความหายากตามระดับร้าน (% · ระดับเดียวกันรวมไม่ถึง 100 ก็ได้ คิดเป็นสัดส่วน)'], ['power', 'งบค่าพลัง (ใช้แสดงผลและเช็กงบเท่านั้น)'], ['lock', 'ล็อกไว้ (ไม่ควรปรับ)'],
+  ['shop', 'ร้านค้าและ run'], ['shopLv', 'ระดับร้านตามรอบ (ร้านขึ้นเองทุกรอบที่เล่น แพ้หรือชนะก็นับ)'], ['shopOdds', 'โอกาสเจอแต่ละความหายากตามระดับร้าน (% · ระดับเดียวกันรวมไม่ถึง 100 ก็ได้ คิดเป็นสัดส่วน)'], ['power', 'งบค่าพลัง (ใช้แสดงผลและเช็กงบเท่านั้น)'], ['lock', 'ล็อกไว้ (ไม่ควรปรับ)'],
 ];
 const SEC = { scale: 1000, step: 0.1 };
 const RAR_RULES = (key, label, lo, hi, unit, group, opts = {}) => RARITIES.map(r => [`${key}.${r}`, `${label} ${r}`, lo, hi, unit, group, opts]);
@@ -146,11 +147,7 @@ export const RULE_SPEC = [
   ['shop.hearts', 'หัวใจตอนเริ่ม', 1, 50, 'ดวง', 'shop', { int: true }],
   ['shop.winsToFinish', 'ชนะกี่ครั้งถึงจบ run', 1, 50, 'ครั้ง', 'shop', { int: true }],
   ...RAR_RULES('shop.prices', 'ราคา', 1, 30, 'เงิน', 'shop', { int: true }),
-  ['shop.levelCostStep', 'ค่าอัปเกรดร้าน (ขึ้นระดับ n ใช้ ค่านี้ × (n − 1))', 0, 20, 'เงิน', 'shop', { int: true }],
-  ['shop.interestPer', 'ดอกเบี้ย: ได้ +1 ต่อเงินที่มีทุกกี่เงิน', 1, 100, 'เงิน', 'shop', { int: true }],
-  ['shop.interestCap', 'ดอกเบี้ยสูงสุดต่อรอบ (0 = ไม่มีเพดาน)', 0, 100, 'เงิน', 'shop', { int: true }],
-  ['shop.streakFrom', 'ชนะติด/แพ้ติด เริ่มได้โบนัสตั้งแต่ครั้งที่', 1, 10, 'ครั้ง', 'shop', { int: true }],
-  ['shop.streakBonus', 'โบนัสชนะติด/แพ้ติด (ชนะติดใช้แทนโบนัสชนะปกติ)', 0, 50, 'เงิน', 'shop', { int: true }],
+  ...RULES.shop.roundLevels.map((_, i) => [`shop.roundLevels.${i}`, `รอบ ${i + 1}${i === RULES.shop.roundLevels.length - 1 ? ' ขึ้นไป' : ''} ระดับร้าน`, 1, RULES.shop.levelOdds.length, 'ระดับ', 'shopLv', { int: true }]),
   ...RULES.shop.levelOdds.flatMap((_, i) => RAR_RULES(`shop.levelOdds.${i}`, `ร้าน Lv${i + 1} โอกาสเจอ`, 0, 100, '%', 'shopOdds', { int: true })),
   ...RAR_RULES('power.budget', 'งบแต้ม', 1, 1000, 'แต้ม', 'power'),
   ['power.burnStack', 'ไฟ 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],

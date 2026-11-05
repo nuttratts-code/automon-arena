@@ -264,10 +264,9 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 
   <div id="prep" style="display:grid;gap:12px">
     <section class="panel">
-      <div class="row"><h2 class="grow">ร้านค้า <span class="stat" id="shopLv">ร้าน Lv 1</span></h2><button id="upShop" type="button">อัปเกรดร้าน</button><button id="reroll" type="button">รีโรล −1</button></div>
+      <div class="row"><h2 class="grow">ร้านค้า <span class="stat" id="shopLv">ร้าน Lv 1</span></h2><button id="reroll" type="button">รีโรล −1</button></div>
       <p class="hint odds" id="shopOdds"></p>
       <div class="shop" id="shop"></div>
-      <p class="hint" id="shopIncome"></p>
       <p class="hint">แตะตัวในร้านแล้วแตะช่องว่างเพื่อซื้อลงช่องนั้น หรือกด "ซื้อ" ในแผงด้านล่าง (ลงม้านั่ง) · ลากก็ได้</p>
     </section>
 
@@ -446,18 +445,12 @@ function renderChips() {
   $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('sGold').textContent = `เงิน ${P.gold}`;
 }
-// set 88: shop level, its odds, next level cost, and the income the next round will pay (interest + streak)
+// set 89: shop level follows the round (no upgrade) · chip shows the level now and the next round's
 function renderShopLevel() {
-  const lv = P.shopLv, cost = upgradeCost(lv), odds = oddsAt(lv);
-  $('shopLv').textContent = `ร้าน Lv ${lv}/${shopLevels()}`;
-  $('upShop').textContent = cost == null ? 'ร้านระดับสูงสุด' : `อัปเกรดร้าน → Lv ${lv + 1} −${cost}`;
-  $('upShop').disabled = cost == null || P.gold < cost || P.over;
+  const lv = shopLvOf(P), odds = oddsAt(lv), nx = lvForRound(P.round + 1);
+  $('shopLv').textContent = `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` · รอบหน้า Lv ${nx}` : ''}`;
   const box = $('shopOdds'); box.replaceChildren(el('span', '', 'โอกาสเจอ:'));
   for (const r of Object.keys(odds)) if (odds[r] > 0) box.append(el('span', 'rar ' + RARITY_CLASS[r], `${r} ${odds[r]}%`));
-  const interest = interestOf(P.gold); // what a win / a loss after this round would pay
-  const ifWin = P.wStreak + 1 >= S.streakFrom ? S.streakBonus : S.winBonus, ifLose = P.lStreak + 1 >= S.streakFrom ? S.streakBonus : 0;
-  $('shopIncome').textContent = `ดอกเบี้ย: เงินที่เหลือตอนจบร้าน ทุก ${S.interestPer} ได้ +1${S.interestCap > 0 ? ` (สูงสุด ${S.interestCap})` : ''} · ตอนนี้ ${P.gold} → รอบหน้า +${interest}`
-    + ` · ชนะรอบนี้ +${ifWin}${P.wStreak + 1 >= S.streakFrom ? ` (ชนะติด ${P.wStreak + 1})` : ''} · แพ้ +${ifLose}${ifLose ? ` (แพ้ติด ${P.lStreak + 1})` : ''}`;
 }
 function render() {
   renderChips();
@@ -659,7 +652,6 @@ document.addEventListener('keydown', e => {
 });
 
 $('reroll').addEventListener('click', () => { pushMsgs(reroll(P, chars)); render(); });
-$('upShop').addEventListener('click', () => { pushMsgs(upgradeShop(P)); render(); });
 $('newRun').addEventListener('click', () => {
   if ($('newRun').dataset.confirm !== '1' && !P.over) { $('newRun').dataset.confirm = '1'; $('newRun').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; }, 3000); return; }
   $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
@@ -689,7 +681,7 @@ $('fight').addEventListener('click', () => {
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
   const r = endMatch(P, won, chars, RULES, gain(0));
-  if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
+  if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
   addMatchStats(stats, result);
   replays.push(replayEntry(round, teamA, teamB, result)); saveReplays(); // ชุด 25
   logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null }));
@@ -883,7 +875,7 @@ function boot() {
   const r = readSave(store.get(SAVE_KEY), CM, RULES, DATA_HASH);
   if (r.status === 'ok') {
     const o = r.save;
-    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่) · ร้าน Lv ${o.P.shopLv}`;
+    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่) · ร้าน Lv ${lvForRound(o.P.round + 1)}`;
     $('resumeGo').onclick = () => {
       P = o.P; B = o.B; stats = o.stats; startedAt = o.startedAt; sel = null; msgs = []; showNotice('');
       const rp = readReplays(store.get(REPLAY_KEY), CM, RULES, DATA_HASH, P.seed); // ชุด 25: รีเพลย์ของ run นี้เท่านั้น

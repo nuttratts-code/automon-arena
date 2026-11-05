@@ -1,5 +1,5 @@
 import { simulate } from './battle.js';
-import { BOT_LV_MIX, botShop } from './bot.js';
+import { botShop } from './bot.js';
 import { makeRng } from './rng.js';
 import { RULES } from './rules.js';
 import { endMatch, newRun, startRound, teamEntries } from './shop.js';
@@ -32,13 +32,12 @@ export function spanOf(losses) {
 // opponent(P, B, round) → entries ของคู่แข่ง หรือ null = ใช้บอทซื้อสด B · onMatch(info) เรียกทุกแมตช์
 // stage = boss settings (default = the game's; the Balance Room passes the stage it is editing) · info.res = full battle result
 // opts.focus / opts.foeFocus (set 87) = tribe the player bot / spare bot B leans toward (core/bot.js teamStrength) · none = plain bot
-// opts.ai (set 88) = player bot habits overriding BOT_AI (shop-level pace)
 export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE, opts = {}) {
   const cm = makeCharMap(chars);
   const P = newRun(chars, seed >>> 0, rules), B = newRun(chars, ((seed ^ 0xA5A5A5A5) >>> 0), rules);
   for (let guard = 0; guard < 40 && !P.over; guard++) {
     startRound(P, chars, rules); startRound(B, chars, rules);
-    botShop(P, chars, rules, { focus: opts.focus || null, ai: opts.ai || null });
+    botShop(P, chars, rules, { focus: opts.focus || null });
     // set 85: boss rounds (core/runboss.js) — same as the game: the boss replaces the bot team, the spare bot B sits out
     const rb = runBossAt(P.round, P.seed, stage);
     const preset = rb ? null : opponent ? opponent(P) : null;
@@ -48,7 +47,7 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts;
     const gain = side => (res.perm || []).filter(g => g.side === side);
     endMatch(P, res.winner !== 1, chars, rules, gain(0));
-    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak; }
+    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; }
     if (onMatch) onMatch({ stage: wins, round, gold, hearts, team: mine, foe: theirs, res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0 });
   }
   return P;
@@ -71,11 +70,10 @@ export function gatherBotPool(chars, rules = RULES, opt = {}) {
   for (let r = 0; r < g.runs; r++) {
     // set 87: every run's bot leans toward one tribe in turn (and its sparring bot toward another) → every tribe gets sample teams
     const focus = tribes[r % tribes.length], foeFocus = tribes[(r + 3) % tribes.length];
-    const ai = BOT_LV_MIX[Math.floor(r / tribes.length) % BOT_LV_MIX.length]; // set 88: shop-level habits rotate too (every tribe meets every habit)
     simRun(chars, rules, (g.seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, null, m => {
       const loss = m.round - 1 - m.stage;
       if (m.team.length && loss >= 0 && loss < L) pool[m.stage][loss].push({ team: m.team, round: m.round, tribe: teamTribe(m.team, cm, focus) });
-    }, RUN_STAGE, { focus, foeFocus, ai });
+    }, RUN_STAGE, { focus, foeFocus });
   }
   return pool;
 }

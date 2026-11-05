@@ -55,6 +55,10 @@ export function validateConfig(chars, rules = RULES) {
       if (!o || typeof o !== 'object' || RARITIES.some(r => !isNum(o[r]) || o[r] < 0)) errors.push(`ร้านค้า: ระดับร้าน ${i + 1} มีโอกาสผิด`);
       else if (!RARITIES.some(r => o[r] > 0)) errors.push(`ร้านค้า: ระดับร้าน ${i + 1} โอกาสรวมเป็น 0`);
     });
+    // set 89: round → shop level table · whole numbers 1…levels
+    const RL = rules.shop.roundLevels;
+    if (!Array.isArray(RL) || !RL.length) errors.push('ร้านค้า: ตารางระดับร้านตามรอบผิด');
+    else RL.forEach((v, i) => { if (!Number.isInteger(v) || v < 1 || v > (Array.isArray(LO) ? LO.length : 0)) errors.push(`ร้านค้า: รอบ ${i + 1} ระดับร้านผิด (ต้องเป็น 1–${Array.isArray(LO) ? LO.length : '?'})`); });
   }
   // แต่ละเผ่าต้องมีอย่างน้อย N ตัวที่ต่างกัน (นับเผ่าเพิ่มด้วย)
   for (const t of TRIBES) {

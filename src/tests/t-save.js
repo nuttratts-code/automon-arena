@@ -227,7 +227,7 @@ export const TESTS_SAVE = [
         if (!(run % 6)) addMatchStats(stats, res);
         const gain = s => (res.perm || []).filter(x => x.side === s);
         endMatch(P, res.winner !== 1, chars, RULES, gain(0));
-        endMatch(B, res.winner === 1, chars, RULES, gain(1)); B.over = false; B.hearts = RULES.shop.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak;
+        endMatch(B, res.winner === 1, chars, RULES, gain(1)); B.over = false; B.hearts = RULES.shop.hearts; B.lastWon = P.lastWon;
       }
       ok(P.over, `run ${run}: run should end`);
       const g0 = P.gold; eq([buy(P, 0, null, chars).ok, reroll(P, chars).ok, P.gold], [false, false, g0], 'ended run: buy/reroll refused');

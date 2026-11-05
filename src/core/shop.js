@@ -15,8 +15,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 2, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false,
-    shopLv: 1, wStreak: 0, lStreak: 0, // set 88: shop level (1–levels) · current win / loss streak (tie = win)
+    v: 3, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -31,23 +30,25 @@ export function draw(st) { // เลขสุ่ม 0–1 จากเมล็�
   return r;
 }
 
-// ---------- set 88: shop level · interest · streak ----------
+// ---------- set 89: shop level follows the round (every round played counts, win or lose) ----------
 export const shopLevels = (rules = RULES) => rules.shop.levelOdds.length;
-// cost to go from level lv to lv + 1 (= step × (new level − 1)) · null = already at the top
-export const upgradeCost = (lv, rules = RULES) => (lv >= shopLevels(rules) ? null : rules.shop.levelCostStep * lv);
+// shop level for a given round: roundLevels[round − 1] (rounds past the table use its last entry), clamped to 1…levels
+export function lvForRound(round, rules = RULES) {
+  const T = rules.shop.roundLevels, r = Math.max(1, round | 0);
+  const v = Array.isArray(T) && T.length ? T[Math.min(r, T.length) - 1] : r;
+  return Math.max(1, Math.min(shopLevels(rules), v | 0 || 1));
+}
+export const shopLvOf = (st, rules = RULES) => lvForRound(st.round, rules);
 export const oddsAt = (lv, rules = RULES) => rules.shop.levelOdds[Math.max(1, Math.min(shopLevels(rules), lv | 0)) - 1];
-export const interestOf = (gold, rules = RULES) => { const S = rules.shop, i = Math.floor(Math.max(0, gold) / S.interestPer); return S.interestCap > 0 ? Math.min(S.interestCap, i) : i; };
-// income the next startRound pays (round 2+): base + interest on gold held now + win bonus or streak bonus
+// income the next startRound pays (round 2+): base + win bonus (no interest, no streaks · set 89)
 export function incomeOf(st, rules = RULES) {
-  const S = rules.shop, interest = interestOf(st.gold, rules);
-  const wS = st.lastWon && st.wStreak >= S.streakFrom, lS = !st.lastWon && st.round > 0 && st.lStreak >= S.streakFrom;
-  const bonus = wS || lS ? S.streakBonus : st.lastWon ? S.winBonus : 0;
-  return { base: S.goldPerRound, interest, bonus, kind: wS ? 'winStreak' : lS ? 'loseStreak' : st.lastWon ? 'win' : 'none', total: S.goldPerRound + interest + bonus };
+  const S = rules.shop, bonus = st.lastWon ? S.winBonus : 0;
+  return { base: S.goldPerRound, bonus, total: S.goldPerRound + bonus };
 }
 
 export function rollChar(st, chars, rules) {
   // โอกาสตามระดับร้าน · ใช้เฉพาะความหายากที่มีตัวละครจริงและโอกาส > 0 (กันช่องร้านว่าง/พัง)
-  const odds = oddsAt(st.shopLv || 1, rules), has = r => chars.some(c => c.rarity === r);
+  const odds = oddsAt(shopLvOf(st, rules), rules), has = r => chars.some(c => c.rarity === r);
   let rars = RARITIES.filter(r => (odds[r] || 0) > 0 && has(r)), w = r => odds[r];
   if (!rars.length) { rars = RARITIES.filter(has); w = () => 1; } // ระดับนี้ไม่มีตัวละครที่สุ่มได้ → ทุกความหายากที่มีตัว เท่ากัน
   if (!rars.length) return null;
@@ -60,16 +61,6 @@ export function rollChar(st, chars, rules) {
 
 export function refill(st, chars, rules) {
   for (const s of st.shop) if (!s.locked || !s.id) { s.id = rollChar(st, chars, rules); s.locked = false; }
-}
-
-// อัปเกรดร้าน (set 88): ไม่สุ่มร้านใหม่ โอกาสใหม่ใช้ตอนรีโรล/รอบถัดไป
-export function upgradeShop(st, rules = RULES) {
-  if (st.over) return fail('run จบแล้ว');
-  const cost = upgradeCost(st.shopLv, rules);
-  if (cost == null) return fail('ร้านระดับสูงสุดแล้ว');
-  if (st.gold < cost) return fail(`เงินไม่พอ (อัปเกรดร้านใช้ ${cost})`);
-  st.gold -= cost; st.shopLv++;
-  return done([`อัปเกรดร้านเป็นระดับ ${st.shopLv} (−${cost}) · โอกาสใหม่ใช้ตอนรีโรลหรือรอบถัดไป`]);
 }
 
 // ---------- ตำแหน่ง ----------
@@ -195,10 +186,12 @@ export function startRound(st, chars, rules = RULES) {
   else {
     const inc = incomeOf(st, rules);
     st.gold += inc.total;
-    const why = { winStreak: `ชนะติด ${st.wStreak} +${inc.bonus}`, loseStreak: `แพ้ติด ${st.lStreak} +${inc.bonus}`, win: `ชนะ +${inc.bonus}`, none: '' }[inc.kind];
-    msgs.push(`รายได้ +${inc.total} (รอบละ ${inc.base}${inc.interest ? ` · ดอกเบี้ย +${inc.interest}` : ''}${why ? ' · ' + why : ''})`);
+    msgs.push(`รายได้ +${inc.total} (รอบละ ${inc.base}${inc.bonus ? ` · ชนะ +${inc.bonus}` : ''})`);
   }
+  const lvBefore = st.round ? shopLvOf(st, rules) : 0;
   st.round++;
+  const lv = shopLvOf(st, rules);
+  if (lv > lvBefore && st.round > 1) msgs.push(`ร้านขึ้นเป็นระดับ ${lv} (ขึ้นเองตามรอบ)`);
   refill(st, chars, rules);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'shopStart', chars, rules, msgs);
   return done(msgs);
@@ -300,7 +293,7 @@ export function endMatch(st, won, chars, rules = RULES, gains = []) {
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchEnd', chars, rules, msgs);
   if (won) for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchWin', chars, rules, msgs);
   st.lastWon = !!won;
-  if (won) { st.wins++; st.wStreak++; st.lStreak = 0; } else { st.hearts--; st.lStreak++; st.wStreak = 0; }
+  if (won) st.wins++; else st.hearts--;
   if (st.wins >= S.winsToFinish || st.hearts <= 0) st.over = true;
   return done(msgs);
 }

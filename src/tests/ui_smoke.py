@@ -20,10 +20,9 @@ with sync_playwright() as p:
         mm=re.search(r'(\d+)\s*/\s*(\d+)', t); chk(mm and mm.group(1)==mm.group(2), 'check page')
         # 2 game: play 12 rounds buying stuff
         pg.goto(f'file://{D}/game.html')
-        # set 88: upgrade shop button (level 1 → 2 costs 2, odds line shows the new level)
-        g0=pg.evaluate('P.gold'); pg.click('#upShop')
-        chk(pg.evaluate('P.shopLv')==2 and pg.evaluate('P.gold')==g0-2 and 'Lv 2' in pg.inner_text('#shopLv') and 'หายาก' in pg.inner_text('#shopOdds'),'upgrade shop')
-        chk('ดอกเบี้ย' in pg.inner_text('#shopIncome'),'income line')
+        # set 89: shop level follows the round (no upgrade button) · reroll costs 2
+        chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and 'รอบหน้า Lv 2' in pg.inner_text('#shopLv') and 'ธรรมดา' in pg.inner_text('#shopOdds'),'shop level chip round 1')
+        chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
         res=[]; maxBoard=0; titles=[]  # set 87: every round's title (the last match can be a boss round)
         for rnd in range(14):
             if pg.evaluate('P.over'): break
@@ -38,6 +37,7 @@ with sync_playwright() as p:
             pg.click('#next')
         print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
         chk(len(res)>=3,'game rounds')
+        if not pg.evaluate('P.over'): chk(('Lv %d/' % min(pg.evaluate('P.round'),15)) in pg.inner_text('#shopLv'),'shop level rose with rounds')
         # ชุด 23: ทีมบอทเตรียมไว้ผ่านตัวตรวจ และหัวแมตช์บอกขั้น/ระดับคู่แข่ง
         chk(pg.evaluate('BOT_OK') and any('คู่แข่ง: ทีมขั้นชนะ' in t for t in titles),'preset bot teams active')
         chk(maxBoard>=3,'units moved from bench to board')

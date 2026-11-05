@@ -6,7 +6,7 @@ import { burnShares } from './battle.js';
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
 // - ตรวจทุกช่องตอนโหลด: ชนิด ช่วงค่า จำนวนเต็ม เวอร์ชัน · ตัวละครมีจริง · ค่าถาวรรู้จักและไม่เกินเพดาน · ประจุ SF-7 · ผิด = ไม่โหลด (ล้างแล้วแจ้ง)
-export const SAVE_VERSION = 2; // set 88: run state v2 (shop level, streaks)
+export const SAVE_VERSION = 3; // set 89: run state v3 (shop level follows the round · no streak / interest fields)
 export const SAVE_MAX_CHARS = 200000;   // เซฟยาวเกินนี้ = ผิดปกติ (ค่าเสนอ)
 export const HISTORY_MAX = 20;          // ประวัติ run เก็บล่าสุด 20 รายการ (ค่าเสนอ)
 
@@ -43,9 +43,9 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shopLv', 'wStreak', 'lStreak', 'shop', 'bench', 'board', 'uid', 'charges'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 2) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 88: v2 = shop level + streaks
+  if (st.v !== 3) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -53,8 +53,6 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svIntIn(st.wins, 0, S.winsToFinish)) errors.push('จำนวนชนะผิด');
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
   if (typeof st.lastWon !== 'boolean' || typeof st.over !== 'boolean') errors.push('ค่าจริง/เท็จผิด');
-  if (!svIntIn(st.shopLv, 1, S.levelOdds.length)) errors.push('ระดับร้านผิด');
-  if (!svIntIn(st.wStreak, 0, 1000) || !svIntIn(st.lStreak, 0, 1000) || (st.wStreak > 0 && !st.lastWon) || (st.lStreak > 0 && st.lastWon)) errors.push('ชนะติด/แพ้ติดผิด');
   if (!svIntIn(st.uid, 1, 1e9)) errors.push('uid ผิด');
   if (!Array.isArray(st.shop) || st.shop.length !== S.slots) errors.push('ร้านผิด');
   else st.shop.forEach((s, i) => {

@@ -82,7 +82,7 @@ export const TESTS_BOTS = [
         botShop(P, chars); botShop(B, chars, RULES);
         for (const s of [P, B]) { ok(s.gold >= 0, 'เงินติดลบ'); const v = validateTeam(teamEntries(s), cm); ok(v.ok, v.errors.join(' · ')); }
         const r = simulate(buildTeam(teamEntries(P), cm), buildTeam(teamEntries(B), cm), { log: false });
-        endMatch(P, r.winner !== 1, chars); endMatch(B, r.winner === 1, chars); B.over = false; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak;
+        endMatch(P, r.winner !== 1, chars); endMatch(B, r.winner === 1, chars); B.over = false; B.lastWon = P.lastWon;
         ok(P.round < 25, 'run ไม่จบ');
       }
       return JSON.stringify(P);
