@@ -20,6 +20,10 @@ with sync_playwright() as p:
         mm=re.search(r'(\d+)\s*/\s*(\d+)', t); chk(mm and mm.group(1)==mm.group(2), 'check page')
         # 2 game: play 12 rounds buying stuff
         pg.goto(f'file://{D}/game.html')
+        # set 88: upgrade shop button (level 1 → 2 costs 2, odds line shows the new level)
+        g0=pg.evaluate('P.gold'); pg.click('#upShop')
+        chk(pg.evaluate('P.shopLv')==2 and pg.evaluate('P.gold')==g0-2 and 'Lv 2' in pg.inner_text('#shopLv') and 'หายาก' in pg.inner_text('#shopOdds'),'upgrade shop')
+        chk('ดอกเบี้ย' in pg.inner_text('#shopIncome'),'income line')
         res=[]; maxBoard=0; titles=[]  # set 87: every round's title (the last match can be a boss round)
         for rnd in range(14):
             if pg.evaluate('P.over'): break
