@@ -405,8 +405,8 @@ with sync_playwright() as p:
         chk(pg.evaluate("[...document.querySelectorAll('#rform .rsec')].filter(s=>!s.hidden).map(s=>s.dataset.g).join()")=='shopOdds','rules chip shows one group')
         pg.fill('#rule-shop-levelOdds-0-ธรรมดา','80'); pg.press('#rule-shop-levelOdds-0-ธรรมดา','Tab')
         rb=pg.evaluate("[RULES.shop.levelOdds[0]['ธรรมดา'], document.querySelector('#rchip-shopOdds .sb').textContent, !document.querySelector('#rule-shop-levelOdds-0-ธรรมดา').nextElementSibling.hidden, document.querySelector('#rform .rsum').textContent]")
-        chk(rb[0]==80 and rb[1]=='1' and rb[2] and rb[3].startswith('90'),'rules odds edit: value + badge + was + total '+str(rb))
-        pg.click('#rsec-shopOdds .rreset'); chk(pg.evaluate("Object.keys(ruleEdits).length===0 && RULES.shop.levelOdds[0]['ธรรมดา']===90"),'rules group reset')
+        chk(rb[0]==80 and rb[1]=='1' and rb[2] and rb[3].startswith(str(80+pg.evaluate("RARITIES.slice(1).reduce((s,r)=>s+(RULES.shop.levelOdds[0][r]||0),0)"))),'rules odds edit: value + badge + was + total '+str(rb))
+        pg.click('#rsec-shopOdds .rreset'); chk(pg.evaluate("Object.keys(ruleEdits).length===0 && RULES.shop.levelOdds[0]['ธรรมดา']===RULES_BASE.shop.levelOdds[0]['ธรรมดา']"),'rules group reset')
         pg.fill('#ruleFind','ราคา'); chk(pg.evaluate("[...document.querySelectorAll('#rform .rsec')].filter(s=>!s.hidden).map(s=>s.dataset.g).join()")=='shop','rules search')
         pg.fill('#ruleFind',''); pg.click('#rchip-all'); pg.evaluate("document.getElementById('tab-sim').click()")
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
