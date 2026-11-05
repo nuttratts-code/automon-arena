@@ -79,23 +79,23 @@ export const TESTS_COMBAT = [
     eq(simulate([], []).winner, null, 'ว่างทั้งคู่');
   }],
   ['set 98: ช่วงต่อเวลา (แทนพายุทราย) · สแตกทุกช่วง · ดาเมจ + · ตีเร็วขึ้น · ฟื้น/เกราะใหม่ − · เพดาน · ไม่มีดาเมจพายุ', () => {
-    const R = { ...NT, stormStartMs: 20000, stormIntervalMs: 1000, stormDmgPct: 10, stormSpeedPct: 10, stormHealCutPct: 10, stormArmorCutPct: 10, stormMaxPct: 100 };
+    const R = { ...NT, stormStartMs: 20000, stormIntervalMs: 1000, stormStepMs: 5000, stormPct1: 10, stormPct2: 50, stormPct3: 100 };
     const A = mk('A', { atk: L3(10), cdMs: 1000, hp: L3(100000), skills: [{ when: 'hit', do: 'armorHitUp', to: 'self', v: L3(0) }, { when: 'hit', do: 'heal', to: 'self', v: L3(5) }] });
     const r = fight([A], [u('A')], [u('A')], { rules: R });
     eq(ev(r, 'dmg', e => e.why === 'storm').length, 0, 'ไม่มีดาเมจพายุแล้ว');
     const ot = ev(r, 'overtime');
     eq(ot.slice(0, 2).map(e => [e.t, e.n, e.dmg, e.speed, e.heal, e.armor]), [[21000, 1, 10, 10, 10, 10], [22000, 2, 20, 20, 20, 20]], 'สแตก 1–2');
-    eq([ot.length, ot[ot.length - 1].n, ot[ot.length - 1].dmg], [10, 10, 100], 'หยุดเพิ่มที่เพดาน 100%');
+    eq(ot.slice(0, 12).map(e => [e.n, e.dmg, e.heal]), [[1, 10, 10], [2, 20, 20], [3, 30, 30], [4, 40, 40], [5, 50, 50], [6, 100, 100], [7, 150, 100], [8, 200, 100], [9, 250, 100], [10, 300, 100], [11, 400, 100], [12, 500, 100]], 'ช่วงละ 5 วิ: +10 → +50 → +100 ไม่มีเพดาน · ส่วนลดหยุดที่ 100%');
     const hits = ev(r, 'dmg', e => e.why === 'hit');
     eq(hits.find(e => e.t < 20000).amount, 10, 'ก่อนต่อเวลา ดาเมจปกติ');
-    eq(hits.find(e => e.t > 31000).amount, 20, 'หลังเพดาน ดาเมจ +100%');
-    const a0 = hits[0].from, at = hits.filter(e => e.from === a0 && e.t > 31000).slice(0, 2).map(e => e.t);
-    eq(at[1] - at[0], 500, 'หลังเพดาน ตีเร็วขึ้น 100% (1 วิ → 0.5 วิ)');
-    eq(ev(r, 'heal', e => e.t > 30000).length, 0, 'หลังเพดาน ฟื้น HP = 0');
+    eq(hits.find(e => e.t >= 25000 && e.t < 26000).amount, 15, 'สแตก 5 (+50%): 10 → 15');
+    const a0 = hits[0].from, at = hits.filter(e => e.from === a0 && e.t > 20000).slice(0, 4).map(e => e.t);
+    ok(at[3] - at[2] < at[1] - at[0], `ตีเร็วขึ้นเรื่อยๆ หลังเริ่มต่อเวลา (${at})`);
+    eq(ev(r, 'heal', e => e.t > 26000).length, 0, 'ลด 100% แล้ว ฟื้น HP = 0');
     // เกราะใหม่ลด · เกราะเดิมไม่ลด
     const T = mk('T', { atk: L3(1), cdMs: 1000, hp: L3(1000), armor: L3(50), skills: [{ when: 'hit', do: 'armorHitUp', to: 'self', v: L3(80) }] });
     const r3 = fight([T], [u('T')], [u('T')], { rules: R });
-    eq(ev(r3, 'armor', e => e.t > 30000).length, 0, 'หลังเพดาน ไม่ได้เกราะใหม่');
+    eq(ev(r3, 'armor', e => e.t > 26000).length, 0, 'ลด 100% แล้ว ไม่ได้เกราะใหม่');
     // ตัวที่ได้เกราะทุกฮิตแรงๆ (แบบ HL-3 Lv3) สู้กันเอง ต้องจบก่อนตัวตัดเวลา (ค่าเกม)
     const r2 = fight([T], [u('T')], [u('T')]);
     ok(r2.timeMs < RULES.hardStopMs, `ทีมสะสมเกราะจบที่ ${r2.timeMs / 1000} วิ`);

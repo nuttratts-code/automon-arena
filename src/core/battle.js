@@ -170,9 +170,11 @@ export function simulate(teamA, teamB, opts = {}) {
     }
     return m;
   }
-  // set 98: overtime (replaces sandstorm) · from stormStartMs, one stack per stormIntervalMs · each stack = % below, every value capped at stormMaxPct
+  // set 98: overtime (replaces sandstorm) · from stormStartMs, one stack per stormIntervalMs · stacks in step 1 add stormPct1 %, step 2 stormPct2 %, after that stormPct3 % (each step = stormStepMs) · no cap (cuts stop at 100% by nature)
   const otK = () => (t > stormAt ? Math.floor((t - stormAt) / R.stormIntervalMs) : 0);
-  const otPct = p => Math.min(R.stormMaxPct, otK() * p);
+  const otTot = k => { const P = Math.max(1, Math.round(R.stormStepMs / R.stormIntervalMs)); return Math.min(k, P) * R.stormPct1 + Math.min(Math.max(k - P, 0), P) * R.stormPct2 + Math.max(k - 2 * P, 0) * R.stormPct3; };
+  const otUp = () => otTot(otK()); // damage + / attack speed +
+  const otCut = () => Math.min(100, otTot(otK())); // heal − / new armor −
   const effCd = f => Math.max(R.minCooldownMs, Math.round(f.cdMs * f.cdMult * cdExtra(f)));
   const atkOf = f => { // R1 บอสตีแรงขึ้น · R13 คลั่ง (×2)
     const a = f.atk + f.atkBonus;
@@ -333,7 +335,7 @@ export function simulate(teamA, teamB, opts = {}) {
   function hurt(target, amount, src, pierce, why, det) {
     amount = Math.floor(amount);
     if (BOSS) amount = ruleDmg(target, amount, src, why);
-    if (why !== 'link' && why !== 'burn' && stormAt < t) { const o = otPct(R.stormDmgPct); if (o > 0) amount = Math.floor(amount * (1 + o / 100)); } // set 98 overtime: all damage +% (link share already amplified · burn amplified at its source)
+    if (why !== 'link' && why !== 'burn' && stormAt < t) { const o = otUp(); if (o > 0) amount = Math.floor(amount * (1 + o / 100)); } // set 98 overtime: all damage +% (link share already amplified · burn amplified at its source)
     if (amount <= 0 || target.down || target.barBreak) return 0;
     // รูนสายสัมพันธ์ (X6): คู่ที่เลือกรับดาเมจแทน % · รับแทนต่อไม่ได้
     if (target.linkPct > 0 && why !== 'link') {
@@ -389,7 +391,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (BR.noArmor) return;
       if (BR.armorCut) v = Math.floor(v * Math.max(0, 1 - BR.armorCut.v / 100));
     }
-    if (why !== 'share') { const o = otPct(R.stormArmorCutPct); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: new armor −% (share = already cut at the source)
+    if (why !== 'share') { const o = otCut(); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: new armor −% (share = already cut at the source)
     if (!(v > 0 && up(f))) return;
     f.armor += v; log('armor', detailOn && BOSS && !f.boss && BR.armorCut ? { to: f.uid, amount: v, why, rr: ['armorCut'] } : { to: f.uid, amount: v, why });
     // แบ่งเกราะ (HL-8): เพื่อนทั้งทีมได้ % ของเกราะที่ตัวนี้ได้ · เกราะที่ได้จากการแบ่งไม่แบ่งต่อ (กันวนไม่จบ)
@@ -453,7 +455,7 @@ export function simulate(teamA, teamB, opts = {}) {
   function heal(f, v, src, why) {
     v = Math.floor(v * amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
     if (BOSS && !f.boss && BR.healCut) v = Math.floor(v * Math.max(0, 1 - BR.healCut.v / 100)); // E3 ผู้เล่นฟื้นได้น้อยลง
-    { const o = otPct(R.stormHealCutPct); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: healing −%
+    { const o = otCut(); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: healing −%
     if (!up(f) || v <= 0) return; // ฟื้น HP ไม่ช่วยตัวที่ HP ถึง 0 แล้ว (ต้องใช้สกิลลุกกลับมา)
     const h = Math.min(v, (BOSS && f.boss ? bossCap() : f.maxHp) - f.hp); // ชุด 71: บอสฟื้น (เช่น ฟื้น/ฮิต) ไม่เกินแถบที่อยู่
     if (h > 0) {
@@ -839,7 +841,7 @@ export function simulate(teamA, teamB, opts = {}) {
   for (;;) {
     t += R.tickMs;
     if (BOSS) BOSS.barBreak = false;
-    const cdTick = R.tickMs * (1 + otPct(R.stormSpeedPct) / 100); // set 98 overtime: attacks come faster
+    const cdTick = R.tickMs * (1 + otUp() / 100); // set 98 overtime: attacks come faster
     for (const f of F) if (up(f)) {
       if (f.stunLeft > 0) f.stunLeft = Math.max(0, f.stunLeft - R.tickMs); else f.cdLeft -= cdTick;
       for (const s of f.skills) if (s.cdLeft > 0) s.cdLeft -= R.tickMs; // คูลดาวน์สกิลนับตามเวลาจริง ไม่สนมึนงง/แช่แข็ง/บัฟคูลดาวน์
@@ -848,16 +850,15 @@ export function simulate(teamA, teamB, opts = {}) {
     // ไฟทำดาเมจก่อนฮิตใน tick นั้น · set 98: ช่วงต่อเวลาเพิ่มสแตก
     stage = 'damage';
     if (t % R.burnIntervalMs === 0) for (const f of F.filter(f => up(f) && f.burn > 0)) {
-      const bAmt = Math.floor(f.burn * amp(f.burnTaken + burnDmgOn[f.side]) * (1 + otPct(R.stormDmgPct) / 100)); // set 98: overtime amp here (not in hurt) so burn credit matches // A7: credit burn to its appliers by share (metric only)
+      const bAmt = Math.floor(f.burn * amp(f.burnTaken + burnDmgOn[f.side]) * (1 + otUp() / 100)); // set 98: overtime amp here (not in hurt) so burn credit matches // A7: credit burn to its appliers by share (metric only)
       if (bAmt > 0) for (const [s, fr] of bShare.split(f.uid)) if (s >= 0) F[s].dealt += bAmt * fr;
       hurt(f, bAmt, null, false, 'burn', detailOn ? { burn: f.burn, takenAmp: f.burnTaken, tribeAmp: burnDmgOn[f.side] } : null); // โดนไฟแรงขึ้น (ชุด 6) · ชุด 32 โบนัสเพลิงเผา ดาเมจไฟ +%
       if (f.noDecayPerm) continue;
       if (f.noDecay > 0) f.noDecay--; else { f.burn = Math.max(0, f.burn - R.burnDecay); log('burnLeft', { to: f.uid, total: f.burn }); } // ให้หน้าจอรู้ว่าไฟลดลงแล้ว
     }
     if (t > stormAt && (t - stormAt) % R.stormIntervalMs === 0) { // set 98: overtime stack (stormAt = R.stormStartMs · R21 starts it at once on phase entry) · log only while a value still grows
-      const k = otK(), w = p => Math.min(R.stormMaxPct, k * p), prev = p => Math.min(R.stormMaxPct, (k - 1) * p);
-      const vals = [R.stormDmgPct, R.stormSpeedPct, R.stormHealCutPct, R.stormArmorCutPct];
-      if (vals.some(p => w(p) > prev(p))) log('overtime', { n: k, dmg: w(R.stormDmgPct), speed: w(R.stormSpeedPct), heal: w(R.stormHealCutPct), armor: w(R.stormArmorCutPct) });
+      const k = otK(), up2 = otTot(k), cut = Math.min(100, up2);
+      log('overtime', { n: k, dmg: up2, speed: up2, heal: cut, armor: cut });
     }
 
     // 1) เริ่มชุด: เลือกเป้าตอนต้น tick ทุกตัวพร้อมกัน แล้วใช้สกิลที่ปรับชุด (ฮิตเพิ่ม กระจาย เปลี่ยนเป้า)

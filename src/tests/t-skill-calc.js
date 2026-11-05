@@ -383,7 +383,7 @@ const SC_SKILL = [
   }],
   ['WY-6', 'ทำศัตรู down → มัลติฮิต +1', (c, L, i) => {
     const glass = mk('ZG-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(1) });
-    const x = scRun([[c, L, 0, 0]], [[glass, 1, 0, 0], [glass, 1, 1, 0], [scBag('ZB-1'), 1, 2, 0]]), me = x.uid(0, 0, 0), v = sk('WY-6').v[i];
+    const x = scRun([[c, L, 0, 0]], [[glass, 1, 0, 0], [glass, 1, 1, 0], [scBag('ZB-1', { hp: L3(1e9) }), 1, 2, 0]]), me = x.uid(0, 0, 0), v = sk('WY-6').v[i];
     const kills = scProcs(x.r, me, 0).length;
     ok(kills === 2, `kills ${kills}`);
     eq(x.res.get(me).fin.multi, c.multi[i] + v * kills, 'multi-hit at end (stat tab)');
@@ -612,8 +612,8 @@ const SC_RETIRED = [
   ['SF-3@1', 'โดนตี → ดาเมจ v ใส่ผู้ตี', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
     const [evSum, tabSum, evs] = scSkillDmg(x, me, 0, 'skill');
-    const n = scProcs(x.r, me, 0).length;
-    eq(evs.map(e => [e.to, e.amount]), Array(n).fill([x.uid(1, 0, 0), v]), 'damage per hit taken');
+    const pre = e => e.t <= RULES.stormStartMs, n = scProcs(x.r, me, 0).filter(pre).length; // set 98: overtime amplifies damage after stormStartMs
+    eq(evs.filter(pre).map(e => [e.to, e.amount]), Array(n).fill([x.uid(1, 0, 0), v]), 'damage per hit taken');
     eq(tabSum, evSum, "tab 'ทำดาเมจ' → สกิล");
     return x;
   }],  ['HL-2@2', 'ตีโดน → เพื่อนข้างหน้า (ทุกเผ่า) เกราะ/ฮิต +v', (c, L, i) => {

@@ -112,7 +112,7 @@ function render() {
     $('proposed').innerHTML = [
       `คูลดาวน์ต่ำสุด <code>${R.minCooldownMs / 1000} วิ</code> (ค่าชั่วคราว)`,
       `ไฟ: ทำดาเมจเท่าจำนวนไฟทุก <code>${R.burnIntervalMs / 1000} วิ</code> แล้วลดลง <code>${R.burnDecay}</code>`,
-      `ช่วงต่อเวลา: หลัง ${R.stormStartMs / 1000} วิ ทุก ${R.stormIntervalMs / 1000} วิ ดาเมจ +<code>${R.stormDmgPct}%</code> · ตีเร็วขึ้น <code>${R.stormSpeedPct}%</code> · ฟื้น −<code>${R.stormHealCutPct}%</code> · เกราะใหม่ −<code>${R.stormArmorCutPct}%</code> (เพดาน ${R.stormMaxPct}%)`,
+      `ช่วงต่อเวลา: หลัง ${R.stormStartMs / 1000} วิ ทุก ${R.stormIntervalMs / 1000} วิ ดาเมจ/ตีเร็ว + และฟื้น/เกราะใหม่ − ทีละ <code>${R.stormPct1}%</code> ${R.stormStepMs / 1000} วิแรก · <code>${R.stormPct2}%</code> อีก ${R.stormStepMs / 1000} วิ · ต่อไป <code>${R.stormPct3}%</code> ไม่มีเพดาน`,
     ].map(x => `<li>${x}</li>`).join('');
     btn.disabled = false;
   }, 30);
