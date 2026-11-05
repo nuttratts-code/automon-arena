@@ -229,7 +229,8 @@ function cleanRunes(o, out) {
 }
 // Drop: rarity by weight (boss may skip ธรรมดา), then a rune of that rarity · chance in % for the page
 export function rarityOdds(st, boss = false) {
-  const w = { common: boss && st.bossNoCommon ? 0 : st.wCommon, rare: st.wRare, legend: st.wLegend };
+  const w = { common: boss && st.bossNoCommon ? 0 : st.wCommon, // set 94: bossNoCommon setting removed (boss offers use offBoss*) — kept for old saves only
+    rare: st.wRare, legend: st.wLegend };
   const sum = w.common + w.rare + w.legend;
   return Object.fromEntries(RUNE_RARITY.map(([k]) => [k, sum ? (w[k] / sum) * 100 : 0]));
 }
@@ -391,9 +392,15 @@ export const STAGE_BOSSES = [
 ];
 export const STAGE_SETTINGS = [
   ['bossEvery', 'บอสทุกกี่ด่าน', 5, 1, 20, 'ด่าน'], ['bossesPerRun', 'บอสใน run หลัก', 2, 1, 10, 'ตัว'],
-  ['dropHard', 'โอกาสได้รูน ด่านยาก', 50, 0, 100, '%'], ['dropNormal', 'โอกาสได้รูน ด่านกลาง', 30, 0, 100, '%'], ['dropEasy', 'โอกาสได้รูน ด่านง่าย', 10, 0, 100, '%'], ['dropBoss', 'โอกาสได้รูน บอส', 100, 0, 100, '%'],
-  // Rune rarity weights (user 29 Oct set 53: 3 tiers · ค่าเสนอ) · boss drop skips ธรรมดา when bossNoCommon = 1
-  ['wCommon', 'น้ำหนักสุ่ม รูนธรรมดา', 60, 0, 100, ''], ['wRare', 'น้ำหนักสุ่ม รูนหายาก', 30, 0, 100, ''], ['wLegend', 'น้ำหนักสุ่ม รูนตำนาน', 10, 0, 100, ''], ['bossNoCommon', 'บอสไม่ดรอปรูนธรรมดา (1 = ใช่)', 1, 0, 1, ''],
+  // Phase 2b (set 94, user 5 Nov): every normal-round WIN offers 1 free rune out of a fixed mix per difficulty (count of each rarity · user numbers);
+  // boss win mix = Claude default (same as ยาก, ค่าเสนอ) · a rarity with no rune left is filled from the other rarities
+  ['offEasyC', 'ชนะง่าย: ให้เลือกรูนธรรมดา', 3, 0, 5, 'อัน'], ['offEasyR', 'ชนะง่าย: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offEasyL', 'ชนะง่าย: ให้เลือกรูนตำนาน', 0, 0, 5, 'อัน'],
+  ['offNormC', 'ชนะกลาง: ให้เลือกรูนธรรมดา', 1, 0, 5, 'อัน'], ['offNormR', 'ชนะกลาง: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offNormL', 'ชนะกลาง: ให้เลือกรูนตำนาน', 0, 0, 5, 'อัน'],
+  ['offHardC', 'ชนะยาก: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offHardR', 'ชนะยาก: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offHardL', 'ชนะยาก: ให้เลือกรูนตำนาน', 1, 0, 5, 'อัน'],
+  ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 1, 0, 5, 'อัน'],
+  // Rune shop (set 94, user 5 Nov): own shop beside the unit shop, same gold · rarity odds fixed (do not change by round) · lock + reroll
+  ['wCommon', 'ร้านรูน: น้ำหนักสุ่ม ธรรมดา', 60, 0, 100, ''], ['wRare', 'ร้านรูน: น้ำหนักสุ่ม หายาก', 30, 0, 100, ''], ['wLegend', 'ร้านรูน: น้ำหนักสุ่ม ตำนาน', 10, 0, 100, ''],
+  ['rsSlots', 'ร้านรูน: จำนวนช่อง', 3, 1, 5, 'ช่อง'], ['rsCommon', 'ร้านรูน: ราคารูนธรรมดา', 3, 0, 99, 'ทอง'], ['rsRare', 'ร้านรูน: ราคารูนหายาก', 9, 0, 99, 'ทอง'], ['rsLegend', 'ร้านรูน: ราคารูนตำนาน', 27, 0, 99, 'ทอง'], ['rsReroll', 'ร้านรูน: ราคารีโรล', 2, 0, 20, 'ทอง'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
   ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];

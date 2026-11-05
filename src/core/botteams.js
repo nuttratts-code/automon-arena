@@ -171,3 +171,15 @@ export function pickBotTeam(data, wins, seed, round) {
   const t = list[i];
   return { tier: t.tier, stage: k, span: b, team: structuredClone(t.team) };
 }
+// set 94 (2b, user Q2 A): the player picks ง่าย/กลาง/ยาก → a team of that tier from the same (wins, round) cell
+// (cell list = BOT_PER teams per tier, in BOT_TIERS order) · same seed + round + tier → same team (scout preview = real fight)
+export function pickBotTeamAt(data, wins, seed, round, tier) {
+  const ti = BOT_TIERS.indexOf(tier);
+  if (ti < 0) return pickBotTeam(data, wins, seed, round);
+  const k = Math.max(0, Math.min(data.stages.length - 1, wins | 0));
+  const b = spanOf((round | 0) - 1 - k), list = data.stages[k][b].filter(t => t.tier === tier);
+  if (!list.length) return pickBotTeam(data, wins, seed, round);
+  const i = makeRng(((seed >>> 0) ^ Math.imul((round | 0) + 1, 0x27D4EB2F) ^ Math.imul(ti + 1, 0x165667B1)) >>> 0).int(list.length);
+  const t = list[i];
+  return { tier: t.tier, stage: k, span: b, team: structuredClone(t.team) };
+}

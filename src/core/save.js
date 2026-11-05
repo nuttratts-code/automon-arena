@@ -2,6 +2,7 @@ import { RULES } from './rules.js';
 import { allUnits, chargeOwner } from './shop.js';
 import { isInt, validateTeam } from './validate.js';
 import { burnShares } from './battle.js';
+import { rnValidate, rnCompactOk } from './runrunes.js';
 // เซฟกลางทาง + สถิติ run + ประวัติ run (ชุด 22 · ผู้ใช้เลือก 24 ต.ค.) · ข้อมูลล้วน ไม่แตะหน้าจอ (ย้ายไปเซิร์ฟเวอร์ได้)
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
@@ -43,9 +44,9 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 3) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round
+  if (st.v !== 4) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn)
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -54,7 +55,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
   if (typeof st.lastWon !== 'boolean' || typeof st.over !== 'boolean') errors.push('ค่าจริง/เท็จผิด');
   if (!svIntIn(st.uid, 1, 1e9)) errors.push('uid ผิด');
-  if (!Array.isArray(st.shop) || st.shop.length !== S.slots) errors.push('ร้านผิด');
+  if (!Array.isArray(st.shop) || st.shop.length < S.slots || st.shop.length > S.slots + 3) errors.push('ร้านผิด'); // set 94: rune แผงใหญ่ adds up to 3 slots
   else st.shop.forEach((s, i) => {
     if (!svObj(s) || !svOnlyKeys(s, ['id', 'locked']) || typeof s.locked !== 'boolean' || !(s.id === null || (typeof s.id === 'string' && svOwn(cm, s.id)))) errors.push(`ร้านช่อง ${i + 1} ผิด`);
   });
@@ -62,6 +63,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   else st.bench.forEach((u, i) => checkUnit(u, cm, rules, `ม้านั่ง ${i + 1}`, errors));
   if (!Array.isArray(st.board) || st.board.length !== rules.rows || !st.board.every(r => Array.isArray(r) && r.length === rules.lanes)) errors.push('บอร์ดผิด');
   else st.board.forEach((r, row) => r.forEach((u, lane) => checkUnit(u, cm, rules, `บอร์ด ${row + 1}/${lane + 1}`, errors)));
+  errors.push(...rnValidate(st.rn, rules));
   if (errors.length) return { ok: false, errors };
   const uids = allUnits(st).map(x => x.u.uid);
   if (new Set(uids).size !== uids.length) errors.push('uid ซ้ำ');
@@ -120,6 +122,7 @@ export function readSave(text, cm, rules, hash) {
   let o; try { o = JSON.parse(text); } catch (e) { return { status: 'bad', errors: ['เซฟอ่านไม่ได้'] }; }
   if (!svObj(o) || !svOnlyKeys(o, ['sv', 'data', 'P', 'B', 'stats', 'startedAt'])) return { status: 'bad', errors: ['เซฟผิดรูปแบบ'] };
   if (o.sv !== SAVE_VERSION) return { status: 'data', errors: ['เวอร์ชันเซฟไม่ตรง'] };
+  if (svObj(o.P) && o.P.v === 3) return { status: 'data', errors: ['เซฟก่อนมีระบบรูน (set 94)'] };
   if (o.data !== hash) return { status: 'data', errors: ['ค่าตัวละคร/กฎเปลี่ยนแล้ว'] };
   const a = validateRunState(o.P, cm, rules), b = validateRunState(o.B, cm, rules, { bot: true });
   const errors = [...a.errors.map(e => 'ผู้เล่น: ' + e), ...b.errors.map(e => 'บอท: ' + e)];
@@ -154,15 +157,19 @@ export function pushHistory(list, entry) { return [entry, ...list].slice(0, HIST
 // ผูกกับ run ด้วยเมล็ดของ run + แฮชค่าเกม · ค่าเกมเปลี่ยน = ซ่อนทั้งชุดแล้วแจ้ง · จำลองซ้ำแล้วผล/เวลาไม่ตรง = ไม่เล่น แจ้งว่าเกมเปลี่ยน
 export const REPLAY_VERSION = 1;
 export const REPLAY_MAX = 40;            // แมตช์ต่อ run สูงสุดจริง = ชนะ 10 + แพ้ 10 − 1 = 19 · เผื่อ (ค่าเสนอ)
-export function replayEntry(round, teamA, teamB, result) {
+// set 94: n = the player's runes at that match (rnCompact) · only written when there are runes (older entries stay valid)
+export function replayEntry(round, teamA, teamB, result, runes = []) {
   const copy = t => JSON.parse(JSON.stringify(t));
-  return { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
+  const x = { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
+  if (runes.length) x.n = copy(runes);
+  return x;
 }
 export function makeReplays(runSeed, hash, list) {
   return JSON.stringify({ rv: REPLAY_VERSION, data: hash, run: runSeed, list: list.slice(-REPLAY_MAX) });
 }
 export function checkReplay(x, cm, rules = RULES) {
-  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (svOwn(x, 'n') && !rnCompactOk(x.n, rules)) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }
@@ -182,19 +189,20 @@ export function readReplays(text, cm, rules, hash, runSeed) {
 // ---- บันทึกข้อมูลการเล่นจริง (ชุด 25 · ผู้ใช้เลือก 8A) ----
 // สรุป 1 แถวต่อแมตช์ ส่งลงฐานข้อมูลของหน้าเกม · สร้างจากสถานะที่ผ่านตัวตรวจแล้ว และตรวจซ้ำทุกช่องก่อนเขียน (checkPlayRecord)
 // ไม่มีข้อมูลระบุตัวผู้เล่น · run = เมล็ดของ run ใช้จัดกลุ่มแมตช์เท่านั้น
-export const PLAY_VERSION = 2; // set 85: + boss (null or { boss, k }) · foeSrc 'boss'
+export const PLAY_VERSION = 3; // set 85: + boss (null or { boss, k }) · foeSrc 'boss' · set 94: + runes (ids held) + diff (ง่าย/กลาง/ยาก or null)
 export const playTeam = t => t.map(e => ({ id: e.id, level: e.level, row: e.row, lane: e.lane, perm: e.perm ? Object.keys(e.perm).length : 0 }));
-export function playRecord({ at, hash, runSeed, round, winsBefore, heartsBefore, result, teamA, teamB, foe, boss = null }, rules = RULES) {
+export function playRecord({ at, hash, runSeed, round, winsBefore, heartsBefore, result, teamA, teamB, foe, boss = null, runes = [], diff = null }, rules = RULES) {
   return {
     v: PLAY_VERSION, at: Math.floor(at), data: hash, run: runSeed >>> 0, round, winsBefore, heartsBefore,
     res: result.winner === 0 ? 'w' : result.winner === 1 ? 'l' : 'd',
     timeMs: Math.floor(result.timeMs), storm: result.timeMs > rules.stormStartMs, aborted: result.aborted || null,
     team: playTeam(teamA), foe: boss ? [] : playTeam(teamB), foeSrc: boss ? 'boss' : foe ? 'set' : 'live', foeStage: foe && !boss ? foe.stage : null, foeSpan: foe && !boss ? foe.span : null,
     boss: boss ? { boss: boss.boss, k: boss.k } : null,
+    runes: runes.map(x => x.id).slice(0, 80), diff,
   };
 }
 export function checkPlayRecord(x, cm, rules = RULES) {
-  const KEYS = ['v', 'at', 'data', 'run', 'round', 'winsBefore', 'heartsBefore', 'res', 'timeMs', 'storm', 'aborted', 'team', 'foe', 'foeSrc', 'foeStage', 'foeSpan', 'boss'];
+  const KEYS = ['v', 'at', 'data', 'run', 'round', 'winsBefore', 'heartsBefore', 'res', 'timeMs', 'storm', 'aborted', 'team', 'foe', 'foeSrc', 'foeStage', 'foeSpan', 'boss', 'runes', 'diff'];
   if (!svObj(x) || !svOnlyKeys(x, KEYS) || !KEYS.every(k => svOwn(x, k))) return false;
   const S = rules.shop, team = t => Array.isArray(t) && t.length <= rules.maxBoard && t.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level', 'row', 'lane', 'perm'])
     && typeof u.id === 'string' && svOwn(cm, u.id) && svIntIn(u.level, 1, rules.maxLevel) && svIntIn(u.row, 0, rules.rows - 1) && svIntIn(u.lane, 0, rules.lanes - 1) && svIntIn(u.perm, 0, 100));
@@ -203,5 +211,6 @@ export function checkPlayRecord(x, cm, rules = RULES) {
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
     && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
     && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)
+    && Array.isArray(x.runes) && x.runes.length <= 80 && x.runes.every(id => typeof id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(id)) && [null, 'ง่าย', 'กลาง', 'ยาก'].includes(x.diff)
     && (x.foeSrc !== 'set' ? x.foeStage === null && x.foeSpan === null : svIntIn(x.foeStage, 0, 100) && svIntIn(x.foeSpan, 0, 10));
 }

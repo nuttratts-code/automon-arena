@@ -17,10 +17,10 @@ export const TESTS_VALIDATE = [
     for (const s of RUNE_SPECIAL) for (const [k, , v, lo, hi, u] of s.f) ok(u === 'tribe' || (v >= lo && v <= hi), `${s.key}.${k} default out of range`);
     for (const r of STAGE_RUNES) ok(runeKind(r.eff), `${r.id} effect`);
     for (const b of STAGE_BOSSES) ok(b.phases.length === 1 && b.phases[0].rules.every(r => BOSS_RULES.some(q => q[0] === r.id)), `${b.id} rule`);
-    const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { dropHard: -1, dropEasy: 20 },
+    const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { rsReroll: -1, offEasyC: 2 },
       bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
     eq(bad.runes.T9.dmgPct, 25, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ร่ำรวย', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', eff: 'gold', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
-    eq(bad.settings.dropHard, 50, 'bad setting'); eq(bad.settings.dropEasy, 20, 'good setting');
+    eq(bad.settings.rsReroll, 2, 'bad setting'); eq(bad.settings.offEasyC, 2, 'good setting');
     eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, d.bosses[0].hp, 'hp out of range → user default'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].phases[0].rules, d.bosses[0].phases[0].rules, 'unknown rule kept user default');
     eq(bad.bosses[1].phases[0].rules, [{ id: 'healCut', v: 50 }], 'old rule/ruleV → phase 1 (value out of range → default)');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
@@ -81,7 +81,7 @@ export const TESTS_VALIDATE = [
     eq(runeText(w.custom[0]), 'ตัวเดียว: ดาเมจใส่บอส +60%', 'special text shows non-natural scope');
     const sw = runeWithEff(w.runes.X10, 'gold'); eq([sw.eff, sw.scope, sw.gold, 'v' in sw, sw.name], ['gold', 'team', 2, false, 'ถ่วงเวลา'], 'switch effect keeps basics, leaves enemy scope');
     eq(cleanStage(JSON.parse(JSON.stringify(w))), w, 'switched runes round trip');
-    const st = stageDefaults().settings; eq(rarityOdds(st), { common: 60, rare: 30, legend: 10 }, 'odds'); eq(rarityOdds(st, true), { common: 0, rare: 75, legend: 25 }, 'boss skips common');
+    const st = stageDefaults().settings; eq(rarityOdds(st), { common: 60, rare: 30, legend: 10 }, 'odds'); eq(rarityOdds({ ...st, bossNoCommon: 1 }, true), { common: 0, rare: 75, legend: 25 }, 'boss skips common (old saves)');
   }],
   ['ทุกคู่สกิลที่หน้าบาลานซ์ให้เลือก ใช้งานได้จริงในตัวคำนวณ', () => {
     const chars = buildCharacterList(), m0 = makeCharMap(chars), rng = makeRng(5);

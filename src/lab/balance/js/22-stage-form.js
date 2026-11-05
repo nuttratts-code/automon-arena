@@ -168,7 +168,7 @@ function renderStageRunes(box) {
       const sec = document.createElement('details'); sec.className = 'rune-sec'; sec.open = true;
       const sum = document.createElement('summary');
       sum.append(byTheme ? el('span', 'pill rune-theme', rt) : el('span', `rar ${RUNE_RAR_CLASS[rk]}`, rt), el('span', 'sec-n', `${items.length} รูน · ใช้ ${items.filter(([, x]) => x.on).length}`));
-      if (!byTheme) sum.append(el('span', 'sec-odds', `โอกาสได้ ด่านปกติ ${fmt(odds(false)[rk])}% · บอส ${fmt(odds(true)[rk])}%`));
+      if (!byTheme) sum.append(el('span', 'sec-odds', `โอกาสขึ้นในร้านรูน ${fmt(odds(false)[rk])}%`));
       sec.append(sum);
       for (const [d, x, custom] of items) {
         const id = x.id || d.id, scope = x.scope, open = runeOpen.has(id);

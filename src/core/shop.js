@@ -1,4 +1,5 @@
 import { makeRng } from './rng.js';
+import { newRunes, rnFx, rnInterest, rnPermMul, rnRefill } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
 // ร้านค้าและรวมร่าง (shop-merge-rules) · ใช้ร่วมกันระหว่างผู้เล่น บอท และห้องบาลานซ์
 // - สถานะเป็นข้อมูลล้วน (ไม่มีฟังก์ชัน) เซฟเป็น JSON ได้ · เลขสุ่มเก็บในสถานะ ใส่เมล็ดเดิมได้ผลเดิม
@@ -15,12 +16,13 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 3, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 4, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
     uid: 1,
     charges: [], // ประจุรอใช้ (SF-7): { id, uid, si } · ให้ค่าถาวรกับเพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ
+    rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
   };
   return st;
 }
@@ -55,7 +57,13 @@ export function rollChar(st, chars, rules) {
   const total = rars.reduce((a, r) => a + w(r), 0);
   let x = draw(st) * total, rar = rars[0];
   for (const r of rars) { x -= w(r); if (x < 0) { rar = r; break; } }
-  const pool = chars.filter(c => c.rarity === rar);
+  const pool = chars.filter(c => c.rarity === rar), lure = rnFx(st).lure; // set 94: rune ดึงดูดตัว = that character weighs ×mult inside its rarity
+  if (Object.keys(lure).length) {
+    const wt = c => lure[c.id] || 1, tot = pool.reduce((a, c) => a + wt(c), 0);
+    let y = draw(st) * tot;
+    for (const c of pool) { y -= wt(c); if (y < 0) return c.id; }
+    return pool[pool.length - 1].id;
+  }
   return pool[Math.floor(draw(st) * pool.length)].id;
 }
 
@@ -147,7 +155,7 @@ export function fireShopSkill(st, u, ref, when, chars, rules, msgs) {
     }
     const tgs = shopTargets(st, ref, s.to, u, chars, s);
     let got = 0;
-    for (const t of tgs) if (addPerm(t, give, v, rules) > 0) got++;
+    for (const t of tgs) if (addPerm(t, give, Math.floor(v * rnPermMul(st, t)), rules) > 0) got++; // set 94: rune คงทน
     msgs.push(tgs.length
       ? `${c.id} ${c.name}: ${got}/${tgs.length} ตัวได้ ${SHOP_GIVE_TH[give] || give} +${v} ถาวร${got < tgs.length ? ' (บางตัวเต็มเพดานแล้ว)' : ''}`
       : `${c.id} ${c.name}: ไม่มีเพื่อนในตำแหน่งที่สกิลให้ผล`);
@@ -188,11 +196,24 @@ export function startRound(st, chars, rules = RULES) {
     st.gold += inc.total;
     msgs.push(`รายได้ +${inc.total} (รอบละ ${inc.base}${inc.bonus ? ` · ชนะ +${inc.bonus}` : ''})`);
   }
+  const fx = rnFx(st); // set 94: run-only runes (gold / interest / shop slots / free reroll / heart trade)
+  if (st.round > 0) {
+    const it = rnInterest(st.gold, fx);
+    if (fx.gold) { st.gold += fx.gold; msgs.push(`รูนทอง +${fx.gold}`); }
+    if (it) { st.gold += it; msgs.push(`ดอกเบี้ยจากรูน +${it}`); }
+  }
+  if (st.rn) {
+    st.rn.free = fx.free; st.rn.traded = false;
+    const want = S.slots + fx.slots;
+    while (st.shop.length < want) st.shop.push({ id: null, locked: false });
+    if (st.shop.length > want) st.shop.length = want;
+  }
   const lvBefore = st.round ? shopLvOf(st, rules) : 0;
   st.round++;
   const lv = shopLvOf(st, rules);
   if (lv > lvBefore && st.round > 1) msgs.push(`ร้านขึ้นเป็นระดับ ${lv} (ขึ้นเองตามรอบ)`);
   refill(st, chars, rules);
+  rnRefill(st);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'shopStart', chars, rules, msgs);
   return done(msgs);
 }
@@ -227,6 +248,11 @@ export function sell(st, ref, chars, rules = RULES) {
   put(st, ref, null);
   st.gold += u.paid; // เอกสาร: คืนเต็มราคาที่จ่ายไปทั้งหมด
   const msgs = [`ขาย ${u.id} ได้คืน ${u.paid}`];
+  if (ref.at === 'board' && st.rn) { // set 94: rune เงา on this slot → a Lv1 copy comes back to the bench (times per run, paid 0)
+    const sh = rnFx(st).shadow.filter(x => x.slot[0] === ref.row && x.slot[1] === ref.lane), times = sh.reduce((a, x) => a + x.times, 0);
+    const to = sh.length ? firstEmptyBench(st) : null;
+    if (to && st.rn.shadow < times) { put(st, to, { uid: st.uid++, id: u.id, level: 1, perm: {}, paid: 0 }); st.rn.shadow++; msgs.push(`รูนเงา: ได้ ${u.id} เลเวล 1 คืนที่ม้านั่ง`); }
+  }
   fireShopSkill(st, u, ref, 'sell', chars, rules, msgs);
   dropDeadCharges(st);
   return done(msgs);
@@ -235,6 +261,7 @@ export function sell(st, ref, chars, rules = RULES) {
 export function reroll(st, chars, rules = RULES) {
   if (st.over) return fail('run จบแล้ว');
   const cost = rules.shop.rerollCost;
+  if (st.rn && st.rn.free > 0) { st.rn.free--; refill(st, chars, rules); return done([`สุ่มร้านฟรี (เหลือ ${st.rn.free})`]); } // set 94: rune สุ่มฟรี
   if (st.gold < cost) return fail(`เงินไม่พอ (รีโรลใช้ ${cost})`);
   st.gold -= cost;
   refill(st, chars, rules);
@@ -255,6 +282,7 @@ export function move(st, from, to, chars, rules = RULES) {
   if (!a) return fail('ไม่มีตัวละครที่ช่องต้นทาง');
   if (a === b) return done();
   if (b && b.id === a.id && b.level === a.level && a.level < rules.maxLevel) {
+    if ((rnFx(st).fast[a.id] || rules.shop.mergeCount) <= 2) return merge(st, [from], to, chars, rules); // set 94: rune รวมร่างเร็ว
     const third = allUnits(st).find(x => x.u !== a && x.u !== b && x.u.id === a.id && x.u.level === a.level);
     if (!third) return fail(`รวมร่างต้องมี ${a.id} เลเวล ${a.level} ครบ ${rules.shop.mergeCount} ตัว`);
     return merge(st, [from, third.ref], to, chars, rules);
@@ -307,7 +335,7 @@ export function applyBattlePerm(st, gains, chars, rules, msgs) {
     if (!(typeof g.amount === 'number' && Number.isFinite(g.amount) && g.amount > 0 && g.amount <= rules.permSanityMax)) continue;
     const u = st.board[g.row][g.lane];
     if (!u || u.id !== g.id) continue;
-    const got = addPerm(u, g.key, Math.floor(g.amount), rules);
+    const got = addPerm(u, g.key, Math.floor(g.amount * rnPermMul(st, u)), rules); // set 94: rune คงทน
     if (got > 0) { const k = `${u.id}|${g.key}`; sum.set(k, (sum.get(k) || 0) + got); }
   }
   for (const [k, v] of sum) { const [id, key] = k.split('|'), c = chars.find(x => x.id === id); msgs.push(`${id}${c ? ' ' + c.name : ''}: ได้${SHOP_GIVE_TH[key] || key} +${v} ถาวร (จากสกิลระหว่างสู้)`); }

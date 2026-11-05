@@ -140,7 +140,7 @@ export const TESTS_SAVE = [
     ok(checkPlayRecord(rec, m) && checkPlayRecord(live, m), 'บันทึกที่สร้างจากเกมต้องผ่านตัวตรวจ');
     eq(rec.team[1].perm, 2, 'นับชนิดค่าถาวร'); eq(rec.storm, r.timeMs > RULES.stormStartMs, 'ถึงพายุทราย');
     eq(rec.res, r.winner === 0 ? 'w' : r.winner === 1 ? 'l' : 'd', 'ผล');
-    eq(Object.keys(JSON.parse(JSON.stringify(rec))).length, 17, 'ช่องครบ (ไม่มีข้อมูลระบุตัวผู้เล่น)');
+    eq(Object.keys(JSON.parse(JSON.stringify(rec))).length, 19, 'ช่องครบ (ไม่มีข้อมูลระบุตัวผู้เล่น)');
     // set 85: boss round record = foeSrc 'boss', no foe team, boss { boss, k }
     const br = playRecord({ ...base, teamB: [], foe: null, boss: { boss: 'B1', k: 2 } });
     ok(checkPlayRecord(br, m) && br.foeSrc === 'boss' && br.foe.length === 0 && br.boss.k === 2, 'บันทึกรอบบอสผ่านตัวตรวจ');
