@@ -785,8 +785,8 @@ const view = new BattleView($('arena'), CM, {
 });
 $('fight').addEventListener('click', () => {
   if (P.over) return;
-  if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; render(); return; }
   if (P.rn.offer) { pushMsgs({ ok: false, msg: 'เลือกรูนรางวัลก่อน (หรือกด "ไม่รับรูน")' }); render(); return; }
+  if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; render(); return; }
   confirmEmpty = false; sel = null;
   // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
   const rb = runBossAt(P.round, P.seed);
