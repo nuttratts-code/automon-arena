@@ -22,6 +22,7 @@ with sync_playwright() as p:
         pg.goto(f'file://{D}/game.html')
         # set 89: shop level follows the round (no upgrade button) · reroll costs 2
         chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and 'รอบหน้า Lv 2' in pg.inner_text('#shopLv') and 'ธรรมดา' in pg.inner_text('#shopOdds'),'shop level chip round 1')
+        chk('รอบหน้าได้เงิน %d' % pg.evaluate('baseIncomeAt(2)') in pg.inner_text('#shopLv'),'next-round income on chip (set 96 ramp)')
         chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
         # set 94: rune shop · difficulty pick · win offer blocks the fight until picked
         # set 95: rune shop removed · difficulty = enemy power %

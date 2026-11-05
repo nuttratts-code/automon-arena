@@ -479,7 +479,7 @@ function renderChips() {
 // set 89: shop level follows the round (no upgrade) · chip shows the level now and the next round's
 function renderShopLevel() {
   const lv = shopLvOf(P), odds = oddsAt(lv), nx = lvForRound(P.round + 1);
-  $('shopLv').textContent = `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` · รอบหน้า Lv ${nx}` : ''}`;
+  $('shopLv').textContent = `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` · รอบหน้า Lv ${nx}` : ''} · รอบหน้าได้เงิน ${baseIncomeAt(P.round + 1)}${S.winBonus ? ` (ชนะ +${S.winBonus})` : ''}`; // set 96: income ramps
   const box = $('shopOdds'); box.replaceChildren(el('span', '', 'โอกาสเจอ:'));
   for (const r of Object.keys(odds)) if (odds[r] > 0) box.append(el('span', 'rar ' + RARITY_CLASS[r], `${r} ${odds[r]}%`));
 }
