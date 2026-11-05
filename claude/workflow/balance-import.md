@@ -1,6 +1,16 @@
-# workflow · importing values from the Balance Room (English · V1.30 · 3 Nov 2026)
+# workflow · importing values from the Balance Room (English · V1.31 · 5 Nov 2026)
 
 Split from workflow.md V1.21 · V1.25 user measures · V1.26 batch 35 yellow clears itself + ui/main · V1.27 translated to English; apply-config now imports tribe bonuses (cfg.tribes); pre-import check results.edits == config.
+
+## 0. Fast import order (V1.31, user 5 Nov: fastest without losing any check · ~20 min instead of ~30)
+Heavy jobs run ONE at a time (2 cores), always in the background; do the light work while each one runs. Never skip a step below.
+1. Read config/main + results/latest in parallel (no out_dir) → pre-import check (edits.chars/tribes/rules == config). Config `stage` is NOT imported unless the user says they edited bosses.
+2. Copy core/characters.js to `core/characters.before.js` (inside core/ so its imports resolve) → `node tools/apply-config.mjs <main.json>` → `node tools/csv.mjs core/characters.before.js` → move `src/characters.csv` to `claude/characters.csv` → delete the .before copy.
+3. **Do not run the full test suite here** (it fails anyway until bot teams are rebuilt). Grep tests for the changed IDs (`grep -n "'ID'" tests/*.js`), fix tests on changed kits (old kit → retired test `ID@n` in SC_OLD/SC_RETIRED), check only them: `node tools/bootstrap.mjs test <ID>` (seconds). Commit + push.
+4. Background: `node lab/botgen.mjs` (~6.5 min). Meanwhile: draft the handoff Relay line, `Artifact read` the 3 Links URLs (writer check).
+5. Background: `node lab/bossrun.mjs 600 75 62 50 --write` ONCE (prints before → after; no separate check run). Commit + push.
+6. Background: `node tools/bootstrap.mjs gate` ONCE (~9 min). Meanwhile: finish handoff text.
+7. GATE: PASS → fast-forward main → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main.
 
 ## 8. Balance Room (ArtifactData)
 - **Read only when the user says they saved** · if handoff says "บาลานซ์: กำลังปรับ" do not import.

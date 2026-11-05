@@ -26,7 +26,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 
 ## State (durable facts only — history in archive)
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). results/latest is stale (re-measure only if user asks) · DRAFT_KEY v9 · bot teams 360 (set 89 round-based shop, tribe rotate, data v4)
-- Import path: Balance Room "คัดลอกค่าให้ Claude" → `AMCFG1` code → `src/tools/cfgcode.mjs` (workflow/balance-import). Match code `AMATCH1` → `node lab/replay.mjs --code <file> [--fx]`.
+- Import: follow the fast order in workflow/balance-import.md §0 (V1.31). Import path: Balance Room "คัดลอกค่าให้ Claude" → `AMCFG1` code → `src/tools/cfgcode.mjs` (workflow/balance-import). Match code `AMATCH1` → `node lab/replay.mjs --code <file> [--fx]`.
 - `healHitUp` effect exists, not assigned to any character (needs measuring once used).
 - Closed by user, **do not re-propose**: SF-6 stealShock loop + overkill in "dealt" metric (kept as is, 27–28 Oct) · Jules (cancelled 28 Oct).
 - t-skill-calc findings F1–F4 print as `WAIT` (not failures); user picks (archive/review-2026-10-28.md).
@@ -41,7 +41,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.
 
 ## Doc versions
-combat-rules V2.11 · tribe-rules V2.1 · shop-merge-rules V3.1 · build-plan V1.47 · instructions V3.3 (Thai copy V3.3 · 2 Nov: merge on GATE PASS without asking) · ops-rules v1.3 · pending V1.2 · workflow V1.27 (publish V1.28 · measure V1.27 · botteams V1.24 · balance-import V1.30 · setup V1.28 · others V1.22) · backlog V2.0 · budget-notes V1.1 · measure-log V1.5 · match-tabs-spec V1.3 (done) · characters.csv 5 Nov
+combat-rules V2.11 · tribe-rules V2.1 · shop-merge-rules V3.1 · build-plan V1.47 · instructions V3.3 (Thai copy V3.3 · 2 Nov: merge on GATE PASS without asking) · ops-rules v1.3 · pending V1.2 · workflow V1.27 (publish V1.28 · measure V1.27 · botteams V1.24 · balance-import V1.31 · setup V1.28 · others V1.22) · backlog V2.0 · budget-notes V1.1 · measure-log V1.5 · match-tabs-spec V1.3 (done) · characters.csv 5 Nov
 
 ## Links (update existing, never create new · main account only)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC
