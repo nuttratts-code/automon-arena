@@ -81,7 +81,7 @@ export const RULES = {
   // ร้านค้า (shop-merge-rules) · ราคาตัวละครอยู่ที่ตัวละครแต่ละตัว
   shop: {
     startGold: 10, goldPerRound: 25, goldStep: 3, winBonus: 2, // set 96 (user picked A): round 1 = startGold, then +goldStep per round up to goldPerRound (10,13,16,19,22,25…) · goldStep 0 = flat goldPerRound (set 83: 25/25)
-    slots: 5, rerollCost: 2, bench: 6,              // เอกสาร (set 89: reroll 1 → 2)
+    slots: 5, rerollCost: 2, bench: 5,              // เอกสาร (set 89: reroll 1 → 2)
     hearts: 10, winsToFinish: 10,                   // เอกสาร
     // set 88: 15 shop levels, odds per level (% , used as weights) (ค่าเสนอ · user accepted the table)
     // set 89 (user 5 Nov, claude/review-2026-11-05-set89-spec.md): no upgrade — level follows the round played (win or lose)
@@ -163,7 +163,7 @@ export const RULE_SPEC = [
   ['shop.mergeCount', 'รวมร่างใช้กี่ตัว', 0, 0, 'ตัว', 'lock', { lock: 'กติการวมร่างหลักของเกม' }],
   ['shop.levels', 'จำนวนระดับร้าน', 0, 0, 'ระดับ', 'lock', { lock: 'ตารางโอกาสตั้งไว้ 15 ระดับ · เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้' }],
   ['shop.slots', 'ช่องในร้าน', 0, 0, 'ช่อง', 'lock', { lock: 'เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้ + หน้าจอร้านจัดไว้สำหรับจำนวนนี้' }],
-  ['shop.bench', 'ช่องม้านั่ง', 0, 0, 'ช่อง', 'lock', { lock: 'เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้ + หน้าจอจัดไว้ 6 ช่อง' }],
+  ['shop.bench', 'ช่องม้านั่ง', 0, 0, 'ช่อง', 'lock', { lock: 'เปลี่ยนแล้วเซฟเกมที่เล่นค้างโหลดไม่ได้ + หน้าจอจัดไว้ 5 ช่อง' }],
   ['tribeSteps', 'ขั้นเผ่า', 0, 0, 'ตัว', 'lock', { lock: 'โบนัสเผ่าทั้งหมดตั้งไว้เป็น 3 ขั้น' }],
   ['minPerTribe', 'ตัวละครต่อเผ่าอย่างน้อย', 0, 0, 'ตัว', 'lock', { lock: 'ตัวเช็กข้อมูลตัวละคร' }],
   ['hardStopMs', 'ตัดจบแมตช์ที่', 0, 0, 'มิลลิวิ', 'lock', { lock: 'ตัวกันแมตช์วนไม่จบ (พายุทรายต้องเริ่มก่อนค่านี้)' }],
