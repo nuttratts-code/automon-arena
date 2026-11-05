@@ -179,7 +179,7 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .fld > input, .fld > select { width: 100%; min-width: 0; height: 36px; box-sizing: border-box; margin: 0; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-body); font-size: .9rem; }
 .fld > input[type=number] { font-family: var(--f-mono); text-align: right; }
 .fld > input.changed, .fld > select.changed { background: var(--edit); border-color: var(--lo); }
-.rgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); align-items: start; }
+.rgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); align-items: start; }
 .rlock { padding: 6px 8px; border-radius: 6px; background: var(--soft, transparent); border: 1px dashed var(--line); } .rlock > b { color: var(--ink, inherit); } .rlock > small { font-size: .72rem; }
 .fld.wide { grid-column: span 2; } .fld.full { grid-column: 1 / -1; }
 .stg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -266,3 +266,29 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
   .boss-body > fieldset { padding: 8px; }
 }
 .boss-body .warn-txt { color: var(--hi); font-size: .82rem; margin: 0; }
+/* set 90: กฎเกม tab — chips + search, badges, odds table, round strip */
+#ruleMsg:empty { display: none; }
+.rtools { display: grid; gap: 8px; }
+.rtools input[type=search] { width: 100%; box-sizing: border-box; height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; }
+.rchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rchips button { padding: 5px 11px; border-radius: 999px; font-size: .84rem; display: inline-flex; gap: 6px; align-items: center; }
+.rchips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rchips .sb { background: var(--lo); color: var(--bg); border-radius: 999px; padding: 0 6px; font-size: .72rem; line-height: 1.5; }
+.rhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rhead h3 { color: var(--ink); font-size: .95rem; }
+.rbadge { background: var(--lo-bg); color: var(--lo); border-radius: 999px; padding: 1px 8px; font-size: .75rem; font-weight: 600; }
+.rreset { margin-left: auto; padding: 4px 10px; font-size: .8rem; }
+.rwas { color: var(--lo); font-size: .72rem; }
+.rlv { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 8px; }
+.rlvc > input { text-align: center !important; }
+.rtwrap { overflow-x: auto; }
+.rodds { border-collapse: collapse; width: 100%; font-size: .82rem; }
+.rodds th, .rodds td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: top; }
+.rodds thead th { color: var(--mute); font-weight: 600; white-space: nowrap; }
+.rodds tbody th { color: var(--mute); white-space: nowrap; padding-top: 10px; }
+.rodds input { width: 100%; min-width: 46px; height: 32px; box-sizing: border-box; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-mono); text-align: right; }
+.rodds td > small { display: block; }
+.rodds .rsum { color: var(--mute); font-size: .74rem; white-space: nowrap; padding-top: 10px; }
+.rodds .rsum.bad { color: var(--hi); }
+.rsec details > summary { cursor: pointer; color: var(--mute); font-size: .85rem; }
+.rsec details[open] > summary { margin-bottom: 8px; }

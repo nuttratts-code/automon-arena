@@ -82,7 +82,9 @@
 
     <div id="pane-rules" hidden style="display:grid;gap:14px">
       <div class="row"><span class="status grow" id="ruleDirty"></span><button type="button" id="ruleReset">คืนค่ากฎทั้งหมด</button></div>
+      <div class="rtools"><input type="search" id="ruleFind" placeholder="ค้นหากฎ เช่น พายุ ราคา Lv3" aria-label="ค้นหากฎ" autocomplete="off"><div class="rchips" id="ruleChips" role="group" aria-label="หมวดกฎ"></div></div>
       <p class="status" id="ruleMsg" role="status"></p>
+      <p class="hint" id="ruleNone" hidden>ไม่พบกฎที่ตรงกับคำค้น</p>
       <div id="rform" style="display:grid;gap:14px"></div>
     </div>
 
