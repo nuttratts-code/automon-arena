@@ -292,7 +292,7 @@ const SC_SKILL = [
     eq(b, [1, 2, 3].map(k => c.burn[i] + v * k).filter(a => a > 0).slice(0, b.length), 'burn applied grows by v each hit');
     return x;
   }],
-  ['SF-2', 'โดนตี → ได้เกราะ 40% ของช็อตบนผู้ตี', (c, L, i) => {
+  ['SF-2', 'โดนตี → ได้เกราะ 70% ของช็อตบนผู้ตี', (c, L, i) => {
     const shocker = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(100000), skills: [{ when: 'matchStart', do: 'shock', to: 'enemyFront', v: L3(25) }] });
     const x = scRun([[c, L, 0, 0], [shocker, 1, 1, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('SF-2').v[i], at = scLedger(x.r);
     const got = scSk(x.r, me, 0, 'armor').filter(e => e.t <= 20000);
@@ -338,12 +338,12 @@ const SC_SKILL = [
     for (const e of x.r.events.filter(q => q.k === 'dmg' && q.why === 'shock' && q.from === me && q.t <= 50000)) eq(e.amount, at2(x.r.events.indexOf(e)).get(foe).shock, `t ${e.t}: shock burst`);
     return x;
   }],
-  ['SF-3', 'โดนตี → ดาเมจ v ใส่ผู้ตี', (c, L, i) => {
+  // set 92 (import 5 Nov, config rev 7): SF-3 shocks the attacker instead of damaging it (old kit 'SF-3@1' kept below)
+  ['SF-3', 'โดนตี → ติดช็อต v ผู้ตี', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('SF-3').v[i];
-    const [evSum, tabSum, evs] = scSkillDmg(x, me, 0, 'skill');
     const n = scProcs(x.r, me, 0).length;
-    eq(evs.map(e => [e.to, e.amount]), Array(n).fill([x.uid(1, 0, 0), v]), 'damage per hit taken');
-    eq(tabSum, evSum, "tab 'ทำดาเมจ' → สกิล");
+    ok(n > 0, `procs = ${n}`);
+    eq(x.r.events.filter(e => e.k === 'shock' && e.from === me && e.why !== 'hit').slice(0, n).map(e => [e.to, e.amount]), Array(n).fill([x.uid(1, 0, 0), v]), 'shock per hit taken');
     return x;
   }],
   ['WY-2', 'โดนตี → ดาเมจ v ศัตรูแถวกลางเลนเดียวกัน', (c, L, i) => {
@@ -530,7 +530,9 @@ const SC_OLD = { 'HL-2': [{ when: 'hitTaken', do: 'armor', to: 'self', v: [2, 4,
              { when: 'hit', do: 'atkOf', of: { stat: 'healHit', who: 'self' }, to: 'self', v: [10, 10, 10] }],
   'HL-8@1': [{ when: 'passive', do: 'shareArmor', to: 'allAllies', v: [30, 30, 30] }],
   // set 84: HL-2 before the own-tribe filter
-  'HL-2@2': [{ when: 'hit', do: 'armorHitUp', to: 'frontAlly', v: [3, 6, 12] }] };
+  'HL-2@2': [{ when: 'hit', do: 'armorHitUp', to: 'frontAlly', v: [3, 6, 12] }],
+  // set 92: SF-3 before the shock kit
+  'SF-3@1': [{ when: 'hitTaken', do: 'dmg', to: 'attacker', v: [2, 4, 8] }] };
 const SC_RETIRED = [
   ['HL-2', 'โดนตี → ได้เกราะ v', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
@@ -605,6 +607,14 @@ const SC_RETIRED = [
     }
     const row = x.model.fxGiven.get(me).get('share'), tab = row ? row.list.reduce((a, q) => a + q.e.amount, 0) : 0;
     eq(tab, x.r.events.filter(s => s.k === 'armor' && s.why === 'share').reduce((a, s) => a + s.amount, 0), "tab 'แบ่งเกราะ' row total");
+    return x;
+  }],
+  ['SF-3@1', 'โดนตี → ดาเมจ v ใส่ผู้ตี', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const [evSum, tabSum, evs] = scSkillDmg(x, me, 0, 'skill');
+    const n = scProcs(x.r, me, 0).length;
+    eq(evs.map(e => [e.to, e.amount]), Array(n).fill([x.uid(1, 0, 0), v]), 'damage per hit taken');
+    eq(tabSum, evSum, "tab 'ทำดาเมจ' → สกิล");
     return x;
   }],  ['HL-2@2', 'ตีโดน → เพื่อนข้างหน้า (ทุกเผ่า) เกราะ/ฮิต +v', (c, L, i) => {
     const fr = mk('ZA-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: NEVER, hp: L3(100000) });
