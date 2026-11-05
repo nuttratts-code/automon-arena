@@ -36,7 +36,7 @@ export const TESTS_SHOP = [
     for (let r = 1; r <= 19; r++) { startRound(st, chars); eq(shopLvOf(st), Math.min(r, 15), `รอบ ${r}`); endMatch(st, r % 2 === 0, chars); st.over = false; }
     const R2 = { ...RULES, shop: { ...RULES.shop, roundLevels: [1, 1, 2, 2, 3] } };
     eq([1, 2, 3, 4, 5, 6, 30].map(r => lvForRound(r, R2)), [1, 1, 2, 2, 3, 3, 3], 'ตารางแก้เอง');
-    eq(RULES.shop.rerollCost, 2, 'รีโรล 2');
+    eq(RULES.shop.rerollCost, 1, 'รีโรล 1 (set 98)');
     ok(!validateConfig(chars, { ...RULES, shop: { ...RULES.shop, roundLevels: [1, 16] } }).ok, 'ระดับเกิน 15 ต้องเตือน');
     ok(!validateConfig(chars, { ...RULES, shop: { ...RULES.shop, roundLevels: [] } }).ok, 'ตารางว่างต้องเตือน');
   }],
