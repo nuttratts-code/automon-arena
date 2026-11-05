@@ -68,6 +68,8 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .slot .price { font: 600 .75rem var(--f-mono); color: var(--gold); }
 .rar { font-weight: 700; white-space: nowrap; }
 .slot .rar { font-size: .62rem; }
+.odds { display: flex; flex-wrap: wrap; gap: 2px 10px; } /* set 88: odds of the current shop level */
+#shopLv { margin-left: 6px; font-size: .75rem; vertical-align: middle; }
 .rar.r0 { color: var(--mute); } .rar.r1 { color: var(--r-unc); } .rar.r2 { color: var(--r-rare); } .rar.r3 { color: var(--r-epic); }
 .rar.r4 { color: var(--r-legend); background: var(--r-legend-bg); border-radius: 999px; padding: 0 6px; }
 .hint .rar { font-size: .85rem; }
@@ -262,8 +264,10 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 
   <div id="prep" style="display:grid;gap:12px">
     <section class="panel">
-      <div class="row"><h2 class="grow">ร้านค้า</h2><button id="reroll" type="button">รีโรล −1</button></div>
+      <div class="row"><h2 class="grow">ร้านค้า <span class="stat" id="shopLv">ร้าน Lv 1</span></h2><button id="upShop" type="button">อัปเกรดร้าน</button><button id="reroll" type="button">รีโรล −1</button></div>
+      <p class="hint odds" id="shopOdds"></p>
       <div class="shop" id="shop"></div>
+      <p class="hint" id="shopIncome"></p>
       <p class="hint">แตะตัวในร้านแล้วแตะช่องว่างเพื่อซื้อลงช่องนั้น หรือกด "ซื้อ" ในแผงด้านล่าง (ลงม้านั่ง) · ลากก็ได้</p>
     </section>
 
@@ -442,10 +446,24 @@ function renderChips() {
   $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('sGold').textContent = `เงิน ${P.gold}`;
 }
+// set 88: shop level, its odds, next level cost, and the income the next round will pay (interest + streak)
+function renderShopLevel() {
+  const lv = P.shopLv, cost = upgradeCost(lv), odds = oddsAt(lv);
+  $('shopLv').textContent = `ร้าน Lv ${lv}/${shopLevels()}`;
+  $('upShop').textContent = cost == null ? 'ร้านระดับสูงสุด' : `อัปเกรดร้าน → Lv ${lv + 1} −${cost}`;
+  $('upShop').disabled = cost == null || P.gold < cost || P.over;
+  const box = $('shopOdds'); box.replaceChildren(el('span', '', 'โอกาสเจอ:'));
+  for (const r of Object.keys(odds)) if (odds[r] > 0) box.append(el('span', 'rar ' + RARITY_CLASS[r], `${r} ${odds[r]}%`));
+  const interest = interestOf(P.gold); // what a win / a loss after this round would pay
+  const ifWin = P.wStreak + 1 >= S.streakFrom ? S.streakBonus : S.winBonus, ifLose = P.lStreak + 1 >= S.streakFrom ? S.streakBonus : 0;
+  $('shopIncome').textContent = `ดอกเบี้ย: เงินที่เหลือตอนจบร้าน ทุก ${S.interestPer} ได้ +1${S.interestCap > 0 ? ` (สูงสุด ${S.interestCap})` : ''} · ตอนนี้ ${P.gold} → รอบหน้า +${interest}`
+    + ` · ชนะรอบนี้ +${ifWin}${P.wStreak + 1 >= S.streakFrom ? ` (ชนะติด ${P.wStreak + 1})` : ''} · แพ้ +${ifLose}${ifLose ? ` (แพ้ติด ${P.lStreak + 1})` : ''}`;
+}
 function render() {
   renderChips();
   $('reroll').textContent = `รีโรล −${S.rerollCost}`;
   $('reroll').disabled = P.gold < S.rerollCost || P.over;
+  renderShopLevel();
 
   const shop = $('shop'); shop.replaceChildren();
   P.shop.forEach((s, i) => {
@@ -641,6 +659,7 @@ document.addEventListener('keydown', e => {
 });
 
 $('reroll').addEventListener('click', () => { pushMsgs(reroll(P, chars)); render(); });
+$('upShop').addEventListener('click', () => { pushMsgs(upgradeShop(P)); render(); });
 $('newRun').addEventListener('click', () => {
   if ($('newRun').dataset.confirm !== '1' && !P.over) { $('newRun').dataset.confirm = '1'; $('newRun').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; }, 3000); return; }
   $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
@@ -864,7 +883,7 @@ function boot() {
   const r = readSave(store.get(SAVE_KEY), CM, RULES, DATA_HASH);
   if (r.status === 'ok') {
     const o = r.save;
-    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่)`;
+    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่) · ร้าน Lv ${o.P.shopLv}`;
     $('resumeGo').onclick = () => {
       P = o.P; B = o.B; stats = o.stats; startedAt = o.startedAt; sel = null; msgs = []; showNotice('');
       const rp = readReplays(store.get(REPLAY_KEY), CM, RULES, DATA_HASH, P.seed); // ชุด 25: รีเพลย์ของ run นี้เท่านั้น

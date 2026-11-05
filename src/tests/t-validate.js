@@ -115,7 +115,9 @@ export const TESTS_VALIDATE = [
     eq(buildCharacterList().length, 48, 'จำนวนตัวละคร');
     const bad = buildCharacterList(); bad[0] = { ...bad[0], price: 99 };
     ok(validateConfig(bad).errors.some(e => e.includes('ราคา')), 'ไม่เตือนราคาไม่ตรงความหายาก');
-    ok(!validateConfig(buildCharacterList(), { ...RULES, shop: { ...RULES.shop, weights: { 'ธรรมดา': 1 } } }).ok, 'ไม่เตือนโอกาสสุ่มที่ขาด');
+    ok(!validateConfig(buildCharacterList(), { ...RULES, shop: { ...RULES.shop, levelOdds: RULES.shop.levelOdds.map((o, i) => (i === 3 ? { 'ธรรมดา': 1 } : o)) } }).ok, 'ไม่เตือนโอกาสสุ่มที่ขาด');
+    ok(!validateConfig(buildCharacterList(), { ...RULES, shop: { ...RULES.shop, levelOdds: RULES.shop.levelOdds.map((o, i) => (i === 0 ? Object.fromEntries(Object.keys(o).map(r => [r, 0])) : o)) } }).ok, 'ไม่เตือนระดับร้านที่โอกาสรวม 0');
+    ok(!validateConfig(buildCharacterList(), { ...RULES, shop: { ...RULES.shop, levelOdds: RULES.shop.levelOdds.slice(1) } }).ok, 'ไม่เตือนจำนวนระดับร้านไม่ตรง');
     for (const bad of [{ name: '' }, { name: 'ก'.repeat(31) }, { name: '<b>x</b>' }, { name: 'a\nb' }, { rowHint: 'บน' }, { extraTribes: ['วายุ', 'ภูติ'] }]) {
       const cs = buildCharacterList(); cs[0] = { ...cs[0], ...bad };
       ok(!validateConfig(cs).ok, `ไม่เตือนค่าผิด ${JSON.stringify(bad)}`);

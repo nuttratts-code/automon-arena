@@ -1,5 +1,5 @@
 import { RULES, pickHintRow } from './rules.js';
-import { SLOT_ORDER, allUnits, buy, move, reroll, sell } from './shop.js';
+import { SLOT_ORDER, allUnits, buy, move, reroll, sell, shopLevels, upgradeShop } from './shop.js';
 import { basePower } from './power.js';
 // บอทซื้อของด้วยร้านและกฎเดียวกับผู้เล่น (ใช้คำสั่งใน shop.js เท่านั้น จึงทำผิดกฎไม่ได้)
 // ไม่มีการสุ่มนอกจากเลขสุ่มในสถานะร้าน → เมล็ดเดิมได้ทีมเดิม (ใช้สร้างทีมบอทชุดตามจำนวนชนะภายหลังได้)
@@ -14,7 +14,12 @@ import { basePower } from './power.js';
 // Value = base stat power (core/power.js, skills not counted) — what a player can read off the character cards.
 
 export const BOT_HINT = { 'หน้า': 0, 'กลาง': 1, 'ที่ไหนก็ได้': 1, 'หลัง': 2 };
-export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6 }; // set 85 sweep vs the old bot: this mix won 81% head to head // ค่าเสนอ (internal bot tuning)
+export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6, lvStart: 0.5, lvPerRound: 0.34, save: 0 };
+// set 88 shop level: the bot upgrades at the start of each shop up to floor(lvStart + lvPerRound × round) · save = gold kept for interest
+// (rerolls stop there). Sweep (head to head, both seats, 16 rounds): never upgrading wins rounds 1–12 (Lv1 shop = 90% common → fast Lv3),
+// upgrading pays only from ~round 13 · saving for interest lost (rerolls are worth more) → save 0 · this default (Lv2 at round 5, Lv5 at 14)
+// tied/beat "never upgrade" (52% over 16 rounds) · bot team runs rotate BOT_LV_MIX so teams with rarer characters exist too (ค่าเสนอ internal)
+export const BOT_LV_MIX = [{}, { lvStart: 1, lvPerRound: 0.5 }, { lvStart: 1, lvPerRound: 0.75 }]; // set 85 sweep vs the old bot: this mix won 81% head to head // ค่าเสนอ (internal bot tuning)
 export const value = (u, cm) => cm[u.id].price * Math.pow(3, u.level - 1);
 
 export function mainTribes(st, cm) {
@@ -112,6 +117,9 @@ export function arrange(st, cm, chars = null, rules = RULES, focus = null) {
 export function botShop(st, chars, rules = RULES, opts = {}) {
   const cm = Object.fromEntries(chars.map(c => [c.id, c])), pw = powers(chars, rules);
   const maxRerolls = opts.maxRerolls ?? BOT_AI.maxRerolls, F = opts.focus || null, cap = rules.maxBoard + st.bench.length;
+  const A = { ...BOT_AI, ...(opts.ai || {}) };
+  const lvWant = Math.min(shopLevels(rules), Math.floor(A.lvStart + A.lvPerRound * st.round));
+  while (st.shopLv < lvWant && upgradeShop(st, rules).ok); // new odds apply to the rerolls below
   let rerolls = 0;
   for (let guard = 0; guard < 200; guard++) {
     tryMerges(st, chars, rules);
@@ -138,7 +146,7 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
         if (worst && worst.net > BOT_AI.minGain) { sell(st, worst.ref, chars, rules); continue; }
       }
     }
-    if (rerolls < maxRerolls && st.gold >= rules.shop.rerollCost) { reroll(st, chars, rules); rerolls++; continue; }
+    if (rerolls < maxRerolls && st.gold - rules.shop.rerollCost >= A.save) { reroll(st, chars, rules); rerolls++; continue; }
     break;
   }
   tryMerges(st, chars, rules);
