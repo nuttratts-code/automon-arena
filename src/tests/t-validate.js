@@ -20,7 +20,7 @@ export const TESTS_VALIDATE = [
     const bad = cleanStage({ runes: { T9: { dmgPct: 9999, on: 'x' }, ZZ: { a: 1 }, T1: { gold: 5, on: false } }, settings: { diffHard: -1, offEasyC: 2 },
       bosses: [{ id: 'B1', name: '<b>x</b>', hp: 1e9, atk: 30, rule: 'nope' }, { id: 'B1' }, { id: 'evil' }, { id: 'B9', tribe: 'ไม่มี', rule: 'healCut', ruleV: 101 }] });
     eq(bad.runes.T9.dmgPct, 25, 'T9 clamp → default'); eq(bad.runes.T9.on, true, 'on must be boolean'); eq(bad.runes.T1, { on: false, del: false, name: 'ร่ำรวย', max: 3, rarity: 'common', theme: '', tribe: 'เหล็กกล้า', scope: 'team', eff: 'gold', gold: 5 }, 'T1 accepted'); ok(!bad.runes.ZZ, 'unknown rune dropped');
-    eq(bad.settings.diffHard, 125, 'bad setting'); eq(bad.settings.offEasyC, 2, 'good setting');
+    eq(bad.settings.diffHard, 145, 'bad setting'); eq(bad.settings.offEasyC, 2, 'good setting');
     eq(bad.bosses.map(b => b.id), ['B1', 'B9'], 'boss ids (dup / bad id dropped)'); eq(bad.bosses[0].name, 'bx/b', 'name cleaned'); eq(bad.bosses[0].hp, d.bosses[0].hp, 'hp out of range → user default'); eq(bad.bosses[0].atk, 30, 'atk ok'); eq(bad.bosses[0].phases[0].rules, d.bosses[0].phases[0].rules, 'unknown rule kept user default');
     eq(bad.bosses[1].phases[0].rules, [{ id: 'healCut', v: 50 }], 'old rule/ruleV → phase 1 (value out of range → default)');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
