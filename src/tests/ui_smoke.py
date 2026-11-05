@@ -18,35 +18,88 @@ with sync_playwright() as p:
         t=pg.inner_text('#summary'); print(w,'check',t.split('\n')[0])
         import re
         mm=re.search(r'(\d+)\s*/\s*(\d+)', t); chk(mm and mm.group(1)==mm.group(2), 'check page')
-        # 2 game: play 12 rounds buying stuff
+        # 2 game (set 97: landscape one-screen page · game checks at 1366×768 and 844×390 · portrait = rotate screen)
+        gw,gh=(1366,768) if w>700 else (844,390)
+        pg.set_viewport_size({'width':gw,'height':gh})
         pg.goto(f'file://{D}/game.html')
-        # set 89: shop level follows the round (no upgrade button) · reroll costs 2
-        chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and 'รอบหน้า Lv 2' in pg.inner_text('#shopLv') and 'ธรรมดา' in pg.inner_text('#shopOdds'),'shop level chip round 1')
-        chk('รอบหน้าได้เงิน %d' % pg.evaluate('baseIncomeAt(2)') in pg.inner_text('#shopLv'),'next-round income on chip (set 96 ramp)')
+        def noscroll(tag):
+            r=pg.evaluate('[document.documentElement.scrollWidth,document.documentElement.scrollHeight,innerWidth,innerHeight]')
+            chk(r[0]<=r[2]+1 and r[1]<=r[3]+1,'no page scroll %s %s' % (tag,r))
+        fighting=lambda: pg.evaluate("document.getElementById('app').classList.contains('fighting')")
+        in_prep=lambda: pg.is_visible('#app') and not fighting()
+        def esc(): pg.evaluate("closePop()")
+        def drag(a,b):
+            ba=pg.locator(a).bounding_box(); bb=pg.locator(b).bounding_box()
+            x,y=ba['x']+ba['width']/2, ba['y']+ba['height']/2
+            pg.mouse.move(x,y); pg.mouse.down(); pg.mouse.move(x+15,y+5,steps=3)
+            pg.mouse.move(bb['x']+bb['width']/2, bb['y']+bb['height']/2, steps=8); pg.mouse.up()
+        noscroll('prep')
+        chk(len(pg.query_selector_all('#bench .cell'))==5 and pg.evaluate('P.bench.length')==5,'bench has 5 cells')
+        chk(len(pg.query_selector_all('#board .cell'))==6 and pg.is_hidden('#arena'),'prep shows only my 3x2 (enemy hidden)')
+        # set 89/96: shop level follows the round · next-round income on the dock · odds in the shop popup · reroll costs 2
+        chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and '→ 2' in pg.inner_text('#shopLv') and ('+%d' % pg.evaluate('baseIncomeAt(2)')) in pg.inner_text('#shopLv'),'shop level + next-round income on dock')
+        pg.click('#shopLv'); chk(pg.is_visible('#dlg') and 'ธรรมดา' in pg.inner_text('#shopOdds') and 'รอบหน้า Lv 2' in pg.inner_text('#pop'),'shop popup: odds + next level')
+        pg.keyboard.press('Escape'); chk(pg.is_hidden('#dlg'),'Esc closes popup')
         chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
-        # set 94: rune shop · difficulty pick · win offer blocks the fight until picked
-        # set 95: rune shop removed · difficulty = enemy power %
+        # set 94/95: runes (HUD bag popup → detail) · difficulty in HUD + "?" popup · win offer = blocking popup
         chk(pg.query_selector('#rShop') is None and pg.query_selector('#rReroll') is None,'no rune shop')
         g0=pg.evaluate('P.gold'); pg.evaluate("P.rn.bag={T4:1};render()")
-        chk(len(pg.query_selector_all('#rBag .rcard'))==1,'rune bag shows held rune')
-        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint') and '155%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line')
-        pg.click('[data-diff="กลาง"]'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune')
-        pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerPanel') and len(pg.query_selector_all('#offer .rcard'))==3,'offer 3 cards')
-        pg.click('#fight'); chk(pg.is_visible('#prep') and 'เลือกรูน' in pg.inner_text('#msgs'),'fight blocked until offer picked')
-        pg.click('#offer button'); chk(not pg.is_visible('#offerPanel') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
+        chk(pg.inner_text('#runeCnt')=='1','rune count on HUD')
+        pg.click('#runeBtn'); chk(len(pg.query_selector_all('#rBag .pitem'))==1,'rune popup lists held rune')
+        pg.click('#rBag .pitem'); chk('← กลับ' in pg.inner_text('#pop') and pg.query_selector('#pop .rcard') is not None,'rune detail popup')
+        pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
+        pg.click('[data-diff="ยาก"]'); pg.click('#diffInfo')
+        chk(pg.get_attribute('[data-diff="ยาก"]','aria-pressed')=='true' and 'ตำนาน' in pg.inner_text('#diffHint') and '155%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line'); esc()
+        pg.click('[data-diff="กลาง"]'); pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
+        pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerDlg') and len(pg.query_selector_all('#offer .rcard'))==3,'offer popup 3 cards')
+        pg.keyboard.press('Escape'); chk(pg.is_visible('#offerDlg'),'offer popup ignores Esc')
+        pg.evaluate("document.getElementById('fight').click()"); chk(not fighting() and 'เลือกรูน' in pg.evaluate('JSON.stringify(msgs)'),'fight blocked until offer picked')
+        pg.click('#offer button'); chk(pg.is_hidden('#offerDlg') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
         pg.evaluate("P.gold=%d;P.rn.bag={};P.rn.at={};P.rn.pt={};render()" % g0)
-        res=[]; maxBoard=0; titles=[]; offers=0  # set 87: every round's title (the last match can be a boss round)
+        # set 97: tap = details popup only (never moves) · drag = buy / move / sell
+        pg.evaluate("P.gold=60;render()")
+        i=pg.evaluate("P.shop.findIndex(s=>s.id)")
+        pg.click('#shop [data-ref="s:%d"]' % i); chk(pg.is_visible('#dlg') and pg.query_selector('#info') is not None,'tap shop card opens popup')
+        pg.click('#pop button.primary'); chk(pg.is_hidden('#dlg') and pg.evaluate('P.bench[0]!==null'),'buy from popup goes to bench')
+        pg.click('#bench [data-ref="n:0"]'); chk(pg.is_visible('#dlg') and pg.evaluate('P.bench[0]!==null && P.board.flat().every(x=>!x)'),'tap own unit opens popup, does not move'); esc()
+        drag('#bench [data-ref="n:0"]','#board [data-ref="b:0:0"]')
+        chk(pg.evaluate('P.bench[0]===null && P.board[0][0]!==null') and pg.is_hidden('#dlg'),'drag bench to board moves')
+        j=pg.evaluate("P.shop.findIndex(s=>s.id&&CM[s.id].price<=P.gold)")
+        if j>=0: drag('#shop [data-ref="s:%d"]' % j,'#bench [data-ref="n:2"]'); chk(pg.evaluate('P.bench[2]!==null'),'drag shop card to bench buys')
+        g1=pg.evaluate('P.gold'); paid=pg.evaluate('P.board[0][0].paid')
+        drag('#board [data-ref="b:0:0"]','#reroll')
+        chk(pg.evaluate('P.board[0][0]===null') and pg.evaluate('P.gold')==g1+paid,'drag unit to dock sells')
+        pg.evaluate("(()=>{const i=P.bench.findIndex(Boolean); if(i>=0) act({at:'bench',i},{at:'board',row:1,lane:0});})()")
+        pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
+        pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup'); esc()
+        pg.evaluate("P.gold=%d;render()" % g0)
+        res=[]; maxBoard=0; titles=[]; offers=0; first=True  # set 87: every round's title (the last match can be a boss round)
+        BUY="""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; tap({at:'shop',i}); const btn=document.querySelector('#pop button.primary'); if(!btn||btn.disabled){closePop();break;} btn.click();}})()"""
+        PLACE="""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()"""
         for rnd in range(14):
             if pg.evaluate('P.over'): break
-            pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
-            # ย้ายจากม้านั่งลงช่องว่างบนบอร์ด: เรียก act() ผ่านเส้นทางเดียวกับการแตะ (เกมรับ pointer events ไม่รับ .click())
-            pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
+            if pg.is_visible('#offerDlg'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
+            pg.evaluate(BUY)
+            # move from the bench to free board cells through act() (the same path a drag ends in)
+            pg.evaluate(PLACE)
             maxBoard=max(maxBoard,pg.evaluate('teamEntries(P).length'))
-            if pg.is_visible('#offerPanel'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
-            pg.click('#fight');
-            if pg.is_visible('#fightHint') and 'ยืนยัน' in pg.inner_text('#fightHint'): pg.click('#fight')
-            pg.click('#skip'); res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
-            pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน (แมตช์ยาวขึ้น เครื่องช้าอาจยังไม่ขึ้น)
+            pg.click('#fight')
+            if not fighting() and 'ยืนยัน' in pg.inner_text('#fight'): pg.click('#fight')
+            if first:
+                chk(fighting() and pg.is_visible('#arena') and len(pg.query_selector_all('#arena .side'))==2 and pg.is_hidden('.prepdock'),'battle on the same field: both teams shown, dock = battle controls')
+                noscroll('battle')
+                cell=pg.query_selector('#arena .side-a .cell .unit')
+                if cell:
+                    cell.click(); chk(pg.is_visible('#dlg') and pg.query_selector('#bInfo') is not None,'tap unit in battle opens live popup'); esc()
+            pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน
+            res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
+            if first:
+                rnd0=pg.evaluate('P.round'); t0=pg.inner_text('#resultTitle'); c0=pg.inner_text('#clock')
+                pg.click('#replayThis'); chk(pg.is_hidden('#result') and pg.is_visible('#replayTag'),'result: replay this match starts')
+                pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)
+                chk(pg.inner_text('#resultTitle')==t0 and pg.inner_text('#clock')==c0 and pg.evaluate('P.round')==rnd0,'replay this match = same result, run unchanged')
+                pg.click('#toMx'); chk(pg.is_visible('#mxDlg') and pg.is_visible('#mxBody'),'match details popup'); pg.click('#mxClose')
+                first=False
             pg.click('#next')
         print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
         chk(len(res)>=3,'game rounds')
@@ -58,75 +111,84 @@ with sync_playwright() as p:
         # ชุด 24: ปุ่มความเร็ว 8× 16× · ร้านไฮไลต์ตัวที่มีแล้ว · คำอธิบายสกิลครบ 3 เลเวล
         chk(pg.eval_on_selector_all('[data-speed]','e=>e.map(b=>b.dataset.speed)')==['1','2','4','8','16'],'speed buttons 1-16')
         if not pg.evaluate('P.over'):
+            if pg.is_visible('#offerDlg'): pg.click('#offer button')
             own=pg.evaluate("""(()=>{const ids=new Set(allUnits(P).map(x=>x.u.id)); const want=P.shop.filter(s=>s.id&&ids.has(s.id)).length; return [want, document.querySelectorAll('#shop .slot.owned').length];})()""")
             chk(own[0]==own[1],'shop owned highlight '+str(own))
-            lv=pg.evaluate("""(()=>{const x=allUnits(P).find(x=>CM[x.u.id].skills.some(s=>!s.lv&&new Set(s.v).size>1)); if(!x) return 'none'; sel=x.ref; render(); const b=document.querySelector('#info .lv-now'); return b?b.textContent:'missing';})()""")
+            lv=pg.evaluate("""(()=>{const x=allUnits(P).find(x=>CM[x.u.id].skills.some(s=>!s.lv&&new Set(s.v).size>1)); if(!x) return 'none'; tap(x.ref); const b=document.querySelector('#info .lv-now'); closePop(); return b?b.textContent:'missing';})()""")
             chk(lv!='missing','skill current level highlighted '+str(lv))
-            # ชุด 26: ปุ่มสลับ Lv1/2/3 ในแผงรายละเอียด · ค่าพลังเปลี่ยนตามเลเวลที่เลือก · แสดงทุกค่า
-            tg=pg.evaluate("""(()=>{const x=allUnits(P)[0]; if(!x) return 'none'; sel=x.ref; render(); const c=CM[x.u.id];
+            # ชุด 26: ปุ่มสลับ Lv1/2/3 ในป๊อปอัปรายละเอียด · ค่าพลังเปลี่ยนตามเลเวลที่เลือก · แสดงทุกค่า
+            tg=pg.evaluate("""(()=>{const x=allUnits(P)[0]; if(!x) return 'none'; tap(x.ref); const c=CM[x.u.id];
               const bs=[...document.querySelectorAll('#info .lvtabs button')]; if(bs.length!==3) return 'buttons '+bs.length;
               bs[2].click(); const t=document.querySelector('#info .stats2').textContent;
-              return [t.includes('HP '+c.hp[2]), t.includes('เกราะ/ฮิต'), t.includes('ฟื้น/ฮิต'), document.querySelector('#info .lvtabs [aria-pressed="true"]').dataset.lv];})()""")
-            chk(tg!='none' and tg[:3]==[True,True,True] and tg[3]=='3','level toggle in info panel '+str(tg))
+              const r=[t.includes('HP '+c.hp[2]), t.includes('เกราะ/ฮิต'), t.includes('ฟื้น/ฮิต'), document.querySelector('#info .lvtabs [aria-pressed="true"]').dataset.lv]; closePop(); return r;})()""")
+            chk(tg!='none' and tg[:3]==[True,True,True] and tg[3]=='3','level toggle in info popup '+str(tg))
         # ชุด 25: รูปตัวละครรายตัว (ลวดลาย + ขอบความหายาก) · รีเพลย์ทุกแมตช์ · บันทึกการต่อสู้ละเอียด
         mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon svg.pat g > *').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat'))]")
         chk(mon[0]>0 and mon[1] and mon[2],'unit shapes have patterns '+str(mon))
         chk(pg.evaluate('replays.length')==len(res) and pg.evaluate("readReplays(localStorage.getItem('automon-run-replays-v1'),CM,RULES,DATA_HASH,P.seed).status")=='ok','replays stored per match '+str(pg.evaluate('replays.length')))
-        back='#runEnd' if pg.evaluate('P.over') else '#prep'
+        over_now=pg.evaluate('P.over')
         rnd0=pg.evaluate('P.round')
-        if back=='#prep': pg.evaluate("document.querySelector('#replayPanel details').open=true")
-        pg.click((('#endReplays' if back=='#runEnd' else '#replayList'))+' li button >> nth=0')
-        chk(pg.is_visible('#battle') and 'รีเพลย์' in pg.text_content('#battleTitle'),'replay opens battle screen')
+        if over_now: pg.click('#endReplays li button >> nth=0')
+        else:
+            pg.click('#replayBtn'); chk(len(pg.query_selector_all('#replayList li button'))==len(res),'replay list popup')
+            pg.click('#replayList li button >> nth=0')
+        chk(fighting() and 'รีเพลย์' in pg.text_content('#battleTitle'),'replay opens battle on the field')
         pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)
         chk(pg.inner_text('#next')=='กลับ' and 'รีเพลย์' in pg.inner_text('#resultTitle'),'replay result screen')
-        pg.evaluate("document.getElementById('logBox').open=true"); pg.wait_for_timeout(100)
-        nlog=pg.eval_on_selector_all('#logList li','e=>e.length'); chk(nlog>3 and 'เริ่มแมตช์' in pg.inner_text('#logList'),'battle log lines '+str(nlog))
+        pg.click('#toMx'); pg.evaluate("document.getElementById('logBox').open=true"); pg.wait_for_timeout(100)
+        nlog=pg.eval_on_selector_all('#logList li','e=>e.length'); chk(nlog>3 and 'เริ่มแมตช์' in pg.text_content('#logList'),'battle log lines '+str(nlog))
         pg.check('#logProc'); chk(pg.eval_on_selector_all('#logList li','e=>e.length')<=nlog,'log filter')
-        pg.click('#next'); chk(pg.is_visible(back) and pg.evaluate('P.round')==rnd0,'replay returns without changing run')
-        pg.screenshot(path=f'{O}/full-game-{w}.png')
+        pg.click('#mxClose'); pg.click('#next')
+        chk((pg.is_visible('#runEnd') if over_now else in_prep()) and pg.evaluate('P.round')==rnd0,'replay returns without changing run')
+        pg.screenshot(path=f'{O}/full-game-{gw}.png')
         # ชุด 22: run จบจริงในลูป → หน้าจบ run + ประวัติจริง → เริ่ม run ใหม่จากหน้านั้น
         if pg.evaluate('P.over'):
             chk(pg.is_visible('#runEnd') and pg.evaluate("JSON.parse(localStorage.getItem('automon-run-history-v1')||'[]').length")>=1 and pg.evaluate("localStorage.getItem('automon-run-save-v1')") is None,'real run end: end screen + history + save removed')
             pg.click('#endNew')
-            # ซื้อและวางตัวลงบอร์ดอีกครั้ง (เหมือนในลูป) ให้ทดสอบสกิลถาวรต่อได้
-            pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
-            pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
-        # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว
+            pg.evaluate(BUY); pg.evaluate(PLACE)  # ซื้อและวางตัวลงบอร์ดอีกครั้ง ให้ทดสอบสกิลถาวรต่อได้
         # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว · 31 Oct: when matchStart (not 'set': a unit killed before its first attack never fires 'set' → ~1.3% random fails)
-            got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
-              const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
-            # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
-            if pg.is_hidden('#battle'):
-                fails.append('perm test: battle did not start · '+pg.evaluate('JSON.stringify(msgs)')+' · '+pg.evaluate('JSON.stringify(teamEntries(P).map(e=>[e.id,e.level,e.perm]))'))
-            else:
-                pg.click('#skip')
-            after=pg.evaluate("(()=>{const x=teamEntries(P)[0]; return x && x.perm ? (x.perm.atk||0) : 0;})()")
-            print(w,'perm atk before/after',got,after); chk(isinstance(got,int) and after>got,'battle perm skill applied after match')
-            chk('จากสกิลระหว่างสู้' in pg.inner_text('#endMsgs'),'battle perm message')
-            pg.click('#next') if pg.is_visible('#next') else None
-            nowrow=pg.evaluate("(()=>{if(P.over) return 'over'; const x=allUnits(P).find(x=>Object.values(x.u.perm).some(v=>v)); if(!x) return 'noperm'; sel=x.ref; render(); return !!document.querySelector('#info .stats2.now');})()")
-            chk(nowrow in (True,'over'),'perm now row in info panel '+str(nowrow))
+        if pg.is_visible('#offerDlg'): pg.click('#offer button')
+        got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
+          const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
+        # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
+        if not fighting():
+            fails.append('perm test: battle did not start · '+pg.evaluate('JSON.stringify(msgs)')+' · '+pg.evaluate('JSON.stringify(teamEntries(P).map(e=>[e.id,e.level,e.perm]))'))
+        else:
+            pg.click('#skip')
+        after=pg.evaluate("(()=>{const x=teamEntries(P)[0]; return x && x.perm ? (x.perm.atk||0) : 0;})()")
+        print(w,'perm atk before/after',got,after); chk(isinstance(got,int) and after>got,'battle perm skill applied after match')
+        chk('จากสกิลระหว่างสู้' in pg.inner_text('#endMsgs'),'battle perm message')
+        pg.click('#next') if pg.is_visible('#next') else None
+        nowrow=pg.evaluate("(()=>{if(P.over) return 'over'; const x=allUnits(P).find(x=>Object.values(x.u.perm).some(v=>v)); if(!x) return 'noperm'; tap(x.ref); const r=!!document.querySelector('#info .stats2.now'); closePop(); return r;})()")
+        chk(nowrow in (True,'over'),'perm now row in info popup '+str(nowrow))
         # 2c ชุด 22: เซฟกลางทาง · เล่นต่อ · เซฟเสียหาย · หน้าจบ run + ประวัติ
         over=pg.evaluate('P.over'); saved=pg.evaluate("localStorage.getItem('automon-run-save-v1')")
         chk(over or saved is not None,'save written after fight')
         if not over:
             rnd=pg.evaluate('JSON.parse(localStorage.getItem("automon-run-save-v1")).P.round')
-            pg.reload(); chk(pg.is_visible('#resume') and pg.is_hidden('#prep'),'resume prompt shown')
-            pg.click('#resumeGo'); chk(pg.is_visible('#prep') and pg.evaluate('P.round')==rnd+1,'resume continues same run')
+            pg.reload(); chk(pg.is_visible('#resume') and pg.is_hidden('#app'),'resume prompt shown')
+            pg.click('#resumeGo'); chk(in_prep() and pg.evaluate('P.round')==rnd+1,'resume continues same run')
             chk(pg.evaluate('replays.length')>=1,'replays kept after resume')
             pg.evaluate("localStorage.setItem('automon-run-replays-v1','{bad')"); pg.reload(); pg.click('#resumeGo')
-            chk('รีเพลย์' in pg.inner_text('#notice') and pg.evaluate('replays.length')==0 and pg.is_hidden('#replayPanel'),'bad replay data cleared + notice')
+            chk('รีเพลย์' in pg.inner_text('#notice') and pg.evaluate('replays.length')==0 and pg.is_hidden('#replayBtn'),'bad replay data cleared + notice')
         pg.evaluate("localStorage.setItem('automon-run-save-v1','{bad')"); pg.reload()
-        chk(pg.is_visible('#prep') and 'เสียหาย' in pg.inner_text('#notice') and pg.evaluate("localStorage.getItem('automon-run-save-v1')") is not None,'bad save cleared + notice + new save')
+        chk(in_prep() and 'เสียหาย' in pg.inner_text('#notice') and pg.evaluate("localStorage.getItem('automon-run-save-v1')") is not None,'bad save cleared + notice + new save')
         pg.evaluate("(()=>{const H=JSON.parse(localStorage.getItem('automon-run-save-v1'));H.data='00000000';localStorage.setItem('automon-run-save-v1',JSON.stringify(H));})()"); pg.reload()
         chk('อัปเดต' in pg.inner_text('#notice'),'data change clears save')
         pg.evaluate("localStorage.setItem('automon-run-history-v1',JSON.stringify([{at:1,won:false,wins:2,hearts:0,rounds:12,matches:12,team:[{id:'HL-1',level:2}],top:'HL-1',topDmg:50},{at:2,won:true,wins:99}]))")
         pg.evaluate("P.wins=3;P.hearts=0;P.over=true;renderRunEnd();showScreen('runEnd')")
         hist=pg.eval_on_selector_all('#endHistory li','e=>e.map(x=>x.textContent)')
         chk(pg.is_visible('#runEnd') and 'หัวใจหมด' in pg.inner_text('#endTitle') and len(hist)==1 and 'HL-1' in hist[0],'run end screen + filtered history '+str(hist))
-        pg.click('#endNew'); chk(pg.is_visible('#prep') and pg.evaluate('P.round')==1 and not pg.evaluate('P.over'),'new run from end screen')
+        pg.click('#endNew'); chk(in_prep() and pg.evaluate('P.round')==1 and not pg.evaluate('P.over'),'new run from end screen')
         print(w,'save/resume/end ok')
         pg.evaluate("localStorage.clear()")
+        # set 97: phone held upright → "rotate your phone" screen · button continues in portrait
+        if w<700:
+            pg.set_viewport_size({'width':390,'height':844}); pg.reload()
+            chk(pg.is_visible('#rotate') and pg.is_visible('#rotateSkip'),'portrait shows rotate screen')
+            pg.click('#rotateSkip'); chk(pg.is_hidden('#rotate') and in_prep(),'rotate screen button continues')
+            pg.evaluate("localStorage.clear()")
+        pg.set_viewport_size({'width':w,'height':h})
         # 3 balance
         pg.goto(f'file://{D}/balance.html')
         chk(pg.is_hidden('#errs'),'balance errs shown')
