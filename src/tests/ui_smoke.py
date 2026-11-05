@@ -23,13 +23,24 @@ with sync_playwright() as p:
         # set 89: shop level follows the round (no upgrade button) · reroll costs 2
         chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and 'รอบหน้า Lv 2' in pg.inner_text('#shopLv') and 'ธรรมดา' in pg.inner_text('#shopOdds'),'shop level chip round 1')
         chk('−2' in pg.inner_text('#reroll'),'reroll cost 2')
-        res=[]; maxBoard=0; titles=[]  # set 87: every round's title (the last match can be a boss round)
+        # set 94: rune shop · difficulty pick · win offer blocks the fight until picked
+        chk(len(pg.query_selector_all('#rShop .rcard'))==3 and '27 ทอง' in pg.inner_text('#rOdds'),'rune shop 3 cards + prices')
+        g0=pg.evaluate('P.gold'); pg.evaluate("P.gold=60;render()"); pg.click('#rShop .rcard button')
+        chk(pg.evaluate('Object.keys(P.rn.bag).length')==1 and pg.evaluate('P.gold')<60 and len(pg.query_selector_all('#rBag .rcard'))==1,'buy rune → bag')
+        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint'),'difficulty pick + reward line')
+        pg.click('[data-diff="กลาง"]'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune')
+        pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerPanel') and len(pg.query_selector_all('#offer .rcard'))==3,'offer 3 cards')
+        pg.click('#fight'); chk(pg.is_visible('#prep') and 'เลือกรูน' in pg.inner_text('#msgs'),'fight blocked until offer picked')
+        pg.click('#offer button'); chk(not pg.is_visible('#offerPanel') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
+        pg.evaluate("P.gold=%d;P.rn.bag={};P.rn.at={};P.rn.pt={};render()" % g0)
+        res=[]; maxBoard=0; titles=[]; offers=0  # set 87: every round's title (the last match can be a boss round)
         for rnd in range(14):
             if pg.evaluate('P.over'): break
             pg.evaluate("""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; sel={at:'shop',i}; render(); const btn=[...document.querySelectorAll('#info button')].find(b=>b.textContent.includes('ซื้อ')); if(!btn||btn.disabled)break; btn.click();}})()""")
             # ย้ายจากม้านั่งลงช่องว่างบนบอร์ด: เรียก act() ผ่านเส้นทางเดียวกับการแตะ (เกมรับ pointer events ไม่รับ .click())
             pg.evaluate("""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()""")
             maxBoard=max(maxBoard,pg.evaluate('teamEntries(P).length'))
+            if pg.is_visible('#offerPanel'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
             pg.click('#fight');
             if pg.is_visible('#fightHint') and 'ยืนยัน' in pg.inner_text('#fightHint'): pg.click('#fight')
             pg.click('#skip'); res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
@@ -37,6 +48,7 @@ with sync_playwright() as p:
             pg.click('#next')
         print(w,'game rounds',len(res),res[-3:], 'over',pg.evaluate('P.over'), 'max board',maxBoard)
         chk(len(res)>=3,'game rounds')
+        chk(offers>0 or not any(x.startswith('ชนะ') or x.startswith('เสมอ') for x in res[:-1]),'win offers a rune (%d)' % offers)
         if not pg.evaluate('P.over'): chk(('Lv %d/' % min(pg.evaluate('P.round'),15)) in pg.inner_text('#shopLv'),'shop level rose with rounds')
         # ชุด 23: ทีมบอทเตรียมไว้ผ่านตัวตรวจ และหัวแมตช์บอกขั้น/ระดับคู่แข่ง
         chk(pg.evaluate('BOT_OK') and any('คู่แข่ง: ทีมขั้นชนะ' in t for t in titles),'preset bot teams active')

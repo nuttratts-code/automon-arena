@@ -158,18 +158,20 @@ export function pushHistory(list, entry) { return [entry, ...list].slice(0, HIST
 export const REPLAY_VERSION = 1;
 export const REPLAY_MAX = 40;            // แมตช์ต่อ run สูงสุดจริง = ชนะ 10 + แพ้ 10 − 1 = 19 · เผื่อ (ค่าเสนอ)
 // set 94: n = the player's runes at that match (rnCompact) · only written when there are runes (older entries stay valid)
-export function replayEntry(round, teamA, teamB, result, runes = []) {
+// g = win streak before the match (rune เติบโต reads it)
+export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0) {
   const copy = t => JSON.parse(JSON.stringify(t));
   const x = { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
-  if (runes.length) x.n = copy(runes);
+  if (runes.length) { x.n = copy(runes); x.g = streak | 0; }
   return x;
 }
 export function makeReplays(runSeed, hash, list) {
   return JSON.stringify({ rv: REPLAY_VERSION, data: hash, run: runSeed, list: list.slice(-REPLAY_MAX) });
 }
 export function checkReplay(x, cm, rules = RULES) {
-  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
   if (svOwn(x, 'n') && !rnCompactOk(x.n, rules)) return false;
+  if (svOwn(x, 'g') && !svIntIn(x.g, 0, 10000)) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }

@@ -166,6 +166,21 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 /* B2: "เริ่มสู้" stays visible at the bottom of the screen on every round (was below the fold under the info panel on phones) */
 .fightbar { position: sticky; bottom: 0; z-index: 5; background: var(--bg); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+/* set 94: runes in the run (offer · rune shop · bag · difficulty) */
+.rcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.rcard { border: 1px solid var(--line); border-radius: 8px; background: var(--soft); padding: 7px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.rcard.locked { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.rcard.empty { color: var(--mute); place-items: center; min-height: 60px; }
+.rcard .rname { font-weight: 600; } .rcard .rtext { font-size: .78rem; color: var(--mute); overflow-wrap: anywhere; }
+.rcard .row { gap: 4px; flex-wrap: wrap; } .rcard button { padding: 4px 8px; font-size: .8rem; }
+.rbag { display: grid; gap: 6px; }
+.rbag .rcard { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.rbag select { font: inherit; font-size: .8rem; padding: 3px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); max-width: 100%; }
+.rune-dot { position: absolute; left: 3px; bottom: 2px; font-size: .58rem; color: var(--gold); font-weight: 700; max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diff { display: flex; gap: 4px; flex-wrap: wrap; }
+.diff button[aria-pressed="true"] { background: var(--sel); color: var(--panel); border-color: var(--sel); }
+#offerPanel { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.scout { font-size: .8rem; }
 @media (max-width: 520px) { .slot { min-height: 96px; } .cell { min-height: 78px; } .shape { width: 28px; height: 28px; } }
 @media (max-width: 520px) { .heads, .arena { min-width: 296px; grid-template-columns: 1fr 8px 1fr; gap: 4px; } .side { gap: 4px; } } /* B1: battle board fits 390px (was min 360px in a 340px stage → enemy back column cut off) */
 .tags { display: inline-flex; flex-wrap: wrap; gap: 3px; margin-right: 6px; vertical-align: 1px; }
@@ -263,11 +278,24 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   </section>
 
   <div id="prep" style="display:grid;gap:12px">
+    <section class="panel" id="offerPanel" hidden>
+      <h2 id="offerTitle">ชนะ! เลือกรูนฟรี 1 อัน</h2>
+      <div class="rcards" id="offer"></div>
+      <div class="row"><button id="offerSkip" type="button">ไม่รับรูน</button></div>
+    </section>
     <section class="panel">
       <div class="row"><h2 class="grow">ร้านค้า <span class="stat" id="shopLv">ร้าน Lv 1</span></h2><button id="reroll" type="button">รีโรล −1</button></div>
       <p class="hint odds" id="shopOdds"></p>
       <div class="shop" id="shop"></div>
       <p class="hint">แตะตัวในร้านแล้วแตะช่องว่างเพื่อซื้อลงช่องนั้น หรือกด "ซื้อ" ในแผงด้านล่าง (ลงม้านั่ง) · ลากก็ได้</p>
+    </section>
+
+    <section class="panel" id="runePanel">
+      <div class="row"><h2 class="grow">ร้านรูน</h2><button id="rReroll" type="button">รีโรล −2</button></div>
+      <p class="hint odds" id="rOdds"></p>
+      <div class="rcards" id="rShop"></div>
+      <details id="rBagFold" open><summary id="rBagSum">รูนของฉัน</summary><p class="hint">ทุกรูนที่มีทำงานทั้งหมด · รูน "ตัวเดียว" ต้องเลือกช่องบนบอร์ด (ทำงานกับตัวที่ยืนช่องนั้น)</p><div class="rbag" id="rBag"></div></details>
+      <div class="row" id="rTradeRow" hidden><button id="rTrade" type="button"></button></div>
     </section>
 
     <section class="panel">
@@ -289,6 +317,11 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
       <details><summary id="replaySum">รีเพลย์แมตช์ใน run นี้</summary><ol class="msgs replays" id="replayList"></ol></details>
     </section>
 
+    <section class="panel" id="diffPanel">
+      <div class="row"><h2 class="grow">ความยากรอบนี้</h2><div class="diff" id="diffBox" role="group" aria-label="ความยาก"><button type="button" data-diff="ง่าย">ง่าย</button><button type="button" data-diff="กลาง">กลาง</button><button type="button" data-diff="ยาก">ยาก</button></div></div>
+      <p class="hint" id="diffHint"></p>
+      <div class="scout hint" id="scoutBox"></div>
+    </section>
     <div class="row fightbar">
       <button class="primary" id="fight" type="button">เริ่มสู้</button>
       <span class="hint" id="fightHint"></span>
@@ -369,6 +402,7 @@ const chars = buildCharacterList(), CM = makeCharMap(chars);
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
 let P = null, B = null, sel = null, msgs = [], speed = 2, confirmEmpty = false;
+let diff = 'กลาง'; // set 94: difficulty picked for the next normal round (page only, not saved)
 // ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
 const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
 let stats = newStats(), startedAt = Date.now(), pendingEnd = null;
@@ -440,7 +474,7 @@ function mergeTargets(u) { // ตัวชนิดเดียวกัน เ�
 function renderChips() {
   const rb = runBossAt(P.round, P.seed); // set 85: boss rounds
   $('sRound').textContent = rb ? `รอบ ${P.round} · บอส!` : `รอบ ${P.round}`;
-  $('fight').textContent = rb ? `สู้บอส: ${rb.boss.name}` : 'เริ่มสู้';
+  $('fight').textContent = rb ? `สู้บอส: ${rb.boss.name}` : `เริ่มสู้ (${diff})`;
   $('sHearts').textContent = `หัวใจ ${P.hearts}`;
   $('sWins').textContent = `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('sGold').textContent = `เงิน ${P.gold}`;
@@ -496,6 +530,7 @@ function render() {
       cell.append(box);
       cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
     } else cell.setAttribute('aria-label', 'ช่องว่าง');
+    if (ref.at === 'board') { const rs = runesAt(ref.row, ref.lane); if (rs.length) cell.append(el('span', 'rune-dot', '◆ ' + rs.join(' · '))); } // set 94
     if (sel && sameRef(sel, ref)) cell.classList.add('sel');
     else if (mt.some(r => sameRef(r, ref))) cell.classList.add('mergeable');
     return cell;
@@ -514,6 +549,7 @@ function render() {
     s.append(i, `${t} ${n}${steps[t] ? ` · ขั้น ${steps[t]}` : ''}`); return s;
   }));
   if (!entries.length) $('tribes').replaceChildren(el('span', '', 'บอร์ดยังว่าง'));
+  renderRunes();
 
   renderInfo();
   renderReplays($('replayList'), 'prep');
@@ -657,6 +693,90 @@ $('newRun').addEventListener('click', () => {
   $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
 });
 
+// ---------- set 94: runes in the run (core/runrunes.js) · every text through textContent ----------
+const RN_RAR_TH = Object.fromEntries(RUNE_RARITY), RN_RAR_CLS = { common: 'r0', rare: 'r2', legend: 'r4' };
+const RN_ROW_TH = ['หน้า', 'กลาง', 'หลัง'], RN_LANE_TH = ['บน', 'ล่าง'];
+const rnSlotTh = s => `${RN_ROW_TH[s[0]]}${RN_LANE_TH[s[1]]}`;
+const rnDesc = r => runeText(r) || `${runeScopeLabel(r)}: สกิลรูน (ทำงานตอนสู้)`;
+function runesAt(row, lane) { return Object.entries(P.rn.at).filter(([, s]) => s[0] === row && s[1] === lane).map(([id]) => (rnRec(id) || { name: id }).name); }
+function runeCard(r, extra) {
+  const c = el('div', 'rcard'); const t = el('span', 'rar ' + RN_RAR_CLS[r.rarity], RN_RAR_TH[r.rarity]);
+  const head = el('div', 'row'); head.append(el('span', 'rname grow', r.name), t);
+  c.append(head, el('span', 'rtext', rnDesc(r)));
+  const held = rnHeld(P, r.id); if (held) c.append(el('span', 'hint', `มีแล้ว ${held}/${r.max || 1}`));
+  if (extra) c.append(extra);
+  return c;
+}
+const rnBtn = (text, fn, dis) => { const b = el('button', '', text); b.type = 'button'; b.disabled = !!dis; b.addEventListener('click', fn); return b; };
+function renderRunes() {
+  const o = P.rn.offer;
+  $('offerPanel').hidden = !o || P.over;
+  if (o) {
+    $('offerTitle').textContent = o.kind === 'boss' ? 'ชนะบอส! เลือกรูนฟรี 1 อัน' : `ชนะรอบ${o.kind}! เลือกรูนฟรี 1 อัน`;
+    $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn('เลือกรูนนี้', () => { pushMsgs(rnTakeOffer(P, i)); saveRun(); render(); })) : el('div', 'rcard empty', id); }));
+  }
+  const st = RUN_STAGE.settings, rc = st.rsReroll | 0;
+  $('rReroll').textContent = `รีโรล −${rc}`; $('rReroll').disabled = P.over || P.gold < rc;
+  const odds = rarityOdds(st), ob = $('rOdds'); ob.replaceChildren(el('span', '', 'โอกาสเจอ:'));
+  for (const [k] of RUNE_RARITY) ob.append(el('span', 'rar ' + RN_RAR_CLS[k], `${RN_RAR_TH[k]} ${Math.round(odds[k])}% · ${rnPrice({ rarity: k })} ทอง`));
+  $('rShop').replaceChildren(...P.rn.shop.map((sl, i) => {
+    const r = rnRec(sl.id);
+    if (!r) return el('div', 'rcard empty', 'ขายแล้ว');
+    const price = rnPrice(r), row = el('div', 'row');
+    row.append(rnBtn(`ซื้อ ${price} ทอง`, () => { pushMsgs(rnBuy(P, i)); render(); }, P.over || P.gold < price || rnHeld(P, r.id) >= (r.max || 1)),
+      rnBtn(sl.locked ? 'ล็อกแล้ว' : 'ล็อก', () => { pushMsgs(rnLock(P, i)); render(); }));
+    const c = runeCard(r, row); if (sl.locked) c.classList.add('locked'); return c;
+  }));
+  const bag = Object.entries(P.rn.bag).filter(([, n]) => n > 0);
+  $('rBagSum').textContent = `รูนของฉัน (${bag.length})`;
+  $('rBag').replaceChildren(...(bag.length ? bag.map(([id, n]) => {
+    const r = rnRec(id); if (!r) return el('div', 'rcard empty', id);
+    const c = el('div', 'rcard'), info = el('div', ''), ctl = el('div', 'row');
+    info.append(el('span', 'rname', `${r.name}${n > 1 ? ` ×${n}` : ''} `), el('span', 'rar ' + RN_RAR_CLS[r.rarity], RN_RAR_TH[r.rarity]), el('div', 'rtext', rnDesc(r)));
+    if (rnNeedsSlot(r)) ctl.append(slotPick(id, false, 'วางที่'));
+    if (rnNeedsPartner(r)) ctl.append(slotPick(id, true, 'คู่'));
+    c.append(info, ctl); return c;
+  }) : [el('p', 'hint', 'ยังไม่มีรูน · ชนะรอบเพื่อเลือกรูนฟรี หรือซื้อจากร้านรูน')]));
+  const fx = rnFx(P);
+  $('rTradeRow').hidden = !fx.heart;
+  if (fx.heart) { $('rTrade').textContent = `แลกหัวใจ 1 ดวง → ${fx.heart.gold} ทอง`; $('rTrade').disabled = P.over || P.rn.traded || P.hearts < fx.heart.min; }
+  renderDiff(fx);
+}
+function slotPick(id, partner, label) {
+  const lab = el('label', 'hint', label + ' '), sel2 = document.createElement('select');
+  const cur = (partner ? P.rn.pt : P.rn.at)[id];
+  sel2.append(new Option('ยังไม่วาง', ''));
+  for (let row = 0; row < 3; row++) for (let lane = 0; lane < 2; lane++) {
+    const u = P.board[row][lane], o = new Option(`${rnSlotTh([row, lane])}${u ? ' · ' + CM[u.id].name : ''}`, `${row},${lane}`);
+    if (cur && cur[0] === row && cur[1] === lane) o.selected = true;
+    sel2.append(o);
+  }
+  sel2.addEventListener('change', () => { const v = sel2.value; pushMsgs(rnPlace(P, id, v ? v.split(',').map(Number) : null, RULES, partner)); saveRun(); render(); });
+  lab.append(sel2); return lab;
+}
+// difficulty + reward line + scout preview (R5: no rune ทำนาย = enemy hidden)
+const RN_OFF_TH = k => { const st = RUN_STAGE.settings, key = RN_OFFER_KEY[k]; return RUNE_RARITY.map(([r, th]) => [st[`off${key}${{ common: 'C', rare: 'R', legend: 'L' }[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => `${th} ${n}`).join(' + '); };
+function renderDiff(fx) {
+  const rb = runBossAt(P.round, P.seed);
+  $('diffBox').hidden = !!rb;
+  document.querySelectorAll('[data-diff]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.diff === diff)));
+  $('diffHint').textContent = rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 อัน (${RN_OFF_TH(diff)}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
+  const box = $('scoutBox');
+  if (rb) { box.textContent = `ศัตรู: บอส ${rb.boss.name}`; return; }
+  if (!fx.scout) { box.textContent = 'ไม่เห็นทีมศัตรู (ต้องมีรูนส่องทีม)'; return; }
+  const foe = BOT_OK ? pickBotTeamAt(BOT_TEAMS, P.wins, P.seed, P.round, diff) : null;
+  box.textContent = foe ? `ทีมศัตรู (${diff}): ` + foe.team.map(e => `${rnSlotTh([e.row, e.lane])} ${e.id} ${CM[e.id] ? CM[e.id].name : ''} Lv${e.level}`).join(' · ') : 'ศัตรูเป็นบอทซื้อสด (ดูล่วงหน้าไม่ได้)';
+}
+// player team for a fight: runes equipped (rnFromCompact) → { units, opts }
+function playerSide(teamA, runes, streak = stats.streak) {
+  const e = equipRunes(buildTeam(teamA, CM), rnFromCompact(runes || []), { winStreak: streak });
+  return { units: e.units, opts: e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {} };
+}
+$('offerSkip').addEventListener('click', () => { pushMsgs(rnSkipOffer(P)); saveRun(); render(); });
+$('rReroll').addEventListener('click', () => { pushMsgs(rnReroll(P)); render(); });
+$('rTrade').addEventListener('click', () => { pushMsgs(rnHeartTrade(P)); saveRun(); render(); });
+document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { diff = b.dataset.diff; render(); }));
+
 // ---------- สู้ ----------
 let lastResult = null;
 const view = new BattleView($('arena'), CM, {
@@ -666,31 +786,34 @@ const view = new BattleView($('arena'), CM, {
 $('fight').addEventListener('click', () => {
   if (P.over) return;
   if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; render(); return; }
+  if (P.rn.offer) { pushMsgs({ ok: false, msg: 'เลือกรูนรางวัลก่อน (หรือกด "ไม่รับรูน")' }); render(); return; }
   confirmEmpty = false; sel = null;
   // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
   const rb = runBossAt(P.round, P.seed);
-  const foe = rb ? null : BOT_OK ? pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round) : null;
+  const foe = rb ? null : BOT_OK ? pickBotTeamAt(BOT_TEAMS, P.wins, P.seed, P.round, diff) : null; // set 94: tier = picked difficulty
   if (!foe && !rb) botShop(B, chars, RULES);
   const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = rb ? { boss: rb.boss.id, k: rb.k } : foe ? foe.team : teamEntries(B);
+  const runes = rnCompact(P), kind = rb ? 'boss' : diff, streak = stats.streak;
   let result;
-  try { result = simulate(buildTeam(teamA, CM), foeUnits(teamB)); }
+  try { const ps = playerSide(teamA, runes); result = simulate(ps.units, foeUnits(teamB), ps.opts); }
   catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
   lastResult = result;
-  const shown = showResult(teamA, teamB, result);
+  const shown = showResult(teamA, teamB, result, runes, streak);
   // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
   const r = endMatch(P, won, chars, RULES, gain(0));
   if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
+  if (won && !P.over) { const of = rnMakeOffer(P, kind); if (!of) r.msgs.push('ไม่มีรูนเหลือให้เลือกแล้ว'); } // set 94: win → pick 1 free rune
   addMatchStats(stats, result);
-  replays.push(replayEntry(round, teamA, teamB, result)); saveReplays(); // ชุด 25
-  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null }));
+  replays.push(replayEntry(round, teamA, teamB, result, runes, streak)); saveReplays(); // ชุด 25
+  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null, runes, diff: rb ? null : diff }));
   pendingEnd = { r, w }; replayMode = null;
   if (P.over) { store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, Date.now())))); store.del(SAVE_KEY); }
   else saveRun();
   showNotice('');
   showScreen('battle'); $('result').hidden = true;
-  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]} (${foe.tier})` : '');
+  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ${foe.tier} · คู่แข่ง: ทีมขั้นชนะ ${foe.stage} ช่วง${BOT_SPAN_TH[foe.span]}` : '');
   viewMap(teamB); view.speed = speed; view.load(shown); resetLog(); view.play();
 });
 // set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
@@ -702,9 +825,9 @@ function foeUnits(b) {
 }
 // battle view card data: the boss is not a character → add its card (set 85)
 function viewMap(b) { const rec = !Array.isArray(b) && b ? runBossById(b.boss) : null; $('foeHead').textContent = rec ? 'บอส' : 'คู่แข่ง (บอท)'; view.charMap = rec ? { ...CM, [rec.id]: runBossChar(rec, b.k) } : CM; }
-function showResult(teamA, teamB, result) {
+function showResult(teamA, teamB, result, runes, streak) {
   let r = null;
-  try { r = simulate(buildTeam(teamA, CM), foeUnits(teamB), { detail: true, live: true }); } catch (e) { r = null; }
+  try { const ps = playerSide(teamA, runes, streak); r = simulate(ps.units, foeUnits(teamB), { ...ps.opts, detail: true, live: true }); } catch (e) { r = null; }
   return r && r.winner === result.winner && r.timeMs === result.timeMs ? r : result;
 }
 // ---------- รีเพลย์ (ชุด 25) ----------
@@ -718,13 +841,13 @@ function renderReplays(list, back) {
 function watchReplay(i, back) {
   const x = replays[i]; if (!x) return;
   let result;
-  try { result = simulate(buildTeam(x.a, CM), foeUnits(x.b)); } catch (e) { result = null; }
+  try { const ps = playerSide(x.a, x.n, x.g | 0); result = simulate(ps.units, foeUnits(x.b), ps.opts); } catch (e) { result = null; }
   // จำลองซ้ำแล้วต้องได้ผลและเวลาเดิม · ไม่ตรง = ระบบต่อสู้เปลี่ยนหลังเล่นแมตช์นั้น → ไม่เล่น แจ้งแทน
   if (!result || result.winner !== x.w || Math.floor(result.timeMs) !== x.t) { showNotice(`รีเพลย์รอบ ${x.r} ใช้ไม่ได้: เกมอัปเดตระบบการต่อสู้หลังแมตช์นี้ ผลจึงไม่ตรงกับที่เล่นจริง`); return; }
   showNotice(''); sel = null; pendingEnd = null; replayMode = { back, x };
   showScreen('battle'); $('result').hidden = true;
   $('battleTitle').textContent = `รีเพลย์รอบ ${x.r}`;
-  viewMap(x.b); view.speed = speed; view.load(showResult(x.a, x.b, result)); resetLog(); view.play();
+  viewMap(x.b); view.speed = speed; view.load(showResult(x.a, x.b, result, x.n, x.g | 0)); resetLog(); view.play();
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {
