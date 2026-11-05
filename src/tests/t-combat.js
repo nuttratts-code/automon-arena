@@ -93,12 +93,12 @@ export const TESTS_COMBAT = [
     ok(at[3] - at[2] < at[1] - at[0], `ตีเร็วขึ้นเรื่อยๆ หลังเริ่มต่อเวลา (${at})`);
     eq(ev(r, 'heal', e => e.t > 26000).length, 0, 'ลด 100% แล้ว ฟื้น HP = 0');
     // เกราะใหม่ลด · เกราะเดิมไม่ลด
-    const T = mk('T', { atk: L3(1), cdMs: 1000, hp: L3(1000), armor: L3(50), skills: [{ when: 'hit', do: 'armorHitUp', to: 'self', v: L3(80) }] });
+    const T = mk('T', { atk: L3(1), cdMs: 1000, hp: L3(1000), armor: L3(50), skills: [{ when: 'hit', do: 'armorHitUp', to: 'self', v: L3(8) }] }); // set 98: 8 = HL-3 Lv3 (an 80/hit stacker outlasts overtime → 300 s draw)
     const r3 = fight([T], [u('T')], [u('T')], { rules: R });
     eq(ev(r3, 'armor', e => e.t > 26000).length, 0, 'ลด 100% แล้ว ไม่ได้เกราะใหม่');
-    // ตัวที่ได้เกราะทุกฮิตแรงๆ (แบบ HL-3 Lv3) สู้กันเอง ต้องจบก่อนตัวตัดเวลา (ค่าเกม)
-    const r2 = fight([T], [u('T')], [u('T')]);
-    ok(r2.timeMs < RULES.hardStopMs, `ทีมสะสมเกราะจบที่ ${r2.timeMs / 1000} วิ`);
+    // ตัวสะสมเกราะจริง (HL-3 + HL-2) สู้กันเอง ต้องจบก่อนตัวตัดเวลา (ค่าเกม · ตัวทดสอบ atk 1 + เกราะ/ฮิตโตทุกฮิต ลากถึง 300 วิได้)
+    const real = buildCharacterList();
+    for (const L of [1, 2, 3]) { const r2 = fight(real, [u('HL-3', 0, 0, L), u('HL-2', 1, 0, L)], [u('HL-3', 0, 0, L), u('HL-2', 1, 0, L)], { rules: RULES }); ok(r2.timeMs < RULES.hardStopMs, `HL-3+HL-2 Lv${L} สะสมเกราะ จบที่ ${r2.timeMs / 1000} วิ`); }
   }],
   ['ผลเหมือนเดิมทุกครั้ง (ทีมเดิม → บันทึกเดิม)', () => {
     const chars = buildCharacterList(), m = makeCharMap(chars), rng = makeRng(7);
