@@ -179,7 +179,12 @@ td.err.e-near { color: var(--lo); font-weight: 600; } td.err.e-out { color: var(
 .fld > input, .fld > select { width: 100%; min-width: 0; height: 36px; box-sizing: border-box; margin: 0; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-body); font-size: .9rem; }
 .fld > input[type=number] { font-family: var(--f-mono); text-align: right; }
 .fld > input.changed, .fld > select.changed { background: var(--edit); border-color: var(--lo); }
-.rgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); align-items: start; }
+.rgrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); align-items: stretch; }
+/* set 91: same input line in every cell even when a label wraps; "เดิม X" keeps its space so nothing jumps while typing */
+.rgrid > .fld:not(.rlock) { grid-template-rows: 1fr auto auto; }
+.rgrid > .fld:not(.rlock) > span { align-self: end; line-height: 1.3; overflow-wrap: anywhere; }
+#rform .rwas { display: block; min-height: 1.2em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#rform .rwas[hidden] { visibility: hidden; }
 .rlock { padding: 6px 8px; border-radius: 6px; background: var(--soft, transparent); border: 1px dashed var(--line); } .rlock > b { color: var(--ink, inherit); } .rlock > small { font-size: .72rem; }
 .fld.wide { grid-column: span 2; } .fld.full { grid-column: 1 / -1; }
 .stg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -282,13 +287,14 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .rlv { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 8px; }
 .rlvc > input { text-align: center !important; }
 .rtwrap { overflow-x: auto; }
-.rodds { border-collapse: collapse; width: 100%; font-size: .82rem; }
+.rodds { border-collapse: collapse; width: 100%; font-size: .82rem; table-layout: fixed; }
+.rodds thead th:first-child { width: 3.2em; } .rodds thead th:last-child { width: 6.6em; }
 .rodds th, .rodds td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: top; }
 .rodds thead th { color: var(--mute); font-weight: 600; white-space: nowrap; }
 .rodds tbody th { color: var(--mute); white-space: nowrap; padding-top: 10px; }
-.rodds input { width: 100%; min-width: 46px; height: 32px; box-sizing: border-box; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-mono); text-align: right; }
+.rodds input { width: 100%; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-mono); text-align: right; }
 .rodds td > small { display: block; }
-.rodds .rsum { color: var(--mute); font-size: .74rem; white-space: nowrap; padding-top: 10px; }
+.rodds .rsum { color: var(--mute); font-size: .72rem; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.25; padding-top: 8px; }
 .rodds .rsum.bad { color: var(--hi); }
 .rsec details > summary { cursor: pointer; color: var(--mute); font-size: .85rem; }
 .rsec details[open] > summary { margin-bottom: 8px; }

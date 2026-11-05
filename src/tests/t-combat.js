@@ -87,7 +87,7 @@ export const TESTS_COMBAT = [
     // ไม่ผูกกับตัวเลขที่ผู้ใช้เลือก: คิดค่าที่คาดจาก RULES
     const A = dummy('A', { hp: L3(9000) }), B = dummy('B', { hp: L3(40000), armor: L3(5) });
     const r = fight([A, B], [u('A')], [u('B')]), s = ev(r, 'dmg', e => e.why === 'storm');
-    const want = k => RULES.stormDmgStart * RULES.stormDmgMult ** (k - 1);
+    const want = k => Math.floor(RULES.stormDmgStart * RULES.stormDmgMult ** (k - 1));
     const ofA = s.filter(e => e.to === s[0].to && e.amount > 0), uidB = s.find(e => e.to !== s[0].to).to;
     eq(ofA.slice(0, 3).map(e => e.amount), [want(1), want(2), want(3)], 'ดาเมจครั้งที่ 1–3');
     eq(s.filter(e => e.to === uidB)[0].amount, want(1), 'HP สูงสุดต่างกันได้ดาเมจเท่ากัน');

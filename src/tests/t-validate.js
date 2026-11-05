@@ -211,9 +211,9 @@ export const TESTS_VALIDATE = [
     eq(Object.keys(cleanRuleEdits(ed)).length, Object.keys(ed).length, 'ค่าในเกมทุกข้อผ่านตัวตรวจ (กดคืนค่าได้)');
     eq(cleanRuleEdits({ tickMs: 50, 'shop.slots': 9, stormStartMs: 999999, burnDecay: 1.5, nope: 1, 'shop.prices.ธรรมดา': 4, stormPierce: true }), { stormPierce: 1, 'shop.prices.ธรรมดา': 4 }, 'ล็อก/นอกช่วง/ไม่ใช่จำนวนเต็ม/ไม่รู้จัก = ตัด');
     eq(cleanRuleEdits(null), {}, 'null'); eq(cleanRuleEdits([1]), {}, 'array');
-    const R = setRuleEdits(structuredClone(RULES), { stormDmgMult: 1.5, 'bossTimers.enrageMs': 4000, stormPierce: 1 });
-    eq([R.stormDmgMult, R.bossTimers.enrageMs, R.stormPierce, RULES.stormDmgMult], [1.5, 4000, true, 2], 'ตั้งค่าบนสำเนา ไม่แตะ RULES');
-    eq(ruleEditsOf(R, RULES), { stormDmgMult: 1.5, stormPierce: 1, 'bossTimers.enrageMs': 4000 }, 'หาค่าที่ต่าง');
+    const R = setRuleEdits(structuredClone(RULES), { stormDmgMult: 1.25, 'bossTimers.enrageMs': 4000, stormPierce: 1 });
+    eq([R.stormDmgMult, R.bossTimers.enrageMs, R.stormPierce, RULES.stormDmgMult], [1.25, 4000, true, 1.5], 'ตั้งค่าบนสำเนา ไม่แตะ RULES');
+    eq(ruleEditsOf(R, RULES), { stormDmgMult: 1.25, stormPierce: 1, 'bossTimers.enrageMs': 4000 }, 'หาค่าที่ต่าง');
     for (const c of buildCharacterList()) eq(c.price, RULES.shop.prices[c.rarity], `${c.id} ราคาตามกฎ`);
   }],
   ['ชุด 76: กฎเกม — พายุทราย/HP ต่ำ ใช้ค่าที่ตั้ง', () => {

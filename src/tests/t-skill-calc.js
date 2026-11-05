@@ -213,7 +213,9 @@ const SC_SKILL = [
   // set 82: HL-8 now shares only to allies of its own tribe (old kit 'HL-8@1' = whole team, kept below)
   ['HL-8', 'แบ่งเกราะ 30% ให้เพื่อนเผ่าเดียวกันทุกครั้งที่ได้เกราะ', (c, L, i) => {
     const x = scRun([[c, L, 0, 0], [scC('HL-1'), 1, 1, 0], [scC('PT-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), steel = x.uid(0, 1, 0), v = sk('HL-8').v[i];
-    const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share');
+    // set 91: only armor gains while both allies still stand (storm 1.5× lets the match run on after they fall)
+    const firstDown = Math.min(...x.r.events.filter(e => e.k === 'down' && e.to !== me && e.who !== me).map(e => e.t), Infinity);
+    const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share' && e.t < firstDown);
     ok(own.length > 2, 'HL-8 got armor');
     for (const e of own) {
       const sh = x.r.events.filter(s => s.k === 'armor' && s.why === 'share' && s.t === e.t && s.to !== me);
@@ -591,7 +593,8 @@ const SC_RETIRED = [
   }],
   ['HL-8@1', 'แบ่งเกราะ 30% ให้ทั้งทีมทุกครั้งที่ได้เกราะ', (c, L, i) => {
     const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0], [scC('PT-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
-    const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share');
+        const firstDown = Math.min(...x.r.events.filter(e => e.k === 'down' && e.to !== me && e.who !== me).map(e => e.t), Infinity);
+    const own = x.r.events.filter(e => e.k === 'armor' && e.to === me && e.why !== 'share' && e.t < firstDown);
     ok(own.length > 2, 'HL-8 got armor');
     for (const e of own) {
       const sh = x.r.events.filter(s => s.k === 'armor' && s.why === 'share' && s.t === e.t && s.to !== me);

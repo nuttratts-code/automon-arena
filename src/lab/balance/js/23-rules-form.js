@@ -73,7 +73,7 @@ function ruleOddsTable(items) {
 function ruleOddsSums() {
   for (const td of document.querySelectorAll('#rform .rsum')) {
     const o = RULES.shop.levelOdds[Number(td.dataset.lv)] || {}, tot = RARITIES.reduce((s, r) => s + (o[r] || 0), 0);
-    td.textContent = !tot ? 'รวม 0 = ไม่มีตัวเลย' : tot === 100 ? '100' : `${tot} → จริง ${RARITIES.map(r => (o[r] ? Math.round(o[r] * 100 / tot) : '·')).join(' / ')}`;
+    td.textContent = !tot ? 'รวม 0 = ไม่มีตัวเลย' : tot === 100 ? '100' : `${tot}\nจริง ${RARITIES.map(r => (o[r] ? Math.round(o[r] * 100 / tot) : '·')).join(' / ')}`;
     td.classList.toggle('bad', !tot);
   }
 }
