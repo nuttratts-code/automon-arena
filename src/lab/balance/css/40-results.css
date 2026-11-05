@@ -289,8 +289,10 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .rtwrap { overflow-x: auto; }
 .rodds { border-collapse: collapse; width: 100%; font-size: .82rem; table-layout: fixed; }
 .rodds thead th:first-child { width: 3.2em; } .rodds thead th:last-child { width: 6.6em; }
+@media (max-width: 560px) { .rodds thead th { font-size: .66rem; } .rodds thead th:first-child { width: 2.6em; } .rodds thead th:last-child { width: 4.8em; } .rodds input { padding: 0 3px; font-size: .8rem; } .rodds th, .rodds td { padding: 3px 2px; } }
+.rodds td > .rwas { min-height: 1em; font-size: .66rem; }
 .rodds th, .rodds td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: center; vertical-align: top; }
-.rodds thead th { color: var(--mute); font-weight: 600; white-space: nowrap; }
+.rodds thead th { color: var(--mute); font-weight: 600; font-size: .74rem; line-height: 1.2; white-space: normal; vertical-align: bottom; }
 .rodds tbody th { color: var(--mute); white-space: nowrap; padding-top: 10px; }
 .rodds input { width: 100%; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-family: var(--f-mono); text-align: right; }
 .rodds td > small { display: block; }

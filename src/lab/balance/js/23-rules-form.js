@@ -58,7 +58,7 @@ function ruleLvStrip(items) {
 // shop.levelOdds.<lv>.<rarity>: table, one row per shop level + real % after normalising
 function ruleOddsTable(items) {
   const wrap = el('div', 'rtwrap', ''), t = el('table', 'rodds', ''), hr = el('tr', '', '');
-  hr.append(el('th', '', 'ร้าน'), ...RARITIES.map(r => el('th', '', r)), el('th', '', 'รวม'));
+  hr.append(el('th', '', 'ร้าน'), ...RARITIES.map(r => el('th', '', r.replace(/^ไม่/, 'ไม่\u200b').replace(/(.)มาก$/, '$1\u200bมาก'))), el('th', '', 'รวม'));
   const head = el('thead', '', ''); head.append(hr); const body = el('tbody', '', ''); t.append(head, body);
   const rows = new Map();
   for (const it of items) { const lv = Number(it[0].split('.')[2]); if (!rows.has(lv)) rows.set(lv, []); rows.get(lv).push(it); }

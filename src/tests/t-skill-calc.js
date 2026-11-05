@@ -158,8 +158,11 @@ const SC_SKILL = [
     return x;
   }],
   // set 82 (import 4 Nov, config rev 293): new PT-6 kit (old kit kept below as retired test 'PT-6@2')
-  ['PT-6', 'ตีโดน → ฟื้น/ฮิต ตัวเอง +v · ตีโดน → พลังโจมตี +v% ของ ฟื้น/ฮิต ตัวเอง (หลังเพิ่มของฮิตนั้น)', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 0, 0);
+  // set 91 (import 5 Nov, config rev 4): atk 20% → 15% + 3rd skill: hit → 1 random ally of its own tribe heal/hit +v
+  ['PT-6', 'ตีโดน → ฟื้น/ฮิต ตัวเอง +v · ตีโดน → พลังโจมตี +v% ของ ฟื้น/ฮิต ตัวเอง (หลังเพิ่มของฮิตนั้น) · ตีโดน → ภูติสุ่ม 1 ตัว ฟื้น/ฮิต +v', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scC('PT-1'), 1, 1, 0], [scC('HL-1'), 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0], [scBag('ZB-2'), 1, 0, 1]]), me = x.uid(0, 0, 0), spirit = x.uid(0, 1, 0);
+    const v2 = sk('PT-6', 2).v[i], g2 = scSk(x.r, me, 2, 'buff').filter(e => e.what === 'healHitUp');
+    eq(g2.map(e => [e.to, e.amount]), Array(scHits(x.r, me).filter(h => h.t < Math.min(...x.r.events.filter(e => e.k === 'down' && e.who === spirit).map(e => e.t), Infinity)).length).fill([spirit, v2]), 'heal/hit +v to the spirit ally only (not the steel ally) on every hit while it stands');
     const v0 = sk('PT-6').v[i], v1 = sk('PT-6', 1).v[i], hits = scHits(x.r, me).length;
     ok(hits >= 3, `PT-6 hit ${hits} times`);
     const g = scSk(x.r, me, 0, 'buff').filter(e => e.what === 'healHitUp');
