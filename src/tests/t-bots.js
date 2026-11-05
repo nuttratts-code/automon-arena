@@ -78,11 +78,11 @@ export const TESTS_BOTS = [
     const play = seed => {
       const P = newRun(chars, seed), B = newRun(chars, seed + 1);
       while (!P.over) {
-        startRound(P, chars); startRound(B, chars, RULES, { unlockWins: P.wins });
-        botShop(P, chars); botShop(B, chars, RULES, { unlockWins: P.wins });
+        startRound(P, chars); startRound(B, chars, RULES);
+        botShop(P, chars); botShop(B, chars, RULES);
         for (const s of [P, B]) { ok(s.gold >= 0, 'เงินติดลบ'); const v = validateTeam(teamEntries(s), cm); ok(v.ok, v.errors.join(' · ')); }
         const r = simulate(buildTeam(teamEntries(P), cm), buildTeam(teamEntries(B), cm), { log: false });
-        endMatch(P, r.winner !== 1, chars); endMatch(B, r.winner === 1, chars); B.over = false; B.lastWon = P.lastWon;
+        endMatch(P, r.winner !== 1, chars); endMatch(B, r.winner === 1, chars); B.over = false; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak;
         ok(P.round < 25, 'run ไม่จบ');
       }
       return JSON.stringify(P);

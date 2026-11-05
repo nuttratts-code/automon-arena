@@ -1,31 +1,63 @@
 // ชุดทดสอบ: ร้านค้า รวมร่าง สกิลร้านค้า ค่าถาวร run (shop-merge-rules) · แยกจาก mechanics.js (ชุด D) · ตัวช่วยอยู่ helpers.js
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
-import { RULES } from '../core/rules.js';
-import { addPerm, allUnits, buy, endMatch, move, newRun, reroll, sell, startRound, teamEntries, toggleLock } from '../core/shop.js';
+import { RARITIES, RULES } from '../core/rules.js';
+import { addPerm, allUnits, buy, endMatch, interestOf, move, newRun, oddsAt, reroll, sell, startRound, teamEntries, toggleLock, upgradeCost, upgradeShop } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok } from './helpers.js';
 export const TESTS_SHOP = [
   // ---------- ร้านค้าและรวมร่าง ----------
-  ['ร้าน: เงินเริ่ม 10 · รอบถัดไป +10 · ชนะได้โบนัส +2 · เงินค้างข้ามรอบ', () => {
+  ['ร้าน: เงินเริ่ม · รายได้รอบละ · ชนะได้โบนัส · เงินค้างข้ามรอบ (ดอกเบี้ยคิดแยก)', () => {
     const chars = buildCharacterList(), st = newRun(chars, 1), S = RULES.shop;
     startRound(st, chars); eq(st.gold, S.startGold, 'รอบแรก');
-    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 3 + S.goldPerRound + S.winBonus, 'หลังชนะ');
-    endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 3 + S.goldPerRound * 2 + S.winBonus, 'หลังแพ้');
+    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 3 + S.goldPerRound + S.winBonus, 'หลังชนะ (เงิน 3 ดอกเบี้ย 0)');
+    st.gold = 4; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 4 + S.goldPerRound, 'หลังแพ้');
   }],
-  ['ร้าน: ความหายากปลดล็อกตามจำนวนชนะ', () => {
+  ['set 88 ดอกเบี้ย: ต้นรอบ +1 ต่อเงิน 5 ที่มี ไม่มีเพดาน · เพดาน > 0 ใช้ได้', () => {
+    const chars = buildCharacterList(), S = RULES.shop;
+    for (const g of [0, 4, 5, 23, 100, 400]) {
+      const st = newRun(chars, 3); startRound(st, chars); st.gold = g; endMatch(st, false, chars);
+      const r = startRound(st, chars); eq(st.gold, g + S.goldPerRound + Math.floor(g / 5), `เงิน ${g}`);
+      if (g >= 5) ok(r.msgs[0].includes(`ดอกเบี้ย +${Math.floor(g / 5)}`), 'ข้อความดอกเบี้ย');
+    }
+    const R2 = { ...RULES, shop: { ...S, interestCap: 5 } };
+    eq(interestOf(100, R2), 5, 'เพดาน 5'); eq(interestOf(100), 20, 'ไม่มีเพดาน');
+  }],
+  ['set 88 ชนะติด/แพ้ติด: ครั้งที่ 3 ขึ้นไป +10 (ชนะติดแทน +2) · เสมอนับชนะ · แพ้/ชนะ ตัดสาย', () => {
+    const chars = buildCharacterList(), S = RULES.shop, st = newRun(chars, 4);
+    startRound(st, chars);
+    const step = (won, bonus, what) => { st.gold = 0; endMatch(st, won, chars); startRound(st, chars); eq(st.gold, S.goldPerRound + bonus, what); };
+    step(true, S.winBonus, 'ชนะ 1'); step(true, S.winBonus, 'ชนะ 2'); step(true, S.streakBonus, 'ชนะ 3'); step(true, S.streakBonus, 'ชนะ 4');
+    eq(st.wStreak, 4, 'นับชนะติด');
+    step(false, 0, 'แพ้ 1 (ตัดสาย)'); eq([st.wStreak, st.lStreak], [0, 1], 'หลังแพ้');
+    step(false, 0, 'แพ้ 2'); step(false, S.streakBonus, 'แพ้ 3'); step(false, S.streakBonus, 'แพ้ 4');
+    step(true, S.winBonus, 'ชนะหลังแพ้ติด = โบนัสชนะปกติ'); eq(st.lStreak, 0, 'ชนะตัดแพ้ติด');
+  }],
+  ['set 88 ระดับร้าน: เริ่ม 1 · ขึ้นระดับ n ใช้ 2 × (n − 1) · สูงสุด 15 · ไม่สุ่มร้านใหม่', () => {
+    const chars = buildCharacterList(), st = newRun(chars, 5);
+    startRound(st, chars); eq(st.shopLv, 1, 'เริ่มระดับ 1');
+    st.gold = 1; ok(!upgradeShop(st).ok, 'เงินไม่พอต้องอัปเกรดไม่ได้'); eq([st.shopLv, st.gold], [1, 1], 'ไม่แตะสถานะ');
+    const before = st.shop.map(x => x.id).join();
+    st.gold = 1000; let paid = 0;
+    for (let n = 2; n <= 15; n++) { eq(upgradeCost(st.shopLv), 2 * (n - 1), `ราคาขึ้น ${n}`); ok(upgradeShop(st).ok, `อัปเป็น ${n}`); paid += 2 * (n - 1); }
+    eq([st.shopLv, 1000 - st.gold, paid], [15, 210, 210], 'รวม 210');
+    ok(!upgradeShop(st).ok, 'ระดับสูงสุดแล้ว'); eq(upgradeCost(15), null, 'ไม่มีราคาเกินสูงสุด');
+    eq(st.shop.map(x => x.id).join(), before, 'อัปเกรดไม่สุ่มร้านใหม่');
+  }],
+  ['set 88 ระดับร้าน: เจอเฉพาะความหายากที่โอกาส > 0 ของระดับนั้น', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars);
-    const U = RULES.shop.unlockWins, open = w => Object.keys(U).filter(r => w >= U[r]);
-    for (const wins of [0, 1, 3, 5, 6, 9]) {
-      const allowed = open(wins);
-      const st = newRun(chars, 9 + wins); st.wins = wins; const seen = new Set();
-      for (let i = 0; i < 80; i++) { startRound(st, chars); st.shop.forEach(x => seen.add(cm[x.id].rarity)); }
-      eq([...seen].sort(), [...allowed].sort(), `ชนะ ${wins}`);
+    for (const lv of [1, 2, 6, 10, 15]) {
+      const allowed = RARITIES.filter(r => oddsAt(lv)[r] > 0);
+      const st = newRun(chars, 9 + lv); st.shopLv = lv; const seen = new Set();
+      for (let i = 0; i < 120; i++) { startRound(st, chars); st.shop.forEach(x => seen.add(cm[x.id].rarity)); }
+      ok([...seen].every(r => allowed.includes(r)), `ระดับ ${lv} เจอความหายากที่ปิดอยู่`);
+      eq(seen.has('ธรรมดา'), true, `ระดับ ${lv} ต้องเจอธรรมดา`);
+      if (lv >= 10) ok(seen.has('ตำนาน'), `ระดับ ${lv} ต้องเจอตำนาน`);
     }
   }],
   ['ร้าน: ความหายากที่ไม่มีตัวละคร ไม่ทำให้ร้านพัง', () => {
-    const chars = buildCharacterList().filter(c => c.rarity !== 'ไม่ธรรมดา'), st = newRun(chars, 77); st.wins = 9;
+    const chars = buildCharacterList().filter(c => c.rarity !== 'ไม่ธรรมดา' && c.rarity !== 'ธรรมดา'), st = newRun(chars, 77);
     for (let i = 0; i < 30; i++) { ok(startRound(st, chars).ok, 'เริ่มรอบไม่ได้'); ok(st.shop.every(x => x.id), 'มีช่องร้านว่าง'); }
   }],
   ['ร้าน: ซื้อหักเงิน · ขายคืนเต็มราคา · ม้านั่งเต็มซื้อไม่ได้', () => {

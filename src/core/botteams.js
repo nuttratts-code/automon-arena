@@ -36,18 +36,18 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
   const cm = makeCharMap(chars);
   const P = newRun(chars, seed >>> 0, rules), B = newRun(chars, ((seed ^ 0xA5A5A5A5) >>> 0), rules);
   for (let guard = 0; guard < 40 && !P.over; guard++) {
-    startRound(P, chars, rules); startRound(B, chars, rules, { unlockWins: P.wins });
+    startRound(P, chars, rules); startRound(B, chars, rules);
     botShop(P, chars, rules, opts.focus ? { focus: opts.focus } : {});
     // set 85: boss rounds (core/runboss.js) — same as the game: the boss replaces the bot team, the spare bot B sits out
     const rb = runBossAt(P.round, P.seed, stage);
     const preset = rb ? null : opponent ? opponent(P) : null;
-    if (!preset && !rb) botShop(B, chars, rules, { unlockWins: P.wins, focus: opts.foeFocus || null });
+    if (!preset && !rb) botShop(B, chars, rules, { focus: opts.foeFocus || null });
     const mine = teamEntries(P), theirs = rb ? null : preset || teamEntries(B);
     const res = simulate(buildTeam(mine, cm, rules), rb ? runBossTeam(rb.boss, rb.k) : buildTeam(theirs, cm, rules), { rules, log: false });
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts;
     const gain = side => (res.perm || []).filter(g => g.side === side);
     endMatch(P, res.winner !== 1, chars, rules, gain(0));
-    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; }
+    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak; }
     if (onMatch) onMatch({ stage: wins, round, gold, hearts, team: mine, foe: theirs, res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0 });
   }
   return P;

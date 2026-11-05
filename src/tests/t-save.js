@@ -22,8 +22,8 @@ export const TESTS_SAVE = [
       const a = structuredClone(P), b = r.save.P;
       startRound(a, chars); startRound(b, chars);
       eq(JSON.stringify(b.shop), JSON.stringify(a.shop), 'ร้านเดิมหลังโหลด');
-      startRound(P, chars); startRound(B, chars, RULES, { unlockWins: P.wins });
-      botShop(P, chars); botShop(B, chars, RULES, { unlockWins: P.wins });
+      startRound(P, chars); startRound(B, chars, RULES);
+      botShop(P, chars); botShop(B, chars, RULES);
       const res = simulate(buildTeam(teamEntries(P), cm), buildTeam(teamEntries(B), cm));
       endMatch(P, res.winner !== 1, chars, RULES, (res.perm || []).filter(g => g.side === 0));
       endMatch(B, res.winner === 1, chars, RULES, (res.perm || []).filter(g => g.side === 1)); B.over = false; B.hearts = RULES.shop.hearts;
@@ -212,7 +212,7 @@ export const TESTS_SAVE = [
     for (let run = 0; run < 60; run++) {
       const P = newRun(chars, ri(2 ** 32)), B = newRun(chars, ri(2 ** 32)), stats = newStats();
       for (let g = 0; g < 40 && !P.over; g++) {
-        startRound(P, chars); startRound(B, chars, RULES, { unlockWins: P.wins });
+        startRound(P, chars); startRound(B, chars, RULES);
         for (let a = 0; a < 25; a++) {
           const before = JSON.stringify(P), op = ri(5);
           const r = op === 0 ? buy(P, ri(P.shop.length + 1), ri(2) ? ref(P) : null, chars) : op === 1 ? sell(P, ref(P), chars)
@@ -222,12 +222,12 @@ export const TESTS_SAVE = [
           const v = validateRunState(P, cm); ok(v.ok, `run ${run} op ${op}: ${v.errors.join(' · ')}`);
         }
         eq(readSave(makeSave(P, B, stats, 1, H), cm, RULES, H).status, 'ok', `run ${run}: save round-trip`);
-        botShop(B, chars, RULES, { unlockWins: P.wins });
+        botShop(B, chars, RULES);
         const res = simulate(buildTeam(teamEntries(P), cm), buildTeam(teamEntries(B), cm), { log: !(run % 6) });
         if (!(run % 6)) addMatchStats(stats, res);
         const gain = s => (res.perm || []).filter(x => x.side === s);
         endMatch(P, res.winner !== 1, chars, RULES, gain(0));
-        endMatch(B, res.winner === 1, chars, RULES, gain(1)); B.over = false; B.hearts = RULES.shop.hearts; B.lastWon = P.lastWon;
+        endMatch(B, res.winner === 1, chars, RULES, gain(1)); B.over = false; B.hearts = RULES.shop.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak;
       }
       ok(P.over, `run ${run}: run should end`);
       const g0 = P.gold; eq([buy(P, 0, null, chars).ok, reroll(P, chars).ok, P.gold], [false, false, g0], 'ended run: buy/reroll refused');

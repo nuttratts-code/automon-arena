@@ -138,7 +138,7 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
         if (worst && worst.net > BOT_AI.minGain) { sell(st, worst.ref, chars, rules); continue; }
       }
     }
-    if (rerolls < maxRerolls && st.gold >= rules.shop.rerollCost) { reroll(st, chars, rules, opts); rerolls++; continue; }
+    if (rerolls < maxRerolls && st.gold >= rules.shop.rerollCost) { reroll(st, chars, rules); rerolls++; continue; }
     break;
   }
   tryMerges(st, chars, rules);

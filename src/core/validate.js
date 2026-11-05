@@ -47,10 +47,14 @@ export function validateConfig(chars, rules = RULES) {
     else if (t.id === c.id) errors.push(`${who}: เรียกตัวเองไม่ได้`);
     else if (Array.isArray(t.skills) && t.skills.some(x => x && x.do === 'summon')) errors.push(`${who}: ${t.id} มีสกิลเรียกตัวอยู่แล้ว เรียกต่อกันไม่ได้`);
   });
-  // ร้านค้า: ทุกความหายากต้องมีค่าปลดล็อกและโอกาสสุ่มที่ถูกต้อง (กันร้านสุ่มได้ช่องว่าง)
-  if (rules.shop) for (const r of RARITIES) {
-    if (!isInt(rules.shop.unlockWins[r]) || rules.shop.unlockWins[r] < 0) errors.push(`ร้านค้า: ความหายาก${r} ไม่มีค่าปลดล็อก`);
-    if (!isNum(rules.shop.weights[r]) || rules.shop.weights[r] < 0) errors.push(`ร้านค้า: ความหายาก${r} ไม่มีโอกาสสุ่ม`);
+  // ร้านค้า (set 88): ตารางโอกาสตามระดับร้าน · ทุกระดับมีโอกาสของทุกความหายาก (≥ 0) และรวม > 0 (กันร้านสุ่มได้ช่องว่าง)
+  if (rules.shop) {
+    const LO = rules.shop.levelOdds;
+    if (!Array.isArray(LO) || !LO.length || LO.length !== rules.shop.levels) errors.push('ร้านค้า: ตารางโอกาสตามระดับร้านผิด');
+    else LO.forEach((o, i) => {
+      if (!o || typeof o !== 'object' || RARITIES.some(r => !isNum(o[r]) || o[r] < 0)) errors.push(`ร้านค้า: ระดับร้าน ${i + 1} มีโอกาสผิด`);
+      else if (!RARITIES.some(r => o[r] > 0)) errors.push(`ร้านค้า: ระดับร้าน ${i + 1} โอกาสรวมเป็น 0`);
+    });
   }
   // แต่ละเผ่าต้องมีอย่างน้อย N ตัวที่ต่างกัน (นับเผ่าเพิ่มด้วย)
   for (const t of TRIBES) {

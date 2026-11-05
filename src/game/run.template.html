@@ -411,7 +411,7 @@ function showScreen(name) {
 }
 function beginRound() {
   const r = startRound(P, chars); pushMsgs(r);
-  startRound(B, chars, RULES, { unlockWins: P.wins });
+  startRound(B, chars, RULES);
   render();
 }
 function pushMsgs(r, isErr) {
@@ -659,7 +659,7 @@ $('fight').addEventListener('click', () => {
   // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
   const rb = runBossAt(P.round, P.seed);
   const foe = rb ? null : BOT_OK ? pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round) : null;
-  if (!foe && !rb) botShop(B, chars, RULES, { unlockWins: P.wins });
+  if (!foe && !rb) botShop(B, chars, RULES);
   const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = rb ? { boss: rb.boss.id, k: rb.k } : foe ? foe.team : teamEntries(B);
   let result;
   try { result = simulate(buildTeam(teamA, CM), foeUnits(teamB)); }
@@ -670,7 +670,7 @@ $('fight').addEventListener('click', () => {
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
   const r = endMatch(P, won, chars, RULES, gain(0));
-  if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
+  if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; B.wStreak = P.wStreak; B.lStreak = P.lStreak; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
   addMatchStats(stats, result);
   replays.push(replayEntry(round, teamA, teamB, result)); saveReplays(); // ชุด 25
   logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null }));
