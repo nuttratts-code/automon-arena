@@ -295,7 +295,7 @@ function renderMatch() {
     chip('ซ้ายทำ', nf(tot[0]), 'รวมส่วนที่เกราะกันด้วย · อาจเกิน HP รวมของอีกฝั่ง'),
     chip('ขวาทำ', nf(tot[1]), 'รวมส่วนที่เกราะกันด้วย · อาจเกิน HP รวมของอีกฝั่ง'),
     chip('รอด', `${alive[0]} / ${alive[1]}`, 'จำนวนตัวที่ยังไม่ down (ซ้าย / ขวา)'),
-    chip('พายุเริ่ม', `${((RULES.stormStartMs || 0) / 1000).toFixed(1)} วิ`),
+    chip('ต่อเวลาเริ่ม', `${((RULES.stormStartMs || 0) / 1000).toFixed(1)} วิ`),
     ...(simSeedLabel() != null ? [chip('เลขสุ่ม', simSeedLabel())] : [])); // game page: no seed → null
 
   mxCtx = { r, m, U, recs, per, act, res, fxTot, fxGiven, maxOut: 1, maxIn: 1, maxFx: 1 };
@@ -428,7 +428,7 @@ function renderChart(all, r, m) {
   if (stormMs > 0 && stormMs < T) {
     const sx = X(stormMs);
     svg.append(sv('line', { x1: sx, x2: sx, y1: TOP, y2: Y(1, 0), stroke: 'var(--n-storm)', 'stroke-width': 1, 'stroke-dasharray': '5 3' }));
-    svg.append(sv('text', { x: sx + 3, y: TOP - 5, class: 'ax', fill: 'var(--n-storm)' }, `พายุ ${(stormMs / 1000).toFixed(0)} วิ`));
+    svg.append(sv('text', { x: sx + 3, y: TOP - 5, class: 'ax', fill: 'var(--n-storm)' }, `ต่อเวลา ${(stormMs / 1000).toFixed(0)} วิ`));
   }
   for (const e of r.events) {
     if (e.k !== 'down') continue;

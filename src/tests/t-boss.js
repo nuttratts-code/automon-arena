@@ -483,17 +483,17 @@ export const TESTS_BOSS = [
     eq(ev(r, 'down').map(e => e.t), [1000], 'down ตั้งแต่ฮิตแรก');
     eq(ev(run([]), 'revive').length, 1, 'ไม่มีกฎ = รูนชุบทำงาน');
   }],
-  ['บอส R21: พายุทรายเริ่มทันทีเมื่อเข้าเฟส', () => {
+  ['บอส R21: ช่วงต่อเวลาเริ่มทันทีเมื่อเข้าเฟส', () => {
     const tank = dummy('T', { hp: L3(50000) });
     const b = boss({ atk: 0, cdMs: NEVER, phases: [ph(0), ph(1, [rl('earlyStorm')])] });
     const r = bossFight([hitter('H', 200), tank], [u('H', 0, 0), u('T', 1, 0)], b);
     const p1 = ev(r, 'phase', e => e.i === 1)[0];
     ok(p1, 'เข้าเฟส 2');
-    const st = ev(r, 'dmg', e => e.why === 'storm');
-    ok(st.length > 0, 'มีพายุ');
-    eq(st[0].t, p1.t + 1000, 'พายุครั้งแรก 1 วิหลังเข้าเฟส');
+    const st = ev(r, 'overtime');
+    ok(st.length > 0, 'มีช่วงต่อเวลา');
+    eq(st[0].t, p1.t + 1000, 'สแตกแรก 1 วิหลังเข้าเฟส (set 98: ช่วงต่อเวลาแทนพายุ)');
     const plain = bossFight([hitter('H', 200), tank], [u('H', 0, 0), u('T', 1, 0)], boss({ atk: 0, cdMs: NEVER, phases: [ph(0), ph(1)] }));
-    eq(ev(plain, 'dmg', e => e.why === 'storm').length, 0, 'ไม่มีกฎ = ไม่มีพายุ (เทสต์ปิดพายุไว้)');
+    eq(ev(plain, 'overtime').length, 0, 'ไม่มีกฎ = ไม่มีช่วงต่อเวลา (เทสต์ปิดไว้)');
   }],
   ['บอส R25 (เผ่าตีเบา): เผ่าที่เลือกตีบอสเบาลง % · เผ่าอื่นเท่าเดิม', () => {
     const b = boss({ phases: [ph(0, [rl('tribeResist', 50, null, 'เหล็กกล้า')])] });

@@ -334,6 +334,7 @@ function simLine0(e, S, U, cm) {
     case 'steal': return [who(e.from), ' ดูดช็อต ', { t: String(e.amount), c: 'lg-shock' }, ' จาก ', who(e.to), ` (เหลือ ${e.total})`];
     case 'revive': return e.why === 'ally' && e.from != null ? ['✚ ', who(e.who), ' ถูก ', who(e.from), ' ชุบ ', { t: `HP ${e.hp}`, c: 'lg-heal' }] // G2: shows who revived (detail on)
       : ['✚ ', who(e.who), ` ${e.why === 'ally' ? 'ถูกเพื่อนชุบ' : e.why === 'tribe' ? 'ลุกกลับมา (โบนัสเผ่า)' : 'ลุกกลับมา'} `, { t: `HP ${e.hp}`, c: 'lg-heal' }];
+    case 'overtime': return ['⏱ ', { t: `ช่วงต่อเวลา สแตก ${e.n}`, c: 'lg-rule' }, ` · ดาเมจ +${e.dmg}% · ตีเร็วขึ้น ${e.speed}% · ฟื้น −${e.heal}% · เกราะใหม่ −${e.armor}%`]; // set 98
     case 'phase': {
       const P2 = ['◆◆ ', who(e.who), ` เข้าเฟส ${e.i + 1}`];
       const rules = e.rd ? e.rd.map(bossRuleText) : (e.rules || []).map(id => bossRuleName(id));

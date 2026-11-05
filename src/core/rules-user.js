@@ -2,7 +2,6 @@
 // Raw external-shaped data: always passed through cleanRuleEdits() (validated), never used directly.
 // Keys = RULE_SPEC paths (core/rules.js), values in stored units (ms for time). Empty = code values.
 export const RULES_USER = {
-  'stormDmgMult': 1.5,
   'minCooldownMs': 100,
   'shop.levelOdds.0.ธรรมดา': 100,
   'shop.levelOdds.0.ไม่ธรรมดา': 0,
