@@ -6,7 +6,7 @@ Decided by user:
 2. Reroll cost 1 → 2.
 3. Remove win/lose streak bonus (+10) and interest entirely.
 
-Open (ask at start of set 89, recommended first):
+**User answered 5 Nov: a1 b1 c1** (round n = level n table, editable · gold carries over · win +2 kept). Options were:
 - a) Pace: table round → shop level, default round n = level n, cap 15 (recommended) · or SAP-like every 2 rounds (Lv15 only at round 29; runs last ~10–19 rounds).
 - b) Gold carry-over between rounds: keep (recommended, no change) · or SAP-like no carry-over (unspent gold lost).
 - c) Normal win bonus +2: keep (recommended) · or remove (SAP has none).
