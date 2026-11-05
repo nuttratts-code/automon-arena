@@ -29,7 +29,7 @@ with sync_playwright() as p:
         chk(pg.query_selector('#rShop') is None and pg.query_selector('#rReroll') is None,'no rune shop')
         g0=pg.evaluate('P.gold'); pg.evaluate("P.rn.bag={T4:1};render()")
         chk(len(pg.query_selector_all('#rBag .rcard'))==1,'rune bag shows held rune')
-        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint') and '145%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line')
+        pg.click('[data-diff="ยาก"]'); chk('ยาก' in pg.inner_text('#fight') and 'ตำนาน' in pg.inner_text('#diffHint') and '155%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line')
         pg.click('[data-diff="กลาง"]'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune')
         pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerPanel') and len(pg.query_selector_all('#offer .rcard'))==3,'offer 3 cards')
         pg.click('#fight'); chk(pg.is_visible('#prep') and 'เลือกรูน' in pg.inner_text('#msgs'),'fight blocked until offer picked')
