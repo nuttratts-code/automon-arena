@@ -392,7 +392,7 @@ export const STAGE_SETTINGS = [
   ['offHardC', 'ชนะยาก: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offHardR', 'ชนะยาก: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offHardL', 'ชนะยาก: ให้เลือกรูนตำนาน', 1, 0, 5, 'อัน'],
   ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 2, 0, 5, 'อัน'],
   // Difficulty (set 95, user 5 Nov · option A): enemy team max hp + atk × this % for the picked difficulty · boss rounds unchanged · rune shop removed
-  ['diffEasy', 'ความยากง่าย: พลังศัตรู', 95, 10, 400, '%'], ['diffNorm', 'ความยากกลาง: พลังศัตรู', 105, 10, 400, '%'], ['diffHard', 'ความยากยาก: พลังศัตรู', 145, 10, 400, '%'],
+  ['diffEasy', 'ความยากง่าย: พลังศัตรู', 100, 10, 400, '%'], ['diffNorm', 'ความยากกลาง: พลังศัตรู', 105, 10, 400, '%'], ['diffHard', 'ความยากยาก: พลังศัตรู', 155, 10, 400, '%'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
   ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];

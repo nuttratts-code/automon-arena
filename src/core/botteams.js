@@ -18,7 +18,7 @@ import { RUN_STAGE, runBossAt, runBossTeam } from './runboss.js';
 export const BOT_TIERS = ['ง่าย', 'กลาง', 'ยาก'];
 export const BOT_SPANS = [[0, 2], [3, 5], [6, 9]]; // จำนวนแพ้ก่อนแมตช์ (ค่าเสนอ · ผู้ใช้เลือก)
 export const BOT_SPAN_TH = ['ต้น', 'กลาง', 'ปลาย'];
-export const BOT_GEN = { runs: 1200, seed: 2310, perTribe: 40, refOpp: 30, pct: [25, 50, 75], near: 5 }; // ค่าเสนอ (ชุด 23 · ชุด 24 เลิกใช้ minPool · set 87: perTribe/near replace perStage)
+export const BOT_GEN = { runs: 2400, seed: 2310, perTribe: 40, refOpp: 30, pct: [25, 50, 75], near: 5 }; // set 96: runs 1200 → 2400 (income ramp: fewer runs reach many wins early, cells lacked tribes) · ค่าเสนอ (ชุด 23 · ชุด 24 เลิกใช้ minPool · set 87: perTribe/near replace perStage)
 // set 87 (user ask: more + more varied bot teams): each tier holds BOT_PER teams → 10 × 3 × 3 × 4 = 360 teams,
 // the 12 teams of a cell cover all 6 tribes twice (main tribe = most units), each as close to the tier's strength as that tribe has
 export const BOT_PER = 4;
