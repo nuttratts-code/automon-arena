@@ -3,7 +3,7 @@ import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { simulate } from '../core/battle.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { newRun, startRound, reroll, sell, move, applyBattlePerm } from '../core/shop.js';
+import { incomeOf, newRun, startRound, reroll, sell, move, applyBattlePerm } from '../core/shop.js';
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
@@ -68,13 +68,13 @@ export const TESTS_RUNRUN = [
   }],
   ['set 94: run-only runes — gold · interest (rune only) · shop slots · free reroll · heart trade', () => {
     const P = fresh(16);
-    P.gold = 17; startRound(P, chars); const base = P.gold; // no runes: no interest
-    eq(base, 17 + RULES.shop.goldPerRound + (P.lastWon ? RULES.shop.winBonus : 0), 'no interest without rune');
+    P.gold = 17; const inc1 = incomeOf(P).total; startRound(P, chars); const base = P.gold; // no runes: no interest
+    eq(base, 17 + inc1, 'no interest without rune');
     give(P, 'T1', 2); give(P, 'T2', 1); give(P, 'T3', 1); give(P, 'T4', 1); give(P, 'X8', 1);
     const fx = rnFx(P); eq([fx.gold, fx.slots, fx.free], [4, 1, 1], 'gold ×copies / slots / free');
     eq(rnInterest(17, fx), 3, 'interest floor(17/5)×1'); eq(rnInterest(500, fx), 20, 'interest cap');
-    P.gold = 17; startRound(P, chars);
-    eq(P.gold, 17 + RULES.shop.goldPerRound + 4 + 3, 'income + gold rune + interest');
+    P.gold = 17; const inc2 = incomeOf(P).total; startRound(P, chars);
+    eq(P.gold, 17 + inc2 + 4 + 3, 'income + gold rune + interest');
     eq(P.shop.length, RULES.shop.slots + 1, 'shop +1 slot'); ok(P.shop.every(s => s.id), 'new slot filled');
     const g = P.gold; ok(reroll(P, chars).ok && P.gold === g && P.rn.free === 0, 'free reroll');
     ok(reroll(P, chars).ok && P.gold === g - RULES.shop.rerollCost, 'then paid');

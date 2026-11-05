@@ -80,7 +80,7 @@ export const RULES = {
   skillCdMaxMs: 120000,        // คูลดาวน์สกิลสูงสุดที่ตั้งได้ (กันค่าผิดปกติ)
   // ร้านค้า (shop-merge-rules) · ราคาตัวละครอยู่ที่ตัวละครแต่ละตัว
   shop: {
-    startGold: 25, goldPerRound: 25, winBonus: 2,   // เอกสาร (ชุด 83: ผู้ใช้เลือก 25/25)
+    startGold: 10, goldPerRound: 25, goldStep: 3, winBonus: 2, // set 96 (user picked A): round 1 = startGold, then +goldStep per round up to goldPerRound (10,13,16,19,22,25…) · goldStep 0 = flat goldPerRound (set 83: 25/25)
     slots: 5, rerollCost: 2, bench: 6,              // เอกสาร (set 89: reroll 1 → 2)
     hearts: 10, winsToFinish: 10,                   // เอกสาร
     // set 88: 15 shop levels, odds per level (% , used as weights) (ค่าเสนอ · user accepted the table)
@@ -141,7 +141,8 @@ export const RULE_SPEC = [
   ['bossTimers.weakSpotMs', 'R30 หลังบอสย้ายที่ โดนดาเมจเพิ่มนาน', 0.1, 60, 'วิ', 'boss', SEC],
   ['bossTimers.curseWindowMs', 'R29 สาป: เวลาให้ทีมตีบอสให้ถึงเป้า', 1, 60, 'วิ', 'boss', SEC],
   ['shop.startGold', 'เงินตอนเริ่ม run', 0, 100, 'เงิน', 'shop', { int: true }],
-  ['shop.goldPerRound', 'เงินต่อรอบ', 0, 100, 'เงิน', 'shop', { int: true }],
+  ['shop.goldPerRound', 'เงินต่อรอบ (สูงสุด)', 0, 100, 'เงิน', 'shop', { int: true }],
+  ['shop.goldStep', 'เงินต่อรอบเพิ่มทีละ (0 = เท่ากันทุกรอบ)', 0, 50, 'เงิน', 'shop', { int: true }],
   ['shop.winBonus', 'โบนัสเงินเมื่อชนะ', 0, 50, 'เงิน', 'shop', { int: true }],
   ['shop.rerollCost', 'ค่าสุ่มร้านใหม่', 0, 20, 'เงิน', 'shop', { int: true }],
   ['shop.hearts', 'หัวใจตอนเริ่ม', 1, 50, 'ดวง', 'shop', { int: true }],

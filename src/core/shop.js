@@ -42,10 +42,16 @@ export function lvForRound(round, rules = RULES) {
 }
 export const shopLvOf = (st, rules = RULES) => lvForRound(st.round, rules);
 export const oddsAt = (lv, rules = RULES) => rules.shop.levelOdds[Math.max(1, Math.min(shopLevels(rules), lv | 0)) - 1];
+// base income for round `round` (1-based): round 1 = startGold · set 96: then +goldStep per round, capped at goldPerRound (goldStep 0 = flat goldPerRound)
+export function baseIncomeAt(round, rules = RULES) {
+  const S = rules.shop, r = Math.max(1, round | 0);
+  if (r === 1) return S.startGold;
+  return S.goldStep ? Math.max(0, Math.min(S.goldPerRound, S.startGold + S.goldStep * (r - 1))) : S.goldPerRound;
+}
 // income the next startRound pays (round 2+): base + win bonus (no interest, no streaks · set 89)
 export function incomeOf(st, rules = RULES) {
-  const S = rules.shop, bonus = st.lastWon ? S.winBonus : 0;
-  return { base: S.goldPerRound, bonus, total: S.goldPerRound + bonus };
+  const S = rules.shop, bonus = st.lastWon ? S.winBonus : 0, base = baseIncomeAt(st.round + 1, rules);
+  return { base, bonus, total: base + bonus };
 }
 
 export function rollChar(st, chars, rules) {

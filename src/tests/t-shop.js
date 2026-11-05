@@ -2,7 +2,7 @@
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RARITIES, RULES } from '../core/rules.js';
-import { addPerm, allUnits, buy, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
+import { addPerm, allUnits, baseIncomeAt, buy, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok } from './helpers.js';
@@ -11,13 +11,22 @@ export const TESTS_SHOP = [
   ['ร้าน: เงินเริ่ม · รายได้รอบละ · ชนะได้โบนัส · เงินค้างข้ามรอบ', () => {
     const chars = buildCharacterList(), st = newRun(chars, 1), S = RULES.shop;
     startRound(st, chars); eq(st.gold, S.startGold, 'รอบแรก');
-    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 3 + S.goldPerRound + S.winBonus, 'หลังชนะ');
-    st.gold = 4; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 4 + S.goldPerRound, 'หลังแพ้');
+    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 3 + baseIncomeAt(2) + S.winBonus, 'หลังชนะ');
+    st.gold = 4; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 4 + baseIncomeAt(3), 'หลังแพ้');
+  }],
+  ['set 96 เงินต่อรอบเพิ่มทีละขั้น: 10,13,16,19,22,25,25… · goldStep 0 = เท่ากันทุกรอบ', () => {
+    eq([1, 2, 3, 4, 5, 6, 7, 20].map(r => baseIncomeAt(r)), [10, 13, 16, 19, 22, 25, 25, 25], 'ค่าเริ่มต้น');
+    const flat = { ...RULES, shop: { ...RULES.shop, goldStep: 0 } };
+    eq([1, 2, 9].map(r => baseIncomeAt(r, flat)), [10, 25, 25], 'goldStep 0');
+    const chars = buildCharacterList(), st = newRun(chars, 2);
+    startRound(st, chars); eq(st.gold, 10, 'รอบ 1');
+    st.gold = 0; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 13, 'รอบ 2 แพ้');
+    st.gold = 0; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 16 + RULES.shop.winBonus, 'รอบ 3 ชนะ');
   }],
   ['set 89 ไม่มีดอกเบี้ย/ชนะติด/แพ้ติด: เงินที่เหลือไม่เพิ่ม · ชนะ = รอบละ + โบนัสชนะเสมอ · แพ้ = รอบละ', () => {
     const chars = buildCharacterList(), S = RULES.shop, st = newRun(chars, 4);
     startRound(st, chars);
-    const step = (won, bonus, what) => { st.gold = 100; endMatch(st, won, chars); startRound(st, chars); eq(st.gold, 100 + S.goldPerRound + bonus, what); };
+    const step = (won, bonus, what) => { st.gold = 100; endMatch(st, won, chars); const base = baseIncomeAt(st.round + 1); startRound(st, chars); eq(st.gold, 100 + base + bonus, what); };
     for (let i = 1; i <= 5; i++) step(true, S.winBonus, `ชนะ ${i}`);
     for (let i = 1; i <= 5; i++) step(false, 0, `แพ้ ${i}`);
     ok(!('wStreak' in st) && !('shopLv' in st), 'สถานะไม่มีช่องชนะติด/ระดับร้าน');
