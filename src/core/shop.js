@@ -189,7 +189,7 @@ export function useCharges(st, u, chars, rules, msgs) {
 export function startRound(st, chars, rules = RULES) {
   if (st.over) return fail('run จบแล้ว');
   const S = rules.shop;
-  const msgs = [];
+  const msgs = [], held = st.gold; // set 94: rune interest is paid on the gold carried over (before this round's income)
   if (st.round === 0) st.gold += S.startGold;
   else {
     const inc = incomeOf(st, rules);
@@ -198,7 +198,7 @@ export function startRound(st, chars, rules = RULES) {
   }
   const fx = rnFx(st); // set 94: run-only runes (gold / interest / shop slots / free reroll / heart trade)
   if (st.round > 0) {
-    const it = rnInterest(st.gold, fx);
+    const it = rnInterest(held, fx);
     if (fx.gold) { st.gold += fx.gold; msgs.push(`รูนทอง +${fx.gold}`); }
     if (it) { st.gold += it; msgs.push(`ดอกเบี้ยจากรูน +${it}`); }
   }
