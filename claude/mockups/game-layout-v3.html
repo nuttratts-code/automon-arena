@@ -1,0 +1,522 @@
+<title>Automon Arena Layout Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Landscape-first, full width, one screen. HUD on top (stats + tribe/rune icon buttons + difficulty) · field: my 3x2 only while shopping, my 3x2 | enemy 3x2 while fighting · bench under it · large shop strip + fight button along the bottom. */
+:root {
+  --bg: #efe9df; --panel: #fbf8f3; --ink: #231f1a; --mute: #6b6258; --line: #d8cfc2; --soft: #f1ebe1;
+  --arena: #e3d6c1; --arena-line: #c9b89c; --foe-zone: #dccab0; --accent: #2d5f7c; --on-accent: #ffffff;
+  --gold: #9a6b00; --gold-bg: #f7e7bf; --heart: #b3263a; --hp: #3c9a5f; --hp-bg: #d9cfbf; --bad: #b3261e;
+  --t-steel: #6e7d8c; --t-fire: #d9542b; --t-bolt: #d6a11a; --t-wind: #2f9c7b; --t-spirit: #7d62c6; --t-fiend: #a92f48;
+  --shade: rgba(35,31,26,.45);
+  --f-display: "Mitr", "IBM Plex Sans Thai", Tahoma, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --arena: #2b251c; --arena-line: #4a3f30; --foe-zone: #251f17; --accent: #8cc0de; --on-accent: #10202a;
+  --gold: #f0c860; --gold-bg: #3a2f14; --heart: #f07a8c; --hp: #5cc283; --hp-bg: #3a332a; --bad: #ff8f86;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --shade: rgba(0,0,0,.6); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --arena: #2b251c; --arena-line: #4a3f30; --foe-zone: #251f17; --accent: #8cc0de; --on-accent: #10202a;
+  --gold: #f0c860; --gold-bg: #3a2f14; --heart: #f07a8c; --hp: #5cc283; --hp-bg: #3a332a; --bad: #ff8f86;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f;
+  --shade: rgba(0,0,0,.6); color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.35; overflow: hidden; }
+* { box-sizing: border-box; }
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  padding-block: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button { font: 600 .85rem var(--f-body); border-radius: 8px; padding: 7px 12px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.hint { font-size: .72rem; color: var(--mute); margin: 0; }
+.lbl { font: 600 .7rem var(--f-display); color: var(--mute); letter-spacing: .02em; }
+.grow { flex: 1; min-width: 0; }
+
+/* HUD */
+.hud { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hud h1 { font: 600 1rem var(--f-display); margin: 0 8px 0 0; }
+.stat { font: 500 .8rem var(--f-mono); font-variant-numeric: tabular-nums; padding: 3px 10px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line); white-space: nowrap; }
+.stat.gold { color: var(--gold); background: var(--gold-bg); border-color: transparent; font-weight: 600; }
+.stat.heart { color: var(--heart); }
+.tag { font: 600 .64rem var(--f-body); color: var(--accent); border: 1px dashed var(--accent); border-radius: 99px; padding: 1px 8px; }
+.seg { display: flex; gap: 3px; }
+.seg button { padding: 4px 10px; font-size: .78rem; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.seg.mono button { font-family: var(--f-mono); padding: 4px 8px; }
+
+/* icons: coloured shapes (placeholder art) */
+.ico { width: var(--s, 30px); height: var(--s, 30px); flex: none; background: var(--c); }
+.ico.tri { clip-path: polygon(50% 4%, 96% 92%, 4% 92%); }
+.ico.sq { border-radius: 18%; }
+.ico.dia { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.ico.circ { border-radius: 50%; }
+.ico.hex { clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%); }
+.ico.pent { clip-path: polygon(50% 0, 98% 36%, 80% 96%, 20% 96%, 2% 36%); }
+
+/* middle: field */
+.mid { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.hudbtn { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; }
+.hudbtn svg { width: 22px; height: 22px; }
+.hudbtn .badge { font: 600 .72rem var(--f-mono); background: var(--accent); color: var(--on-accent); border-radius: 99px; padding: 0 6px; }
+.hudbtn .mini { display: flex; gap: 2px; }
+.hudbtn .mini .ico { --s: 14px; }
+.list { display: grid; gap: 6px; }
+.list .tribe, .list .rune { width: 100%; }
+.rune { grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; }
+.rune svg { width: 22px; height: 22px; grid-row: 1 / 3; color: var(--gold); }
+.tribe { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); text-align: left; font-weight: 600; }
+.tribe .ico { --s: 20px; }
+.tribe { padding: 8px 10px; }
+.tribe small { font: 500 .72rem var(--f-mono); color: var(--mute); }
+.tribe .pips { display: flex; gap: 2px; }
+.tribe .pips i { width: 6px; height: 12px; border-radius: 2px; background: var(--line); }
+.tribe .pips i.on { background: var(--c); }
+.tribe.off { opacity: .55; }
+.rune { padding: 7px 10px; text-align: left; background: var(--soft); display: grid; gap: 0; }
+.rune b { font-size: .85rem; }
+.rune span { font-size: .7rem; color: var(--mute); font-weight: 400; }
+
+.field { position: relative; background: var(--arena); border: 1px solid var(--arena-line); border-radius: 12px; padding: 8px 10px 10px;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 18px; row-gap: 6px; min-height: 0; }
+.field .foe, .field .side-head.foehead { display: none; }
+.fighting .field { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "h1 h2" "t1 t2" "b b"; }
+.fighting .field .foe, .fighting .field .side-head.foehead { display: grid; }
+.field::before { display: none; }
+.fighting .field::before { display: block; content: ""; position: absolute; top: 10px; bottom: 10px; left: 50%; border-left: 2px dashed var(--arena-line); }
+.side-head { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.side-head .lbl:first-child { text-align: left; }
+.team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px; min-height: 0; }
+.cell { border: 1px dashed var(--arena-line); border-radius: 10px; display: grid; min-height: 0; min-width: 0; position: relative; }
+.team.foe .cell { background: var(--foe-zone); border-style: solid; border-color: transparent; }
+.foe-q { display: grid; place-items: center; font: 600 1.6rem var(--f-display); color: var(--arena-line); }
+.bench { grid-column: 1 / -1; display: grid; grid-template-columns: auto repeat(8, minmax(0, 1fr)); gap: 6px; align-items: stretch; border-top: 1px solid var(--arena-line); padding-top: 8px; }
+.bench .lbl { align-self: center; writing-mode: vertical-rl; transform: rotate(180deg); }
+.bench .cell { background: color-mix(in srgb, var(--panel) 45%, transparent); height: clamp(42px, 8vh, 70px); }
+.cell.over { border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.unit { display: grid; justify-items: center; align-content: center; gap: 2px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; padding: 4px; border-radius: 10px; min-height: 0; overflow: hidden; }
+.team .unit { --s: clamp(28px, 7vh, 56px); background: color-mix(in srgb, var(--panel) 50%, transparent); }
+.bench .unit { --s: clamp(18px, 3.4vh, 28px); gap: 0; padding: 2px; }
+.unit .nm { font-size: .74rem; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bench .unit .nm { font-size: .64rem; }
+.lv { font: 600 .62rem var(--f-mono); color: var(--gold); line-height: 1; }
+.unit.merge { animation: pop .5s ease; box-shadow: 0 0 0 2px var(--gold); }
+@keyframes pop { 40% { transform: scale(1.1); } }
+
+/* battle on the same field */
+.bar { width: 80%; height: 6px; background: var(--hp-bg); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--hp); transition: width .15s linear; }
+.unit.dead { opacity: .28; }
+.unit.hit { animation: shake .25s; }
+@keyframes shake { 30% { transform: translateX(-3px); } 70% { transform: translateX(3px); } }
+.float { position: absolute; top: 4px; left: 50%; font: 600 .8rem var(--f-mono); color: var(--bad); pointer-events: none; animation: rise .7s forwards; }
+@keyframes rise { to { transform: translate(-50%, -18px); opacity: 0; } }
+.fighting .bench { opacity: .35; pointer-events: none; }
+.result { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--arena) 65%, transparent); border-radius: 12px; z-index: 2; }
+.result > div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 22px; display: grid; gap: 10px; justify-items: center; text-align: center; box-shadow: 0 8px 30px var(--shade); }
+.result strong { font: 600 1.5rem var(--f-display); }
+.result .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.replaytag { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); font: 600 .7rem var(--f-body); background: var(--accent); color: var(--on-accent); padding: 2px 10px; border-radius: 99px; z-index: 1; }
+
+/* bottom strip: shop or battle controls */
+.dock { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: stretch; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px; }
+.dock .left, .dock .right { display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+.dock .left button { white-space: nowrap; }
+.shop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.dock { min-height: clamp(70px, 20vh, 150px); }
+.card { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 12px; row-gap: 2px; align-items: center; padding: clamp(8px, 2vh, 16px) 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; min-width: 0; }
+.card .ico { --s: clamp(32px, 9vh, 64px); grid-row: 1 / 4; }
+.card .nm { font-weight: 600; font-size: clamp(.8rem, 2vh, 1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .rar { font-size: .7rem; color: var(--mute); }
+.card .sub { font: 500 .74rem var(--f-mono); color: var(--mute); display: flex; justify-content: space-between; gap: 4px; }
+.card .price { color: var(--gold); font-weight: 600; }
+.card.cant .price { color: var(--bad); }
+.card.locked { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.card.locked::after { content: "ล็อก"; position: absolute; top: -7px; right: 8px; font: 600 .58rem var(--f-body); background: var(--gold); color: var(--panel); border-radius: 5px; padding: 0 4px; }
+.card.sold { visibility: hidden; }
+.dock.sellzone.over { outline: 2px dashed var(--bad); outline-offset: -4px; }
+#fight { font-size: 1.1rem; padding: 12px 30px; height: 100%; }
+.dock .left button { height: 100%; }
+.bctl { display: none; align-items: center; gap: 10px; min-width: 0; }
+.ticker { font-size: .78rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fighting .shop, .fighting #reroll, .fighting .shopnote, .fighting #fight { display: none; }
+.fighting .bctl { display: flex; }
+
+/* popup */
+dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; background: var(--panel); color: var(--ink); width: min(460px, calc(100vw - 32px)); max-height: calc(100% - 32px); box-shadow: 0 12px 40px var(--shade); }
+dialog::backdrop { background: var(--shade); }
+.pop { padding: 14px; display: grid; gap: 10px; }
+.pop header { display: flex; gap: 10px; align-items: center; }
+.pop header .ico { --s: 40px; }
+.pop h3 { font: 600 1rem var(--f-display); margin: 0; }
+.pop p { margin: 0; }
+.statgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.statgrid div { background: var(--soft); border-radius: 8px; padding: 6px 8px; display: grid; }
+.statgrid span { font-size: .68rem; color: var(--mute); }
+.statgrid b { font: 600 .95rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.skill { border-left: 3px solid var(--c, var(--accent)); padding: 2px 0 2px 8px; }
+.skill b { font-size: .82rem; }
+.skill p { margin: 1px 0 0; font-size: .78rem; color: var(--mute); }
+.acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.mxt { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.mxt td, .mxt th { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.mxt td:last-child, .mxt th:last-child { text-align: right; font-family: var(--f-mono); }
+.dmgbar { height: 5px; background: var(--c); border-radius: 3px; margin-top: 2px; }
+.scroll { overflow: auto; }
+
+#ghost { position: fixed; pointer-events: none; z-index: 50; transform: translate(-50%, -60%); opacity: .9; }
+#toast { position: fixed; left: 50%; top: calc(56px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 6px 14px; border-radius: 99px; font-size: .8rem; z-index: 60; }
+#rotate { display: none; }
+
+/* short landscape screens (phone held sideways) */
+@media (max-height: 520px) {
+  .app { gap: 5px; padding-block: 4px; }
+  .hud h1, .tag { display: none; }
+  .stat { padding: 1px 7px; font-size: .72rem; }
+  .seg button { padding: 2px 7px; }
+  .field { padding: 5px 8px 6px; row-gap: 4px; }
+  .team { gap: 5px; }
+  .unit .nm { font-size: .64rem; }
+  .bench { padding-top: 5px; gap: 4px; }
+  .dock { padding: 5px; gap: 6px; }
+  .card { padding: 4px 6px; column-gap: 5px; }
+  .card .nm { font-size: .72rem; }
+  .shopnote { display: none; }
+  #fight { padding: 8px 16px; font-size: .9rem; }
+  .hudbtn { padding: 2px 8px; }
+  .hudbtn svg { width: 18px; height: 18px; }
+  .card .rar, .card .sub span:first-child { display: none; }
+  .card .sub { justify-content: flex-start; }
+  .unit { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 6px; }
+  .team .unit { --s: 24px; }
+  .bench .unit .nm { display: none; }
+}
+/* portrait phone: ask to rotate */
+@media (orientation: portrait) and (max-width: 700px) {
+  #rotate:not(.dismissed) { display: grid; position: fixed; inset: 0; z-index: 70; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
+  #rotate > div { display: grid; gap: 12px; justify-items: center; max-width: 280px; }
+  #rotate .phone { width: 46px; height: 80px; border: 3px solid var(--ink); border-radius: 10px; animation: turn 2s ease-in-out infinite; }
+  @keyframes turn { 40%, 100% { transform: rotate(-90deg); } }
+  .card { grid-template-columns: 1fr; justify-items: center; padding: 4px; }
+  .card .ico { grid-row: auto; }
+  .card .sub span:first-child, .shopnote { display: none; }
+  .dock { grid-template-columns: 1fr auto; }
+  .dock .left { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="app" id="app">
+  <div class="hud">
+    <h1>Automon Arena</h1>
+    <span class="stat" id="sRound">รอบ 3</span>
+    <span class="stat heart">หัวใจ 9</span>
+    <span class="stat" id="sWins">ชนะ 2/10</span>
+    <span class="stat gold" id="sGold">เงิน 10</span>
+    <button class="hudbtn" id="tribeBtn" type="button" aria-label="เผ่าในทีม"><span class="mini" id="tribeMini"></span><span class="badge" id="tribeCnt">0</span></button>
+    <button class="hudbtn" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span class="badge" id="runeCnt">3</span></button>
+    <span class="tag">ตัวอย่างหน้าตา · ยังไม่ใช่เกมจริง</span>
+    <span class="grow"></span>
+    <span class="lbl">ความยาก</span>
+    <div class="seg" id="diff"><button type="button" data-d="ง่าย" aria-pressed="false">ง่าย</button><button type="button" data-d="กลาง" aria-pressed="true">กลาง</button><button type="button" data-d="ยาก" aria-pressed="false">ยาก</button></div>
+    <button id="diffInfo" type="button" aria-label="ความยากคืออะไร">?</button>
+  </div>
+
+  <div class="mid">
+    <div class="field" id="field">
+      <div class="side-head"><span class="lbl" style="text-align:center">ทีมคุณ · หลัง</span><span class="lbl">กลาง</span><span class="lbl">หน้า →</span></div>
+      <div class="side-head foehead"><span class="lbl" style="text-align:center">← หน้า</span><span class="lbl">กลาง</span><span class="lbl">หลัง · คู่แข่ง</span></div>
+      <div class="team" id="mine"></div>
+      <div class="team foe" id="foe"></div>
+      <div class="bench" id="bench"></div>
+      <span class="replaytag" id="replayTag" hidden>กำลังดูรีเพลย์</span>
+      <div class="result" id="result" hidden><div>
+        <strong id="resTitle"></strong><span class="hint" id="resSub"></span>
+        <div class="row">
+          <button id="replay" type="button">▶ ดูรีเพลย์</button>
+          <button id="details" type="button">รายละเอียดแมตช์</button>
+          <button class="primary" id="next" type="button">ไปรอบถัดไป</button>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="dock sellzone" id="dock" data-drop="sell">
+    <div class="left">
+      <button id="reroll" type="button">รีโรล −2</button>
+      <span class="hint shopnote">ร้าน Lv 3</span>
+    </div>
+    <div style="display:grid;gap:4px;min-width:0">
+      <div class="shop" id="shop"></div>
+      <div class="bctl">
+        <span class="stat" id="clock">0.0 วิ</span>
+        <div class="seg mono" id="speed"><button type="button" data-s="1" aria-pressed="false">1×</button><button type="button" data-s="2" aria-pressed="true">2×</button><button type="button" data-s="4" aria-pressed="false">4×</button><button type="button" data-s="8" aria-pressed="false">8×</button></div>
+        <button id="skip" type="button">ข้ามไปผล</button>
+        <span class="ticker grow" id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span>
+      </div>
+    </div>
+    <div class="right">
+      <button class="primary" id="fight" type="button">เริ่มสู้</button>
+    </div>
+  </div>
+</div>
+
+<div id="rotate"><div><div class="phone"></div><strong>หมุนมือถือเป็นแนวนอน</strong><span class="hint">เกมนี้ออกแบบให้เล่นแนวนอนเป็นหลัก</span><button id="rotateSkip" type="button">ใช้แนวตั้งต่อ</button></div></div>
+<dialog id="dlg"><div class="pop" id="pop"></div></dialog>
+<div id="ghost" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+(() => {
+  const TR = {
+    fire: { n: 'ไฟ', s: 'tri', c: '--t-fire' }, steel: { n: 'เหล็ก', s: 'sq', c: '--t-steel' }, bolt: { n: 'สายฟ้า', s: 'dia', c: '--t-bolt' },
+    wind: { n: 'วายุ', s: 'circ', c: '--t-wind' }, spirit: { n: 'ภูติ', s: 'hex', c: '--t-spirit' }, fiend: { n: 'อสูร', s: 'pent', c: '--t-fiend' } };
+  const DEF = {
+    'PL-1': { n: 'นักจุดไฟ', t: 'fire', hp: 420, atk: 30, cd: 1.4 }, 'HL-1': { n: 'กำปั้นเหล็ก', t: 'steel', hp: 620, atk: 22, cd: 1.6 },
+    'HL-2': { n: 'โล่ยักษ์', t: 'steel', hp: 780, atk: 14, cd: 1.8 }, 'PT-1': { n: 'ภูติฮีล', t: 'spirit', hp: 380, atk: 16, cd: 1.5 },
+    'WN-2': { n: 'อสูรแค้น', t: 'fiend', hp: 500, atk: 28, cd: 1.5 }, 'SF-2': { n: 'วัวสายฟ้า', t: 'bolt', hp: 460, atk: 26, cd: 1.3 },
+    'WY-1': { n: 'นักล่าสายลม', t: 'wind', hp: 400, atk: 24, cd: 1.0 } };
+  const IDS = Object.keys(DEF);
+  const RUNES = [
+    { n: 'เกราะหนา', k: 'ทั้งทีม', d: 'ตัวอย่าง: ทุกตัวเริ่มแมตช์พร้อมเกราะเพิ่ม' },
+    { n: 'ไฟลุก', k: 'ช่อง หน้า-บน', d: 'ตัวอย่าง: ตัวที่ยืนช่องนี้ตีแล้วติดไฟ' },
+    { n: 'ส่องทีม', k: 'ร้าน', d: 'ตัวอย่าง: เห็นทีมศัตรูก่อนเริ่มสู้' } ];
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const ico = (t) => { const i = el('div', 'ico ' + TR[t].s); i.style.setProperty('--c', `var(${TR[t].c})`); return i; };
+  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 1600); };
+
+  let tribeCount = {};
+  let gold = 10, round = 3, wins = 2, diff = 'กลาง', fighting = false;
+  const board = [null, null, { id: 'HL-2', lv: 1 }, { id: 'PT-1', lv: 1 }, { id: 'PL-1', lv: 1 }, { id: 'HL-1', lv: 1 }];
+  const bench = [{ id: 'HL-1', lv: 1 }, { id: 'WN-2', lv: 1 }, null, null, null, null, null, null];
+  let shop = [{ id: 'HL-1' }, { id: 'SF-2' }, { id: 'WY-1' }, { id: 'PL-1' }, { id: 'WN-2' }], locked = new Set();
+  const rollShop = () => { shop = shop.map((s, i) => locked.has(i) ? s : { id: IDS[Math.floor(Math.random() * IDS.length)] }); };
+  /* my side: columns หลัง กลาง หน้า (front faces the enemy); enemy side mirrored */
+  const slotOf = (r, c, foe) => r * 3 + (foe ? 2 - c : c);
+
+  function unitEl(u, where, idx) {
+    const d = DEF[u.id], w = el('div', 'unit'); w.dataset.src = where; w.dataset.idx = idx;
+    w.append(ico(d.t), el('span', 'nm', d.n), el('span', 'lv', '★'.repeat(u.lv)));
+    if (u.fresh) { w.classList.add('merge'); delete u.fresh; }
+    return w;
+  }
+  function render() {
+    $('app').classList.toggle('fighting', fighting);
+    $('sGold').textContent = 'เงิน ' + gold; $('sRound').textContent = 'รอบ ' + round; $('sWins').textContent = `ชนะ ${wins}/10`;
+    const mine = $('mine'), foe = $('foe'); mine.replaceChildren(); foe.replaceChildren();
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const i = slotOf(r, c, false), cell = el('div', 'cell'); cell.dataset.drop = 'board'; cell.dataset.idx = i;
+      if (board[i]) cell.append(unitEl(board[i], 'board', i)); mine.append(cell);
+      const fc = el('div', 'cell'); fc.append(el('div', 'foe-q', '?')); foe.append(fc);
+    }
+    const be = $('bench'); be.replaceChildren(el('span', 'lbl', 'ม้านั่ง'));
+    bench.forEach((u, i) => { const cell = el('div', 'cell'); cell.dataset.drop = 'bench'; cell.dataset.idx = i; if (u) cell.append(unitEl(u, 'bench', i)); be.append(cell); });
+    const sh = $('shop'); sh.replaceChildren();
+    shop.forEach((s, i) => {
+      const d = DEF[s.id], c = el('div', 'card'); c.dataset.src = 'shop'; c.dataset.idx = i;
+      if (s.sold) c.classList.add('sold'); if (locked.has(i)) c.classList.add('locked'); if (gold < 3) c.classList.add('cant');
+      const sub = el('div', 'sub'); sub.append(el('span', '', 'เผ่า' + TR[d.t].n), el('span', 'price', '3 เงิน'));
+      c.append(ico(d.t), el('div', 'nm', d.n), el('div', 'rar', s.id + ' · ธรรมดา'), sub); sh.append(c);
+    });
+    const cnt = {}; board.forEach(u => { if (u) cnt[DEF[u.id].t] = (cnt[DEF[u.id].t] || 0) + 1; });
+    tribeCount = cnt;
+    const tm = $('tribeMini'); tm.replaceChildren(); const act = Object.keys(cnt).sort((x, y) => cnt[y] - cnt[x]);
+    act.slice(0, 3).forEach(t => tm.append(ico(t))); $('tribeCnt').textContent = act.filter(t => cnt[t] >= 2).length + '/' + act.length;
+    $('runeCnt').textContent = RUNES.length;
+    $('fight').textContent = `เริ่มสู้ (${board.filter(Boolean).length}/6)`;
+  }
+
+  function merge() {
+    for (const id of IDS) for (const lv of [1, 2]) {
+      const spots = [];
+      board.forEach((u, i) => u && u.id === id && u.lv === lv && spots.push([board, i]));
+      bench.forEach((u, i) => u && u.id === id && u.lv === lv && spots.push([bench, i]));
+      if (spots.length >= 3) {
+        const [keep, ...rest] = spots.slice(0, 3); rest.forEach(([a, i]) => a[i] = null);
+        keep[0][keep[1]] = { id, lv: lv + 1, fresh: true }; toast(`รวมร่าง! ${DEF[id].n} ★${lv + 1}`); return merge();
+      }
+    }
+  }
+
+  /* tap = popup · drag = move/buy/sell */
+  let drag = null;
+  document.addEventListener('pointerdown', (e) => {
+    const src = e.target.closest('.unit, .card'); if (!src || src.classList.contains('sold')) return;
+    drag = { src, x: e.clientX, y: e.clientY, moved: false, from: src.dataset.src, idx: +src.dataset.idx, over: null };
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || drag.from === 'battle') return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+    if (!drag.moved) { drag.moved = true; const g = $('ghost'); g.replaceChildren(drag.src.querySelector('.ico').cloneNode()); g.hidden = false; drag.src.style.opacity = '.35'; }
+    const g = $('ghost'); g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px';
+    const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+    if (drag.over && drag.over !== hit) drag.over.classList.remove('over');
+    if (hit && !(hit.dataset.drop === 'sell' && drag.from === 'shop')) { hit.classList.add('over'); drag.over = hit; } else drag.over = null;
+  });
+  document.addEventListener('pointerup', () => {
+    if (!drag) return;
+    const d = drag; drag = null; $('ghost').hidden = true; d.src.style.opacity = '';
+    if (d.over) d.over.classList.remove('over');
+    if (!d.moved) {
+      if (d.from === 'battle') return unitPop(match.cur[d.idx].id, match.cur[d.idx].lv, 'battle', d.idx, match.cur[d.idx]);
+      if (d.from === 'shop') return unitPop(shop[d.idx].id, 1, 'shop', d.idx);
+      const u = (d.from === 'board' ? board : bench)[d.idx]; return unitPop(u.id, u.lv, d.from, d.idx);
+    }
+    if (!d.over) return;
+    const to = d.over.dataset.drop, ti = +d.over.dataset.idx;
+    if (to === 'sell') return sell(d.from, d.idx);
+    const dest = to === 'board' ? board : bench;
+    if (d.from === 'shop') {
+      if (dest[ti]) return toast('ช่องนี้มีตัวอยู่แล้ว');
+      if (gold < 3) return toast('เงินไม่พอ');
+      gold -= 3; dest[ti] = { id: shop[d.idx].id, lv: 1 }; shop[d.idx].sold = true; locked.delete(d.idx);
+    } else { const src = d.from === 'board' ? board : bench; [src[d.idx], dest[ti]] = [dest[ti], src[d.idx]]; }
+    merge(); render();
+  });
+  function sell(from, idx) { const arr = from === 'board' ? board : bench, u = arr[idx]; arr[idx] = null; gold += 2 * u.lv; toast(`ขาย ${DEF[u.id].n} +${2 * u.lv} เงิน`); render(); }
+  function buyToBench(idx) {
+    const free = bench.indexOf(null); if (free < 0) return toast('ม้านั่งเต็ม'); if (gold < 3) return toast('เงินไม่พอ');
+    gold -= 3; bench[free] = { id: shop[idx].id, lv: 1 }; shop[idx].sold = true; locked.delete(idx); merge(); render();
+  }
+
+  /* popups */
+  const dlg = $('dlg');
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  const openPop = (nodes) => { $('pop').replaceChildren(...nodes); dlg.showModal(); };
+  const btn = (txt, cls, fn) => { const b = el('button', cls, txt); b.type = 'button'; b.onclick = fn; return b; };
+  const head = (title, sub, t) => { const h = el('header'); const tx = el('div', 'grow'); tx.append(el('h3', '', title), el('div', 'hint', sub)); if (t) h.append(ico(t)); h.append(tx); return h; };
+  const closeRow = (...extra) => { const a = el('div', 'acts'); a.append(...extra, btn('ปิด', '', () => dlg.close())); return a; };
+  function unitPop(id, lv, where, idx, live) {
+    const d = DEF[id], m = lv === 1 ? 1 : lv === 2 ? 2 : 4;
+    const sg = el('div', 'statgrid');
+    [['HP', live ? `${Math.max(0, Math.round(live.hp))}/${live.max}` : d.hp * m], ['โจมตี', live ? live.atk : d.atk * m], ['คูลดาวน์', d.cd + ' วิ']]
+      .forEach(([a, b]) => { const c = el('div'); c.append(el('span', '', a), el('b', '', b)); sg.append(c); });
+    const sk = [['สกิล 1', 'ข้อความตัวอย่าง: ทุกครั้งที่ตี เพิ่มผลพิเศษตามเผ่า'], ['สกิล 2', 'ข้อความตัวอย่าง: เมื่อเลือดต่ำกว่าครึ่ง ได้เกราะเพิ่ม']]
+      .map(([a, b]) => { const s = el('div', 'skill'); s.style.setProperty('--c', `var(${TR[d.t].c})`); s.append(el('b', '', a), el('p', '', b)); return s; });
+    let acts;
+    if (where === 'shop') acts = closeRow(btn(locked.has(idx) ? 'ปลดล็อก' : 'ล็อก', '', () => { locked.has(idx) ? locked.delete(idx) : locked.add(idx); dlg.close(); render(); }), btn('ซื้อลงม้านั่ง · 3 เงิน', 'primary', () => { dlg.close(); buyToBench(idx); }));
+    else if (where === 'board' || where === 'bench') acts = closeRow(btn(`ขาย +${2 * lv} เงิน`, '', () => { dlg.close(); sell(where, idx); }));
+    else acts = closeRow();
+    openPop([head(`${d.n} ${'★'.repeat(lv)}`, `${id} · เผ่า${TR[d.t].n} · ธรรมดา`, d.t), sg,
+      el('p', 'hint', live ? 'ค่าตอนนี้ระหว่างแมตช์ (ตัวเลขตัวอย่าง)' : 'ตัวเลขและสกิลในตัวอย่างนี้เป็นของสมมติ ในเกมจริงจะใช้ค่าจริง'), ...sk, acts]);
+  }
+  const BAGSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg>';
+  const bagIco = () => { const t = document.createElement('template'); t.innerHTML = BAGSVG; return t.content.firstChild; };
+  const back = (fn) => btn('← กลับ', '', fn);
+  const runePop = (r) => openPop([head('รูน ' + r.n, r.k), el('p', '', r.d), closeRow(back(runeList))]);
+  function runeList() {
+    const l = el('div', 'list');
+    RUNES.forEach(r => { const x = el('button', 'rune'); x.type = 'button'; x.append(bagIco(), el('b', '', r.n), el('span', '', r.k)); x.onclick = () => runePop(r); l.append(x); });
+    openPop([head(`รูนของฉัน (${RUNES.length})`, 'ทุกรูนที่มีทำงานทั้งหมด · แตะรูนเพื่อดูว่าทำอะไร'), l, closeRow()]);
+  }
+  function tribeList() {
+    const l = el('div', 'list'); const cnt = tribeCount;
+    const keys = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+    if (!keys.length) l.append(el('p', 'hint', 'ยังไม่มีตัวบนบอร์ด'));
+    keys.forEach(t => {
+      const n = cnt[t], b = el('button', 'tribe' + (n >= 2 ? '' : ' off')); b.type = 'button'; b.style.setProperty('--c', `var(${TR[t].c})`);
+      const pips = el('span', 'pips'); for (let k = 0; k < 4; k++) { const p = el('i'); if (k < n) p.className = 'on'; pips.append(p); }
+      const nm = el('span'); nm.append(document.createTextNode(TR[t].n + ' '), el('small', '', n >= 2 ? 'ทำงานขั้น 1' : `อีก ${2 - n} ตัวถึงขั้น 1`));
+      b.append(ico(t), nm, pips); b.onclick = () => tribePop(t, n); l.append(b);
+    });
+    openPop([head('เผ่าในทีม', 'นับเฉพาะตัวบนบอร์ด · แตะเผ่าเพื่อดูโบนัส'), l, closeRow()]);
+  }
+  $('runeBtn').onclick = runeList; $('tribeBtn').onclick = tribeList;
+  const tribePop = (t, n) => openPop([head('เผ่า' + TR[t].n, `บนบอร์ด ${n} ตัว`, t), el('p', '', 'ข้อความตัวอย่าง: มีครบ 2 ตัว = โบนัสขั้น 1 · ครบ 4 ตัว = โบนัสขั้น 2'), closeRow(back(tribeList))]);
+  $('diffInfo').onclick = () => openPop([head('ความยากรอบนี้', 'เลือกก่อนกดเริ่มสู้'),
+    el('p', '', 'ง่าย: ศัตรูพลัง 100% · ชนะได้รูนธรรมดา'), el('p', '', 'กลาง: ศัตรูพลัง 105% · ชนะได้รูนธรรมดา 1 + หายาก 2'), el('p', '', 'ยาก: ศัตรูพลัง 155% · ชนะได้รูนหายาก 2 + ตำนาน 1'),
+    el('p', 'hint', 'ตัวเลขตัวอย่าง'), closeRow()]);
+
+  $('diff').onclick = (e) => { const b = e.target.closest('[data-d]'); if (!b || fighting) return; diff = b.dataset.d; $('diff').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+  $('reroll').onclick = () => { if (gold < 2) return toast('เงินไม่พอ'); gold -= 2; rollShop(); render(); };
+  $('rotateSkip').onclick = () => $('rotate').classList.add('dismissed');
+
+  /* battle on the same field (seeded so the replay is identical) */
+  let match = null, speed = 2, raf = 0;
+  const rng = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  function simulate(seed) {
+    const r = rng(seed), mult = { 'ง่าย': 1, 'กลาง': 1.05, 'ยาก': 1.55 }[diff];
+    const mk = (side, slot, id, lv, k) => { const d = DEF[id]; return { side, slot, id, lv, max: Math.round(d.hp * lv * k), hp: Math.round(d.hp * lv * k), atk: Math.round(d.atk * lv * k), cd: d.cd, next: r() * d.cd, dealt: 0 }; };
+    const all = board.map((u, i) => u && mk(0, i, u.id, u.lv, 1)).filter(Boolean);
+    for (let i = 0; i < 6; i++) if (r() < 0.8) all.push(mk(1, i, IDS[Math.floor(r() * IDS.length)], 1, mult));
+    const start = all.map(u => ({ ...u })), ev = []; let t = 0;
+    while (t < 40) {
+      const a = all.filter(u => u.hp > 0).sort((x, y) => x.next - y.next)[0]; if (!a) break;
+      t = a.next; const foes = all.filter(u => u.side !== a.side && u.hp > 0); if (!foes.length) break;
+      foes.sort((x, y) => (y.slot % 3) - (x.slot % 3) || r() - .5);
+      const tg = foes[0], dmg = Math.round(a.atk * 4 * (0.8 + r() * 0.4));
+      tg.hp -= dmg; a.dealt += dmg; ev.push({ t, a: all.indexOf(a), b: all.indexOf(tg), dmg }); a.next = t + a.cd;
+      if (!all.some(u => u.side === 0 && u.hp > 0) || !all.some(u => u.side === 1 && u.hp > 0)) break;
+    }
+    return { start, ev, end: t, win: !all.some(u => u.side === 1 && u.hp > 0), dealt: all.map(u => u.dealt) };
+  }
+  function buildArena() {
+    const cells = [[], []];
+    [['mine', 0], ['foe', 1]].forEach(([id, side]) => {
+      const box = $(id); box.replaceChildren();
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { const cell = el('div', 'cell'); cells[side][slotOf(r, c, side === 1)] = cell; box.append(cell); }
+    });
+    match.units = match.start.map((u, i) => {
+      const d = DEF[u.id], w = el('div', 'unit'); w.dataset.src = 'battle'; w.dataset.idx = i;
+      const bar = el('div', 'bar'), fill = el('i'); bar.append(fill);
+      w.append(ico(d.t), el('span', 'nm', d.n), bar); cells[u.side][u.slot].append(w); return { w, fill };
+    });
+  }
+  function play(isReplay) {
+    match.cur = match.start.map(u => ({ ...u })); match.i = 0; match.t = 0;
+    $('result').hidden = true; $('replayTag').hidden = !isReplay;
+    match.units.forEach(x => { x.w.classList.remove('dead'); x.fill.style.width = '100%'; });
+    let last = performance.now(); cancelAnimationFrame(raf);
+    const step = (now) => {
+      match.t += (now - last) / 1000 * speed; last = now;
+      while (match.i < match.ev.length && match.ev[match.i].t <= match.t) applyEv(match.ev[match.i++], true);
+      $('clock').textContent = Math.min(match.t, match.end).toFixed(1) + ' วิ';
+      if (match.i >= match.ev.length) return finish();
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  function applyEv(e, fx) {
+    const tg = match.cur[e.b]; tg.hp -= e.dmg; const u = match.units[e.b];
+    u.fill.style.width = Math.max(0, tg.hp / tg.max * 100) + '%'; if (tg.hp <= 0) u.w.classList.add('dead');
+    if (!fx) return;
+    u.w.classList.remove('hit'); void u.w.offsetWidth; u.w.classList.add('hit');
+    const f = el('span', 'float', '−' + e.dmg); u.w.parentNode.append(f); setTimeout(() => f.remove(), 700);
+    $('ticker').textContent = `${match.t.toFixed(1)} วิ · ${DEF[match.cur[e.a].id].n} ตี ${DEF[tg.id].n} ${e.dmg}`;
+  }
+  function finish() {
+    cancelAnimationFrame(raf); $('replayTag').hidden = true; $('clock').textContent = match.end.toFixed(1) + ' วิ';
+    $('resTitle').textContent = match.win ? 'ชนะ!' : 'แพ้'; $('resSub').textContent = match.win ? 'ได้เงินตามปกติ + เลือกรูนฟรี 1 อัน' : 'เสียหัวใจ 1 ดวง';
+    $('result').hidden = false;
+  }
+  $('fight').onclick = () => {
+    if (!board.some(Boolean)) return toast('วางตัวบนบอร์ดก่อน');
+    fighting = true; render(); match = simulate(Date.now()); buildArena(); play(false);
+  };
+  $('skip').onclick = () => { cancelAnimationFrame(raf); while (match.i < match.ev.length) applyEv(match.ev[match.i++], false); match.t = match.end; finish(); };
+  $('speed').onclick = (e) => { const b = e.target.closest('[data-s]'); if (!b) return; speed = +b.dataset.s; $('speed').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+  $('replay').onclick = () => play(true);
+  $('details').onclick = () => {
+    const tbl = el('table', 'mxt'); const hd = el('tr'); hd.append(el('th', '', 'ตัว'), el('th', '', 'ทำดาเมจ')); tbl.append(hd);
+    const max = Math.max(1, ...match.dealt);
+    match.start.map((u, i) => [u, match.dealt[i]]).sort((a, b) => b[1] - a[1]).forEach(([u, v]) => {
+      const tr = el('tr'), td = el('td'); td.append(document.createTextNode((u.side ? 'คู่แข่ง · ' : '') + DEF[u.id].n));
+      const bar = el('div', 'dmgbar'); bar.style.width = (v / max * 100) + '%'; bar.style.setProperty('--c', `var(${TR[DEF[u.id].t].c})`); td.append(bar);
+      tr.append(td, el('td', '', v)); tbl.append(tr);
+    });
+    const wrap = el('div', 'scroll'); wrap.style.maxHeight = '50vh'; wrap.append(tbl);
+    openPop([head('รายละเอียดแมตช์', `รอบ ${round} · ${diff}`), el('p', 'hint', 'ในเกมจริง: แท็บ ทำดาเมจ / โดนดาเมจ / อื่นๆ / สเตตัส, ใครตีใคร, กราฟ และบันทึกการต่อสู้ จะอยู่ในหน้าต่างนี้'), wrap, closeRow()]);
+  };
+  $('next').onclick = () => {
+    if (match.win) wins++; round++; gold += 10; shop.forEach(s => delete s.sold); rollShop();
+    $('result').hidden = true; fighting = false; render();
+  };
+  render();
+})();
+</script>
