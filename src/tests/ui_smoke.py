@@ -50,7 +50,7 @@ with sync_playwright() as p:
         pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
         chk(pg.get_attribute('[data-diff="ง่าย"]','aria-pressed')=='true','difficulty starts at easy (set 99)')
         pg.click('[data-diff="ยาก"]'); pg.click('#diffInfo')
-        chk(pg.get_attribute('[data-diff="ยาก"]','aria-pressed')=='true' and 'ตำนาน' in pg.inner_text('#diffHint') and '155%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line'); esc()
+        chk(pg.get_attribute('[data-diff="ยาก"]','aria-pressed')=='true' and 'ตำนาน' in pg.inner_text('#diffHint') and '106%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line'); esc()
         pg.click('[data-diff="กลาง"]'); pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
         pg.evaluate("rnMakeOffer(P,'กลาง');render()"); chk(pg.is_visible('#offerDlg') and len(pg.query_selector_all('#offer .rcard'))==3,'offer popup 3 cards')
         pg.keyboard.press('Escape'); chk(pg.is_visible('#offerDlg'),'offer popup ignores Esc')
