@@ -44,9 +44,9 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 7) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 8) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -54,6 +54,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svIntIn(st.wins, 0, 1000) || (!st.extra && st.wins > S.winsToFinish)) errors.push('จำนวนชนะผิด');
   if (!svIntIn(st.bw, 0, 1000) || !svIntIn(st.bk, 0, 1000) || st.bw > st.wins || st.bk > st.wins) errors.push('ตัวนับบอสผิด');
   if (!svIntIn(st.ls, 0, 1000)) errors.push('ตัวนับแพ้ติดผิด');
+  if (!svIntIn(st.ws, 0, 1000)) errors.push('ตัวนับชนะติดผิด');
   if (typeof st.extra !== 'boolean' || (st.extra && st.wins < S.winsToFinish)) errors.push('แมตช์พิเศษผิด');
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
   if (typeof st.lastWon !== 'boolean' || typeof st.over !== 'boolean') errors.push('ค่าจริง/เท็จผิด');
@@ -162,22 +163,28 @@ export const REPLAY_VERSION = 1;
 export const REPLAY_MAX = 40;            // แมตช์ต่อ run สูงสุดจริง = ชนะ 10 + แพ้ 10 − 1 = 19 · เผื่อ (ค่าเสนอ)
 // set 94: n = the player's runes at that match (rnCompact) · only written when there are runes (older entries stay valid)
 // g = win streak before the match (rune เติบโต reads it)
-// d = picked difficulty (set 95: enemy team hp/atk scale) · only written for a scaled team fight
-export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0, d = null) {
+// d = enemy team hp/atk % (set 107: power-match scale from pickFoe, a number · older replays: mode name) · only written for a scaled team fight
+// fn = the enemy bot team's runes (set 107, rnCompact form) · only written when it has runes
+export const REPLAY_D_LEGACY = { 'ปกติ': 100, 'ยาก': 113, 'นรก': 131, 'ง่าย': 100, 'กลาง': 100 };
+export const replayPct = d => (typeof d === 'number' ? d : REPLAY_D_LEGACY[d] || 100);
+const pctOk = d => (typeof d === 'number' && Number.isInteger(d) && d >= 10 && d <= 1000) || svOwn(REPLAY_D_LEGACY, d);
+export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0, d = null, foeRunes = []) {
   const copy = t => JSON.parse(JSON.stringify(t));
   const x = { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
   if (runes.length) { x.n = copy(runes); x.g = streak | 0; }
-  if (d && Array.isArray(teamB)) x.d = d;
+  if (d && d !== 100 && Array.isArray(teamB)) x.d = d;
+  if (foeRunes && foeRunes.length && Array.isArray(teamB)) x.fn = copy(foeRunes);
   return x;
 }
 export function makeReplays(runSeed, hash, list) {
   return JSON.stringify({ rv: REPLAY_VERSION, data: hash, run: runSeed, list: list.slice(-REPLAY_MAX) });
 }
 export function checkReplay(x, cm, rules = RULES) {
-  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g', 'd']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g', 'd', 'fn']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
   if (svOwn(x, 'n') && !rnCompactOk(x.n, rules)) return false;
   if (svOwn(x, 'g') && !svIntIn(x.g, 0, 10000)) return false;
-  if (svOwn(x, 'd') && !['ปกติ', 'ยาก', 'นรก', 'ง่าย', 'กลาง'].includes(x.d)) return false;
+  if (svOwn(x, 'd') && !pctOk(x.d)) return false;
+  if (svOwn(x, 'fn') && !rnCompactOk(x.fn, rules)) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }
@@ -219,7 +226,7 @@ export function checkPlayRecord(x, cm, rules = RULES) {
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
     && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
     && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)
-    && Array.isArray(x.runes) && x.runes.length <= 80 && x.runes.every(id => typeof id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(id)) && [null, 'ปกติ', 'ยาก', 'นรก', 'ง่าย', 'กลาง'].includes(x.diff)
+    && Array.isArray(x.runes) && x.runes.length <= 80 && x.runes.every(id => typeof id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(id)) && (x.diff === null || pctOk(x.diff))
     && (x.foeSrc !== 'set' ? x.foeStage === null && x.foeSpan === null : svIntIn(x.foeStage, 0, 100) && svIntIn(x.foeSpan, 0, 10));
 }
 

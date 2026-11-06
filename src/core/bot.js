@@ -1,6 +1,8 @@
 import { RULES, pickHintRow, rowsOfHint } from './rules.js';
-import { SLOT_ORDER, allUnits, buy, move, reroll, sell } from './shop.js';
+import { SLOT_ORDER, allUnits, buy, buyMerge, move, reroll, sell } from './shop.js';
 import { basePower } from './power.js';
+import { RUNE_RUN_ONLY } from './runes.js';
+import { RN_RARS, rnMakeOffer, rnNeedsPartner, rnNeedsSlot, rnPlace, rnRec, rnRerollCost, rnRerollOffer, rnTakeOffer } from './runrunes.js';
 // บอทซื้อของด้วยร้านและกฎเดียวกับผู้เล่น (ใช้คำสั่งใน shop.js เท่านั้น จึงทำผิดกฎไม่ได้)
 // ไม่มีการสุ่มนอกจากเลขสุ่มในสถานะร้าน → เมล็ดเดิมได้ทีมเดิม (ใช้สร้างทีมบอทชุดตามจำนวนชนะภายหลังได้)
 // Set 85 (user 4 Nov: "play like a real person"): the bot thinks like a player who only sees what the shop really offers —
@@ -14,7 +16,9 @@ import { basePower } from './power.js';
 // Value = base stat power (core/power.js, skills not counted) — what a player can read off the character cards.
 
 export const BOT_HINT = { 'หน้า': 0, 'กลาง': 1, 'ที่ไหนก็ได้': 1, 'หลัง': 2 };
-export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6 };
+export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6, carryFrom: 4, mergeFirst: true };
+// set 107 (user D2 "merge like a person"): mergeFirst = a shop copy that completes a merge is always bought (buy + merge works on a full bench)
+// · from round carryFrom the carry (most copies on its way to Lv3, cheaper first) is always bought, never sold, and rerolls hunt for it
 // set 89: shop level follows the round (no upgrade decision) · no interest → the bot spends all gold (rerolls up to maxRerolls)
 export const value = (u, cm) => cm[u.id].price * Math.pow(3, u.level - 1);
 
@@ -120,12 +124,46 @@ export function arrange(st, cm, chars = null, rules = RULES, focus = null) {
   st.bench = st.bench.map((_, i) => rest[i] || null);
 }
 
+// carry = the character with most copies (Lv1 units) on its way to Lv3 · ties → cheaper, then stronger at Lv3
+function carryOf(st, cm, rules) {
+  const n = copiesOf(unitsNow(st)), need = Math.pow(rules.shop.mergeCount, rules.maxLevel - 1);
+  let c = null;
+  for (const id of Object.keys(n)) if (n[id] >= rules.shop.mergeCount && n[id] < need && (!c || n[id] > n[c] || (n[id] === n[c] && cm[id].price < cm[c].price))) c = id;
+  return c;
+}
+function freeDest(st) {
+  if (st.bench.includes(null)) return null;
+  for (const [row, lane] of SLOT_ORDER) if (!st.board[row][lane]) return { at: 'board', row, lane };
+  return null;
+}
+// the unit whose loss hurts the estimated strength least (never the carry)
+function weakest(st, cm, pw, rules, F, keep) {
+  const now = strengthWith(st, cm, pw, rules, null, null, F);
+  let w = null;
+  for (const { u, ref } of allUnits(st)) {
+    if (u.id === keep) continue;
+    const loss = now - strengthWith(st, cm, pw, rules, null, u, F);
+    if (!w || loss < w.loss || (loss === w.loss && u.uid < w.u.uid)) w = { u, ref, loss };
+  }
+  return w;
+}
 export function botShop(st, chars, rules = RULES, opts = {}) {
   const cm = Object.fromEntries(chars.map(c => [c.id, c])), pw = powers(chars, rules);
   const maxRerolls = opts.maxRerolls ?? BOT_AI.maxRerolls, F = opts.focus || null, cap = rules.maxBoard + st.bench.length;
   let rerolls = 0;
   for (let guard = 0; guard < 200; guard++) {
     tryMerges(st, chars, rules);
+    const carry = BOT_AI.mergeFirst && st.round >= BOT_AI.carryFrom ? carryOf(st, cm, rules) : null;
+    if (BOT_AI.mergeFirst) {
+      const own1 = id => allUnits(st).filter(x => x.u.id === id && x.u.level === 1);
+      const i = st.shop.findIndex(s => s.id && cm[s.id].price <= st.gold && own1(s.id).length >= rules.shop.mergeCount - 1);
+      if (i >= 0 && buyMerge(st, i, own1(st.shop[i].id)[0].ref, chars, rules).ok) continue;
+      const ci = carry ? st.shop.findIndex(s => s.id === carry && cm[carry].price <= st.gold) : -1;
+      if (ci >= 0) {
+        if (allUnits(st).length < cap) { if (buy(st, ci, freeDest(st), chars, rules).ok) continue; }
+        else { const w = weakest(st, cm, pw, rules, F, carry); if (w) { sell(st, w.ref, chars, rules); continue; } }
+      }
+    }
     const now = strengthWith(st, cm, pw, rules, null, null, F);
     // best affordable buy by strength gain
     let best = null;
@@ -143,7 +181,8 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
         // full: sell the unit whose loss hurts least, if the new one is worth more (full refund → only the swap matters)
         let worst = null;
         for (const { u, ref } of allUnits(st)) {
-                    const net = best.g - (now - strengthWith(st, cm, pw, rules, null, u, F));
+          if (u.id === carry) continue;
+          const net = best.g - (now - strengthWith(st, cm, pw, rules, null, u, F));
           if (!worst || net > worst.net || (net === worst.net && u.uid < worst.u.uid)) worst = { u, ref, net };
         }
         if (worst && worst.net > BOT_AI.minGain) { sell(st, worst.ref, chars, rules); continue; }
@@ -154,4 +193,27 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
   }
   tryMerges(st, chars, rules);
   arrange(st, cm, chars, rules, F);
+}
+
+// ---- runes (set 107, user D2: bot teams carry runes like a real player) ----
+// offer → highest rarity, battle runes before run-only ones · free reroll when no legend is offered (paid rerolls never)
+// "one" runes sit on the strongest board unit (level, then rarity), partner on the 2nd strongest
+const BOT_RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
+const rRank = r => RN_RARS.indexOf(r.rarity) * 2 + (RUNE_RUN_ONLY.includes(r.eff) ? 0 : 1);
+export function botTakeRune(st, kind) {
+  let o = rnMakeOffer(st, kind);
+  if (o && kind !== 'boss' && !o.ids.some(id => rnRec(id).rarity === 'legend') && rnRerollCost(st) === 0) { rnRerollOffer(st); o = st.rn.offer; }
+  if (!o) return;
+  let bi = 0; o.ids.forEach((id, i) => { if (rRank(rnRec(id)) > rRank(rnRec(o.ids[bi]))) bi = i; });
+  rnTakeOffer(st, bi);
+}
+export function botPlaceRunes(st, cm, rules = RULES) {
+  const units = [], strength = u => u.level * 10 + BOT_RAR.indexOf(cm[u.id].rarity);
+  st.board.forEach((row, ri) => row.forEach((u, li) => { if (u) units.push({ u, s: [ri, li] }); }));
+  units.sort((a, b) => strength(b.u) - strength(a.u));
+  for (const id of Object.keys(st.rn.bag)) {
+    const r = rnRec(id); if (!r) continue;
+    if (rnNeedsSlot(r)) rnPlace(st, id, units[0] ? units[0].s : null, rules);
+    if (rnNeedsPartner(r)) rnPlace(st, id, units[1] ? units[1].s : null, rules, true);
+  }
 }

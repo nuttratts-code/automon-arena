@@ -116,7 +116,8 @@ export function simulate(teamA, teamB, opts = {}) {
   // ---------- โบนัสเผ่า (tribe-rules): นับตัวไม่ซ้ำชื่อบนบอร์ด ให้ผลทั้งทีม ----------
   const tribeOn = [0, 1].map(s => R.tribesOn !== false && !(opts.tribesOff && opts.tribesOff[s]));
   const tExtra = Object.create(null); // ชุด 66: นับเผ่าเพิ่มจากรูนธงเผ่า (ฝั่งผู้เล่น) [{ tribe, count, maxTier }]
-  for (const x of opts.tribeExtra || []) if (x && x.count > 0) tExtra[x.tribe] = { count: (tExtra[x.tribe] ? tExtra[x.tribe].count : 0) + x.count, maxTier: Math.max(tExtra[x.tribe] ? tExtra[x.tribe].maxTier : 0, x.maxTier || 6) };
+  const tExtraB = Object.create(null); // set 107: the enemy bot team's tribe-flag runes (opts.tribeExtraB, side 1)
+  for (const [box, list] of [[tExtra, opts.tribeExtra], [tExtraB, opts.tribeExtraB]]) for (const x of list || []) if (x && x.count > 0) box[x.tribe] = { count: (box[x.tribe] ? box[x.tribe].count : 0) + x.count, maxTier: Math.max(box[x.tribe] ? box[x.tribe].maxTier : 0, x.maxTier || 6) };
   const steps = [0, 1].map(side => {
     const out = {};
     if (!tribeOn[side]) return out;
@@ -127,7 +128,7 @@ export function simulate(teamA, teamB, opts = {}) {
     for (const [tr, n] of Object.entries(counts)) {
       let idx = R.tribeSteps.filter(x => n >= x).length - 1;
       // รูนธงเผ่า (T8 · ชุด 66): เผ่าที่เลือกนับเพิ่ม N ตัว แต่พาไปได้ไม่เกินขั้นที่รูนกำหนด · ใช้กับเผ่าที่ทีมมีอยู่แล้ว
-      const e = side === 0 ? tExtra[tr] : null;
+      const e = side === 0 ? tExtra[tr] : tExtraB[tr];
       if (e) idx = Math.max(idx, Math.min(R.tribeSteps.filter(x => n + e.count >= x).length - 1, e.maxTier - 1));
       const only = opts.tribeOnly && opts.tribeOnly[side]; // ใช้ทดสอบบาลานซ์: เปิดเฉพาะเผ่าเดียว
       if (idx >= 0 && R.tribeBonus && R.tribeBonus[tr] && (!only || only === tr)) out[tr] = idx;

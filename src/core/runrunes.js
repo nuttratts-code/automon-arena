@@ -13,7 +13,7 @@ import { makeRng } from './rng.js';
 
 // set 107 (user 6 Nov): modes ปกติ / ยาก / นรก REMOVED · normal win offer = 'win' (cards roll rarity by rarC/rarR/rarL %) · boss = 'boss'
 // the enemy follows the player's power + win streak instead (core/botteams.js pickFoe)
-export const RN_OFFER_KEY = { win: '', boss: 'Boss' };
+export const RN_OFFER_KEY = { win: 'Win', boss: 'Boss' }; // key used only to check the kind (rarity settings: rarC/R/L · offBoss*)
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
@@ -47,7 +47,7 @@ function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) 
 // kind 'win' → offCards cards, each rolls its rarity by rarC/rarR/rarL % · 'boss' = fixed counts offBoss*
 // a rarity with nothing left is filled from any rarity · nothing at all = no offer · skip = ids to avoid if possible (reroll)
 function rnRollRar(st, key, S) {
-  const w = RN_RARS.map(r => Math.max(0, S[`rar${key}${RN_RAR_KEY[r]}`] | 0)), tot = w.reduce((a, b) => a + b, 0);
+  const w = RN_RARS.map(r => Math.max(0, S[`rar${RN_RAR_KEY[r]}`] | 0)), tot = w.reduce((a, b) => a + b, 0);
   if (!tot) return RN_RARS[0];
   let x = rnDraw(st) * tot;
   for (let i = 0; i < w.length; i++) { if (x < w[i]) return RN_RARS[i]; x -= w[i]; }

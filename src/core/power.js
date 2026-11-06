@@ -12,3 +12,23 @@ export function basePower(c, L = 0, rules = RULES) {
   return { dps, ehp, points: Math.sqrt(Math.max(0, dps * ehp)) };
 }
 
+
+// ---- team power (set 107, user D1: the enemy follows the player's power) ----
+// units = buildTeam output (level, perm included · runes NOT counted, same for player and bot teams)
+// power = √(team dps × team effective hp) × (1 + tribeW × active tribe tiers) · uniform hp+atk scale ×f → power ×f (roughly)
+export const TEAM_POWER = { tribeW: 0.08 }; // ค่าเสนอ (internal)
+export function teamPower(units, rules = RULES) {
+  if (!Array.isArray(units) || !units.length) return 0;
+  const k = rules.power;
+  let dps = 0, ehp = 0;
+  const ids = new Set(), cnt = {};
+  for (const u of units) {
+    const hps = (u.multi || 1) / Math.max(0.1, (u.cdMs || 1000) / 1000);
+    dps += (u.atk + (u.burnHit || 0) * k.burnStack + (u.shockHit || 0) * k.shockStack) * hps;
+    ehp += u.maxHp + (u.startArmor || 0) + ((u.armorHit || 0) + (u.healHit || 0)) * hps * k.armorLifeSec;
+    if (!ids.has(u.id)) { ids.add(u.id); for (const t of [u.tribe, ...(u.extraTribes || [])]) cnt[t] = (cnt[t] || 0) + 1; }
+  }
+  let tiers = 0;
+  for (const t in cnt) tiers += rules.tribeSteps.filter(x => cnt[t] >= x).length;
+  return Math.sqrt(Math.max(0, dps * ehp)) * (1 + TEAM_POWER.tribeW * tiers);
+}
