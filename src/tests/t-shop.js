@@ -11,8 +11,8 @@ export const TESTS_SHOP = [
   ['ร้าน: เงินเริ่ม · รายได้รอบละ · ชนะได้โบนัส · เงินค้างข้ามรอบ', () => {
     const chars = buildCharacterList(), st = newRun(chars, 1), S = RULES.shop;
     startRound(st, chars); eq(st.gold, S.startGold, 'รอบแรก');
-    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, 3 + baseIncomeAt(2) + S.winBonus, 'หลังชนะ');
-    st.gold = 4; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, 4 + baseIncomeAt(3), 'หลังแพ้');
+    st.gold = 3; endMatch(st, true, chars); startRound(st, chars); eq(st.gold, baseIncomeAt(2) + S.winBonus, 'หลังชนะ (set 107: เงินเหลือไม่ทบ)');
+    st.gold = 4; endMatch(st, false, chars); startRound(st, chars); eq(st.gold, baseIncomeAt(3), 'หลังแพ้ (set 107: เงินเหลือไม่ทบ)');
   }],
   ['set 96 เงินต่อรอบเพิ่มทีละขั้น: 10,13,16,19,22,25,25… · goldStep 0 = เท่ากันทุกรอบ', () => {
     eq([1, 2, 3, 4, 5, 6, 7, 20].map(r => baseIncomeAt(r)), [10, 13, 16, 19, 22, 25, 25, 25], 'ค่าเริ่มต้น');
@@ -26,7 +26,7 @@ export const TESTS_SHOP = [
   ['set 89 ไม่มีดอกเบี้ย/ชนะติด/แพ้ติด: เงินที่เหลือไม่เพิ่ม · ชนะ = รอบละ + โบนัสชนะเสมอ · แพ้ = รอบละ', () => {
     const chars = buildCharacterList(), S = RULES.shop, st = newRun(chars, 4);
     startRound(st, chars);
-    const step = (won, bonus, what) => { st.gold = 100; endMatch(st, won, chars); const base = baseIncomeAt(st.round + 1); startRound(st, chars); eq(st.gold, 100 + base + bonus, what); };
+    const step = (won, bonus, what) => { st.gold = 100; endMatch(st, won, chars); const base = baseIncomeAt(st.round + 1); startRound(st, chars); eq(st.gold, base + bonus, what); };
     for (let i = 1; i <= 5; i++) step(true, S.winBonus, `ชนะ ${i}`);
     for (let i = 1; i <= 5; i++) step(false, 0, `แพ้ ${i}`);
     ok(!('wStreak' in st) && !('shopLv' in st), 'สถานะไม่มีช่องชนะติด/ระดับร้าน');

@@ -164,27 +164,28 @@ export const REPLAY_MAX = 40;            // แมตช์ต่อ run สู�
 // set 94: n = the player's runes at that match (rnCompact) · only written when there are runes (older entries stay valid)
 // g = win streak before the match (rune เติบโต reads it)
 // d = enemy team hp/atk % (set 107: power-match scale from pickFoe, a number · older replays: mode name) · only written for a scaled team fight
-// fn = the enemy bot team's runes (set 107, rnCompact form) · only written when it has runes
+// fn = the enemy bot team's runes (set 107, rnCompact form) + fs = its win streak (rune เติบโต) · only written when it has runes
 export const REPLAY_D_LEGACY = { 'ปกติ': 100, 'ยาก': 113, 'นรก': 131, 'ง่าย': 100, 'กลาง': 100 };
 export const replayPct = d => (typeof d === 'number' ? d : REPLAY_D_LEGACY[d] || 100);
 const pctOk = d => (typeof d === 'number' && Number.isInteger(d) && d >= 10 && d <= 1000) || svOwn(REPLAY_D_LEGACY, d);
-export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0, d = null, foeRunes = []) {
+export function replayEntry(round, teamA, teamB, result, runes = [], streak = 0, d = null, foeRunes = [], foeStreak = 0) {
   const copy = t => JSON.parse(JSON.stringify(t));
   const x = { r: round, a: copy(teamA), b: copy(teamB), w: result.winner, t: Math.floor(result.timeMs) };
   if (runes.length) { x.n = copy(runes); x.g = streak | 0; }
   if (d && d !== 100 && Array.isArray(teamB)) x.d = d;
-  if (foeRunes && foeRunes.length && Array.isArray(teamB)) x.fn = copy(foeRunes);
+  if (foeRunes && foeRunes.length && Array.isArray(teamB)) { x.fn = copy(foeRunes); if (foeStreak) x.fs = foeStreak | 0; }
   return x;
 }
 export function makeReplays(runSeed, hash, list) {
   return JSON.stringify({ rv: REPLAY_VERSION, data: hash, run: runSeed, list: list.slice(-REPLAY_MAX) });
 }
 export function checkReplay(x, cm, rules = RULES) {
-  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g', 'd', 'fn']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
+  if (!svObj(x) || !svOnlyKeys(x, ['r', 'a', 'b', 'w', 't', 'n', 'g', 'd', 'fn', 'fs']) || !['r', 'a', 'b', 'w', 't'].every(k => svOwn(x, k))) return false;
   if (svOwn(x, 'n') && !rnCompactOk(x.n, rules)) return false;
   if (svOwn(x, 'g') && !svIntIn(x.g, 0, 10000)) return false;
   if (svOwn(x, 'd') && !pctOk(x.d)) return false;
   if (svOwn(x, 'fn') && !rnCompactOk(x.fn, rules)) return false;
+  if (svOwn(x, 'fs') && !svIntIn(x.fs, 0, 99)) return false;
   if (!svIntIn(x.r, 1, 1000) || ![0, 1, null].includes(x.w) || !svIntIn(x.t, 0, 1e7)) return false;
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }

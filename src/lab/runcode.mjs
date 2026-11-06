@@ -9,7 +9,9 @@ import { RULES } from '../core/rules.js';
 import { dataHash, parseRunCode } from '../core/save.js';
 import { RUN_STAGE, runBossById, runBossTeam } from '../core/runboss.js';
 import { equipRunes } from '../core/runes.js';
-import { rnFoeScale, rnFromCompact } from '../core/runrunes.js';
+import { rnFromCompact } from '../core/runrunes.js';
+import { foeSide } from '../core/botteams.js';
+import { replayPct } from '../core/save.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 
 const args = process.argv.slice(2);
@@ -33,8 +35,8 @@ for (const x of run.list) {
   try {
     const e = equipRunes(buildTeam(x.a, CM), rnFromCompact(x.n || []), { winStreak: x.g | 0 });
     const boss = !Array.isArray(x.b) ? runBossById(x.b.boss) : null;
-    const foe = Array.isArray(x.b) ? rnFoeScale(buildTeam(x.b, CM), x.d || null, RUN_STAGE, x.r) : boss ? runBossTeam(boss, x.b.k) : null;
-    if (foe) r = simulate(e.units, foe, { ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}), detail });
+    const foe = Array.isArray(x.b) ? foeSide({ team: x.b, pct: replayPct(x.d), rn: x.fn || [], s: x.fs | 0 }, CM, RULES, RUN_STAGE, x.r) : boss ? { units: runBossTeam(boss, x.b.k), opts: {} } : null;
+    if (foe) r = simulate(e.units, foe.units, { ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}), ...foe.opts, detail });
   } catch (err) { r = null; }
   const same = r && r.winner === x.w && Math.floor(r.timeMs) === x.t; if (same) ok++;
   console.log(`\nround ${x.r} ${res(x.w)} ${(x.t / 1000).toFixed(1)}s ${same ? '✓' : '✗ re-sim differs'}${x.d ? ' · ' + x.d : ''}${x.n ? ' · runes ' + x.n.map(q => q.id + (q.n > 1 ? '×' + q.n : '')).join(',') + ' · streak ' + (x.g | 0) : ''}`);

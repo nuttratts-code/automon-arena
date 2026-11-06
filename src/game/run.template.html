@@ -362,10 +362,9 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
     <button class="hudbtn" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span class="badge" id="runeCnt">0</span></button>
     <button class="hudbtn" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
     <span class="grow"></span>
-    <span class="lbl" id="diffLbl">โหมด</span>
-    <div class="seg" id="diffBox" role="group" aria-label="โหมด"><button type="button" data-diff="ปกติ">ปกติ</button><button type="button" data-diff="ยาก">ยาก</button><button type="button" data-diff="นรก">นรก</button></div>
+    <span class="lbl" id="foeLbl">ศัตรู <b id="foePct">100%</b></span>
     <span class="bosschip" id="bossChip" hidden></span>
-    <button id="diffInfo" type="button" aria-label="ความยากและศัตรูรอบนี้">?</button>
+    <button id="diffInfo" type="button" aria-label="ศัตรูรอบนี้และรางวัล">?</button>
     <button id="newRun" type="button">เริ่ม run ใหม่</button>
   </div>
 
@@ -503,7 +502,7 @@ const chars = buildCharacterList(), CM = makeCharMap(chars);
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
 let P = null, B = null, msgs = [], speed = 4, confirmEmpty = false, autoSkip = false; // set 106: default 4× · speed + auto-skip remembered (localStorage)
-let diff = 'ปกติ'; // set 94: difficulty picked for the next normal round (page only, not saved) · set 100: modes ปกติ/ยาก/นรก, starts at ปกติ (user)
+// set 107 (user): modes removed · the enemy follows the player's power (pickFoe) · stronger after each win in a row (P.ws)
 // ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
 const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
 let stats = newStats(), startedAt = Date.now(), pendingEnd = null, clearAt = 0; // set 99: clearAt = history time of the clear (replaced if the player continues)
@@ -967,30 +966,29 @@ POPS.tribe = t => {
   return [phead(`เผ่า${t}`, `บนบอร์ด ${counts[t] | 0} ตัว · ${st ? `ทำงานขั้น ${st}` : 'ยังไม่ทำงาน'}`, tribeIco(t)), tbl, pacts(back(() => openPop('tribes')))];
 };
 $('tribeBtn').addEventListener('click', () => openPop('tribes'));
-// difficulty + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 97: HUD shows the pick, "?" popup shows the text
-// set 100: mode → each card's rarity % · boss → fixed card counts
-const RN_OFF_TH = k => { const st = RUN_STAGE.settings, key = RN_OFFER_KEY[k], RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss';
-  return RUNE_RARITY.map(([r, th]) => [st[`${boss ? 'offBoss' : 'rar' + key}${RK[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
-const foeTierTh = t => (t ? `ทีม${RN_TEAM_TH[t] || t}` : 'สุ่มทุกระดับ');
+// enemy + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 107: no modes, the HUD shows the enemy power %
+const RN_OFF_TH = k => { const st = RUN_STAGE.settings, RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss';
+  return RUNE_RARITY.map(([r, th]) => [st[`${boss ? 'offBoss' : 'rar'}${RK[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
 let diffText = { hint: '', scout: '' };
+const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, buildTeam(teamEntries(P), CM), P.round, P.seed, P.ws) : null);
 function renderDiff(fx) {
-  const rb = runBossAt(P);
-  $('diffBox').hidden = !!rb; $('diffLbl').hidden = !!rb;
+  const rb = runBossAt(P), want = foeWantPct(P.ws);
+  $('foeLbl').hidden = !!rb; $('foePct').textContent = `${want}%`;
   $('bossChip').hidden = !rb; $('bossChip').textContent = rb ? `บอส: ${rb.boss.name}` : '';
-  document.querySelectorAll('[data-diff]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.diff === diff)));
-  diffText.hint = rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรูพลัง ${rnDiffPct(diff)}% · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH(diff)}) · แพ้ = เสียหัวใจ ไม่ได้รูน · ศัตรูรอบนี้: ${foeTierTh(rnFoeTier(P))}`;
+  diffText.hint = rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรูพลัง ${want}% ของทีมคุณ${P.ws ? ` (ชนะติดกัน ${P.ws} ครั้ง)` : ''} · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH('win')}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
   if (rb) diffText.scout = `ศัตรู: บอส ${rb.boss.name}`;
   else if (!fx.scout) diffText.scout = 'ไม่เห็นทีมศัตรู (ต้องมีรูนส่องทีม)';
   else {
-    const foe = BOT_OK ? pickBotTeam(BOT_TEAMS, P.round, P.seed, rnFoeTier(P)) : null;
-    diffText.scout = foe ? `ทีมศัตรู (ทีม${RN_TEAM_TH[foe.tier] || foe.tier}): ` + foe.team.map(e => `${rnSlotTh([e.row, e.lane])} ${e.id} ${CM[e.id] ? CM[e.id].name : ''} Lv${e.level}`).join(' · ') : 'ศัตรูเป็นบอทซื้อสด (ดูล่วงหน้าไม่ได้)';
+    const foe = nextFoe();
+    diffText.scout = foe ? `ทีมศัตรู${foe.rn.length ? ` (มีรูน ${foe.rn.length} แบบ)` : ''}: ` + foe.team.map(e => `${rnSlotTh([e.row, e.lane])} ${e.id} ${CM[e.id] ? CM[e.id].name : ''} Lv${e.level}`).join(' · ') : 'ศัตรูเป็นบอทซื้อสด (ดูล่วงหน้าไม่ได้)';
   }
 }
 POPS.diff = () => {
   const rb = runBossAt(P), h = el('p', '', diffText.hint), sc = el('p', 'scout hint', diffText.scout); h.id = 'diffHint'; sc.id = 'scoutBox';
-  const lines = rb ? [] : [...RN_MODES.map(d => el('p', 'hint', `${d}: ศัตรูพลัง ${rnDiffPct(d)}% · การ์ดรูน ${RN_OFF_TH(d)}`)),
-    el('p', 'hint', 'ทีมศัตรู: เริ่มรัน/ชนะมา = สุ่มจากทุกระดับ · แพ้มา 1 ครั้ง = ทีมกลาง · แพ้ติด 2 ครั้งขึ้นไป = ทีมอ่อนจนกว่าจะชนะ (แพ้บอสไม่นับ)')];
-  return [phead(rb ? 'รอบบอส' : `โหมดรอบนี้: ${diff}`, rb ? '' : 'เลือกที่แถบด้านบนก่อนกดเริ่มสู้'), h, ...lines, sc, pacts()];
+  const S2 = RUN_STAGE.settings;
+  const lines = rb ? [] : [el('p', 'hint', `ศัตรูเลือกจากพลังทีมบนบอร์ดของคุณ (ไม่นับรูน): ${S2.foeBase}% · ชนะติดกันแรงขึ้นครั้งละ ${S2.foeStreak}% สูงสุด +${S2.foeStreakCap}% · แพ้ = กลับเป็น ${S2.foeBase}%`),
+    el('p', 'hint', 'ทีมศัตรูเป็นทีมบอทที่เล่นแบบคนจริง (รวมร่าง + มีรูน)')];
+  return [phead(rb ? 'รอบบอส' : 'ศัตรูรอบนี้'), h, ...lines, sc, pacts()];
 };
 $('diffInfo').addEventListener('click', () => openPop('diff'));
 // player team for a fight: runes equipped (rnFromCompact) → { units, opts }
@@ -1000,7 +998,6 @@ function playerSide(teamA, runes, streak = stats.streak) {
 }
 $('offerReroll').addEventListener('click', () => { pushMsgs(rnRerollOffer(P)); saveRun(); render(); });
 $('offerSkip').addEventListener('click', () => { pushMsgs(rnSkipOffer(P)); saveRun(); render(); });
-document.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { if ($('app').classList.contains('fighting')) return; diff = b.dataset.diff; render(); }));
 $('rotateSkip').addEventListener('click', () => $('rotate').classList.add('dismissed'));
 
 // ---------- สู้ ----------
@@ -1018,16 +1015,16 @@ $('fight').addEventListener('click', () => {
   confirmEmpty = false;
   // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
   const rb = runBossAt(P);
-  const foe = rb ? null : BOT_OK ? pickBotTeam(BOT_TEAMS, P.round, P.seed, rnFoeTier(P)) : null; // set 100: tier from the loss streak (rnFoeTier) · mode only scales
+  const foe = rb ? null : nextFoe(); // set 107: the enemy follows the player's power + win streak (pickFoe)
   if (!foe && !rb) botShop(B, chars, RULES);
   const round = P.round, winsBefore = P.wins, heartsBefore = P.hearts, teamA = teamEntries(P), teamB = rb ? { boss: rb.boss.id, k: rb.k } : foe ? foe.team : teamEntries(B);
-  const runes = rnCompact(P), kind = rb ? 'boss' : diff, streak = stats.streak;
+  const runes = rnCompact(P), kind = rb ? 'boss' : 'win', streak = stats.streak;
   let result;
-  const fd = rb ? null : diff; // set 95: difficulty scales the enemy team
-  try { const ps = playerSide(teamA, runes); result = simulate(ps.units, foeUnits(teamB, fd, round), ps.opts); }
+  const fd = foe ? foe.pct : null, fr = foe ? foe.rn : [], fs = foe ? foe.s : 0; // set 107: power-match scale + the bot team's runes
+  try { const ps = playerSide(teamA, runes); const fo = foeUnits(teamB, fd, round, fr, fs); result = simulate(ps.units, fo.units, { ...ps.opts, ...fo.opts }); }
   catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
   lastResult = result;
-  const shown = showResult(teamA, teamB, result, runes, streak, fd, round);
+  const shown = showResult(teamA, teamB, result, runes, streak, fd, round, fr, fs);
   // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
@@ -1035,31 +1032,32 @@ $('fight').addEventListener('click', () => {
   if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
   if (won && !P.over) { const of = rnMakeOffer(P, kind); if (!of) r.msgs.push('ไม่มีรูนเหลือให้เลือกแล้ว'); } // set 94: win → pick 1 free rune
   addMatchStats(stats, result);
-  replays.push(replayEntry(round, teamA, teamB, result, runes, streak, fd)); saveReplays(); // ชุด 25
-  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null, runes, diff: rb ? null : diff }));
+  replays.push(replayEntry(round, teamA, teamB, result, runes, streak, fd, fr, fs)); saveReplays(); // ชุด 25
+  logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null, runes, diff: fd }));
   pendingEnd = { r, w }; replayMode = null;
   if (P.over) { clearAt = P.hearts > 0 && !P.extra ? Date.now() : 0; store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, clearAt || Date.now())))); store.del(SAVE_KEY); }
   else saveRun();
   showNotice('');
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = true;
-  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ${diff} · ทีม${RN_TEAM_TH[foe.tier] || foe.tier} · คู่แข่ง: ทีมบอทรอบ ${foe.round}` : '');
+  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ศัตรูพลัง ${foe.want}% · คู่แข่ง: ทีมบอทรอบ ${foe.round}` : '');
   hideToast(); // set 106 (B4): shop warnings must not cover the field
   viewMap(teamB); view.speed = speed; view.load(shown); resetLog(); view.play();
   if (autoSkip) view.skip();
 });
 // set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
 // enemy side: a team (array of entries) or a boss { boss: id, k } (set 85) · unknown boss id → throws (replay shows a notice)
-// set 95: d = picked difficulty → enemy team hp/atk × diff % (rnFoeScale) · boss never scaled · set 99: round → extra-match growth
-function foeUnits(b, d = null, round = 0) {
-  if (Array.isArray(b)) return rnFoeScale(buildTeam(b, CM), d, RUN_STAGE, round);
+// set 107: d = enemy hp/atk % (power match · old replays: mode name → replayPct) · fn/fs = the bot team's runes + its win streak · boss never scaled
+// returns { units, opts } (opts.tribeExtraB = the bot team's tribe-flag runes)
+function foeUnits(b, d = null, round = 0, fn = [], fs = 0) {
+  if (Array.isArray(b)) return foeSide({ team: b, pct: replayPct(d), rn: fn || [], s: fs | 0 }, CM, RULES, RUN_STAGE, round);
   const rec = runBossById(b.boss); if (!rec) throw new Error('ไม่พบบอส ' + b.boss);
-  return runBossTeam(rec, b.k);
+  return { units: runBossTeam(rec, b.k), opts: {} };
 }
 // battle view card data: the boss is not a character → add its card (set 85)
 function viewMap(b) { const rec = !Array.isArray(b) && b ? runBossById(b.boss) : null; $('foeHead').textContent = rec ? 'บอส' : 'คู่แข่ง (บอท)'; view.charMap = rec ? { ...CM, [rec.id]: runBossChar(rec, b.k) } : CM; }
-function showResult(teamA, teamB, result, runes, streak, d = null, round = 0) {
+function showResult(teamA, teamB, result, runes, streak, d = null, round = 0, fn = [], fs = 0) {
   let r = null;
-  try { const ps = playerSide(teamA, runes, streak); r = simulate(ps.units, foeUnits(teamB, d, round), { ...ps.opts, detail: true, live: true }); } catch (e) { r = null; }
+  try { const ps = playerSide(teamA, runes, streak), fo = foeUnits(teamB, d, round, fn, fs); r = simulate(ps.units, fo.units, { ...ps.opts, ...fo.opts, detail: true, live: true }); } catch (e) { r = null; }
   return r && r.winner === result.winner && r.timeMs === result.timeMs ? r : result;
 }
 // ---------- รีเพลย์ (ชุด 25) ----------
@@ -1082,13 +1080,13 @@ POPS.runcode = () => {
 function watchReplay(i, back) {
   const x = replays[i]; if (!x) return;
   let result;
-  try { const ps = playerSide(x.a, x.n, x.g | 0); result = simulate(ps.units, foeUnits(x.b, x.d || null, x.r), ps.opts); } catch (e) { result = null; }
+  try { const ps = playerSide(x.a, x.n, x.g | 0); const fo = foeUnits(x.b, x.d || null, x.r, x.fn || [], x.fs | 0); result = simulate(ps.units, fo.units, { ...ps.opts, ...fo.opts }); } catch (e) { result = null; }
   // จำลองซ้ำแล้วต้องได้ผลและเวลาเดิม · ไม่ตรง = ระบบต่อสู้เปลี่ยนหลังเล่นแมตช์นั้น → ไม่เล่น แจ้งแทน
   if (!result || result.winner !== x.w || Math.floor(result.timeMs) !== x.t) { showNotice(`รีเพลย์รอบ ${x.r} ใช้ไม่ได้: เกมอัปเดตระบบการต่อสู้หลังแมตช์นี้ ผลจึงไม่ตรงกับที่เล่นจริง`); return; }
   showNotice(''); pendingEnd = null; replayMode = { back, x };
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = false;
   $('battleTitle').textContent = `รีเพลย์รอบ ${x.r}`;
-  viewMap(x.b); view.speed = speed; view.load(showResult(x.a, x.b, result, x.n, x.g | 0, x.d || null, x.r)); resetLog(); view.play();
+  viewMap(x.b); view.speed = speed; view.load(showResult(x.a, x.b, result, x.n, x.g | 0, x.d || null, x.r, x.fn || [], x.fs | 0)); resetLog(); view.play();
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {

@@ -1,104 +1,62 @@
-// Set 95: boss win % when the player collects runes (phase 2b run flow) · node lab/runerun.mjs [runs] [mode ปกติ|ยาก|นรก|off] [--write t1 t2 t3]
-// set 100: enemy tier from the loss streak (rnFoeTier, like the game) · cards roll rarity by mode % · the bot uses the free reroll when no legend is offered
-// The player bot (core/bot.js, focus rotating over the 6 tribes) plays real runs against the game's bot teams at the picked difficulty
-// (pickBotTeam by round + enemy hp/atk × difficulty %, like the game · set 95: no rune shop) and handles runes with a simple greedy policy (harness only, not game rules):
-//   offer → highest rarity, battle runes before run-only ones · "one" runes sit on the strongest unit (level, then rarity), partner on the 2nd strongest.
-// diff "off" = no runes, opponents by wins (pickBotTeam) = the lab/bossrun.mjs baseline.
-// Prints boss win % per boss round (k1 round 5 · k2 round 10 · k3 round 15) and run results.
-// --write: like lab/bossrun.mjs but the collected boss-round teams carry their runes → re-tunes core/stage-user.js bosses.
+// Set 95 → set 107: run results with the game's real flow · node lab/runerun.mjs [runs=600] [--write t1 t2 t3]
+// set 107 (user 6 Nov): no modes · the enemy is picked by the player's power + win streak (core/botteams.js pickFoe, like the game)
+// · both sides carry runes (player bot takes rune offers, bot teams have the runes their bot held) · the player bot = core/bot.js
+// (merge-first, focus rotating over the 6 tribes) · harness plays extra matches after 10 wins (boss 3+ lives there).
+// Prints normal-round win %, win % by win streak, boss win % per boss (k1 = 1st boss …), run cleared %.
+// --write t1 t2 t3: re-tunes core/stage-user.js bosses (k1 base scale, k2 mult10, k3 endlessPct) to those boss win % on the collected teams.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { simulate } from '../core/battle.js';
-import { botShop } from '../core/bot.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickBotTeam, tribeList, validateBotTeams } from '../core/botteams.js';
+import { pickFoe, simRun, tribeList, validateBotTeams } from '../core/botteams.js';
 import { dataHash } from '../core/save.js';
-import { RUN_STAGE, runBossAt, runBossTeam } from '../core/runboss.js';
-import { RUNE_RUN_ONLY, equipRunes } from '../core/runes.js';
-import { RN_RARS, RN_MODE_KEY, rnFoeTier, rnRerollCost, rnRerollOffer, rnEquips, rnFoeScale, rnMakeOffer, rnPlace, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
-import { continueExtra, endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
+import { RUN_STAGE, runBossTeam } from '../core/runboss.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
+import { teamEntries } from '../core/shop.js';
 
 const argv = process.argv.slice(2), WRITE = argv.includes('--write');
 const args = argv.filter(a => !a.startsWith('--'));
-const runs = +args[0] || 600, DIFF = args[1] || 'ปกติ', RUNES = DIFF !== 'off';
-const T1 = +(args[2] || 75), T2 = +(args[3] || 62), T3 = +(args[4] || 50);
-if (process.env.DIFFPCT && RUNES) RUN_STAGE.settings[`mode${RN_MODE_KEY[DIFF]}`] = +process.env.DIFFPCT; // try a % without editing the stage
+const runs = +args[0] || 600;
+const T1 = +(args[1] || 60), T2 = +(args[2] || 50), T3 = +(args[3] || 40);
 const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
-const RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
-if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first'); process.exit(1); }
+if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first', bt.errors.slice(0, 2)); process.exit(1); }
 
-const rRank = r => RN_RARS.indexOf(r.rarity) * 2 + (RUNE_RUN_ONLY.includes(r.eff) ? 0 : 1);
-const strength = u => u.level * 10 + RAR.indexOf(cm[u.id].rarity);
-function placeRunes(P) {
-  const units = [];
-  P.board.forEach((row, ri) => row.forEach((u, li) => { if (u) units.push({ u, s: [ri, li] }); }));
-  units.sort((a, b) => strength(b.u) - strength(a.u));
-  for (const id of Object.keys(P.rn.bag)) {
-    const r = rnRec(id); if (!r) continue;
-    if (rnNeedsSlot(r)) rnPlace(P, id, units[0] ? units[0].s : null, RULES);
-    if (rnNeedsPartner(r)) rnPlace(P, id, units[1] ? units[1].s : null, RULES, true);
-  }
-}
-
-const goldLog = Array.from({ length: 16 }, () => []);
-const normal = [0, 0];
-const out = { 1: [0, 0], 2: [0, 0], 3: [0, 0] }, teams = { 1: [], 2: [], 3: [] }, finish = { wins: 0, runs: 0 }, held = [];
-const t0 = Date.now();
+const normal = [0, 0], byWs = {}, out = {}, teams = { 1: [], 2: [], 3: [] }, pcts = [];
 let cleared = 0;
+const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
-  const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0, focus = tribes[r % tribes.length];
-  const P = newRun(chars, seed, RULES);
-  let streak = 0;
-  for (let g = 0; g < 40 && !P.over; g++) {
-    startRound(P, chars, RULES); if (P.round < 16) goldLog[P.round].push(P.gold);
-    botShop(P, chars, RULES, { focus });
-    if (RUNES) placeRunes(P);
-    const rb = runBossAt(P);
-    const foe = rb ? null : pickBotTeam(BOT_TEAMS, P.round, P.seed, RUNES ? rnFoeTier(P) : null);
-    const mine = teamEntries(P);
-    const e = equipRunes(buildTeam(mine, cm, RULES), RUNES ? rnEquips(P) : [], { winStreak: streak });
-    const opts = { rules: RULES, log: false, ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}) };
-    const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : rnFoeScale(buildTeam(foe.team, cm, RULES), RUNES ? DIFF : null, RUN_STAGE, P.round), opts);
-    const won = res.winner !== 1;
-    if (!rb) { normal[0]++; normal[1] += won ? 1 : 0; }
-    if (rb && out[rb.k]) { out[rb.k][0]++; out[rb.k][1] += won ? 1 : 0; teams[rb.k].push({ units: e.units, opts }); }
-    streak = won ? streak + 1 : 0;
-    endMatch(P, won, chars, RULES, (res.perm || []).filter(x => x.side === 0), !!rb);
-    if (P.over && P.hearts > 0 && !P.extra) { cleared++; continueExtra(P, RULES); } // set 99: the bot always plays the extra matches (boss 3+ lives there)
-    if (RUNES && won && !P.over) {
-      let o = rnMakeOffer(P, rb ? 'boss' : DIFF);
-      if (o && !rb && !o.ids.some(id => rnRec(id).rarity === 'legend') && rnRerollCost(P) === 0) { rnRerollOffer(P); o = P.rn.offer; } // harness: free reroll when no legend (game resets ro at startRound; offer comes before it here)
-      if (o) { let bi = 0; o.ids.forEach((id, i) => { if (rRank(rnRec(id)) > rRank(rnRec(o.ids[bi]))) bi = i; }); rnTakeOffer(P, bi); }
-    }
-  }
-  finish.runs++;
-  if (RUNES) held.push(Object.values(P.rn.bag).reduce((a, n) => a + n, 0));
+  const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
+  let wasOver = false;
+  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, buildTeam(teamEntries(p), cm, RULES), p.round, p.seed, p.ws); pcts.push(f.pct); return f; }, m => {
+    const won = m.winner !== 1;
+    if (!m.boss) { normal[0]++; normal[1] += won ? 1 : 0; const w = Math.min(5, m.ws); (byWs[w] = byWs[w] || [0, 0])[0]++; byWs[w][1] += won ? 1 : 0; }
+    else { (out[m.k] = out[m.k] || [0, 0])[0]++; out[m.k][1] += won ? 1 : 0; if (teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts }); }
+    if (m.stage + (won ? 1 : 0) >= RULES.shop.winsToFinish && !wasOver && won) { wasOver = true; cleared++; }
+  }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: 25 });
+  void P;
 }
 const pct = (a, b) => (b ? (a / b * 100).toFixed(1) : '-');
-console.log(`diff ${DIFF} · runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(cleared, finish.runs)}%${RUNES ? ` · runes held at end avg ${(held.reduce((a, b) => a + b, 0) / held.length).toFixed(1)}` : ''}`);
-console.log(`normal rounds won ${pct(normal[1], normal[0])}%`);
-for (const k of [1, 2, 3]) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
+pcts.sort((a, b) => a - b);
+console.log(`runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(cleared, runs)}% · enemy scale % p10/p50/p90 ${pcts[Math.floor(pcts.length * 0.1)]}/${pcts[Math.floor(pcts.length / 2)]}/${pcts[Math.floor(pcts.length * 0.9)]}`);
+console.log(`normal rounds won ${pct(normal[1], normal[0])}% · by wins in a row: ` + Object.keys(byWs).map(k => `${k}${k === '5' ? '+' : ''}: ${pct(byWs[k][1], byWs[k][0])}% (${byWs[k][0]})`).join(' · '));
+for (const k of Object.keys(out)) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
 
 if (WRITE) {
-  // same search as lab/bossrun.mjs, on rune-equipped teams
   const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),
     phases: b.phases.map(p => ({ ...p, stats: typeof p.stats?.atk === 'number' ? { ...p.stats, atk: Math.max(1, Math.round(p.stats.atk * s)) } : p.stats })) });
   const winPct = (b, k, list) => { let w = 0; for (const t of list) w += simulate(t.units, runBossTeam(b, k), t.opts).winner !== 1 ? 1 : 0; return w / list.length * 100; };
-  const search = (lo, hi, f, target, up) => { for (let i = 0; i < 10; i++) { const m = (lo + hi) / 2; (up ? f(m) > target : f(m) < target) ? (up ? lo = m : hi = m) : (up ? hi = m : lo = m); } return (lo + hi) / 2; };
-  const S = RUN_STAGE.settings, K3 = (S.bossesPerRun | 0) >= 3;
+  const search = (lo, hi, f, target) => { for (let i = 0; i < 10; i++) { const m = (lo + hi) / 2; if (f(m) > target) lo = m; else hi = m; } return (lo + hi) / 2; };
   const res = RUN_STAGE.bosses.filter(x => x.on).map(b0 => {
-    const s = search(0.3, 4, x => winPct(scale(b0, x), 1, teams[1]), T1, true);
+    const s = search(0.3, 4, x => winPct(scale(b0, x), 1, teams[1]), T1);
     let b = scale(b0, s);
-    const m10 = search(1, 6, x => winPct({ ...b, mult10: x }, 2, teams[2]), T2, true);
+    const m10 = search(1, 8, x => winPct({ ...b, mult10: x }, 2, teams[2]), T2);
     b = { ...b, mult10: Math.round(m10 * 100) / 100 };
-    if (K3 && teams[3].length) { const ep = search(0, 300, x => winPct({ ...b, endlessPct: x }, 3, teams[3]), T3, true); b = { ...b, endlessPct: Math.round(ep) }; }
-    console.log(`${b0.id}: s ${s.toFixed(2)} hp ${b0.hp}→${b.hp} atk ${b0.atk}→${b.atk} mult10 ${b0.mult10}→${b.mult10}${K3 ? ` endless ${b0.endlessPct}→${b.endlessPct}` : ''} · k1 ${winPct(b, 1, teams[1]).toFixed(1)} k2 ${winPct(b, 2, teams[2]).toFixed(1)}${K3 ? ` k3 ${winPct(b, 3, teams[3]).toFixed(1)}` : ''}`);
+    if (teams[3].length) { const ep = search(0, 300, x => winPct({ ...b, endlessPct: x }, 3, teams[3]), T3); b = { ...b, endlessPct: Math.round(ep) }; }
+    console.log(`${b0.id}: s ${s.toFixed(2)} hp ${b0.hp}→${b.hp} atk ${b0.atk}→${b.atk} mult10 ${b0.mult10}→${b.mult10} endless ${b0.endlessPct}→${b.endlessPct} · k1 ${winPct(b, 1, teams[1]).toFixed(1)} k2 ${winPct(b, 2, teams[2]).toFixed(1)}${teams[3].length ? ` k3 ${winPct(b, 3, teams[3]).toFixed(1)}` : ''}`);
     return b;
   });
-  // same writer as lab/bossrun.mjs
   const f = new URL('../core/stage-user.js', import.meta.url);
   let src = readFileSync(f, 'utf8');
   for (const nb of res) {
@@ -110,4 +68,3 @@ if (WRITE) {
   writeFileSync(f, src);
   console.log('core/stage-user.js written');
 }
-if (process.env.GOLD) console.log('gold per round start avg', JSON.stringify(goldLog.map(a => a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : 0)));
