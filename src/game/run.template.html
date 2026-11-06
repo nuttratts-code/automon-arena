@@ -1137,7 +1137,7 @@ function finishMatch() {
   const { r, w } = pendingEnd; // ผลถูกนำไปใช้ตอนกดสู้แล้ว (ชุด 22) · ตรงนี้แสดงผลอย่างเดียว
   renderChips();
   $('resultTitle').textContent = w === 0 ? 'ชนะ' : w === 1 ? 'แพ้ เสียหัวใจ 1 ดวง' : 'เสมอ นับเป็นชนะ';
-  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ชนะ ${P.wins}/${S.winsToFinish}`;
+  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ` + (P.extra ? `ชนะ ${P.wins} (แมตช์พิเศษ)` : `ชนะ ${P.wins}/${S.winsToFinish}`);
   $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
   $('next').textContent = P.over ? 'ดูสรุป run' : 'ไปรอบถัดไป';
   msgs = (r.msgs || []).map(t => ({ t }));
