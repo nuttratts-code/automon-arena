@@ -1,6 +1,6 @@
 import { makeRng } from './rng.js';
 import { RUN_STAGE } from './runboss.js';
-import { newRunes, rnFx, rnInterest, rnPermMul } from './runrunes.js';
+import { newRunes, rnFx, rnInterest, rnPermMul, rnSync } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
 // ร้านค้าและรวมร่าง (shop-merge-rules) · ใช้ร่วมกันระหว่างผู้เล่น บอท และห้องบาลานซ์
 // - สถานะเป็นข้อมูลล้วน (ไม่มีฟังก์ชัน) เซฟเป็น JSON ได้ · เลขสุ่มเก็บในสถานะ ใส่เมล็ดเดิมได้ผลเดิม
@@ -258,10 +258,11 @@ export function sell(st, ref, chars, rules = RULES) {
   put(st, ref, null);
   st.gold += u.paid; // เอกสาร: คืนเต็มราคาที่จ่ายไปทั้งหมด
   const msgs = [`ขาย ${u.id} ได้คืน ${u.paid}`];
-  if (ref.at === 'board' && st.rn) { // set 94: rune เงา on this slot → a Lv1 copy comes back to the bench (times per run, paid 0)
-    const sh = rnFx(st).shadow.filter(x => x.slot[0] === ref.row && x.slot[1] === ref.lane), times = sh.reduce((a, x) => a + x.times, 0);
+  if (st.rn) { // set 94: rune เงา worn by this unit → a Lv1 copy comes back to the bench (times per run, paid 0) · set 109: worn by the unit, not the slot
+    put(st, ref, u); const sh = rnFx(st).shadow.filter(x => x.uid === u.uid), times = sh.reduce((a, x) => a + x.times, 0); put(st, ref, null);
     const to = sh.length ? firstEmptyBench(st) : null;
     if (to && st.rn.shadow < times) { put(st, to, { uid: st.uid++, id: u.id, level: 1, perm: {}, paid: 0 }); st.rn.shadow++; msgs.push(`รูนเงา: ได้ ${u.id} เลเวล 1 คืนที่ม้านั่ง`); }
+    rnSync(st); // set 109 (user): every rune the sold unit wore goes back to the bag (not worn) — เงา too
   }
   fireShopSkill(st, u, ref, 'sell', chars, rules, msgs);
   dropDeadCharges(st);
@@ -334,6 +335,7 @@ export function merge(st, srcRefs, destRef, chars, rules, extra = []) {
   for (const s of srcs) { res.paid += s.paid; for (const k of PERM_KEYS) addPerm(res, k, s.perm[k] || 0, rules); }
   for (const r of srcRefs) put(st, r, null);
   put(st, destRef, res);
+  rnSync(st, { from: srcs.map(x => x.uid), to: res.uid }); // set 109: runes worn by a merged copy stay on the result
   const c = chars.find(x => x.id === res.id);
   const msgs = [`รวมร่าง ${c.id} ${c.name} → เลเวล ${res.level}`];
   fireShopSkill(st, res, destRef, 'merge', chars, rules, msgs);

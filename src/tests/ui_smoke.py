@@ -52,6 +52,15 @@ with sync_playwright() as p:
         pg.click('#runeBtn'); chk(len(pg.query_selector_all('#rBag .pitem'))==1,'rune popup lists held rune')
         pg.click('#rBag .pitem'); chk('← กลับ' in pg.inner_text('#pop') and pg.query_selector('#pop .rcard') is not None,'rune detail popup')
         pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
+        # set 109: a "one" rune is worn by a unit (not a slot) · unworn = red HUD badge + list warning · worn → no warning, follows the unit
+        pg.evaluate("P.board[0][0]={uid:P.uid++,id:chars[0].id,level:1,perm:{},paid:1};P.rn.bag={C3:1};P.rn.at={};render()")
+        chk('⚠1' in pg.inner_text('#runeCnt') and 'warn' in pg.get_attribute('#runeBtn','class'),'unworn rune → warning on HUD')
+        pg.click('#runeBtn'); chk('ยังไม่ได้สวม' in pg.inner_text('#rBag'),'rune list says not worn')
+        pg.click('#rBag .pitem'); pg.select_option('#pop select','0,0')
+        chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
+        chk('เกราะไม้' in pg.inner_text('#board'),'rune name shown on the wearer')
+        pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk('⚠1' in pg.inner_text('#runeCnt'),'wearer on the bench → warning')
+        esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
         # set 107: no modes · HUD shows enemy power % (100 + 5 per win in a row) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
         pg.click('#diffInfo'); chk('ตำนาน 10%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
@@ -67,6 +76,7 @@ with sync_playwright() as p:
         pg.keyboard.press('Escape'); chk(pg.is_visible('#offerDlg'),'offer popup ignores Esc')
         pg.evaluate("document.getElementById('fight').click()"); chk(not fighting() and 'เลือกรูน' in pg.evaluate('JSON.stringify(msgs)'),'fight blocked until offer picked')
         pg.click('#offer button'); chk(pg.is_hidden('#offerDlg') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
+        esc()  # set 109: a picked rune that must be worn opens its popup
         pg.evaluate("P.gold=%d;P.rn.bag={};P.rn.at={};P.rn.pt={};render()" % g0)
         # set 97: tap = details popup only (never moves) · drag = buy / move / sell
         pg.evaluate("P.gold=60;render()")
@@ -91,6 +101,7 @@ with sync_playwright() as p:
         for rnd in range(14):
             if pg.evaluate('P.over'): break
             if pg.is_visible('#offerDlg'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
+            if pg.evaluate("document.getElementById('dlg').open"): esc()  # set 109: a rune that must be worn opens its popup after the pick
             pg.evaluate(BUY)
             # move from the bench to free board cells through act() (the same path a drag ends in)
             pg.evaluate(PLACE)
@@ -177,8 +188,9 @@ with sync_playwright() as p:
             pg.evaluate(BUY); pg.evaluate(PLACE)  # ซื้อและวางตัวลงบอร์ดอีกครั้ง ให้ทดสอบสกิลถาวรต่อได้
         # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว · 31 Oct: when matchStart (not 'set': a unit killed before its first attack never fires 'set' → ~1.3% random fails)
         if pg.is_visible('#offerDlg'): pg.click('#offer button')
+        esc()
         got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
-          const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
+          const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); if(!document.getElementById('app').classList.contains('fighting')&&confirmRunes) document.getElementById('fight').click(); return before;})()""")  # set 109: unworn-rune warning = press again
         # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
         if not fighting():
             fails.append('perm test: battle did not start · '+pg.evaluate('JSON.stringify(msgs)')+' · '+pg.evaluate('JSON.stringify(teamEntries(P).map(e=>[e.id,e.level,e.perm]))'))

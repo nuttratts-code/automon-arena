@@ -1,7 +1,10 @@
 // Phase 2b — runes inside the normal run (set 94 · user 5 Nov 2026, claude/review-2026-11-05-set94-2b.md)
 // - every normal-round WIN offers 1 free rune (set 100: cards roll rarity by mode %, rerollable) · boss win = offBoss* mix
 // - set 95 (user 5 Nov): rune shop REMOVED (runes come only from win offers) · difficulty = enemy team hp/atk × diffEasy/diffNorm/diffHard %
-// - every held rune is active (Q4 A) · a rune with scope "ตัวเดียว" works on the board slot it is placed on · link/buddy also need a partner slot
+// - every held rune is active (Q4 A) · a rune with scope "ตัวเดียว" is worn by ONE unit (st.rn.at[id] = that unit's uid · set 109 bug fix:
+//   it used to sit on a board slot, so any unit swapped into the slot got it) · link/buddy also need a partner unit (st.rn.pt[id] = uid)
+// - the rune follows its unit when moved / merged (merge keeps it on the result) · unit sold = rune back in the bag, not worn (user 6 Nov) · runes with a fixed area (row / whole team / enemy) work as before
+// - battle effects work only while the unit is on the board · old saves (slot arrays) read as the unit standing on that slot
 // - run-only runes (gold, interest, shop slots, free reroll, heart trade, lure, fast merge, shadow, perm up, scout) are read by core/shop.js + the game page
 // - copies per run (rune.max) cap the offers
 // State lives in st.rn (pure data, saved with the run) · randomness = the run seed (draw) · every number comes from the stage config.
@@ -106,13 +109,55 @@ export function rnFoeScale(units, pct = 100, stage = RUN_STAGE, round = 0) {
 
 // ---------- place a "one" rune on a board slot / pick the partner ----------
 const rnSlotOk = (s, rules) => Array.isArray(s) && s.length === 2 && Number.isInteger(s[0]) && Number.isInteger(s[1]) && s[0] >= 0 && s[0] < rules.rows && s[1] >= 0 && s[1] < rules.lanes;
+// slot = the board slot of the unit that should wear it (null = take it off) · stored as that unit's uid
 export function rnPlace(st, id, slot, rules, partner = false) {
   if (!st.rn || !rnHeld(st, id)) return fail('ไม่มีรูนนี้');
   const box = partner ? st.rn.pt : st.rn.at;
   if (slot === null) { delete box[id]; return done(); }
   if (!rnSlotOk(slot, rules)) return fail('ช่องไม่ถูกต้อง');
-  box[id] = [slot[0], slot[1]];
+  const u = st.board[slot[0]] && st.board[slot[0]][slot[1]];
+  if (!u) return fail('ช่องนี้ว่าง · เลือกตัวบนบอร์ด');
+  box[id] = u.uid;
   return done();
+}
+// unit wearing rune id (partner box if partner) · anywhere (board or bench) · old saves: slot array = the unit on that slot
+export function rnUnitOf(st, id, partner = false) {
+  const v = st && st.rn ? (partner ? st.rn.pt : st.rn.at)[id] : undefined;
+  if (v === undefined || v === null) return null;
+  if (Array.isArray(v)) return (st.board[v[0]] && st.board[v[0]][v[1]]) || null;
+  for (const row of st.board) for (const u of row) if (u && u.uid === v) return u;
+  for (const u of st.bench) if (u && u.uid === v) return u;
+  return null;
+}
+// board slot [row, lane] of the unit wearing rune id · null = not worn / unit on the bench / sold
+export function rnSlotOf(st, id, partner = false) {
+  const u = rnUnitOf(st, id, partner); if (!u) return null;
+  for (let r = 0; r < st.board.length; r++) for (let l = 0; l < st.board[r].length; l++) if (st.board[r][l] === u) return [r, l];
+  return null;
+}
+// rune state for the UI: 'ok' · 'none' (not worn) · 'bench' (worn by a unit on the bench) — also checks the partner
+export function rnWear(st, id, stage = RUN_STAGE) {
+  const r = rnRec(id, stage); if (!r) return 'ok';
+  for (const [need, p] of [[rnNeedsSlot(r), false], [rnNeedsPartner(r), true]]) {
+    if (!need) continue;
+    if (!rnUnitOf(st, id, p)) return 'none';
+    if (!rnSlotOf(st, id, p)) return 'bench';
+  }
+  return 'ok';
+}
+// ids of held runes that do nothing right now because no board unit wears them (UI warning)
+export function rnUnworn(st, stage = RUN_STAGE) {
+  if (!st || !st.rn) return [];
+  return Object.keys(st.rn.bag).filter(id => st.rn.bag[id] > 0 && rnWear(st, id, stage) !== 'ok');
+}
+// tidy after the board changed: old slot arrays → uid · drop runes whose unit is gone (sold) · merged units: srcUids → toUid
+export function rnSync(st, merged = null) {
+  if (!st || !st.rn) return;
+  for (const box of [st.rn.at, st.rn.pt]) for (const id of Object.keys(box)) {
+    if (merged && merged.from.includes(box[id])) box[id] = merged.to;
+    const u = rnUnitOf(st, id, box === st.rn.pt);
+    if (u) box[id] = u.uid; else delete box[id];
+  }
 }
 
 // ---------- effects ----------
@@ -120,10 +165,9 @@ export function rnPlace(st, id, slot, rules, partner = false) {
 export function rnFx(st, stage = RUN_STAGE) {
   const fx = { gold: 0, intr: null, slots: 0, free: 0, heart: null, lure: {}, fast: {}, shadow: [], permUp: [], scout: false };
   if (!st || !st.rn) return fx;
-  const unitAt = s => (s && st.board[s[0]] ? st.board[s[0]][s[1]] : null);
   for (const [id, n] of Object.entries(st.rn.bag)) {
     const r = rnRec(id, stage); if (!r || n < 1) continue;
-    const slot = st.rn.at[id] || null, u = rnNeedsSlot(r) ? unitAt(slot) : null;
+    const slot = rnSlotOf(st, id), u = rnNeedsSlot(r) ? rnUnitOf(st, id) : null; // shop effects (lure / fast merge) work on the bench too
     switch (r.eff) {
       case 'gold': fx.gold += rnSpecNum(r, 'gold') * n; break;
       case 'interest': fx.intr = { per: Math.max(1, rnSpecNum(r, 'per')), gold: rnSpecNum(r, 'gold') * n, cap: rnSpecNum(r, 'cap') * n }; break;
@@ -132,8 +176,8 @@ export function rnFx(st, stage = RUN_STAGE) {
       case 'heartTrade': fx.heart = { gold: rnSpecNum(r, 'gold') * n, min: Math.max(2, rnSpecNum(r, 'minHearts')) }; break;
       case 'lure': if (u) fx.lure[u.id] = Math.max(fx.lure[u.id] || 1, rnSpecNum(r, 'mult')); break;
       case 'fastMerge': if (u) fx.fast[u.id] = Math.min(fx.fast[u.id] || 3, Math.max(2, rnSpecNum(r, 'need'))); break;
-      case 'shadow': if (slot) fx.shadow.push({ slot, times: rnSpecNum(r, 'times') * n }); break;
-      case 'permUp': if (slot) fx.permUp.push({ slot, pct: rnSpecNum(r, 'permPct') * n }); break;
+      case 'shadow': if (u) fx.shadow.push({ uid: u.uid, slot, times: rnSpecNum(r, 'times') * n }); break;
+      case 'permUp': if (u) fx.permUp.push({ uid: u.uid, slot, pct: rnSpecNum(r, 'permPct') * n }); break;
       case 'scout': fx.scout = true; break;
       default: break;
     }
@@ -146,7 +190,7 @@ export function rnInterest(gold, fx) { return fx.intr ? Math.min(fx.intr.cap, Ma
 export function rnPermMul(st, u, stage = RUN_STAGE) {
   if (!st || !st.rn || !u) return 1;
   let pct = 0;
-  for (const p of rnFx(st, stage).permUp) if (st.board[p.slot[0]] && st.board[p.slot[0]][p.slot[1]] === u) pct += p.pct;
+  for (const p of rnFx(st, stage).permUp) if (p.uid === u.uid) pct += p.pct;
   return 1 + pct / 100;
 }
 export function rnHeartTrade(st, stage = RUN_STAGE) {
@@ -168,9 +212,9 @@ export function rnEquips(st, stage = RUN_STAGE) {
 export function rnCompact(st) {
   if (!st || !st.rn) return [];
   return Object.entries(st.rn.bag).filter(([, n]) => n > 0).map(([id, n]) => {
-    const o = { id, n };
-    if (st.rn.at[id]) o.s = st.rn.at[id].slice();
-    if (st.rn.pt[id]) o.p = st.rn.pt[id].slice();
+    const o = { id, n }, s = rnSlotOf(st, id), p = rnSlotOf(st, id, true); // worn unit on the board → its slot for the fight
+    if (s) o.s = s;
+    if (p) o.p = p;
     return o;
   });
 }
@@ -198,7 +242,7 @@ export function rnValidate(rn, rules, stage = RUN_STAGE) {
   else for (const [id, n] of Object.entries(rn.bag)) { const r = rnRec(id, stage); if (!r || !Number.isInteger(n) || n < 1 || n > (r.max || 1)) errors.push(`รูน ${id}: ผิด`); }
   for (const k of ['at', 'pt']) {
     if (!isObj(rn[k])) { errors.push('รูน: ช่องวางผิด'); continue; }
-    for (const [id, s] of Object.entries(rn[k])) if (!isObj(rn.bag) || !rn.bag[id] || !rnSlotOk(s, rules)) errors.push(`รูน ${id}: ช่องวางผิด`);
+    for (const [id, s] of Object.entries(rn[k])) if (!isObj(rn.bag) || !rn.bag[id] || !(rnSlotOk(s, rules) || (Number.isInteger(s) && s >= 1 && s <= 1e9))) errors.push(`รูน ${id}: ช่องวางผิด`);
   }
   if (rn.offer !== null && !(isObj(rn.offer) && Object.keys(rn.offer).every(k => k === 'kind' || k === 'ids') && RN_OFFER_KEY[rn.offer.kind]
     && Array.isArray(rn.offer.ids) && rn.offer.ids.length >= 1 && rn.offer.ids.length <= 15 && rn.offer.ids.every(id => !!rnRec(id, stage)))) errors.push('รูนรางวัลผิด');
