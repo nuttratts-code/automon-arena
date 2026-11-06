@@ -1343,6 +1343,7 @@ function boot() {
       if (rp.status === 'bad') showNotice('ข้อมูลรีเพลย์เสียหายหรือผิดรูปแบบ จึงถูกล้าง (เล่นต่อได้ตามปกติ)');
       if (rp.status !== 'ok') saveReplays();
       RL = resumeLog(); rlSent = { id: '', n: 0 };
+      if (RL && playerName && RL.nm !== playerName) { RL.nm = playerName; saveLog(); } // set 110: renamed on the resume screen
       showScreen('prep'); beginRound();
     };
     $('resumeNew').onclick = () => { showNotice(''); startNewRun(); };
