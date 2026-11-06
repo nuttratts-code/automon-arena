@@ -138,6 +138,8 @@ with sync_playwright() as p:
         mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon svg.pat g > *').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat'))]")
         chk(mon[0]>0 and mon[1] and mon[2],'unit shapes have patterns '+str(mon))
         chk(pg.evaluate('replays.length')==len(res) and pg.evaluate("readReplays(localStorage.getItem('automon-run-replays-v1'),CM,RULES,DATA_HASH,P.seed).status")=='ok','replays stored per match '+str(pg.evaluate('replays.length')))
+        chk(pg.evaluate('parseRunCode(runCode(),CM,RULES).runs[0].list.length')==len(res),'run code carries this run (set 105)')
+        pg.evaluate("openPop('runcode')"); chk(pg.input_value('#runCodeText').startswith('ARUN1 '),'run code box (clipboard fallback)'); pg.evaluate('closePop()')
         over_now=pg.evaluate('P.over')
         rnd0=pg.evaluate('P.round')
         if over_now: pg.click('#endReplays li button >> nth=0')

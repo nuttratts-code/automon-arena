@@ -4,7 +4,7 @@ import { botShop } from '../core/bot.js';
 import { buildCharacterList } from '../core/characters.js';
 import { makeRng } from '../core/rng.js';
 import { RULES } from '../core/rules.js';
-import { REPLAY_MAX, SAVE_MAX_CHARS, addMatchStats, checkPlayRecord, checkReplay, dataHash, historyEntry, makeReplays, makeSave, newStats, playRecord, pushHistory, readHistory, readReplays, readSave, replayEntry, validateRunState } from '../core/save.js';
+import { REPLAY_MAX, SAVE_MAX_CHARS, addMatchStats, checkPlayRecord, checkReplay, dataHash, historyEntry, makeReplays, makeRunCode, makeSave, newStats, parseRunCode, playRecord, pushHistory, readHistory, readReplays, readSave, replayEntry, validateRunState } from '../core/save.js';
 import { buy, endMatch, move, newRun, reroll, sell, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { applyMatchDiff, baseFingerprint, makeMatchCode, matchFightParts, parseMatchCode } from '../lab/matchcode.js';
@@ -98,6 +98,25 @@ export const TESTS_SAVE = [
     let h = []; for (let i = 0; i < 25; i++) h = pushHistory(h, { ...e, at: i });
     eq([h.length, h[0].at], [20, 24], 'เก็บล่าสุด 20 รายการ');
     eq(readHistory('{bad'), [], 'อ่านไม่ได้ = ว่าง');
+  }],
+  ['set 105: run code carries current + previous run replays + history · round trip · bad codes rejected', () => {
+    const chars = buildCharacterList(), m = makeCharMap(chars), H = dataHash(chars), rng = makeRng(105), list = [];
+    for (let i = 0; i < 5; i++) {
+      const A = randomTeam(rng, chars, 6, 'mix'), B = randomTeam(rng, chars, 6, 'mix');
+      list.push(replayEntry(i + 1, A, B, simulate(buildTeam(A, m), buildTeam(B, m))));
+    }
+    const cur = makeReplays(11, H, list), prev = makeReplays(22, H, list.slice(0, 2));
+    const hist = JSON.stringify([{ at: 5, won: true, wins: 10, hearts: 3, rounds: 17, team: [{ id: 'HL-1', level: 2 }], top: 'HL-1', topDmg: 900, matches: 17 }]);
+    const code = makeRunCode([cur, prev], hist, H, 1000);
+    const rc = parseRunCode(code, m, RULES);
+    eq([rc.runs.length, rc.runs[0].run, rc.runs[0].list.length, rc.runs[1].run, rc.runs[1].list.length, rc.hist.length, rc.page], [2, 11, 5, 22, 2, 1, H], 'round trip');
+    eq(rc.runs[0].list, list, 'matches kept as stored');
+    eq(makeRunCode([null, makeReplays(1, H, [])], null, H, 1), null, 'nothing to copy = null');
+    eq(parseRunCode(makeRunCode(['{bad', cur], '', H, 1), m, RULES).runs.length, 1, 'unreadable stored text skipped');
+    const body = JSON.parse(code.slice(6)), bad = f => { const y = JSON.parse(JSON.stringify(body)); f(y); return 'ARUN1 ' + JSON.stringify(y); };
+    const bads = ['', 'AMATCH1 {}', 'ARUN1 {bad', bad(y => { y.v = 2; }), bad(y => { y.evil = 1; }), bad(y => { y.runs[0].list[0].a[0].id = 'ZZ-9'; }),
+      bad(y => { y.runs.push(y.runs[0], y.runs[0]); }), bad(y => { y.h[0].wins = -1; }), bad(y => { y.runs[0].list[0].a[0].perm = { hp: '<img src=x>' }; }), 'ARUN1 ' + 'x'.repeat(300001)];
+    bads.forEach((t, i) => { let threw = false; try { parseRunCode(t, m, RULES); } catch (e) { threw = true; } ok(threw, `bad run code ${i + 1}`); });
   }],
   ['ชุด 25: รีเพลย์ เก็บทีม 2 ฝั่ง จำลองซ้ำได้ผลเดิม · ผูกกับ run + ค่าเกม · ข้อมูลผิดถูกปฏิเสธ', () => {
     const chars = buildCharacterList(), m = makeCharMap(chars), H = dataHash(chars), rng = makeRng(2525), list = [];

@@ -256,6 +256,7 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 /* ชุด 25: รีเพลย์ + บันทึกการต่อสู้ละเอียด (ชุดเดียวกับห้องบาลานซ์) */
 .replays li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .replays li button { padding: 3px 10px; font-size: .78rem; }
+.runcode { width: 100%; box-sizing: border-box; font: .72rem/1.3 monospace; word-break: break-all; }
 details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .logbox .row label { font-size: .8rem; display: inline-flex; gap: 4px; align-items: center; }
 .logbox select { font: inherit; max-width: 100%; }
@@ -413,7 +414,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 <div class="screen" id="resume" hidden><section class="panel">
   <h2>มี run ที่เล่นค้างไว้</h2>
   <p class="hint" id="resumeInfo"></p>
-  <div class="row"><button class="primary" id="resumeGo" type="button">เล่นต่อ</button><button id="resumeNew" type="button">เริ่ม run ใหม่</button></div>
+  <div class="row"><button class="primary" id="resumeGo" type="button">เล่นต่อ</button><button id="resumeNew" type="button">เริ่ม run ใหม่</button><button id="resumeCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
   <p class="hint">เล่นต่อจะกลับไปเริ่มรอบร้านค้าที่ค้างไว้ (ร้านเดิม เงินเดิม)</p>
 </section></div>
 
@@ -430,6 +431,8 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   <ol class="msgs replays" id="endReplays"></ol>
   <p class="hint" id="endExtraHint" hidden>แมตช์พิเศษ: เล่นต่อด้วยหัวใจที่เหลือ ศัตรูแรงขึ้นเรื่อยๆ หัวใจหมด = จบเกม</p>
   <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
+  <div class="row"><button id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
+  <p class="hint">ส่งโค้ดนี้ให้คนทำเกม เพื่อให้ดูทีมและผลทุกแมตช์ของ run นี้ได้</p>
 </section></div>
 
 <div id="notice" hidden><span id="noticeText" class="grow"></span><button id="noticeX" type="button" aria-label="ปิด">✕</button></div>
@@ -502,7 +505,7 @@ const store = {
 };
 function saveRun() { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); }
 // ชุด 25 (7A): รีเพลย์ทุกแมตช์ใน run นี้ · เก็บทีม 2 ฝั่ง + ผล แยกจากเซฟ (core/save.js readReplays ตรวจทุกช่องตอนโหลด)
-const REPLAY_KEY = 'automon-run-replays-v1';
+const REPLAY_KEY = 'automon-run-replays-v1', PREV_REPLAY_KEY = 'automon-run-replays-prev-v1'; // set 105: previous run's replays kept for the run code
 let replays = [], replayMode = null;
 function saveReplays() { store.set(REPLAY_KEY, makeReplays(P.seed, DATA_HASH, replays)); }
 // ชุด 25 (8A): สรุปรายแมตช์ลงฐานข้อมูลของหน้านี้ · ไม่มีฐานข้อมูล (เปิดนอก Claude / ไม่ได้สิทธิ์เขียน) = ข้ามเงียบๆ เกมเล่นได้ปกติ
@@ -525,6 +528,7 @@ function startNewRun() {
   const seed = randSeed();
   P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
   msgs = []; stats = newStats(); startedAt = Date.now();
+  const old = store.get(REPLAY_KEY); if (old && old.includes('"list":[{')) store.set(PREV_REPLAY_KEY, old); // set 105: keep the finished run's replays for the run code
   replays = []; replayMode = null; saveReplays();
   saveRun(); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
   showScreen('prep');
@@ -556,6 +560,13 @@ let toastT = 0;
 function toast(list) {
   const t = $('toast'); t.replaceChildren(...list.slice(-3).map(m => el('div', m.err ? 'err' : '', m.t))); t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, list.some(m => m.err) ? 3500 : 2600);
+}
+// ---------- set 105: run code (testers paste it in chat; read with lab/runcode.mjs) ----------
+function runCode() { return makeRunCode([store.get(REPLAY_KEY), store.get(PREV_REPLAY_KEY)], store.get(HIST_KEY), DATA_HASH, Date.now()); }
+async function copyRunCode() {
+  const code = runCode();
+  if (!code) { toast([{ t: 'ยังไม่มีผลการเล่นให้คัดลอก', err: true }]); return; }
+  try { await navigator.clipboard.writeText(code); toast([{ t: 'คัดลอกโค้ดแล้ว วางส่งให้คนทำเกมได้เลย' }]); } catch (e) { openPop('runcode'); }
 }
 // ---------- set 97: popups (one <dialog> for every detail view · content rebuilt by kind, so it follows the run state) ----------
 let popKind = null, popArg = null;
@@ -1011,8 +1022,15 @@ function renderReplays(list, back) {
     b.addEventListener('click', () => watchReplay(i, back)); li.append(b); return li;
   }) : [el('li', '', 'ยังไม่มีแมตช์')]));
 }
-POPS.replays = () => { const ol = el('ol', 'msgs replays'); ol.id = 'replayList'; renderReplays(ol, 'prep'); return [phead(`รีเพลย์แมตช์ใน run นี้ (${replays.length})`, 'ดูซ้ำได้ ไม่เปลี่ยนสถานะ run'), ol, pacts()]; };
+POPS.replays = () => { const ol = el('ol', 'msgs replays'); ol.id = 'replayList'; renderReplays(ol, 'prep'); return [phead(`รีเพลย์แมตช์ใน run นี้ (${replays.length})`, 'ดูซ้ำได้ ไม่เปลี่ยนสถานะ run'), ol, pacts(pbtn('คัดลอกโค้ดผลการเล่น', copyRunCode))]; };
 $('replayBtn').addEventListener('click', () => openPop('replays'));
+// set 105: clipboard blocked → show the code in a box to copy by hand
+POPS.runcode = () => {
+  const code = runCode(); if (!code) return null;
+  const ta = el('textarea', 'runcode'); ta.id = 'runCodeText'; ta.readOnly = true; ta.value = code; ta.rows = 6;
+  setTimeout(() => { try { ta.focus(); ta.select(); } catch (e) { /* ignore */ } }, 0);
+  return [phead('โค้ดผลการเล่น', 'กดค้างในกล่องแล้วเลือกคัดลอกทั้งหมด แล้ววางส่งให้คนทำเกม'), ta, pacts()];
+};
 function watchReplay(i, back) {
   const x = replays[i]; if (!x) return;
   let result;
@@ -1215,6 +1233,7 @@ function boot() {
   if (r.status === 'data') showNotice('เกมอัปเดตค่าตัวละครหรือกฎแล้ว เซฟ run เดิมจึงถูกล้าง · เริ่ม run ใหม่ให้แล้ว');
   if (r.status === 'bad') showNotice('เซฟ run เดิมเสียหายหรือผิดรูปแบบ จึงถูกล้าง · เริ่ม run ใหม่ให้แล้ว');
 }
+$('endCode').addEventListener('click', copyRunCode); $('resumeCode').addEventListener('click', copyRunCode);
 $('skip').addEventListener('click', () => { if (view.result && !view.ended) view.skip(); });
 document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
   speed = +b.dataset.speed; view.speed = speed;

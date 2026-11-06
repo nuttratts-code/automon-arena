@@ -222,3 +222,40 @@ export function checkPlayRecord(x, cm, rules = RULES) {
     && Array.isArray(x.runes) && x.runes.length <= 80 && x.runes.every(id => typeof id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(id)) && [null, 'ปกติ', 'ยาก', 'นรก', 'ง่าย', 'กลาง'].includes(x.diff)
     && (x.foeSrc !== 'set' ? x.foeStage === null && x.foeSpan === null : svIntIn(x.foeStage, 0, 100) && svIntIn(x.foeSpan, 0, 10));
 }
+
+// ---- Run code (set 105, user picked option 1) ----
+// One line a tester copies from the game page ("คัดลอกโค้ดผลการเล่น") and pastes in chat: the stored replays of the current run
+// and of the previous run (both teams, runes, difficulty, result per match) + the latest run-history entries. No player identity.
+// Built from the raw stored texts so a finished run (no save left) can still be sent. Read back with lab/runcode.mjs.
+export const RUN_CODE_TAG = 'ARUN1';
+export const RUN_CODE_MAX = 300000;
+const RUN_CODE_HIST = 3, RUN_CODE_RUNS = 2;
+export function makeRunCode(replayTexts, historyText, pageHash, at, rules = RULES) {
+  const runs = [];
+  for (const t of replayTexts.slice(0, RUN_CODE_RUNS)) {
+    try { const o = typeof t === 'string' && t.length <= SAVE_MAX_CHARS ? JSON.parse(t) : null; if (svObj(o) && Array.isArray(o.list) && o.list.length) runs.push(o); } catch (e) { /* skip unreadable */ }
+  }
+  const h = readHistory(historyText, rules).slice(0, RUN_CODE_HIST);
+  if (!runs.length && !h.length) return null;
+  return RUN_CODE_TAG + ' ' + JSON.stringify({ v: 1, at: Math.floor(at), page: pageHash, runs, h });
+}
+// Text → { at, page, runs: [{ data, run, list }], hist } (throws Error with a reason) · every match goes through checkReplay, history through readHistory
+export function parseRunCode(text, cm, rules = RULES) {
+  const t = String(text).trim();
+  if (t.length > RUN_CODE_MAX) throw new Error('code too long');
+  if (!t.startsWith(RUN_CODE_TAG + ' ')) throw new Error('not a run code (missing ' + RUN_CODE_TAG + ')');
+  let o; try { o = JSON.parse(t.slice(RUN_CODE_TAG.length + 1)); } catch (e) { throw new Error('code is not valid (cut off while copying?)'); }
+  if (!svObj(o) || !svOnlyKeys(o, ['v', 'at', 'page', 'runs', 'h']) || o.v !== 1) throw new Error('bad code body');
+  if (!svIntIn(o.at, 0, 1e15) || typeof o.page !== 'string' || !/^[0-9a-f]{8}$/.test(o.page)) throw new Error('bad header');
+  if (!Array.isArray(o.h) || o.h.length > RUN_CODE_HIST) throw new Error('bad history');
+  const hist = readHistory(JSON.stringify(o.h), rules);
+  if (hist.length !== o.h.length) throw new Error('bad history entry');
+  if (!Array.isArray(o.runs) || o.runs.length > RUN_CODE_RUNS) throw new Error('bad runs');
+  const runs = o.runs.map((rp, k) => {
+    if (!svObj(rp) || !svOnlyKeys(rp, ['rv', 'data', 'run', 'list']) || rp.rv !== REPLAY_VERSION || !Array.isArray(rp.list) || rp.list.length > REPLAY_MAX) throw new Error('bad replays');
+    if (typeof rp.data !== 'string' || !/^[0-9a-f]{8}$/.test(rp.data) || !svIntIn(rp.run, 0, 0xFFFFFFFF)) throw new Error('bad replays header');
+    rp.list.forEach((x, i) => { if (!checkReplay(x, cm, rules)) throw new Error(`bad match #${i + 1} in run ${k + 1}`); });
+    return { data: rp.data, run: rp.run, list: rp.list };
+  });
+  return { at: o.at, page: o.page, runs, hist };
+}
