@@ -229,7 +229,7 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .screen > section { max-width: 760px; margin: 0 auto; }
 #nameScr { z-index: 45; }
 /* set 112 (user): owner-only Log screen · run list live from the db + paste a run code · report nodes from lab/runlogview.js */
-#logScr { z-index: 46; }
+#logScr { z-index: 61; } /* above toast (60) + notice: the game keeps running underneath */
 #logScr > section, #logOut > section { max-width: 860px; margin: 0 auto 12px; }
 #logScr .status { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
 #logScr .status.ok { background: var(--soft); color: var(--ok); } #logScr .status.bad { background: var(--soft); color: var(--bad); }
