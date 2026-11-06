@@ -38,14 +38,14 @@ export const TESTS_BOTS = [
   ['ชุด 23: ทีมบอทถูกแก้/ผิดรูปแบบ ถูกปฏิเสธ', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = 'abc', n = botRounds(RULES);
     const team = [{ id: chars[0].id, level: 1, row: 0, lane: 0 }];
-    const good = { v: 5, hash: H, rounds: Array.from({ length: n }, (_, k) => BOT_TIERS.flatMap(t => Array(BOT_PER).fill(t)).map(tier => ({ tier, from: k, round: k + 1, power: 50, team: structuredClone(team) }))) };
+    const good = { v: 6, hash: H, rounds: Array.from({ length: n }, (_, k) => BOT_TIERS.flatMap(t => Array(BOT_PER).fill(t)).map(tier => ({ tier, from: k, round: k + 1, power: 50, pw: 100, rn: [], s: 0, team: structuredClone(team) }))) };
     ok(validateBotTeams(good, cm, RULES, H).ok, 'ข้อมูลปกติผ่าน');
     const bad = f => { const o = structuredClone(good); f(o); return validateBotTeams(o, cm, RULES, H).ok; };
     eq([bad(o => { o.hash = 'zzz'; }), bad(o => { o.rounds.pop(); }), bad(o => { o.rounds[2].pop(); }), bad(o => { o.rounds[1][0].team[0].id = 'ZZ-9'; }),
       bad(o => { o.rounds[1][0].team[0].level = 4; }), bad(o => { o.rounds[1][0].team[0].perm = { multi: 1e9 }; }), bad(o => { o.rounds[1][0].team[0].perm = { hack: 1 }; }),
       bad(o => { o.rounds[1][0].evil = 1; }), bad(o => { o.rounds[1][0].team = []; }), bad(o => { o.rounds[1][1].tier = 'ยาก'; }), bad(o => { o.rounds[0][0].round = 1.5; }),
       bad(o => { o.rounds[2][0].from = 3; o.rounds[2][0].round = 4; }), bad(o => { o.rounds[2][0].round = 2; }), bad(o => { o.rounds[0][2].power = 'x'; }),
-      bad(o => { o.rounds[3][2].team.push({ ...team[0] }); }), bad(o => { o.v = 4; })].every(x => x === false), true, 'ทุกแบบที่ผิดถูกปฏิเสธ');
+      bad(o => { o.rounds[3][2].team.push({ ...team[0] }); }), bad(o => { o.v = 4; }), bad(o => { o.rounds[0][0].pw = -1; }), bad(o => { o.rounds[0][0].rn = [{ id: 'bad id', n: 1 }]; }), bad(o => { o.rounds[0][0].s = 1.5; })].every(x => x === false), true, 'ทุกแบบที่ผิดถูกปฏิเสธ');
     ok(!validateBotTeams(null, cm, RULES, H).ok && !validateBotTeams('x', cm, RULES, H).ok, 'ไม่ใช่วัตถุ = ปฏิเสธ');
   }],
   ['set 99: empty round cell uses the previous round, never a later one', () => {
