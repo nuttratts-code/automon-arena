@@ -3,6 +3,7 @@ import { allUnits, chargeOwner } from './shop.js';
 import { isInt, validateTeam } from './validate.js';
 import { burnShares } from './battle.js';
 import { rnValidate, rnCompactOk } from './runrunes.js';
+import { rlCheck, rlName } from './runlog.js';
 // เซฟกลางทาง + สถิติ run + ประวัติ run (ชุด 22 · ผู้ใช้เลือก 24 ต.ค.) · ข้อมูลล้วน ไม่แตะหน้าจอ (ย้ายไปเซิร์ฟเวอร์ได้)
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
@@ -236,16 +237,23 @@ export function checkPlayRecord(x, cm, rules = RULES) {
 // and of the previous run (both teams, runes, difficulty, result per match) + the latest run-history entries. No player identity.
 // Built from the raw stored texts so a finished run (no save left) can still be sent. Read back with lab/runcode.mjs.
 export const RUN_CODE_TAG = 'ARUN1';
-export const RUN_CODE_MAX = 300000;
+export const RUN_CODE_MAX = 900000; // set 109: + run journals (up to 2 × ~100 KB)
 const RUN_CODE_HIST = 3, RUN_CODE_RUNS = 2;
-export function makeRunCode(replayTexts, historyText, pageHash, at, rules = RULES) {
+// set 109: v2 adds logs = run journals (core/runlog.js) of the current/last run and the one before · v1 codes still read
+// set 110: nm = player name (optional, rlName-cleaned) so the reader knows who sent it
+export function makeRunCode(replayTexts, historyText, pageHash, at, rules = RULES, logTexts = [], name = '') {
   const runs = [];
   for (const t of replayTexts.slice(0, RUN_CODE_RUNS)) {
     try { const o = typeof t === 'string' && t.length <= SAVE_MAX_CHARS ? JSON.parse(t) : null; if (svObj(o) && Array.isArray(o.list) && o.list.length) runs.push(o); } catch (e) { /* skip unreadable */ }
   }
   const h = readHistory(historyText, rules).slice(0, RUN_CODE_HIST);
-  if (!runs.length && !h.length) return null;
-  return RUN_CODE_TAG + ' ' + JSON.stringify({ v: 1, at: Math.floor(at), page: pageHash, runs, h });
+  const logs = [];
+  for (const t of logTexts.slice(0, RUN_CODE_RUNS)) {
+    try { const o = typeof t === 'string' && t.length <= 400000 ? JSON.parse(t) : null; if (o && rlCheck(o) === true && o.ev.length) logs.push(o); } catch (e) { /* skip unreadable */ }
+  }
+  if (!runs.length && !h.length && !logs.length) return null;
+  const nm = rlName(name);
+  return RUN_CODE_TAG + ' ' + JSON.stringify({ v: 2, at: Math.floor(at), page: pageHash, runs, h, logs, ...(nm ? { nm } : {}) });
 }
 // Text → { at, page, runs: [{ data, run, list }], hist } (throws Error with a reason) · every match goes through checkReplay, history through readHistory
 export function parseRunCode(text, cm, rules = RULES) {
@@ -253,7 +261,11 @@ export function parseRunCode(text, cm, rules = RULES) {
   if (t.length > RUN_CODE_MAX) throw new Error('code too long');
   if (!t.startsWith(RUN_CODE_TAG + ' ')) throw new Error('not a run code (missing ' + RUN_CODE_TAG + ')');
   let o; try { o = JSON.parse(t.slice(RUN_CODE_TAG.length + 1)); } catch (e) { throw new Error('code is not valid (cut off while copying?)'); }
-  if (!svObj(o) || !svOnlyKeys(o, ['v', 'at', 'page', 'runs', 'h']) || o.v !== 1) throw new Error('bad code body');
+  if (!svObj(o) || !svOnlyKeys(o, ['v', 'at', 'page', 'runs', 'h', 'logs', 'nm']) || (o.v !== 1 && o.v !== 2)) throw new Error('bad code body');
+  if (svOwn(o, 'nm') && (typeof o.nm !== 'string' || !o.nm || rlName(o.nm) !== o.nm)) throw new Error('bad player name');
+  const logs = o.v === 2 ? o.logs : [];
+  if (!Array.isArray(logs) || logs.length > RUN_CODE_RUNS) throw new Error('bad logs');
+  logs.forEach((x, i) => { const c = rlCheck(x); if (c !== true) throw new Error(`bad run journal ${i + 1}: ${c}`); });
   if (!svIntIn(o.at, 0, 1e15) || typeof o.page !== 'string' || !/^[0-9a-f]{8}$/.test(o.page)) throw new Error('bad header');
   if (!Array.isArray(o.h) || o.h.length > RUN_CODE_HIST) throw new Error('bad history');
   const hist = readHistory(JSON.stringify(o.h), rules);
@@ -265,5 +277,5 @@ export function parseRunCode(text, cm, rules = RULES) {
     rp.list.forEach((x, i) => { if (!checkReplay(x, cm, rules)) throw new Error(`bad match #${i + 1} in run ${k + 1}`); });
     return { data: rp.data, run: rp.run, list: rp.list };
   });
-  return { at: o.at, page: o.page, runs, hist };
+  return { at: o.at, page: o.page, runs, hist, logs, nm: svOwn(o, 'nm') ? o.nm : '' };
 }

@@ -59,7 +59,7 @@ function printMeasure(m) {
 }
 
 if (mode === 'setup') { // repo: build + tests only (code is already in src/)
-  try { sh('node', ['build.mjs']); flag(true, 'build ok (3 pages)'); }
+  try { sh('node', ['build.mjs']); flag(true, 'build ok (4 pages)'); }
   catch (e) { say('❌ build failed:', String(e.stderr || e.message).split('\n').slice(0, 6).join('\n')); process.exit(1); }
   const t = summarizeTests(sh('node', ['tests/run.js']));
   flag(t.ok, `tests ${t.total}${t.fails.length ? ' · ' + t.fails.join(' | ') : ''}`);

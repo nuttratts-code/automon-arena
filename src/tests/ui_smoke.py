@@ -2,6 +2,7 @@
 import sys, json, os
 from playwright.sync_api import sync_playwright
 D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
+KEEPNAME="""(()=>{const n=localStorage.getItem('automon-player-name-v1');localStorage.clear();if(n)localStorage.setItem('automon-player-name-v1',n);})()"""  # set 110: wipe game storage but keep the player name (else every reload stops at the name screen)
 def chk(c,msg):
     if not c: fails.append(msg)
 with sync_playwright() as p:
@@ -22,6 +23,9 @@ with sync_playwright() as p:
         gw,gh=(1366,768) if w>700 else (844,390)
         pg.set_viewport_size({'width':gw,'height':gh})
         pg.goto(f'file://{D}/game.html')
+        # set 110: a fresh device asks the player name first (fuller name tests further down)
+        chk(pg.is_visible('#nameScr') and pg.evaluate('P') is None,'first open: name screen before the run')
+        pg.fill('#nameIn','ทดสอบ'); pg.click('#nameGo')
         def noscroll(tag):
             r=pg.evaluate('[document.documentElement.scrollWidth,document.documentElement.scrollHeight,innerWidth,innerHeight]')
             chk(r[0]<=r[2]+1 and r[1]<=r[3]+1,'no page scroll %s %s' % (tag,r))
@@ -224,7 +228,49 @@ with sync_playwright() as p:
         pg.click('#endExtra'); chk(in_prep() and pg.evaluate('P.extra') and not pg.evaluate('P.over') and 'พิเศษ' in pg.inner_text('#sWins'),'extra matches continue the run')
         pg.evaluate('startNewRun()')
         print(w,'save/resume/end ok')
-        pg.evaluate("localStorage.clear()")
+        pg.evaluate(KEEPNAME)
+        # set 110: player name screen (fresh device, no name) · name goes into the run journal + run code
+        print(w,'set 110 name/runlog start',flush=True)
+        if w>700:
+            c2=b.new_context(viewport={'width':gw,'height':gh}); p2=c2.new_page()
+            p2.route('**/*', lambda r: r.abort() if not r.request.url.startswith('file:') else r.continue_())
+            p2.on('pageerror', lambda e: errs.append((w,'pageerror name',str(e))))
+            p2.goto(f'file://{D}/game.html')
+            chk(p2.is_visible('#nameScr') and p2.evaluate('P')is None,'no name: name screen first, run not started')
+            p2.fill('#nameIn','   '); p2.click('#nameGo'); chk(p2.is_visible('#nameErr') and p2.is_visible('#nameScr'),'empty name refused')
+            p2.fill('#nameIn','  เพื่อน\u200b ทดสอบ  '); p2.click('#nameGo')
+            chk(p2.is_hidden('#nameScr') and p2.evaluate('P')is not None and p2.evaluate('RL.nm')=='เพื่อน ทดสอบ' and p2.evaluate("localStorage.getItem('automon-player-name-v1')")=='เพื่อน ทดสอบ','name saved, run starts, journal has it')
+            p2.reload(); chk(p2.is_visible('#resume') and p2.is_hidden('#nameScr') and 'เพื่อน ทดสอบ' in p2.inner_text('#resume'),'name remembered, shown on resume')
+            p2.click('#resume .nameEdit'); p2.fill('#nameIn','คนใหม่'); p2.click('#nameGo')
+            chk(p2.is_visible('#resume') and 'คนใหม่' in p2.inner_text('#resume'),'rename from resume screen')
+            p2.click('#resumeGo'); chk(p2.evaluate('RL && RL.nm')=='คนใหม่','renamed player goes on the resumed run journal')
+            c2.close()
+        # set 110: run-log viewer (runlog.html) · clean run (reload = no test hacks in CM/P) → code → no alert · edited code → red
+        pg.reload()
+        chk(in_prep() and pg.is_hidden('#nameScr'),'name set → game opens on prep')
+        for k in range(3):
+            if pg.evaluate('P.over'): break
+            if pg.is_visible('#offerDlg'): pg.click('#offer button')
+            pg.evaluate(BUY); pg.evaluate(PLACE); pg.click('#fight')
+            if not fighting() and 'ยืนยัน' in pg.inner_text('#fight'): pg.click('#fight')
+            pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000); pg.click('#next')
+        print(w,'set 110 clean run done',flush=True)
+        code=pg.evaluate('runCode()')
+        chk(code and pg.evaluate('parseRunCode(runCode(),CM,RULES).nm')=='ทดสอบ','run code carries the player name')
+        pg.goto(f'file://{D}/runlog.html')
+        pg.fill('#code',code); pg.click('#read')
+        chk(pg.is_visible('#lvStatus') and 'ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and 'ทดสอบ' in pg.inner_text('#out'),'viewer: fair run = no alert, name shown')
+        chk(len(pg.query_selector_all('#out details.round'))>=2 and pg.query_selector('#out .bad') is None,'viewer: rounds listed, nothing red')
+        pg.evaluate("document.querySelector('#out details.round').open=true")
+        chk('ซื้อ' in pg.inner_text('#out details.round') or 'เริ่มรอบ' in pg.inner_text('#out details.round'),'viewer: round steps')
+        bad=pg.evaluate("(()=>{const o=JSON.parse(document.getElementById('code').value.slice(6)); const e=o.logs[0].ev.find(e=>e[0]==='st'); e[3]+=50; return 'ARUN1 '+JSON.stringify(o);})()")
+        pg.fill('#code',bad); pg.click('#read')
+        chk('ผิดปกติ' in pg.inner_text('#lvStatus') and pg.evaluate("getComputedStyle(document.getElementById('lvStatus')).color")==pg.evaluate("getComputedStyle(document.querySelector('#out .bad')).color"),'viewer: edited gold = red alert')
+        pg.fill('#code','ARUN1 {bad'); pg.click('#read'); chk(pg.is_visible('#err') and pg.is_hidden('#out'),'viewer: broken code = error')
+        chk(pg.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'viewer: no sideways scroll')
+        pg.screenshot(path=f'{O}/runlog-{gw}.png')
+        pg.goto(f'file://{D}/game.html'); pg.evaluate(KEEPNAME)
+        print(w,'set 110 runlog viewer ok',flush=True)
         # set 97: phone held upright → "rotate your phone" screen · button continues in portrait
         if w<700:
             pg.set_viewport_size({'width':390,'height':844}); pg.reload()
