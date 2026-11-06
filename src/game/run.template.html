@@ -536,7 +536,7 @@ $('noticeX').addEventListener('click', () => showNotice(''));
 function randSeed() { try { return crypto.getRandomValues(new Uint32Array(1))[0]; } catch (e) { return (Date.now() ^ 0x5bd1e995) >>> 0; } }
 function startNewRun() {
   const seed = randSeed();
-  P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
+  dummyDmg = 0; P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
   msgs = []; stats = newStats(); startedAt = Date.now();
   const old = store.get(REPLAY_KEY); if (old && old.includes('"list":[{')) store.set(PREV_REPLAY_KEY, old); // set 105: keep the finished run's replays for the run code
   replays = []; replayMode = null; saveReplays();
@@ -975,7 +975,7 @@ function renderDiff(fx) {
   const rb = runBossAt(P), want = foeWantPct(P.ws);
   $('foeLbl').hidden = !!rb; $('foePct').textContent = `${want}%`;
   $('bossChip').hidden = !rb; $('bossChip').textContent = rb ? `บอส: ${rb.boss.name}` : '';
-  diffText.hint = rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรูพลัง ${want}% ของทีมคุณ${P.ws ? ` (ชนะติดกัน ${P.ws} ครั้ง)` : ''} · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH('win')}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
+  diffText.hint = rb && isDummy(rb.boss) ? `รอบสุดท้าย: หุ่นเป้า เลือดไม่มีวันหมด ไม่โจมตี · ตีให้ได้ดาเมจมากที่สุดใน ${RUN_STAGE.settings.dummySec} วิ` : rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรูพลัง ${want}% ของทีมคุณ${P.ws ? ` (ชนะติดกัน ${P.ws} ครั้ง)` : ''} · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH('win')}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
   if (rb) diffText.scout = `ศัตรู: บอส ${rb.boss.name}`;
   else if (!fx.scout) diffText.scout = 'ไม่เห็นทีมศัตรู (ต้องมีรูนส่องทีม)';
   else {
@@ -1001,7 +1001,7 @@ $('offerSkip').addEventListener('click', () => { pushMsgs(rnSkipOffer(P)); saveR
 $('rotateSkip').addEventListener('click', () => $('rotate').classList.add('dismissed'));
 
 // ---------- สู้ ----------
-let lastResult = null;
+let lastResult = null, dummyDmg = 0; // set 108: damage into the last-round dummy (shown on the result + run end)
 let tick = '', tickShown = '';
 const view = new BattleView($('arena'), CM, {
   onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; if (bPick != null) renderBInfo(); if (tick !== tickShown) { tickShown = tick; $('ticker').textContent = tick; } },
@@ -1024,6 +1024,7 @@ $('fight').addEventListener('click', () => {
   try { const ps = playerSide(teamA, runes); const fo = foeUnits(teamB, fd, round, fr, fs); result = simulate(ps.units, fo.units, { ...ps.opts, ...fo.opts }); }
   catch (e) { pushMsgs({ ok: false, msg: 'ทีมไม่ถูกกฎ: ' + e.message }); render(); return; }
   lastResult = result;
+  if (rb && isDummy(rb.boss)) dummyDmg = dummyScore(result); // set 108: last-round dummy → damage score
   const shown = showResult(teamA, teamB, result, runes, streak, fd, round, fr, fs);
   // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
   const w = result.winner, won = w !== 1;
@@ -1051,7 +1052,7 @@ $('fight').addEventListener('click', () => {
 function foeUnits(b, d = null, round = 0, fn = [], fs = 0) {
   if (Array.isArray(b)) return foeSide({ team: b, pct: replayPct(d), rn: fn || [], s: fs | 0 }, CM, RULES, RUN_STAGE, round);
   const rec = runBossById(b.boss); if (!rec) throw new Error('ไม่พบบอส ' + b.boss);
-  return { units: runBossTeam(rec, b.k), opts: {} };
+  return { units: runBossTeam(rec, b.k), opts: runBossOpts(rec) }; // set 108: dummy boss stops at dummySec
 }
 // battle view card data: the boss is not a character → add its card (set 85)
 function viewMap(b) { const rec = !Array.isArray(b) && b ? runBossById(b.boss) : null; $('foeHead').textContent = rec ? 'บอส' : 'คู่แข่ง (บอท)'; view.charMap = rec ? { ...CM, [rec.id]: runBossChar(rec, b.k) } : CM; }
@@ -1208,7 +1209,7 @@ function finishMatch() {
   const { r, w } = pendingEnd; // ผลถูกนำไปใช้ตอนกดสู้แล้ว (ชุด 22) · ตรงนี้แสดงผลอย่างเดียว
   renderChips();
   $('resultTitle').textContent = w === 0 ? 'ชนะ' : w === 1 ? 'แพ้ เสียหัวใจ 1 ดวง' : 'เสมอ นับเป็นชนะ';
-  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ` + (P.extra ? `ชนะ ${P.wins} (แมตช์พิเศษ)` : `ชนะ ${P.wins}/${S.winsToFinish}`);
+  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ` + (P.extra ? `ชนะ ${P.wins} (แมตช์พิเศษ)` : `ชนะ ${P.wins}/${S.winsToFinish}`) + (dummyDmg ? ` · ดาเมจใส่หุ่นเป้า ${dummyDmg}` : '');
   $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
   $('next').textContent = P.over ? 'ดูสรุป run' : 'ไปรอบถัดไป';
   msgs = (r.msgs || []).map(t => ({ t }));
@@ -1225,9 +1226,10 @@ $('next').addEventListener('click', () => {
 // ---------- หน้าจบ run (ชุด 22 · ผู้ใช้เลือก 4A+B+C) · ทุกข้อความใส่ด้วย textContent ----------
 const nameOf = id => (CM[id] ? `${id} ${CM[id].name}` : id);
 function renderRunEnd() {
-  const won = P.wins >= S.winsToFinish, canExtra = won && !P.extra && P.hearts > 0;
-  $('endTitle').textContent = P.extra ? `จบแมตช์พิเศษ: ชนะรวม ${P.wins} ครั้ง` : won ? `จบ run: ชนะครบ ${S.winsToFinish} แมตช์` : 'จบ run: หัวใจหมด';
-  $('endSummary').textContent = `ชนะ ${P.wins}/${S.winsToFinish} · หัวใจเหลือ ${P.hearts}/${S.hearts} · เล่น ${P.round} รอบ`;
+  const won = P.wins >= S.winsToFinish, canExtra = won && !P.extra && P.hearts > 0 && P.round < (RUN_STAGE.settings.lastStage | 0);
+  const allRounds = P.hearts > 0 && P.round >= (RUN_STAGE.settings.lastStage | 0); // set 108: max rounds played
+  $('endTitle').textContent = allRounds ? `จบ run: เล่นครบ ${P.round} รอบ` : P.extra ? `จบแมตช์พิเศษ: ชนะรวม ${P.wins} ครั้ง` : won ? `จบ run: ชนะครบ ${S.winsToFinish} แมตช์` : 'จบ run: หัวใจหมด';
+  $('endSummary').textContent = `ชนะ ${P.wins}/${S.winsToFinish} · หัวใจเหลือ ${P.hearts}/${S.hearts} · เล่น ${P.round} รอบ` + (dummyDmg ? ` · ดาเมจใส่หุ่นเป้า ${dummyDmg}` : '');
   // set 99 (user 6 Nov): a cleared run may go on with extra matches (hearts left · lose them all = game over)
   $('endExtra').hidden = !canExtra; $('endExtraHint').hidden = !canExtra;
   // set 106 (G5): final team as pictures, laid out like the board (หลัง กลาง หน้า × 2 lanes)

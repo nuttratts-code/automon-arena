@@ -1,4 +1,5 @@
 import { makeRng } from './rng.js';
+import { RUN_STAGE } from './runboss.js';
 import { newRunes, rnFx, rnInterest, rnPermMul } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
 // ร้านค้าและรวมร่าง (shop-merge-rules) · ใช้ร่วมกันระหว่างผู้เล่น บอท และห้องบาลานซ์
@@ -351,8 +352,8 @@ export function teamEntries(st) {
 // won: true = win or draw (a draw counts as the player's win)
 // gains = perm values from skills during the fight (simulate().perm of this side) · on win and loss (22 Oct) · every field checked
 // boss (set 99) = this match was a boss fight: resets bw (win or lose), a win adds bk · normal win adds bw
-// over: hearts gone, or wins reach winsToFinish outside extra matches (the player may then continueExtra)
-export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false) {
+// over: hearts gone, or wins reach winsToFinish outside extra matches (the player may then continueExtra), or the last round (stage lastStage) was played
+export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false, stage = RUN_STAGE) {
   const S = rules.shop, msgs = [];
   applyBattlePerm(st, gains, chars, rules, msgs);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchEnd', chars, rules, msgs);
@@ -361,12 +362,14 @@ export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false
   if (won) st.wins++; else st.hearts--;
   if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) { st.bw++; st.ls = 0; } else st.ls++; // set 100: ls = normal losses in a row
   st.ws = won ? (st.ws | 0) + 1 : 0; // set 107: wins in a row (boss too) → stronger enemy
-  if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish)) st.over = true;
+  if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish) || st.round >= (stage.settings.lastStage | 0)) st.over = true; // set 108: max rounds
+  const real = stage.settings.foeRealUntil | 0;
+  if (!st.over && real > 0 && st.round === real) msgs.push(`คำเตือน: ตั้งแต่รอบ ${real + 1} ศัตรูจะเก่งขึ้นมาก (ขยายพลังได้) รวมถึงบอสด้วย`); // set 108 (user)
   return done(msgs);
 }
 // set 99 (user 6 Nov): after the run is cleared (wins = winsToFinish) the player may keep playing extra matches with the hearts left
 export function continueExtra(st, rules = RULES) {
-  if (!st.over || st.extra || st.hearts <= 0 || st.wins < rules.shop.winsToFinish) return fail('เล่นต่อไม่ได้');
+  if (!st.over || st.extra || st.hearts <= 0 || st.wins < rules.shop.winsToFinish || st.round >= (RUN_STAGE.settings.lastStage | 0)) return fail('เล่นต่อไม่ได้');
   st.extra = true; st.over = false;
   return done(['แมตช์พิเศษ: เล่นต่อด้วยหัวใจที่เหลือ']);
 }

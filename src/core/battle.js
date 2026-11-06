@@ -831,6 +831,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (!a && !b) return finish(null);
     if (!b) return finish(0);
     if (!a) return finish(1);
+    if (opts.stopMs > 0 && t >= opts.stopMs) return finish(0); // set 108: training-dummy boss (endless HP) → time up = player side wins
     if (t >= R.hardStopMs) return finish(null);
     return null;
   };

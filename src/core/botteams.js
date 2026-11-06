@@ -8,7 +8,7 @@ import { RULES } from './rules.js';
 import { continueExtra, endMatch, newRun, startRound, teamEntries } from './shop.js';
 import { buildTeam, makeCharMap } from './team.js';
 import { validateTeam } from './validate.js';
-import { RUN_STAGE, runBossAt, runBossTeam } from './runboss.js';
+import { RUN_STAGE, runBossAt, runBossTeam, runBossOpts } from './runboss.js';
 // set 107 (user D1/D2): teams carry the runes their bot held (rn, rnCompact form) + its win streak (s) + team power (pw, core/power.js teamPower)
 // · the game picks the enemy by the player's power (pickFoe), not by tier
 // Pre-built bot teams (set 23) · pure data, no screen code
@@ -40,7 +40,7 @@ export const roundCell = (round, n) => Math.max(1, Math.min(n, round | 0)) - 1;
 export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE, opts = {}) {
   const cm = makeCharMap(chars), R = !!opts.runes;
   const P = newRun(chars, seed >>> 0, rules), B = newRun(chars, ((seed ^ 0xA5A5A5A5) >>> 0), rules);
-  for (let guard = 0; guard < 40 && !P.over; guard++) {
+  for (let guard = 0; guard < 220 && !P.over; guard++) { // set 108: up to lastStage rounds
     startRound(P, chars, rules); startRound(B, chars, rules);
     botShop(P, chars, rules, { focus: opts.focus || null });
     if (R) botPlaceRunes(P, cm, rules);
@@ -51,7 +51,7 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     const mine = teamEntries(P), myRn = R ? rnCompact(P) : [], ws = P.ws | 0;
     const foe = rb ? null : preset ? (Array.isArray(preset) ? { team: preset } : preset) : { team: teamEntries(B), rn: R ? rnCompact(B) : [], s: B.ws | 0 };
     const me = equipRunes(buildTeam(mine, cm, rules), rnFromCompact(myRn, stage), { winStreak: ws });
-    const fs = rb ? { units: runBossTeam(rb.boss, rb.k, stage), opts: {} } : foeSide(foe, cm, rules, stage, P.round);
+    const fs = rb ? { units: runBossTeam(rb.boss, rb.k, stage), opts: runBossOpts(rb.boss, stage) } : foeSide(foe, cm, rules, stage, P.round);
     const res = simulate(me.units, fs.units, { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...fs.opts });
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts, won = res.winner !== 1;
     const gain = side => (res.perm || []).filter(g => g.side === side);
@@ -201,6 +201,8 @@ export function pickFoe(data, myUnits, round, seed, ws = 0, stage = RUN_STAGE, r
   cand.sort((a, b) => gap(a) - gap(b) || a.d - b.d || a.j - b.j);
   const near = cand.slice(0, FOE_PICK.near);
   const t = near[makeRng(((seed >>> 0) ^ Math.imul((round | 0) + 1, 0x27D4EB2F) ^ 0x7E57F0E5) >>> 0).int(near.length)].t;
-  const pct = target > 0 ? Math.max(FOE_PICK.lo, Math.min(FOE_PICK.hi, Math.round(target / t.pw * 100))) : 100;
+  // set 108 (user): up to round foeRealUntil the enemy is the real team as it is (no scaling)
+  const real = (round | 0) <= (stage.settings.foeRealUntil | 0);
+  const pct = real || !(target > 0) ? 100 : Math.max(FOE_PICK.lo, Math.min(FOE_PICK.hi, Math.round(target / t.pw * 100)));
   return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, power: Math.round(pp) };
 }

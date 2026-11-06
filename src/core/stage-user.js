@@ -73,5 +73,5 @@ export const STAGE_USER = {
     X8: { del: false, eff: 'heartTrade', gold: 10, max: 3, minHearts: 2, name: 'หัวการค้า', on: true, rarity: 'common', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
     X9: { del: false, eff: 'scout', max: 1, name: 'ทำนาย', on: true, rarity: 'legend', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
   },
-  settings: { bossEvery: 4, bossesPerRun: 10, growFrom: 20, growPct: 8, lastStage: 50 },
+  settings: { bossEvery: 5, bossLateFrom: 20, bossEveryLate: 10, growFrom: 20, growPct: 8, lastStage: 50 },
 };

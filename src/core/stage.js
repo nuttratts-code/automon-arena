@@ -384,7 +384,12 @@ export const STAGE_BOSSES = [
   stageBoss('B4', 'กระจกสะท้อน', 'สายฟ้า', 380, 22, 2000, 'reflect', 10, 'front'),
 ];
 export const STAGE_SETTINGS = [
-  ['bossEvery', 'ชนะกี่ครั้งแล้วเจอบอส', 4, 1, 20, 'ครั้ง'], ['bossesPerRun', 'บอสสูงสุดต่อ run (รวมแมตช์พิเศษ)', 10, 1, 10, 'ตัว'], // set 99: boss after every bossEvery normal wins
+  // set 108 (user 6 Nov): bosses on fixed ROUNDS (win or lose): every bossEvery rounds up to bossLateFrom (5 10 15 20), then every bossEveryLate (30 40 …)
+  // · the last round (lastStage) is the training-dummy boss (endless HP, no attack/skills, fight lasts dummySec → damage score)
+  ['bossEvery', 'บอสทุกกี่รอบ (ช่วงแรก)', 5, 1, 50, 'รอบ'], ['bossLateFrom', 'ช่วงแรกถึงรอบ', 20, 1, 200, 'รอบ'], ['bossEveryLate', 'หลังจากนั้น บอสทุกกี่รอบ', 10, 1, 50, 'รอบ'],
+  ['dummySec', 'บอสรอบสุดท้าย (หุ่นเป้า เลือดไม่หมด): สู้ได้นาน', 60, 10, 170, 'วิ'],
+  // set 108 (user): enemy = the real bot team as it is (no hp/atk scaling) up to round foeRealUntil · later rounds may be scaled (+ warning)
+  ['foeRealUntil', 'ทีมศัตรูเป็นทีมจริง (ไม่ขยายพลัง) ถึงรอบ', 10, 0, 200, 'รอบ'],
   // Set 107 (user 6 Nov): modes removed · every normal-round WIN offers offCards runes, each card rolls its rarity by rarC/rarR/rarL %
   // (rarity with nothing left → other rarities) · boss win = fixed counts offBoss* (pick 1 of 2 legend, user set 95)
   ['offCards', 'ชนะรอบปกติ: จำนวนการ์ดรูนให้เลือก', 3, 1, 5, 'ใบ'],
@@ -397,8 +402,16 @@ export const STAGE_SETTINGS = [
   // boss (set 107, user D3): every boss in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)
   ['bossExtraPct', 'บอสแมตช์พิเศษ (ตัวที่ 3 ขึ้นไป) แรงขึ้นอีกครั้งละ', 20, 0, 300, '%'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
-  ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
+  ['lastStage', 'รอบสูงสุดต่อ run (รอบสุดท้าย = หุ่นเป้า)', 50, 10, 200, 'รอบ'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
+// set 108: boss rounds → k (1 = first boss) · 0 = no boss · the last round = 'dummy'
+export function bossRoundK(round, S) {
+  const r = round | 0, e = Math.max(1, S.bossEvery | 0), late = Math.max(0, S.bossLateFrom | 0), el = Math.max(1, S.bossEveryLate | 0);
+  if (r < 1 || r > (S.lastStage | 0)) return 0;
+  let k = 0;
+  for (let i = 1; i <= r; i++) if (i <= late ? i % e === 0 : (i - late) % el === 0) k++;
+  return (r <= late ? r % e === 0 : (r - late) % el === 0) ? k : 0;
+}
 // Normal-enemy HP/attack multiplier at a stage (1 before growFrom).
 export const enemyMultAt = (st, stage) => (1 + st.growPct / 100) ** Math.max(0, stage - st.growFrom + 1);
 

@@ -1,4 +1,5 @@
 // Set 95 → set 107: run results with the game's real flow · node lab/runerun.mjs [runs=600] [--write t1 t2 t3]
+// set 108: bosses on fixed rounds (5 10 15 20 …, k by round, lost boss does not come back) · real bot teams (no scaling) up to round foeRealUntil
 // set 107 (user 6 Nov): no modes · the enemy is picked by the player's power + win streak (core/botteams.js pickFoe, like the game)
 // · both sides carry runes (player bot takes rune offers, bot teams have the runes their bot held) · the player bot = core/bot.js
 // (merge-first, focus rotating over the 6 tribes) · harness plays extra matches after 10 wins (boss 3+ lives there).
@@ -32,7 +33,7 @@ for (let r = 0; r < runs; r++) {
   const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, buildTeam(teamEntries(p), cm, RULES), p.round, p.seed, p.ws); pcts.push(f.pct); return f; }, m => {
     const won = m.winner !== 1;
     if (!m.boss) { normal[0]++; normal[1] += won ? 1 : 0; const w = Math.min(5, m.ws); (byWs[w] = byWs[w] || [0, 0])[0]++; byWs[w][1] += won ? 1 : 0; }
-    else { (out[m.k] = out[m.k] || [0, 0])[0]++; out[m.k][1] += won ? 1 : 0; if (teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts }); }
+    else if (m.boss !== 'DUMMY') { (out[m.k] = out[m.k] || [0, 0])[0]++; out[m.k][1] += won ? 1 : 0; if (teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts }); }
     if (m.stage + (won ? 1 : 0) >= RULES.shop.winsToFinish && !wasOver && won) { wasOver = true; cleared++; }
   }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: 25 });
   void P;
