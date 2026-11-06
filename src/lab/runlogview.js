@@ -1,4 +1,4 @@
-// Run-log report → page nodes (set 112, user): shared by the run-log viewer page (runlog.html) and the game page's owner-only
+// Run-log report → page nodes (set 114, user): shared by the run-log viewer page (runlog.html) and the game page's owner-only
 // Log screen. Takes the reports made by lab/runlogread.js (rvReadCode / rvAnalyze) and builds DOM nodes. Every text goes in with
 // textContent (never HTML: player names and codes come from other people). All names start with lv (the build bundles every
 // file into one script). CSS classes used: status ok/bad · kv · tbl · round · steps · t · note · good · bad · mute · gold · row.

@@ -228,7 +228,7 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .screen { position: fixed; inset: 0; z-index: 40; overflow: auto; background: var(--bg); padding: 16px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .screen > section { max-width: 760px; margin: 0 auto; }
 #nameScr { z-index: 45; }
-/* set 112 (user): owner-only Log screen · run list live from the db + paste a run code · report nodes from lab/runlogview.js */
+/* set 114 (user): owner-only Log screen · run list live from the db + paste a run code · report nodes from lab/runlogview.js */
 #logScr { z-index: 61; } /* above toast (60) + notice: the game keeps running underneath */
 #logScr > section, #logOut > section { max-width: 860px; margin: 0 auto 12px; }
 #logScr .status { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
@@ -619,7 +619,7 @@ function logPlay(rec) {
   if (!playDb) return;
   try { Promise.resolve(playDb.collection('plays').add(rec)).catch(() => {}); } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
 }
-// ---------- set 112 (user): owner-only Log screen ----------
+// ---------- set 114 (user): owner-only Log screen ----------
 // Button shown only to the owner / Editors (user.isOwner / canEdit) · the db rule on runlogs (read+write admin, set at publish)
 // keeps everyone else from reading the logs even outside this screen. List = runlogs heads, live (onSnapshot, subscribed once on
 // first open); one run's detail = its parts read once, re-read when that run's head changes. Paste box = same report as runlog.html.

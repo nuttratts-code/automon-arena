@@ -257,7 +257,7 @@ with sync_playwright() as p:
         print(w,'set 110 clean run done',flush=True)
         code=pg.evaluate('runCode()')
         chk(code and pg.evaluate('parseRunCode(runCode(),CM,RULES).nm')=='ทดสอบ','run code carries the player name')
-        # set 112: owner-only Log screen in the game · no Claude viewer (file page) = button hidden · fake db → live list + detail · paste box
+        # set 114: owner-only Log screen in the game · no Claude viewer (file page) = button hidden · fake db → live list + detail · paste box
         chk(pg.is_hidden('#logBtn'),'log button hidden when the viewer is not the owner/editor')
         if pg.is_visible('#offerDlg'): pg.click('#offer button') # a win's rune offer is a modal dialog: it would block the Log button
         pg.evaluate('''(()=>{ const head={...RL, ev:undefined, n:RL.ev.length, parts:1, upd:Date.now(), round:P.round, wins:P.wins, hearts:P.hearts, gold:P.gold, over:0};

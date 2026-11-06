@@ -147,7 +147,7 @@ export function rvReadCode(text, ctx) {
   return { ok: true, nm: rc.nm || (logs[0] && logs[0].nm) || '', at: rc.at, page: rc.page, hashOk: rc.page === ctx.hash, hist: rc.hist, logs, runs, alerts };
 }
 
-// set 112: one run as the game page's db keeps it (head = runlogs/<id>, parts = runlogs/<id>/parts docs) → { log, short }
+// set 114: one run as the game page's db keeps it (head = runlogs/<id>, parts = runlogs/<id>/parts docs) → { log, short }
 // log = journal for rvAnalyze (null if the head is not a journal head) · short = parts hold fewer entries than the head says
 export function rvFromDb(head, parts) {
   if (!head || typeof head !== 'object') return { log: null, short: false };
