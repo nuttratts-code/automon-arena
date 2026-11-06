@@ -11,12 +11,9 @@ import { runeRecord } from './runes.js';
 import { fail, done } from './shop.js';
 import { makeRng } from './rng.js';
 
-// set 100 (user 6 Nov): modes ปกติ / ยาก / นรก (enemy % + rune card rarity %) · bot team strength tier (BOT_TIERS) is chosen by rnFoeTier
-export const RN_MODES = ['ปกติ', 'ยาก', 'นรก'];
-export const RN_MODE_KEY = { 'ปกติ': 'Normal', 'ยาก': 'Hard', 'นรก': 'Hell' };
-const RN_LEGACY = { 'ง่าย': 'ปกติ', 'กลาง': 'ยาก' }; // offer kinds saved before set 100 (state v6 is refused anyway; kept for safety)
-export const RN_OFFER_KEY = { ...RN_MODE_KEY, boss: 'Boss' };
-export const RN_TEAM_TH = { 'ง่าย': 'อ่อน', 'กลาง': 'กลาง', 'ยาก': 'แข็ง' }; // bot team tier → player-facing name
+// set 107 (user 6 Nov): modes ปกติ / ยาก / นรก REMOVED · normal win offer = 'win' (cards roll rarity by rarC/rarR/rarL %) · boss = 'boss'
+// the enemy follows the player's power + win streak instead (core/botteams.js pickFoe)
+export const RN_OFFER_KEY = { win: '', boss: 'Boss' };
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
@@ -47,7 +44,7 @@ function rnPool(st, rarity, stage, skip) {
 function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) * list.length)] : null; }
 
 // ---------- reward after a win (offer: pick 1 of N) ----------
-// kind = mode ('ปกติ' | 'ยาก' | 'นรก') → offCards cards, each rolls its rarity by the mode % (rar<Mode>C/R/L) · 'boss' = fixed counts offBoss*
+// kind 'win' → offCards cards, each rolls its rarity by rarC/rarR/rarL % · 'boss' = fixed counts offBoss*
 // a rarity with nothing left is filled from any rarity · nothing at all = no offer · skip = ids to avoid if possible (reroll)
 function rnRollRar(st, key, S) {
   const w = RN_RARS.map(r => Math.max(0, S[`rar${key}${RN_RAR_KEY[r]}`] | 0)), tot = w.reduce((a, b) => a + b, 0);
@@ -57,7 +54,6 @@ function rnRollRar(st, key, S) {
   return RN_RARS[RN_RARS.length - 1];
 }
 export function rnMakeOffer(st, kind, stage = RUN_STAGE, avoid = []) {
-  kind = RN_LEGACY[kind] || kind;
   if (!st.rn || !RN_OFFER_KEY[kind]) return null;
   const S = stage.settings, key = RN_OFFER_KEY[kind], ids = [], skip = new Set(avoid);
   const rars = kind === 'boss' ? RN_RARS.flatMap(rar => Array(S[`offBoss${RN_RAR_KEY[rar]}`] | 0).fill(rar))
@@ -85,9 +81,6 @@ export function rnRerollOffer(st, stage = RUN_STAGE) {
   if (!rnMakeOffer(st, o.kind, stage, o.ids)) st.rn.offer = o; // nothing at all left → keep the old cards
   return done([cost ? `สุ่มการ์ดรูนใหม่ -${cost} เงิน` : 'สุ่มการ์ดรูนใหม่ (ฟรี)']);
 }
-// enemy bot team tier (set 100, user): first match / after a normal win = any of the 12 teams · 1 normal loss in a row = กลาง · 2+ = ง่าย (อ่อน)
-// st.ls = normal (non-boss) losses in a row (core/shop.js endMatch) · boss matches do not touch it (user ก1)
-export const rnFoeTier = st => ((st.ls | 0) >= 2 ? 'ง่าย' : (st.ls | 0) === 1 ? 'กลาง' : null);
 export function rnTakeOffer(st, i, stage = RUN_STAGE) {
   const o = st.rn && st.rn.offer;
   if (!o || !Number.isInteger(i) || i < 0 || i >= o.ids.length) return fail('ไม่มีรูนให้เลือก');
@@ -100,13 +93,12 @@ export function rnTakeOffer(st, i, stage = RUN_STAGE) {
 export function rnSkipOffer(st) { if (st.rn) st.rn.offer = null; return done(); }
 function rnAdd(st, r) { st.rn.bag[r.id] = rnHeld(st, r.id) + 1; }
 
-// ---------- mode enemy % (set 95 difficulty → set 100 modes) ----------
-// enemy % for a picked mode (100 = as the bot team is) · null / unknown = 100 · boss rounds are never scaled
-export const rnDiffPct = (mode, stage = RUN_STAGE) => (RN_MODE_KEY[mode] ? stage.settings[`mode${RN_MODE_KEY[mode]}`] ?? 100 : 100);
+// ---------- enemy scale (set 107: modes removed) ----------
 // enemy units (buildTeam output) with max hp and atk × pct/100 (rounded down, hp ≥ 1) · summons scale the same way
-// set 99: round = the match round → extra matches past growFrom also × enemyMultAt (stage settings growFrom/growPct, compounding)
-export function rnFoeScale(units, tier, stage = RUN_STAGE, round = 0) {
-  const p = rnDiffPct(tier, stage) * enemyMultAt(stage.settings, round | 0);
+// pct = the power-match scale picked by pickFoe (100 = as the bot team is) · set 99: round = the match round → extra matches past
+// growFrom also × enemyMultAt (stage settings growFrom/growPct, compounding)
+export function rnFoeScale(units, pct = 100, stage = RUN_STAGE, round = 0) {
+  const p = (typeof pct === 'number' && pct > 0 ? pct : 100) * enemyMultAt(stage.settings, round | 0);
   if (p === 100) return units;
   const sc = u => ({ ...u, maxHp: Math.max(1, Math.floor(u.maxHp * p / 100)), atk: Math.floor(u.atk * p / 100), skills: (u.skills || []).map(k => (k && k.unit ? { ...k, unit: sc(k.unit) } : k)) });
   return units.map(sc);

@@ -199,6 +199,7 @@ export function startRound(st, chars, rules = RULES) {
   if (st.over) return fail('run จบแล้ว');
   const S = rules.shop;
   const msgs = [], held = st.gold; // set 94: rune interest is paid on the gold carried over (before this round's income)
+  st.gold = 0; // set 107 (user G1): leftover gold is lost at the next round start (rune interest above still counts it · rune card rerolls after a win can still use it)
   if (st.round === 0) st.gold += S.startGold;
   else {
     const inc = incomeOf(st, rules);

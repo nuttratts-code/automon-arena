@@ -23,10 +23,10 @@ export function runBossAt(st, stage = RUN_STAGE) {
 }
 // replay / play record form → boss record (null = unknown id, e.g. the boss was removed after the match)
 export const runBossById = (id, stage = RUN_STAGE) => stage.bosses.find(b => b.id === id) || null;
-export const runBossTeam = (b, k) => [bossUnit(b, k)];
+export const runBossTeam = (b, k, stage = RUN_STAGE) => [bossUnit(b, k, stage.settings.bossExtraPct | 0)]; // set 107: 3rd+ boss +bossExtraPct % each
 // boss as a character card for the battle view / unit panels (same shape as the Balance Room's simBossChar)
-export function runBossChar(b, k) {
-  const at = bossAt(b, k), b3 = v => [v, v, v];
+export function runBossChar(b, k, stage = RUN_STAGE) {
+  const at = bossAt(b, k, stage.settings.bossExtraPct | 0), b3 = v => [v, v, v];
   return { id: b.id, name: `${b.name} (บอส)`, tribe: b.tribe, extraTribes: [], rarity: 'ตำนาน', price: 0, rowHint: 'หน้า',
     hp: b3(at.hp), atk: b3(at.atk), cdMs: b3(b.cdMs), multi: b3(b.multi), burn: b3(b.burn || 0), shock: b3(b.shock || 0), armorHit: b3(0), healHit: b3(0), skills: [] };
 }

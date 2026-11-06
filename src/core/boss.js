@@ -9,9 +9,9 @@ export const slotKey = (row, lane) => row * 2 + lane;
 export const slotsOf = bits => [...bits].flatMap((b, i) => (b === '1' ? [i] : []));
 
 // boss record + k (1 = first appearance, 2 = second, 3+ = endless) → unit for simulate()
-export function bossUnit(b, k = 1) {
+export function bossUnit(b, k = 1, extraPct = 0) { // set 107: extraPct = stage bossExtraPct (3rd+ boss)
   const si = spotInfo(b.spot) || { bits: '111111', move: false };
-  const at = bossAt(b, k);
+  const at = bossAt(b, k, extraPct);
   const slots = slotsOf(si.bits);
   const first = slots.length ? slots[0] : 0;
   const bars = Math.max(1, Math.floor(b.bars) || 1);
@@ -25,7 +25,7 @@ export function bossUnit(b, k = 1) {
     // boss extras read by battle.js
     boss: true, bars, barHp: Math.max(1, Math.floor(at.hp / bars)),
     slots: slots.length ? slots : [0], move: si.move, moveSec: Math.max(1, Math.floor(b.moveSec) || 8),
-    phases: (b.phases || []).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '', stats: phaseUnitStats(p.stats, bossMult(b, k)) })),
+    phases: (b.phases || []).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '', stats: phaseUnitStats(p.stats, bossMult(b, k, extraPct)) })),
   };
 }
 

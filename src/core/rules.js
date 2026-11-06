@@ -108,8 +108,8 @@ export const RULES = {
       { 'ธรรมดา': 2, 'ไม่ธรรมดา': 3, 'หายาก': 7, 'หายากมาก': 33, 'ตำนาน': 55 }, // Lv14
       { 'ธรรมดา': 1, 'ไม่ธรรมดา': 3, 'หายาก': 6, 'หายากมาก': 20, 'ตำนาน': 70 }, // Lv15
     ],
-    // set 89: interest and win/lose streak bonus removed (user) · unspent gold carries over
-    prices: { 'ธรรมดา': 3, 'ไม่ธรรมดา': 4, 'หายาก': 5, 'หายากมาก': 6, 'ตำนาน': 8 },   // ราคาตามความหายาก (ตัวตรวจค่าเช็กให้ตรงกัน)
+    // set 89: interest and win/lose streak bonus removed (user) · set 107 (user): unspent gold does NOT carry over (lost at the next round start)
+    prices: { 'ธรรมดา': 3, 'ไม่ธรรมดา': 5, 'หายาก': 7, 'หายากมาก': 10, 'ตำนาน': 15 }, // set 107 (user): 3/5/7/10/15   // ราคาตามความหายาก (ตัวตรวจค่าเช็กให้ตรงกัน)
     mergeCount: 3,                                  // เอกสาร
   },
 };

@@ -385,17 +385,17 @@ export const STAGE_BOSSES = [
 ];
 export const STAGE_SETTINGS = [
   ['bossEvery', 'ชนะกี่ครั้งแล้วเจอบอส', 4, 1, 20, 'ครั้ง'], ['bossesPerRun', 'บอสสูงสุดต่อ run (รวมแมตช์พิเศษ)', 10, 1, 10, 'ตัว'], // set 99: boss after every bossEvery normal wins
-  // Set 100 (user 6 Nov): modes ปกติ / ยาก / นรก · every normal-round WIN offers offCards runes, each card rolls its rarity by the mode %
+  // Set 107 (user 6 Nov): modes removed · every normal-round WIN offers offCards runes, each card rolls its rarity by rarC/rarR/rarL %
   // (rarity with nothing left → other rarities) · boss win = fixed counts offBoss* (pick 1 of 2 legend, user set 95)
   ['offCards', 'ชนะรอบปกติ: จำนวนการ์ดรูนให้เลือก', 3, 1, 5, 'ใบ'],
-  ['rarNormalC', 'โหมดปกติ: โอกาสการ์ดธรรมดา', 80, 0, 100, '%'], ['rarNormalR', 'โหมดปกติ: โอกาสการ์ดหายาก', 15, 0, 100, '%'], ['rarNormalL', 'โหมดปกติ: โอกาสการ์ดตำนาน', 5, 0, 100, '%'],
-  ['rarHardC', 'โหมดยาก: โอกาสการ์ดธรรมดา', 10, 0, 100, '%'], ['rarHardR', 'โหมดยาก: โอกาสการ์ดหายาก', 75, 0, 100, '%'], ['rarHardL', 'โหมดยาก: โอกาสการ์ดตำนาน', 15, 0, 100, '%'],
-  ['rarHellC', 'โหมดนรก: โอกาสการ์ดธรรมดา', 5, 0, 100, '%'], ['rarHellR', 'โหมดนรก: โอกาสการ์ดหายาก', 25, 0, 100, '%'], ['rarHellL', 'โหมดนรก: โอกาสการ์ดตำนาน', 70, 0, 100, '%'],
+  ['rarC', 'ชนะรอบปกติ: โอกาสการ์ดธรรมดา', 60, 0, 100, '%'], ['rarR', 'ชนะรอบปกติ: โอกาสการ์ดหายาก', 30, 0, 100, '%'], ['rarL', 'ชนะรอบปกติ: โอกาสการ์ดตำนาน', 10, 0, 100, '%'],
   ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 2, 0, 5, 'อัน'],
   // rune card reroll (set 100, user): rrFree free per match, then rrCost, +rrStep each time · resets every match · boss reward too
   ['rrFree', 'สุ่มการ์ดรูนใหม่ฟรีต่อรอบ', 1, 0, 9, 'ครั้ง'], ['rrCost', 'สุ่มการ์ดรูนใหม่ (เสียเงิน) ครั้งแรก', 3, 0, 50, 'เงิน'], ['rrStep', 'สุ่มการ์ดรูนใหม่: แพงขึ้นครั้งละ', 3, 0, 50, 'เงิน'],
-  // Mode (set 100): enemy team max hp + atk × this % · boss rounds unchanged · ปกติ = 100 (user) · ยาก/นรก tuned to normal-round win 65–75 / 55–65 %
-  ['modeNormal', 'โหมดปกติ: พลังศัตรู', 100, 10, 400, '%'], ['modeHard', 'โหมดยาก: พลังศัตรู', 113, 10, 400, '%'], ['modeHell', 'โหมดนรก: พลังศัตรู', 131, 10, 400, '%'],
+  // Enemy follows the player (set 107, user D1): enemy power = player board power × foeBase %, + foeStreak % per win in a row (cap foeStreakCap)
+  ['foeBase', 'ศัตรูเทียบพลังทีมคุณ', 100, 10, 400, '%'], ['foeStreak', 'ชนะติดกัน: ศัตรูแรงขึ้นครั้งละ', 5, 0, 100, '%'], ['foeStreakCap', 'ชนะติดกัน: เพิ่มได้สูงสุด', 25, 0, 400, '%'],
+  // boss (set 107, user D3): every boss in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)
+  ['bossExtraPct', 'บอสแมตช์พิเศษ (ตัวที่ 3 ขึ้นไป) แรงขึ้นอีกครั้งละ', 20, 0, 300, '%'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
   ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
@@ -478,8 +478,8 @@ function cleanPhases(x, b, num, isObj) {
 }
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
-export const bossMult = (b, k) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2));
-export function bossAt(b, k) {
-  const m = bossMult(b, k);
+export const bossMult = (b, k, extraPct = 0) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2) * (1 + extraPct / 100) ** Math.max(0, k - 2)); // set 107: extraPct = stage bossExtraPct (3rd+ boss = extra matches)
+export function bossAt(b, k, extraPct = 0) {
+  const m = bossMult(b, k, extraPct);
   return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
 }
