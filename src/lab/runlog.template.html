@@ -73,11 +73,8 @@ ol.steps .note { display: block; font-size: .8rem; }
 </div>
 <script>
 /*__CORE__*/const $ = id => document.getElementById(id);
-// every text from the code goes in with textContent (never HTML)
-function mk(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = String(text); return e; }
 const LV_CHARS = buildCharacterList(), LV_CM = makeCharMap(LV_CHARS), LV_CTX = { chars: LV_CHARS, CM: LV_CM, rules: RULES, hash: dataHash(LV_CHARS) };
 $('ver').textContent = `ค่าเกมของหน้านี้ ${LV_CTX.hash}`;
-const lvWhen = ms => { try { return new Date(ms).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return String(ms); } };
 let lvRep = null, lvPick = 0;
 
 function lvRead() {
@@ -89,100 +86,9 @@ function lvRead() {
   lvRep = r; lvPick = 0; lvRender();
 }
 function lvErr(t) { $('err').textContent = t; $('err').hidden = false; }
-
 function lvRender() {
-  const r = lvRep, out = $('out');
-  out.replaceChildren();
-  const alerts = [...r.alerts, ...r.logs.flatMap((L, i) => L.alerts.map(a => (r.logs.length > 1 ? `${i ? 'run ก่อนหน้า' : 'run ล่าสุด'}: ` : '') + a))];
-  const head = mk('section');
-  head.append(mk('h2', '', `ผู้เล่น: ${r.nm || '(ไม่ได้ตั้งชื่อ)'}`), mk('p', 'mute', `คัดลอกโค้ดเมื่อ ${lvWhen(r.at)} · ค่าเกมในเครื่องผู้เล่น ${r.page}`));
-  const st = mk('div', 'status ' + (alerts.length ? 'bad' : 'ok'), alerts.length ? `ผิดปกติ ${alerts.length} จุด` : 'ไม่พบความผิดปกติ: ทุกขั้นและทุกแมตช์ตรงกับเกมจริง');
-  st.id = 'lvStatus';
-  if (alerts.length) { const ul = mk('ul'); alerts.slice(0, 30).forEach(a => ul.append(mk('li', '', a))); if (alerts.length > 30) ul.append(mk('li', '', `… อีก ${alerts.length - 30} จุด`)); st.append(ul); }
-  head.append(st);
-  if (!r.logs.length) head.append(mk('p', 'mute', 'โค้ดนี้ไม่มี log การเล่น (เกมเวอร์ชันก่อน set 109 หรือยังไม่ได้ทำอะไร) · ดูได้เฉพาะแมตช์ด้านล่าง'));
-  out.append(head);
-  if (r.logs.length > 1) {
-    const sw = mk('div', 'row');
-    r.logs.forEach((L, i) => { const b = mk('button', '', i ? 'run ก่อนหน้า' : 'run ล่าสุด'); b.type = 'button'; b.setAttribute('aria-pressed', String(i === lvPick)); b.addEventListener('click', () => { lvPick = i; lvRender(); }); sw.append(b); });
-    out.append(sw);
-  }
-  if (r.logs.length) out.append(...lvRun(r.logs[lvPick]));
-  if (r.runs.length) out.append(lvMatches(r));
-  if (r.hist.length) {
-    const s = mk('section'); s.append(mk('h2', '', 'ประวัติ run ในเครื่องผู้เล่น'));
-    const ol = mk('ol');
-    r.hist.forEach(h => ol.append(mk('li', '', `${lvWhen(h.at)} · ${h.won ? 'ผ่าน' : 'จบ'} · ชนะ ${h.wins} · หัวใจ ${h.hearts} · ${h.rounds} รอบ · ตัวเด่น ${h.top}`)));
-    s.append(ol); out.append(s);
-  }
-  out.hidden = false;
-}
-
-function lvRun(L) {
-  const nm = id => `${id} ${(LV_CM[id] || {}).name || '?'}`;
-  const s1 = mk('section');
-  s1.append(mk('h2', '', `run เริ่ม ${lvWhen(L.at)}${L.nm ? ' · ' + L.nm : ''}`));
-  const lost = L.OUT['เงินเหลือถูกทิ้งตอนขึ้นรอบใหม่'] || 0, buy = L.OUT['ซื้อตัวละคร'] || 0, rr = L.OUT['สุ่มร้าน'] || 0;
-  const kv = mk('div', 'kv');
-  [[`รอบ ${L.final.round}`, L.final.over ? 'จบ run แล้ว' : 'ยังเล่นอยู่'], [L.final.wins, 'ชนะ'], [L.final.hearts, 'หัวใจเหลือ'], [L.inTotal, 'เงินเข้าทั้งหมด'],
-    [buy, 'ใช้ซื้อตัวละคร'], [rr, 'ใช้สุ่มร้าน'], [lost, 'เงินเหลือถูกทิ้ง'], [L.n, 'การกระทำทั้งหมด']]
-    .forEach(([v, k]) => { const d = mk('div'); d.append(mk('b', '', v), mk('span', '', k)); kv.append(d); });
-  s1.append(kv);
-  s1.append(mk('p', L.firstBad < 0 ? 'good' : 'bad', L.firstBad < 0 ? `ตรวจย้อน: ทุกขั้นเงินตรงกับเกมจริง (${L.n} ขั้น)` : `ตรวจย้อน: เงินไม่ตรงตั้งแต่ขั้นที่ ${L.firstBad + 1}`));
-  // money table
-  const t = mk('table'), tb = mk('tbody');
-  t.append(lvTr(['', 'เงิน'], 'th'));
-  for (const [k, v] of Object.entries(L.IN)) tb.append(lvTr([`เข้า · ${k}`, `+${v}`]));
-  for (const [k, v] of Object.entries(L.OUT)) tb.append(lvTr([`ออก · ${k}`, `−${v}`]));
-  tb.append(lvTr(['คงเหลือ', L.final.gold]));
-  t.append(tb); const tw = mk('div', 'tbl'); tw.append(t);
-  s1.append(mk('h3', '', 'เงินมาจากไหน ไปไหน'), tw);
-  const bb = Object.entries(L.buyBy).sort((x, y) => y[1] - x[1]);
-  s1.append(mk('h3', '', 'ซื้อตัวไหนกี่ครั้ง'), mk('p', '', bb.length ? bb.map(([id, n]) => `${nm(id)} ×${n}`).join(' · ') : 'ไม่ได้ซื้อ'));
-  // rounds
-  const s2 = mk('section');
-  s2.append(mk('h2', '', 'รายรอบ (กดเพื่อดูทุกขั้น)'));
-  for (const rd of L.rounds) {
-    const d = mk('details', 'round'), sm = mk('summary');
-    const bad = rd.steps.some(x => x.status === 'bad' || x.notes.some(n => n.bad));
-    const m = rd.steps.find(x => x.t === 'en');
-    sm.append(mk('b', bad ? 'bad' : '', `รอบ ${rd.r}`), mk('span', 'gold', `เข้า ${rd.in}`), mk('span', '', `ใช้ ${rd.out}`), mk('span', rd.lost ? 'gold' : 'mute', `ทิ้ง ${rd.lost}`));
-    if (m) sm.append(mk('span', '', m.what.replace(/^จบแมตช์ /, '')));
-    if (bad) sm.append(mk('span', 'bad', 'มีจุดผิดปกติ'));
-    d.append(sm);
-    const ol = mk('ol', 'steps');
-    for (const x of rd.steps) {
-      const li = mk('li'), body = mk('span', x.status === 'bad' ? 'bad' : x.status === 'refused' ? 'mute' : '');
-      body.append(mk('span', '', `${x.what} · ${x.money}`));
-      if (x.status === 'bad') body.append(mk('span', 'note bad', '✗ ไม่ตรงกับเกมจริง: ' + x.badText));
-      if (x.status === 'refused') body.append(mk('span', 'note', '(เกมปฏิเสธ)'));
-      for (const msg of x.msgs) body.append(mk('span', 'note mute', msg));
-      for (const n of x.notes) body.append(mk('span', 'note ' + (n.bad ? 'bad' : 'mute'), (n.bad ? '✗ ' : '') + n.text));
-      li.append(mk('span', 't', rvMmss(x.sec)), body);
-      ol.append(li);
-    }
-    d.append(ol); s2.append(d);
-  }
-  return [s1, s2];
-}
-function lvTr(cells, tag = 'td') { const tr = mk('tr'); cells.forEach((c, i) => tr.append(mk(tag, i && tag === 'td' ? 'n' : '', c))); return tr; }
-
-function lvMatches(r) {
-  const s = mk('section'); s.append(mk('h2', '', 'แมตช์ที่เก็บไว้ (จำลองใหม่ทุกแมตช์)'));
-  r.runs.forEach((run, k) => {
-    s.append(mk('h3', '', `${k ? 'run ก่อนหน้า' : 'run ล่าสุด'} · ${run.matches.length} แมตช์`));
-    const t = mk('table'), tb = mk('tbody');
-    t.append(lvTr(['รอบ', 'ผล', 'เวลา', 'ทีมผู้เล่น', 'ศัตรู', 'ตรวจ'], 'th'));
-    for (const m of run.matches) {
-      const x = m.x, tr = mk('tr');
-      tr.append(mk('td', '', x.r), mk('td', '', x.w === 1 ? 'แพ้' : x.w === 0 ? 'ชนะ' : 'เสมอ'), mk('td', '', `${(x.t / 1000).toFixed(1)} วิ`),
-        mk('td', '', x.a.map(u => `${u.id} Lv${u.level}`).join(', ')), mk('td', '', Array.isArray(x.b) ? x.b.map(u => `${u.id} Lv${u.level}`).join(', ') : `บอส ${x.b.boss}`),
-        mk('td', m.ok ? 'good' : 'bad', m.ok ? '✓' : '✗ จำลองใหม่ได้ผลไม่ตรง'));
-      tb.append(tr);
-    }
-    t.append(tb); const tw = mk('div', 'tbl'); tw.append(t); s.append(tw);
-  });
-  return s;
+  $('out').replaceChildren(...lvCodeNodes(lvRep, LV_CM, lvPick, i => { lvPick = i; lvRender(); }));
+  $('out').hidden = false;
 }
 $('read').addEventListener('click', lvRead);
 $('clear').addEventListener('click', () => { $('code').value = ''; $('out').hidden = true; $('err').hidden = true; lvRep = null; });

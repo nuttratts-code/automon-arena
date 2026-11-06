@@ -257,6 +257,22 @@ with sync_playwright() as p:
         print(w,'set 110 clean run done',flush=True)
         code=pg.evaluate('runCode()')
         chk(code and pg.evaluate('parseRunCode(runCode(),CM,RULES).nm')=='ทดสอบ','run code carries the player name')
+        # set 112: owner-only Log screen in the game · no Claude viewer (file page) = button hidden · fake db → live list + detail · paste box
+        chk(pg.is_hidden('#logBtn'),'log button hidden when the viewer is not the owner/editor')
+        pg.evaluate('''(()=>{ const head={...RL, ev:undefined, n:RL.ev.length, parts:1, upd:Date.now(), round:P.round, wins:P.wins, hearts:P.hearts, gold:P.gold, over:0};
+          delete head.ev; window.__lgFire=null;
+          playDb={ collection(p){ if(p==='runlogs') return { orderBy(){return this;}, limit(){return this;}, onSnapshot(fn){ window.__lgFire=fn; fn({docs:[{id:'t1',exists:true,data:()=>head}]}); return ()=>{}; } };
+            return { get: async()=>({docs:[{id:'p0',exists:true,data:()=>({k:0,ev:RL.ev.slice()})}]}) }; }, doc(){ return { set:async()=>{}, collection(){ return { doc(){ return { set:async()=>{} }; } }; } }; } };
+          document.getElementById('logBtn').hidden=false; })()''')
+        pg.click('#logBtn'); chk(pg.is_visible('#logScr') and len(pg.query_selector_all('#logList tr'))==1 and 'ทดสอบ' in pg.inner_text('#logList'),'log screen: live run list from the db')
+        pg.click('#logList button'); pg.wait_for_selector('#logScr #lvStatus', timeout=20000)
+        chk('ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and len(pg.query_selector_all('#logOut details.round'))>=2,'log screen: db run detail rebuilt, no alert')
+        pg.fill('#logCode',code); pg.click('#logRead')
+        chk('ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and 'ผู้เล่น: ทดสอบ' in pg.inner_text('#logOut'),'log screen: pasted run code read')
+        pg.fill('#logCode','ARUN1 {bad'); pg.click('#logRead'); chk(pg.is_visible('#logErr'),'log screen: broken code = error')
+        chk(pg.evaluate('document.getElementById("logScr").scrollWidth<=innerWidth+1'),'log screen: no sideways scroll')
+        pg.screenshot(path=f'{O}/logscr-{gw}.png')
+        pg.click('#logClose'); chk(pg.is_hidden('#logScr'),'log screen closes')
         pg.goto(f'file://{D}/runlog.html')
         pg.fill('#code',code); pg.click('#read')
         chk(pg.is_visible('#lvStatus') and 'ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and 'ทดสอบ' in pg.inner_text('#out'),'viewer: fair run = no alert, name shown')

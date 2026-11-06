@@ -146,3 +146,13 @@ export function rvReadCode(text, ctx) {
   }).filter(Boolean);
   return { ok: true, nm: rc.nm || (logs[0] && logs[0].nm) || '', at: rc.at, page: rc.page, hashOk: rc.page === ctx.hash, hist: rc.hist, logs, runs, alerts };
 }
+
+// set 112: one run as the game page's db keeps it (head = runlogs/<id>, parts = runlogs/<id>/parts docs) → { log, short }
+// log = journal for rvAnalyze (null if the head is not a journal head) · short = parts hold fewer entries than the head says
+export function rvFromDb(head, parts) {
+  if (!head || typeof head !== 'object') return { log: null, short: false };
+  const ps = (Array.isArray(parts) ? parts : []).filter(p => p && Number.isInteger(p.k) && Array.isArray(p.ev)).sort((a, b) => a.k - b.k);
+  const ev = ps.flatMap(p => p.ev);
+  const log = { v: head.v, seed: head.seed, data: head.data, at: head.at, cut: head.cut, ev, ...(head.nm ? { nm: head.nm } : {}) };
+  return rlCheck(log) === true ? { log, short: ev.length !== head.n } : { log: null, short: false };
+}

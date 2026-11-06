@@ -13,7 +13,7 @@ import { RULES } from '../core/rules.js';
 import { dataHash } from '../core/save.js';
 import { rlCheck } from '../core/runlog.js';
 import { makeCharMap } from '../core/team.js';
-import { rvAnalyze, rvMmss, rvReadCode } from './runlogread.js';
+import { rvAnalyze, rvFromDb, rvMmss, rvReadCode } from './runlogread.js';
 
 const args = process.argv.slice(2);
 if (!args[0]) { console.log('usage: node lab/runlog.mjs <file> [--run 2] [--brief]'); process.exit(1); }
@@ -33,9 +33,10 @@ if (txt.startsWith('ARUN1 ')) {
   const o = JSON.parse(txt);
   let log = o;
   if (o && o.head && Array.isArray(o.parts)) {
-    const h = o.head, ev = o.parts.slice().sort((a, b) => a.k - b.k).flatMap(p => p.ev);
-    log = { v: h.v, seed: h.seed, data: h.data, at: h.at, cut: h.cut, ev, ...(h.nm ? { nm: h.nm } : {}) };
-    if (ev.length !== h.n) console.log(`⚠ head says ${h.n} entries, parts hold ${ev.length} (a part not saved yet?)`);
+    const d = rvFromDb(o.head, o.parts);
+    if (!d.log) { console.log('journal rejected: bad db head/parts'); process.exit(1); }
+    log = d.log;
+    if (d.short) console.log(`⚠ head says ${o.head.n} entries, parts hold ${log.ev.length} (a part not saved yet?)`);
   }
   const c = rlCheck(log);
   if (c !== true) { console.log('journal rejected: ' + c); process.exit(1); }

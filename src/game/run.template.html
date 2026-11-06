@@ -228,6 +228,31 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .screen { position: fixed; inset: 0; z-index: 40; overflow: auto; background: var(--bg); padding: 16px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .screen > section { max-width: 760px; margin: 0 auto; }
 #nameScr { z-index: 45; }
+/* set 112 (user): owner-only Log screen · run list live from the db + paste a run code · report nodes from lab/runlogview.js */
+#logScr { z-index: 46; }
+#logScr > section, #logOut > section { max-width: 860px; margin: 0 auto 12px; }
+#logScr .status { padding: 10px 12px; border-radius: 10px; font-weight: 700; }
+#logScr .status.ok { background: var(--soft); color: var(--ok); } #logScr .status.bad { background: var(--soft); color: var(--bad); }
+#logScr .status ul { margin: 6px 0 0; padding-left: 20px; font-weight: 600; }
+#logScr .bad { color: var(--bad); font-weight: 600; } #logScr .good { color: var(--ok); font-weight: 600; }
+#logScr .mute { color: var(--mute); } #logScr .gold { color: var(--gold); }
+#logScr .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+#logScr .kv div { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+#logScr .kv b { display: block; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+#logScr .kv span { font-size: .8rem; color: var(--mute); }
+#logScr .tbl { overflow-x: auto; }
+#logScr table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+#logScr th, #logScr td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+#logScr th { color: var(--mute); font-weight: 600; font-size: .78rem; }
+#logScr td.n { text-align: right; font-variant-numeric: tabular-nums; }
+#logScr tr.open td { background: var(--soft); }
+#logScr details.round { border-top: 1px solid var(--line); padding: 6px 0; }
+#logScr details.round > summary { cursor: pointer; display: flex; gap: 10px; flex-wrap: wrap; }
+#logScr ol.steps { margin: 6px 0 0; padding-left: 0; list-style: none; font-size: .82rem; display: grid; gap: 3px; }
+#logScr ol.steps li { display: grid; grid-template-columns: 48px 1fr; gap: 6px; }
+#logScr ol.steps .t { color: var(--mute); font-variant-numeric: tabular-nums; }
+#logScr ol.steps .note { display: block; font-size: .78rem; }
+#logCode { width: 100%; box-sizing: border-box; min-height: 70px; font: 500 .78rem ui-monospace, Menlo, monospace; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: inherit; resize: vertical; }
 #nameIn { flex: 1 1 180px; min-width: 0; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: inherit; }
 .nameEdit { font-size: 12px; padding: 2px 8px; }
 #rotate { display: none; }
@@ -368,6 +393,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
     <button class="hudbtn" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span class="lbl">เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
     <button class="hudbtn" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span class="badge" id="runeCnt">0</span></button>
     <button class="hudbtn" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
+    <button class="hudbtn" id="logBtn" type="button" aria-label="Log การเล่น (เห็นเฉพาะเจ้าของเกม)" hidden><span class="lbl">Log</span></button>
     <span class="grow"></span>
     <span class="lbl" id="foeLbl">ศัตรู <b id="foePct">100%</b></span>
     <span class="bosschip" id="bossChip" hidden></span>
@@ -456,10 +482,26 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   <ol class="msgs replays" id="endReplays"></ol>
   <p class="hint" id="endExtraHint" hidden>แมตช์พิเศษ: เล่นต่อด้วยหัวใจที่เหลือ ศัตรูแรงขึ้นเรื่อยๆ หัวใจหมด = จบเกม</p>
   <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
-  <div class="row"><button id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
-  <p class="hint">ส่งโค้ดนี้ให้คนทำเกม เพื่อให้ดูทีมและผลทุกแมตช์ของ run นี้ได้</p>
+  <div class="row"><button class="primary" id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
+  <p class="hint">กดคัดลอกแล้วส่งโค้ดนี้ให้เจ้าของเกม (เช่นทาง LINE) เพื่อให้ดูเงิน การซื้อ ทีม และผลทุกแมตช์ของ run นี้ได้</p>
   <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
 </section></div>
+
+<div class="screen" id="logScr" hidden>
+<section class="panel">
+  <div class="row"><h2 class="grow">Log การเล่น</h2><button id="logClose" type="button">ปิด</button></div>
+  <p class="hint">เห็นเฉพาะเจ้าของเกมและ Editor · รายการอัปเดตเองทุกครั้งที่เกมของคนที่มีสิทธิ์บันทึกเซฟ (เพื่อนที่เปิดจากลิงก์หรือเป็น Commenter บันทึกไม่ได้ ให้เขาส่งโค้ดผลการเล่นมาวางด้านล่าง)</p>
+  <p class="hint" id="logInfo">กำลังโหลด…</p>
+  <div class="tbl"><table><thead><tr><th>ผู้เล่น</th><th>เริ่ม</th><th>เซฟล่าสุด</th><th>รอบ</th><th>ชนะ</th><th>หัวใจ</th><th>เงิน</th><th>สถานะ</th><th></th></tr></thead><tbody id="logList"></tbody></table></div>
+</section>
+<section class="panel">
+  <h3>วางโค้ดผลการเล่นเอง</h3>
+  <textarea id="logCode" spellcheck="false" placeholder="ARUN1 {...}"></textarea>
+  <div class="row"><button class="primary" id="logRead" type="button">อ่าน log</button><button id="logClear" type="button">ล้าง</button></div>
+  <div id="logErr" class="bad" hidden></div>
+</section>
+<div id="logOut"></div>
+</div>
 
 <div id="notice" hidden><span id="noticeText" class="grow"></span><button id="noticeX" type="button" aria-label="ปิด">✕</button></div>
 <div id="toast" hidden></div>
@@ -577,6 +619,76 @@ function logPlay(rec) {
   if (!playDb) return;
   try { Promise.resolve(playDb.collection('plays').add(rec)).catch(() => {}); } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
 }
+// ---------- set 112 (user): owner-only Log screen ----------
+// Button shown only to the owner / Editors (user.isOwner / canEdit) · the db rule on runlogs (read+write admin, set at publish)
+// keeps everyone else from reading the logs even outside this screen. List = runlogs heads, live (onSnapshot, subscribed once on
+// first open); one run's detail = its parts read once, re-read when that run's head changes. Paste box = same report as runlog.html.
+const LG_CTX = { chars, CM, rules: RULES, hash: DATA_HASH };
+let lgUnsub = null, lgOpenId = '', lgOpenUpd = 0, lgHeads = new Map(), lgCodeRep = null, lgCodePick = 0, lgBusy = 0;
+(async () => {
+  let u = null;
+  try { u = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('user') : null; } catch (e) { u = null; }
+  let ok = false;
+  try { ok = !!u && ((await u.isOwner()) || (await u.canEdit())); } catch (e) { ok = false; }
+  $('logBtn').hidden = !ok;
+})();
+function lgOpen() {
+  $('logScr').hidden = false;
+  if (lgUnsub || !playDb) { if (!playDb) $('logInfo').textContent = 'ฐานข้อมูลของหน้านี้ใช้ไม่ได้ตอนนี้ (เปิดนอก Claude หรือยังโหลดไม่เสร็จ) · ยังวางโค้ดเองได้'; return; }
+  try {
+    lgUnsub = playDb.collection('runlogs').orderBy('upd', 'desc').limit(200).onSnapshot(snap => {
+      lgHeads = new Map(snap.docs.filter(d => d.exists).map(d => [d.id, d.data()]));
+      lgList();
+      const h = lgOpenId && lgHeads.get(lgOpenId);
+      if (h && h.upd !== lgOpenUpd) lgShow(lgOpenId);
+    }, () => { $('logInfo').textContent = 'อ่าน log จากฐานข้อมูลไม่ได้ (ไม่มีสิทธิ์อ่าน) · ยังวางโค้ดเองได้'; });
+  } catch (e) { $('logInfo').textContent = 'อ่าน log จากฐานข้อมูลไม่ได้ · ยังวางโค้ดเองได้'; }
+}
+const lgNum = x => (Number.isFinite(x) ? String(x) : '-');
+function lgList() {
+  const rows = [...lgHeads.entries()];
+  $('logInfo').textContent = rows.length ? `${rows.length} run · เรียงจากเซฟล่าสุด · อัปเดตเอง` : 'ยังไม่มี log ในระบบ';
+  $('logList').replaceChildren(...rows.map(([id, h]) => {
+    const tr = lvMk('tr', id === lgOpenId ? 'open' : ''), b = lvMk('button', '', id === lgOpenId ? 'กำลังดู' : 'ดู'); b.type = 'button';
+    b.addEventListener('click', () => lgShow(id));
+    const td = lvMk('td'); td.append(b);
+    tr.append(lvMk('td', '', typeof h.nm === 'string' && h.nm ? rlName(h.nm) || '(ไม่ได้ตั้งชื่อ)' : '(ไม่ได้ตั้งชื่อ)'), lvMk('td', '', Number.isFinite(h.at) ? lvWhen(h.at) : '-'),
+      lvMk('td', '', Number.isFinite(h.upd) ? lvWhen(h.upd) : '-'), lvMk('td', 'n', lgNum(h.round)), lvMk('td', 'n', lgNum(h.wins)), lvMk('td', 'n', lgNum(h.hearts)),
+      lvMk('td', 'n', lgNum(h.gold)), lvMk('td', '', h.over ? 'จบแล้ว' : 'ยังเล่นอยู่'), td);
+    return tr;
+  }));
+}
+async function lgShow(id) {
+  const h = lgHeads.get(id); if (!h || !playDb) return;
+  lgOpenId = id; lgOpenUpd = h.upd; lgCodeRep = null; lgList();
+  const my = ++lgBusy;
+  $('logOut').replaceChildren(lvMk('p', 'hint', 'กำลังโหลด log…'));
+  let parts = [];
+  try { const snap = await playDb.collection('runlogs/' + id + '/parts').get(); parts = snap.docs.filter(d => d.exists).map(d => d.data()); } catch (e) { parts = null; }
+  if (my !== lgBusy) return; // another run was opened meanwhile
+  if (!parts) { $('logOut').replaceChildren(lvMk('p', 'bad', 'อ่านรายละเอียด run นี้ไม่ได้')); return; }
+  const d = rvFromDb(h, parts);
+  if (!d.log) { $('logOut').replaceChildren(lvMk('p', 'bad', 'log ของ run นี้อ่านไม่ได้ (ข้อมูลไม่ครบหรือผิดรูปแบบ)')); return; }
+  let rep;
+  try { rep = rvAnalyze(d.log, LG_CTX, null); } catch (e) { rep = null; }
+  if (!rep) { $('logOut').replaceChildren(lvMk('p', 'bad', 'คำนวณ log ของ run นี้ใหม่ไม่ได้')); return; }
+  const nodes = lvLogNodes(rep, CM);
+  if (d.short) nodes.unshift(lvMk('p', 'hint', `ส่วนท้ายของ log ยังส่งมาไม่ครบ (มี ${d.log.ev.length} จาก ${h.n} ขั้น) · จะอัปเดตเองเมื่อมาครบ`));
+  $('logOut').replaceChildren(...nodes);
+}
+function lgRead() {
+  const t = $('logCode').value.trim();
+  $('logErr').hidden = true;
+  if (!t) { $('logErr').textContent = 'วางโค้ดก่อน'; $('logErr').hidden = false; return; }
+  const r = rvReadCode(t, LG_CTX);
+  if (!r.ok) { $('logErr').textContent = 'อ่านโค้ดไม่ได้: ' + r.error + ' · โค้ดที่ถูกแก้หรือคัดลอกมาไม่ครบจะอ่านไม่ได้'; $('logErr').hidden = false; return; }
+  lgOpenId = ''; lgBusy++; lgList(); lgCodeRep = r; lgCodePick = 0; lgCodeRender();
+}
+function lgCodeRender() { $('logOut').replaceChildren(...lvCodeNodes(lgCodeRep, CM, lgCodePick, i => { lgCodePick = i; lgCodeRender(); })); }
+$('logBtn').addEventListener('click', lgOpen);
+$('logClose').addEventListener('click', () => { $('logScr').hidden = true; });
+$('logRead').addEventListener('click', lgRead);
+$('logClear').addEventListener('click', () => { $('logCode').value = ''; $('logErr').hidden = true; if (lgCodeRep) { lgCodeRep = null; $('logOut').replaceChildren(); } });
 function showNotice(t) { $('noticeText').textContent = t; $('notice').hidden = !t; }
 $('noticeX').addEventListener('click', () => showNotice(''));
 

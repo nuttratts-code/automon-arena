@@ -18,8 +18,8 @@ const TESTS = ['tests/helpers.js', 'tests/runlog-fixture.js', 'tests/t-combat.js
 const pages = [
   ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', 'lab/runlogread.js', 'game/labels.js', ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'lab/matchcode.js', 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],
-  ['game/run.template.html', 'game.html', [...CORE, 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],
-  ['lab/runlog.template.html', 'runlog.html', [...CORE, 'lab/runlogread.js']], // set 110: run-log viewer page (paste an ARUN1 code)
+  ['game/run.template.html', 'game.html', [...CORE, 'lab/matchcalc.js', 'lab/runlogread.js', 'lab/runlogview.js', 'game/view.js', 'game/labels.js']],
+  ['lab/runlog.template.html', 'runlog.html', [...CORE, 'lab/runlogread.js', 'lab/runlogview.js']], // set 110: run-log viewer page (paste an ARUN1 code)
 ];
 for (const [tpl, out, files] of pages) {
   const page = expand(readFileSync(tpl, 'utf8')).replace('/*__CORE__*/', () => bundle(files));
