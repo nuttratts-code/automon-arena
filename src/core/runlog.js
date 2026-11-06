@@ -24,7 +24,20 @@ export function rlUnref(s) {
   m = /^F([0-2])([0-1])$/.exec(s); if (m) return { at: 'board', row: +m[1], lane: +m[2] };
   return undefined;
 }
-export function newRunLog(seed, hash, at) { return { v: RLOG_VERSION, seed: seed >>> 0, data: hash, at: Math.floor(at), cut: 0, ev: [] }; }
+// set 110 (user): player name typed before playing · cleaned text only (no control / invisible / bidi marks), spaces squeezed,
+// at most RL_NAME_MAX characters · '' = no name · always shown with textContent (never as HTML)
+export const RL_NAME_MAX = 20;
+export function rlName(s) {
+  if (typeof s !== 'string') return '';
+  const t = s.replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ufff0-\uffff]/g, '').replace(/\s+/g, ' ').trim();
+  return Array.from(t).slice(0, RL_NAME_MAX).join('').trim();
+}
+// nm = player name (optional · journals before set 110 have none)
+export function newRunLog(seed, hash, at, name = '') {
+  const L = { v: RLOG_VERSION, seed: seed >>> 0, data: hash, at: Math.floor(at), cut: 0, ev: [] }, nm = rlName(name);
+  if (nm) L.nm = nm;
+  return L;
+}
 // add one entry · now = ms clock · returns false when the journal is full (cut set)
 export function rlPush(log, type, args, g0, g1, now) {
   if (!log || !(type in RL_TYPES)) return false;
@@ -56,8 +69,9 @@ function rlArgsOk(e) {
 // true / reason text
 export function rlCheck(log) {
   if (!log || typeof log !== 'object' || Array.isArray(log)) return 'not an object';
-  const keys = ['v', 'seed', 'data', 'at', 'cut', 'ev'];
+  const keys = ['v', 'seed', 'data', 'at', 'cut', 'ev', 'nm'];
   if (!Object.keys(log).every(k => keys.includes(k)) || log.v !== RLOG_VERSION) return 'bad header';
+  if ('nm' in log && (typeof log.nm !== 'string' || !log.nm || rlName(log.nm) !== log.nm)) return 'bad name';
   if (!rlInt(log.seed, 0, 0xFFFFFFFF) || typeof log.data !== 'string' || !/^[0-9a-f]{8}$/.test(log.data) || !rlInt(log.at, 0, 1e15) || (log.cut !== 0 && log.cut !== 1)) return 'bad header';
   if (!Array.isArray(log.ev) || log.ev.length > RLOG_MAX) return 'bad entries';
   for (let i = 0; i < log.ev.length; i++) {

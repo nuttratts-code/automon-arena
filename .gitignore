@@ -3,6 +3,7 @@ node_modules/
 src/game.html
 src/balance.html
 src/system-check.html
+src/runlog.html
 # local measure output / screenshots
 *.measure.json
 shots/

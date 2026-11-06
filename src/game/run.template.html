@@ -223,6 +223,9 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 #notice button { padding: 2px 8px; }
 .screen { position: fixed; inset: 0; z-index: 40; overflow: auto; background: var(--bg); padding: 16px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
 .screen > section { max-width: 760px; margin: 0 auto; }
+#nameScr { z-index: 45; }
+#nameIn { flex: 1 1 180px; min-width: 0; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: inherit; }
+.nameEdit { font-size: 12px; padding: 2px 8px; }
 #rotate { display: none; }
 
 /* แผงรายละเอียด (popup) */
@@ -421,11 +424,19 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   </div>
 </div>
 
+<div class="screen" id="nameScr" hidden><section class="panel">
+  <h2>ตั้งชื่อผู้เล่น</h2>
+  <p class="hint">ชื่อนี้จะติดไปกับโค้ดผลการเล่น เพื่อให้คนทำเกมรู้ว่าใครเล่น (เครื่องนี้จะจำชื่อไว้)</p>
+  <form id="nameForm" class="row"><input id="nameIn" type="text" maxlength="40" autocomplete="nickname" placeholder="ชื่อของคุณ" aria-label="ชื่อผู้เล่น"><button class="primary" id="nameGo" type="submit">เริ่มเล่น</button></form>
+  <p class="hint" id="nameErr" hidden>พิมพ์ชื่อก่อน (ไม่เกิน 20 ตัวอักษร)</p>
+</section></div>
+
 <div class="screen" id="resume" hidden><section class="panel">
   <h2>มี run ที่เล่นค้างไว้</h2>
   <p class="hint" id="resumeInfo"></p>
   <div class="row"><button class="primary" id="resumeGo" type="button">เล่นต่อ</button><button id="resumeNew" type="button">เริ่ม run ใหม่</button><button id="resumeCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
   <p class="hint">เล่นต่อจะกลับไปเริ่มรอบร้านค้าที่ค้างไว้ (ร้านเดิม เงินเดิม)</p>
+  <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
 </section></div>
 
 <div class="screen" id="runEnd" hidden><section class="panel">
@@ -443,6 +454,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
   <div class="row"><button id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
   <p class="hint">ส่งโค้ดนี้ให้คนทำเกม เพื่อให้ดูทีมและผลทุกแมตช์ของ run นี้ได้</p>
+  <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
 </section></div>
 
 <div id="notice" hidden><span id="noticeText" class="grow"></span><button id="noticeX" type="button" aria-label="ปิด">✕</button></div>
@@ -539,7 +551,7 @@ function sendLog() { // whole parts that changed since the last send · no db / 
   try {
     const run = playDb.doc('runlogs/' + id);
     Promise.resolve(run.set({ v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
-      round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0 })).catch(() => {});
+      round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0, ...(RL.nm ? { nm: RL.nm } : {}) })).catch(() => {});
     for (let k = Math.floor(from / RLOG_PART); k * RLOG_PART < n; k++) Promise.resolve(run.collection('parts').doc('p' + k).set({ k, ev: RL.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) })).catch(() => {});
     rlSent = { id, n };
   } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
@@ -570,7 +582,7 @@ function startNewRun() {
   dummyDmg = 0; P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
   msgs = []; stats = newStats(); startedAt = Date.now();
   const oldLog = store.get(RLOG_KEY); if (oldLog && oldLog.includes('"ev":[[')) store.set(RLOG_PREV_KEY, oldLog); // set 109: keep the last run's journal for the run code
-  RL = newRunLog(seed, DATA_HASH, startedAt); rlSent = { id: '', n: 0 };
+  RL = newRunLog(seed, DATA_HASH, startedAt, playerName); rlSent = { id: '', n: 0 };
   const old = store.get(REPLAY_KEY); if (old && old.includes('"list":[{')) store.set(PREV_REPLAY_KEY, old); // set 105: keep the finished run's replays for the run code
   replays = []; replayMode = null; saveReplays();
   saveRun(); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
@@ -606,7 +618,7 @@ function toast(list) {
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, list.some(m => m.err) ? 3500 : 2600);
 }
 // ---------- set 105: run code (testers paste it in chat; read with lab/runcode.mjs) ----------
-function runCode() { return makeRunCode([store.get(REPLAY_KEY), store.get(PREV_REPLAY_KEY)], store.get(HIST_KEY), DATA_HASH, Date.now(), RULES, [store.get(RLOG_KEY), store.get(RLOG_PREV_KEY)]); }
+function runCode() { return makeRunCode([store.get(REPLAY_KEY), store.get(PREV_REPLAY_KEY)], store.get(HIST_KEY), DATA_HASH, Date.now(), RULES, [store.get(RLOG_KEY), store.get(RLOG_PREV_KEY)], playerName); }
 async function copyRunCode() {
   const code = runCode();
   if (!code) { toast([{ t: 'ยังไม่มีผลการเล่นให้คัดลอก', err: true }]); return; }
@@ -1297,8 +1309,28 @@ $('endExtra').addEventListener('click', () => {
   clearAt = 0; saveRun(); showScreen('prep'); beginRound(); pushMsgs(r); render();
 });
 
+// ---------- set 110 (user): player name before playing · remembered on this device · goes into the run journal + run code ----------
+const NAME_KEY = 'automon-player-name-v1';
+let playerName = rlName(store.get(NAME_KEY) || ''), nameThen = null;
+function showName() { document.querySelectorAll('.pname').forEach(x => { x.textContent = playerName || '(ไม่มีชื่อ)'; }); }
+function askName(then) {
+  nameThen = then; $('nameIn').value = playerName; $('nameErr').hidden = true;
+  $('nameScr').hidden = false; try { $('nameIn').focus(); } catch (e) { /* no focus */ }
+}
+$('nameForm').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const nm = rlName($('nameIn').value);
+  if (!nm) { $('nameErr').hidden = false; return; }
+  playerName = nm; store.set(NAME_KEY, nm); showName();
+  if (RL) { RL.nm = nm; saveLog(); } // a rename during a run goes on this run's journal too
+  $('nameScr').hidden = true;
+  const f = nameThen; nameThen = null; if (f) f();
+});
+document.querySelectorAll('.nameEdit').forEach(b => b.addEventListener('click', () => askName(null)));
+showName();
 // ---------- เปิดเกม: เซฟเดิม (ชุด 22) ----------
 function boot() {
+  if (!playerName) { askName(boot); return; }
   const r = readSave(store.get(SAVE_KEY), CM, RULES, DATA_HASH);
   if (r.status === 'ok') {
     const o = r.save;

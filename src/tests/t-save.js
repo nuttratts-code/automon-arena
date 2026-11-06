@@ -12,7 +12,9 @@ import { cleanStage, stageDefaults } from '../core/stage.js';
 import { equipRunes } from '../core/runes.js';
 import { bossUnit } from '../core/boss.js';
 import { eq, ok, randomTeam } from './helpers.js';
-import { newRunLog, rlApply, rlCheck, rlPush, rlRef, rlReplay } from '../core/runlog.js';
+import { newRunLog, rlApply, rlCheck, rlName, rlPush, rlRef, rlReplay } from '../core/runlog.js';
+import { rvReadCode } from '../lab/runlogread.js';
+import { fxPlayRun } from './runlog-fixture.js';
 export const TESTS_SAVE = [
   ['ชุด 22: เซฟ run ผ่านตัวตรวจทุกรอบ · เล่นต่อแล้วได้ร้านเดิม', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars);
@@ -289,5 +291,31 @@ export const TESTS_SAVE = [
     ok(rlCheck({ ...L, extra: 1 }) !== true, 'unknown header key refused');
     let thrown = ''; try { parseRunCode('ARUN1 ' + JSON.stringify({ v: 2, at: 1, page: H, runs: [], h: [], logs: [{ v: 1 }] }), cm, RULES); } catch (e) { thrown = e.message; }
     ok(thrown.includes('journal'), 'bad journal in a run code refused: ' + thrown);
+  }],
+  ['set 110: player name cleaned + carried in journal and run code · run-log reader finds no alert on a fair run, red alerts on edited gold / result / team / perm / hash / clock', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars), ctx = { chars, CM: cm, rules: RULES, hash: H };
+    eq([rlName('  เพื่อน   A  '), rlName('a\u200bb\u202ec\n'), rlName('x'.repeat(30)).length, rlName(5), rlName('   ')], ['เพื่อน A', 'abc', 20, '', ''], 'rlName cleans');
+    ok(rlCheck({ ...newRunLog(1, H, 0), nm: ' bad ' }) !== true && rlCheck({ ...newRunLog(1, H, 0), nm: '' }) !== true, 'uncleaned / empty name refused');
+    eq(newRunLog(1, H, 0, '').nm, undefined, 'no name = no field');
+    const { L, list } = fxPlayRun(chars, cm, H, 4242, ' เพื่อน A ');
+    eq(L.nm, 'เพื่อน A', 'journal keeps the cleaned name');
+    const code = makeRunCode([makeReplays(L.seed, H, list)], null, H, 5000, RULES, [JSON.stringify(L)], 'เพื่อน A');
+    const r = rvReadCode(code, ctx);
+    ok(r.ok, 'reader reads the code: ' + r.error);
+    eq([r.nm, r.alerts, r.logs[0].alerts, r.logs[0].firstBad], ['เพื่อน A', [], [], -1], 'fair run: no alert');
+    ok(r.logs[0].matches.length === list.length && r.logs[0].matches.every(m => m.status === 'ok'), 'every match checked against its replay');
+    eq(r.logs[0].inTotal - r.logs[0].outTotal, r.logs[0].final.gold, 'money in − out = gold left');
+    const base = JSON.parse(code.slice(6)), alertsOf = f => { const o = structuredClone(base); f(o); const x = rvReadCode('ARUN1 ' + JSON.stringify(o), ctx); return x.ok ? [...x.alerts, ...x.logs.flatMap(l => l.alerts)] : ['rejected']; };
+    const T = {
+      'gold edited': o => { o.logs[0].ev.find(e => e[0] === 'by')[3] += 5; },
+      'win flag flipped': o => { const e = o.logs[0].ev.find(e => e[0] === 'en'); e[4] = 1 - e[4]; },
+      'replay team edited': o => { o.runs[0].list[1].a[0].level = 3; },
+      'game values differ': o => { o.page = '12345678'; o.logs[0].data = '12345678'; },
+      'perm gains invented': o => { o.logs[0].ev.find(e => e[0] === 'en')[6] = [[o.runs[0].list[0].a[0].id, 'hp', 0, 0, 99]]; },
+      'clock goes back': o => { o.logs[0].ev[4][1] = 999; },
+      'replay result edited': o => { const x = o.runs[0].list[0]; x.w = x.w === 1 ? 0 : 1; },
+    };
+    for (const [k, f] of Object.entries(T)) ok(alertsOf(f).length > 0, `${k} → alert`);
+    eq(rvReadCode('ARUN1 ' + JSON.stringify({ ...base, nm: '<b>\u202e' }), ctx).ok, false, 'bad name in a code refused');
   }],
 ];

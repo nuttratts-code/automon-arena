@@ -1,0 +1,189 @@
+<title>ดู log การเล่น</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* set 110 (user): run-log viewer, its own page (not part of the game) · paste a run code (ARUN1) → where the money went each round
+   + every step rebuilt from the run's seed · anything that does not match the real game = red text (lab/runlogread.js) */
+:root {
+  --bg: #f3f4f1; --panel: #ffffff; --ink: #1d2320; --mute: #5f6a64; --line: #d9ddd6;
+  --accent: #2f5d8a; --pass: #1f7a4a; --pass-bg: #e3f2e8; --fail: #b3261e; --fail-bg: #fbe4e2; --gold: #8a5a00;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141816; --panel: #1c211e; --ink: #e6ebe7; --mute: #9aa59e; --line: #2e3531;
+  --accent: #8db8e2; --pass: #6fd49b; --pass-bg: #17301f; --fail: #ff8f86; --fail-bg: #3a1a18; --gold: #f0c46a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141816; --panel: #1c211e; --ink: #e6ebe7; --mute: #9aa59e; --line: #2e3531;
+  --accent: #8db8e2; --pass: #6fd49b; --pass-bg: #17301f; --fail: #ff8f86; --fail-bg: #3a1a18; --gold: #f0c46a; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 16px; }
+h1 { font-size: 1.5rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 0 0 8px; }
+h3 { font-size: .95rem; margin: 12px 0 6px; }
+.sub, .mute { color: var(--mute); }
+.sub { margin: 4px 0 0; font-size: .9rem; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+textarea { width: 100%; box-sizing: border-box; min-height: 90px; font: 500 .8rem var(--f-mono); padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+button { font: 600 .9rem var(--f-body); background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.bad { color: var(--fail); font-weight: 600; }
+.good { color: var(--pass); font-weight: 600; }
+.status { padding: 12px 14px; border-radius: 10px; font-weight: 700; }
+.status.ok { background: var(--pass-bg); color: var(--pass); }
+.status.bad { background: var(--fail-bg); color: var(--fail); }
+.status ul { margin: 6px 0 0; padding-left: 20px; font-weight: 600; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.kv div { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.kv b { display: block; font: 500 1.25rem var(--f-mono); font-variant-numeric: tabular-nums; }
+.kv span { font-size: .8rem; color: var(--mute); }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--mute); font-weight: 600; font-size: .8rem; }
+td.n { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+details.round { border-top: 1px solid var(--line); padding: 6px 0; }
+details.round > summary { cursor: pointer; display: flex; gap: 10px; flex-wrap: wrap; }
+details.round > summary b { min-width: 64px; }
+ol.steps { margin: 6px 0 0; padding-left: 0; list-style: none; font-size: .85rem; display: grid; gap: 3px; }
+ol.steps li { display: grid; grid-template-columns: 48px 1fr; gap: 6px; }
+ol.steps .t { font-family: var(--f-mono); color: var(--mute); }
+ol.steps .note { display: block; font-size: .8rem; }
+.gold { color: var(--gold); }
+#err { margin-top: 8px; }
+</style>
+<div class="wrap">
+  <div>
+    <h1>ดู log การเล่น</h1>
+    <p class="sub">วางโค้ดที่ขึ้นต้นด้วย ARUN1 (ผู้เล่นกด "คัดลอกโค้ดผลการเล่น" ในหน้าเกม) แล้วกด "อ่าน log" · หน้านี้คำนวณการเล่นทั้ง run ใหม่จากเลขสุ่มเริ่มต้น ถ้าจุดไหนไม่ตรงกับเกมจริงจะขึ้นตัวหนังสือสีแดง</p>
+  </div>
+  <section>
+    <label for="code"><b>โค้ดผลการเล่น</b></label>
+    <textarea id="code" spellcheck="false" placeholder="ARUN1 {...}"></textarea>
+    <div class="row"><button class="primary" id="read" type="button">อ่าน log</button><button id="clear" type="button">ล้าง</button><span class="mute" id="ver"></span></div>
+    <div id="err" class="bad" hidden></div>
+  </section>
+  <div id="out" hidden></div>
+</div>
+<script>
+/*__CORE__*/const $ = id => document.getElementById(id);
+// every text from the code goes in with textContent (never HTML)
+function mk(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = String(text); return e; }
+const LV_CHARS = buildCharacterList(), LV_CM = makeCharMap(LV_CHARS), LV_CTX = { chars: LV_CHARS, CM: LV_CM, rules: RULES, hash: dataHash(LV_CHARS) };
+$('ver').textContent = `ค่าเกมของหน้านี้ ${LV_CTX.hash}`;
+const lvWhen = ms => { try { return new Date(ms).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return String(ms); } };
+let lvRep = null, lvPick = 0;
+
+function lvRead() {
+  const t = $('code').value.trim();
+  $('err').hidden = true; $('out').hidden = true; lvRep = null;
+  if (!t) { lvErr('วางโค้ดก่อน'); return; }
+  const r = rvReadCode(t, LV_CTX);
+  if (!r.ok) { lvErr('อ่านโค้ดไม่ได้: ' + r.error + ' · โค้ดที่ถูกแก้หรือคัดลอกมาไม่ครบจะอ่านไม่ได้'); return; }
+  lvRep = r; lvPick = 0; lvRender();
+}
+function lvErr(t) { $('err').textContent = t; $('err').hidden = false; }
+
+function lvRender() {
+  const r = lvRep, out = $('out');
+  out.replaceChildren();
+  const alerts = [...r.alerts, ...r.logs.flatMap((L, i) => L.alerts.map(a => (r.logs.length > 1 ? `${i ? 'run ก่อนหน้า' : 'run ล่าสุด'}: ` : '') + a))];
+  const head = mk('section');
+  head.append(mk('h2', '', `ผู้เล่น: ${r.nm || '(ไม่ได้ตั้งชื่อ)'}`), mk('p', 'mute', `คัดลอกโค้ดเมื่อ ${lvWhen(r.at)} · ค่าเกมในเครื่องผู้เล่น ${r.page}`));
+  const st = mk('div', 'status ' + (alerts.length ? 'bad' : 'ok'), alerts.length ? `ผิดปกติ ${alerts.length} จุด` : 'ไม่พบความผิดปกติ: ทุกขั้นและทุกแมตช์ตรงกับเกมจริง');
+  st.id = 'lvStatus';
+  if (alerts.length) { const ul = mk('ul'); alerts.slice(0, 30).forEach(a => ul.append(mk('li', '', a))); if (alerts.length > 30) ul.append(mk('li', '', `… อีก ${alerts.length - 30} จุด`)); st.append(ul); }
+  head.append(st);
+  if (!r.logs.length) head.append(mk('p', 'mute', 'โค้ดนี้ไม่มี log การเล่น (เกมเวอร์ชันก่อน set 109 หรือยังไม่ได้ทำอะไร) · ดูได้เฉพาะแมตช์ด้านล่าง'));
+  out.append(head);
+  if (r.logs.length > 1) {
+    const sw = mk('div', 'row');
+    r.logs.forEach((L, i) => { const b = mk('button', '', i ? 'run ก่อนหน้า' : 'run ล่าสุด'); b.type = 'button'; b.setAttribute('aria-pressed', String(i === lvPick)); b.addEventListener('click', () => { lvPick = i; lvRender(); }); sw.append(b); });
+    out.append(sw);
+  }
+  if (r.logs.length) out.append(...lvRun(r.logs[lvPick]));
+  if (r.runs.length) out.append(lvMatches(r));
+  if (r.hist.length) {
+    const s = mk('section'); s.append(mk('h2', '', 'ประวัติ run ในเครื่องผู้เล่น'));
+    const ol = mk('ol');
+    r.hist.forEach(h => ol.append(mk('li', '', `${lvWhen(h.at)} · ${h.won ? 'ผ่าน' : 'จบ'} · ชนะ ${h.wins} · หัวใจ ${h.hearts} · ${h.rounds} รอบ · ตัวเด่น ${h.top}`)));
+    s.append(ol); out.append(s);
+  }
+  out.hidden = false;
+}
+
+function lvRun(L) {
+  const nm = id => `${id} ${(LV_CM[id] || {}).name || '?'}`;
+  const s1 = mk('section');
+  s1.append(mk('h2', '', `run เริ่ม ${lvWhen(L.at)}${L.nm ? ' · ' + L.nm : ''}`));
+  const lost = L.OUT['เงินเหลือถูกทิ้งตอนขึ้นรอบใหม่'] || 0, buy = L.OUT['ซื้อตัวละคร'] || 0, rr = L.OUT['สุ่มร้าน'] || 0;
+  const kv = mk('div', 'kv');
+  [[`รอบ ${L.final.round}`, L.final.over ? 'จบ run แล้ว' : 'ยังเล่นอยู่'], [L.final.wins, 'ชนะ'], [L.final.hearts, 'หัวใจเหลือ'], [L.inTotal, 'เงินเข้าทั้งหมด'],
+    [buy, 'ใช้ซื้อตัวละคร'], [rr, 'ใช้สุ่มร้าน'], [lost, 'เงินเหลือถูกทิ้ง'], [L.n, 'การกระทำทั้งหมด']]
+    .forEach(([v, k]) => { const d = mk('div'); d.append(mk('b', '', v), mk('span', '', k)); kv.append(d); });
+  s1.append(kv);
+  s1.append(mk('p', L.firstBad < 0 ? 'good' : 'bad', L.firstBad < 0 ? `ตรวจย้อน: ทุกขั้นเงินตรงกับเกมจริง (${L.n} ขั้น)` : `ตรวจย้อน: เงินไม่ตรงตั้งแต่ขั้นที่ ${L.firstBad + 1}`));
+  // money table
+  const t = mk('table'), tb = mk('tbody');
+  t.append(lvTr(['', 'เงิน'], 'th'));
+  for (const [k, v] of Object.entries(L.IN)) tb.append(lvTr([`เข้า · ${k}`, `+${v}`]));
+  for (const [k, v] of Object.entries(L.OUT)) tb.append(lvTr([`ออก · ${k}`, `−${v}`]));
+  tb.append(lvTr(['คงเหลือ', L.final.gold]));
+  t.append(tb); const tw = mk('div', 'tbl'); tw.append(t);
+  s1.append(mk('h3', '', 'เงินมาจากไหน ไปไหน'), tw);
+  const bb = Object.entries(L.buyBy).sort((x, y) => y[1] - x[1]);
+  s1.append(mk('h3', '', 'ซื้อตัวไหนกี่ครั้ง'), mk('p', '', bb.length ? bb.map(([id, n]) => `${nm(id)} ×${n}`).join(' · ') : 'ไม่ได้ซื้อ'));
+  // rounds
+  const s2 = mk('section');
+  s2.append(mk('h2', '', 'รายรอบ (กดเพื่อดูทุกขั้น)'));
+  for (const rd of L.rounds) {
+    const d = mk('details', 'round'), sm = mk('summary');
+    const bad = rd.steps.some(x => x.status === 'bad' || x.notes.some(n => n.bad));
+    const m = rd.steps.find(x => x.t === 'en');
+    sm.append(mk('b', bad ? 'bad' : '', `รอบ ${rd.r}`), mk('span', 'gold', `เข้า ${rd.in}`), mk('span', '', `ใช้ ${rd.out}`), mk('span', rd.lost ? 'gold' : 'mute', `ทิ้ง ${rd.lost}`));
+    if (m) sm.append(mk('span', '', m.what.replace(/^จบแมตช์ /, '')));
+    if (bad) sm.append(mk('span', 'bad', 'มีจุดผิดปกติ'));
+    d.append(sm);
+    const ol = mk('ol', 'steps');
+    for (const x of rd.steps) {
+      const li = mk('li'), body = mk('span', x.status === 'bad' ? 'bad' : x.status === 'refused' ? 'mute' : '');
+      body.append(mk('span', '', `${x.what} · ${x.money}`));
+      if (x.status === 'bad') body.append(mk('span', 'note bad', '✗ ไม่ตรงกับเกมจริง: ' + x.badText));
+      if (x.status === 'refused') body.append(mk('span', 'note', '(เกมปฏิเสธ)'));
+      for (const msg of x.msgs) body.append(mk('span', 'note mute', msg));
+      for (const n of x.notes) body.append(mk('span', 'note ' + (n.bad ? 'bad' : 'mute'), (n.bad ? '✗ ' : '') + n.text));
+      li.append(mk('span', 't', rvMmss(x.sec)), body);
+      ol.append(li);
+    }
+    d.append(ol); s2.append(d);
+  }
+  return [s1, s2];
+}
+function lvTr(cells, tag = 'td') { const tr = mk('tr'); cells.forEach((c, i) => tr.append(mk(tag, i && tag === 'td' ? 'n' : '', c))); return tr; }
+
+function lvMatches(r) {
+  const s = mk('section'); s.append(mk('h2', '', 'แมตช์ที่เก็บไว้ (จำลองใหม่ทุกแมตช์)'));
+  r.runs.forEach((run, k) => {
+    s.append(mk('h3', '', `${k ? 'run ก่อนหน้า' : 'run ล่าสุด'} · ${run.matches.length} แมตช์`));
+    const t = mk('table'), tb = mk('tbody');
+    t.append(lvTr(['รอบ', 'ผล', 'เวลา', 'ทีมผู้เล่น', 'ศัตรู', 'ตรวจ'], 'th'));
+    for (const m of run.matches) {
+      const x = m.x, tr = mk('tr');
+      tr.append(mk('td', '', x.r), mk('td', '', x.w === 1 ? 'แพ้' : x.w === 0 ? 'ชนะ' : 'เสมอ'), mk('td', '', `${(x.t / 1000).toFixed(1)} วิ`),
+        mk('td', '', x.a.map(u => `${u.id} Lv${u.level}`).join(', ')), mk('td', '', Array.isArray(x.b) ? x.b.map(u => `${u.id} Lv${u.level}`).join(', ') : `บอส ${x.b.boss}`),
+        mk('td', m.ok ? 'good' : 'bad', m.ok ? '✓' : '✗ จำลองใหม่ได้ผลไม่ตรง'));
+      tb.append(tr);
+    }
+    t.append(tb); const tw = mk('div', 'tbl'); tw.append(t); s.append(tw);
+  });
+  return s;
+}
+$('read').addEventListener('click', lvRead);
+$('clear').addEventListener('click', () => { $('code').value = ''; $('out').hidden = true; $('err').hidden = true; lvRep = null; });
+</script>
