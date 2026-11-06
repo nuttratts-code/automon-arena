@@ -1,4 +1,4 @@
-import { RULES, pickHintRow } from './rules.js';
+import { RULES, pickHintRow, rowsOfHint } from './rules.js';
 import { SLOT_ORDER, allUnits, buy, move, reroll, sell } from './shop.js';
 import { basePower } from './power.js';
 // บอทซื้อของด้วยร้านและกฎเดียวกับผู้เล่น (ใช้คำสั่งใน shop.js เท่านั้น จึงทำผิดกฎไม่ได้)
@@ -102,11 +102,21 @@ export function arrange(st, cm, chars = null, rules = RULES, focus = null) {
     for (const u of all) if (chosen.length < SLOT_ORDER.length && !chosen.includes(u)) chosen.push(u);
   } else chosen = all.slice(0, SLOT_ORDER.length);
   // แถวแนะนำหลายแถว: เลือกแถวต่างกันไปทุกรอบ (คิดจาก uid + รอบ ไม่ใช้ตัวสุ่มของ run จะได้ไม่กระทบร้านค้า)
+  // set 101 fix: each unit goes INTO its suggested row (was: sorted then packed 2 per row front-first, so a
+  // 3-unit team put back-row units in front). Order of claim: single-row hints first, then 2-row, then anywhere;
+  // inside a group the stronger unit (chosen order) first. Row full → the hint's other row → nearest row (front on tie).
   const key = u => { const h = cm[u.id].rowHint, p = pickHintRow(h, ((u.uid * 7 + st.round) % 2) / 2); return p != null ? p : BOT_HINT[h] ?? 1; };
-  const onBoard = chosen.sort((a, b) => key(a) - key(b) || a.uid - b.uid);
+  const nRows = h => { const n = rowsOfHint(h).length; return n === 0 ? 1 : n; };
+  const onBoard = chosen.map((u, i) => ({ u, i })).sort((a, b) => nRows(cm[a.u.id].rowHint) - nRows(cm[b.u.id].rowHint) || a.i - b.i).map(x => x.u);
   const rest = all.filter(u => !onBoard.includes(u));
   st.board = [[null, null], [null, null], [null, null]];
-  onBoard.forEach((u, i) => { const [r, l] = SLOT_ORDER[i]; st.board[r][l] = u; });
+  const free = r => st.board[r].findIndex(x => !x);
+  for (const u of onBoard) {
+    const want = key(u), ok = rowsOfHint(cm[u.id].rowHint);
+    const order = [0, 1, 2].sort((a, b) => (a === want ? -1 : 0) - (b === want ? -1 : 0) || ok.includes(b) - ok.includes(a) || Math.abs(a - want) - Math.abs(b - want) || a - b);
+    const r = order.find(x => free(x) >= 0);
+    st.board[r][free(r)] = u;
+  }
   st.bench = st.bench.map((_, i) => rest[i] || null);
 }
 
