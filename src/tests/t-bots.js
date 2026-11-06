@@ -104,10 +104,13 @@ export const TESTS_BOTS = [
     ok(ids.size >= Math.min(3, on.length), 'สุ่มบอสหลายตัว');
     // whole run: boss matches come exactly after E normal wins since the last boss fight
     const chars = buildCharacterList(); let since = 0, beaten = 0, seen = 0;
-    simRun(chars, RULES, 11, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, m => {
-      if (m.boss) { seen++; eq([since, m.k], [E, beaten + 1], 'boss timing'); since = 0; if (m.winner !== 1) beaten++; }
-      else { ok(since < E, 'boss skipped'); if (m.winner !== 1) since++; }
-    }, RUN_STAGE, { extra: 40 });
+    for (let seed = 11; seed < 31; seed++) {
+      since = 0; beaten = 0;
+      simRun(chars, RULES, seed, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, m => {
+        if (m.boss) { seen++; eq([since, m.k], [E, beaten + 1], 'boss timing'); since = 0; if (m.winner !== 1) beaten++; }
+        else { ok(since < E, 'boss skipped'); if (m.winner !== 1) since++; }
+      }, RUN_STAGE, { extra: 40 });
+    }
     ok(seen >= 1, 'met a boss');
   }],
   ['set 86: simRun ใช้ค่าด่านที่ส่งมา (ห้องบาลานซ์ "รันจริง") · ไม่มีบอส = ไม่เจอบอส · บอสหลังชนะ 1 ครั้ง ไม่เกิน 1 ตัว', () => {

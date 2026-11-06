@@ -148,7 +148,7 @@ export function readHistory(text, rules = RULES) {
   if (!Array.isArray(a)) return [];
   const idOk = x => typeof x === 'string' && /^[A-Z]{2}-\d{1,2}$/.test(x);
   return a.slice(0, HISTORY_MAX).filter(h => svObj(h) && svOnlyKeys(h, ['at', 'won', 'wins', 'hearts', 'rounds', 'team', 'top', 'topDmg', 'matches'])
-    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, 1000) && svIntIn(h.hearts, 0, rules.shop.hearts)
+    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, 1000) && h.wins <= h.rounds && svIntIn(h.hearts, 0, rules.shop.hearts)
     && svIntIn(h.rounds, 0, 1000) && svIntIn(h.matches, 0, 1000) && (h.top === null || idOk(h.top)) && svIntIn(h.topDmg, 0, 1e12)
     && Array.isArray(h.team) && h.team.length <= rules.maxBoard && h.team.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level']) && idOk(u.id) && svIntIn(u.level, 1, rules.maxLevel)));
 }
@@ -214,7 +214,7 @@ export function checkPlayRecord(x, cm, rules = RULES) {
   const S = rules.shop, team = t => Array.isArray(t) && t.length <= rules.maxBoard && t.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level', 'row', 'lane', 'perm'])
     && typeof u.id === 'string' && svOwn(cm, u.id) && svIntIn(u.level, 1, rules.maxLevel) && svIntIn(u.row, 0, rules.rows - 1) && svIntIn(u.lane, 0, rules.lanes - 1) && svIntIn(u.perm, 0, 100));
   return x.v === PLAY_VERSION && svIntIn(x.at, 0, 1e15) && typeof x.data === 'string' && /^[0-9a-f]{8}$/.test(x.data) && svIntIn(x.run, 0, 0xFFFFFFFF)
-    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, 1000) && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
+    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, 1000) && x.winsBefore < x.round && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
     && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
     && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)
