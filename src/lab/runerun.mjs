@@ -1,4 +1,5 @@
-// Set 95: boss win % when the player collects runes (phase 2b run flow) · node lab/runerun.mjs [runs] [diff ง่าย|กลาง|ยาก|off] [--write t1 t2 t3]
+// Set 95: boss win % when the player collects runes (phase 2b run flow) · node lab/runerun.mjs [runs] [mode ปกติ|ยาก|นรก|off] [--write t1 t2 t3]
+// set 100: enemy tier from the loss streak (rnFoeTier, like the game) · cards roll rarity by mode % · the bot uses the free reroll when no legend is offered
 // The player bot (core/bot.js, focus rotating over the 6 tribes) plays real runs against the game's bot teams at the picked difficulty
 // (pickBotTeam by round + enemy hp/atk × difficulty %, like the game · set 95: no rune shop) and handles runes with a simple greedy policy (harness only, not game rules):
 //   offer → highest rarity, battle runes before run-only ones · "one" runes sit on the strongest unit (level, then rarity), partner on the 2nd strongest.
@@ -15,15 +16,15 @@ import { pickBotTeam, tribeList, validateBotTeams } from '../core/botteams.js';
 import { dataHash } from '../core/save.js';
 import { RUN_STAGE, runBossAt, runBossTeam } from '../core/runboss.js';
 import { RUNE_RUN_ONLY, equipRunes } from '../core/runes.js';
-import { RN_RARS, rnEquips, rnFoeScale, rnMakeOffer, rnPlace, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
+import { RN_RARS, RN_MODE_KEY, rnFoeTier, rnRerollCost, rnRerollOffer, rnEquips, rnFoeScale, rnMakeOffer, rnPlace, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
 import { continueExtra, endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 
 const argv = process.argv.slice(2), WRITE = argv.includes('--write');
 const args = argv.filter(a => !a.startsWith('--'));
-const runs = +args[0] || 600, DIFF = args[1] || 'กลาง', RUNES = DIFF !== 'off';
+const runs = +args[0] || 600, DIFF = args[1] || 'ปกติ', RUNES = DIFF !== 'off';
 const T1 = +(args[2] || 75), T2 = +(args[3] || 62), T3 = +(args[4] || 50);
-if (process.env.DIFFPCT && RUNES) RUN_STAGE.settings[{ 'ง่าย': 'diffEasy', 'กลาง': 'diffNorm', 'ยาก': 'diffHard' }[DIFF]] = +process.env.DIFFPCT; // try a % without editing the stage
+if (process.env.DIFFPCT && RUNES) RUN_STAGE.settings[`mode${RN_MODE_KEY[DIFF]}`] = +process.env.DIFFPCT; // try a % without editing the stage
 const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
 const RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
@@ -56,7 +57,7 @@ for (let r = 0; r < runs; r++) {
     botShop(P, chars, RULES, { focus });
     if (RUNES) placeRunes(P);
     const rb = runBossAt(P);
-    const foe = rb ? null : pickBotTeam(BOT_TEAMS, P.round, P.seed, RUNES ? DIFF : null);
+    const foe = rb ? null : pickBotTeam(BOT_TEAMS, P.round, P.seed, RUNES ? rnFoeTier(P) : null);
     const mine = teamEntries(P);
     const e = equipRunes(buildTeam(mine, cm, RULES), RUNES ? rnEquips(P) : [], { winStreak: streak });
     const opts = { rules: RULES, log: false, ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}) };
@@ -68,7 +69,8 @@ for (let r = 0; r < runs; r++) {
     endMatch(P, won, chars, RULES, (res.perm || []).filter(x => x.side === 0), !!rb);
     if (P.over && P.hearts > 0 && !P.extra) { cleared++; continueExtra(P, RULES); } // set 99: the bot always plays the extra matches (boss 3+ lives there)
     if (RUNES && won && !P.over) {
-      const o = rnMakeOffer(P, rb ? 'boss' : DIFF);
+      let o = rnMakeOffer(P, rb ? 'boss' : DIFF);
+      if (o && !rb && !o.ids.some(id => rnRec(id).rarity === 'legend') && rnRerollCost(P) === 0) { rnRerollOffer(P); o = P.rn.offer; } // harness: free reroll when no legend (game resets ro at startRound; offer comes before it here)
       if (o) { let bi = 0; o.ids.forEach((id, i) => { if (rRank(rnRec(id)) > rRank(rnRec(o.ids[bi]))) bi = i; }); rnTakeOffer(P, bi); }
     }
   }

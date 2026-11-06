@@ -395,7 +395,7 @@ export const STAGE_SETTINGS = [
   // rune card reroll (set 100, user): rrFree free per match, then rrCost, +rrStep each time · resets every match · boss reward too
   ['rrFree', 'สุ่มการ์ดรูนใหม่ฟรีต่อรอบ', 1, 0, 9, 'ครั้ง'], ['rrCost', 'สุ่มการ์ดรูนใหม่ (เสียเงิน) ครั้งแรก', 3, 0, 50, 'เงิน'], ['rrStep', 'สุ่มการ์ดรูนใหม่: แพงขึ้นครั้งละ', 3, 0, 50, 'เงิน'],
   // Mode (set 100): enemy team max hp + atk × this % · boss rounds unchanged · ปกติ = 100 (user) · ยาก/นรก tuned to normal-round win 65–75 / 55–65 %
-  ['modeNormal', 'โหมดปกติ: พลังศัตรู', 100, 10, 400, '%'], ['modeHard', 'โหมดยาก: พลังศัตรู', 110, 10, 400, '%'], ['modeHell', 'โหมดนรก: พลังศัตรู', 120, 10, 400, '%'],
+  ['modeNormal', 'โหมดปกติ: พลังศัตรู', 100, 10, 400, '%'], ['modeHard', 'โหมดยาก: พลังศัตรู', 113, 10, 400, '%'], ['modeHell', 'โหมดนรก: พลังศัตรู', 131, 10, 400, '%'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
   ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
