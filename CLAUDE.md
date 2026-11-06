@@ -39,7 +39,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 
 ## Git workflow
 - Work on a branch; **merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user (rule 2 Nov)**. Gate FAIL or not runnable = do not merge, tell the user.
-- Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests); GitHub Actions runs the full gate on every push. Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
+- Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests); GitHub Actions runs the full gate on every push to main (+ manual run; branches skipped to save minutes, decision 6 Nov). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
 
 ## Relay between two Claude accounts (decision 27 Oct)
 Two Claude accounts take turns on this repo: when one hits its usage limit, the other picks up. Only ONE account works at a time.

@@ -2,8 +2,10 @@ name: tests
 
 # Same merge gate CLAUDE.md requires: build the 3 pages + run all tests + ui_smoke on the BUILT pages.
 # (Set 62 lesson: source tests passed while the built balance page was broken.)
+# Runs only on main (+ manual) to save private-repo Actions minutes; branches are gated in the chat before merge (CLAUDE.md rule 3).
 on:
   push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
