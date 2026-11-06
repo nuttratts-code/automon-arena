@@ -385,14 +385,17 @@ export const STAGE_BOSSES = [
 ];
 export const STAGE_SETTINGS = [
   ['bossEvery', 'ชนะกี่ครั้งแล้วเจอบอส', 4, 1, 20, 'ครั้ง'], ['bossesPerRun', 'บอสสูงสุดต่อ run (รวมแมตช์พิเศษ)', 10, 1, 10, 'ตัว'], // set 99: boss after every bossEvery normal wins
-  // Phase 2b (set 94, user 5 Nov): every normal-round WIN offers 1 free rune out of a fixed mix per difficulty (count of each rarity · user numbers);
-  // boss win = pick 1 of 2 legend (user set 95) · a rarity with no rune left is filled from the other rarities
-  ['offEasyC', 'ชนะง่าย: ให้เลือกรูนธรรมดา', 3, 0, 5, 'อัน'], ['offEasyR', 'ชนะง่าย: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offEasyL', 'ชนะง่าย: ให้เลือกรูนตำนาน', 0, 0, 5, 'อัน'],
-  ['offNormC', 'ชนะกลาง: ให้เลือกรูนธรรมดา', 1, 0, 5, 'อัน'], ['offNormR', 'ชนะกลาง: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offNormL', 'ชนะกลาง: ให้เลือกรูนตำนาน', 0, 0, 5, 'อัน'],
-  ['offHardC', 'ชนะยาก: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offHardR', 'ชนะยาก: ให้เลือกรูนหายาก', 2, 0, 5, 'อัน'], ['offHardL', 'ชนะยาก: ให้เลือกรูนตำนาน', 1, 0, 5, 'อัน'],
+  // Set 100 (user 6 Nov): modes ปกติ / ยาก / นรก · every normal-round WIN offers offCards runes, each card rolls its rarity by the mode %
+  // (rarity with nothing left → other rarities) · boss win = fixed counts offBoss* (pick 1 of 2 legend, user set 95)
+  ['offCards', 'ชนะรอบปกติ: จำนวนการ์ดรูนให้เลือก', 3, 1, 5, 'ใบ'],
+  ['rarNormalC', 'โหมดปกติ: โอกาสการ์ดธรรมดา', 80, 0, 100, '%'], ['rarNormalR', 'โหมดปกติ: โอกาสการ์ดหายาก', 15, 0, 100, '%'], ['rarNormalL', 'โหมดปกติ: โอกาสการ์ดตำนาน', 5, 0, 100, '%'],
+  ['rarHardC', 'โหมดยาก: โอกาสการ์ดธรรมดา', 10, 0, 100, '%'], ['rarHardR', 'โหมดยาก: โอกาสการ์ดหายาก', 75, 0, 100, '%'], ['rarHardL', 'โหมดยาก: โอกาสการ์ดตำนาน', 15, 0, 100, '%'],
+  ['rarHellC', 'โหมดนรก: โอกาสการ์ดธรรมดา', 5, 0, 100, '%'], ['rarHellR', 'โหมดนรก: โอกาสการ์ดหายาก', 25, 0, 100, '%'], ['rarHellL', 'โหมดนรก: โอกาสการ์ดตำนาน', 70, 0, 100, '%'],
   ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 2, 0, 5, 'อัน'],
-  // Difficulty (set 95, user 5 Nov · option A): enemy team max hp + atk × this % for the picked difficulty · boss rounds unchanged · rune shop removed
-  ['diffEasy', 'ความยากง่าย: พลังศัตรู', 92, 10, 400, '%'], ['diffNorm', 'ความยากกลาง: พลังศัตรู', 99, 10, 400, '%'], ['diffHard', 'ความยากยาก: พลังศัตรู', 106, 10, 400, '%'], // set 99: 100/105/155 → 92/99/106 (round matching made bot teams stronger; keeps targets 85/70/55)
+  // rune card reroll (set 100, user): rrFree free per match, then rrCost, +rrStep each time · resets every match · boss reward too
+  ['rrFree', 'สุ่มการ์ดรูนใหม่ฟรีต่อรอบ', 1, 0, 9, 'ครั้ง'], ['rrCost', 'สุ่มการ์ดรูนใหม่ (เสียเงิน) ครั้งแรก', 3, 0, 50, 'เงิน'], ['rrStep', 'สุ่มการ์ดรูนใหม่: แพงขึ้นครั้งละ', 3, 0, 50, 'เงิน'],
+  // Mode (set 100): enemy team max hp + atk × this % · boss rounds unchanged · ปกติ = 100 (user) · ยาก/นรก tuned to normal-round win 65–75 / 55–65 %
+  ['modeNormal', 'โหมดปกติ: พลังศัตรู', 100, 10, 400, '%'], ['modeHard', 'โหมดยาก: พลังศัตรู', 110, 10, 400, '%'], ['modeHell', 'โหมดนรก: พลังศัตรู', 120, 10, 400, '%'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
   ['lastStage', 'ด่านสุดท้าย (เล่นต่อได้ถึง)', 50, 10, 200, 'ด่าน'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];

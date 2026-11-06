@@ -1,7 +1,7 @@
 // Bosses inside the run (set 85 · set 99 user 6 Nov 2026): after every `bossEvery` normal-match WINS (4) the next match is a boss
 // instead of a bot team (stage settings, Balance Room ด่าน tab) · lose to it = lose a heart like a normal match, the counter restarts and
-// the same boss comes back after bossEvery more wins · win = next boss · up to `bossesPerRun` bosses beaten (extra matches too)
-// boss k = 1st, 2nd… boss (grows with bossAt) · which boss = shuffle of the enabled bosses by the run seed (same run → same bosses)
+// a boss comes back after bossEvery more wins · up to `bossesPerRun` bosses beaten (extra matches too)
+// boss k = bosses beaten + 1 (strength grows with bossAt) · which boss = random draw per boss match (set 100: same one may repeat)
 // Pure data, no randomness outside the run seed.
 import { makeRng } from './rng.js';
 import { stageDefaults, bossAt } from './stage.js';
@@ -17,9 +17,9 @@ export function runBossAt(st, stage = RUN_STAGE) {
   if (k > max) return null;
   const list = stage.bosses.filter(b => b.on);
   if (!list.length) return null;
-  const rng = makeRng(((seed >>> 0) ^ 0x5B0551E5) >>> 0), a = list.slice();
-  for (let i = a.length - 1; i > 0; i--) { const j = rng.int(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
-  return { boss: a[(k - 1) % a.length], k };
+  // set 100 (user 6 Nov): every boss match draws any enabled boss (the same one may come again, even after losing to it) · seed + round → same pick on reload
+  const rng = makeRng(((seed >>> 0) ^ 0x5B0551E5 ^ Math.imul((st.round | 0) + 1, 0x2C1B3C6D)) >>> 0);
+  return { boss: list[rng.int(list.length)], k };
 }
 // replay / play record form → boss record (null = unknown id, e.g. the boss was removed after the match)
 export const runBossById = (id, stage = RUN_STAGE) => stage.bosses.find(b => b.id === id) || null;

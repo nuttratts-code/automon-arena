@@ -89,7 +89,7 @@ export const TESTS_BOTS = [
     };
     for (let i = 0; i < 20; i++) eq(play(50 + i) === play(50 + i), true, `run ${i} ผลไม่ตรงกัน`);
   }],
-  ['set 99: boss after every bossEvery normal wins · lost boss = heart lost, comes back after bossEvery more wins · same seed same boss · bosses differ', () => {
+  ['set 99/100: boss after every bossEvery normal wins · lost boss = heart lost, a boss comes back after bossEvery more wins · same seed+round same boss · random boss per match', () => {
     const S = RUN_STAGE.settings, E = S.bossEvery, on = RUN_STAGE.bosses.filter(b => b.on);
     for (let seed = 1; seed <= 30; seed++) {
       const st = { seed, bw: 0, bk: 0 };
@@ -97,11 +97,14 @@ export const TESTS_BOTS = [
       const b1 = runBossAt(st); ok(b1 && b1.k === 1, 'boss 1 after bossEvery wins');
       eq(JSON.stringify(runBossAt({ ...st })), JSON.stringify(b1), 'เมล็ดเดิมได้บอสเดิม');
       st.bw = E; st.bk = 1; const b2 = runBossAt(st); eq(b2.k, 2, 'boss 2 after a boss win');
-      if (on.length >= 2) ok(b1.boss.id !== b2.boss.id, 'บอสซ้ำกันใน run เดียว');
       eq(runBossAt({ seed, bw: E, bk: S.bossesPerRun }), null, 'no more than bossesPerRun bosses');
     }
     const ids = new Set(); for (let seed = 1; seed <= 60; seed++) ids.add(runBossAt({ seed, bw: E, bk: 0 }).boss.id);
     ok(ids.size >= Math.min(3, on.length), 'สุ่มบอสหลายตัว');
+    // set 100 (user): each boss match draws any boss → over rounds of one run the same boss may repeat and others come too
+    const per = new Set(); let rep = false;
+    for (let round = 1; round <= 40; round++) { const b = runBossAt({ seed: 5, bw: E, bk: 0, round }).boss.id; if (per.has(b)) rep = true; per.add(b); }
+    ok(rep && per.size === on.length, 'random per boss match: repeats possible, every boss can come');
     // whole run: boss matches come exactly after E normal wins since the last boss fight
     const chars = buildCharacterList(); let since = 0, beaten = 0, seen = 0;
     for (let seed = 11; seed < 31; seed++) {

@@ -16,7 +16,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 6, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 7, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -25,7 +25,7 @@ export function newRun(chars, seed, rules = RULES) {
     rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
     // set 99 (user 6 Nov): bw = normal-match wins since the last boss fight (boss after bossEvery of them, core/runboss.js)
     // bk = bosses beaten (next boss = bk + 1; a lost boss comes back later) · extra = playing extra matches after the run was cleared
-    bw: 0, bk: 0, extra: false,
+    bw: 0, bk: 0, extra: false, ls: 0,
   };
   return st;
 }
@@ -212,7 +212,7 @@ export function startRound(st, chars, rules = RULES) {
     if (it) { st.gold += it; msgs.push(`ดอกเบี้ยจากรูน +${it}`); }
   }
   if (st.rn) {
-    st.rn.free = fx.free; st.rn.traded = false;
+    st.rn.free = fx.free; st.rn.traded = false; st.rn.ro = 0;
     const want = S.slots + fx.slots;
     while (st.shop.length < want) st.shop.push({ id: null, locked: false });
     if (st.shop.length > want) st.shop.length = want;
@@ -332,7 +332,7 @@ export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false
   if (won) for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchWin', chars, rules, msgs);
   st.lastWon = !!won;
   if (won) st.wins++; else st.hearts--;
-  if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) st.bw++;
+  if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) { st.bw++; st.ls = 0; } else st.ls++; // set 100: ls = normal losses in a row
   if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish)) st.over = true;
   return done(msgs);
 }

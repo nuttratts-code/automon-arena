@@ -1,5 +1,5 @@
 // Phase 2b — runes inside the normal run (set 94 · user 5 Nov 2026, claude/review-2026-11-05-set94-2b.md)
-// - every normal-round WIN offers 1 free rune out of a fixed rarity mix per difficulty (ง่าย/กลาง/ยาก) · boss win = offBoss* mix
+// - every normal-round WIN offers 1 free rune (set 100: cards roll rarity by mode %, rerollable) · boss win = offBoss* mix
 // - set 95 (user 5 Nov): rune shop REMOVED (runes come only from win offers) · difficulty = enemy team hp/atk × diffEasy/diffNorm/diffHard %
 // - every held rune is active (Q4 A) · a rune with scope "ตัวเดียว" works on the board slot it is placed on · link/buddy also need a partner slot
 // - run-only runes (gold, interest, shop slots, free reroll, heart trade, lure, fast merge, shadow, perm up, scout) are read by core/shop.js + the game page
@@ -11,17 +11,20 @@ import { runeRecord } from './runes.js';
 import { fail, done } from './shop.js';
 import { makeRng } from './rng.js';
 
-export const RN_TIERS = ['ง่าย', 'กลาง', 'ยาก']; // = BOT_TIERS (core/botteams.js)
-export const RN_OFFER_KEY = { 'ง่าย': 'Easy', 'กลาง': 'Norm', 'ยาก': 'Hard', boss: 'Boss' };
+// set 100 (user 6 Nov): modes ปกติ / ยาก / นรก (enemy % + rune card rarity %) · bot team strength tier (BOT_TIERS) is chosen by rnFoeTier
+export const RN_MODES = ['ปกติ', 'ยาก', 'นรก'];
+export const RN_MODE_KEY = { 'ปกติ': 'Normal', 'ยาก': 'Hard', 'นรก': 'Hell' };
+const RN_LEGACY = { 'ง่าย': 'ปกติ', 'กลาง': 'ยาก' }; // offer kinds saved before set 100 (state v6 is refused anyway; kept for safety)
+export const RN_OFFER_KEY = { ...RN_MODE_KEY, boss: 'Boss' };
+export const RN_TEAM_TH = { 'ง่าย': 'อ่อน', 'กลาง': 'กลาง', 'ยาก': 'แข็ง' }; // bot team tier → player-facing name
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
-export const RN_DIFF_KEY = { 'ง่าย': 'diffEasy', 'กลาง': 'diffNorm', 'ยาก': 'diffHard' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
 
 // own random stream (st.rn.n) so rune rolls never shift the unit shop's rolls
 function rnDraw(st) { return makeRng((st.seed ^ 0x52554E45 ^ Math.imul(++st.rn.n, 0x85EBCA77)) >>> 0).next(); }
 export function newRunes() {
-  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, shadow: 0 };
+  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, shadow: 0, ro: 0 }; // ro = rune card rerolls used this match (set 100)
 }
 // rune record with its id · null = unknown / switched off / deleted
 export function rnRec(id, stage = RUN_STAGE) {
@@ -44,18 +47,47 @@ function rnPool(st, rarity, stage, skip) {
 function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) * list.length)] : null; }
 
 // ---------- reward after a win (offer: pick 1 of N) ----------
-// kind = 'ง่าย' | 'กลาง' | 'ยาก' | 'boss' · a rarity with nothing left is filled from any rarity · nothing at all = no offer
-export function rnMakeOffer(st, kind, stage = RUN_STAGE) {
+// kind = mode ('ปกติ' | 'ยาก' | 'นรก') → offCards cards, each rolls its rarity by the mode % (rar<Mode>C/R/L) · 'boss' = fixed counts offBoss*
+// a rarity with nothing left is filled from any rarity · nothing at all = no offer · skip = ids to avoid if possible (reroll)
+function rnRollRar(st, key, S) {
+  const w = RN_RARS.map(r => Math.max(0, S[`rar${key}${RN_RAR_KEY[r]}`] | 0)), tot = w.reduce((a, b) => a + b, 0);
+  if (!tot) return RN_RARS[0];
+  let x = rnDraw(st) * tot;
+  for (let i = 0; i < w.length; i++) { if (x < w[i]) return RN_RARS[i]; x -= w[i]; }
+  return RN_RARS[RN_RARS.length - 1];
+}
+export function rnMakeOffer(st, kind, stage = RUN_STAGE, avoid = []) {
+  kind = RN_LEGACY[kind] || kind;
   if (!st.rn || !RN_OFFER_KEY[kind]) return null;
-  const S = stage.settings, key = RN_OFFER_KEY[kind], ids = [], skip = new Set();
-  for (const rar of RN_RARS) for (let i = 0; i < (S[`off${key}${RN_RAR_KEY[rar]}`] | 0); i++) {
-    const r = rnPickFrom(st, rnPool(st, rar, stage, skip)) || rnPickFrom(st, rnPool(st, null, stage, skip));
+  const S = stage.settings, key = RN_OFFER_KEY[kind], ids = [], skip = new Set(avoid);
+  const rars = kind === 'boss' ? RN_RARS.flatMap(rar => Array(S[`offBoss${RN_RAR_KEY[rar]}`] | 0).fill(rar))
+    : Array.from({ length: Math.max(1, S.offCards | 0) }, () => rnRollRar(st, key, S));
+  for (const rar of rars) {
+    const r = rnPickFrom(st, rnPool(st, rar, stage, skip)) || rnPickFrom(st, rnPool(st, null, stage, skip))
+      || rnPickFrom(st, rnPool(st, null, stage, new Set(ids))); // reroll: the old cards may come back only when nothing else is left
     if (!r) break;
     ids.push(r.id); skip.add(r.id);
   }
   st.rn.offer = ids.length ? { kind, ids } : null;
   return st.rn.offer;
 }
+// reroll the offer cards (set 100, user): rrFree free per match, then rrCost + rrStep × (paid rerolls so far) gold · counter reset in startRound
+export function rnRerollCost(st, stage = RUN_STAGE) {
+  const S = stage.settings, used = (st.rn && st.rn.ro) | 0, free = Math.max(0, S.rrFree | 0);
+  return used < free ? 0 : Math.max(0, S.rrCost | 0) + Math.max(0, S.rrStep | 0) * (used - free);
+}
+export function rnRerollOffer(st, stage = RUN_STAGE) {
+  const o = st.rn && st.rn.offer;
+  if (!o) return fail('ไม่มีการ์ดรูนให้สุ่มใหม่');
+  const cost = rnRerollCost(st, stage);
+  if (st.gold < cost) return fail(`เงินไม่พอ (ต้องใช้ ${cost})`);
+  st.gold -= cost; st.rn.ro++;
+  if (!rnMakeOffer(st, o.kind, stage, o.ids)) st.rn.offer = o; // nothing at all left → keep the old cards
+  return done([cost ? `สุ่มการ์ดรูนใหม่ -${cost} เงิน` : 'สุ่มการ์ดรูนใหม่ (ฟรี)']);
+}
+// enemy bot team tier (set 100, user): first match / after a normal win = any of the 12 teams · 1 normal loss in a row = กลาง · 2+ = ง่าย (อ่อน)
+// st.ls = normal (non-boss) losses in a row (core/shop.js endMatch) · boss matches do not touch it (user ก1)
+export const rnFoeTier = st => ((st.ls | 0) >= 2 ? 'ง่าย' : (st.ls | 0) === 1 ? 'กลาง' : null);
 export function rnTakeOffer(st, i, stage = RUN_STAGE) {
   const o = st.rn && st.rn.offer;
   if (!o || !Number.isInteger(i) || i < 0 || i >= o.ids.length) return fail('ไม่มีรูนให้เลือก');
@@ -68,9 +100,9 @@ export function rnTakeOffer(st, i, stage = RUN_STAGE) {
 export function rnSkipOffer(st) { if (st.rn) st.rn.offer = null; return done(); }
 function rnAdd(st, r) { st.rn.bag[r.id] = rnHeld(st, r.id) + 1; }
 
-// ---------- difficulty (set 95, user A) ----------
-// enemy % for a picked difficulty (100 = as the bot team is) · boss rounds are never scaled
-export const rnDiffPct = (tier, stage = RUN_STAGE) => (RN_DIFF_KEY[tier] ? stage.settings[RN_DIFF_KEY[tier]] ?? 100 : 100);
+// ---------- mode enemy % (set 95 difficulty → set 100 modes) ----------
+// enemy % for a picked mode (100 = as the bot team is) · null / unknown = 100 · boss rounds are never scaled
+export const rnDiffPct = (mode, stage = RUN_STAGE) => (RN_MODE_KEY[mode] ? stage.settings[`mode${RN_MODE_KEY[mode]}`] ?? 100 : 100);
 // enemy units (buildTeam output) with max hp and atk × pct/100 (rounded down, hp ≥ 1) · summons scale the same way
 // set 99: round = the match round → extra matches past growFrom also × enemyMultAt (stage settings growFrom/growPct, compounding)
 export function rnFoeScale(units, tier, stage = RUN_STAGE, round = 0) {
@@ -168,7 +200,7 @@ export function rnCompactOk(list, rules) {
 // ---------- save check (st.rn) ----------
 export function rnValidate(rn, rules, stage = RUN_STAGE) {
   const errors = [], isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
-  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'shadow'];
+  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'shadow', 'ro'];
   if (!isObj(rn) || !Object.keys(rn).every(k => KEYS.includes(k)) || !KEYS.every(k => k in rn)) return ['รูน: ผิดรูปแบบ'];
   if (!isObj(rn.bag) || Object.keys(rn.bag).length > RN_MAX_HELD) errors.push('รูน: กระเป๋าผิด');
   else for (const [id, n] of Object.entries(rn.bag)) { const r = rnRec(id, stage); if (!r || !Number.isInteger(n) || n < 1 || n > (r.max || 1)) errors.push(`รูน ${id}: ผิด`); }
@@ -180,6 +212,7 @@ export function rnValidate(rn, rules, stage = RUN_STAGE) {
     && Array.isArray(rn.offer.ids) && rn.offer.ids.length >= 1 && rn.offer.ids.length <= 15 && rn.offer.ids.every(id => !!rnRec(id, stage)))) errors.push('รูนรางวัลผิด');
   if (!Number.isInteger(rn.n) || rn.n < 0 || rn.n > 1e9) errors.push('รูน: ตัวนับสุ่มผิด');
   if (!Number.isInteger(rn.free) || rn.free < 0 || rn.free > 99) errors.push('รูน: สุ่มฟรีผิด');
+  if (!Number.isInteger(rn.ro) || rn.ro < 0 || rn.ro > 999) errors.push('รูน: สุ่มการ์ดใหม่ผิด');
   if (typeof rn.traded !== 'boolean') errors.push('รูน: แลกหัวใจผิด');
   if (!Number.isInteger(rn.shadow) || rn.shadow < 0 || rn.shadow > 99) errors.push('รูน: เงาผิด');
   return errors;
