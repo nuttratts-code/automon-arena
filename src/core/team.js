@@ -52,7 +52,7 @@ export function unitOf(c, e, rules, charMap) {
   }
 }
 
-// นับเผ่าบนบอร์ด: ตัวซ้ำชื่อเดียวกันนับครั้งเดียว · เผ่าเพิ่มนับด้วย · ตัวที่ down ยังนับ
+// นับเผ่าบนบอร์ด: ตัวซ้ำชื่อเดียวกันนับครั้งเดียว · เผ่าเพิ่มนับด้วย · ตัวที่ล้มยังนับ
 export function countTribes(entries, charMap) {
   const counts = Object.fromEntries(TRIBES.map(t => [t, 0]));
   const ids = new Set(entries.map(e => e.id));

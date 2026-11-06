@@ -122,6 +122,16 @@ with sync_playwright() as p:
         chk(maxBoard>=3,'units moved from bench to board')
         # ชุด 24: ปุ่มความเร็ว 8× 16× · ร้านไฮไลต์ตัวที่มีแล้ว · คำอธิบายสกิลครบ 3 เลเวล
         chk(pg.eval_on_selector_all('[data-speed]','e=>e.map(b=>b.dataset.speed)')==['1','2','4','8','16'],'speed buttons 1-16')
+        # set 106: auto-skip toggle · buy + merge by dropping a shop card on an owned Lv1 copy (works with a full bench) · no English "down" in game texts
+        chk(pg.is_visible('#autoSkip') or pg.query_selector('#autoSkip') is not None,'auto-skip button')
+        bm=pg.evaluate("""(()=>{const keep=JSON.stringify(P); const id=chars[0].id;
+          P.over=false; P.gold=99; P.shop[0]={id,locked:false};
+          P.board=[[null,null],[null,null],[null,null]]; P.bench=P.bench.map((_,i)=>({uid:900+i,id:chars[1].id,level:1,perm:{},paid:1}));
+          P.board[0][0]={uid:990,id,level:1,perm:{},paid:1}; P.board[1][0]={uid:991,id,level:1,perm:{},paid:1};
+          act({at:'shop',i:0},{at:'board',row:0,lane:0}); const u=P.board[0][0], out=[u&&u.level, P.board[1][0], P.shop[0].id, P.bench.every(Boolean)];
+          P=JSON.parse(keep); render(); return out;})()""")
+        chk(bm==[2,None,None,True],'shop card dropped on own copy = buy + merge, full bench ok '+str(bm))
+        chk('down' not in pg.evaluate("GLOSSARY.map(x=>x.join(' ')).join(' ')"),'glossary has no English down')
         if not pg.evaluate('P.over'):
             if pg.is_visible('#offerDlg'): pg.click('#offer button')
             own=pg.evaluate("""(()=>{const ids=new Set(allUnits(P).map(x=>x.u.id)); const want=P.shop.filter(s=>s.id&&ids.has(s.id)).length; return [want, document.querySelectorAll('#shop .slot.owned').length];})()""")
@@ -376,7 +386,7 @@ with sync_playwright() as p:
         chk(pg.evaluate(f"chars.find(c=>c.id==='HL-2').skills[{k}].of.who")=='rowEnemies','of who row enemies')
         # ชุด 16: เริ่มแมตช์ → ตัวเอง down ทันที · ใส่ใครล็อกเป็นตัวเอง
         pg.select_option(f'#s{k}-when','matchStart'); pg.select_option(f'#s{k}-do','selfKo')
-        chk(pg.is_disabled(f'#s{k}-to') and 'ตัวเอง down ทันที' in pg.inner_text(f'#skillList .skcard >> nth={k}'),'selfKo editor')
+        chk(pg.is_disabled(f'#s{k}-to') and 'ตัวเองล้มทันที' in pg.inner_text(f'#skillList .skcard >> nth={k}'),'selfKo editor')
         pg.select_option(f'#s{k}-when','hitTaken'); pg.select_option(f'#s{k}-do','reflect')
         # ชุด 12: สะท้อนแบบ % ของ อยู่ในรายการเมื่อโดนตี
         dos2=pg.eval_on_selector_all(f'#s{k}-do option','e=>e.map(o=>o.value)'); chk('reflectOf' in dos2,'reflectOf listed on hitTaken')

@@ -95,7 +95,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .bench .cell { background: color-mix(in srgb, var(--panel) 45%, transparent); border-color: var(--line); height: clamp(44px, 11vh, 80px); }
 .fighting .benchrow { opacity: .35; pointer-events: none; }
 .unit { display: grid; justify-items: center; align-content: center; gap: 2px; min-width: 0; width: 100%; }
-.board .shape { width: clamp(26px, 8vh, 60px); height: clamp(26px, 8vh, 60px); }
+.board .shape { width: clamp(30px, 12vh, 92px); height: clamp(30px, 12vh, 92px); } /* set 106 (G4): bigger units */
 .bench .shape { width: clamp(18px, 4.5vh, 32px); height: clamp(18px, 4.5vh, 32px); }
 .bench .uid { display: none; }
 .mergeable { box-shadow: 0 0 0 2px var(--gold) inset; }
@@ -174,19 +174,19 @@ button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-c
 .mid { background: repeating-linear-gradient(var(--mid) 0 6px, transparent 6px 12px); width: 2px; justify-self: center; }
 .arena .cell { cursor: pointer; touch-action: manipulation; }
 .arena .unit { transition: opacity .3s, filter .3s; gap: 1px; }
-.arena .shape { width: clamp(22px, 6.5vh, 48px); height: clamp(22px, 6.5vh, 48px); }
+.arena .shape { width: clamp(26px, 10vh, 76px); height: clamp(26px, 10vh, 76px); }
 .arena .unit.down { opacity: .35; filter: grayscale(1); }
-.arena .unit.down::after { content: "down"; font: 600 .7rem var(--f-mono); color: var(--ink); background: var(--panel); border-radius: 4px; padding: 0 4px; position: absolute; top: 4px; right: 4px; }
+.arena .unit.down::after { content: "ล้ม"; font: 600 .7rem var(--f-mono); color: var(--ink); background: var(--panel); border-radius: 4px; padding: 0 4px; position: absolute; top: 4px; right: 4px; }
 .arena .cell.picked { outline: 3px solid var(--sel); outline-offset: 1px; }
-.hp { position: relative; width: 90%; height: 6px; border-radius: 3px; background: var(--hp-bg); overflow: hidden; }
+.hp { position: relative; width: 92%; height: 9px; border-radius: 4px; background: var(--hp-bg); overflow: hidden; }
 .hp-fill { position: absolute; inset: 0 auto 0 0; background: var(--hp); transition: width .15s; }
-.armor-fill { position: absolute; inset: 0 auto 0 0; height: 2px; background: var(--armor); transition: width .15s; }
+.armor-fill { position: absolute; inset: 0 auto 0 0; height: 3px; background: var(--armor); transition: width .15s; }
 .nums { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 6px; font: 500 .62rem var(--f-mono); font-variant-numeric: tabular-nums; color: var(--mute); line-height: 1.25; }
 .armor-text { color: var(--n-armor); }
 .chips { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; min-height: 12px; }
 .chip { font: 600 .6rem var(--f-body); padding: 0 4px; border-radius: 4px; background: var(--panel); }
 .c-burn { color: var(--n-burn); } .c-shock { color: var(--n-shock); } .c-multi { color: var(--ink, inherit); font-weight: 700; }
-.float { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font: 600 .8rem var(--f-mono); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px var(--arena), 0 0 3px var(--arena); }
+.float { position: absolute; left: 50%; top: 28%; transform: translateX(-50%); font: 700 clamp(.85rem, 2.6vh, 1.2rem) var(--f-mono); pointer-events: none; white-space: nowrap; text-shadow: 0 0 3px var(--arena), 0 0 3px var(--arena); }
 .n-hit { color: var(--n-hit); } .n-shock { color: var(--n-shock); } .n-burn { color: var(--n-burn); } .n-heal { color: var(--n-heal); } .n-armor { color: var(--n-armor); } .n-storm { color: var(--n-storm); }
 .result { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; background: color-mix(in srgb, var(--arena) 65%, transparent); border-radius: 12px; }
 .result > div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 22px; text-align: center; display: grid; gap: 8px; justify-items: center; max-width: calc(100% - 24px); max-height: calc(100% - 16px); overflow: auto; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
@@ -257,7 +257,16 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .replays li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .replays li button { padding: 3px 10px; font-size: .78rem; }
 .runcode { width: 100%; box-sizing: border-box; font: .72rem/1.3 monospace; word-break: break-all; }
+.endteam { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ecard { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 10px 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); text-align: center; min-width: 0; }
+.ecard .shape { width: 64px; height: 64px; }
+.ecard.empty { border-style: dashed; background: transparent; }
+.ecard .perm { font-size: .7rem; color: var(--accent); overflow-wrap: anywhere; }
 details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
+.term[role="button"] { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+.termhelp { min-height: 1.2em; }
+.gloss summary { font-size: .8rem; color: var(--mute); }
+.gloss .msgs { font-size: .76rem; }
 .logbox .row label { font-size: .8rem; display: inline-flex; gap: 4px; align-items: center; }
 .logbox select { font: inherit; max-width: 100%; }
 .simlog { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow-y: auto; font-family: var(--f-body); font-size: .82rem; border: 1px solid var(--line); border-radius: 8px; }
@@ -319,8 +328,9 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   .dock { padding: 5px; min-height: 0; }
   .prepdock { gap: 6px; }
   .slot { padding: 3px 6px; column-gap: 6px; }
-  .slot .uname { font-size: .72rem; }
-  .slot .sub.tr { display: none; }
+  .slot .uname { font-size: .72rem; white-space: normal; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; } /* set 106 (B5): full name on phones */
+  .slot .sub.tr, .slot .cid { display: none; }
+  .slot .shape { width: clamp(24px, 8vh, 40px); height: clamp(24px, 8vh, 40px); }
   #fight { padding: 6px 14px; font-size: .9rem; }
   #shopLv { font-size: .62rem; padding: 2px 5px; }
   .arena .uname, .arena .chips { display: none; }
@@ -348,7 +358,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
     <span class="stat heart" id="sHearts">หัวใจ 10</span>
     <span class="stat" id="sWins">ชนะ 0/10</span>
     <span class="stat gold" id="sGold">เงิน 10</span>
-    <button class="hudbtn" id="tribeBtn" type="button" aria-label="เผ่าในทีม"><span class="mini" id="tribeMini"></span><span class="badge" id="tribeCnt">0/0</span></button>
+    <button class="hudbtn" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span class="lbl">เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
     <button class="hudbtn" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span class="badge" id="runeCnt">0</span></button>
     <button class="hudbtn" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
     <span class="grow"></span>
@@ -400,12 +410,13 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
       <span class="stat" id="clock">0.0 วิ</span>
       <div class="speed" role="group" aria-label="ความเร็ว">
         <button type="button" data-speed="1" aria-pressed="false">1×</button>
-        <button type="button" data-speed="2" aria-pressed="true">2×</button>
-        <button type="button" data-speed="4" aria-pressed="false">4×</button>
+        <button type="button" data-speed="2" aria-pressed="false">2×</button>
+        <button type="button" data-speed="4" aria-pressed="true">4×</button>
         <button type="button" data-speed="8" aria-pressed="false">8×</button>
         <button type="button" data-speed="16" aria-pressed="false">16×</button>
       </div>
       <button id="skip" type="button">ข้ามไปผล</button>
+      <button id="autoSkip" type="button" aria-pressed="false" title="เปิดไว้ = ทุกแมตช์ข้ามไปดูผลทันที (ดูรีเพลย์ทีหลังได้)">ข้ามอัตโนมัติ</button>
       <div class="btext grow"><span id="battleTitle">แมตช์</span><span id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span></div>
     </div>
   </div>
@@ -422,7 +433,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
   <h2 id="endTitle"></h2>
   <p class="hint" id="endSummary"></p>
   <h3>ทีมสุดท้าย</h3>
-  <ul class="msgs" id="endTeam"></ul>
+  <div class="endteam" id="endTeam"></div>
   <h3>สถิติ run</h3>
   <ul class="msgs" id="endStats"></ul>
   <h3>ประวัติ run ในเครื่องนี้</h3>
@@ -491,7 +502,7 @@ const simSeedLabel = () => null;
 const chars = buildCharacterList(), CM = makeCharMap(chars);
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
-let P = null, B = null, msgs = [], speed = 2, confirmEmpty = false;
+let P = null, B = null, msgs = [], speed = 4, confirmEmpty = false, autoSkip = false; // set 106: default 4× · speed + auto-skip remembered (localStorage)
 let diff = 'ปกติ'; // set 94: difficulty picked for the next normal round (page only, not saved) · set 100: modes ปกติ/ยาก/นรก, starts at ปกติ (user)
 // ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
 const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
@@ -557,6 +568,7 @@ function pushMsgs(r) {
   toast(add);
 }
 let toastT = 0;
+function hideToast() { clearTimeout(toastT); $('toast').hidden = true; }
 function toast(list) {
   const t = $('toast'); t.replaceChildren(...list.slice(-3).map(m => el('div', m.err ? 'err' : '', m.t))); t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, list.some(m => m.err) ? 3500 : 2600);
@@ -592,6 +604,10 @@ const shapeOf = (id, level) => unitShape(CM[id], level); // ชุด 25: รู
 const refKey = r => r.at === 'board' ? `b:${r.row}:${r.lane}` : r.at === 'bench' ? `n:${r.i}` : `s:${r.i}`;
 const sameRef = (a, b) => a && b && refKey(a) === refKey(b);
 function unitAt(ref) { return ref.at === 'board' ? P.board[ref.row][ref.lane] : ref.at === 'bench' ? P.bench[ref.i] : null; }
+function shopMergeTargets(id) { // set 106: Lv1 copies a shop card can be dropped on (buy + merge)
+  const lv1 = allUnits(P).filter(x => x.u.id === id && x.u.level === 1);
+  return lv1.length >= Math.max(1, S.mergeCount - 1) ? lv1.map(x => x.ref) : [];
+}
 function mergeTargets(u) { // ตัวชนิดเดียวกัน เลเวลเท่ากัน ที่มีครบ 3
   if (!u || u.level >= RULES.maxLevel) return [];
   const same = allUnits(P).filter(x => x.u.id === u.id && x.u.level === u.level);
@@ -615,7 +631,7 @@ function renderShopLevel() {
 POPS.shop = () => {
   const odds = oddsAt(shopLvOf(P)), box = el('p', 'hint odds'); box.id = 'shopOdds'; box.append(el('span', '', 'โอกาสเจอ:'));
   for (const r of Object.keys(odds)) if (odds[r] > 0) box.append(el('span', 'rar ' + RARITY_CLASS[r], `${r} ${odds[r]}%`));
-  return [phead('ร้านค้า', shopLvText()), box, el('p', 'hint', `รีโรล ${S.rerollCost} เงิน · ระดับร้านขึ้นเองตามรอบ · ลากตัวในร้านไปวางบนบอร์ด/ม้านั่ง = ซื้อ · ลากตัวของคุณมาที่แถบร้าน = ขาย`), pacts()];
+  return [phead('ร้านค้า', shopLvText()), box, el('p', 'hint', `รีโรล ${S.rerollCost} เงิน · ระดับร้านขึ้นเองตามรอบ · ลากตัวในร้านไปวางบนบอร์ด/ม้านั่ง = ซื้อ · ลากไปทับตัวชนิดเดียวกัน (มีเลเวล 1 ครบ 2 ตัว) = ซื้อแล้วรวมร่างทันที ม้านั่งเต็มก็ได้ · ลากตัวของคุณมาที่แถบร้าน = ขาย`), pacts()];
 };
 $('shopLv').addEventListener('click', () => openPop('shop'));
 function render() {
@@ -634,7 +650,7 @@ function render() {
     card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price}`);
     if (s.locked) card.classList.add('locked');
     if (c.price > P.gold) card.classList.add('cant');
-    const sub = el('span', 'sub'); sub.append(`${c.id} · `, rarityTag(c.rarity));
+    const sub = el('span', 'sub'); sub.append(el('span', 'cid', `${c.id} · `), rarityTag(c.rarity));
     card.append(shapeOf(c.id), el('span', 'uname', c.name), sub, el('span', 'sub tr', `เผ่า${c.tribe}`), el('span', 'price', `${c.price} เงิน`));
     // ชุด 24: ไฮไลต์ตัวที่มีอยู่แล้วบนบอร์ด/ม้านั่ง · มี Lv1 ครบ (รวมร่าง − 1) ตัว = ซื้อแล้วรวมร่างได้
     const mine = allUnits(P).filter(x => x.u.id === c.id), lv1 = mine.filter(x => x.u.level === 1).length;
@@ -642,7 +658,7 @@ function render() {
       const ready = lv1 >= S.mergeCount - 1;
       card.classList.add('owned'); if (ready) card.classList.add('ready');
       card.append(el('span', 'own', ready ? 'รวมร่างได้' : `มีแล้ว ${mine.length}`));
-      card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price} · มีแล้ว ${mine.length} ตัว${ready ? ' ซื้อแล้วรวมร่างได้' : ''}`);
+      card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price} · มีแล้ว ${mine.length} ตัว${ready ? ' ลากไปทับตัวที่มีเพื่อซื้อแล้วรวมร่างทันที' : ''}`);
     }
     shop.append(card);
   });
@@ -691,6 +707,27 @@ function statLine(id, level, perm, all) {
     ...(u.startArmor ? [['เกราะสะสม (ถาวร)', u.startArmor]] : []),
   ];
 }
+// set 106 (playtest G3): tap a stat name = one-line meaning · keyword list from GLOSSARY (game/labels.js)
+const STAT_HELP = {
+  HP: 'พลังชีวิต · ถึง 0 = ล้ม', 'พลังโจมตี': 'ดาเมจต่อ 1 ฮิต (ก่อนหักเกราะ)', 'คูลดาวน์': 'เวลารอระหว่างการโจมตีแต่ละชุด ยิ่งน้อยยิ่งตีถี่',
+  'มัลติฮิต': 'จำนวนฮิตใน 1 ชุดการโจมตี · มัลติฮิต 3 = ตีชุดละ 3 ฮิต', 'ไฟ/ฮิต': 'ทุกฮิตที่ตีโดน ใส่ไฟให้เป้าเท่านี้ · ไฟทำดาเมจทุก 1 วิ แล้วลดลง (โดนเกราะกัน)',
+  'ช็อต/ฮิต': 'ทุกฮิตที่ตีโดน ใส่ช็อตให้เป้าเท่านี้ · ช็อตทำให้ทุกฮิตที่เป้าโดน แรงขึ้นเท่าจำนวนช็อต เข้า HP ตรง ไม่โดนเกราะ',
+  'เกราะ/ฮิต': 'ทุกฮิตที่ตีโดน ตัวเองได้เกราะเท่านี้ · เกราะกันดาเมจก่อน HP', 'ฟื้น/ฮิต': 'ทุกฮิตที่ตีโดน ตัวเองฟื้น HP เท่านี้',
+  'เกราะสะสม (ถาวร)': 'ค่าถาวรจากสกิลร้านค้า · ได้เกราะเท่านี้ทุกครั้งที่เริ่มแมตช์',
+};
+function termEl(k, v, help) {
+  const d = el('span', 'term', `${k} `); d.append(el('b', '', String(v)));
+  const tip = STAT_HELP[k]; if (!tip) return d;
+  d.title = tip; d.tabIndex = 0; d.setAttribute('role', 'button');
+  const show = () => { help.textContent = `${k}: ${tip}`; };
+  d.addEventListener('click', show); d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
+  return d;
+}
+function glossaryEl() {
+  const box = el('details', 'gloss'); box.append(el('summary', '', 'คำศัพท์ (ไฟ ช็อต มัลติฮิต ฯลฯ)'));
+  const ul = el('ul', 'msgs'); for (const [k, t] of GLOSSARY) { const li = el('li'); li.append(el('b', '', k + ': '), t); ul.append(li); }
+  box.append(ul); return box;
+}
 // set 97: unit details popup (shop card / board / bench) · Lv1/2/3 tabs · buy + lock (shop) or sell (own unit)
 POPS.unit = ref => {
   let id, level = 1, perm = {}, u = null;
@@ -713,25 +750,28 @@ POPS.unit = ref => {
     lvBar.append(b);
   }
   right.append(lvBar);
-  const st = el('div', 'stats2');
-  for (const [k, v] of statLine(id, vl, {}, true)) { const d = el('span', '', `${k} `); d.append(el('b', '', String(v))); st.append(d); }
-  right.append(st);
+  const st = el('div', 'stats2'), help = el('span', 'hint termhelp', 'แตะชื่อค่าเพื่อดูความหมาย');
+  for (const [k, v] of statLine(id, vl, {}, true)) st.append(termEl(k, v, help));
+  right.append(st, help);
   // ค่าถาวร: แยกแถว "ตอนนี้ (รวมถาวร)" ของเลเวลปัจจุบัน (ผู้ใช้เลือก)
   if (Object.values(perm).some(v => v)) {
     const now = el('div', 'stats2 now'); now.append(el('span', 'nowlbl', `ตอนนี้ Lv${level} (รวมถาวร)`));
-    for (const [k, v] of statLine(id, level, perm, true)) { const d = el('span', '', `${k} `); d.append(el('b', '', String(v))); now.append(d); }
+    for (const [k, v] of statLine(id, level, perm, true)) now.append(termEl(k, v, help));
     right.append(now);
   }
   // สกิลเฉพาะเลเวลอื่น แสดงจาง · ค่าในคำอธิบายขีดเส้นใต้ตามเลเวลที่เลือกดู
   for (const sk of c.skills) { const on = !sk.lv || sk.lv.includes(vl); const line = el('span', on ? 'skill' : 'skill off'); line.append(skillTags(sk), skillLineEl(sk, on ? vl : 0)); right.append(line); }
   if (!c.skills.length) right.append(el('span', 'hint', 'ไม่มีสกิล'));
+  right.append(glossaryEl());
   const pk = Object.entries(perm).filter(([, v]) => v);
   if (pk.length) right.append(el('span', 'perm', 'ค่าถาวร: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
   wrap.append(right);
   let acts;
   if (ref.at === 'shop') {
     const s = P.shop[ref.i], cant = c.price > P.gold;
+    const mt = shopMergeTargets(id);
     acts = pacts(pbtn(s.locked ? 'ปลดล็อก' : 'ล็อก', () => { pushMsgs(toggleLock(P, ref.i)); render(); }),
+      ...(mt.length ? [pbtn(`ซื้อ + รวมร่าง ${c.price} เงิน`, () => { closePop(); pushMsgs(buyMerge(P, ref.i, mt[0], chars)); confirmEmpty = false; render(); }, 'primary', cant)] : []),
       pbtn(cant ? `ซื้อ ${c.price} เงิน · เงินไม่พอ (มี ${P.gold})` : `ซื้อลงม้านั่ง ${c.price} เงิน`, () => { closePop(); doBuy(ref.i, null); }, 'primary', cant));
   } else {
     const mt = mergeTargets(u);
@@ -746,7 +786,13 @@ function doBuy(i, dest) { const r = buy(P, i, dest, chars); pushMsgs(r); confirm
 function doSell(ref) { const r = sell(P, ref, chars); pushMsgs(r); render(); }
 function act(from, to) {
   if (!from || !to || sameRef(from, to)) return;
-  if (from.at === 'shop') { if (to.at === 'shop') return; if (unitAt(to)) { pushMsgs({ ok: false, msg: 'ซื้อลงช่องที่มีตัวอยู่ไม่ได้ เลือกช่องว่าง' }); render(); return; } return doBuy(from.i, to); }
+  if (from.at === 'shop') {
+    if (to.at === 'shop') return;
+    const t = unitAt(to), sid = P.shop[from.i] && P.shop[from.i].id;
+    if (t && t.id === sid) { pushMsgs(buyMerge(P, from.i, to, chars)); confirmEmpty = false; render(); return; } // set 106: drop on own copy = buy + merge
+    if (t) { pushMsgs({ ok: false, msg: 'ซื้อลงช่องที่มีตัวอยู่ไม่ได้ เลือกช่องว่าง หรือลากไปทับตัวชนิดเดียวกันเพื่อรวมร่าง' }); render(); return; }
+    return doBuy(from.i, to);
+  }
   if (to.at === 'shop') return;
   const r = move(P, from, to, chars); pushMsgs(r); confirmEmpty = false;
   render();
@@ -788,7 +834,7 @@ document.addEventListener('pointermove', e => {
     const u = drag.ref.at === 'shop' ? null : unitAt(drag.ref), id = u ? u.id : P.shop[drag.ref.i].id;
     drag.ghost = shapeOf(id, u ? u.level : 0); drag.ghost.classList.add('ghost'); document.body.append(drag.ghost);
     drag.src.classList.add('dragging');
-    for (const r of mergeTargets(u)) { const n = document.querySelector(`[data-ref="${refKey(r)}"]`); if (n && n !== drag.src) n.classList.add('mergeable'); }
+    for (const r of (u ? mergeTargets(u) : shopMergeTargets(id))) { const n = document.querySelector(`[data-ref="${refKey(r)}"]`); if (n && n !== drag.src) n.classList.add('mergeable'); }
   }
   drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
   document.querySelectorAll('.drop-ok').forEach(n => n.classList.remove('drop-ok')); $('dock').classList.remove('sell-over');
@@ -890,7 +936,7 @@ function slotPick(id, partner, label) {
 // set 97: tribes popup (HUD button) → tribe detail · bonus table rows = RULES.tribeBonus (labels as the Balance Room)
 const TRIBE_LBL = {
   armorPct: 'เกราะเริ่ม % ของ HP', restore: 'เกราะแตกได้คืน (ครั้ง)', burn: 'ไฟ +N ที่ฮิตแรก', every: 'ทุกกี่ชุด', shock: 'ช็อต +N ที่ฮิตแรก',
-  extraHit: 'ฮิตเพิ่ม', cdPct: 'คูลดาวน์ −%', instantFirst: 'ชุดแรกปล่อยทันที (1=ใช่)', blastPct: 'ระเบิดตอน down % พลังโจมตี', revives: 'ฟื้นได้กี่ตัว', revivePct: 'ฟื้นด้วย HP %',
+  extraHit: 'ฮิตเพิ่ม', cdPct: 'คูลดาวน์ −%', instantFirst: 'ชุดแรกปล่อยทันที (1=ใช่)', blastPct: 'ระเบิดตอนล้ม % พลังโจมตี', revives: 'ฟื้นได้กี่ตัว', revivePct: 'ฟื้นด้วย HP %',
   hpPct: 'HP สูงสุด +%', startBurn: 'เริ่มแมตช์ ศัตรูทุกตัวติดไฟ +N', burnDmgPct: 'ดาเมจไฟ +%', startShock: 'เริ่มแมตช์ ศัตรูทุกตัวติดช็อต +N', shockDmgPct: 'ดาเมจช็อต +%',
   dmgPct: 'ดาเมจตีปกติ +%', startSets: 'เริ่มแมตช์ ทั้งทีมปล่อยทันที (ชุด)',
 };
@@ -997,7 +1043,9 @@ $('fight').addEventListener('click', () => {
   showNotice('');
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = true;
   $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ${diff} · ทีม${RN_TEAM_TH[foe.tier] || foe.tier} · คู่แข่ง: ทีมบอทรอบ ${foe.round}` : '');
+  hideToast(); // set 106 (B4): shop warnings must not cover the field
   viewMap(teamB); view.speed = speed; view.load(shown); resetLog(); view.play();
+  if (autoSkip) view.skip();
 });
 // set 84: the match is shown from a 2nd run with detail + live stats (log only) · same teams → same result; if not, show the plain one
 // enemy side: a team (array of entries) or a boss { boss: id, k } (set 85) · unknown boss id → throws (replay shows a notice)
@@ -1098,7 +1146,7 @@ function renderBInfo(force) {
   right.append(el('h2', '', `${v.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[v.row]}${v.lane + 1} · ${c.id} ${c.name}${v.level ? ` · เลเวล ${v.level}` : ''}`), el('span', 'hint', `${c.tribe}${extra}`));
   const live = el('div', 'live');
   for (const [k, val] of [['HP', `${Math.max(0, v.hp)}/${v.maxHp}`], ['เกราะ', v.armor], ['ไฟบนตัว', v.burn], ['ช็อตบนตัว', v.shock]]) { const d = el('span', '', `${k} `); d.append(el('b', '', String(val))); live.append(d); }
-  if (v.down) live.append(el('b', '', 'down'));
+  if (v.down) live.append(el('b', '', 'ล้ม'));
   right.append(live);
   const st = v.stat;
   if (st) {
@@ -1184,11 +1232,18 @@ function renderRunEnd() {
   $('endSummary').textContent = `ชนะ ${P.wins}/${S.winsToFinish} · หัวใจเหลือ ${P.hearts}/${S.hearts} · เล่น ${P.round} รอบ`;
   // set 99 (user 6 Nov): a cleared run may go on with extra matches (hearts left · lose them all = game over)
   $('endExtra').hidden = !canExtra; $('endExtraHint').hidden = !canExtra;
-  const team = boardUnits(P).map(({ u }) => {
-    const perm = Object.entries(u.perm).filter(([, v]) => v > 0).map(([k, v]) => `${SHOP_GIVE_TH[k] || k} +${v}`).join(' · ');
-    return el('li', '', `${nameOf(u.id)} · เลเวล ${u.level}${perm ? ' · ถาวร: ' + perm : ''}`);
-  });
-  $('endTeam').replaceChildren(...(team.length ? team : [el('li', '', 'ไม่มีตัวบนบอร์ด')]));
+  // set 106 (G5): final team as pictures, laid out like the board (หลัง กลาง หน้า × 2 lanes)
+  const team = [];
+  for (let lane = 0; lane < 2; lane++) for (const row of [2, 1, 0]) {
+    const u = P.board[row][lane], card = el('div', 'ecard');
+    if (u) {
+      const perm = Object.entries(u.perm).filter(([, v]) => v > 0).map(([k, v]) => `${SHOP_GIVE_TH[k] || k} +${v}`).join(' · ');
+      card.append(shapeOf(u.id, u.level), el('b', '', CM[u.id] ? CM[u.id].name : u.id), el('span', 'hint', `${u.id} · เลเวล ${u.level}`));
+      if (perm) card.append(el('span', 'perm', 'ถาวร: ' + perm));
+    } else card.classList.add('empty');
+    team.push(card);
+  }
+  $('endTeam').replaceChildren(...(boardUnits(P).length ? team : [el('p', 'hint', 'ไม่มีตัวบนบอร์ด')]));
   const top = topDamage(stats), avg = stats.matches ? stats.timeMs / stats.matches / 1000 : 0;
   const ranked = Object.entries(stats.dmg).sort((a, b) => b[1] - a[1]).slice(0, 3);
   $('endStats').replaceChildren(
@@ -1235,10 +1290,18 @@ function boot() {
 }
 $('endCode').addEventListener('click', copyRunCode); $('resumeCode').addEventListener('click', copyRunCode);
 $('skip').addEventListener('click', () => { if (view.result && !view.ended) view.skip(); });
-document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => {
-  speed = +b.dataset.speed; view.speed = speed;
-  document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-}));
+const PREF_KEY = 'automon-play-prefs-v1';
+function setSpeed(v, save) {
+  if (![1, 2, 4, 8, 16].includes(v)) return;
+  speed = v; view.speed = speed;
+  document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.speed === v)));
+  if (save) savePrefs();
+}
+function setAutoSkip(on, save) { autoSkip = !!on; $('autoSkip').setAttribute('aria-pressed', String(autoSkip)); if (save) savePrefs(); }
+function savePrefs() { store.set(PREF_KEY, JSON.stringify({ speed, autoSkip })); }
+try { const pf = JSON.parse(store.get(PREF_KEY) || '{}'); if (pf && typeof pf === 'object') { setSpeed(+pf.speed); setAutoSkip(pf.autoSkip === true); } } catch (e) { /* bad prefs = defaults */ }
+document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => setSpeed(+b.dataset.speed, true)));
+$('autoSkip').addEventListener('click', () => { setAutoSkip(!autoSkip, true); if (autoSkip && view.result && !view.ended && !replayMode) view.skip(); });
 
 boot();
 </script>

@@ -551,7 +551,7 @@ export const TESTS_BOSS = [
     const p0 = ev(r, 'phase')[0];
     eq(p0.rd.find(x => x.id === 'burnAura').v, 4, 'เฟสจดค่าของกฎ');
     ok(simLine(p0, new Map(), new Map(), {}).some(x => x && x.t && x.t.includes('R11 ทุก 5 วิ ผู้เล่นทุกตัวติดไฟ (4 ไฟ)')), 'บรรทัดเฟสบอกกฎพร้อมค่า');
-    eq(bossRuleText(rl('curse', 5, 10)), 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: down ใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า (5 วิ · เป้า (% ของ 1 แถบ) 10%)', 'ข้อความกฎ 2 ค่า');
+    eq(bossRuleText(rl('curse', 5, 10)), 'R29 ทุก X วิ สาปผู้เล่น 1 ตัว: ล้มใน 5 วิ ถ้าทีมตีบอสไม่ถึงเป้า (5 วิ · เป้า (% ของ 1 แถบ) 10%)', 'ข้อความกฎ 2 ค่า');
     ok(ev(r, 'burn', e => e.why === 'boss').every(e => e.r === 'burnAura'), 'ไฟจาก R11 มีป้าย burnAura');
     ok(ev(r, 'curse').length > 0 && ev(r, 'curse').every(e => e.r === 'curse'), 'คำสาปมีป้าย curse');
     const blk = ev(r, 'ruleBlock');

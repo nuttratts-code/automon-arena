@@ -5,7 +5,7 @@ import { phaseIndexAt, ruleMap, fxMap, spotCells } from './boss.js';
 // - ใส่ทีมเดิม + เมล็ดสุ่มเดิม ได้ผลเดิมทุกครั้ง (เซิร์ฟเวอร์ MVP2 จำลองซ้ำเพื่อตรวจได้) · ไม่อ่านเวลาเครื่อง
 //   เลขสุ่มใช้เฉพาะสกิลที่มี "โอกาส %" หรือเป้าแบบสุ่ม · เมล็ดตั้งต้นคำนวณจากทีม
 // - เวลาเก็บเป็นมิลลิวินาทีจำนวนเต็ม · ดาเมจ/เกราะ/ฟื้น ปัดลงเป็นจำนวนเต็ม
-// - ลำดับใน 1 tick: ไฟ/พายุทราย → เริ่มชุด → เกราะ → ฮิต → ดาเมจจากสกิล → เกราะจากการโดนตี → สถานะ → ฟื้น HP → เช็ก down (วนจนนิ่ง)
+// - ลำดับใน 1 tick: ไฟ/พายุทราย → เริ่มชุด → เกราะ → ฮิต → ดาเมจจากสกิล → เกราะจากการโดนตี → สถานะ → ฟื้น HP → เช็กล้ม (วนจนนิ่ง)
 // - ตัวละครมีได้หลายสกิล · สกิลทุกแบบผ่านคิวเดียวกัน (ไม่มีโค้ดพิเศษรายตัวละคร)
 
 
@@ -51,7 +51,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const SRC_KINDS = new Set(['armor', 'heal', 'buff', 'atkUp', 'perm', 'maxhp', 'cleanse', 'steal', 'cdCut', 'cdPct', 'reflectDebuff', 'revive']);
   const bShare = burnShares(); // A7: burn credit by share (runs with log off too)
   const log = (k, d) => {
-    if (muteLog && k !== 'perm') return; // F2: ผลถาวรของตัวที่ down จริง จดเฉพาะ perm
+    if (muteLog && k !== 'perm') return; // F2: ผลถาวรของตัวที่ล้มจริง จดเฉพาะ perm
     if (k === 'burn' || k === 'cleanse' || k === 'down') bShare.see(k, d);
     if (!logOn) return;
     if (detailOn && ruleTag && k !== 'proc' && k !== 'set' && k !== 'perm' && !('r' in d)) d = { ...d, r: ruleTag }; // set 75: which boss rule / phase effect caused this event (detail only)
@@ -71,7 +71,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (any) { liveLast.set(f.uid, now); events.push({ t, k: 'stat', to: f.uid, s: ch }); }
     }
   };
-  let muteLog = false; // F2: true ระหว่างทำผลถาวรของตัวที่ down จริง (ดู apply)
+  let muteLog = false; // F2: true ระหว่างทำผลถาวรของตัวที่ล้มจริง (ดู apply)
   let dCur = null; // สกิลที่กำลังทำผล (ลำดับสกิล + ชนิดผล) ให้ดาเมจที่เกิดจากสกิลรู้ที่มา
   let ruleTag = null; // set 75: boss rule id while its effect runs (log adds it as r, detail only · never changes results)
   const byRule = (id, fn) => { const o = ruleTag; ruleTag = id; try { return fn(); } finally { ruleTag = o; } };
@@ -138,8 +138,8 @@ export function simulate(teamA, teamB, opts = {}) {
   const reviveLeft = [0, 1].map(side => { const x = TB(side, 'อสูร'); return x ? x.b.revives[x.idx] : 0; });
 
   // ---------- ตัวช่วย ----------
-  let standMode = false; // ชุด 21: ระหว่างหาเพื่อนที่จะพาไปตี นับ "ยังไม่ down" เป็นยืนอยู่ (ไม่ขึ้นกับลำดับฝั่ง)
-  const up = f => !f.down && (standMode || (f.hp > 0 && !f.barBreak)); // ชุด 70: บอสแถบแตกใน tick นี้ = เหมือนม่อน down (ฮิต/สกิลที่เหลือใน tick หายไป)
+  let standMode = false; // ชุด 21: ระหว่างหาเพื่อนที่จะพาไปตี นับ "ยังไม่ล้ม" เป็นยืนอยู่ (ไม่ขึ้นกับลำดับฝั่ง)
+  const up = f => !f.down && (standMode || (f.hp > 0 && !f.barBreak)); // ชุด 70: บอสแถบแตกใน tick นี้ = เหมือนม่อนล้ม (ฮิต/สกิลที่เหลือใน tick หายไป)
   const enemies = f => F.filter(x => x.side !== f.side && up(x));
   const allies = f => F.filter(x => x.side === f.side && up(x));
   const byFront = (a, b) => a.row - b.row || a.lane - b.lane;
@@ -183,7 +183,7 @@ export function simulate(teamA, teamB, opts = {}) {
   };
   // ปิดสกิล: E2 แถวหลังเงียบช่วงแรก · R15 สุ่มปิดสกิลเป็นช่วง
   const silenced = f => !!BOSS && !f.boss && ((BR.backSilence && f.row === 2 && t <= BR.backSilence.v * 1000) || f.silenceUntil > t);
-  // เพดานฟื้นเลือดของบอส: ไม่เกินยอดของแถบปัจจุบัน (กันลูป "ศัตรู down" ซ้ำ)
+  // เพดานฟื้นเลือดของบอส: ไม่เกินยอดของแถบปัจจุบัน (กันลูป "ศัตรูล้ม" ซ้ำ)
   // ยอดของแถบที่บอสอยู่ตอนนี้ · ไม่เกินยอดของแถบที่ยังไม่หมด (แถบที่หมดไปแล้วไม่เต็มกลับ)
   const bossCap = () => Math.min(BOSS.maxHp, (BOSS.bars - barsGone) * BOSS.barHp, Math.ceil(Math.max(0, BOSS.hp) / BOSS.barHp) * BOSS.barHp);
   function bossHeal(v) {
@@ -214,9 +214,9 @@ export function simulate(teamA, teamB, opts = {}) {
   // ชุด 14: ผู้รับของสกิล = เป้าตามช่อง to + เพื่อนตามตำแหน่ง (allyAt) + กรองเผ่าเดียวกัน (sameTribe · นับเผ่าเพิ่ม · ตัวเองผ่านเสมอถ้าเป้าเดิมรวมตัวเอง)
   const RAND_N = { allyRandom: 1, allyRandom2: 2 };
   function skillTargetsOf(u, s, ctx) {
-    if (s.to === 'self' && s.perm && u.down && ctx.downed === u) return [u]; // F2: ตัวเอง down จริง ยังได้ค่าถาวร
+    if (s.to === 'self' && s.perm && u.down && ctx.downed === u) return [u]; // F2: ตัวเองล้มจริง ยังได้ค่าถาวร
     if (RAND_N[s.to] && (s.sameTribe || s.skipSameId)) { // ชุด 20: เป้าสุ่ม + กรอง → กรองก่อนแล้วค่อยสุ่ม (เดิมสุ่มก่อนแล้วกรอง ทำให้บ่อยครั้งไม่มีผู้รับ)
-      // ชุด 21: พาเพื่อนไปตี (ทำทันทีระหว่างฮิต) ใช้ "ยังไม่ down" แทน HP > 0 · เพื่อนที่ HP หมดใน tick นี้ยังตีได้ เหมือนชุดปกติที่ตั้งไว้แล้ว (ไม่ขึ้นกับลำดับฝั่ง)
+      // ชุด 21: พาเพื่อนไปตี (ทำทันทีระหว่างฮิต) ใช้ "ยังไม่ล้ม" แทน HP > 0 · เพื่อนที่ HP หมดใน tick นี้ยังตีได้ เหมือนชุดปกติที่ตั้งไว้แล้ว (ไม่ขึ้นกับลำดับฝั่ง)
       let pool = allies(u).filter(x => x !== u);
       if (s.sameTribe) pool = pool.filter(x => x.tribes.some(t => u.tribes.includes(t)));
       if (s.skipSameId) pool = pool.filter(x => x.id !== u.id);
@@ -231,7 +231,7 @@ export function simulate(teamA, teamB, opts = {}) {
     const al = allies(f), others = al.filter(x => x !== f);
     switch (to) {
       case 'self': return up(f) ? [f] : [];
-      // เป้าของฮิต/ผู้ตี: ยังรับสถานะได้จนกว่าจะ down จริงตอนเช็กท้าย tick (ไฟ/ช็อตจากฮิตสุดท้ายนับรวมตอน down)
+      // เป้าของฮิต/ผู้ตี: ยังรับสถานะได้จนกว่าจะล้มจริงตอนเช็กท้าย tick (ไฟ/ช็อตจากฮิตสุดท้ายนับรวมตอนล้ม)
       case 'target': return ctx.target && !ctx.target.down ? [ctx.target] : [];
       case 'attacker': return ctx.attacker && !ctx.attacker.down ? [ctx.attacker] : [];
       case 'enemyFront': return [normalTarget(f)].filter(Boolean);
@@ -287,7 +287,7 @@ export function simulate(teamA, teamB, opts = {}) {
     for (const s of u.skills) {
       if (s.when !== when || !usable(s) || (filter && !filter(s))) continue;
       if (s.do === 'allyStrike' && ctx.carried) continue; // ชุด 20: ฮิตที่ถูกพาไปไม่พาต่อ (กันวน · ไม่ใช้คูลดาวน์สกิล)
-      if (s.do === 'revive' || s.do === 'reviveAlly' || s.do === 'summon') continue; // ลุกกลับมา/ชุบเพื่อน/เรียกตัว ตรวจตอน down
+      if (s.do === 'revive' || s.do === 'reviveAlly' || s.do === 'summon') continue; // ลุกกลับมา/ชุบเพื่อน/เรียกตัว ตรวจตอนล้ม
       if (s.chance != null && s.chance < 100 && rngOf(u.side).next() * 100 >= s.chance) continue;
       fire(u, s, when);
       if (PRE[s.do]) { applyPre(u, s, ctx); continue; }
@@ -345,7 +345,7 @@ export function simulate(teamA, teamB, opts = {}) {
         if (share > 0) { hurt(p, share, src, pierce, 'link', det); amount -= share; if (amount <= 0) return 0; }
       }
     }
-    // รูนเลี่ยงจุดตาย (X4): ฮิตที่จะทำให้ down ถูกยกเลิกทั้งฮิต (ไฟ/ช็อตของฮิตนั้นด้วย ดู strike)
+    // รูนเลี่ยงจุดตาย (X4): ฮิตที่จะทำให้ล้มถูกยกเลิกทั้งฮิต (ไฟ/ช็อตของฮิตนั้นด้วย ดู strike)
     if (target.avoidLeft > 0 && (why === 'hit' || why === 'shock') && (pierce ? amount : Math.max(0, amount - target.armor)) >= target.hp) {
       target.avoidLeft--; target.avoidedAt = t; target.avoidedBy = src || null;
       log('avoid', { to: target.uid, from: src ? src.uid : null });
@@ -376,7 +376,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (BR.thorns && src && !src.boss && why === 'hit' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: BR.thorns.v, why: 'reflect', r: 'thorns' }, ctx: { attacker: src } }); // R32 หนาม
       if (BR.reflect && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect', r: 'reflect' }, ctx: { attacker: src } });
     }
-    target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำ down = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
+    target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำล้ม = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
     if (detailOn) { const dd = { ...(dCur || {}), ...(det || {}) }; if (target.hp < 0) dd.over = Math.min(loss, -target.hp); log('dmg', { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, ...(subHit && why === 'hit' ? { sub: 1 } : {}), ...(hitRules ? { rr: hitRules } : {}), d: dd }); } else
     log('dmg', subHit && why === 'hit' ? { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, sub: 1 } : { to: target.uid, from: src ? src.uid : null, amount, absorbed, why });
     if (!target.lowFired && wasAbove && target.hp > 0 && target.hp * 100 < target.maxHp * R.lowHpPct) {
@@ -500,7 +500,7 @@ export function simulate(teamA, teamB, opts = {}) {
   }
 
   // ทำผลของสกิล 1 ครั้ง
-  // F2 (28 Oct, user A): สกิล "ตัวเอง down" ที่ได้ค่าถาวรให้ตัวเอง ได้ค่าถาวรทุกครั้งที่ทำงาน แม้ down จริง (ไม่ลุก) · ผลในแมตช์ไม่มี (ตัวนี้สู้ต่อไม่ได้แล้ว): ปิดบันทึกยกเว้น perm แล้วคืนค่าตัวนั้นเหมือนเดิม
+  // F2 (28 Oct, user A): สกิล "ตัวเองล้ม" ที่ได้ค่าถาวรให้ตัวเอง ได้ค่าถาวรทุกครั้งที่ทำงาน แม้ล้มจริง (ไม่ลุก) · ผลในแมตช์ไม่มี (ตัวนี้สู้ต่อไม่ได้แล้ว): ปิดบันทึกยกเว้น perm แล้วคืนค่าตัวนั้นเหมือนเดิม
   function apply(it) {
     if (!(it.u.down && it.ctx.downed === it.u && it.s.perm && it.s.to === 'self')) return applyD(it);
     const keep = { ...it.u }; muteLog = true;
@@ -525,7 +525,7 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'dmgPctArmor': for (const x of T()) hurt(x, (ctx.armorSnap ?? u.armor) * v / 100, u, false, dwhy); break;
       case 'dmgPctEnemyBurn': { const sum = enemies(u).reduce((a, e) => a + e.burn, 0); for (const x of T()) hurt(x, sum * v / 100, u, false, dwhy); break; }
       case 'execute': for (const x of T()) if (up(x)) hurt(x, x.hp, u, true, 'execute'); break; // เข้า HP ตรง ไม่สนเกราะ
-      case 'selfKo': if (up(u)) hurt(u, u.hp, null, true, 'execute'); break; // ชุด 16 (SF-5): ตัวเอง down ทันที · ไม่มีผู้ทำ down (ไม่กระตุ้น "ทำศัตรู down")
+      case 'selfKo': if (up(u)) hurt(u, u.hp, null, true, 'execute'); break; // ชุด 16 (SF-5): ตัวเองล้มทันที · ไม่มีผู้ทำล้ม (ไม่กระตุ้น "ทำศัตรูล้ม")
       case 'burnPctArmor': for (const x of T()) addStatus(x, 'burn', (ctx.armorSnap ?? u.armor) * v / 100, why, u); break;
       case 'maxHpCut': for (const x of T()) if (up(x)) {
         const cut = Math.floor(x.maxHp * v / 100);
@@ -545,7 +545,7 @@ export function simulate(teamA, teamB, opts = {}) {
         x.burn -= b; x.shock -= k; if (x.burn === 0) { x.noDecay = 0; x.noDecayPerm = false; }
         log('cleanse', { to: x.uid, what: 'pct', burn: x.burn, shock: x.shock, cut: [b, k] });
       } break;
-      case 'reviveDowned': { // ชุด 20 (WN-4): ชุบเพื่อนที่ down จริงอยู่ สุ่ม v ตัว · ไม่รวมตัวที่ถูกเรียกมาสู้แทน และตัวที่ช่องถูกแทนแล้ว · HP เท่าชุบเพื่อน
+      case 'reviveDowned': { // ชุด 20 (WN-4): ชุบเพื่อนที่ล้มจริงอยู่ สุ่ม v ตัว · ไม่รวมตัวที่ถูกเรียกมาสู้แทน และตัวที่ช่องถูกแทนแล้ว · HP เท่าชุบเพื่อน
         if (!up(u)) break;
         revQ.push({ u, v, s }); // ชุด 21: ชุบหลังฟื้น HP ทั้งหมดของ tick (เดิมชุบทันที → ฟื้นที่เลือก "เพื่อน HP ต่ำสุด" ขึ้นกับลำดับฝั่ง)
         break; }
@@ -623,7 +623,7 @@ export function simulate(teamA, teamB, opts = {}) {
     const part = x => Math.floor(x / n);
     const atk0 = n > 1 ? Math.max(1, part(atkOf(a))) : atkOf(a);
     const atkP = pow != null && pow !== 100 ? Math.max(1, Math.floor(atk0 * pow / 100)) : atk0; // R4 ตีโดนทุกตัว % · รูนคู่หู % ของการโจมตีปกติ
-    const ha = hitAmpOf(a); // ชุด 66: รูนที่เปลี่ยนตามสถานการณ์ (เพื่อน down / เหลือตัวเดียว)
+    const ha = hitAmpOf(a); // ชุด 66: รูนที่เปลี่ยนตามสถานการณ์ (เพื่อนล้ม / เหลือตัวเดียว)
     const atk = ha || tg.dmgTakenAmp ? Math.floor(atkP * amp(ha) * amp(tg.dmgTakenAmp)) : atkP; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
     const absorbed = hurt(tg, atk, a, !!(BOSS && a.boss && BR.pierce), 'hit', // R31 บอสตีทะลุเกราะ
       detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: ha, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
@@ -638,7 +638,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (part(a.shockHit) > 0) Q.S.push({ u: a, s: { do: 'shock', to: 'target', value: part(a.shockHit) }, ctx: { target: tg } });
     if (part(a.armorHit) > 0) Q.L.push({ u: a, s: { do: 'armor', to: 'self', value: part(a.armorHit), why: 'armorHit' }, ctx: {} }); // เกราะ/ฮิต: ได้หลังดาเมจ
     if (part(a.healHit) > 0) Q.H.push({ u: a, s: { do: 'heal', to: 'self', value: part(a.healHit), why: 'healHit' }, ctx: {} }); // ฟื้น/ฮิต (ชุด 18): ฟื้นตัวเอง ขั้นฟื้น HP ท้าย tick · ทุกเผ่า
-    // R7 ตีจนเลือดต่ำกว่าเกณฑ์ = down ทันที (เฉพาะบอส)
+    // R7 ตีจนเลือดต่ำกว่าเกณฑ์ = ล้มทันที (เฉพาะบอส)
     if (BOSS && a.boss && BR.execute && up(tg) && tg.hp > 0 && tg.hp * 100 < tg.maxHp * BR.execute.v) byRule('execute', () => hurt(tg, tg.hp, a, true, 'execute'));
     trigger(a, 'hit', carried ? { target: tg, dealt: taken, carried: true } : { target: tg, dealt: taken });
     trigger(tg, 'hitTaken', { attacker: a, amount: absorbed, taken });
@@ -650,7 +650,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (!tg) return;
     standMode = true; const xs = skillTargetsOf(u, s, ctx); standMode = false; // ชุด 21: เพื่อนที่ HP หมดใน tick นี้ยังตีได้ เหมือนชุดปกติที่ตั้งไว้แล้ว
     for (const x of xs) for (let i = 0; i < s.value; i++) {
-      if (aborted || !up(tg) || x.down) return; // ชุด 21: เพื่อนยังไม่ down = ตีได้ (ดูหมายเหตุใน skillTargetsOf)
+      if (aborted || !up(tg) || x.down) return; // ชุด 21: เพื่อนยังไม่ล้ม = ตีได้ (ดูหมายเหตุใน skillTargetsOf)
       if (++hitN > R.hitCapPerMatch) { aborted = 'hits'; return; }
       log('carry', { who: x.uid, by: u.uid, target: tg.uid });
       strike(x, tg, 1, false, true, s.pow); // pow = รูนคู่หู (% ของการโจมตีปกติ) · สกิลปกติไม่มี = เต็มแรง
@@ -709,10 +709,10 @@ export function simulate(teamA, teamB, opts = {}) {
     b.db = dbZero();
     log('cleanse', { to: b.uid, what: 'bar' });
   }
-  // แถบเลือดหมด 1 แถบ = "ศัตรู down" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
+  // แถบเลือดหมด 1 แถบ = "ศัตรูล้ม" สำหรับสกิลผู้เล่น (ผู้ใช้เลือก Q2 A) · นับสูงสุดที่เคยถึง แถบที่เต็มกลับไม่กระตุ้นซ้ำ
   function bossBars() {
     if (!BOSS || BOSS.down) return;
-    BOSS.barBreak = false; // ฮิต/สกิลของ tick นี้จบแล้ว · ผลตอนเปลี่ยนแถบ/เฟส และสกิล "ศัตรู down" เจอแถบใหม่ได้ (เหมือนม่อนตัวใหม่)
+    BOSS.barBreak = false; // ฮิต/สกิลของ tick นี้จบแล้ว · ผลตอนเปลี่ยนแถบ/เฟส และสกิล "ศัตรูล้ม" เจอแถบใหม่ได้ (เหมือนม่อนตัวใหม่)
     const gone = Math.max(0, Math.min(BOSS.bars, BOSS.bars - Math.ceil(Math.max(0, BOSS.hp) / BOSS.barHp)));
     let changed = false;
     while (barsGone < gone && barsGone < BOSS.bars) {
@@ -757,7 +757,7 @@ export function simulate(teamA, teamB, opts = {}) {
     ruleTag = 'shieldPulse'; if (BR.shieldPulse && t - shieldT >= BR.shieldPulse.v * 1000) { shieldT = t; addArmor(BOSS, BOSS.barHp * BR.shieldPulse.v2 / 100, 'boss'); } // R36
     ruleTag = 'cleansePulse'; if (BR.cleansePulse && t - cleanT >= BR.cleansePulse.v * 1000) { cleanT = t; if (BOSS.burn || BOSS.shock) { BOSS.burn = BOSS.shock = BOSS.noDecay = 0; BOSS.noDecayPerm = false; log('cleanse', { to: BOSS.uid }); } } // R37
     ruleTag = 'vanish'; if (BR.vanish && t - vanT >= BR.vanish.v * 1000) { vanT = t; BOSS.noHitUntil = t + BR.vanish.v2 * 1000; log('vanish', { who: BOSS.uid, ms: BR.vanish.v2 * 1000 }); } // R27
-    ruleTag = 'dpsCheck'; if (BR.dpsCheck && t - barT >= BR.dpsCheck.v * 1000) { // R28 ตีแถบไม่หมดในเวลา → แถบเต็มกลับ (ไม่กระตุ้น "ศัตรู down" ซ้ำ)
+    ruleTag = 'dpsCheck'; if (BR.dpsCheck && t - barT >= BR.dpsCheck.v * 1000) { // R28 ตีแถบไม่หมดในเวลา → แถบเต็มกลับ (ไม่กระตุ้น "ศัตรูล้ม" ซ้ำ)
       barT = t;
       const top = bossCap();
       if (BOSS.hp < top) { BOSS.hp = top; log('barRefill', { who: BOSS.uid, hp: top }); }
@@ -817,7 +817,7 @@ export function simulate(teamA, teamB, opts = {}) {
   for (const f of F) trigger(f, 'matchStart', {});
   drainAll();
   for (const f of F) f.cdLeft = Math.max(0, (f.tb.instant ? 0 : effCd(f)) + (f.cdLeft - f.cd0) - f.cdStart); // cdStart = ลดคูลดาวน์ตอนเริ่มแบบถาวร (22 ต.ค.)
-  resolveDowns(); // ผลตอนเริ่มทำให้ down ได้ (เช่น down ทันที WN-8)
+  resolveDowns(); // ผลตอนเริ่มทำให้ล้มได้ (เช่นล้มทันที WN-8)
   if (BOSS) bossBars(); // ดาเมจตอนเริ่มแมตช์อาจทำแถบแรกหมดไปแล้ว
 
   const finish = winner => {
@@ -897,7 +897,7 @@ export function simulate(teamA, teamB, opts = {}) {
           if (p.spread) { const live = p.spread.filter(up); tg = live.length ? live[h % live.length] : null; }
           tgs = tg && up(tg) ? [tg] : [];
         }
-        if (!tgs.length) break; // เป้า down → รอบที่เหลือหายไป
+        if (!tgs.length) break; // เป้าล้ม → รอบที่เหลือหายไป
         const n = aoePow ? 1 : tgs.length; // ตีแบ่ง: ค่าที่แบ่ง ปัดลง (ค่าเสนอ) · พลังโจมตีอย่างน้อย 1 · R4 ไม่ใช่การแบ่ง (ทุกตัวโดนเท่ากัน %)
         p.landed++;
         tgs.forEach((tg, j) => { subHit = j > 0; if (up(tg)) strike(a, tg, n, p.landed === 1 && j === 0, false, aoePow); });
@@ -915,9 +915,9 @@ export function simulate(teamA, teamB, opts = {}) {
     // 6) สถานะ → 7) ฟื้น HP
     stage = 'status';
     drainS(); flushRefl(); drainH(); flushRefl(); flushRevive();
-    // 8) เช็ก down และผลจากการ down (วนจนนิ่ง)
+    // 8) เช็กล้มและผลจากการล้ม (วนจนนิ่ง)
     resolveDowns();
-    if (BOSS) bossBars(); // แถบเลือดที่หมดไป → "ศัตรู down" + เปลี่ยนเฟส
+    if (BOSS) bossBars(); // แถบเลือดที่หมดไป → "ศัตรูล้ม" + เปลี่ยนเฟส
 
     if (liveOn) liveStat();
     res = endCheck();
@@ -933,8 +933,8 @@ export function simulate(teamA, teamB, opts = {}) {
       // ชุด 21 (2A): ระเบิดเผ่าอสูรเล็งเป้าก่อนตัดสินลุก/ชุบของทุกตัว (เดิมเล็งระหว่างวน → ตัวอีกฝั่งที่ลุกไปก่อนถูกเล็งได้หรือไม่ ขึ้นกับลำดับฝั่ง)
       for (const f of fallen) if (f.tb.blast) { const x = normalTarget(f); if (x) Q.D.push({ u: f, s: { do: 'dmg', to: 'enemyFront', value: Math.floor(atkOf(f) * f.tb.blast / 100), why: 'downSkill', src: 'blast' }, ctx: {} }); }
       for (const f of fallen) {
-        // ผลตอน down (combat-rules V1.14): ทำงานทุกครั้งที่ HP ถึง 0 แม้จะลุก/ถูกชุบกลับมา
-        // สกิลตัวเอง down · เพื่อน down · ศัตรู down · ทำศัตรู down · ระเบิดเผ่าอสูร · ผลเข้าคิวแล้วทำหลังตัดสินลุก/ชุบ
+        // ผลตอนล้ม (combat-rules V1.14): ทำงานทุกครั้งที่ HP ถึง 0 แม้จะลุก/ถูกชุบกลับมา
+        // สกิลตัวเองล้ม · เพื่อนล้ม · ศัตรูล้ม · ทำศัตรูล้ม · ระเบิดเผ่าอสูร · ผลเข้าคิวแล้วทำหลังตัดสินลุก/ชุบ
         const ctx = { downed: f, burn: f.burn, shock: f.shock, attacker: f.lastHitBy };
         trigger(f, 'selfDown', ctx);
         for (const x of F.filter(x => x.side === f.side && x !== f && up(x))) trigger(x, 'allyDown', ctx);
@@ -947,7 +947,7 @@ export function simulate(teamA, teamB, opts = {}) {
         // R20 ชุบชีวิตไม่ได้ (เฉพาะฝั่งผู้เล่น ระหว่างเฟสนั้น) · รูนชุบ (U2) จำกัดครั้งด้วย s.lim และทำงานก่อนการลุกของเผ่าอสูร (ผู้ใช้เลือก Q5 U2)
         const noRev = !!(BOSS && !f.boss && BR.noRevive);
         const rv = noRev ? null : f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (!s.lim || s.uses < s.lim) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
-        if (rv) { // สกิลลุกกลับมา: เกิดแทนการ down (ผลตอน down ด้านบนทำงานไปแล้ว)
+        if (rv) { // สกิลลุกกลับมา: เกิดแทนการล้ม (ผลตอนล้มด้านบนทำงานไปแล้ว)
           fire(f, rv, 'selfDown');
           reviveUnit(f, rv.value, 'skill', f, rv);
           continue;
@@ -964,7 +964,7 @@ export function simulate(teamA, teamB, opts = {}) {
           reviveUnit(f, R.reviveAllyHpPct, 'ally', healer, ra);
           continue;
         }
-        if (!noRev && reviveLeft[f.side] > 0) { // โบนัสอสูร: ตัวที่ down ก่อนลุกกลับมา
+        if (!noRev && reviveLeft[f.side] > 0) { // โบนัสอสูร: ตัวที่ล้มก่อนลุกกลับมา
           const x = TB(f.side, 'อสูร');
           reviveLeft[f.side]--;
           reviveUnit(f, x.b.revivePct[x.idx], 'tribe');
@@ -972,12 +972,12 @@ export function simulate(teamA, teamB, opts = {}) {
         }
         f.down = true; f.hp = 0; f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false; f.cdLeft = Infinity;
         log('down', { who: f.uid });
-        // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): down จริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
+        // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): ล้มจริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
         // ตัวที่ถูกเรียก: ไม่นับเผ่า ไม่ได้โบนัสเผ่า ไม่มีค่าถาวร สกิลติดตัวทำงานทันที (ค่าเสนอ)
         const sm = f.skills.find(s => s.do === 'summon' && s.when === 'selfDown' && s.unit && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
         if (sm) { fire(f, sm, 'selfDown'); f.replaced = true; summons.push([f, sm]); } // ชุด 20: ช่องนี้มีตัวใหม่แล้ว ชุบตัวเดิมไม่ได้
       }
-      // ชุด 21 (2A): เรียกตัวมาแทนหลังจัดการตัวที่ down ทุกตัวใน tick แล้ว (เดิมเรียกทันที → ผลตอน down ของอีกฝั่งเล็งตัวที่ถูกเรียกได้หรือไม่ ขึ้นกับลำดับฝั่ง)
+      // ชุด 21 (2A): เรียกตัวมาแทนหลังจัดการตัวที่ล้มทุกตัวใน tick แล้ว (เดิมเรียกทันที → ผลตอนล้มของอีกฝั่งเล็งตัวที่ถูกเรียกได้หรือไม่ ขึ้นกับลำดับฝั่ง)
       for (const [f, sm] of summons.splice(0)) {
         const n = mkFighter(sm.unit, f.side); n.uid = F.length; n.summoned = true; F.push(n);
         n.cdLeft = effCd(n);

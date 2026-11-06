@@ -99,7 +99,7 @@ function mxOutPane(uid, k) {
 }
 
 // G1: label of the ownerless row depends on the source (execute without owner = SF-5 type selfKo skill)
-const MX_NOOWNER = { storm: 'ไม่มีเจ้าของ (พายุทราย)', burn: 'ไม่มีเจ้าของ (ไฟที่ไม่มีผู้ทำ)', execute: 'ตัวเอง down (สกิล)' };
+const MX_NOOWNER = { storm: 'ไม่มีเจ้าของ (พายุทราย)', burn: 'ไม่มีเจ้าของ (ไฟที่ไม่มีผู้ทำ)', execute: 'ตัวเองล้ม (สกิล)' };
 // แท็บ 2: ดาเมจที่โดน · 1 แถวต่อ 1 ศัตรู (ไม่รวมกัน) · ลิงก์เดียวต่อแถว = เปิดบันทึกเฉพาะคู่ (ตัวนี้ × ศัตรูตัวนั้น)
 function mxInPane(uid, k) {
   const { U, m, per } = mxCtx, P = per.get(uid), box = el('div', 'mx-pane'), me = U.get(uid);
@@ -294,7 +294,7 @@ function renderMatch() {
     chip('เวลา', `${(r.timeMs / 1000).toFixed(1)} วิ`),
     chip('ซ้ายทำ', nf(tot[0]), 'รวมส่วนที่เกราะกันด้วย · อาจเกิน HP รวมของอีกฝั่ง'),
     chip('ขวาทำ', nf(tot[1]), 'รวมส่วนที่เกราะกันด้วย · อาจเกิน HP รวมของอีกฝั่ง'),
-    chip('รอด', `${alive[0]} / ${alive[1]}`, 'จำนวนตัวที่ยังไม่ down (ซ้าย / ขวา)'),
+    chip('รอด', `${alive[0]} / ${alive[1]}`, 'จำนวนตัวที่ยังไม่ล้ม (ซ้าย / ขวา)'),
     chip('ต่อเวลาเริ่ม', `${((RULES.stormStartMs || 0) / 1000).toFixed(1)} วิ`),
     ...(simSeedLabel() != null ? [chip('เลขสุ่ม', simSeedLabel())] : [])); // game page: no seed → null
 

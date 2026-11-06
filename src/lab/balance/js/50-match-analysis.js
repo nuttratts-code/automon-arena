@@ -3,7 +3,7 @@
 // + ตารางใครตีใคร + กราฟ HP ตามเวลา · ข้อความทั้งหมดใส่ด้วย textContent / createElementNS เท่านั้น
 // MX_SRC mxWhy mxAgg mxAdd mxLoss mxRecords mxModel: lab/matchcalc.js (set 42, tested in tests/t-skill-calc.js)
 const MX_COLOR = { hit: 'var(--n-hit)', counter: 'var(--n-cnt)', reflect: 'var(--n-reflect)', shock: 'var(--n-shock)', burn: 'var(--n-burn)', storm: 'var(--n-storm)', skill: 'var(--n-skill)', downSkill: 'var(--n-down)', armorBreak: 'var(--n-abrk)', execute: 'var(--n-exec)' };
-const MX_NAME = { hit: 'ฮิต', counter: 'สวนกลับ', shock: 'ช็อต', burn: 'ไฟ', skill: 'สกิล', downSkill: 'สกิลตอน down', armorBreak: 'เกราะแตก', reflect: 'สะท้อน', execute: 'down ทันที', storm: 'พายุทราย' };
+const MX_NAME = { hit: 'ฮิต', counter: 'สวนกลับ', shock: 'ช็อต', burn: 'ไฟ', skill: 'สกิล', downSkill: 'สกิลตอนล้ม', armorBreak: 'เกราะแตก', reflect: 'สะท้อน', execute: 'ล้มทันที', storm: 'พายุทราย' };
 const nf = v => Math.round(v).toLocaleString('en-US');
 const pctTxt = v => `${v > 0 ? '+' : ''}${v}%`;
 let mxKey = null, mxOpen = new Set(), mxCellSel = null, mxHi = null;
@@ -27,7 +27,7 @@ function mxCompose(rec, U, m) {
     case 'burn': P.push(`ไฟบนตัว ${d.burn ?? '?'}`); if (d.takenAmp) P.push(`× โดนไฟแรงขึ้น ${pctTxt(d.takenAmp)}`); if (d.tribeAmp) P.push(`× โบนัสเพลิงเผาของอีกฝั่ง ${pctTxt(d.tribeAmp)}`); if (rec.f < 0.999) P.push(`· ส่วนของผู้ทำ ${Math.round(rec.f * 100)}%`); break;
     case 'storm': P.push(`พายุทรายครั้งที่ ${d.k ?? '?'}`); P.push(d.pierce ? '· ทะลุเกราะ' : '· เกราะกันได้'); break;
     default: {
-      if (d.src === 'blast') { P.push('ระเบิดตอน down (โบนัสเผ่าอสูร)'); break; }
+      if (d.src === 'blast') { P.push('ระเบิดตอนล้ม (โบนัสเผ่าอสูร)'); break; }
       if (d.src === 'tribe') { P.push('โบนัสเผ่า'); break; }
       const owner = U.get(rec.from != null ? rec.from : rec.to), c = owner && m[owner.id], s = c && d.si != null ? c.skills[d.si] : null;
       if (s) P.push(`สกิล ${d.si + 1}: ${skillLine(s, owner.level)}`);

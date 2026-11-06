@@ -282,6 +282,32 @@ export function toggleLock(st, slot) {
   return done();
 }
 
+// set 106 (user 6 Nov, playtest P2): drag a shop card onto an owned Lv1 copy = buy + merge at once (no free slot needed)
+// needs the target (Lv1, same id) + one more Lv1 copy anywhere (or rune รวมร่างเร็ว) · buy skills/charges fire as if bought onto the target's slot
+export function buyMerge(st, slot, to, chars, rules = RULES) {
+  if (st.over) return fail('run จบแล้ว');
+  if (!Number.isInteger(slot) || slot < 0 || slot >= st.shop.length) return fail('ช่องร้านไม่ถูกต้อง');
+  const s = st.shop[slot];
+  if (!s.id) return fail('ช่องนี้ว่าง');
+  const c = chars.find(x => x.id === s.id);
+  if (!c) return fail('ไม่มีตัวละครนี้');
+  if (!okRef(st, to) || to.at === 'shop') return fail('ตำแหน่งไม่ถูกต้อง');
+  const b = get(st, to);
+  if (!b || b.id !== c.id || b.level !== 1 || rules.maxLevel < 2) return fail('ซื้อแล้วรวมร่างได้เฉพาะเมื่อลากไปทับตัวชนิดเดียวกันเลเวล 1');
+  const fast = (rnFx(st).fast[c.id] || rules.shop.mergeCount) <= 2;
+  const third = fast ? null : allUnits(st).find(x => x.u !== b && x.u.id === c.id && x.u.level === 1);
+  if (!fast && !third) return fail(`รวมร่างต้องมี ${c.id} เลเวล 1 ครบ ${rules.shop.mergeCount} ตัว (มีอยู่ 1 ตัว ซื้อลงช่องว่างก่อน)`);
+  if (st.gold < c.price) return fail(`เงินไม่พอ (ต้องใช้ ${c.price})`);
+  st.gold -= c.price;
+  const u = { uid: st.uid++, id: c.id, level: 1, perm: {}, paid: c.price };
+  s.id = null; s.locked = false;
+  const msgs = [];
+  useCharges(st, u, chars, rules, msgs);
+  fireShopSkill(st, u, to, 'buy', chars, rules, msgs);
+  const r = merge(st, third ? [third.ref] : [], to, chars, rules, [u]);
+  return { ...r, msgs: [...msgs, ...r.msgs], ref: to };
+}
+
 // ---------- ย้าย / สลับ / รวมร่าง ----------
 // ลากตัวไปทับตัวชนิดเดียวกัน เลเวลเท่ากัน + มีตัวที่ 3 อยู่ที่ไหนก็ได้ → รวมร่างที่ช่องปลายทาง
 export function move(st, from, to, chars, rules = RULES) {
@@ -299,8 +325,8 @@ export function move(st, from, to, chars, rules = RULES) {
   return done();
 }
 
-export function merge(st, srcRefs, destRef, chars, rules) {
-  const dest = get(st, destRef), srcs = srcRefs.map(r => get(st, r));
+export function merge(st, srcRefs, destRef, chars, rules, extra = []) {
+  const dest = get(st, destRef), srcs = srcRefs.map(r => get(st, r)).concat(extra);
   const res = { uid: dest.uid, id: dest.id, level: dest.level + 1, perm: {}, paid: dest.paid };
   for (const k of PERM_KEYS) addPerm(res, k, dest.perm[k] || 0, rules);
   for (const s of srcs) { res.paid += s.paid; for (const k of PERM_KEYS) addPerm(res, k, s.perm[k] || 0, rules); }

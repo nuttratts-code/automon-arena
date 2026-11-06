@@ -14,7 +14,7 @@ function numInput(id, value, base, onChange, step = 1) {
   return i;
 }
 function cell(text, cls) { const s = document.createElement('span'); s.textContent = text; if (cls) s.className = cls; return s; }
-// ตัวเลือกตัวละครแบบมีสีเผ่า (dropdown ของเครื่องแสดงสี/รูปทรงไม่ได้) · จัดกลุ่มตามเผ่าหลัก
+// ตัวเลือกตัวละครแบบมีสีเผ่า (dropล้มของเครื่องแสดงสี/รูปทรงไม่ได้) · จัดกลุ่มตามเผ่าหลัก
 // กางลงจากที่เดิม (20 ต.ค.): แผงต่อท้ายแถบเดียวกับปุ่ม เต็มความกว้าง ยาวลงไปจนครบทุกตัว ไม่โดนขอบตัด · ค้นหาชื่อ/ID · กรองเผ่า (รวมเผ่าเพิ่ม)
 // แผงต่อเข้าหน้าเฉพาะตอนเปิด และถอดออกตอนปิด · ข้อความใส่ด้วย textContent เท่านั้น
 let openPicker = null, cpSeq = 0;
@@ -319,7 +319,7 @@ function renderSkillForm(c, b) {
       const seg = el('div', 'seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'ระยะเวลา');
       for (const [d, label] of DUR_BTN) {
         const bt = el('button', '', label); bt.type = 'button'; bt.id = `s${k}-dur-${d}`; bt.setAttribute('aria-pressed', String(dur === d)); bt.disabled = !okOf(d);
-        bt.title = okOf(d) ? DUR_HELP[d] : shop ? 'เงื่อนไขหลังสู้/ร้านค้าให้ค่าถาวรเท่านั้น' : d === 'perm' ? 'ผลนี้ตั้งเป็นถาวรไม่ได้ (ผลใส่ศัตรู หรือผลเฉพาะชุด/ตอน down)' : `ผลนี้เป็นแบบ${DUR_TAG[natural]}`;
+        bt.title = okOf(d) ? DUR_HELP[d] : shop ? 'เงื่อนไขหลังสู้/ร้านค้าให้ค่าถาวรเท่านั้น' : d === 'perm' ? 'ผลนี้ตั้งเป็นถาวรไม่ได้ (ผลใส่ศัตรู หรือผลเฉพาะชุด/ตอนล้ม)' : `ผลนี้เป็นแบบ${DUR_TAG[natural]}`;
         bt.addEventListener('click', () => { if (!okOf(d) || shop) return; if (d === 'perm') s.perm = true; else delete s.perm; afterEdit(); });
         seg.append(bt);
       }

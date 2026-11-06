@@ -2,7 +2,7 @@
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RARITIES, RULES } from '../core/rules.js';
-import { addPerm, allUnits, baseIncomeAt, buy, continueExtra, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
+import { addPerm, allUnits, baseIncomeAt, buy, buyMerge, continueExtra, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok } from './helpers.js';
@@ -86,6 +86,22 @@ export const TESTS_SHOP = [
     st.bench[0] = U(4, 1, 3); st.bench[1] = U(5, 1, 3);
     const r2 = move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars);
     eq([r2.merged, st.board[0][0].level], [undefined, 1], '1+1+2 ไม่รวม (สลับที่แทน)');
+  }],
+  ['set 106: ลากการ์ดร้านไปทับตัวชนิดเดียวกัน Lv1 = ซื้อ + รวมร่างทันที · ม้านั่งเต็มก็ได้ · มีตัวเดียว/เงินไม่พอ/ต่างชนิด = ไม่ได้ ไม่เสียเงิน', () => {
+    const chars = buildCharacterList(), st = newRun(chars, 4), price = chars.find(c => c.id === 'HL-1').price;
+    const U = (uid, id, level = 1) => ({ uid, id, level, perm: {}, paid: 3 });
+    st.bench = st.bench.map((_, i) => U(100 + i, 'WY-1')); st.board[0][0] = U(1, 'HL-1');
+    st.gold = 50; st.shop[0] = { id: 'HL-1', locked: true };
+    const r0 = buyMerge(st, 0, { at: 'board', row: 0, lane: 0 }, chars);
+    ok(!r0.ok && st.gold === 50 && st.shop[0].id === 'HL-1', 'มีตัวเดียว = ไม่ได้ ไม่เสียเงิน');
+    st.board[1][1] = U(2, 'HL-1');
+    ok(!buyMerge(st, 0, { at: 'bench', i: 0 }, chars).ok, 'ต่างชนิด = ไม่ได้');
+    st.gold = price - 1; ok(!buyMerge(st, 0, { at: 'board', row: 0, lane: 0 }, chars).ok, 'เงินไม่พอ'); st.gold = 50;
+    const r = buyMerge(st, 0, { at: 'board', row: 0, lane: 0 }, chars);
+    ok(r.ok && r.merged === 2, 'ควรรวมได้');
+    eq([st.board[0][0].level, st.board[0][0].paid, st.board[1][1], st.gold, st.shop[0].id, st.bench.filter(Boolean).length], [2, 6 + price, null, 50 - price, null, st.bench.length], 'ผล');
+    st.board[0][0] = U(3, 'HL-1', 2); st.board[1][1] = U(4, 'HL-1', 2); st.shop[1] = { id: 'HL-1', locked: false };
+    ok(!buyMerge(st, 1, { at: 'board', row: 0, lane: 0 }, chars).ok, 'ทับตัวเลเวล 2 ไม่ได้ (ตัวที่ซื้อเป็นเลเวล 1)');
   }],
   ['รวมร่าง: ค่าถาวรรวมกัน (ไม่เกินเพดานถ้ามี · ชุด 27 ไม่มีเพดาน) · เลเวล 3 รวมต่อไม่ได้', () => {
     const chars = buildCharacterList(), st = newRun(chars, 5);

@@ -17,10 +17,10 @@ export const WHEN_KIND = {
   passive: 'เริ่มแมตช์', matchStart: 'เริ่มแมตช์',
   set: 'ต่อเนื่อง', hit: 'ต่อเนื่อง', hits3: 'ต่อเนื่อง', hitTaken: 'ต่อเนื่อง', armorBreak: 'ต่อเนื่อง',
   allyDown: 'ต่อเนื่อง', enemyDown: 'ต่อเนื่อง', kill: 'ต่อเนื่อง',
-  lowHp: 'ครั้งเดียว', selfDown: 'ตอน down',
+  lowHp: 'ครั้งเดียว', selfDown: 'ตอนล้ม',
   buy: 'หลังสู้/ร้านค้า', sell: 'หลังสู้/ร้านค้า', merge: 'หลังสู้/ร้านค้า', matchEnd: 'หลังสู้/ร้านค้า', matchWin: 'หลังสู้/ร้านค้า', shopStart: 'หลังสู้/ร้านค้า', // 22 ต.ค.: เดิมชื่อ "ร้านค้า" (ทำงานนอกการต่อสู้ ให้ค่าถาวรเท่านั้น)
 };
-export const SKILL_KINDS = ['เริ่มแมตช์', 'ต่อเนื่อง', 'ครั้งเดียว', 'ตอน down', 'หลังสู้/ร้านค้า', 'ร้านค้า'];
+export const SKILL_KINDS = ['เริ่มแมตช์', 'ต่อเนื่อง', 'ครั้งเดียว', 'ตอนล้ม', 'หลังสู้/ร้านค้า', 'ร้านค้า'];
 export const TAG_MAX = 3, TAG_LEN = 12;
 // ทำความสะอาดแท็กจากผู้ใช้/ที่เก็บ: ตัดอักขระควบคุม < > , ออก · ตัดซ้ำและซ้ำกับแท็กหลัก · คืนรายการที่ใช้ได้
 export function cleanTags(list) {
@@ -29,7 +29,7 @@ export function cleanTags(list) {
   for (const t of list) {
     if (typeof t !== 'string') continue;
     const x = t.replace(/[\u0000-\u001f\u007f<>,]/g, '').trim().slice(0, TAG_LEN);
-    if (x && !out.includes(x) && !SKILL_KINDS.includes(x)) out.push(x);
+    if (x && !out.includes(x) && !SKILL_KINDS.includes(x) && x !== 'ตอน down') out.push(x);
     if (out.length >= TAG_MAX) break;
   }
   return out;
@@ -63,7 +63,7 @@ export const RULES = {
     'สายฟ้า':   { shock: [0, 0, 0], every: [1, 1, 1], startShock: [0, 0, 15], shockDmgPct: [3, 6, 12] },                // ฮิตแรกของชุด ติดช็อต +N ทุก K ชุด
     'วายุ':     { extraHit: [0, 0, 1], every: [1, 1, 1], dmgPct: [10, 20, 30] },             // ฮิตเพิ่ม N ทุก K ชุด
     'ภูติ':     { cdPct: [5, 10, 20], instantFirst: [0, 0, 0], startSets: [0, 1, 2] },       // คูลดาวน์ −% · ขั้น 6 ชุดแรกปล่อยทันที
-    'อสูร':     { blastPct: [0, 0, 0], revives: [1, 2, 3], revivePct: [10, 10, 10] }, // down แล้วระเบิด % พลังโจมตีใส่ศัตรูตรงหน้า · ฟื้นกี่ตัว HP กี่ %
+    'อสูร':     { blastPct: [0, 0, 0], revives: [1, 2, 3], revivePct: [10, 10, 10] }, // ล้มแล้วระเบิด % พลังโจมตีใส่ศัตรูตรงหน้า · ฟื้นกี่ตัว HP กี่ %
   },
   // ชุด 32 (ผู้ใช้เลือก 25 ต.ค. · ค่าเริ่ม 0 = ไม่มีผล ผู้ใช้กรอกเองในห้องบาลานซ์): hpPct HP สูงสุด +% ทั้งทีม · startBurn/startShock ติดไฟ/ช็อตศัตรูทุกตัวตอนเริ่มแมตช์
   // burnDmgPct ดาเมจไฟบนศัตรู +% · shockDmgPct ดาเมจช็อตที่ทีมตี +% · dmgPct ดาเมจตีปกติ +% · startSets เพื่อนทุกตัวปล่อยชุดทันทีตอนเริ่ม N ชุด (รวมชุดแรกปล่อยทันที ใช้ค่าที่มากกว่า)
@@ -240,7 +240,7 @@ export const DO_INFO = {
   counterMulti: { phase: 1, side: 'foe', need: ['hitTaken'] },                 // สวนกลับเท่ามัลติฮิตของตัวเอง (WY-4)
   dmgPctArmor: { phase: 1, side: 'foe' },                                      // ดาเมจ % ของเกราะที่ตัวเองมี (HL-7)
   dmgPctEnemyBurn: { phase: 1, side: 'foe' },                                  // ดาเมจ % ของไฟรวมบนศัตรูทุกตัว (PL-4)
-  execute: { phase: 1, side: 'foe' },                                          // ทำให้ down ทันที (WN-8 เลเวล 3)
+  execute: { phase: 1, side: 'foe' },                                          // ทำให้ล้มทันที (WN-8 เลเวล 3)
   burnPctArmor: { phase: 2, side: 'foe' },                                     // ติดไฟ = % ของเกราะที่ตัวเองมี (HL-1)
   maxHpCut: { phase: 2, side: 'foe' },                                         // ลด HP สูงสุด % ระหว่างสู้ (WN-8)
   burn: { phase: 2, side: 'foe' }, shock: { phase: 2, side: 'foe' },
@@ -248,15 +248,15 @@ export const DO_INFO = {
   stun: { phase: 2, side: 'foe' },                                             // มึนงง หยุดนับคูลดาวน์ (มิลลิวินาที)
   cdSlowPct: { phase: 2, side: 'foeSelf' },                                   // ชุด 16: คูลดาวน์ช้าลง % ถึงจบแมตช์ (ซ้อนแบบคูณ) · ใส่ศัตรูหรือตัวเอง · ตั้งถาวรไม่ได้ · ล้างไม่ได้ (WY-8)
   noDecay: { phase: 2, side: 'foe' },
-  spreadBurn: { phase: 2, side: 'foe', need: ['selfDown', 'allyDown', 'enemyDown', 'kill'] }, // % ไฟของตัวที่ down
-  moveShock: { phase: 2, side: 'foe', need: ['selfDown', 'allyDown', 'enemyDown', 'kill'] },  // % ช็อตของตัวที่ down
+  spreadBurn: { phase: 2, side: 'foe', need: ['selfDown', 'allyDown', 'enemyDown', 'kill'] }, // % ไฟของตัวที่ล้ม
+  moveShock: { phase: 2, side: 'foe', need: ['selfDown', 'allyDown', 'enemyDown', 'kill'] },  // % ช็อตของตัวที่ล้ม
   // ฝั่งเรา
   armor: { phase: 0, side: 'ally', perm: 'armor' }, armorPct: { phase: 0, side: 'ally', perm: 'armor' },     // เกราะ / เกราะ % HP สูงสุด
   heal: { phase: 3, side: 'ally', heal: true, perm: 'hp' }, healPct: { phase: 3, side: 'ally', heal: true, perm: 'hp' },
-  selfKo: { phase: 1, side: 'self', need: ['matchStart'] },                  // ชุด 16: ตัวเอง down ทันทีตอนเริ่มแมตช์ (SF-5) · ผลตอน down/เพื่อน down ทำงานตามปกติ · ลุก/ชุบได้ แต่ผลเริ่มแมตช์ไม่ทำซ้ำ
+  selfKo: { phase: 1, side: 'self', need: ['matchStart'] },                  // ชุด 16: ตัวเองล้มทันทีตอนเริ่มแมตช์ (SF-5) · ผลตอนล้ม/เพื่อนล้มทำงานตามปกติ · ลุก/ชุบได้ แต่ผลเริ่มแมตช์ไม่ทำซ้ำ
   revive: { phase: 3, side: 'self', need: ['selfDown'] },                      // ลุกกลับมา % HP
   reviveAlly: { phase: 3, side: 'self', need: ['allyDown'], heal: true },
-  reviveDowned: { phase: 3, side: 'self', need: ['set', 'hit', 'hits3', 'hitTaken', 'lowHp', 'armorBreak', 'enemyDown', 'kill'], heal: true }, // ชุด 20 (WN-4 ผู้ใช้เลือก): ชุบเพื่อนที่ down อยู่ สุ่ม v ตัว HP reviveAllyHpPct · ไม่จำกัดครั้ง (ใช้คูลดาวน์สกิลกัน)     // ชุบเพื่อนที่ down ได้ N ครั้ง/แมตช์ ด้วย HP reviveAllyHpPct (WN-4)
+  reviveDowned: { phase: 3, side: 'self', need: ['set', 'hit', 'hits3', 'hitTaken', 'lowHp', 'armorBreak', 'enemyDown', 'kill'], heal: true }, // ชุด 20 (WN-4 ผู้ใช้เลือก): ชุบเพื่อนที่ล้มอยู่ สุ่ม v ตัว HP reviveAllyHpPct · ไม่จำกัดครั้ง (ใช้คูลดาวน์สกิลกัน)     // ชุบเพื่อนที่ล้มได้ N ครั้ง/แมตช์ ด้วย HP reviveAllyHpPct (WN-4)
   lifesteal: { phase: 3, side: 'self', need: ['hit'], heal: true, perm: 'hp' },           // ฟื้น HP ตัวเอง % ของดาเมจฮิตนั้น (WN-4)
   cleanse: { phase: 2, side: 'ally' },                                         // ล้าง ไฟ ช็อต แช่แข็ง มึนงง (PT-4)
   // ชุด 20 (24 ต.ค. ผู้ใช้เลือก): ล้างไฟ/ช็อต % ของที่มี (ปัดลง · PT-4 4A) · พาเพื่อนไปตี (PT-5 3A) · สะท้อนดีบัฟ (PT-8 6A)
@@ -265,7 +265,7 @@ export const DO_INFO = {
   reflectDebuff: { phase: 2, side: 'ally', need: ['passive'] },                // ผู้รับโดนศัตรูใส่ ไฟ/ช็อต/คูลดาวน์ช้าลง → ศัตรูที่ใส่โดนกลับ v% (ผู้รับยังโดนเต็ม · ระหว่างผู้ใช้สกิลยังยืนอยู่)
   eatAllyBurn: { phase: 2, side: 'self', perm: 'atk' },                                     // ดับไฟบนเพื่อนทั้งทีม ได้พลังโจมตี % ของไฟที่ดับ (PL-5)
   stealShock: { phase: 2, side: 'foe', perm: 'shock' },                                       // ดูดช็อต % จากเป้า มาเป็นช็อตต่อฮิตตัวเอง ระหว่างสู้ (SF-6 · 21 ต.ค.)
-  summon: { phase: 3, side: 'self', need: ['selfDown'] },                     // down จริงแล้วเรียกตัวที่ระบุ (s.summon) มาสู้แทน เลเวลเดียวกัน ช่องเดิม (PL-5 · 21 ต.ค.)
+  summon: { phase: 3, side: 'self', need: ['selfDown'] },                     // ล้มจริงแล้วเรียกตัวที่ระบุ (s.summon) มาสู้แทน เลเวลเดียวกัน ช่องเดิม (PL-5 · 21 ต.ค.)
   shareArmor: { phase: 2, side: 'ally', need: ['passive'], perm: 'shareArmor' },     // 22 ต.ค. ชุด 7: เลือกได้ว่าแบ่งให้ใคร (ช่อง to = ผู้รับ · เดิมทั้งทีม)                  // ได้เกราะเมื่อไหร่ เพื่อนทั้งทีมได้ % ของจำนวนนั้น (HL-8)
   healToAtk: { phase: 2, side: 'self', need: ['passive'], perm: 'healToAtk' },                   // ฟื้น HP ให้ใคร ได้พลังโจมตี % ของที่ฟื้น (PT-4)
   cdCut: { phase: 2, side: 'ally', perm: 'cdStart' }, cdPct: { phase: 2, side: 'ally', perm: 'cdPct' },        // ลดคูลดาวน์ที่เหลือ (ms) / ลดคูลดาวน์ %

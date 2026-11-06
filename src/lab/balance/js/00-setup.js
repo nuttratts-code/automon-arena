@@ -26,7 +26,7 @@ const ONE_FIELDS = [];
 const DRAFT_KEY = 'automon-balance-draft-v9'; // v3 (20 ต.ค.): นำค่าที่บันทึกเข้าเกมแล้ว ร่างเก่าไม่โหลด (กันค่าเก่าทับค่าที่ปรับบาลานซ์ใหม่)
 const TRIBE_LABEL = {
   armorPct: 'เกราะเริ่ม % ของ HP', restore: 'เกราะแตกได้คืน (ครั้ง)', burn: 'ไฟ +N ที่ฮิตแรก', every: 'ทุกกี่ชุด', shock: 'ช็อต +N ที่ฮิตแรก',
-  extraHit: 'ฮิตเพิ่ม', cdPct: 'คูลดาวน์ −%', instantFirst: 'ชุดแรกปล่อยทันที (1=ใช่)', blastPct: 'ระเบิดตอน down % พลังโจมตี', revives: 'ฟื้นได้กี่ตัว', revivePct: 'ฟื้นด้วย HP %',
+  extraHit: 'ฮิตเพิ่ม', cdPct: 'คูลดาวน์ −%', instantFirst: 'ชุดแรกปล่อยทันที (1=ใช่)', blastPct: 'ระเบิดตอนล้ม % พลังโจมตี', revives: 'ฟื้นได้กี่ตัว', revivePct: 'ฟื้นด้วย HP %',
   hpPct: 'HP สูงสุด +%', startBurn: 'เริ่มแมตช์ ศัตรูทุกตัวติดไฟ +N', burnDmgPct: 'ดาเมจไฟ +%', startShock: 'เริ่มแมตช์ ศัตรูทุกตัวติดช็อต +N', shockDmgPct: 'ดาเมจช็อต +%',
   dmgPct: 'ดาเมจตีปกติ +%', startSets: `เริ่มแมตช์ ทั้งทีมปล่อยทันที (ชุด · สูงสุด ${RULES.startSetsMax})`, // ชุด 32
 };

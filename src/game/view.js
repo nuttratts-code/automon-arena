@@ -10,7 +10,7 @@ export const TRIBE_STYLE = {
   'อสูร': { color: 'var(--t-fiend)', shape: 'pentagon' },
 };
 export const WHY_CLASS = { reflect: 'n-hit', hit: 'n-hit', counter: 'n-hit', shock: 'n-shock', burn: 'n-burn', storm: 'n-storm', armorBreak: 'n-hit', downSkill: 'n-hit' };
-export const WHY_TEXT = { execute: 'down ทันที', share: 'แบ่งเกราะ', reflect: 'สะท้อน', hit: 'ฮิต', counter: 'สวนกลับ', shock: 'ช็อต', burn: 'ไฟ', storm: 'พายุทราย', armorBreak: 'เกราะแตก', downSkill: 'สกิลตอน down' };
+export const WHY_TEXT = { execute: 'ล้มทันที', share: 'แบ่งเกราะ', reflect: 'สะท้อน', hit: 'ฮิต', counter: 'สวนกลับ', shock: 'ช็อต', burn: 'ไฟ', storm: 'พายุทราย', armorBreak: 'เกราะแตก', downSkill: 'สกิลตอนล้ม' };
 
 export function el(tag, cls, text) {
   const e = document.createElement(tag);
@@ -262,7 +262,7 @@ export class BattleView {
       case 'reflectDebuff': this.wantLog && this.onLog(`${s} ${this.name(e.from)} สะท้อน${e.kind === 'burn' ? 'ไฟ' : e.kind === 'shock' ? 'ช็อต' : 'คูลดาวน์ช้าลง'} กลับไปหา ${this.name(e.to)}`); break;
       case 'cleanse': if (e.what === 'pct') { const v = this.units.get(e.to); v.burn = e.burn; v.shock = e.shock; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ล้างไฟ −${e.cut[0]} ช็อต −${e.cut[1]}`); break; } if (e.what === 'bar') { const v = this.units.get(e.to); v.burn = v.shock = 0; this.float(v, 'ขึ้นแถบใหม่ ล้างดีบัฟ', 'n-heal'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ขึ้นแถบเลือดใหม่ ล้างดีบัฟทั้งหมด`); break; } { const v = this.units.get(e.to); v.burn = 0; if (e.what !== 'burn') v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ${e.what === 'burn' ? 'ไฟดับ' : 'ล้างสถานะ'}`); break; }
       case 'buff': if (e.what === 'hpUp') { const v = this.units.get(e.to); v.maxHp += e.amount; v.hp += e.amount; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} HP สูงสุด +${e.amount}`); } break;
-      case 'down': { const v = this.units.get(e.who); v.down = true; v.hp = 0; v.armor = v.burn = v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.who)} down`); break; }
+      case 'down': { const v = this.units.get(e.who); v.down = true; v.hp = 0; v.armor = v.burn = v.shock = 0; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.who)} ล้ม`); break; }
       case 'revive': { const v = this.units.get(e.who); v.hp = e.hp; v.armor = v.burn = v.shock = 0; v.down = false; this.float(v, 'ลุกกลับมา', 'n-heal'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.who)} ลุกกลับมา HP ${e.hp}`); break; }
       case 'summon': { const o = this.units.get(e.from); if (o) o.card.remove(); const v = this.addUnit(e.unit); this.float(v, 'ถูกเรียกมา', 'n-heal'); this.wantLog && this.onLog(`${s} ${this.name(e.from)} เรียก ${this.name(e.who)} มาสู้แทน`); break; }
       case 'steal': { const v = this.units.get(e.to); v.shock = e.total; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.from)} ดูดช็อต ${e.amount} จาก ${this.name(e.to)}`); break; }

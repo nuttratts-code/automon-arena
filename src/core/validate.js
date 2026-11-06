@@ -96,7 +96,7 @@ export function checkSkill(c, s, k, errors, rules) {
   if (s.perm != null) { // ถาวร (22 ต.ค.): เฉพาะสกิลระหว่างสู้ที่ผลให้ฝ่ายเรา (DO_INFO.perm)
     if (s.perm !== true) errors.push(`${who}: ช่องถาวรต้องเป็น true`);
     else if (DO_INFO[s.do].shop) errors.push(`${who}: สกิลร้านค้าเป็นถาวรอยู่แล้ว ไม่ต้องติ๊กถาวร`);
-    else if (!DO_INFO[s.do].perm) errors.push(`${who}: ผล "${s.do}" ตั้งเป็นถาวรไม่ได้ (ผลที่ใส่ศัตรู หรือผลเฉพาะชุด/ตอน down)`);
+    else if (!DO_INFO[s.do].perm) errors.push(`${who}: ผล "${s.do}" ตั้งเป็นถาวรไม่ได้ (ผลที่ใส่ศัตรู หรือผลเฉพาะชุด/ตอนล้ม)`);
   }
   if (s.n != null) errors.push(`${who}: "ทุก N ชุด" เอาออกแล้ว ใช้คูลดาวน์สกิลแทน`);
   if (s.cd != null && (!isInt(s.cd) || s.cd < 100 || s.cd > rules.skillCdMaxMs)) errors.push(`${who}: คูลดาวน์สกิลต้องอยู่ระหว่าง 0.1–${rules.skillCdMaxMs / 1000} วิ`);
