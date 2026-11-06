@@ -3,7 +3,7 @@
 // - set 95 (user 5 Nov): rune shop REMOVED (runes come only from win offers) · difficulty = enemy team hp/atk × diffEasy/diffNorm/diffHard %
 // - every held rune is active (Q4 A) · a rune with scope "ตัวเดียว" is worn by ONE unit (st.rn.at[id] = that unit's uid · set 109 bug fix:
 //   it used to sit on a board slot, so any unit swapped into the slot got it) · link/buddy also need a partner unit (st.rn.pt[id] = uid)
-// - the rune follows its unit when moved / merged (merge keeps it on the result) · unit sold = rune back in the bag, not worn
+// - the rune follows its unit when moved / merged (merge keeps it on the result) · unit sold = rune back in the bag, not worn (user 6 Nov) · runes with a fixed area (row / whole team / enemy) work as before
 // - battle effects work only while the unit is on the board · old saves (slot arrays) read as the unit standing on that slot
 // - run-only runes (gold, interest, shop slots, free reroll, heart trade, lure, fast merge, shadow, perm up, scout) are read by core/shop.js + the game page
 // - copies per run (rune.max) cap the offers

@@ -261,9 +261,8 @@ export function sell(st, ref, chars, rules = RULES) {
   if (st.rn) { // set 94: rune เงา worn by this unit → a Lv1 copy comes back to the bench (times per run, paid 0) · set 109: worn by the unit, not the slot
     put(st, ref, u); const sh = rnFx(st).shadow.filter(x => x.uid === u.uid), times = sh.reduce((a, x) => a + x.times, 0); put(st, ref, null);
     const to = sh.length ? firstEmptyBench(st) : null;
-    let copy = null;
-    if (to && st.rn.shadow < times) { copy = { uid: st.uid++, id: u.id, level: 1, perm: {}, paid: 0 }; put(st, to, copy); st.rn.shadow++; msgs.push(`รูนเงา: ได้ ${u.id} เลเวล 1 คืนที่ม้านั่ง`); }
-    rnSync(st, copy ? { from: [u.uid], to: copy.uid } : null); // runes of the sold unit → the shadow copy, else back to the bag (not worn)
+    if (to && st.rn.shadow < times) { put(st, to, { uid: st.uid++, id: u.id, level: 1, perm: {}, paid: 0 }); st.rn.shadow++; msgs.push(`รูนเงา: ได้ ${u.id} เลเวล 1 คืนที่ม้านั่ง`); }
+    rnSync(st); // set 109 (user): every rune the sold unit wore goes back to the bag (not worn) — เงา too
   }
   fireShopSkill(st, u, ref, 'sell', chars, rules, msgs);
   dropDeadCharges(st);

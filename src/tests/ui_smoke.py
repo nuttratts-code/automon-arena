@@ -72,6 +72,7 @@ with sync_playwright() as p:
         pg.keyboard.press('Escape'); chk(pg.is_visible('#offerDlg'),'offer popup ignores Esc')
         pg.evaluate("document.getElementById('fight').click()"); chk(not fighting() and 'เลือกรูน' in pg.evaluate('JSON.stringify(msgs)'),'fight blocked until offer picked')
         pg.click('#offer button'); chk(pg.is_hidden('#offerDlg') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
+        esc()  # set 109: a picked rune that must be worn opens its popup
         pg.evaluate("P.gold=%d;P.rn.bag={};P.rn.at={};P.rn.pt={};render()" % g0)
         # set 97: tap = details popup only (never moves) · drag = buy / move / sell
         pg.evaluate("P.gold=60;render()")
@@ -183,8 +184,9 @@ with sync_playwright() as p:
             pg.evaluate(BUY); pg.evaluate(PLACE)  # ซื้อและวางตัวลงบอร์ดอีกครั้ง ให้ทดสอบสกิลถาวรต่อได้
         # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว · 31 Oct: when matchStart (not 'set': a unit killed before its first attack never fires 'set' → ~1.3% random fails)
         if pg.is_visible('#offerDlg'): pg.click('#offer button')
+        esc()
         got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
-          const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); return before;})()""")
+          const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); if(!document.getElementById('app').classList.contains('fighting')&&confirmRunes) document.getElementById('fight').click(); return before;})()""")  # set 109: unworn-rune warning = press again
         # ชุด 19: ถ้าแมตช์ไม่เริ่ม (ทีมไม่ถูกกฎ ฯลฯ) ให้รายงานข้อความแทนการรอจนหมดเวลา
         if not fighting():
             fails.append('perm test: battle did not start · '+pg.evaluate('JSON.stringify(msgs)')+' · '+pg.evaluate('JSON.stringify(teamEntries(P).map(e=>[e.id,e.level,e.perm]))'))
