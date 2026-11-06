@@ -71,10 +71,13 @@ export const TESTS_RUNRUN = [
     P.ws = 9; eq(foeWantPct(P.ws), 125, 'cap +25');
     endMatch(P, false, chars, RULES); eq(foeWantPct(P.ws), 100, 'loss resets');
     const me = buildTeam([{ id: commonId, level: 2, row: 0, lane: 0 }, { id: commonId, level: 1, row: 1, lane: 0 }], cm), pw = teamPower(me);
-    const a = pickFoe(BOT_TEAMS, me, 4, 777, 0), b = pickFoe(BOT_TEAMS, me, 4, 777, 0), c = pickFoe(BOT_TEAMS, me, 4, 777, 5);
+    // set 108: up to round foeRealUntil (10) the enemy is the real team (pct 100) · later rounds are scaled to the target
+    const real = pickFoe(BOT_TEAMS, me, 4, 777, 5); eq(real.pct, 100, 'round 4 = real team, no scaling');
+    const R = RUN_STAGE.settings.foeRealUntil + 1, me2 = buildTeam(BOT_TEAMS.rounds[R - 1][0].team, cm), pw2 = teamPower(me2);
+    const a = pickFoe(BOT_TEAMS, me2, R, 777, 0), b = pickFoe(BOT_TEAMS, me2, R, 777, 0), c = pickFoe(BOT_TEAMS, me2, R, 777, 5);
     eq(JSON.stringify(a), JSON.stringify(b), 'deterministic');
-    const pow = f => teamPower(rnFoeScale(buildTeam(f.team, cm), f.pct));
-    ok(Math.abs(pow(a) / pw - 1) < 0.08, `enemy ≈ my power (${(pow(a) / pw).toFixed(2)})`);
+    const pow = f => teamPower(rnFoeScale(buildTeam(f.team, cm), f.pct)); // round 0: no late growth
+    ok(Math.abs(pow(a) / pw2 - 1) < 0.08, `enemy ≈ my power (${(pow(a) / pw2).toFixed(2)})`); void pw;
     ok(pow(c) > pow(a) * 1.15, 'streak 5 → stronger enemy');
     ok(Array.isArray(a.rn) && BOT_TEAMS.rounds.some(l => l.some(t => t.rn.length)), 'bot teams carry runes');
   }],
