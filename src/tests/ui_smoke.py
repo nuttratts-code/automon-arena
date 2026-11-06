@@ -44,7 +44,7 @@ with sync_playwright() as p:
         chk(pg.query_selector('#upShop') is None and 'Lv 1/' in pg.inner_text('#shopLv') and '→ 2' in pg.inner_text('#shopLv') and ('+%d' % pg.evaluate('baseIncomeAt(2)')) in pg.inner_text('#shopLv'),'shop level + next-round income on dock')
         pg.click('#shopLv'); chk(pg.is_visible('#dlg') and 'ธรรมดา' in pg.inner_text('#shopOdds') and 'รอบหน้า Lv 2' in pg.inner_text('#pop'),'shop popup: odds + next level')
         pg.keyboard.press('Escape'); chk(pg.is_hidden('#dlg'),'Esc closes popup')
-        chk('−1' in pg.inner_text('#reroll'),'reroll cost 1 (set 98)')
+        chk('· 1' in pg.inner_text('#reroll'),'reroll cost 1 (set 98)')
         # set 94/95: runes (HUD bag popup → detail) · difficulty in HUD + "?" popup · win offer = blocking popup
         chk(pg.query_selector('#rShop') is None and pg.query_selector('#rReroll') is None,'no rune shop')
         g0=pg.evaluate('P.gold'); pg.evaluate("P.rn.bag={T4:1};render()")
@@ -54,12 +54,12 @@ with sync_playwright() as p:
         pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
         # set 109: a "one" rune is worn by a unit (not a slot) · unworn = red HUD badge + list warning · worn → no warning, follows the unit
         pg.evaluate("P.board[0][0]={uid:P.uid++,id:chars[0].id,level:1,perm:{},paid:1};P.rn.bag={C3:1};P.rn.at={};render()")
-        chk('⚠1' in pg.inner_text('#runeCnt') and 'warn' in pg.get_attribute('#runeBtn','class'),'unworn rune → warning on HUD')
+        chk('ยังไม่สวม 1' in pg.inner_text('#runeWarn') and pg.is_visible('#runeWarn') and 'warn' in pg.get_attribute('#runeBtn','class'),'unworn rune → warning on HUD')
         pg.click('#runeBtn'); chk('ยังไม่ได้สวม' in pg.inner_text('#rBag'),'rune list says not worn')
         pg.click('#rBag .pitem'); pg.select_option('#pop select','0,0')
-        chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
+        chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and pg.is_hidden('#runeWarn') and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
         chk('เกราะไม้' in pg.inner_text('#board'),'rune name shown on the wearer')
-        pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk('⚠1' in pg.inner_text('#runeCnt'),'wearer on the bench → warning')
+        pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk(pg.is_visible('#runeWarn'),'wearer on the bench → warning')
         esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
         # set 107: no modes · HUD shows enemy power % (100 + 5 per win in a row) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
@@ -92,6 +92,13 @@ with sync_playwright() as p:
         drag('#board [data-ref="b:0:0"]','#reroll')
         chk(pg.evaluate('P.board[0][0]===null') and pg.evaluate('P.gold')==g1+paid,'drag unit to dock sells')
         pg.evaluate("(()=>{const i=P.bench.findIndex(Boolean); if(i>=0) act({at:'bench',i},{at:'board',row:1,lane:0});})()")
+        # set 116 (mockup): bench row + inline tribe cards (desktop) · ⋯ menu holds new run · fight button shows units on the field
+        chk(pg.inner_text('#benchCnt')==('%d/5' % pg.evaluate('P.bench.filter(Boolean).length')) and 'ลงสนาม' in pg.inner_text('#fight'),'bench count + fight button count')
+        if gh>520:
+            chk(len(pg.query_selector_all('#tribeRow .tcard[data-tribe]'))>=1,'tribe cards next to the bench')
+            pg.click('#tribeRow .tcard[data-tribe] >> nth=0'); chk(pg.query_selector('#pop .btbl') is not None,'tribe card opens its bonus table'); esc()
+        else: chk(pg.is_hidden('#tribeRow'),'phone: tribe cards hidden (HUD button instead)')
+        pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
         pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup'); esc()
         pg.evaluate("P.gold=%d;render()" % g0)
@@ -111,10 +118,12 @@ with sync_playwright() as p:
             if first:
                 chk(fighting() and pg.is_visible('#arena') and len(pg.query_selector_all('#arena .side'))==2 and pg.is_hidden('.prepdock'),'battle on the same field: both teams shown, dock = battle controls')
                 noscroll('battle')
+                chk(pg.is_hidden('#benchbar') and pg.is_hidden('#runeBtn') and pg.is_visible('#battleTitle'),'battle: no bench row, HUD shows match title')
                 cell=pg.query_selector('#arena .side-a .cell .unit')
                 if cell:
                     cell.click(); chk(pg.is_visible('#dlg') and pg.query_selector('#bInfo') is not None,'tap unit in battle opens live popup'); esc()
             pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน
+            if not res: chk(pg.is_visible('#rChips') and pg.inner_text('#resultTitle') in ('ชนะ!','แพ้','เสมอ') and pg.inner_text('#resultNext').startswith('ต่อไป'),'result card: big word + chips + next step')
             res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
             if first:
                 rnd0=pg.evaluate('P.round'); t0=pg.inner_text('#resultTitle'); c0=pg.inner_text('#clock')

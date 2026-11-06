@@ -5,7 +5,7 @@
 <style>
 /* โต๊ะเตรียมทีมกลางสนามทราย: แถบสถานะ → ร้าน → บอร์ด 3×2 (หน้าหันขวาเข้าหาศัตรู) → ม้านั่ง → ปุ่มสู้ · สีเผ่าชุดเดียวกับหน้าจอสู้ */
 :root {
-  --bg: #efe9df; --panel: #fbf8f3; --ink: #231f1a; --mute: #6b6258; --line: #d8cfc2; --soft: #f1ebe1;
+  --bg: #efe9df; --panel: #fbf8f3; --card: #ffffff; --heart-bg: #f8dfe3; --heart-ink: #9b1f33; --gold-ink: #7a5400; --ink: #231f1a; --mute: #6b6258; --line: #d8cfc2; --soft: #f1ebe1;
   --arena: #e3d6c1; --arena-line: #c9b89c; --mid: #a8916d; --accent: #2d5f7c; --on-accent: #ffffff;
   --gold: #9a6b00; --gold-bg: #f7e7bf; --r-unc: #2f7d3a; --r-rare: #1d5fb8; --r-epic: #7a3fb0; --r-legend: #8f6200; --r-legend-bg: #fbefc9; --heart: #b3263a; --sel: #2d5f7c;
   --hp: #3c9a5f; --hp-bg: #d9cfbf; --armor: #6d7f92; --ok: #1f7a4a; --bad: #b3261e;
@@ -19,7 +19,7 @@
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --bg: #17140f; --panel: #211d17; --card: #2a251d; --heart-bg: #3a1c22; --heart-ink: #f5a3b0; --gold-ink: #f0c860; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
   --arena: #2b251c; --arena-line: #4a3f30; --mid: #7d6a4c; --accent: #8cc0de; --on-accent: #10202a;
   --gold: #f0c860; --gold-bg: #3a2f14; --r-unc: #7fd18c; --r-rare: #7fb2f0; --r-epic: #c9a2f2; --r-legend: #f0c860; --r-legend-bg: #3a2f14; --heart: #f07a8c; --sel: #8cc0de;
   --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
@@ -29,7 +29,7 @@
   --n-reflect: #38d9a9; --n-down: #748ffc; --n-abrk: #f06595; --n-skill: #4dabf7; --n-cnt: #9775fa; --n-exec: #adb5bd;
   --n-hit: #ff8a80; --n-shock: #f5cf5a; --n-burn: #ff9a6b; --n-heal: #7be0a2; --n-armor: #b5c7da; --n-storm: #d8b67a; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #17140f; --panel: #211d17; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
+  --bg: #17140f; --panel: #211d17; --card: #2a251d; --heart-bg: #3a1c22; --heart-ink: #f5a3b0; --gold-ink: #f0c860; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d;
   --arena: #2b251c; --arena-line: #4a3f30; --mid: #7d6a4c; --accent: #8cc0de; --on-accent: #10202a;
   --gold: #f0c860; --gold-bg: #3a2f14; --r-unc: #7fd18c; --r-rare: #7fb2f0; --r-epic: #c9a2f2; --r-legend: #f0c860; --r-legend-bg: #3a2f14; --heart: #f07a8c; --sel: #8cc0de;
   --hp: #5cc283; --hp-bg: #3a332a; --armor: #9fb2c6; --ok: #6fd49b; --bad: #ff8f86;
@@ -342,33 +342,229 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 <!--@include lab/balance/css/55-match.css-->
 <!--@include lab/balance/css/60-units.css-->
 
-/* short landscape screens (phone held sideways) */
+/* ===== set 116: approved mockup (Design canvas set 113 v8) · HUD chips · bench + tribe cards row · shop cards · battle dock · result card · title screens ===== */
+.app { grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 10px; padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+.app.fighting { grid-template-rows: auto minmax(0, 1fr) auto; }
+.fighting .prep-only, .fighting .benchbar { display: none !important; }
+.nw { display: none; }
+.hud { min-height: 44px; gap: 10px; flex-wrap: nowrap; }
+.hud h1 { font-size: 1.25rem; white-space: nowrap; }
+.hudtxt { font-size: .95rem; color: var(--mute); white-space: nowrap; }
+.hudtxt span { color: var(--ink); font-weight: 600; }
+.bigchip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 20px; font: 500 1.25rem var(--f-display); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bigchip svg { width: 20px; height: 20px; flex: none; }
+.bigchip b { font-weight: 500; }
+.bigchip.heart { background: var(--heart-bg); color: var(--heart-ink); } .bigchip.heart svg { color: var(--heart); }
+.bigchip.gold { background: var(--gold-bg); color: var(--gold-ink); }
+.bigchip.win { background: var(--ok-bg); color: var(--ok); }
+.htitle { display: none; }
+.fighting .htitle { display: block; flex: 1; min-width: 0; text-align: center; font: 500 1.1rem var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hudbtn { height: 40px; padding: 0 14px; border-radius: 20px; font: 400 .88rem var(--f-body); gap: 7px; white-space: nowrap; }
+.hudbtn svg { width: 18px; height: 18px; }
+.hudbtn.round { width: 40px; padding: 0; justify-content: center; }
+.hudbtn.warn { outline: 0; border-color: var(--bad); }
+#runeCnt { font-weight: 600; }
+.badge.warn { font: 600 .72rem var(--f-body); padding: 1px 7px; }
+#diffInfo { padding: 0 14px; } #diffInfo b { font-weight: 700; }
+.menuwrap { position: relative; display: inline-flex; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.2); display: grid; min-width: 180px; }
+.menu button { border: 0; background: transparent; text-align: left; padding: 10px 12px; font-weight: 600; }
+.menu button:hover { background: var(--soft); }
+/* field */
+.field { border-radius: 16px; padding: 10px 12px 12px; grid-template-rows: minmax(0, 1fr); }
+.cols .lbl, .heads .lbl { font-size: .8rem; color: color-mix(in srgb, var(--ink) 70%, var(--arena)); }
+.board .cell { border-radius: 12px; border: 2px dashed var(--arena-line); }
+.board .cell.filled { background: var(--panel); border: 1px solid var(--line); }
+.board .unit { gap: 4px; }
+.board .shape { width: clamp(30px, 12vh, 92px); height: clamp(30px, 12vh, 92px); }
+.board .uname, .arena .uname { font-size: .95rem; }
+.rune-dot { left: auto; right: 8px; top: 8px; bottom: auto; font-size: .74rem; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--panel)); border-radius: 8px; padding: 1px 8px; max-width: 60%; }
+.rune-dot.off { color: var(--mute); background: var(--soft); }
+.perm-dot { right: auto; left: 8px; top: 8px; }
+/* bench + tribe cards */
+.benchbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; height: clamp(56px, 12vh, 92px); min-height: 0; }
+.benchrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; border: 0; padding: 0; min-height: 0; }
+.blbl { display: flex; flex-direction: column; justify-content: center; font-size: .8rem; color: var(--mute); }
+.blbl b { color: var(--ink); font-size: .88rem; }
+.bench { gap: 8px; min-height: 0; }
+.bench .cell { height: auto; min-height: 0; border-radius: 10px; border: 2px dashed var(--arena-line); background: transparent; }
+.bench .cell.filled { background: var(--panel); border: 1px solid var(--line); }
+.bench .shape { width: clamp(18px, 5.7vh, 44px); height: clamp(18px, 5.7vh, 44px); }
+.bench .uname { font-size: .8rem; }
+.bench .mon.has-lv { margin-bottom: 5px; }
+.trow { display: flex; gap: 8px; min-width: 0; }
+.tcard { flex: 1; min-width: 0; text-align: left; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; display: flex; flex-direction: column; justify-content: center; gap: 4px; font-weight: 400; }
+.tcard.on { background: var(--panel); border-color: var(--tc); box-shadow: inset 3px 0 0 var(--tc); }
+.tcard.empty { color: var(--mute); font-size: .82rem; align-items: center; }
+.tcard.more { flex: 0 0 auto; align-items: center; font-weight: 600; }
+.tcard .th { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; }
+.tcard .th .tico { width: 16px; height: 16px; flex: none; display: inline-block; background: var(--tc); }
+.tpips { display: flex; gap: 3px; } .tpips i { width: 18px; height: 6px; border-radius: 3px; background: var(--line); } .tpips i.on { background: var(--tc); }
+.tcard .tn { font-size: .76rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* dock (shop) */
+.dock { border-radius: 16px; padding: 10px; min-height: clamp(70px, 16vh, 128px); }
+.prepdock { grid-template-columns: 150px minmax(0, 1fr) 190px; gap: 10px; }
+.dock .left { gap: 6px; }
+#reroll { flex: 1; max-height: none; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--card); color: var(--accent); border-color: var(--accent); border-radius: 10px; font: 500 1.05rem var(--f-display); }
+#reroll svg { width: 18px; height: 18px; flex: none; }
+#shopLv { border: 0; background: transparent; display: block; text-align: center; white-space: normal; line-height: 1.3; font: 400 .76rem var(--f-body); color: var(--mute); padding: 2px; }
+#shopLv b { font-weight: 400; color: var(--mute); }
+.dock .right { justify-content: stretch; }
+#fight { flex: 1; max-height: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: var(--f-display); padding: 6px; }
+#fight .fbig { font-size: 1.5rem; font-weight: 500; line-height: 1.2; } #fight .fsm { font-size: .8rem; opacity: .9; font-weight: 400; }
+.shop { gap: 10px; }
+.slot { grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; background: var(--card); border-radius: 12px; padding: 8px 10px; }
+.slot > .mon { grid-row: auto; }
+.slot .shape { width: clamp(30px, 7.3vh, 56px); height: clamp(30px, 7.3vh, 56px); }
+.stxt { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 14px; }
+.slot .uname { font-size: 1rem; text-align: left; }
+.slot .sub.tr { font: 400 .8rem var(--f-body); color: var(--ink); opacity: .8; }
+.slot .stxt .rar { font-size: .76rem; align-self: flex-start; }
+.slot .price { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; background: var(--gold-bg); color: var(--gold-ink); border-radius: 10px; padding: 0 8px; font: 500 .95rem var(--f-display); }
+.slot .price::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #d6a11a; }
+.slot.cant .price { color: var(--bad); }
+.slot.empty { opacity: 1; background: transparent; border: 1px dashed var(--line); box-shadow: none; }
+.slot .own { top: -10px; left: 10px; font: 400 .74rem var(--f-body); padding: 1px 8px; border-radius: 8px; background: var(--accent); color: var(--on-accent); }
+.slot.owned { border: 1px solid var(--accent); }
+.slot.owned.ready { border: 2px solid var(--tg-shop); box-shadow: none; }
+.slot.ready .own { background: var(--tg-shop); color: var(--on-accent); }
+/* battle (same cells · HP bar · floating numbers · skill tag) + compact dock */
+.arena .cell { border-radius: 12px; border: 2px dashed var(--arena-line); opacity: 1; }
+.arena .cell:has(.unit) { background: var(--panel); border: 1px solid var(--line); }
+.arena .cell.skilling { background: color-mix(in srgb, var(--n-skill) 10%, var(--panel)); border: 2px solid var(--n-skill); }
+.sktag { position: absolute; top: 8px; left: 8px; z-index: 2; font: 600 .8rem var(--f-body); color: #fff; background: var(--n-skill); border-radius: 8px; padding: 2px 10px; white-space: nowrap; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.arena .shape { width: clamp(26px, 13.5vh, 104px); height: clamp(26px, 13.5vh, 104px); }
+.arena .unit { gap: 3px; }
+.hp { width: 78%; height: 10px; border-radius: 5px; }
+.nums { font: 400 .76rem var(--f-body); color: var(--ink); opacity: .8; }
+.float { top: 40px; font: 500 clamp(1rem, 3.1vh, 1.5rem) var(--f-display); background: color-mix(in srgb, var(--panel) 92%, transparent); border-radius: 8px; padding: 0 8px; text-shadow: none; z-index: 3; }
+.bctl { gap: 14px; }
+.clock { font: 500 1.6rem var(--f-display); min-width: 92px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.speed { gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex: none; }
+.speed button { width: 52px; height: 44px; border: 0; border-left: 1px solid var(--line); border-radius: 0; background: var(--card); font: 400 .95rem var(--f-body); padding: 0; }
+.speed button:first-child { border-left: 0; }
+.speed button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btext { gap: 4px; }
+#ticker { font-size: .88rem; color: var(--ink); font-weight: 600; } #ticker2 { font-size: .8rem; color: var(--mute); }
+#skip { height: 48px; padding: 0 18px; border-radius: 10px; border-color: var(--arena-line); background: var(--card); font: 400 .95rem var(--f-body); flex: none; }
+.chk { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; white-space: nowrap; cursor: pointer; }
+.chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+.replaytag { top: 8px; }
+/* result card (centered over a dimmed screen) */
+.result { position: fixed; inset: 0; z-index: 30; background: rgba(20,16,12,.55); border-radius: 0; display: grid; place-items: center; padding: 16px; }
+.result > .rbox { width: min(560px, 100%); max-height: 100%; overflow: auto; background: var(--panel); border: 0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; box-shadow: 0 16px 50px rgba(0,0,0,.35); }
+#resultTitle { font: 600 3.5rem/1 var(--f-display); }
+#resultTitle.win { color: var(--ok); } #resultTitle.lose { color: var(--bad); }
+#resultTitle.small { font-size: 1.8rem; }
+#resultSub { font-size: .95rem; }
+.rchips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.rchips .bigchip { font-size: 1.1rem; height: 38px; }
+#endMsgs { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; text-align: left; font-size: .92rem; color: var(--ink); gap: 4px; }
+#endMsgs:empty { display: none; }
+.rnext { margin: 0; font-size: .9rem; color: var(--mute); } .rnext:empty { display: none; }
+.racts { width: 100%; display: flex; gap: 10px; }
+.racts button { flex: 1; height: 48px; border-radius: 10px; font: 400 .95rem var(--f-body); background: var(--card); border-color: var(--arena-line); }
+.racts button.primary { flex: 1.4; font: 500 1.1rem var(--f-display); background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+/* unit popup: aligned 2-column stats + skill card */
+dialog { width: min(640px, calc(100vw - 24px)); border-radius: 18px; }
+.pop { padding: 20px; gap: 14px; }
+.info { gap: 10px 16px; }
+.info > .mon .shape { width: 76px; height: 76px; }
+.info h2 { font-size: 1.4rem; font-weight: 500; }
+.info .stats2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; font-size: .95rem; }
+.info .stats2 .term { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line); color: var(--mute); }
+.info .stats2 b { font: 500 1.05rem var(--f-display); color: var(--ink); }
+.info .stats2.now .term { color: inherit; }
+.lvtabs { gap: 6px; } .lvtabs button { height: 38px; padding: 0 18px; border-radius: 10px; font: 400 .9rem var(--f-body); }
+.info .skill { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: .95rem; line-height: 1.5; }
+.info .skill .tags { display: flex; margin: 0 0 4px; }
+.acts button { min-height: 44px; border-radius: 10px; padding: 0 18px; }
+.acts button.primary { font: 500 1rem var(--f-display); }
+/* title / name + resume screens */
+.screen.title { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding-top: max(16px, env(safe-area-inset-top, 0px)); }
+.screen.title > section { margin: 0; }
+.hero { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.tshapes { display: flex; gap: 14px; margin-bottom: 14px; } .tshapes .shape { width: 40px; height: 40px; }
+.ttl { margin: 0; font: 600 clamp(2.2rem, 9vh, 4.5rem)/1.1 var(--f-display); letter-spacing: .5px; }
+.tagline { margin: 0; font-size: 1.25rem; color: var(--mute); }
+.tcardbox { width: min(460px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 12px; }
+.tcardbox h2 { font-size: 1.1rem; }
+.nform { display: grid; gap: 12px; }
+.nform label { font-weight: 600; font-size: 1rem; }
+#nameIn { height: 48px; border: 2px solid var(--ink); border-radius: 10px; padding: 0 14px; font-size: 1.05rem; background: var(--card); flex: none; }
+button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-display); }
+
+/* short landscape screens (phone held sideways · mockup 844×390) */
 @media (max-height: 520px) {
-  .app { gap: 5px; padding-block: max(4px, env(safe-area-inset-top, 0px)) max(4px, env(safe-area-inset-bottom, 0px)); }
-  .hud h1 { display: none; }
-  .hud { gap: 4px; }
-  .stat { padding: 1px 7px; font-size: .72rem; }
-  .seg button, #diffInfo, #newRun, .hudbtn { padding: 2px 7px; }
-  .hudbtn svg { width: 16px; height: 16px; }
-  .field { padding: 4px 8px 5px; gap: 4px; }
+  .app { gap: 6px; padding-block: max(6px, env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-bottom, 0px)); padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .hud h1, .wd { display: none; } .nw { display: inline; }
+  .hud { gap: 6px; min-height: 32px; }
+  .hudtxt { font-size: .8rem; }
+  .bigchip { height: 30px; padding: 0 10px; font-size: 1rem; gap: 4px; } .bigchip svg { width: 15px; height: 15px; }
+  .hudbtn { height: 32px; padding: 0 10px; font-size: .8rem; gap: 4px; } .hudbtn svg { width: 15px; height: 15px; } .hudbtn.round { width: 32px; }
+  #runeBtn > span:not([id]) { display: none; }
+  .fighting .htitle { font-size: .9rem; }
+  .field { padding: 6px; border-radius: 12px; }
+  .pfield .cols, .bfield .heads { display: none; }
+  .pfield, .bfield { grid-template-rows: minmax(0, 1fr); }
   .board, .side { gap: 5px; }
-  .uid { display: none; }
-  .board .unit { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 6px; }
-  .bench .uname { display: none; }
-  .benchrow { padding-top: 4px; }
-  .bench .cell { height: clamp(34px, 11vh, 60px); }
-  .dock { padding: 5px; min-height: 0; }
-  .prepdock { gap: 6px; }
-  .slot { padding: 3px 6px; column-gap: 6px; }
-  .slot .uname { font-size: .72rem; white-space: normal; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; } /* set 106 (B5): full name on phones */
-  .slot .sub.tr, .slot .cid { display: none; }
-  .slot .shape { width: clamp(24px, 8vh, 40px); height: clamp(24px, 8vh, 40px); }
-  #fight { padding: 6px 14px; font-size: .9rem; }
-  #shopLv { font-size: .62rem; padding: 2px 5px; }
-  .arena .uname, .arena .chips { display: none; }
-  .nums { font-size: .56rem; }
+  .board .cell, .arena .cell { border-radius: 8px; }
+  .board .unit { gap: 1px; }
+  .board .shape { width: clamp(24px, 11vh, 42px); height: clamp(24px, 11vh, 42px); }
+  .board .uname, .arena .uname { font-size: .74rem; }
+  .rune-dot { top: 3px; right: 3px; font-size: .6rem; padding: 0 4px; }
+  .perm-dot { top: 3px; left: 4px; }
+  .benchbar { grid-template-columns: minmax(0, 1fr); height: 46px; gap: 0; }
+  .trow { display: none; }
+  .benchrow { grid-template-columns: 42px minmax(0, 1fr); gap: 5px; }
+  .blbl { font-size: .68rem; } .blbl b { font-size: .74rem; }
+  .bench { gap: 5px; }
+  .bench .cell { border-radius: 8px; padding: 2px 4px; }
+  .bench .unit { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; }
+  .bench .shape { width: 26px; height: 26px; } .bench .mon.has-lv { margin-bottom: 0; } .bench .mon > .lv { bottom: -4px; }
+  .bench .uname { font-size: .72rem; }
+  .dock { padding: 5px; min-height: 0; border-radius: 12px; height: 76px; }
+  .prepdock { grid-template-columns: 76px minmax(0, 1fr) 104px; gap: 5px; }
+  .dock .left { gap: 1px; }
+  #reroll { flex-direction: column; gap: 0; font-size: .85rem; border-radius: 8px; padding: 2px; line-height: 1.15; } #reroll svg { display: none; } #rerollCost { font-size: .72rem; }
+  #shopLv { font-size: .6rem; padding: 0; line-height: 1.15; }
+  #fight { border-radius: 8px; padding: 2px; } #fight .fbig { font-size: 1.1rem; } #fight .fsm { font-size: .7rem; }
+  .shop { gap: 5px; }
+  .slot { padding: 4px 6px; column-gap: 6px; border-radius: 8px; align-content: center; }
+  .slot .shape { width: 32px; height: 32px; }
+  .stxt { padding-bottom: 0; gap: 0; }
+  .slot .uname { font-size: .74rem; white-space: normal; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .slot .sub.tr, .slot .stxt .rar { display: none; }
+  .slot .price { position: static; background: transparent; padding: 0; font-size: .74rem; justify-self: start; grid-column: 2; }
+  .slot .price::before { width: 8px; height: 8px; }
+  .slot .own { top: -7px; left: auto; right: 4px; font-size: .6rem; padding: 0 5px; border-radius: 6px; max-width: 92%; }
+  .bctl { gap: 8px; }
+  .clock { font-size: 1.05rem; min-width: 0; }
+  .speed button { width: 34px; height: 32px; font-size: .78rem; }
+  #ticker { font-size: .74rem; } #ticker2 { display: none; }
+  #skip { height: 34px; padding: 0 10px; font-size: .8rem; }
+  .chk { font-size: .74rem; gap: 4px; } .chk input { width: 16px; height: 16px; }
+  .arena .shape { width: clamp(22px, 9.5vh, 46px); height: clamp(22px, 9.5vh, 46px); }
+  .arena .chips { display: none; }
+  .hp { height: 7px; }
+  .nums { font-size: .6rem; }
+  .float { top: 4px; font-size: .95rem; padding: 0 5px; }
+  .sktag { top: 3px; left: 3px; font-size: .6rem; padding: 0 5px; }
+  .result > .rbox { padding: 14px 18px; gap: 8px; border-radius: 14px; }
+  #resultTitle { font-size: 2.1rem; } #resultTitle.small { font-size: 1.3rem; }
+  .rchips .bigchip { height: 28px; font-size: .9rem; }
+  #endMsgs { padding: 6px 12px; font-size: .78rem; max-height: 76px; overflow: auto; }
+  .racts button { height: 38px; font-size: .82rem; } .racts button.primary { font-size: .95rem; }
+  .pop { padding: 12px; gap: 8px; }
+  .info > .mon .shape { width: 48px; height: 48px; } .info h2 { font-size: 1.1rem; } .info .stats2 .term { padding: 3px 0; } .lvtabs button { height: 32px; }
+  .screen.title { gap: 10px; justify-content: flex-start; padding-top: 10px; }
+  .tshapes { margin-bottom: 2px; gap: 8px; } .tshapes .shape { width: 20px; height: 20px; }
+  .ttl { font-size: 1.9rem; } .tagline { font-size: .9rem; }
+  .tcardbox { padding: 12px 16px; gap: 8px; }
+  .nform { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } .nform label { grid-column: 1 / -1; font-size: .85rem; }
+  #nameIn { height: 42px; } button.big { height: 42px; font-size: 1.05rem; padding: 0 18px; }
 }
-@media (max-width: 760px) and (orientation: landscape) { .slot { grid-template-columns: 1fr; justify-items: center; text-align: center; } .slot > .mon { grid-row: auto; } .slot .uname { text-align: center; } .slot .sub.tr { display: none; } }
+@media (max-width: 760px) and (orientation: landscape) { .slot { grid-template-columns: 1fr; justify-items: center; text-align: center; } .slot .uname { text-align: center; } .slot .sub.tr { display: none; } .slot .price { grid-column: auto; justify-self: center; } }
 /* portrait phone: ask to rotate (button continues in portrait) */
 @media (orientation: portrait) and (max-width: 700px) {
   #rotate:not(.dismissed) { display: grid; position: fixed; inset: 0; z-index: 80; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
@@ -386,25 +582,24 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 <div class="app" id="app">
   <div class="hud">
     <h1>Automon Arena</h1>
-    <span class="stat" id="sRound">รอบ 1</span>
-    <span class="stat heart" id="sHearts">หัวใจ 10</span>
-    <span class="stat" id="sWins">ชนะ 0/10</span>
-    <span class="stat gold" id="sGold">เงิน 10</span>
-    <button class="hudbtn" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span class="lbl">เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
-    <button class="hudbtn" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span class="badge" id="runeCnt">0</span></button>
-    <button class="hudbtn" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
-    <button class="hudbtn" id="logBtn" type="button" aria-label="Log การเล่น (เห็นเฉพาะเจ้าของเกม)" hidden><span class="lbl">Log</span></button>
-    <span class="grow"></span>
-    <span class="lbl" id="foeLbl">ศัตรู <b id="foePct">100%</b></span>
-    <span class="bosschip" id="bossChip" hidden></span>
-    <button id="diffInfo" type="button" aria-label="ศัตรูรอบนี้และรางวัล">?</button>
-    <button id="newRun" type="button">เริ่ม run ใหม่</button>
+    <span class="hudtxt"><span id="sRound">รอบ 1</span> · <span id="sWins">ชนะ 0/10</span></span>
+    <span class="bigchip heart" id="sHearts" role="img" aria-label="หัวใจ 10"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg><b id="sHeartsN">10</b></span>
+    <span class="bigchip gold" id="sGold" role="img" aria-label="เงิน 10"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="sGoldN">10</b></span>
+    <span class="grow prep-only"></span>
+    <span class="htitle" id="battleTitle">แมตช์</span>
+    <button class="hudbtn prep-only" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span>เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
+    <button class="hudbtn prep-only" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span>รูน</span><span id="runeCnt">0</span><span class="badge warn" id="runeWarn" hidden></span></button>
+    <button class="hudbtn prep-only" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
+    <button class="hudbtn prep-only" id="logBtn" type="button" aria-label="Log การเล่น (เห็นเฉพาะเจ้าของเกม)" hidden><span>Log</span></button>
+    <button class="hudbtn" id="diffInfo" type="button" aria-label="ศัตรูรอบนี้และรางวัล"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="var(--t-fiend)" stroke-width="1.8"/></svg><span id="foeLbl"><span class="wd">ศัตรูแรง </span><span class="nw">ศัตรู </span><b id="foePct">100%</b></span><span class="bosschip" id="bossChip" hidden></span></button>
+    <span class="menuwrap prep-only"><button class="hudbtn round" id="menuBtn" type="button" aria-label="เมนู" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></button>
+      <span class="menu" id="menu" hidden><button id="newRun" type="button">เริ่ม run ใหม่</button></span></span>
   </div>
 
   <div class="main">
     <div class="field" id="field">
       <div class="pfield">
-        <div class="cols"><span class="lbl">ทีมคุณ · หลัง</span><span class="lbl">กลาง</span><span class="lbl">หน้า →</span></div>
+        <div class="cols"><span class="lbl">หลัง</span><span class="lbl">กลาง</span><span class="lbl">หน้า → <span class="wd">(ศัตรูอยู่ทางขวา เห็นตอนเริ่มสู้)</span></span></div>
         <div class="board" id="board"></div>
       </div>
       <div class="bfield">
@@ -415,31 +610,26 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
         </div>
         <div class="arena" id="arena"></div>
       </div>
-      <div class="benchrow"><span class="lbl">ม้านั่ง</span><div class="bench" id="bench"></div></div>
       <span class="replaytag" id="replayTag" hidden>กำลังดูรีเพลย์</span>
-      <div class="result" id="result" hidden><div>
-        <strong id="resultTitle"></strong><span class="hint" id="resultSub"></span>
-        <ul class="msgs" id="endMsgs"></ul>
-        <div class="row" style="justify-content:center">
-          <button id="replayThis" type="button">▶ ดูรีเพลย์</button>
-          <button id="toMx" type="button">รายละเอียดแมตช์</button>
-          <button class="primary" id="next" type="button">ไปรอบถัดไป</button>
-        </div>
-      </div></div>
     </div>
+  </div>
+
+  <div class="benchbar" id="benchbar">
+    <div class="benchrow"><span class="blbl"><b>ม้านั่ง</b><span id="benchCnt">0/5</span></span><div class="bench" id="bench"></div></div>
+    <div class="trow" id="tribeRow"></div>
   </div>
 
   <div class="dock" id="dock">
     <div class="prepdock">
       <div class="left">
-        <button id="reroll" type="button">รีโรล −2</button>
+        <button id="reroll" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>สุ่มใหม่</span> <span id="rerollCost">· 1</span></button>
         <button id="shopLv" type="button" aria-label="ระดับร้านและโอกาสเจอ">ร้าน Lv 1</button>
       </div>
       <div class="shop" id="shop"></div>
-      <div class="right"><button class="primary" id="fight" type="button">เริ่มสู้</button></div>
+      <div class="right"><button class="primary" id="fight" type="button"><span class="fbig" id="fightT">เริ่มสู้</span><span class="fsm" id="fightN">ลงสนาม 0/6 ตัว</span></button></div>
     </div>
     <div class="bctl">
-      <span class="stat" id="clock">0.0 วิ</span>
+      <span class="clock" id="clock">0.0 วิ</span>
       <div class="speed" role="group" aria-label="ความเร็ว">
         <button type="button" data-speed="1" aria-pressed="false">1×</button>
         <button type="button" data-speed="2" aria-pressed="false">2×</button>
@@ -447,25 +637,46 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
         <button type="button" data-speed="8" aria-pressed="false">8×</button>
         <button type="button" data-speed="16" aria-pressed="false">16×</button>
       </div>
+      <div class="btext grow"><span id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span><span id="ticker2"></span></div>
       <button id="skip" type="button">ข้ามไปผล</button>
-      <button id="autoSkip" type="button" aria-pressed="false" title="เปิดไว้ = ทุกแมตช์ข้ามไปดูผลทันที (ดูรีเพลย์ทีหลังได้)">ข้ามอัตโนมัติ</button>
-      <div class="btext grow"><span id="battleTitle">แมตช์</span><span id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span></div>
+      <label class="chk" title="เปิดไว้ = ทุกแมตช์ข้ามไปดูผลทันที (ดูรีเพลย์ทีหลังได้)"><input type="checkbox" id="autoSkip"> ข้ามทุกครั้ง</label>
     </div>
   </div>
+
+  <div class="result" id="result" hidden><div class="rbox" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <span class="hint" id="resultSub"></span>
+    <strong id="resultTitle"></strong>
+    <div class="rchips" id="rChips">
+      <span class="bigchip heart" id="rHearts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg><b id="rHeartsN"></b></span>
+      <span class="bigchip win" id="rWins"></span>
+      <span class="bigchip gold" id="rGold" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="rGoldN"></b></span>
+    </div>
+    <ul class="msgs" id="endMsgs"></ul>
+    <p class="rnext" id="resultNext"></p>
+    <div class="racts">
+      <button id="replayThis" type="button">ดูรีเพลย์</button>
+      <button id="toMx" type="button">รายละเอียดแมตช์</button>
+      <button class="primary" id="next" type="button">ไปรอบถัดไป</button>
+    </div>
+  </div></div>
 </div>
 
-<div class="screen" id="nameScr" hidden><section class="panel">
-  <h2>ตั้งชื่อผู้เล่น</h2>
-  <p class="hint">ชื่อนี้จะติดไปกับโค้ดผลการเล่น เพื่อให้คนทำเกมรู้ว่าใครเล่น (เครื่องนี้จะจำชื่อไว้)</p>
-  <form id="nameForm" class="row"><input id="nameIn" type="text" maxlength="40" autocomplete="nickname" placeholder="ชื่อของคุณ" aria-label="ชื่อผู้เล่น"><button class="primary" id="nameGo" type="submit">เริ่มเล่น</button></form>
+<div class="screen title" id="nameScr" hidden><div class="hero"><div class="tshapes" aria-hidden="true"><i class="shape s-square" style="--tc:var(--t-steel)"></i><i class="shape s-triangle" style="--tc:var(--t-fire)"></i><i class="shape s-diamond" style="--tc:var(--t-bolt)"></i><i class="shape s-circle" style="--tc:var(--t-wind)"></i><i class="shape s-hexagon" style="--tc:var(--t-spirit)"></i><i class="shape s-pentagon" style="--tc:var(--t-fiend)"></i></div>
+  <h1 class="ttl">Automon Arena</h1><p class="tagline">จัดทีม · รวมเผ่า · ปล่อยให้สู้เอง</p></div>
+<section class="tcardbox">
+  <form id="nameForm" class="nform"><label for="nameIn">ชื่อผู้เล่น</label><input id="nameIn" type="text" maxlength="40" autocomplete="nickname" placeholder="ชื่อของคุณ"><button class="primary big" id="nameGo" type="submit">เริ่มเล่น</button></form>
   <p class="hint" id="nameErr" hidden>พิมพ์ชื่อก่อน (ไม่เกิน 20 ตัวอักษร)</p>
+  <p class="hint">ชื่อนี้จะติดไปกับโค้ดผลการเล่น เพื่อให้คนทำเกมรู้ว่าใครเล่น (เครื่องนี้จะจำชื่อไว้)</p>
 </section></div>
 
-<div class="screen" id="resume" hidden><section class="panel">
+<div class="screen title" id="resume" hidden><div class="hero"><div class="tshapes" aria-hidden="true"><i class="shape s-square" style="--tc:var(--t-steel)"></i><i class="shape s-triangle" style="--tc:var(--t-fire)"></i><i class="shape s-diamond" style="--tc:var(--t-bolt)"></i><i class="shape s-circle" style="--tc:var(--t-wind)"></i><i class="shape s-hexagon" style="--tc:var(--t-spirit)"></i><i class="shape s-pentagon" style="--tc:var(--t-fiend)"></i></div>
+  <h1 class="ttl">Automon Arena</h1><p class="tagline">จัดทีม · รวมเผ่า · ปล่อยให้สู้เอง</p></div>
+<section class="tcardbox">
   <h2>มี run ที่เล่นค้างไว้</h2>
+  <button class="primary big" id="resumeGo" type="button">เล่นต่อ</button>
   <p class="hint" id="resumeInfo"></p>
-  <div class="row"><button class="primary" id="resumeGo" type="button">เล่นต่อ</button><button id="resumeNew" type="button">เริ่ม run ใหม่</button><button id="resumeCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
   <p class="hint">เล่นต่อจะกลับไปเริ่มรอบร้านค้าที่ค้างไว้ (ร้านเดิม เงินเดิม)</p>
+  <div class="row"><button id="resumeNew" type="button">เริ่ม run ใหม่</button><button id="resumeCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
   <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
 </section></div>
 
@@ -778,15 +989,17 @@ function mergeTargets(u) { // ตัวชนิดเดียวกัน เ�
 function renderChips() {
   const rb = runBossAt(P); // set 85: boss rounds
   $('sRound').textContent = rb ? `รอบ ${P.round} · บอส!` : `รอบ ${P.round}`;
-  $('sHearts').textContent = `หัวใจ ${P.hearts}`;
+  $('sHeartsN').textContent = String(P.hearts); $('sHearts').setAttribute('aria-label', `หัวใจ ${P.hearts}`);
   $('sWins').textContent = P.extra ? `ชนะ ${P.wins} · พิเศษ` : `ชนะ ${P.wins}/${S.winsToFinish}`;
-  $('sGold').textContent = `เงิน ${P.gold}`;
+  $('sGoldN').textContent = String(P.gold); $('sGold').setAttribute('aria-label', `เงิน ${P.gold}`);
 }
 // set 89: shop level follows the round (no upgrade) · set 96: income ramps · set 97: short text on the dock, full text + odds in a popup
 function shopLvText() { const lv = shopLvOf(P), nx = lvForRound(P.round + 1); return `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` · รอบหน้า Lv ${nx}` : ''} · รอบหน้าได้เงิน ${baseIncomeAt(P.round + 1)}${S.winBonus ? ` (ชนะ +${S.winBonus})` : ''}`; }
 function renderShopLevel() {
   const lv = shopLvOf(P), nx = lvForRound(P.round + 1), b = $('shopLv');
-  b.replaceChildren(el('b', '', `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` → ${nx}` : ''}`), el('span', '', `รอบหน้า +${baseIncomeAt(P.round + 1)} เงิน`));
+  const t = el('b', ''); t.append(el('span', 'wd', 'ร้าน '), `Lv ${lv}/${shopLevels()}${nx > lv ? ` → ${nx}` : ''}`);
+  const nx2 = el('span', ''); nx2.append(' · ', el('span', 'wd', 'รอบหน้า '), `+${baseIncomeAt(P.round + 1)}`);
+  b.replaceChildren(t, nx2);
 }
 POPS.shop = () => {
   const odds = oddsAt(shopLvOf(P)), box = el('p', 'hint odds'); box.id = 'shopOdds'; box.append(el('span', '', 'โอกาสเจอ:'));
@@ -796,7 +1009,7 @@ POPS.shop = () => {
 $('shopLv').addEventListener('click', () => openPop('shop'));
 function render() {
   renderChips();
-  $('reroll').textContent = `รีโรล −${S.rerollCost}`;
+  $('rerollCost').textContent = `· ${S.rerollCost}`; $('reroll').setAttribute('aria-label', `สุ่มร้านใหม่ ${S.rerollCost} เงิน`);
   $('reroll').disabled = P.gold < S.rerollCost || P.over;
   renderShopLevel();
 
@@ -805,19 +1018,19 @@ function render() {
     const ref = { at: 'shop', i };
     const card = el('div', 'slot'); card.dataset.ref = refKey(ref); card.tabIndex = 0;
     card.setAttribute('role', 'button');
-    if (!s.id) { card.classList.add('empty'); card.append(el('span', 'hint', 'ขายแล้ว')); shop.append(card); return; }
+    if (!s.id) { card.classList.add('empty'); card.setAttribute('aria-label', 'ขายแล้ว'); shop.append(card); return; }
     const c = CM[s.id];
     card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price}`);
     if (s.locked) card.classList.add('locked');
     if (c.price > P.gold) card.classList.add('cant');
-    const sub = el('span', 'sub'); sub.append(el('span', 'cid', `${c.id} · `), rarityTag(c.rarity));
-    card.append(shapeOf(c.id), el('span', 'uname', c.name), sub, el('span', 'sub tr', `เผ่า${c.tribe}`), el('span', 'price', `${c.price} เงิน`));
+    const txt = el('span', 'stxt'); txt.append(el('span', 'uname', c.name), el('span', 'sub tr', [c.tribe, ...c.extraTribes].join(' + ')), rarityTag(c.rarity));
+    card.append(shapeOf(c.id), txt, el('span', 'price', String(c.price)));
     // ชุด 24: ไฮไลต์ตัวที่มีอยู่แล้วบนบอร์ด/ม้านั่ง · มี Lv1 ครบ (รวมร่าง − 1) ตัว = ซื้อแล้วรวมร่างได้
     const mine = allUnits(P).filter(x => x.u.id === c.id), lv1 = mine.filter(x => x.u.level === 1).length;
     if (mine.length) {
       const ready = lv1 >= S.mergeCount - 1;
       card.classList.add('owned'); if (ready) card.classList.add('ready');
-      card.append(el('span', 'own', ready ? 'รวมร่างได้' : `มีแล้ว ${mine.length}`));
+      card.append(el('span', 'own', ready ? `มีแล้ว ${lv1} · ซื้อ = ★★` : `มีแล้ว ${mine.length}`));
       card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price} · มีแล้ว ${mine.length} ตัว${ready ? ' ลากไปทับตัวที่มีเพื่อซื้อแล้วรวมร่างทันที' : ''}`);
     }
     shop.append(card);
@@ -828,7 +1041,7 @@ function render() {
     if (u) {
       cell.classList.add('filled');
       const c = CM[u.id];
-      const box = el('div', 'unit'); box.append(shapeOf(u.id, u.level), el('span', 'uname', c.name), el('span', 'uid', c.id));
+      const box = el('div', 'unit'); box.append(shapeOf(u.id, u.level), el('span', 'uname', c.name));
       if (Object.keys(u.perm).length) cell.append(el('span', 'perm-dot', '+ถาวร'));
       cell.append(box);
       cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
@@ -840,21 +1053,39 @@ function render() {
   const cells = []; for (let lane = 0; lane < 2; lane++) for (const row of [2, 1, 0]) cells.push(cellFor({ at: 'board', row, lane }));
   $('board').replaceChildren(...cells);
   $('bench').replaceChildren(...P.bench.map((_, i) => cellFor({ at: 'bench', i })));
+  $('benchCnt').textContent = `${P.bench.filter(Boolean).length}/${P.bench.length}`;
 
   // HUD: tribes on the board (mini shapes of the 3 biggest + active/total) · runes held · replays
   const entries = teamEntries(P), counts = countTribes(entries, CM), steps = tribeSteps(counts);
   const have = Object.keys(counts).filter(t => counts[t] > 0).sort((a, b) => counts[b] - counts[a]);
   $('tribeMini').replaceChildren(...have.slice(0, 3).map(t => { const i = el('i', 's-' + TRIBE_STYLE[t].shape); i.style.setProperty('--tc', TRIBE_STYLE[t].color); return i; }));
   $('tribeCnt').textContent = `${have.filter(t => steps[t]).length}/${have.length}`;
+  renderTribeRow(have, counts, steps);
   renderRunes();
   $('replayBtn').hidden = !replays.length; $('replayCnt').textContent = String(replays.length);
 
   const rb = runBossAt(P);
   $('fight').disabled = P.over;
-  $('fight').textContent = `${confirmEmpty || confirmRunes ? 'ยืนยันสู้' : rb ? 'สู้บอส' : 'เริ่มสู้'} (${entries.length}/6)`;
+  $('fightT').textContent = confirmEmpty || confirmRunes ? 'ยืนยันสู้' : rb ? 'สู้บอส' : 'เริ่มสู้';
+  $('fightN').textContent = `ลงสนาม ${entries.length}/6 ตัว`;
   if (popKind) renderPop();
 }
 
+// set 116 (mockup): inline tribe progress cards next to the bench (top 3 tribes on the board · tap = that tribe's bonus table)
+function renderTribeRow(have, counts, steps) {
+  const top = RULES.tribeSteps[RULES.tribeSteps.length - 1], row = $('tribeRow'), out = [];
+  if (!have.length) out.push(el('div', 'tcard empty', 'วางตัวบนบอร์ดเพื่อเริ่มนับเผ่า'));
+  for (const t of have.slice(0, 3)) {
+    const n = counts[t], st = steps[t] || 0, nx = RULES.tribeSteps.find(x => x > n);
+    const b = el('button', 'tcard' + (st ? ' on' : '')); b.type = 'button'; b.dataset.tribe = t; b.style.setProperty('--tc', TRIBE_STYLE[t].color);
+    const h = el('span', 'th'); h.append(tribeIco(t), `${t} ${n}`);
+    const pips = el('span', 'tpips'); for (let k = 1; k <= top; k++) pips.append(el('i', k <= n ? 'on' : ''));
+    b.append(h, pips, el('span', 'tn', `${st ? `ขั้น ${st} ทำงาน` : 'ยังไม่ทำงาน'}${nx ? ` · อีก ${nx - n} ตัวถึงขั้น ${nx}` : ' · ขั้นสูงสุด'}`));
+    b.addEventListener('click', () => openPop('tribe', t)); out.push(b);
+  }
+  if (have.length > 3) { const m = el('button', 'tcard more', `+${have.length - 3} เผ่า`); m.type = 'button'; m.addEventListener('click', () => openPop('tribes')); out.push(m); }
+  row.replaceChildren(...out);
+}
 function statLine(id, level, perm, all) {
   // ค่าที่ใช้สู้จริง (รวมค่าถาวรทุกชนิด · ชุด 6) คำนวณด้วยตัวจัดทีมเดียวกับการต่อสู้ · all = แสดงทุกค่าแม้เป็น 0 (ชุด 26)
   const c = CM[id], p = perm || {}, u = unitOf(c, { id, level, row: 0, lane: 0, perm: p }, RULES, null);
@@ -1017,9 +1248,14 @@ document.addEventListener('keydown', e => { // keyboard: Enter / Space on a cell
 });
 
 $('reroll').addEventListener('click', () => { pushMsgs(J('rr', [], () => reroll(P, chars))); render(); });
+// set 116: ⋯ menu (holds เริ่ม run ใหม่) · click outside / Esc closes
+function showMenu(on) { $('menu').hidden = !on; $('menuBtn').setAttribute('aria-expanded', String(!!on)); }
+$('menuBtn').addEventListener('click', () => showMenu($('menu').hidden));
+document.addEventListener('click', e => { if (!$('menu').hidden && !e.target.closest('.menuwrap')) showMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('menu').hidden) showMenu(false); });
 $('newRun').addEventListener('click', () => {
   if ($('newRun').dataset.confirm !== '1' && !P.over) { $('newRun').dataset.confirm = '1'; $('newRun').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; }, 3000); return; }
-  $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
+  $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; showMenu(false); startNewRun();
 });
 
 // ---------- set 94: runes in the run (core/runrunes.js) · every text through textContent ----------
@@ -1060,8 +1296,8 @@ function renderRunes() {
     if (!dlgO.open) { closePop(); dlgO.showModal(); }
   } else if (dlgO.open) dlgO.close();
   const unworn = rnUnworn(P).length; // set 109: warn when a held rune does nothing (not worn / wearer on the bench)
-  $('runeCnt').textContent = unworn ? `${rnBag().length} · ⚠${unworn}` : String(rnBag().length);
-  $('runeCnt').classList.toggle('warn', !!unworn); $('runeBtn').classList.toggle('warn', !!unworn);
+  $('runeCnt').textContent = String(rnBag().length);
+  $('runeWarn').hidden = !unworn; $('runeWarn').textContent = `ยังไม่สวม ${unworn}`; $('runeBtn').classList.toggle('warn', !!unworn);
   $('runeBtn').setAttribute('aria-label', unworn ? `รูนของฉัน · ${unworn} อันยังไม่ได้สวม (ไม่ทำงาน)` : 'รูนของฉัน');
   renderDiff(rnFx(P));
 }
@@ -1174,12 +1410,19 @@ $('rotateSkip').addEventListener('click', () => $('rotate').classList.add('dismi
 
 // ---------- สู้ ----------
 let lastResult = null, dummyDmg = 0; // set 108: damage into the last-round dummy (shown on the result + run end)
-let tick = '', tickShown = '';
+let tick = '', tick2 = '', tickShown = '';
 const view = new BattleView($('arena'), CM, {
-  onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; if (bPick != null) renderBInfo(); if (tick !== tickShown) { tickShown = tick; $('ticker').textContent = tick; } },
+  onTime: ms => { $('clock').textContent = `${(ms / 1000).toFixed(1)} วิ`; if (bPick != null) renderBInfo(); if (tick !== tickShown) { tickShown = tick; $('ticker').textContent = tick; $('ticker2').textContent = tick2; } },
   onEnd: () => finishMatch(),
-  onLog: line => { tick = line.replace(/(ซ้าย|ขวา) ([A-Z]+-\d+)/g, (m, sd, id) => `${sd === 'ซ้าย' ? 'ทีมคุณ' : 'คู่แข่ง'} ${CM[id] ? CM[id].name : id}`); }, // set 97: dock ticker = latest battle event
+  onLog: line => { if (tick) tick2 = tick; tick = line.replace(/(ซ้าย|ขวา) ([A-Z]+-\d+)/g, (m, sd, id) => `${sd === 'ซ้าย' ? 'ทีมคุณ' : 'คู่แข่ง'} ${CM[id] ? CM[id].name : id}`); }, // set 97: dock ticker = latest battle event
 });
+// set 116 (mockup): a skill that fires → tag on that unit's cell for a moment (skip / fast-forward = none)
+view.onProc = e => {
+  const v = view.units.get(e.who); if (!v || view.fast || !v.cell) return;
+  let t = v.cell.querySelector('.sktag'); if (!t) { t = el('span', 'sktag'); v.cell.append(t); }
+  t.textContent = `สกิล: ${String(DO_TH[e.what] || 'ทำงาน').split(/[,(·]/)[0].trim()}`; v.cell.classList.add('skilling');
+  const cell = v.cell; clearTimeout(cell.skT); cell.skT = setTimeout(() => { t.remove(); cell.classList.remove('skilling'); }, 1400 / Math.min(view.speed || 1, 4));
+};
 $('fight').addEventListener('click', () => {
   if (P.over) return;
   if (P.rn.offer) { pushMsgs({ ok: false, msg: 'เลือกรูนรางวัลก่อน (หรือกด "ไม่รับรูน")' }); render(); return; }
@@ -1237,6 +1480,7 @@ function showResult(teamA, teamB, result, runes, streak, d = null, round = 0, fn
 }
 // ---------- รีเพลย์ (ชุด 25) ----------
 const resTh = w => (w === 0 ? 'ชนะ' : w === 1 ? 'แพ้' : 'เสมอ');
+const resCls = w => (w === 1 ? 'lose' : 'win');
 function renderReplays(list, back) {
   list.replaceChildren(...(replays.length ? replays.map((x, i) => {
     const li = el('li', '', `รอบ ${x.r} · ${resTh(x.w)} · ${(x.t / 1000).toFixed(1)} วิ`), b = el('button', '', 'ดูรีเพลย์'); b.type = 'button';
@@ -1272,7 +1516,7 @@ function logNameEl(u) {
   return s;
 }
 function resetLog() {
-  bPick = null; tick = $('battleTitle').textContent; simLast = null; mxKey = null; mxOpen.clear(); mxCellSel = null; mxHi = null;
+  bPick = null; tick = $('battleTitle').textContent; tick2 = ''; simLast = null; mxKey = null; mxOpen.clear(); mxCellSel = null; mxHi = null;
   $('logBox').open = false; $('logList').replaceChildren();
   const r = view.result, sw = $('logWho');
   sw.replaceChildren(el('option', '', 'ทุกตัว'), ...unitsOf(r).map(u => { const o = el('option', '', `${u.side === 0 ? 'ทีมคุณ' : 'คู่แข่ง'} ${ROW_TH[u.row]}${u.lane + 1} · ${(CM[u.id] || u).name || u.id}${CM[u.id] ? ` Lv${u.level}` : ''}`); o.value = String(u.uid); return o; }));
@@ -1373,19 +1617,26 @@ function finishMatch() {
   renderBInfo(true); $('replayTag').hidden = true;
   if (replayMode) { // ชุด 25: รีเพลย์ แสดงผลอย่างเดียว ไม่แตะสถานะ run
     const x = replayMode.x;
-    $('resultTitle').textContent = `รีเพลย์รอบ ${x.r}: ${resTh(x.w)}`;
+    $('resultTitle').textContent = `รีเพลย์รอบ ${x.r}: ${resTh(x.w)}`; $('resultTitle').className = 'small ' + resCls(x.w);
     $('resultSub').textContent = `${(x.t / 1000).toFixed(1)} วิ`;
-    $('endMsgs').replaceChildren();
+    $('endMsgs').replaceChildren(); $('rChips').hidden = true; $('resultNext').textContent = '';
     $('next').textContent = 'กลับ';
     $('result').hidden = false; return;
   }
   if (!pendingEnd) return;
   const { r, w } = pendingEnd; // ผลถูกนำไปใช้ตอนกดสู้แล้ว (ชุด 22) · ตรงนี้แสดงผลอย่างเดียว
   renderChips();
-  $('resultTitle').textContent = w === 0 ? 'ชนะ' : w === 1 ? 'แพ้ เสียหัวใจ 1 ดวง' : 'เสมอ นับเป็นชนะ';
-  $('resultSub').textContent = `${(lastResult.timeMs / 1000).toFixed(1)} วิ · หัวใจ ${P.hearts} · ` + (P.extra ? `ชนะ ${P.wins} (แมตช์พิเศษ)` : `ชนะ ${P.wins}/${S.winsToFinish}`) + (dummyDmg ? ` · ดาเมจใส่หุ่นเป้า ${dummyDmg}` : '');
+  // set 116 (mockup): big win/lose word · chips (hearts, wins, win-bonus gold) · messages · what comes next
+  $('resultTitle').textContent = w === 0 ? 'ชนะ!' : w === 1 ? 'แพ้' : 'เสมอ'; $('resultTitle').className = resCls(w);
+  $('resultSub').textContent = `รอบ ${P.round} · ${(lastResult.timeMs / 1000).toFixed(1)} วิ` + (w === 2 ? ' · เสมอนับเป็นชนะ' : '') + (dummyDmg ? ` · ดาเมจใส่หุ่นเป้า ${dummyDmg}` : '');
+  $('rChips').hidden = false;
+  $('rHeartsN').textContent = w === 1 ? `${P.hearts} (−1)` : String(P.hearts); $('rHearts').setAttribute('aria-label', `หัวใจ ${P.hearts}${w === 1 ? ' เสียไป 1 ดวง' : ''}`);
+  $('rWins').textContent = P.extra ? `ชนะ ${P.wins} · พิเศษ` : `ชนะ ${P.wins}/${S.winsToFinish}`;
+  $('rGold').hidden = !(w !== 1 && S.winBonus && !P.over); $('rGoldN').textContent = `+${S.winBonus} โบนัสชนะ`;
   $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
-  $('next').textContent = P.over ? 'ดูสรุป run' : 'ไปรอบถัดไป';
+  const offer = !P.over && P.rn.offer;
+  $('resultNext').textContent = P.over ? 'ต่อไป: สรุป run' : offer ? `ต่อไป: เลือกรูน 1 จาก ${offer.ids.length} ใบ` : 'ต่อไป: จัดทีมรอบถัดไป';
+  $('next').textContent = P.over ? 'ดูสรุป run' : offer ? 'เลือกรูน →' : 'ไปรอบถัดไป';
   msgs = (r.msgs || []).map(t => ({ t }));
   $('result').hidden = false;
 }
@@ -1493,11 +1744,11 @@ function setSpeed(v, save) {
   document.querySelectorAll('[data-speed]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.speed === v)));
   if (save) savePrefs();
 }
-function setAutoSkip(on, save) { autoSkip = !!on; $('autoSkip').setAttribute('aria-pressed', String(autoSkip)); if (save) savePrefs(); }
+function setAutoSkip(on, save) { autoSkip = !!on; $('autoSkip').checked = autoSkip; if (save) savePrefs(); }
 function savePrefs() { store.set(PREF_KEY, JSON.stringify({ speed, autoSkip })); }
 try { const pf = JSON.parse(store.get(PREF_KEY) || '{}'); if (pf && typeof pf === 'object') { setSpeed(+pf.speed); setAutoSkip(pf.autoSkip === true); } } catch (e) { /* bad prefs = defaults */ }
 document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => setSpeed(+b.dataset.speed, true)));
-$('autoSkip').addEventListener('click', () => { setAutoSkip(!autoSkip, true); if (autoSkip && view.result && !view.ended && !replayMode) view.skip(); });
+$('autoSkip').addEventListener('change', () => { setAutoSkip($('autoSkip').checked, true); if (autoSkip && view.result && !view.ended && !replayMode) view.skip(); });
 
 boot();
 </script>
