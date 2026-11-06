@@ -12,6 +12,7 @@ import { cleanStage, stageDefaults } from '../core/stage.js';
 import { equipRunes } from '../core/runes.js';
 import { bossUnit } from '../core/boss.js';
 import { eq, ok, randomTeam } from './helpers.js';
+import { newRunLog, rlApply, rlCheck, rlPush, rlRef, rlReplay } from '../core/runlog.js';
 export const TESTS_SAVE = [
   ['ชุด 22: เซฟ run ผ่านตัวตรวจทุกรอบ · เล่นต่อแล้วได้ร้านเดิม', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars);
@@ -114,8 +115,8 @@ export const TESTS_SAVE = [
     eq(makeRunCode([null, makeReplays(1, H, [])], null, H, 1), null, 'nothing to copy = null');
     eq(parseRunCode(makeRunCode(['{bad', cur], '', H, 1), m, RULES).runs.length, 1, 'unreadable stored text skipped');
     const body = JSON.parse(code.slice(6)), bad = f => { const y = JSON.parse(JSON.stringify(body)); f(y); return 'ARUN1 ' + JSON.stringify(y); };
-    const bads = ['', 'AMATCH1 {}', 'ARUN1 {bad', bad(y => { y.v = 2; }), bad(y => { y.evil = 1; }), bad(y => { y.runs[0].list[0].a[0].id = 'ZZ-9'; }),
-      bad(y => { y.runs.push(y.runs[0], y.runs[0]); }), bad(y => { y.h[0].wins = -1; }), bad(y => { y.runs[0].list[0].a[0].perm = { hp: '<img src=x>' }; }), 'ARUN1 ' + 'x'.repeat(300001)];
+    const bads = ['', 'AMATCH1 {}', 'ARUN1 {bad', bad(y => { y.v = 3; }), bad(y => { y.logs = [{ v: 1 }]; }), bad(y => { y.evil = 1; }), bad(y => { y.runs[0].list[0].a[0].id = 'ZZ-9'; }),
+      bad(y => { y.runs.push(y.runs[0], y.runs[0]); }), bad(y => { y.h[0].wins = -1; }), bad(y => { y.runs[0].list[0].a[0].perm = { hp: '<img src=x>' }; }), 'ARUN1 ' + 'x'.repeat(900001)];
     bads.forEach((t, i) => { let threw = false; try { parseRunCode(t, m, RULES); } catch (e) { threw = true; } ok(threw, `bad run code ${i + 1}`); });
   }],
   ['ชุด 25: รีเพลย์ เก็บทีม 2 ฝั่ง จำลองซ้ำได้ผลเดิม · ผูกกับ run + ค่าเกม · ข้อมูลผิดถูกปฏิเสธ', () => {
@@ -251,5 +252,42 @@ export const TESTS_SAVE = [
       ok(P.over, `run ${run}: run should end`);
       const g0 = P.gold; eq([buy(P, 0, null, chars).ok, reroll(P, chars).ok, P.gold], [false, false, g0], 'ended run: buy/reroll refused');
     }
+  }],
+  ['set 109: run journal rebuilds the whole run from its seed (gold every step + final state) · run code v2 carries it · bad journals refused', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars), rng = makeRng(77);
+    for (const seed of [11, 2024, 909090]) {
+      const P = newRun(chars, seed), L = newRunLog(seed, H, 1000);
+      const J = e => { const g0 = P.gold, snap = JSON.stringify(P), r = rlApply(P, e, chars); if (e[0] === 'of' || (r && r.ok) || JSON.stringify(P) !== snap) rlPush(L, e[0], e.slice(4), g0, P.gold, 2000); return r; };
+      const pick = n => Math.floor(rng.next() * n), refs = () => [...P.bench.map((u, i) => (u ? { at: 'bench', i } : null)), ...P.board.flatMap((r, row) => r.map((u, lane) => (u ? { at: 'board', row, lane } : null)))].filter(Boolean);
+      for (let n = 0; n < 40 && !P.over; n++) {
+        J(['st', 0, 0, 0]);
+        for (let k = 0; k < 14; k++) {
+          const x = pick(10), own = refs();
+          if (x < 4) J(['by', 0, 0, 0, pick(P.shop.length), pick(2) ? rlRef({ at: 'board', row: pick(3), lane: pick(2) }) : '-']);
+          else if (x < 5) J(['rr', 0, 0, 0]);
+          else if (x < 6 && own.length) J(['sl', 0, 0, 0, rlRef(own[pick(own.length)])]);
+          else if (x < 8 && own.length) J(['mv', 0, 0, 0, rlRef(own[pick(own.length)]), rlRef({ at: 'board', row: pick(3), lane: pick(2) })]);
+          else if (x < 9) J(['lk', 0, 0, 0, pick(P.shop.length)]);
+          else J(['bm', 0, 0, 0, pick(P.shop.length), own.length ? rlRef(own[pick(own.length)]) : 'B0']);
+        }
+        const won = pick(2), team = teamEntries(P), gains = team.length && won ? [[team[0].id, 'hp', team[0].row, team[0].lane, 3]] : [];
+        J(['en', 0, 0, 0, won, 0, gains]);
+        if (won && !P.over) { J(['of', 0, 0, 0, 'win']); J(pick(3) ? ['tk', 0, 0, 0, 0] : ['or', 0, 0, 0]); if (P.rn.offer) J(['sk', 0, 0, 0]); }
+      }
+      ok(L.ev.length > 100, `seed ${seed}: journal has entries (${L.ev.length})`);
+      eq(rlCheck(L), true, `seed ${seed}: journal passes the checker`);
+      const back = JSON.parse(JSON.stringify(L)), R = rlReplay(back, chars, RULES);
+      eq(R.firstBad, -1, `seed ${seed}: every step's gold rebuilt`);
+      eq(JSON.stringify(R.st), JSON.stringify(P), `seed ${seed}: rebuilt state = played state`);
+      const code = makeRunCode([], null, H, 5000, RULES, [JSON.stringify(L)]), rc = parseRunCode(code, cm, RULES);
+      eq(rc.logs.length, 1, 'run code carries the journal'); eq(rc.logs[0].ev.length, L.ev.length, 'whole journal in the code');
+    }
+    const L = newRunLog(5, H, 0); rlPush(L, 'by', [0, 'B0'], 3, 0, 0);
+    for (const bad of [['by', 0, 3, 0, 0, 'X9'], ['zz', 0, 0, 0], ['sl', 0, 0, 0, '-'], ['en', 0, 0, 0, 1, 0, [['A', 'nope', 0, 0, 1]]], ['by', -1, 0, 0, 0, 'B0']]) {
+      const x = structuredClone(L); x.ev.push(bad); ok(rlCheck(x) !== true, 'refused: ' + JSON.stringify(bad));
+    }
+    ok(rlCheck({ ...L, extra: 1 }) !== true, 'unknown header key refused');
+    let thrown = ''; try { parseRunCode('ARUN1 ' + JSON.stringify({ v: 2, at: 1, page: H, runs: [], h: [], logs: [{ v: 1 }] }), cm, RULES); } catch (e) { thrown = e.message; }
+    ok(thrown.includes('journal'), 'bad journal in a run code refused: ' + thrown);
   }],
 ];

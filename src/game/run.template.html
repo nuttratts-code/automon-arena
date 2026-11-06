@@ -513,7 +513,37 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* ไม่มีที่เก็บ */ } },
 };
-function saveRun() { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); }
+function saveRun() { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); saveLog(); }
+// set 109 (user): run journal (core/runlog.js) · every action on P with gold before → after · saved with the run (same moments,
+// so a resumed run and its journal always match) · sent to the db (runlogs/<id> + parts) and added to the run code
+const RLOG_KEY = 'automon-run-log-v1', RLOG_PREV_KEY = 'automon-run-log-prev-v1';
+let RL = null, rlSent = { id: '', n: 0 };
+function J(t, args, fn) {
+  const g0 = P.gold, snap = RL ? JSON.stringify(P) : '', r = fn();
+  if (RL && (t === 'of' || (r && r.ok) || JSON.stringify(P) !== snap)) rlPush(RL, t, args, g0, P.gold, Date.now()); // a refused action that changed nothing is not kept
+  return r;
+}
+// resumed run: the saved journal must rebuild exactly the saved state, else this run goes on unlogged (never a wrong log)
+function resumeLog() {
+  try {
+    const t = store.get(RLOG_KEY), o = t && t.length <= RUN_CODE_MAX ? JSON.parse(t) : null;
+    if (!o || rlCheck(o) !== true || o.seed !== P.seed || o.data !== DATA_HASH) return null;
+    const k = x => JSON.stringify([x.gold, x.round, x.n, x.uid, x.hearts, x.wins, x.shop, x.bench, x.board, x.rn]), r = rlReplay(o, chars, RULES, false);
+    return r.firstBad < 0 && k(r.st) === k(P) ? o : null;
+  } catch (e) { return null; }
+}
+function saveLog() { if (!RL) return; store.set(RLOG_KEY, JSON.stringify(RL)); sendLog(); }
+function sendLog() { // whole parts that changed since the last send · no db / no write right = skip silently (the run code still has it)
+  if (!RL || !playDb || playWait) return;
+  const id = `${RL.seed.toString(16)}-${RL.at}`, from = rlSent.id === id ? rlSent.n : 0, n = RL.ev.length;
+  try {
+    const run = playDb.doc('runlogs/' + id);
+    Promise.resolve(run.set({ v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
+      round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0 })).catch(() => {});
+    for (let k = Math.floor(from / RLOG_PART); k * RLOG_PART < n; k++) Promise.resolve(run.collection('parts').doc('p' + k).set({ k, ev: RL.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) })).catch(() => {});
+    rlSent = { id, n };
+  } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
+}
 // ชุด 25 (7A): รีเพลย์ทุกแมตช์ใน run นี้ · เก็บทีม 2 ฝั่ง + ผล แยกจากเซฟ (core/save.js readReplays ตรวจทุกช่องตอนโหลด)
 const REPLAY_KEY = 'automon-run-replays-v1', PREV_REPLAY_KEY = 'automon-run-replays-prev-v1'; // set 105: previous run's replays kept for the run code
 let replays = [], replayMode = null;
@@ -523,6 +553,7 @@ let playDb, playWait = [];
 (async () => {
   try { playDb = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('db') : null; } catch (e) { playDb = null; }
   const q = playWait; playWait = null; for (const r of q) logPlay(r);
+  sendLog();
 })();
 function logPlay(rec) {
   if (!checkPlayRecord(rec, CM, RULES)) return; // ตรวจทุกช่องก่อนเขียน
@@ -538,6 +569,8 @@ function startNewRun() {
   const seed = randSeed();
   dummyDmg = 0; P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
   msgs = []; stats = newStats(); startedAt = Date.now();
+  const oldLog = store.get(RLOG_KEY); if (oldLog && oldLog.includes('"ev":[[')) store.set(RLOG_PREV_KEY, oldLog); // set 109: keep the last run's journal for the run code
+  RL = newRunLog(seed, DATA_HASH, startedAt); rlSent = { id: '', n: 0 };
   const old = store.get(REPLAY_KEY); if (old && old.includes('"list":[{')) store.set(PREV_REPLAY_KEY, old); // set 105: keep the finished run's replays for the run code
   replays = []; replayMode = null; saveReplays();
   saveRun(); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
@@ -554,7 +587,7 @@ function showScreen(name) {
   if (name !== 'battle') { $('result').hidden = true; $('replayTag').hidden = true; } // set 98: result card lived on over prep → "ไปรอบถัดไป" could be pressed again and again (free rounds)
 }
 function beginRound() {
-  const r = startRound(P, chars); pushMsgs(r);
+  const r = J('st', [], () => startRound(P, chars)); pushMsgs(r);
   startRound(B, chars, RULES);
   render();
 }
@@ -573,7 +606,7 @@ function toast(list) {
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, list.some(m => m.err) ? 3500 : 2600);
 }
 // ---------- set 105: run code (testers paste it in chat; read with lab/runcode.mjs) ----------
-function runCode() { return makeRunCode([store.get(REPLAY_KEY), store.get(PREV_REPLAY_KEY)], store.get(HIST_KEY), DATA_HASH, Date.now()); }
+function runCode() { return makeRunCode([store.get(REPLAY_KEY), store.get(PREV_REPLAY_KEY)], store.get(HIST_KEY), DATA_HASH, Date.now(), RULES, [store.get(RLOG_KEY), store.get(RLOG_PREV_KEY)]); }
 async function copyRunCode() {
   const code = runCode();
   if (!code) { toast([{ t: 'ยังไม่มีผลการเล่นให้คัดลอก', err: true }]); return; }
@@ -769,8 +802,8 @@ POPS.unit = ref => {
   if (ref.at === 'shop') {
     const s = P.shop[ref.i], cant = c.price > P.gold;
     const mt = shopMergeTargets(id);
-    acts = pacts(pbtn(s.locked ? 'ปลดล็อก' : 'ล็อก', () => { pushMsgs(toggleLock(P, ref.i)); render(); }),
-      ...(mt.length ? [pbtn(`ซื้อ + รวมร่าง ${c.price} เงิน`, () => { closePop(); pushMsgs(buyMerge(P, ref.i, mt[0], chars)); confirmEmpty = false; render(); }, 'primary', cant)] : []),
+    acts = pacts(pbtn(s.locked ? 'ปลดล็อก' : 'ล็อก', () => { pushMsgs(J('lk', [ref.i], () => toggleLock(P, ref.i))); render(); }),
+      ...(mt.length ? [pbtn(`ซื้อ + รวมร่าง ${c.price} เงิน`, () => { closePop(); pushMsgs(J('bm', [ref.i, rlRef(mt[0])], () => buyMerge(P, ref.i, mt[0], chars))); confirmEmpty = false; render(); }, 'primary', cant)] : []),
       pbtn(cant ? `ซื้อ ${c.price} เงิน · เงินไม่พอ (มี ${P.gold})` : `ซื้อลงม้านั่ง ${c.price} เงิน`, () => { closePop(); doBuy(ref.i, null); }, 'primary', cant));
   } else {
     const mt = mergeTargets(u);
@@ -781,19 +814,19 @@ POPS.unit = ref => {
 };
 
 // ---------- คำสั่ง (ทุกคำสั่งผ่านแกนกลาง ซึ่งตรวจกฎก่อนทำ) ----------
-function doBuy(i, dest) { const r = buy(P, i, dest, chars); pushMsgs(r); confirmEmpty = false; render(); }
-function doSell(ref) { const r = sell(P, ref, chars); pushMsgs(r); render(); }
+function doBuy(i, dest) { const r = J('by', [i, rlRef(dest)], () => buy(P, i, dest, chars)); pushMsgs(r); confirmEmpty = false; render(); }
+function doSell(ref) { const r = J('sl', [rlRef(ref)], () => sell(P, ref, chars)); pushMsgs(r); render(); }
 function act(from, to) {
   if (!from || !to || sameRef(from, to)) return;
   if (from.at === 'shop') {
     if (to.at === 'shop') return;
     const t = unitAt(to), sid = P.shop[from.i] && P.shop[from.i].id;
-    if (t && t.id === sid) { pushMsgs(buyMerge(P, from.i, to, chars)); confirmEmpty = false; render(); return; } // set 106: drop on own copy = buy + merge
+    if (t && t.id === sid) { pushMsgs(J('bm', [from.i, rlRef(to)], () => buyMerge(P, from.i, to, chars))); confirmEmpty = false; render(); return; } // set 106: drop on own copy = buy + merge
     if (t) { pushMsgs({ ok: false, msg: 'ซื้อลงช่องที่มีตัวอยู่ไม่ได้ เลือกช่องว่าง หรือลากไปทับตัวชนิดเดียวกันเพื่อรวมร่าง' }); render(); return; }
     return doBuy(from.i, to);
   }
   if (to.at === 'shop') return;
-  const r = move(P, from, to, chars); pushMsgs(r); confirmEmpty = false;
+  const r = J('mv', [rlRef(from), rlRef(to)], () => move(P, from, to, chars)); pushMsgs(r); confirmEmpty = false;
   render();
 }
 function parseRef(key) {
@@ -855,7 +888,7 @@ document.addEventListener('keydown', e => { // keyboard: Enter / Space on a cell
   if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); tap(parseRef(t.dataset.ref)); }
 });
 
-$('reroll').addEventListener('click', () => { pushMsgs(reroll(P, chars)); render(); });
+$('reroll').addEventListener('click', () => { pushMsgs(J('rr', [], () => reroll(P, chars))); render(); });
 $('newRun').addEventListener('click', () => {
   if ($('newRun').dataset.confirm !== '1' && !P.over) { $('newRun').dataset.confirm = '1'; $('newRun').textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; }, 3000); return; }
   $('newRun').dataset.confirm = ''; $('newRun').textContent = 'เริ่ม run ใหม่'; startNewRun();
@@ -888,7 +921,7 @@ function renderRunes() {
   const o = P.rn.offer, dlgO = $('offerDlg');
   if (o && !P.over && !$('app').hidden && !$('app').classList.contains('fighting')) {
     $('offerTitle').textContent = o.kind === 'boss' ? 'ชนะบอส! เลือกรูนฟรี 1 อัน' : `ชนะ (โหมด${o.kind})! เลือกรูนฟรี 1 อัน`;
-    $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn('เลือกรูนนี้', () => { pushMsgs(rnTakeOffer(P, i)); saveRun(); render(); })) : el('div', 'rcard empty', id); }));
+    $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn('เลือกรูนนี้', () => { pushMsgs(J('tk', [i], () => rnTakeOffer(P, i))); saveRun(); render(); })) : el('div', 'rcard empty', id); }));
     const cost = rnRerollCost(P), rr = $('offerReroll'); // set 100: reroll the cards (free first, then paid)
     rr.textContent = cost ? `สุ่มใหม่ (${cost} เงิน · มี ${P.gold})` : 'สุ่มใหม่ (ฟรี)'; rr.disabled = P.gold < cost;
     if (!dlgO.open) { closePop(); dlgO.showModal(); }
@@ -909,7 +942,7 @@ POPS.runes = () => {
     b.append(bagIcon(), nm, el('span', 'hint', '›')); b.addEventListener('click', () => openPop('rune', id)); list.append(b);
   }
   const fx = rnFx(P), extra = [];
-  if (fx.heart) { const t = pbtn(`แลกหัวใจ 1 ดวง → ${fx.heart.gold} ทอง`, () => { pushMsgs(rnHeartTrade(P)); saveRun(); render(); }, '', P.over || P.rn.traded || P.hearts < fx.heart.min); t.id = 'rTrade'; extra.push(t); }
+  if (fx.heart) { const t = pbtn(`แลกหัวใจ 1 ดวง → ${fx.heart.gold} ทอง`, () => { pushMsgs(J('ht', [], () => rnHeartTrade(P))); saveRun(); render(); }, '', P.over || P.rn.traded || P.hearts < fx.heart.min); t.id = 'rTrade'; extra.push(t); }
   return [phead(`รูนของฉัน (${bag.length})`, 'ทุกรูนที่มีทำงานทั้งหมด · รูน "ตัวเดียว" ต้องเลือกช่องบนบอร์ด (ทำงานกับตัวที่ยืนช่องนั้น) · แตะรูนเพื่อดูรายละเอียด'), list, pacts(...extra)];
 };
 POPS.rune = id => {
@@ -929,7 +962,7 @@ function slotPick(id, partner, label) {
     if (cur && cur[0] === row && cur[1] === lane) o.selected = true;
     sel2.append(o);
   }
-  sel2.addEventListener('change', () => { const v = sel2.value; pushMsgs(rnPlace(P, id, v ? v.split(',').map(Number) : null, RULES, partner)); saveRun(); render(); });
+  sel2.addEventListener('change', () => { const v = sel2.value; { const sl = v ? v.split(',').map(Number) : null; pushMsgs(J('pl', [id, sl ? rlRef({ at: 'board', row: sl[0], lane: sl[1] }) : '-', partner ? 1 : 0], () => rnPlace(P, id, sl, RULES, partner))); } saveRun(); render(); });
   lab.append(sel2); return lab;
 }
 // set 97: tribes popup (HUD button) → tribe detail · bonus table rows = RULES.tribeBonus (labels as the Balance Room)
@@ -996,8 +1029,8 @@ function playerSide(teamA, runes, streak = stats.streak) {
   const e = equipRunes(buildTeam(teamA, CM), rnFromCompact(runes || []), { winStreak: streak });
   return { units: e.units, opts: e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {} };
 }
-$('offerReroll').addEventListener('click', () => { pushMsgs(rnRerollOffer(P)); saveRun(); render(); });
-$('offerSkip').addEventListener('click', () => { pushMsgs(rnSkipOffer(P)); saveRun(); render(); });
+$('offerReroll').addEventListener('click', () => { pushMsgs(J('or', [], () => rnRerollOffer(P))); saveRun(); render(); });
+$('offerSkip').addEventListener('click', () => { pushMsgs(J('sk', [], () => rnSkipOffer(P))); saveRun(); render(); });
 $('rotateSkip').addEventListener('click', () => $('rotate').classList.add('dismissed'));
 
 // ---------- สู้ ----------
@@ -1029,14 +1062,14 @@ $('fight').addEventListener('click', () => {
   // ชุด 22 (ผู้ใช้เลือก): ผลแมตช์มีผลทันทีที่กดสู้ แล้วเซฟ ก่อนเล่นภาพ · ปิดหน้าเว็บระหว่างสู้ = ผลยังนับ
   const w = result.winner, won = w !== 1;
   const gain = side => (result.perm || []).filter(g => g.side === side); // ค่าถาวรจากสกิลระหว่างสู้ ได้ทั้งแพ้และชนะ
-  const r = endMatch(P, won, chars, RULES, gain(0), !!rb);
+  const r = J('en', [won ? 1 : 0, rb ? 1 : 0, rlGains(gain(0))], () => endMatch(P, won, chars, RULES, gain(0), !!rb));
   if (!foe && !rb) { endMatch(B, w === 1, chars, RULES, gain(1)); B.over = false; B.hearts = S.hearts; B.lastWon = P.lastWon; } // บอทซื้อสด (สำรอง) ได้เงินเท่าผู้เล่น
-  if (won && !P.over) { const of = rnMakeOffer(P, kind); if (!of) r.msgs.push('ไม่มีรูนเหลือให้เลือกแล้ว'); } // set 94: win → pick 1 free rune
+  if (won && !P.over) { const of = J('of', [kind], () => rnMakeOffer(P, kind)); if (!of) r.msgs.push('ไม่มีรูนเหลือให้เลือกแล้ว'); } // set 94: win → pick 1 free rune
   addMatchStats(stats, result);
   replays.push(replayEntry(round, teamA, teamB, result, runes, streak, fd, fr, fs)); saveReplays(); // ชุด 25
   logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null, runes, diff: fd }));
   pendingEnd = { r, w }; replayMode = null;
-  if (P.over) { clearAt = P.hearts > 0 && !P.extra ? Date.now() : 0; store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, clearAt || Date.now())))); store.del(SAVE_KEY); }
+  if (P.over) { clearAt = P.hearts > 0 && !P.extra ? Date.now() : 0; store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, clearAt || Date.now())))); store.del(SAVE_KEY); saveLog(); }
   else saveRun();
   showNotice('');
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = true;
@@ -1259,7 +1292,7 @@ function renderRunEnd() {
 }
 $('endNew').addEventListener('click', () => startNewRun());
 $('endExtra').addEventListener('click', () => {
-  const r = continueExtra(P); if (!r.ok) return;
+  const r = J('ex', [], () => continueExtra(P)); if (!r.ok) return;
   if (clearAt) store.set(HIST_KEY, JSON.stringify(readHistory(store.get(HIST_KEY)).filter(h => h.at !== clearAt))); // the run's final entry is written when it really ends
   clearAt = 0; saveRun(); showScreen('prep'); beginRound(); pushMsgs(r); render();
 });
@@ -1277,6 +1310,7 @@ function boot() {
       if (rp.status === 'data') showNotice('เกมอัปเดตแล้ว รีเพลย์ของ run นี้จึงถูกซ่อน');
       if (rp.status === 'bad') showNotice('ข้อมูลรีเพลย์เสียหายหรือผิดรูปแบบ จึงถูกล้าง (เล่นต่อได้ตามปกติ)');
       if (rp.status !== 'ok') saveReplays();
+      RL = resumeLog(); rlSent = { id: '', n: 0 };
       showScreen('prep'); beginRound();
     };
     $('resumeNew').onclick = () => { showNotice(''); startNewRun(); };
