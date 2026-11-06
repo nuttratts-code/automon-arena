@@ -68,6 +68,10 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .hudbtn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; }
 .hudbtn svg { width: 20px; height: 20px; }
 .badge { font: 600 .72rem var(--f-mono); background: var(--accent); color: var(--on-accent); border-radius: 99px; padding: 0 6px; }
+.badge.warn { background: var(--bad); color: #fff; } /* set 109: runes not worn */
+.hudbtn.warn { outline: 2px solid var(--bad); outline-offset: 1px; }
+.rune-dot.off { color: var(--mute); font-weight: 600; }
+.pitem.rune small.warn { color: var(--bad); font-weight: 700; }
 .mini { display: flex; gap: 2px; align-items: center; }
 .mini i { display: inline-block; width: 14px; height: 14px; background: var(--tc); }
 .mini i.s-square { border-radius: 3px; }
@@ -501,7 +505,7 @@ const simSeedLabel = () => null;
 const chars = buildCharacterList(), CM = makeCharMap(chars);
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
-let P = null, B = null, msgs = [], speed = 4, confirmEmpty = false, autoSkip = false; // set 106: default 4× · speed + auto-skip remembered (localStorage)
+let P = null, B = null, msgs = [], speed = 4, confirmEmpty = false, confirmRunes = false, autoSkip = false; // set 106: default 4× · speed + auto-skip remembered (localStorage)
 // set 107 (user): modes removed · the enemy follows the player's power (pickFoe) · stronger after each win in a row (P.ws)
 // ชุด 22: เซฟกลางทาง 1 ช่อง + สถิติ + ประวัติ (core/save.js) · ที่เก็บพังหรือถูกปิด = เล่นได้ปกติ แค่ไม่เซฟ
 const SAVE_KEY = 'automon-run-save-v1', HIST_KEY = 'automon-run-history-v1', DATA_HASH = dataHash(chars);
@@ -672,7 +676,7 @@ function render() {
       cell.append(box);
       cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
     } else cell.setAttribute('aria-label', 'ช่องว่าง');
-    if (ref.at === 'board') { const rs = runesAt(ref.row, ref.lane); if (rs.length) cell.append(el('span', 'rune-dot', '◆ ' + rs.join(' · '))); } // set 94
+    if (u) { const rs = runesOn(u); if (rs.length) cell.append(el('span', 'rune-dot' + (ref.at === 'board' ? '' : ' off'), '◆ ' + rs.join(' · '))); } // set 109: runes worn by this unit (bench = not working)
     return cell;
   };
   // grid fills row by row: top lane (หลัง กลาง หน้า) then bottom lane · front column faces the enemy (right)
@@ -690,7 +694,7 @@ function render() {
 
   const rb = runBossAt(P);
   $('fight').disabled = P.over;
-  $('fight').textContent = `${confirmEmpty ? 'ยืนยันสู้' : rb ? 'สู้บอส' : 'เริ่มสู้'} (${entries.length}/6)`;
+  $('fight').textContent = `${confirmEmpty || confirmRunes ? 'ยืนยันสู้' : rb ? 'สู้บอส' : 'เริ่มสู้'} (${entries.length}/6)`;
   if (popKind) renderPop();
 }
 
@@ -770,7 +774,7 @@ POPS.unit = ref => {
     const s = P.shop[ref.i], cant = c.price > P.gold;
     const mt = shopMergeTargets(id);
     acts = pacts(pbtn(s.locked ? 'ปลดล็อก' : 'ล็อก', () => { pushMsgs(toggleLock(P, ref.i)); render(); }),
-      ...(mt.length ? [pbtn(`ซื้อ + รวมร่าง ${c.price} เงิน`, () => { closePop(); pushMsgs(buyMerge(P, ref.i, mt[0], chars)); confirmEmpty = false; render(); }, 'primary', cant)] : []),
+      ...(mt.length ? [pbtn(`ซื้อ + รวมร่าง ${c.price} เงิน`, () => { closePop(); pushMsgs(buyMerge(P, ref.i, mt[0], chars)); confirmEmpty = confirmRunes = false; render(); }, 'primary', cant)] : []),
       pbtn(cant ? `ซื้อ ${c.price} เงิน · เงินไม่พอ (มี ${P.gold})` : `ซื้อลงม้านั่ง ${c.price} เงิน`, () => { closePop(); doBuy(ref.i, null); }, 'primary', cant));
   } else {
     const mt = mergeTargets(u);
@@ -781,7 +785,7 @@ POPS.unit = ref => {
 };
 
 // ---------- คำสั่ง (ทุกคำสั่งผ่านแกนกลาง ซึ่งตรวจกฎก่อนทำ) ----------
-function doBuy(i, dest) { const r = buy(P, i, dest, chars); pushMsgs(r); confirmEmpty = false; render(); }
+function doBuy(i, dest) { const r = buy(P, i, dest, chars); pushMsgs(r); confirmEmpty = confirmRunes = false; render(); }
 function doSell(ref) { const r = sell(P, ref, chars); pushMsgs(r); render(); }
 function act(from, to) {
   if (!from || !to || sameRef(from, to)) return;
@@ -793,7 +797,7 @@ function act(from, to) {
     return doBuy(from.i, to);
   }
   if (to.at === 'shop') return;
-  const r = move(P, from, to, chars); pushMsgs(r); confirmEmpty = false;
+  const r = move(P, from, to, chars); pushMsgs(r); confirmEmpty = confirmRunes = false;
   render();
 }
 function parseRef(key) {
@@ -866,7 +870,9 @@ const RN_RAR_TH = Object.fromEntries(RUNE_RARITY), RN_RAR_CLS = { common: 'r0', 
 const RN_ROW_TH = ['หน้า', 'กลาง', 'หลัง'], RN_LANE_TH = ['บน', 'ล่าง'];
 const rnSlotTh = s => `${RN_ROW_TH[s[0]]}${RN_LANE_TH[s[1]]}`;
 const rnDesc = r => runeText(r) || `${runeScopeLabel(r)}: สกิลรูน (ทำงานตอนสู้)`;
-function runesAt(row, lane) { return Object.entries(P.rn.at).filter(([, s]) => s[0] === row && s[1] === lane).map(([id]) => (rnRec(id) || { name: id }).name); }
+// set 109: runes are worn by a unit (uid), not a board slot · partner runes show as "คู่"
+function runesOn(u) { return Object.keys(P.rn.bag).flatMap(id => [[rnUnitOf(P, id), ''], [rnUnitOf(P, id, true), ' (คู่)']].filter(([w]) => w === u).map(([, t]) => (rnRec(id) || { name: id }).name + t)); }
+const RN_WEAR_TH = { none: '⚠ ยังไม่ได้สวมให้ตัวไหน (ไม่ทำงาน)', bench: '⚠ ตัวที่สวมอยู่ม้านั่ง (ไม่ทำงานตอนสู้)' };
 function runeCard(r, extra) {
   const c = el('div', 'rcard'); const t = el('span', 'rar ' + RN_RAR_CLS[r.rarity], RN_RAR_TH[r.rarity]);
   const head = el('div', 'row'); head.append(el('span', 'rname grow', r.name), t);
@@ -887,13 +893,19 @@ const rnBag = () => Object.entries(P.rn.bag).filter(([, n]) => n > 0);
 function renderRunes() {
   const o = P.rn.offer, dlgO = $('offerDlg');
   if (o && !P.over && !$('app').hidden && !$('app').classList.contains('fighting')) {
-    $('offerTitle').textContent = o.kind === 'boss' ? 'ชนะบอส! เลือกรูนฟรี 1 อัน' : `ชนะ (โหมด${o.kind})! เลือกรูนฟรี 1 อัน`;
-    $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn('เลือกรูนนี้', () => { pushMsgs(rnTakeOffer(P, i)); saveRun(); render(); })) : el('div', 'rcard empty', id); }));
+    $('offerTitle').textContent = o.kind === 'boss' ? 'ชนะบอส! เลือกรูนฟรี 1 อัน' : 'ชนะ! เลือกรูนฟรี 1 อัน';
+    $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn('เลือกรูนนี้', () => {
+      pushMsgs(rnTakeOffer(P, i)); saveRun(); render();
+      if (rnWear(P, id) !== 'ok') openPop('rune', id); // set 109: a rune that must be worn → open it right away to pick the unit
+    })) : el('div', 'rcard empty', id); }));
     const cost = rnRerollCost(P), rr = $('offerReroll'); // set 100: reroll the cards (free first, then paid)
     rr.textContent = cost ? `สุ่มใหม่ (${cost} เงิน · มี ${P.gold})` : 'สุ่มใหม่ (ฟรี)'; rr.disabled = P.gold < cost;
     if (!dlgO.open) { closePop(); dlgO.showModal(); }
   } else if (dlgO.open) dlgO.close();
-  $('runeCnt').textContent = String(rnBag().length);
+  const unworn = rnUnworn(P).length; // set 109: warn when a held rune does nothing (not worn / wearer on the bench)
+  $('runeCnt').textContent = unworn ? `${rnBag().length} · ⚠${unworn}` : String(rnBag().length);
+  $('runeCnt').classList.toggle('warn', !!unworn); $('runeBtn').classList.toggle('warn', !!unworn);
+  $('runeBtn').setAttribute('aria-label', unworn ? `รูนของฉัน · ${unworn} อันยังไม่ได้สวม (ไม่ทำงาน)` : 'รูนของฉัน');
   renderDiff(rnFx(P));
 }
 $('offerDlg').addEventListener('cancel', e => e.preventDefault()); // Esc does not dismiss the offer
@@ -904,32 +916,35 @@ POPS.runes = () => {
     const r = rnRec(id); if (!r) { list.append(el('div', 'rcard empty', id)); continue; }
     const b = el('button', 'pitem rune'); b.type = 'button'; b.dataset.rune = id;
     const nm = el('span', ''); nm.append(`${r.name}${n > 1 ? ` ×${n}` : ''} `, el('span', 'rar ' + RN_RAR_CLS[r.rarity], RN_RAR_TH[r.rarity]));
-    const need = (rnNeedsSlot(r) && !P.rn.at[id]) || (rnNeedsPartner(r) && !P.rn.pt[id]);
-    nm.append(el('small', '', need ? '⚠ ยังไม่ได้เลือกช่องบนบอร์ด' : runeScopeLabel(r)));
+    const wear = rnWear(P, id), on = rnUnitOf(P, id);
+    nm.append(el('small', wear === 'ok' ? '' : 'warn', wear !== 'ok' ? RN_WEAR_TH[wear] : on ? `สวมให้ ${CM[on.id].name}` : runeScopeLabel(r)));
     b.append(bagIcon(), nm, el('span', 'hint', '›')); b.addEventListener('click', () => openPop('rune', id)); list.append(b);
   }
   const fx = rnFx(P), extra = [];
   if (fx.heart) { const t = pbtn(`แลกหัวใจ 1 ดวง → ${fx.heart.gold} ทอง`, () => { pushMsgs(rnHeartTrade(P)); saveRun(); render(); }, '', P.over || P.rn.traded || P.hearts < fx.heart.min); t.id = 'rTrade'; extra.push(t); }
-  return [phead(`รูนของฉัน (${bag.length})`, 'ทุกรูนที่มีทำงานทั้งหมด · รูน "ตัวเดียว" ต้องเลือกช่องบนบอร์ด (ทำงานกับตัวที่ยืนช่องนั้น) · แตะรูนเพื่อดูรายละเอียด'), list, pacts(...extra)];
+  return [phead(`รูนของฉัน (${bag.length})`, 'ทุกรูนที่มีทำงานทั้งหมด · รูน "ตัวเดียว" ต้องสวมให้ตัวบนบอร์ด 1 ตัว (ติดตัวนั้นไปเมื่อย้ายช่อง/รวมร่าง · ขายตัวนั้น = รูนกลับมาให้สวมใหม่) · แตะรูนเพื่อเลือกตัว'), list, pacts(...extra)];
 };
 POPS.rune = id => {
   const r = rnRec(id), n = P.rn.bag[id] | 0; if (!r || !n) return POPS.runes();
   const card = runeCard(r), ctl = el('div', 'row');
-  if (rnNeedsSlot(r)) ctl.append(slotPick(id, false, 'วางที่'));
+  if (rnNeedsSlot(r)) ctl.append(slotPick(id, false, 'สวมให้'));
   if (rnNeedsPartner(r)) ctl.append(slotPick(id, true, 'คู่'));
   return [phead(`รูน ${r.name}${n > 1 ? ` ×${n}` : ''}`, runeScopeLabel(r)), card, ...(ctl.childNodes.length ? [ctl] : []), pacts(back(() => openPop('runes')))];
 };
 $('runeBtn').addEventListener('click', () => openPop('runes'));
 function slotPick(id, partner, label) {
   const lab = el('label', 'hint', label + ' '), sel2 = document.createElement('select');
-  const cur = (partner ? P.rn.pt : P.rn.at)[id];
-  sel2.append(new Option('ยังไม่วาง', ''));
+  const cur = rnUnitOf(P, id, partner), curSlot = rnSlotOf(P, id, partner); // set 109: worn by a unit (follows it), list = units on the board
+  sel2.append(new Option('ยังไม่สวม', ''));
+  if (cur && !curSlot) { const o = new Option(`${CM[cur.id].name} (อยู่ม้านั่ง · ไม่ทำงาน)`, 'bench'); o.selected = true; o.disabled = true; sel2.append(o); }
   for (let row = 0; row < 3; row++) for (let lane = 0; lane < 2; lane++) {
-    const u = P.board[row][lane], o = new Option(`${rnSlotTh([row, lane])}${u ? ' · ' + CM[u.id].name : ''}`, `${row},${lane}`);
-    if (cur && cur[0] === row && cur[1] === lane) o.selected = true;
+    const u = P.board[row][lane]; if (!u) continue;
+    const o = new Option(`${CM[u.id].name} Lv${u.level} · ${rnSlotTh([row, lane])}`, `${row},${lane}`);
+    if (u === cur) o.selected = true;
     sel2.append(o);
   }
-  sel2.addEventListener('change', () => { const v = sel2.value; pushMsgs(rnPlace(P, id, v ? v.split(',').map(Number) : null, RULES, partner)); saveRun(); render(); });
+  if (sel2.options.length === 1) sel2.options[0].text = 'ยังไม่มีตัวบนบอร์ด';
+  sel2.addEventListener('change', () => { const v = sel2.value; pushMsgs(rnPlace(P, id, v ? v.split(',').map(Number) : null, RULES, partner)); confirmRunes = false; saveRun(); render(); });
   lab.append(sel2); return lab;
 }
 // set 97: tribes popup (HUD button) → tribe detail · bonus table rows = RULES.tribeBonus (labels as the Balance Room)
@@ -1012,7 +1027,9 @@ $('fight').addEventListener('click', () => {
   if (P.over) return;
   if (P.rn.offer) { pushMsgs({ ok: false, msg: 'เลือกรูนรางวัลก่อน (หรือกด "ไม่รับรูน")' }); render(); return; }
   if (!teamEntries(P).length && !confirmEmpty) { confirmEmpty = true; pushMsgs({ ok: false, msg: 'บอร์ดว่าง จะแพ้ทันที · กดอีกครั้งเพื่อยืนยัน' }); render(); return; }
-  confirmEmpty = false;
+  const unworn = rnUnworn(P); // set 109: remind once per round about runes that do nothing
+  if (unworn.length && !confirmRunes && teamEntries(P).length) { confirmRunes = true; pushMsgs({ ok: false, msg: `มีรูน ${unworn.length} อันยังไม่ได้สวม (${unworn.map(id => (rnRec(id) || { name: id }).name).join(', ')}) จะไม่ทำงาน · กดปุ่มรูนเพื่อสวม หรือกดสู้อีกครั้ง` }); render(); return; }
+  confirmEmpty = false; confirmRunes = false;
   // set 85: every bossEvery rounds the opponent is a boss (core/runboss.js) · teamB = { boss: id, k } then
   const rb = runBossAt(P);
   const foe = rb ? null : nextFoe(); // set 107: the enemy follows the player's power + win streak (pickFoe)

@@ -48,6 +48,15 @@ with sync_playwright() as p:
         pg.click('#runeBtn'); chk(len(pg.query_selector_all('#rBag .pitem'))==1,'rune popup lists held rune')
         pg.click('#rBag .pitem'); chk('← กลับ' in pg.inner_text('#pop') and pg.query_selector('#pop .rcard') is not None,'rune detail popup')
         pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
+        # set 109: a "one" rune is worn by a unit (not a slot) · unworn = red HUD badge + list warning · worn → no warning, follows the unit
+        pg.evaluate("P.board[0][0]={uid:P.uid++,id:chars[0].id,level:1,perm:{},paid:1};P.rn.bag={C3:1};P.rn.at={};render()")
+        chk('⚠1' in pg.inner_text('#runeCnt') and 'warn' in pg.get_attribute('#runeBtn','class'),'unworn rune → warning on HUD')
+        pg.click('#runeBtn'); chk('ยังไม่ได้สวม' in pg.inner_text('#rBag'),'rune list says not worn')
+        pg.click('#rBag .pitem'); pg.select_option('#pop select','0,0')
+        chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
+        chk('เกราะไม้' in pg.inner_text('#board'),'rune name shown on the wearer')
+        pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk('⚠1' in pg.inner_text('#runeCnt'),'wearer on the bench → warning')
+        esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
         # set 107: no modes · HUD shows enemy power % (100 + 5 per win in a row) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
         pg.click('#diffInfo'); chk('ตำนาน 10%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
@@ -87,6 +96,7 @@ with sync_playwright() as p:
         for rnd in range(14):
             if pg.evaluate('P.over'): break
             if pg.is_visible('#offerDlg'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
+            if pg.evaluate("document.getElementById('dlg').open"): esc()  # set 109: a rune that must be worn opens its popup after the pick
             pg.evaluate(BUY)
             # move from the bench to free board cells through act() (the same path a drag ends in)
             pg.evaluate(PLACE)

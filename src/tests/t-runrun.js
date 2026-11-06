@@ -3,14 +3,14 @@ import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { simulate } from '../core/battle.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { incomeOf, newRun, startRound, reroll, sell, move, applyBattlePerm, endMatch } from '../core/shop.js';
+import { incomeOf, newRun, startRound, reroll, sell, move, merge, applyBattlePerm, endMatch } from '../core/shop.js';
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { pickFoe, foeWantPct } from '../core/botteams.js';
 import { teamPower } from '../core/power.js';
 import { RUN_STAGE } from '../core/runboss.js';
-import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest } from '../core/runrunes.js';
+import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest, rnUnworn, rnWear } from '../core/runrunes.js';
 import { eq, ok } from './helpers.js';
 
 const chars = buildCharacterList(), cm = makeCharMap(chars);
@@ -80,5 +80,31 @@ export const TESTS_RUNRUN = [
     ok(Math.abs(pow(a) / pw2 - 1) < 0.08, `enemy ≈ my power (${(pow(a) / pw2).toFixed(2)})`); void pw;
     ok(pow(c) > pow(a) * 1.15, 'streak 5 → stronger enemy');
     ok(Array.isArray(a.rn) && BOT_TEAMS.rounds.some(l => l.some(t => t.rn.length)), 'bot teams carry runes');
+  }],
+  ['set 109 bug fix: a "one" rune is worn by the UNIT (not the board slot) · swap / bench / merge / sell · unworn list for the warning', () => {
+    const P = fresh(41), other = chars.find(c => c.id !== commonId).id;
+    const a = unit(P, commonId), b = unit(P, other);
+    P.board = P.board.map(r => r.map(() => null)); P.bench = P.bench.map(() => null);
+    P.board[0][0] = a; P.bench[0] = b;
+    give(P, 'X3'); give(P, 'C3');
+    eq(rnUnworn(P).sort(), ['C3', 'X3'], 'not worn yet → warning list');
+    ok(!rnPlace(P, 'X3', [1, 0], RULES).ok, 'empty slot → fail');
+    ok(rnPlace(P, 'X3', [0, 0], RULES).ok && rnPlace(P, 'C3', [0, 0], RULES).ok, 'worn by a');
+    eq(rnUnworn(P), [], 'all worn');
+    eq(rnFx(P).fast[commonId], 2, 'a merges with 2');
+    move(P, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars); // b swaps into a's slot, a goes to the bench
+    eq(P.board[0][0], b, 'b on the slot');
+    ok(!rnFx(P).fast[other], 'b does NOT get the rune (the old bug)'); eq(rnFx(P).fast[commonId], 2, 'a keeps the shop effect on the bench');
+    eq(rnCompact(P).find(x => x.id === 'C3').s, undefined, 'battle rune: a on the bench → no slot, does nothing');
+    eq(rnWear(P, 'C3'), 'bench', 'UI: worn unit on the bench'); eq(rnUnworn(P).sort(), ['C3', 'X3'], 'bench → warning');
+    move(P, { at: 'bench', i: 0 }, { at: 'board', row: 2, lane: 1 }, chars);
+    eq(rnCompact(P).find(x => x.id === 'C3').s, [2, 1], 'rune follows a to its new slot');
+    const a2 = unit(P, commonId); P.bench[1] = a2;
+    merge(P, [{ at: 'board', row: 2, lane: 1 }], { at: 'bench', i: 1 }, chars, RULES);
+    ok(P.bench[1].level === 2 && rnWear(P, 'C3') === 'bench', 'merged: rune stays on the result (worn copy was the source)');
+    sell(P, { at: 'bench', i: 1 }, chars);
+    eq([P.rn.at.C3, P.rn.bag.C3], [undefined, 1], 'sold → rune back in the bag, not worn');
+    const Q = fresh(42), q = unit(Q, commonId); Q.board[1][1] = q; give(Q, 'C3'); Q.rn.at.C3 = [1, 1]; // old save: slot array
+    eq(rnCompact(Q).find(x => x.id === 'C3').s, [1, 1], 'old save slot still read');
   }],
 ];
