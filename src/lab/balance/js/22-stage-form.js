@@ -221,7 +221,7 @@ function bossVsTable(bs) {
   const hr = document.createElement('tr'); for (const h of ['ด่าน', 'HP', 'ตี/วิ', 'ทีมล้มบอสใน', 'บอสล้มทีมใน', '']) hr.append(el('th', '', h));
   t.append(hr);
   for (const k of [1, 2, 3, 4]) {
-    const stg = k * stageCfg.settings.bossEvery, s = bossAt(bs, k), ref = STAGE_MEDIAN[stg], tr = document.createElement('tr');
+    const stg = k * (stageCfg.settings.bossEvery + 1), s = bossAt(bs, k), ref = STAGE_MEDIAN[stg], tr = document.createElement('tr');
     const hpC = el('td', 'n', String(s.hp)); hpC.append(el('span', 'bk', ` (${bs.bars} × ${s.barHp})`));
     const kC = el('td', '', ''); kC.append(el('span', 'bk', `${k} · `), `ด่าน ${stg}`);
     tr.append(kC, hpC, el('td', 'n', fmt(s.dps)));

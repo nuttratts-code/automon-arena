@@ -276,7 +276,7 @@ const mainTribeOf = (team, map, rules) => {
 export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
-  const pick = useTeams ? (P => pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round).team) : null;
+  const pick = useTeams ? (P => pickBotTeam(BOT_TEAMS, P.round, P.seed).team) : null;
   const tribes = tribeList(chars);
   const ends = Array(W + 1).fill(0), byRound = {}, boss = {}, ch = {}, tr = {}, combos = {};
   for (const c of chars) ch[c.id] = { runs: 0, lvSum: 0, won: 0, winsSum: 0, mGames: 0, mWins: 0 };

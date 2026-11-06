@@ -15,7 +15,7 @@ const cm = makeCharMap([...chars, dummy]);
 const R2 = { ...RULES, stormStartMs: WIN + 1000 };
 const by = {}; let err = 0;
 for (let r = 0; r < N; r++) {
-  simRun(chars, RULES, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.wins, p.seed, p.round).team, m => {
+  simRun(chars, RULES, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, m => {
     if (!m.team.length) return;
     try {
       const A = buildTeam(m.team, cm, RULES);

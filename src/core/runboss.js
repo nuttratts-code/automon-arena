@@ -1,7 +1,7 @@
-// Bosses inside the normal run (set 85 · user picked option ก, 4 Nov 2026): every `bossEvery` rounds the opponent is a boss
-// instead of a bot team, up to `bossesPerRun` bosses (stage settings, Balance Room ด่าน tab · ค่าเสนอ 5 / 2).
-// ด่าน = round (match number) · boss k = 1st, 2nd… appearance (grows with bossAt) · which boss = shuffle of the enabled
-// bosses by the run seed (same run → same bosses, also after loading a save) · win/lose = same as a normal match.
+// Bosses inside the run (set 85 · set 99 user 6 Nov 2026): after every `bossEvery` normal-match WINS (4) the next match is a boss
+// instead of a bot team (stage settings, Balance Room ด่าน tab) · lose to it = lose a heart like a normal match, the counter restarts and
+// the same boss comes back after bossEvery more wins · win = next boss · up to `bossesPerRun` bosses beaten (extra matches too)
+// boss k = 1st, 2nd… boss (grows with bossAt) · which boss = shuffle of the enabled bosses by the run seed (same run → same bosses)
 // Pure data, no randomness outside the run seed.
 import { makeRng } from './rng.js';
 import { stageDefaults, bossAt } from './stage.js';
@@ -9,12 +9,11 @@ import { bossUnit } from './boss.js';
 
 export const RUN_STAGE = stageDefaults();
 
-// round → { boss, k } or null
-export function runBossAt(round, seed, stage = RUN_STAGE) {
+// run state (bw = normal wins since the last boss fight, bk = bosses beaten, seed) → { boss, k } or null
+export function runBossAt(st, stage = RUN_STAGE) {
   const S = stage.settings, every = Math.max(1, S.bossEvery | 0), max = Math.max(0, S.bossesPerRun | 0);
-  const r = round | 0;
-  if (r < every || r % every) return null;
-  const k = r / every;
+  if ((st.bw | 0) < every) return null;
+  const k = (st.bk | 0) + 1, seed = st.seed;
   if (k > max) return null;
   const list = stage.bosses.filter(b => b.on);
   if (!list.length) return null;

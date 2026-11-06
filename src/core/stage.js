@@ -384,7 +384,7 @@ export const STAGE_BOSSES = [
   stageBoss('B4', 'กระจกสะท้อน', 'สายฟ้า', 380, 22, 2000, 'reflect', 10, 'front'),
 ];
 export const STAGE_SETTINGS = [
-  ['bossEvery', 'บอสทุกกี่ด่าน', 5, 1, 20, 'ด่าน'], ['bossesPerRun', 'บอสใน run หลัก', 2, 1, 10, 'ตัว'],
+  ['bossEvery', 'ชนะกี่ครั้งแล้วเจอบอส', 4, 1, 20, 'ครั้ง'], ['bossesPerRun', 'บอสสูงสุดต่อ run (รวมแมตช์พิเศษ)', 10, 1, 10, 'ตัว'], // set 99: boss after every bossEvery normal wins
   // Phase 2b (set 94, user 5 Nov): every normal-round WIN offers 1 free rune out of a fixed mix per difficulty (count of each rarity · user numbers);
   // boss win = pick 1 of 2 legend (user set 95) · a rarity with no rune left is filled from the other rarities
   ['offEasyC', 'ชนะง่าย: ให้เลือกรูนธรรมดา', 3, 0, 5, 'อัน'], ['offEasyR', 'ชนะง่าย: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offEasyL', 'ชนะง่าย: ให้เลือกรูนตำนาน', 0, 0, 5, 'อัน'],

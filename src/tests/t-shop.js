@@ -2,7 +2,7 @@
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RARITIES, RULES } from '../core/rules.js';
-import { addPerm, allUnits, baseIncomeAt, buy, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
+import { addPerm, allUnits, baseIncomeAt, buy, continueExtra, endMatch, lvForRound, move, newRun, oddsAt, reroll, sell, shopLvOf, startRound, teamEntries, toggleLock } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok } from './helpers.js';
@@ -143,6 +143,25 @@ export const TESTS_SHOP = [
     ok(st.over && !startRound(st, chars).ok, 'ควรจบเมื่อหัวใจหมด');
     const w = newRun(chars, 8); for (let i = 0; i < RULES.shop.winsToFinish; i++) endMatch(w, true, chars);
     ok(w.over, 'ควรจบเมื่อชนะครบ');
+  }],
+  ['set 99: cleared run → extra matches with the hearts left · never ends by wins · ends when hearts run out', () => {
+    const chars = buildCharacterList(), S = RULES.shop, w = newRun(chars, 8);
+    ok(!continueExtra(w).ok, 'not cleared yet → refused');
+    endMatch(w, false, chars); for (let i = 0; i < S.winsToFinish; i++) endMatch(w, true, chars);
+    ok(w.over && !w.extra, 'cleared'); ok(continueExtra(w).ok && w.extra && !w.over, 'continue'); ok(!continueExtra(w).ok, 'only once');
+    for (let i = 0; i < 5; i++) endMatch(w, true, chars);
+    ok(!w.over && w.wins === S.winsToFinish + 5, 'extra wins do not end the run');
+    while (w.hearts > 0) endMatch(w, false, chars);
+    ok(w.over, 'hearts gone = game over');
+    const z = newRun(chars, 9); for (let i = 0; i < S.hearts; i++) endMatch(z, false, chars);
+    ok(!continueExtra(z).ok, 'lost run cannot continue');
+  }],
+  ['set 99: boss counter · normal win +1 · boss fight resets it (win or lose) · boss win = next boss', () => {
+    const chars = buildCharacterList(), st = newRun(chars, 3);
+    endMatch(st, true, chars); endMatch(st, false, chars); endMatch(st, true, chars);
+    eq([st.bw, st.bk], [2, 0], 'normal wins count, losses do not');
+    endMatch(st, false, chars, RULES, [], true); eq([st.bw, st.bk], [0, 0], 'lost boss: counter restarts, same boss next time');
+    endMatch(st, true, chars, RULES, [], true); eq([st.bw, st.bk], [0, 1], 'boss win: next boss');
   }],
   ['คำสั่งร้านค้ากันข้อมูลแปลกปลอม', () => {
     const chars = buildCharacterList(), st = newRun(chars, 10); startRound(st, chars);

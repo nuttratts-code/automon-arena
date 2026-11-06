@@ -48,6 +48,7 @@ with sync_playwright() as p:
         pg.click('#runeBtn'); chk(len(pg.query_selector_all('#rBag .pitem'))==1,'rune popup lists held rune')
         pg.click('#rBag .pitem'); chk('← กลับ' in pg.inner_text('#pop') and pg.query_selector('#pop .rcard') is not None,'rune detail popup')
         pg.click('#pop button:has-text("← กลับ")'); chk(pg.query_selector('#rBag') is not None,'rune detail back to list'); esc()
+        chk(pg.get_attribute('[data-diff="ง่าย"]','aria-pressed')=='true','difficulty starts at easy (set 99)')
         pg.click('[data-diff="ยาก"]'); pg.click('#diffInfo')
         chk(pg.get_attribute('[data-diff="ยาก"]','aria-pressed')=='true' and 'ตำนาน' in pg.inner_text('#diffHint') and '155%' in pg.inner_text('#diffHint'),'difficulty pick + enemy % + reward line'); esc()
         pg.click('[data-diff="กลาง"]'); pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
@@ -111,7 +112,7 @@ with sync_playwright() as p:
         chk(offers>0 or not any(x.startswith('ชนะ') or x.startswith('เสมอ') for x in res[:-1]),'win offers a rune (%d)' % offers)
         if not pg.evaluate('P.over'): chk(('Lv %d/' % min(pg.evaluate('P.round'),15)) in pg.inner_text('#shopLv'),'shop level rose with rounds')
         # ชุด 23: ทีมบอทเตรียมไว้ผ่านตัวตรวจ และหัวแมตช์บอกขั้น/ระดับคู่แข่ง
-        chk(pg.evaluate('BOT_OK') and any('คู่แข่ง: ทีมขั้นชนะ' in t for t in titles),'preset bot teams active')
+        chk(pg.evaluate('BOT_OK') and any('คู่แข่ง: ทีมบอทรอบ' in t for t in titles),'preset bot teams active')
         chk(maxBoard>=3,'units moved from bench to board')
         # ชุด 24: ปุ่มความเร็ว 8× 16× · ร้านไฮไลต์ตัวที่มีแล้ว · คำอธิบายสกิลครบ 3 เลเวล
         chk(pg.eval_on_selector_all('[data-speed]','e=>e.map(b=>b.dataset.speed)')==['1','2','4','8','16'],'speed buttons 1-16')
@@ -184,7 +185,13 @@ with sync_playwright() as p:
         pg.evaluate("P.wins=3;P.hearts=0;P.over=true;renderRunEnd();showScreen('runEnd')")
         hist=pg.eval_on_selector_all('#endHistory li','e=>e.map(x=>x.textContent)')
         chk(pg.is_visible('#runEnd') and 'หัวใจหมด' in pg.inner_text('#endTitle') and len(hist)==1 and 'HL-1' in hist[0],'run end screen + filtered history '+str(hist))
+        chk(pg.is_hidden('#endExtra'),'lost run: no extra matches button')
         pg.click('#endNew'); chk(in_prep() and pg.evaluate('P.round')==1 and not pg.evaluate('P.over'),'new run from end screen')
+        # set 99: cleared run → "เล่นต่อ (แมตช์พิเศษ)" → back to prep with the hearts left, wins chip shows extra
+        pg.evaluate("P.wins=10;P.bw=Math.min(P.bw,10);P.hearts=4;P.over=true;renderRunEnd();showScreen('runEnd')")
+        chk(pg.is_visible('#endExtra') and 'ชนะครบ' in pg.inner_text('#endTitle'),'cleared run offers extra matches')
+        pg.click('#endExtra'); chk(in_prep() and pg.evaluate('P.extra') and not pg.evaluate('P.over') and 'พิเศษ' in pg.inner_text('#sWins'),'extra matches continue the run')
+        pg.evaluate('startNewRun()')
         print(w,'save/resume/end ok')
         pg.evaluate("localStorage.clear()")
         # set 97: phone held upright → "rotate your phone" screen · button continues in portrait

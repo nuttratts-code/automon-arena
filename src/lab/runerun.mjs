@@ -1,6 +1,6 @@
 // Set 95: boss win % when the player collects runes (phase 2b run flow) · node lab/runerun.mjs [runs] [diff ง่าย|กลาง|ยาก|off] [--write t1 t2 t3]
 // The player bot (core/bot.js, focus rotating over the 6 tribes) plays real runs against the game's bot teams at the picked difficulty
-// (pickBotTeamAt + enemy hp/atk × difficulty %, like the game · set 95: no rune shop) and handles runes with a simple greedy policy (harness only, not game rules):
+// (pickBotTeam by round + enemy hp/atk × difficulty %, like the game · set 95: no rune shop) and handles runes with a simple greedy policy (harness only, not game rules):
 //   offer → highest rarity, battle runes before run-only ones · "one" runes sit on the strongest unit (level, then rarity), partner on the 2nd strongest.
 // diff "off" = no runes, opponents by wins (pickBotTeam) = the lab/bossrun.mjs baseline.
 // Prints boss win % per boss round (k1 round 5 · k2 round 10 · k3 round 15) and run results.
@@ -11,12 +11,12 @@ import { botShop } from '../core/bot.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickBotTeam, pickBotTeamAt, tribeList, validateBotTeams } from '../core/botteams.js';
+import { pickBotTeam, tribeList, validateBotTeams } from '../core/botteams.js';
 import { dataHash } from '../core/save.js';
 import { RUN_STAGE, runBossAt, runBossTeam } from '../core/runboss.js';
 import { RUNE_RUN_ONLY, equipRunes } from '../core/runes.js';
 import { RN_RARS, rnEquips, rnFoeScale, rnMakeOffer, rnPlace, rnRec, rnTakeOffer, rnNeedsSlot, rnNeedsPartner } from '../core/runrunes.js';
-import { endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
+import { continueExtra, endMatch, newRun, startRound, teamEntries } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 
 const argv = process.argv.slice(2), WRITE = argv.includes('--write');
@@ -46,6 +46,7 @@ const goldLog = Array.from({ length: 16 }, () => []);
 const normal = [0, 0];
 const out = { 1: [0, 0], 2: [0, 0], 3: [0, 0] }, teams = { 1: [], 2: [], 3: [] }, finish = { wins: 0, runs: 0 }, held = [];
 const t0 = Date.now();
+let cleared = 0;
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0, focus = tribes[r % tribes.length];
   const P = newRun(chars, seed, RULES);
@@ -54,27 +55,28 @@ for (let r = 0; r < runs; r++) {
     startRound(P, chars, RULES); if (P.round < 16) goldLog[P.round].push(P.gold);
     botShop(P, chars, RULES, { focus });
     if (RUNES) placeRunes(P);
-    const rb = runBossAt(P.round, P.seed);
-    const foe = rb ? null : RUNES ? pickBotTeamAt(BOT_TEAMS, P.wins, P.seed, P.round, DIFF) : pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round);
+    const rb = runBossAt(P);
+    const foe = rb ? null : pickBotTeam(BOT_TEAMS, P.round, P.seed, RUNES ? DIFF : null);
     const mine = teamEntries(P);
     const e = equipRunes(buildTeam(mine, cm, RULES), RUNES ? rnEquips(P) : [], { winStreak: streak });
     const opts = { rules: RULES, log: false, ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}) };
-    const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : rnFoeScale(buildTeam(foe.team, cm, RULES), RUNES ? DIFF : null), opts);
+    const res = simulate(e.units, rb ? runBossTeam(rb.boss, rb.k) : rnFoeScale(buildTeam(foe.team, cm, RULES), RUNES ? DIFF : null, RUN_STAGE, P.round), opts);
     const won = res.winner !== 1;
     if (!rb) { normal[0]++; normal[1] += won ? 1 : 0; }
     if (rb && out[rb.k]) { out[rb.k][0]++; out[rb.k][1] += won ? 1 : 0; teams[rb.k].push({ units: e.units, opts }); }
     streak = won ? streak + 1 : 0;
-    endMatch(P, won, chars, RULES, (res.perm || []).filter(x => x.side === 0));
+    endMatch(P, won, chars, RULES, (res.perm || []).filter(x => x.side === 0), !!rb);
+    if (P.over && P.hearts > 0 && !P.extra) { cleared++; continueExtra(P, RULES); } // set 99: the bot always plays the extra matches (boss 3+ lives there)
     if (RUNES && won && !P.over) {
       const o = rnMakeOffer(P, rb ? 'boss' : DIFF);
       if (o) { let bi = 0; o.ids.forEach((id, i) => { if (rRank(rnRec(id)) > rRank(rnRec(o.ids[bi]))) bi = i; }); rnTakeOffer(P, bi); }
     }
   }
-  finish.runs++; finish.wins += P.wins >= RULES.shop.winsToFinish ? 1 : 0;
+  finish.runs++;
   if (RUNES) held.push(Object.values(P.rn.bag).reduce((a, n) => a + n, 0));
 }
 const pct = (a, b) => (b ? (a / b * 100).toFixed(1) : '-');
-console.log(`diff ${DIFF} · runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(finish.wins, finish.runs)}%${RUNES ? ` · runes held at end avg ${(held.reduce((a, b) => a + b, 0) / held.length).toFixed(1)}` : ''}`);
+console.log(`diff ${DIFF} · runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(cleared, finish.runs)}%${RUNES ? ` · runes held at end avg ${(held.reduce((a, b) => a + b, 0) / held.length).toFixed(1)}` : ''}`);
 console.log(`normal rounds won ${pct(normal[1], normal[0])}%`);
 for (const k of [1, 2, 3]) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
 

@@ -7,7 +7,7 @@ import { incomeOf, newRun, startRound, reroll, sell, move, applyBattlePerm } fro
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickBotTeamAt } from '../core/botteams.js';
+import { pickBotTeam } from '../core/botteams.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { rnMakeOffer, rnTakeOffer, rnRec, rnDiffPct, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest } from '../core/runrunes.js';
 import { eq, ok } from './helpers.js';
@@ -130,7 +130,7 @@ export const TESTS_RUNRUN = [
   }],
   ['set 94: difficulty pick = bot team of that tier from the same cell · same seed → same team', () => {
     for (const tier of ['ง่าย', 'กลาง', 'ยาก']) {
-      const a = pickBotTeamAt(BOT_TEAMS, 2, 777, 4, tier), b = pickBotTeamAt(BOT_TEAMS, 2, 777, 4, tier);
+      const a = pickBotTeam(BOT_TEAMS, 4, 777, tier), b = pickBotTeam(BOT_TEAMS, 4, 777, tier);
       eq(a.tier, tier, 'tier'); eq(JSON.stringify(a.team), JSON.stringify(b.team), 'deterministic');
     }
   }],

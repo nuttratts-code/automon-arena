@@ -6,7 +6,7 @@
 // - copies per run (rune.max) cap the offers
 // State lives in st.rn (pure data, saved with the run) · randomness = the run seed (draw) · every number comes from the stage config.
 import { RUN_STAGE } from './runboss.js';
-import { RUNE_RARITY, RUNE_SPEC, runeActive } from './stage.js';
+import { RUNE_RARITY, RUNE_SPEC, runeActive, enemyMultAt } from './stage.js';
 import { runeRecord } from './runes.js';
 import { fail, done } from './shop.js';
 import { makeRng } from './rng.js';
@@ -72,8 +72,9 @@ function rnAdd(st, r) { st.rn.bag[r.id] = rnHeld(st, r.id) + 1; }
 // enemy % for a picked difficulty (100 = as the bot team is) · boss rounds are never scaled
 export const rnDiffPct = (tier, stage = RUN_STAGE) => (RN_DIFF_KEY[tier] ? stage.settings[RN_DIFF_KEY[tier]] ?? 100 : 100);
 // enemy units (buildTeam output) with max hp and atk × pct/100 (rounded down, hp ≥ 1) · summons scale the same way
-export function rnFoeScale(units, tier, stage = RUN_STAGE) {
-  const p = rnDiffPct(tier, stage);
+// set 99: round = the match round → extra matches past growFrom also × enemyMultAt (stage settings growFrom/growPct, compounding)
+export function rnFoeScale(units, tier, stage = RUN_STAGE, round = 0) {
+  const p = rnDiffPct(tier, stage) * enemyMultAt(stage.settings, round | 0);
   if (p === 100) return units;
   const sc = u => ({ ...u, maxHp: Math.max(1, Math.floor(u.maxHp * p / 100)), atk: Math.floor(u.atk * p / 100), skills: (u.skills || []).map(k => (k && k.unit ? { ...k, unit: sc(k.unit) } : k)) });
   return units.map(sc);

@@ -11,7 +11,7 @@ const [sg, gp] = (process.argv[4] || '').split(',').map(Number);
 const rules = sg ? { ...RULES, shop: { ...RULES.shop, startGold: sg, goldPerRound: gp || sg } } : RULES;
 const by = {}, end = { won: 0, rounds: 0 };
 for (let r = 0; r < N; r++) {
-  const P = simRun(chars, rules, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.wins, p.seed, p.round).team, m => {
+  const P = simRun(chars, rules, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, m => {
     const x = (by[process.env.BYROUND ? m.round : m.stage] ||= { n: 0, gold: 0, size: 0, lv: 0, u: 0, l2: 0, l3: 0, full2: 0, win: 0 });
     const lvs = m.team.map(e => e.level || 1);
     x.n++; x.gold += m.gold; x.size += lvs.length; x.u += lvs.length; x.lv += lvs.reduce((a, b) => a + b, 0);

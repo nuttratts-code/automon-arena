@@ -22,7 +22,7 @@ const teams = { 1: [], 2: [], 3: [] };
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  simRun(chars, RULES, seed, P => pickBotTeam(BOT_TEAMS, P.wins, P.seed, P.round).team, m => { if (m.boss && teams[m.k]) teams[m.k].push(buildTeam(m.team, cm, RULES)); }, RUN_STAGE, { focus: tribes[r % tribes.length] });
+  simRun(chars, RULES, seed, P => pickBotTeam(BOT_TEAMS, P.round, P.seed).team, m => { if (m.boss && teams[m.k]) teams[m.k].push(buildTeam(m.team, cm, RULES)); }, RUN_STAGE, { focus: tribes[r % tribes.length], extra: 40 });
 }
 console.log(`teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),

@@ -16,13 +16,16 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 5, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 6, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
     uid: 1,
     charges: [], // ประจุรอใช้ (SF-7): { id, uid, si } · ให้ค่าถาวรกับเพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ
     rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
+    // set 99 (user 6 Nov): bw = normal-match wins since the last boss fight (boss after bossEvery of them, core/runboss.js)
+    // bk = bosses beaten (next boss = bk + 1; a lost boss comes back later) · extra = playing extra matches after the run was cleared
+    bw: 0, bk: 0, extra: false,
   };
   return st;
 }
@@ -318,17 +321,26 @@ export function teamEntries(st) {
   });
 }
 
-// won: true = ชนะหรือเสมอ (เสมอนับเป็นชนะของผู้เล่น)
-// gains = ค่าถาวรจากสกิลระหว่างสู้ (ผล simulate().perm ของฝั่งนี้) · ได้ทั้งแพ้และชนะ (22 ต.ค.) · ตรวจทุกช่องก่อนใช้
-export function endMatch(st, won, chars, rules = RULES, gains = []) {
+// won: true = win or draw (a draw counts as the player's win)
+// gains = perm values from skills during the fight (simulate().perm of this side) · on win and loss (22 Oct) · every field checked
+// boss (set 99) = this match was a boss fight: resets bw (win or lose), a win adds bk · normal win adds bw
+// over: hearts gone, or wins reach winsToFinish outside extra matches (the player may then continueExtra)
+export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false) {
   const S = rules.shop, msgs = [];
   applyBattlePerm(st, gains, chars, rules, msgs);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchEnd', chars, rules, msgs);
   if (won) for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchWin', chars, rules, msgs);
   st.lastWon = !!won;
   if (won) st.wins++; else st.hearts--;
-  if (st.wins >= S.winsToFinish || st.hearts <= 0) st.over = true;
+  if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) st.bw++;
+  if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish)) st.over = true;
   return done(msgs);
+}
+// set 99 (user 6 Nov): after the run is cleared (wins = winsToFinish) the player may keep playing extra matches with the hearts left
+export function continueExtra(st, rules = RULES) {
+  if (!st.over || st.extra || st.hearts <= 0 || st.wins < rules.shop.winsToFinish) return fail('เล่นต่อไม่ได้');
+  st.extra = true; st.over = false;
+  return done(['แมตช์พิเศษ: เล่นต่อด้วยหัวใจที่เหลือ']);
 }
 
 // ค่าถาวรจากการต่อสู้: ให้ตัวบนบอร์ดที่ช่องเดิมและชนิดเดิม · เกินเพดานถูกตัด (combat-rules เพดานค่าถาวร)

@@ -9,7 +9,7 @@ const chars = buildCharacterList(), N = +(process.argv[2] || 2000), SEED = +(pro
 const byRound = {}, byStage = {}, end = { won: 0, rounds: 0 }; let abn = 0, matches = 0;
 const add = (o, k, m) => { const x = (o[k] ||= { n: 0, ms: 0, w: 0, max: 0, storm: 0 }); x.n++; x.ms += m.timeMs; x.max = Math.max(x.max, m.timeMs); if (m.timeMs > 180000) x.storm++; if (m.winner !== 1) x.w++; };
 for (let r = 0; r < N; r++) {
-  const P = simRun(chars, RULES, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.wins, p.seed, p.round).team,
+  const P = simRun(chars, RULES, (SEED + Math.imul(r + 1, 0x9E3779B1)) >>> 0, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team,
     m => { matches++; if (m.aborted) abn++; add(byRound, m.round, m); add(byStage, m.stage, m); });
   if (P.wins >= RULES.shop.winsToFinish) end.won++; end.rounds += P.round;
 }

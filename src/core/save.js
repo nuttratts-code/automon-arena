@@ -44,14 +44,16 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 5) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 6) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
   if (!svIntIn(st.gold, 0, 100000)) errors.push('เงินผิด');
-  if (!svIntIn(st.wins, 0, S.winsToFinish)) errors.push('จำนวนชนะผิด');
+  if (!svIntIn(st.wins, 0, 1000) || (!st.extra && st.wins > S.winsToFinish)) errors.push('จำนวนชนะผิด');
+  if (!svIntIn(st.bw, 0, 1000) || !svIntIn(st.bk, 0, 1000) || st.bw > st.wins || st.bk > st.wins) errors.push('ตัวนับบอสผิด');
+  if (typeof st.extra !== 'boolean' || (st.extra && st.wins < S.winsToFinish)) errors.push('แมตช์พิเศษผิด');
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
   if (typeof st.lastWon !== 'boolean' || typeof st.over !== 'boolean') errors.push('ค่าจริง/เท็จผิด');
   if (!svIntIn(st.uid, 1, 1e9)) errors.push('uid ผิด');
@@ -75,7 +77,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   else for (const x of st.charges) {
     if (!svObj(x) || !svOnlyKeys(x, ['id', 'uid', 'si']) || typeof x.id !== 'string' || !svOwn(cm, x.id) || !svIntIn(x.uid, 1, 1e9) || !svIntIn(x.si, 0, 5) || !cm[x.id].skills[x.si] || !chargeOwner(st, x)) errors.push('ประจุผิด');
   }
-  if (!opts.bot && st.over !== (st.wins >= S.winsToFinish || st.hearts <= 0)) errors.push('สถานะจบ run ไม่ตรง'); // บอท: หัวใจ/จบ run ถูกตั้งใหม่ทุกแมตช์
+  if (!opts.bot && st.over !== (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish))) errors.push('สถานะจบ run ไม่ตรง'); // บอท: หัวใจ/จบ run ถูกตั้งใหม่ทุกแมตช์
   return { ok: errors.length === 0, errors };
 }
 
@@ -146,7 +148,7 @@ export function readHistory(text, rules = RULES) {
   if (!Array.isArray(a)) return [];
   const idOk = x => typeof x === 'string' && /^[A-Z]{2}-\d{1,2}$/.test(x);
   return a.slice(0, HISTORY_MAX).filter(h => svObj(h) && svOnlyKeys(h, ['at', 'won', 'wins', 'hearts', 'rounds', 'team', 'top', 'topDmg', 'matches'])
-    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, rules.shop.winsToFinish) && svIntIn(h.hearts, 0, rules.shop.hearts)
+    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, 1000) && svIntIn(h.hearts, 0, rules.shop.hearts)
     && svIntIn(h.rounds, 0, 1000) && svIntIn(h.matches, 0, 1000) && (h.top === null || idOk(h.top)) && svIntIn(h.topDmg, 0, 1e12)
     && Array.isArray(h.team) && h.team.length <= rules.maxBoard && h.team.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level']) && idOk(u.id) && svIntIn(u.level, 1, rules.maxLevel)));
 }
@@ -212,7 +214,7 @@ export function checkPlayRecord(x, cm, rules = RULES) {
   const S = rules.shop, team = t => Array.isArray(t) && t.length <= rules.maxBoard && t.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level', 'row', 'lane', 'perm'])
     && typeof u.id === 'string' && svOwn(cm, u.id) && svIntIn(u.level, 1, rules.maxLevel) && svIntIn(u.row, 0, rules.rows - 1) && svIntIn(u.lane, 0, rules.lanes - 1) && svIntIn(u.perm, 0, 100));
   return x.v === PLAY_VERSION && svIntIn(x.at, 0, 1e15) && typeof x.data === 'string' && /^[0-9a-f]{8}$/.test(x.data) && svIntIn(x.run, 0, 0xFFFFFFFF)
-    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, S.winsToFinish) && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
+    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, 1000) && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
     && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
     && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)
