@@ -24,7 +24,8 @@ if (process.argv[2] === '--part') { // โปรเซสลูก: คำนว
   })));
   const rounds = Array.from({ length: n }, (_, k) => outs.find((o, p) => parts[p].includes(k)).rounds[k]);
   const { cells: _c, ...gen } = outs[0].gen;
-  const data = { v: 5, gen, sizes: outs[0].sizes, rounds, hash: dataHash(chars) };
+  const data = { v: 6, gen, sizes: outs[0].sizes, rounds, hash: dataHash(chars) };
+  writeFileSync(process.env.BOTGEN_RAW || '/tmp/botgen-raw.json', JSON.stringify(data)); // set 107: keep the raw result even when the check fails
   const v = validateBotTeams(data, makeCharMap(chars), RULES, data.hash);
   if (!v.ok) { console.log('❌ ทีมบอทไม่ผ่านตัวตรวจ:', v.errors.slice(0, 5).join(' | ')); process.exit(1); }
   writeFileSync('core/botdata.js', `// สร้างอัตโนมัติด้วย lab/botgen.mjs (ชุด 23) · ห้ามแก้มือ · ${runs} run จำลอง เมล็ด ${gen.seed}\nexport const BOT_TEAMS = ${JSON.stringify(data)};\n`);
