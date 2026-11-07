@@ -25,7 +25,8 @@ export const TESTS_BOTS = [
       ok(l.every(t => t.round === t.from + 1 && t.from <= k), `round ${k + 1}: team from a later round`);
       if (k >= 1) ok(l.every(t => t.team.length >= 5), `round ${k + 1}: team with ${Math.min(...l.map(t => t.team.length))} units`);
     });
-    ok(BOT_TEAMS.rounds.filter((l, k) => l[0].from === k).length >= BOT_TEAMS.rounds.length - 2, 'almost every round has its own samples');
+    // set 119: boss rounds are fixed (set 108: 5 10 15) → those cells have no samples and borrow the round before (never fought as a bot team)
+    const S = RUN_STAGE.settings; BOT_TEAMS.rounds.forEach((l, k) => { if (!bossRoundK(k + 1, S)) ok(l[0].from === k, `round ${k + 1} has its own samples`); });
   }],
   ['set 87: bot teams spread over tribes (every cell ≥ 5 main tribes · every tribe ≥ 12% of all teams)', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), all = {};
