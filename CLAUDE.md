@@ -30,6 +30,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Small things (text, colours, button position, internal code): decide and inform.
 - The user tunes character stats. New character: propose from the median table. Numbers in skills/rules: always ask first.
 - Unbalanced idea / loophole: warn directly first.
+- **Conflict check (user rule 7 Nov, set 118 — the user may mistype):** before acting on ANY request, compare it with the current docs/code (rules, settings, earlier decisions). If it contradicts or changes something already decided, STOP and tell the user first in Thai: what exists now (doc + rule id + set), what the request would change, and every side effect/clash it creates — then wait for confirmation. Never silently follow the new wording, never silently keep the old one.
 
 ## Docs (all under claude/)
 - Source of truth: claude/ docs > imported Balance Room values > Game Bible (non-conflicting parts). Not-yet-imported values are not real.

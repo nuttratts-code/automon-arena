@@ -1,4 +1,4 @@
-# Automon Arena handoff (English · updated 7 Nov 2026 set 117 · instructions V3.4)
+# Automon Arena handoff (English · updated 7 Nov 2026 set 117 · instructions V3.5)
 Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/archive/ (full pre-trim copy: archive/handoff-2026-10-30-full.md). User gets a Thai summary in chat at the end of each task set.
 
 ## Relay (two accounts take turns — rules in CLAUDE.md · full pre-trim block: archive/relay-2026-10-31.md)
@@ -67,7 +67,7 @@ Read by Claude every new chat. Keep ≤ 1 screen; move finished items to claude/
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.
 
 ## Doc versions
-combat-rules V3.0 · tribe-rules V2.1 · shop-merge-rules V8.0 · build-plan V1.47 · instructions V3.4 (Thai copy V3.4 · 5 Nov: unit tests pass before the one full gate · 2 Nov: merge on GATE PASS without asking) · ops-rules v1.3 · pending V1.2 · workflow V1.27 (publish V1.28 · measure V1.27 · botteams V1.25 · balance-import V1.31 · setup V1.28 · others V1.22) · backlog V2.0 · budget-notes V1.1 · measure-log V1.5 · match-tabs-spec V1.3 (done) · characters.csv 5 Nov
+combat-rules V3.0 · tribe-rules V2.1 · shop-merge-rules V8.0 · build-plan V1.47 · instructions V3.5 (Thai copy V3.4 · 5 Nov: unit tests pass before the one full gate · 2 Nov: merge on GATE PASS without asking) · ops-rules v1.3 · pending V1.2 · workflow V1.27 (publish V1.28 · measure V1.27 · botteams V1.25 · balance-import V1.31 · setup V1.28 · others V1.22) · backlog V2.0 · budget-notes V1.1 · measure-log V1.5 · match-tabs-spec V1.3 (done) · characters.csv 5 Nov
 
 ## Links (update existing, never create new · main account only)
 - game https://claude.ai/artifact/2HnrsoguqeWpBAj7BjxqDL · balance room https://claude.ai/artifact/6hWvgNcKtQmSmvWg4xrgdq (db: config/main ui/main ideas skillPicks results/latest simTeams) · check https://claude.ai/artifact/WTPqFrsDWwoifmdX3ZCJSC · runlog viewer (set 110, owned by the 2nd account rattanakon.ns — republish from that account; ARUN1 paste only, no db) https://claude.ai/artifact/4tUV1rUXepLJVCciniqUvq
