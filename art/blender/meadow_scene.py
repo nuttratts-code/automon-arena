@@ -181,7 +181,7 @@ M_TERR = mat_vcol('terrain', detail=35, nfac=.25)
 M_GRASS = mat_vcol('grass', detail=2, nfac=.15, trans=.3)
 M_FLOWER = mat_vcol('flower', detail=1, nfac=.05)
 M_LEAF = mat_foliage('leaf', (0.13, 0.30, 0.08), (0.48, 0.66, 0.20))
-M_LEAF_FAR = mat_foliage('leaf_far', (0.12, 0.26, 0.12), (0.30, 0.48, 0.18), 1.2)
+M_LEAF_FAR = mat_foliage('leaf_far', (0.20, 0.36, 0.16), (0.40, 0.58, 0.24), 1.2)
 M_BUSH = mat_foliage('bush', (0.10, 0.26, 0.06), (0.36, 0.56, 0.14), 4)
 M_BARK = mat_plain('bark', (0.30, 0.22, 0.15))
 M_ROCK = mat_plain('rock', (0.55, 0.54, 0.50))
@@ -218,6 +218,8 @@ def blades(N):
     _, dirt = ground_color(x, y, np.zeros_like(x))
     rv = np.exp(-(poly_dist(x, y, RIVER) / 2.6) ** 2)
     view = np.abs(x) < (y + 22) * 0.62
+    eb = (x / CLEAR_R[0]) ** 2 + ((y - CLEAR_C[1]) / CLEAR_R[1]) ** 2
+    view &= rng.random(N) < sstep(.75, 1.25, eb)          # board area stays clear
     keep = (rng.random(N) < (1 - dirt) * (1 - rv) * 0.95) & view
     keep &= rng.random(N) < np.clip(1.25 - (y + 8) / 50, 0.25, 1)
     x, y = x[keep], y[keep]
@@ -244,10 +246,10 @@ def flowers(N):
     x, y = scatter(N, -34, 34, -8, 30)
     _, dirt = ground_color(x, y, np.zeros_like(x))
     patch = fbm(x * .15, y * .15, 61)
-    keep = (dirt < .2) & (patch > .52) & (np.abs(x) < (y + 22) * 0.62)
+    keep = (dirt < .1) & (patch > .62) & (rng.random(len(x)) < .5) & (np.abs(x) < (y + 22) * 0.62)
     x, y = x[keep], y[keep]; m = len(x)
     z = height(x, y) + rng.uniform(.25, .55, m)
-    s = rng.uniform(.06, .11, m) * (1 + 0.8 * sstep(-6, -2, -y))
+    s = rng.uniform(.04, .075, m) * (1 + 0.6 * sstep(-6, -2, -y))
     pal = np.array([[1.0, .85, .25], [.98, .96, .9], [.72, .45, .95], [1.0, .55, .6], [1.0, .7, .2]])
     c = pal[rng.integers(0, len(pal), m)] ** 2.2
     off = np.array([[0, 0, 1], [1, 0, 0], [0, 0, -1], [-1, 0, 0], [0, 1, 0], [0, -1, 0]], float)
@@ -258,7 +260,7 @@ def flowers(N):
     ob.data.materials.append(M_FLOWER)
 
 nbl = blades(30000 if FAST else 900000)
-flowers(3000 if FAST else 60000)
+flowers(3000 if FAST else 30000)
 
 # ---------------- trees, bushes, rocks ----------------
 cloud_tex = bpy.data.textures.new('clouds', 'CLOUDS'); cloud_tex.noise_scale = 0.9
@@ -292,7 +294,7 @@ xs = rng.uniform(-420, 420, 2400); ys = 60 + rng.uniform(0, 1, 2400) ** 1.5 * 48
 ok = (np.abs(xs) < (ys + 20) * 0.75) & (fbm(xs * .02, ys * .02, 41) > .40) & (poly_dist(xs, ys, RIVER) > 5) & (poly_dist(xs, ys, ROAD) > 6)
 cnt = 0
 for x, y in zip(xs[ok], ys[ok]):
-    if cnt >= (150 if FAST else 700): break
+    if cnt >= (120 if FAST else 300): break
     z = float(height(np.array(x), np.array(y))); s = rng.uniform(1.4, 3.0)
     blob('ftree', (x, y, z + s * .55), s, M_LEAF_FAR, sub=2, disp=.35, sq=.95)
     for j in range(2): blob('ftree', (x + rng.uniform(-1.6, 1.6) * s, y + rng.uniform(-1, 1) * s, z + s * .4), s * rng.uniform(.6, .9), M_LEAF_FAR, sub=2, disp=.35, sq=.9); cnt += 1
