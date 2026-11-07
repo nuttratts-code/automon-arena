@@ -16,3 +16,5 @@ Side effects (all options):
 - bots sell too (core/bot.js) → bot teams must be regenerated (botgen, new hash) and the G3 economy measure is stale.
 - copies with paid 0 (rune เงา) / fast merge rune (2 copies) / buy+merge: refund floors at 0.
 - S line 14 (sell + rebuy loop) stays valid; sell skills (fireShopSkill) unchanged.
+
+## DECISION (user 7 Nov, set 127): option A. Build next chat (see review-2026-11-07-system-compare.md DECISIONS).
