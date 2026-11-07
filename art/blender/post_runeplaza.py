@@ -51,7 +51,36 @@ cc = cs + (cw - cs) * lit[..., None]
 edge = (sstep(.0, .5, dens) * (1 - sstep(.5, 1., dens)))[..., None]
 cc = cc + (warm - cc) * edge * (1 - lit[..., None]) * .55   # pink/gold rims
 cc = cc + (hor - cc) * (1 - up)[..., None] ** 6 * .5      # clouds fade into haze near horizon
-sky = sky + (cc - sky) * dens[..., None] * .95
+sky = sky + (cc - sky) * dens[..., None] * .35          # thin far streaks only
+# big puffy cumulus: clusters of soft blobs with flat bases, lit from the upper left, pink/gold underside
+sc_ = W / 1600
+field = np.zeros((H, W), np.float32); base_y = np.zeros((H, W), np.float32)
+crng = np.random.default_rng(21)
+CL = [(.10, .15, 150), (.36, .06, 125), (.58, .19, 90), (.78, .07, 165), (.97, .18, 120)]
+for (cxf, cyf, R) in CL:
+    R *= sc_; cx = cxf * W; cy = cyf * H + R * .35
+    f = np.zeros((H, W), np.float32)
+    for k in range(70):
+        bx = cx + crng.normal(0, R * 1.1); by = cy - abs(crng.normal(0, R * .5)) - R * .1
+        br = R * crng.uniform(.18, .42) * (1.2 - abs(bx - cx) / (R * 3))
+        if br <= R * .14: continue
+        x0, x1 = int(max(0, bx - br * 2)), int(min(W, bx + br * 2)); y0, y1 = int(max(0, by - br * 2)), int(min(H, by + br * 2))
+        if x0 >= x1 or y0 >= y1: continue
+        d2 = ((xx[y0:y1, x0:x1] - bx) ** 2 + (yy[y0:y1, x0:x1] - by) ** 2) / br ** 2
+        f[y0:y1, x0:x1] += np.exp(-d2 * 1.6) * .55
+    f *= sstep(cy + R * .12, cy - R * .25, yy)                      # flat underside
+    upd = f > field; base_y = np.where(upd, cy, base_y); field = np.maximum(field, f)
+det = fbm(xx / (22 * sc_), yy / (22 * sc_), 70, 5)
+cd = sstep(.36, .56, field + (det - .5) * .55)
+cd = cd * sstep(.18, .32, field)
+lightf = np.roll(np.roll(field + (det - .5) * .45, 9, 0), 12, 1)  # sample toward the upper-left light
+litc = np.clip(.55 + (field + (det - .5) * .45 - lightf) * 3.2, 0, 1)
+under = np.clip(1 - (base_y - yy) / (90 * sc_), 0, 1) * (base_y > 0)
+c_lit = np.array([1.0, .98, .93]); c_sh = np.array([.62, .66, .80]); c_warm = np.array([1.0, .86, .78])
+ccol = c_sh + (c_lit - c_sh) * litc[..., None]
+ccol = ccol + (c_warm - ccol) * (under ** 1.5)[..., None] * .4
+ccol = ccol + (hor - ccol) * (1 - up)[..., None] ** 4 * .4
+sky = sky + (ccol - sky) * cd[..., None]
 sky = np.clip(sky, 0, 1)
 
 img = rgb * alpha + sky * (1 - alpha)                    # render is straight alpha

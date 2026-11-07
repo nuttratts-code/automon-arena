@@ -75,6 +75,12 @@ def ground_color(x, y, h):
     c = c + (np.array([0.20, 0.47, 0.18]) - c) * far * .7
     worn = (1 - sstep(PR - .2, PR + 2.2, pr(x, y) + (fbm(x * .4, y * .4, 33) - .5) * 1.5))[..., None]
     c = c + (np.array([0.50, 0.44, 0.30]) - c) * worn * .45            # trodden ring round the plaza
+    dry = sstep(.6, .78, fbm(x * .09, y * .09, 91))[..., None] * (1 - worn)
+    c = c + (np.array([0.70, 0.62, 0.32]) - c) * dry * .45
+    forest = sstep(.53, .62, fbm(x * .012, y * .012, 41))[..., None] * np.clip((y - 110) / 60, 0, 1)[..., None]
+    c = c + (np.array([0.10, 0.24, 0.09]) - c) * forest * .8
+    shade = sstep(.52, .7, fbm(x * .004 + 3.1, y * .004, 97))[..., None] * np.clip((y - 50) / 80, 0, 1)[..., None]
+    c = c * (1 - shade * .4)
     rock = sstep(.6, .8, fbm(x * .015, y * .015, 37))[..., None] * np.clip((h - 30) / 60, 0, 1)[..., None]
     c = c + (np.array([0.46, 0.48, 0.50]) - c) * rock
     return np.clip(c, 0, 1) ** 2.2
@@ -115,6 +121,14 @@ def haze_wrap(nt, bsdf_out, near=90, far=2000, maxf=0.82, pw=0.85):
     mr = nt.nodes.new('ShaderNodeMapRange'); mr.inputs[1].default_value = near; mr.inputs[2].default_value = far
     mr.inputs[3].default_value = 0; mr.inputs[4].default_value = maxf
     nt.links.new(cam.outputs['View Distance'], mr.inputs[0])
+    gpos = nt.nodes.new('ShaderNodeNewGeometry'); gsep = nt.nodes.new('ShaderNodeSeparateXYZ')
+    nt.links.new(gpos.outputs['Position'], gsep.inputs[0])
+    mz = nt.nodes.new('ShaderNodeMapRange'); mz.inputs[1].default_value = -24; mz.inputs[2].default_value = -2
+    mz.inputs[3].default_value = .55; mz.inputs[4].default_value = 0
+    nt.links.new(gsep.outputs['Z'], mz.inputs[0])
+    mxm = nt.nodes.new('ShaderNodeMath'); mxm.operation = 'MAXIMUM'
+    nt.links.new(mr.outputs[0], mxm.inputs[0]); nt.links.new(mz.outputs[0], mxm.inputs[1])
+    mr = mxm
     pwn = nt.nodes.new('ShaderNodeMath'); pwn.operation = 'POWER'; pwn.inputs[1].default_value = pw
     nt.links.new(mr.outputs[0], pwn.inputs[0])
     em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*HAZE, 1); em.inputs['Strength'].default_value = 1.1
@@ -142,13 +156,13 @@ def mat_vcol(name, detail=40.0, rough=0.95, nfac=0.3, trans=0.0):
         nt.links.new(out, ms.inputs[1]); nt.links.new(tr.outputs[0], ms.inputs[2]); out = ms.outputs[0]
     haze_wrap(nt, out); return m
 
-GLOW = (0.30, 0.78, 1.0)
+GLOW = (0.10, 0.52, 1.0)
 def mat_plaza():
     """vertex colour slabs + faint rune-blue glow in the carved cell rings (attribute 'glow')."""
     m = bpy.data.materials.new('plaza'); m.use_nodes = True; nt = m.node_tree; b = nt.nodes['Principled BSDF']
     c = vcol_node(nt, 18, .22); nt.links.new(c, b.inputs['Base Color']); b.inputs['Roughness'].default_value = .9
     g = nt.nodes.new('ShaderNodeAttribute'); g.attribute_name = 'glow'; g.attribute_type = 'GEOMETRY'
-    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*GLOW, 1); em.inputs['Strength'].default_value = 2.2
+    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*GLOW, 1); em.inputs['Strength'].default_value = 1.5
     ad = nt.nodes.new('ShaderNodeAddShader')
     mul = nt.nodes.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = 1.0
     nt.links.new(g.outputs['Fac'], mul.inputs[0])
@@ -189,7 +203,7 @@ def mat_stone(name, base=(0.58, 0.57, 0.53), moss=(0.36, 0.48, 0.16), mossamt=.5
 def mat_glow():
     m = bpy.data.materials.new('rune'); m.use_nodes = True; nt = m.node_tree
     nt.nodes.remove(nt.nodes['Principled BSDF'])
-    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*GLOW, 1); em.inputs['Strength'].default_value = 7
+    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (*GLOW, 1); em.inputs['Strength'].default_value = 3.2
     haze_wrap(nt, em.outputs[0]); return m
 
 M_TERR = mat_vcol('terrain', detail=35, nfac=.22)
@@ -270,7 +284,10 @@ def plaza():
     glow = glow * (1 - crack * .6)
     Z = height(X, Y) + .09 - groove * .035 - crack * .03 + (fbm(X * 3, Y * 3, 83) - .5) * .015 \
         + (tone - .5)[...] * .02
-    keep = R < PR
+    sr = pr(SEEDS[:, 0], SEEDS[:, 1]); gone = (sr > PR - 1.4) & (np.random.default_rng(9).random(len(SEEDS)) < .16)
+    gone &= ~((SEEDS[:, 1] < PC[1] - PR + 3) & (np.abs(SEEDS[:, 0]) < 4))
+    keep = (R < PR) & ~gone[sid]
+    global MISSING; MISSING = gone
     verts = np.stack([X, Y, Z], -1).reshape(-1, 3)
     faces = grid_faces(n, n)
     kf = keep.ravel()[faces].all(1); faces = faces[kf]
@@ -313,35 +330,72 @@ def glyph_mesh(strokes, scale, w=.075, dep=.12):
 cloud_tex = bpy.data.textures.new('clouds', 'CLOUDS'); cloud_tex.noise_scale = 0.7
 CAM = None   # set below; stones face a point between the camera and the plaza centre
 
+voro_tex = bpy.data.textures.new('vor', 'VORONOI'); voro_tex.noise_scale = 1.3
+
+def stone_mesh(h, w, d, r, broken=False):
+    """irregular weathered monolith: 10-sided rings with per-vertex noise, flat worked front (-y), rounded/slanted top."""
+    NS, NZ = 12, 16
+    ang = np.linspace(0, 2 * np.pi, NS, endpoint=False) + r.uniform(0, .3)
+    jit = r.normal(0, .07, (NZ + 1, NS))
+    for _ in range(3): jit = (jit + np.roll(jit, 1, 0) + np.roll(jit, -1, 0)) / 3   # smooth along height
+    drift = np.cumsum(r.normal(0, .025, (NZ + 1, 2)), 0) * w
+    slant = r.uniform(-.45, .45); topz = np.ones(NS)
+    if broken: topz = 1 + r.uniform(-.25, .1, NS)
+    verts = []
+    for k in range(NZ + 1):
+        t = k / NZ
+        taper = 1 - .3 * t ** 1.4 + .08 * (1 - t) ** 6                  # wider foot
+        rnd = math.sqrt(max(0.0, 1 - ((t - .8) / .2) ** 2)) if t > .8 else 1.0
+        s = taper * max(rnd, .22)
+        x = np.cos(ang) * w / 2 * s * (1 + jit[k]); y = np.sin(ang) * d / 2 * s * (1 + jit[k] * .6)
+        y = np.maximum(y, -d / 2 * s * .78)                               # flatter front face for the runes
+        z = t * h * (topz if broken and k == NZ else 1) + slant * x * t ** 3
+        for i in range(NS): verts.append((x[i] + drift[k, 0], y[i] + drift[k, 1], float(z[i] if np.ndim(z) else z)))
+    tc = len(verts); top = np.mean(np.array(verts[-NS:]), 0); verts.append((top[0], top[1], top[2] + h * .015))
+    bc = len(verts); verts.append((drift[0, 0], drift[0, 1], 0))
+    faces = []
+    for k in range(NZ):
+        for i in range(NS):
+            a = k * NS + i; b = k * NS + (i + 1) % NS
+            faces.append([a, b, b + NS, a + NS])
+    for i in range(NS):
+        faces.append([NZ * NS + i, NZ * NS + (i + 1) % NS, tc, tc]); faces.append([(i + 1) % NS, i, bc, bc])
+    faces = [f[:3] if f[2] == f[3] else f for f in faces]
+    quads = [f for f in faces if len(f) == 4]; tris = [f for f in faces if len(f) == 3]
+    return np.array(verts), quads, tris
+
+def build_poly(name, verts, quads, tris):
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(v) for v in verts], [], [tuple(f) for f in quads + tris]); me.update()
+    ob = bpy.data.objects.new(name, me); sc.collection.objects.link(ob); return ob
+
 def standing_stone(x, y, h, w, d, seed, glyphs=(), face_to=(0, -26), lean=(0, 0), mat=None, broken=False):
     r = np.random.default_rng(seed)
-    z = float(height(x, y)) - .4
-    tw = r.uniform(.6, .8); td = r.uniform(.7, .9); slant = r.uniform(-.35, .35) * w
-    v = [(-w / 2, -d / 2, 0), (w / 2, -d / 2, 0), (w / 2, d / 2, 0), (-w / 2, d / 2, 0),
-         (-w / 2 * tw, -d / 2 * td, h + slant), (w / 2 * tw, -d / 2 * td, h - slant),
-         (w / 2 * tw, d / 2 * td, h - slant * .6), (-w / 2 * tw, d / 2 * td, h + slant * .6)]
-    if broken: v[4:] = [(a, b, c * .55 + r.uniform(-.3, .3)) for (a, b, c) in v[4:]]
-    f = np.array([[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]])
-    ob = build_mesh('stone', np.array(v), f, smooth=False)
-    ob.data.materials.append(mat or M_STONE)
-    bv = ob.modifiers.new('b', 'BEVEL'); bv.width = min(w, d) * .18; bv.segments = 3
-    ss = ob.modifiers.new('s', 'SUBSURF'); ss.levels = ss.render_levels = 1 if FAST else 3
-    dm = ob.modifiers.new('d', 'DISPLACE'); dm.texture = cloud_tex; dm.strength = .16; dm.mid_level = .5
-    dm.texture_coords = 'OBJECT'
+    v, q, t = stone_mesh(h, w, d, r, broken)
+    ob = build_poly('stone', v, q, t); ob.data.materials.append(mat or M_STONE)
+    ss = ob.modifiers.new('s', 'SUBSURF'); ss.levels = ss.render_levels = 1 if FAST else 2
+    d1 = ob.modifiers.new('d1', 'DISPLACE'); d1.texture = voro_tex; d1.strength = .16; d1.mid_level = .5; d1.texture_coords = 'OBJECT'
+    d2 = ob.modifiers.new('d2', 'DISPLACE'); d2.texture = cloud_tex; d2.strength = .05; d2.mid_level = .5; d2.texture_coords = 'OBJECT'
+    for p in ob.data.polygons: p.use_smooth = True
+    z = float(height(x, y)) - .5
     ob.location = (x, y, z)
     ang = math.atan2(face_to[1] - y, face_to[0] - x) + math.pi / 2   # local -y faces the target
     ob.rotation_euler = (lean[0], lean[1], ang)
-    for o in bpy.context.view_layer.objects: o.select_set(False)
-    ob.select_set(True); bpy.context.view_layer.objects.active = ob; bpy.ops.object.shade_smooth()
-    # glyph column on the front face
-    hh = h if not broken else h * .5
-    gs = min(w * tw * .6, 1.0); top = hh - gs * 1.25
+    if not glyphs: return ob
+    dg = bpy.context.evaluated_depsgraph_get(); ev = ob.evaluated_get(dg)
+    def front(u, vz):
+        ok, loc, nor, _ = ev.ray_cast(Vector((u, -5.0, vz)), Vector((0, 1, 0)))
+        return loc.y if ok else -d / 2
+    hh = h * (.7 if broken else 1)
+    gs = min(w * .45, .95); top = hh * .86 - gs
     for k, gi in enumerate(glyphs):
-        vz = top - k * gs * 1.32
-        if vz < .6: break
-        gv, gf = glyph_mesh(GLYPHS[gi], gs)
-        fr = vz / h; fy = -(d / 2) * (1 - fr) - (d / 2 * td) * fr - .02
-        gv = gv + np.array([0, fy, vz])
+        vz = top - k * gs * 1.3
+        if vz < .7: break
+        gv, gf = glyph_mesh(GLYPHS[gi], gs, w=.09, dep=.06)
+        cx = float(np.mean(np.array(v)[:, 0])) * 0
+        gv[:, 2] += vz
+        for i in range(len(gv)):                                       # stick each stroke vertex to the stone face
+            fy = front(gv[i, 0], gv[i, 2]); gv[i, 1] = fy + (-.05 if gv[i, 1] < 0 else .12)
         g = build_mesh('rune', gv, gf, smooth=False); g.data.materials.append(M_RUNE)
         g.parent = ob
     return ob
@@ -350,53 +404,121 @@ def standing_stone(x, y, h, w, d, seed, glyphs=(), face_to=(0, -26), lean=(0, 0)
 # no stone covers a board cell. Front corners are pushed far out to frame the picture.
 STONES = [
     # x, y, h, w, d, glyphs
-    (-17.0, 8.0, 6.6, 2.1, 1.3, (0, 3)),
-    (-12.6, 15.2, 8.2, 2.5, 1.5, (2, 5, 1)),
-    (-8.4, 17.2, 4.0, 1.5, 1.1, (6,)),
-    (-4.2, 19.5, 2.6, 1.3, 1.0, ()),
-    (10.4, 17.4, 4.2, 1.4, 1.0, (4,)),
-    (16.2, 13.2, 7.6, 2.2, 1.35, (5, 0, 3)),
-    (-15.2, -2.0, 6.8, 2.3, 1.4, (1,)),      # front-left frame stone (pushed out)
-    (15.6, -3.0, 6.2, 2.1, 1.3, ()),       # front-right frame stone (pushed out)
+    (-17.0, 8.0, 6.6, 2.3, 1.5, (0, 3)),
+    (-12.6, 15.2, 8.0, 2.7, 1.7, (2, 5, 1)),
+    (-8.4, 17.2, 4.2, 1.8, 1.3, (6,)),
+    (-4.2, 19.5, 2.6, 1.6, 1.2, ()),
+    (10.4, 17.4, 4.4, 1.8, 1.3, (4,)),
+    (16.2, 13.2, 7.4, 2.5, 1.6, (5, 0, 3)),
+    (-15.2, -2.0, 6.8, 2.5, 1.6, (1,)),    # front-left frame stone (pushed out)
+    (15.6, -3.0, 6.2, 2.3, 1.5, ()),       # front-right frame stone (pushed out)
 ]
 for i, (x, y, h, w, d, g) in enumerate(STONES):
-    standing_stone(x, y, h, w, d, 40 + i, g, face_to=(PC[0] * .3, -30), lean=(rng.uniform(-.05, .05), rng.uniform(-.06, .06), 0),
+    standing_stone(x, y, h, w, d, 40 + i, g, face_to=(PC[0] * .3, -30), lean=(rng.uniform(-.07, .07), rng.uniform(-.09, .09), 0),
                    mat=M_STONE if i % 3 else M_STONE2)
-# a broken stone and a fallen one with runes (foreground right / back right)
-standing_stone(13.0, -10.5, 2.2, 1.6, 1.1, 60, (3,), face_to=(-2, -30), broken=True, mat=M_STONE2)
-fallen = standing_stone(9.0, 19.5, 3.6, 1.2, .9, 61, (), face_to=(0, -30))
-fallen.rotation_euler = (math.radians(84), 0, math.radians(-12)); fallen.location.z = float(height(9, 19.5)) + .45
-# boulders
+standing_stone(13.0, -10.5, 2.4, 1.9, 1.3, 60, (3,), face_to=(-2, -30), broken=True, mat=M_STONE2)
+fallen = standing_stone(9.0, 19.5, 3.8, 1.6, 1.1, 61, (), face_to=(0, -30), mat=M_STONE2)
+fallen.rotation_euler = (math.radians(84), math.radians(6), math.radians(-12)); fallen.location.z = float(height(9, 19.5)) + .35
 def boulder(x, y, r, sq=.6, seed=0):
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1 if FAST else 3, radius=r, location=(x, y, float(height(x, y)) + r * .15))
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1 if FAST else 3, radius=r, location=(x, y, float(height(x, y)) + r * .1))
     o = bpy.context.object; o.scale.z = sq; o.rotation_euler.z = seed
-    md = o.modifiers.new('d', 'DISPLACE'); md.texture = cloud_tex; md.strength = r * .4; md.mid_level = .5
+    md = o.modifiers.new('d', 'DISPLACE'); md.texture = voro_tex; md.strength = r * .35; md.mid_level = .5
+    md2 = o.modifiers.new('d2', 'DISPLACE'); md2.texture = cloud_tex; md2.strength = r * .25; md2.mid_level = .5
     o.data.materials.append(M_STONE2); bpy.ops.object.shade_smooth(); return o
 for i, (x, y, r) in enumerate([(-17.5, -4.0, .8), (-14.5, -7.5, .45), (-25, 12, 1.2), (-27.5, 14.5, .7), (14.0, -9.5, .5),
                                 (24, 8, 1.0), (19.5, 18, .7), (-4.5, 21, .55), (6.5, 22.5, .9), (-13.5, -11, .35),
-                                (-31, 22, 1.5), (30, 26, 1.3), (12.5, -2.5, .3), (-12.8, -1.5, .28)]):
+                                (-31, 22, 1.5), (30, 26, 1.3), (12.5, -2.5, .3), (-12.8, -1.5, .28),
+                                (-16.4, 6.6, .5), (-11.3, 14.0, .45), (15.0, 12.0, .55), (17.3, 14.6, .35), (-14.0, -1.0, .4)]):
     boulder(x, y, r, seed=i)
+# rubble: broken slab chips round the plaza edge
+for i in range(10 if FAST else 34):
+    a = rng.uniform(0, 2 * math.pi); rr = rng.uniform(PR - .8, PR + 3.5)
+    x = PC[0] + math.cos(a) * rr; y = PC[1] + math.sin(a) * rr
+    if y < -4 and abs(x) < 9: continue
+    s = rng.uniform(.25, .7)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(x, y, float(height(x, y)) + .05),
+                                    rotation=(rng.uniform(-.3, .3), rng.uniform(-.3, .3), rng.uniform(0, 3)))
+    o = bpy.context.object; o.scale = (s * rng.uniform(.8, 1.6), s, s * .28)
+    bv = o.modifiers.new('b', 'BEVEL'); bv.width = .05; bv.segments = 2
+    o.data.materials.append(M_STONE2)
 
-# ---------------- ruined arch on the far hill (landmark) ----------------
-def box(cx, cy, cz, sx, sy, sz, rz=0, mat=M_STONE):
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, cz), rotation=(0, 0, rz)); o = bpy.context.object
-    o.scale = (sx, sy, sz); o.data.materials.append(mat); return o
-az = float(height(ARCH[0], ARCH[1])) - .5
-AW, AH, AT = 9.0, 13.0, 2.6
-box(ARCH[0] - AW / 2, ARCH[1], az + AH / 2, AT, AT * .9, AH, mat=M_STONE)
-box(ARCH[0] + AW / 2, ARCH[1], az + AH * .42, AT, AT * .9, AH * .84, mat=M_STONE)
-for k in range(6):                                                   # arch voussoirs (right end broken off)
-    a = math.radians(180 - k * 26); ra = AW / 2
-    box(ARCH[0] + math.cos(a) * ra, ARCH[1], az + AH + math.sin(a) * ra * .8, AT * 1.05, AT * .85, AT * .8, mat=M_STONE)
-box(ARCH[0] - AW / 2 - 6, ARCH[1] + 3, az + 1.6, 2.4, 2.2, 3.4, mat=M_STONE2)   # stub wall
-box(ARCH[0] + AW / 2 + 4, ARCH[1] - 2, az + .8, 3.0, 2.0, 1.6, .5, mat=M_STONE2)
+# ---------------- ruined arch on the far hill (landmark): stacked blocks + wedge arch + broken wall ----------------
+def block(cx, cy, cz, sx, sy, sz, rx=0.0, ry=0.0, rz=0.0, mat=None):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, cz), rotation=(rx, ry, rz)); o = bpy.context.object
+    o.scale = (sx, sy, sz); bv = o.modifiers.new('b', 'BEVEL'); bv.width = .18; bv.segments = 2
+    md = o.modifiers.new('d', 'DISPLACE'); md.texture = cloud_tex; md.strength = .15; md.mid_level = .5
+    o.data.materials.append(mat or M_STONE); return o
+
+def wedge(cx, cz, cy, ri, ro, a0, a1, dep, mat=None):
+    pts = []
+    for a in (a0, a1):
+        for rr in (ri, ro):
+            for yy in (-dep / 2, dep / 2):
+                pts.append((cx + math.cos(a) * rr, cy + yy, cz + math.sin(a) * rr))
+    me = bpy.data.meshes.new('wedge')
+    f = [(0, 2, 3, 1), (4, 5, 7, 6), (0, 1, 5, 4), (2, 6, 7, 3), (0, 4, 6, 2), (1, 3, 7, 5)]
+    me.from_pydata(pts, [], f); me.update()
+    o = bpy.data.objects.new('wedge', me); sc.collection.objects.link(o)
+    bv = o.modifiers.new('b', 'BEVEL'); bv.width = .14; bv.segments = 2
+    o.data.materials.append(mat or M_STONE); return o
+
+ar = np.random.default_rng(7)
+ax, ay = ARCH; az = float(height(ax, ay)) - .8
+AW, AT, BH = 8.0, 2.2, 1.55            # opening width, pillar thickness, block height
+NB = 6                                 # blocks per pillar
+for side in (-1, 1):
+    px = ax + side * (AW / 2 + AT / 2)
+    for k in range(NB):
+        block(px + ar.uniform(-.12, .12), ay + ar.uniform(-.1, .1), az + BH * (k + .5), AT * ar.uniform(.95, 1.08), AT * .95, BH * .97,
+              rz=ar.uniform(-.04, .04), mat=M_STONE if k % 2 else M_STONE2)
+spring = az + BH * NB; ri = AW / 2; ro = AW / 2 + AT
+NW = 9
+for k in range(NW):                                       # full semicircle of voussoirs
+    a0 = math.pi * k / NW + .012; a1 = math.pi * (k + 1) / NW - .012
+    wedge(ax, spring, ay, ri, ro, a0, a1, AT * .95, M_STONE if k % 2 else M_STONE2)
+block(ax, ay, spring + ro + .45, AT * 1.1, AT * .95, .9, mat=M_STONE2)        # cap stone
+# broken wall running left from the arch, stepping down; a few fallen blocks on the right
+for j in range(5):
+    hgt = max(1, 4 - j - (j % 2))
+    for k in range(hgt):
+        block(ax - AW / 2 - AT - 1.2 - j * 2.2 + ar.uniform(-.1, .1), ay + .3, az + BH * (k + .5), 2.1, AT * .85, BH * .96,
+              rz=ar.uniform(-.05, .05), mat=M_STONE2)
+for j in range(4):
+    bx = ax + AW / 2 + AT + 2 + j * 1.9 + ar.uniform(-.5, .5); by = ay + ar.uniform(-3, 2)
+    block(bx, by, float(height(bx, by)) - .1, 2.0, AT * .9, BH, rx=ar.uniform(-.3, .3), ry=ar.uniform(-.4, .4), rz=ar.uniform(0, 3), mat=M_STONE2)
+
+# ---------------- distant trees on the hills (clumps where the forest patches are) ----------------
+M_TREE = bpy.data.materials.new('tree'); M_TREE.use_nodes = True
+_b = M_TREE.node_tree.nodes['Principled BSDF']; _b.inputs['Base Color'].default_value = (0.05, 0.13, 0.04, 1); _b.inputs['Roughness'].default_value = .9
+haze_wrap(M_TREE.node_tree, _b.outputs[0])
+# one mesh of many small low-poly crowns, packed in clusters on the forest patches (reads as woods, not balls)
+xs = rng.uniform(-700, 700, 20000); ys = 130 + rng.uniform(0, 1, 20000) ** 1.2 * 600
+ok = (np.abs(xs) < (ys + 20) * 0.8) & (fbm(xs * .012, ys * .012, 41) > .56) & (np.hypot(xs - ARCH[0], ys - ARCH[1]) > 35)
+cxs, cys = xs[ok][:140], ys[ok][:140]
+TV = []; TF = []
+ico = np.array([[0, 0, 1], [.89, 0, .45], [.28, .85, .45], [-.72, .53, .45], [-.72, -.53, .45], [.28, -.85, .45],
+                [.72, .53, -.45], [-.28, .85, -.45], [-.89, 0, -.45], [-.28, -.85, -.45], [.72, -.53, -.45], [0, 0, -1]])
+icof = np.array([[0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5], [0, 5, 1], [1, 6, 2], [2, 7, 3], [3, 8, 4], [4, 9, 5], [5, 10, 1],
+                 [6, 7, 2], [7, 8, 3], [8, 9, 4], [9, 10, 5], [10, 6, 1], [11, 7, 6], [11, 8, 7], [11, 9, 8], [11, 10, 9], [11, 6, 10]])
+for cx, cy in zip(cxs, cys):
+    n = int(rng.integers(12, 40)) if not FAST else 8
+    tx = cx + rng.normal(0, 9, n); ty = cy + rng.normal(0, 6, n)
+    for x, y in zip(tx, ty):
+        z = float(height(x, y)); s = rng.uniform(1.3, 2.4)
+        v = ico * np.array([s, s, s * 1.3]) * rng.uniform(.85, 1.15, (12, 3)) + np.array([x, y, z + s * 1.0])
+        TF.append(icof + len(TV) * 12); TV.append(v)
+if TV:
+    tob = build_mesh('woods', np.concatenate(TV), np.concatenate(TF), smooth=False); tob.data.materials.append(M_TREE)
 
 # ---------------- grass blades + flowers ----------------
 def blades(N):
     x = rng.uniform(-46, 46, N); y = rng.uniform(-16, 48, N)
     view = np.abs(x) < (y + 30) * 0.72
     r = pr(x, y)
-    view &= rng.random(N) < sstep(PR - .3, PR + 1.6, r)               # plaza stays clear; tufts creep on the edge
+    inner = r < PR
+    hole = np.zeros(N, bool); ii = np.where(inner & (r > PR - 3))[0]
+    if len(ii): hole[ii] = MISSING[voronoi(x[ii], y[ii])[2]]
+    view &= (rng.random(N) < sstep(PR - .3, PR + 1.6, r)) | (hole & (rng.random(N) < .8))   # plaza clear except lost slabs
     keep = view & (rng.random(N) < np.clip(1.25 - (y + 14) / 70, 0.25, 1))
     x, y = x[keep], y[keep]
     z = height(x, y); gc = ground_color(x, y, z)
@@ -404,7 +526,7 @@ def blades(N):
     bx = np.repeat(x, K) + rng.normal(0, .12, m * K); by = np.repeat(y, K) + rng.normal(0, .12, m * K)
     bz = np.repeat(z, K) - 0.03
     ang = rng.uniform(0, math.pi, m * K); w = rng.uniform(.05, .09, m * K) * 0.5
-    big = np.repeat(1 + 0.8 * sstep(-6, -12, y), K)                   # taller tufts at the very front
+    big = np.repeat(1 + 1.4 * sstep(-6, -14, y), K)                   # taller tufts at the very front
     hgt = rng.uniform(.2, .48, m * K) * big * np.repeat(0.8 + 0.5 * fbm(x * .2, y * .2, 51), K)
     lean = rng.normal(0, .07, (m * K, 2))
     p0 = np.c_[bx + np.cos(ang) * w, by + np.sin(ang) * w, bz]
@@ -412,7 +534,8 @@ def blades(N):
     p2 = np.c_[bx + lean[:, 0], by + lean[:, 1], bz + hgt]
     verts = np.stack([p0, p1, p2], 1).reshape(-1, 3)
     faces = np.arange(m * K * 3).reshape(-1, 3)
-    g = np.repeat(gc ** (1 / 2.2), K, axis=0) * rng.uniform(.85, 1.15, (m * K, 1))
+    g = np.repeat(gc ** (1 / 2.2), K, axis=0) * rng.uniform(.78, 1.18, (m * K, 1)) * rng.uniform(.92, 1.08, (m * K, 3))
+    dryb = rng.random(m * K) < .12; g[dryb] = g[dryb] * .4 + np.array([.62, .56, .30]) * .6
     base = (g * .45) ** 2.2; tip = np.clip(g * 1.25 + np.array([.06, .05, 0]), 0, 1) ** 2.2
     cols = np.stack([base, base, tip], 1).reshape(-1, 3)
     ob = build_mesh('grass', verts, faces, np.c_[cols, np.ones(len(cols))], smooth=False)
@@ -437,9 +560,32 @@ def flowers(N):
 nbl = blades(30000 if FAST else 1000000)
 flowers(4000 if FAST else 40000)
 
+def front_flowers(N):
+    # clustered wildflowers along the bottom edge: squashed heads on thin stems
+    cx = rng.uniform(-24, 24, 26); cy = rng.uniform(-16, -7, 26)
+    k = rng.integers(0, 26, N); x = cx[k] + rng.normal(0, .9, N); y = cy[k] + rng.normal(0, .6, N)
+    keep = (np.abs(x) < (y + 30) * .72) & ~((np.abs(x) < 8) & (y > -9))
+    x, y, k = x[keep], y[keep], k[keep]; m = len(x)
+    z = height(x, y); hs = rng.uniform(.35, .7, m)
+    pal = np.array([[1.0, .82, .16], [1.0, .86, .30], [.70, .42, .92], [.98, .95, .88], [1.0, .55, .72]])
+    c = pal[np.array([0, 1, 2, 3, 4, 0, 1, 2])[k % 8]] ** 2.2 * rng.uniform(.85, 1.1, (m, 1))
+    s = rng.uniform(.09, .15, m)
+    off = np.array([[0, 0, .5], [1, 0, 0], [0, 0, -.5], [-1, 0, 0], [0, 1, 0], [0, -1, 0]], float)
+    hv = (np.c_[x, y, z + hs][:, None, :] + off[None] * s[:, None, None]).reshape(-1, 3)
+    oct_f = np.array([[0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4], [1, 0, 5], [2, 1, 5], [3, 2, 5], [0, 3, 5]])
+    hf = (oct_f[None] + 6 * np.arange(m)[:, None, None]).reshape(-1, 3)
+    sv = np.stack([np.c_[x - .015, y, z], np.c_[x + .015, y, z], np.c_[x, y, z + hs]], 1).reshape(-1, 3)
+    sf = np.arange(m * 3).reshape(-1, 3) + len(hv)
+    stem = np.array([.18, .32, .08]) ** 2.2
+    cols = np.r_[np.repeat(c, 6, 0), np.tile(stem, (m * 3, 1))]
+    ob = build_mesh('fflowers', np.r_[hv, sv], np.r_[hf, sf], np.c_[cols, np.ones(len(cols))], smooth=False)
+    ob.data.materials.append(M_FLOWER)
+
+front_flowers(1500 if FAST else 7000)
+
 # ---------------- light / world ----------------
 bpy.ops.object.light_add(type='SUN', rotation=(math.radians(50), 0, math.radians(-38)))
-sun = bpy.context.object.data; sun.energy = 4.0; sun.color = (1.0, 0.95, 0.85); sun.angle = math.radians(2)
+sun = bpy.context.object.data; sun.energy = 4.6; sun.color = (1.0, 0.90, 0.74); sun.angle = math.radians(2)
 wd = bpy.data.worlds.new('w'); sc.world = wd; wd.use_nodes = True; nt = wd.node_tree
 bg = nt.nodes['Background']; tc = nt.nodes.new('ShaderNodeTexCoord'); sep = nt.nodes.new('ShaderNodeSeparateXYZ')
 cr = nt.nodes.new('ShaderNodeValToRGB')
