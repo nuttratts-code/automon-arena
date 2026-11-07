@@ -1,16 +1,24 @@
-# workflow · importing values from the Balance Room (English · V1.31 · 5 Nov 2026)
+# workflow · importing values from the Balance Room (English · V1.32 · 7 Nov 2026)
 
-Split from workflow.md V1.21 · V1.25 user measures · V1.26 batch 35 yellow clears itself + ui/main · V1.27 translated to English; apply-config now imports tribe bonuses (cfg.tribes); pre-import check results.edits == config.
+Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · V1.25 user measures · V1.26 batch 35 yellow clears itself + ui/main · V1.27 translated to English; apply-config now imports tribe bonuses (cfg.tribes); pre-import check results.edits == config.
+
+## 00. Check before tuning (V1.32, user rule set 130 · CLAUDE.md HARD RULE 6) — before ANY work that touches game values
+1. Ask the user for a fresh AMCFG1 (Balance Room → 💾 → "คัดลอกค่าให้ Claude"), save it to the scratchpad.
+2. `cd src && node tools/cfgdiff.mjs <file> --md ../claude/review-YYYY-MM-DD-cfgdiff.md` → lists ONLY differing cells across chars · tribe bonuses · game rules · runes · custom runes · bosses (every phase) · mode settings (แท็บด่าน). MATCH = go on. (Chars/tribes/rules in the code are only the fields the user changed vs the page defaults; the page defaults = game only if the Balance Room was published from the current main — check the Relay publish line.)
+3. DIFFERS → commit the review file to main (docs-only) and ask the user in Thai, per cell or per group: **ยึด Balance Room** (import it) or **ยึดเกม** (keep the game; user sets it back on the page). Wait for the answer. Never pick a side yourself.
+4. Do the work: Balance Room side → chars/tribes/rules: tools/apply-config.mjs (§0) · stage: `node tools/apply-stage.mjs <out>/main.json --take <part | part:id,…>` (e.g. `bosses:B1,runes:T2,settings:foeFloor`) → re-run cfgdiff: the taken cells must be gone.
+5. **bossrun / runerun --write / any tool that rewrites boss values: run WITHOUT --write first, show the user the before → after table (hp, atk, phase atk, mult10, endlessPct, win %), write only after the user agrees** (same seed → re-run with --write and check the printed values are the same).
+6. After the merge: publish the Balance Room (page defaults = game) and tell the user, cell by cell, what they must set back on the page (the "ยึดเกม" cells + any values Claude changed, e.g. bossrun) and press 💾 — otherwise their saved config still holds the old values and the next import reverts them.
 
 ## 0. Fast import order (V1.31, user 5 Nov: fastest without losing any check · ~20 min instead of ~30)
 Heavy jobs run ONE at a time (2 cores), always in the background; do the light work while each one runs. Never skip a step below.
-1. Read config/main + results/latest in parallel (no out_dir) → pre-import check (edits.chars/tribes/rules == config). Config `stage` is NOT imported unless the user says they edited bosses.
+1. Read config/main + results/latest in parallel (no out_dir) → pre-import check (edits.chars/tribes/rules == config) + §00 cfgdiff. Config `stage` (runes/bosses/mode settings) is imported item by item with tools/apply-stage.mjs for every cell the user chose "ยึด Balance Room" in §00 (V1.32 — before set 130 the stage tab was never imported, so the page and the game drifted apart).
 2. Copy core/characters.js to `core/characters.before.js` (inside core/ so its imports resolve) → `node tools/apply-config.mjs <main.json>` → `node tools/csv.mjs core/characters.before.js` → move `src/characters.csv` to `claude/characters.csv` → delete the .before copy.
 3. **Do not run the full test suite here** (it fails anyway until bot teams are rebuilt). Grep tests for the changed IDs (`grep -n "'ID'" tests/*.js`), fix tests on changed kits (old kit → retired test `ID@n` in SC_OLD/SC_RETIRED), check only them: `node tools/bootstrap.mjs test <ID>` (seconds). Commit + push.
 4. Background: `node lab/botgen.mjs` (~6.5 min). Meanwhile: draft the handoff Relay line, `Artifact read` the 3 Links URLs (writer check).
-5. Background: `node lab/bossrun.mjs 600 75 62 50 --write` ONCE (prints before → after; no separate check run). Commit + push.
+5. Background: `node lab/bossrun.mjs 600 75 62 50` (no --write) → show the user before → after (§00 step 5) → after the user agrees: same command with --write. Commit + push.
 6. Background: `node tools/bootstrap.mjs gate` ONCE (~9 min). Meanwhile: finish handoff text.
-7. GATE: PASS → fast-forward main → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main.
+7. GATE: PASS → fast-forward main → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main → tell the user the cells to set back (§00 step 6).
 
 ## 8. Balance Room (ArtifactData)
 - **Read only when the user says they saved** · if handoff says "บาลานซ์: กำลังปรับ" do not import.
