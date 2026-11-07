@@ -1,6 +1,18 @@
 # Measurement log per task set (Automon Arena)
 
-V1.5 · 28 Oct 2026 (set 49 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md
+V1.6 · 7 Nov 2026 (set 127 build G3 added) · was V1.5 · 28 Oct 2026 (set 49 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md
+
+## Set 127 build · G3 (7 Nov 2026 · R2 sell −1 copy/merge + R1 floor + set 128 lock, new bot teams)
+`node lab/runerun.mjs 600` (simple player bot, runes on) · same bot teams both columns · set 119 reference (10→5 hearts, no lock, full refund): cleared 18.5% · normal won 45.5% · second chance 93% · k1 54.5% · k2 reached 53% won 66.5%.
+| | floor 100% (game default) | floor 0 (= set 128 lock + R2 only) |
+|---|---|---|
+| run cleared | 25.0% | 41.7% |
+| normal rounds won | 50.6% | 62.1% |
+| second chance used | 91.5% | 84.0% |
+| boss k1 won | 55.7% | 67.3% |
+| boss k2 reached / won | 61.5% / 64.5% | 90.0% / 59.1% |
+| boss k3 in normal run reached / won | 8.8% / 75.5% | 10.5% / 61.9% |
+Reading: the set-128 lock (enemy from pre-shop power) made runs much easier (+23 pt clear vs set 119); the floor pulls most of it back (25%). R2 effect not separable here (bots also sell less profitably).
 
 ## Set 49 · balance import (28 Oct 2026 · values entered the game)
 Source: AMCFG1 code pasted in chat by the user (second account cannot read the db) · config saved 15:24:53Z · measured 15:24:33Z · pre-import check MATCH · 12 characters: HL-2 HL-6 HL-7 HL-8 PL-4 PL-6 PT-2 PT-3 PT-6 PT-8 SF-6 SF-8 (rows; new kits HL-2 / PT-6 / PT-8; SF-6 / SF-8 / PT-8 stats) · no tribe changes.
