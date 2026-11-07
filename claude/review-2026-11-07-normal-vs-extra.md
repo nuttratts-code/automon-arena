@@ -23,3 +23,10 @@ foeRealUntil 10 → 19 and boss rounds 15/20 skipped when not in extra. Simpler 
 
 ## Open question for the user
 Q1 normal-run team pick: (a, rec) closest power to your team, unscaled (as now) · (b) random team from that round's pool, ignoring your power.
+
+## Update (same day, user follow-up) — current shape, still NOT built
+- Normal run = rounds 1–19 (hearts out or 10 wins ends it; round 20 is never reached in a normal run). Real bot teams, unscaled, no win-streak bonus. Bosses 5/10/15; boss at 15 drops the +20% extra-match bonus when met in a normal run (proposed, user to confirm).
+- Extra mode (after 10 wins → เล่นต่อ): real team of that round + flat % — user said "20" (read as option ก +20%, to confirm). After round 20: +8%/round compounding as now. Bosses 15/20/30/40 still ahead, #3+ +20% each, round 50 dummy.
+- NEW (user): "Demo": start hearts 10 → 5. On losing the last heart: 1 free heart + pick 1 of 3 random LEGEND runes, no reroll.
+  Conflicts: shop.hearts 10 (rules.js) · with 5 hearts a normal run lasts ≤ 14 rounds (≤ 15 with the free heart) → boss at 15 only reachable via the free heart · boss reward is legend 1 of 2 (S-12), this is 1 of 3.
+  Open: what "Demo" means (whole game vs a separate mode) · once per run? · normal run only or extra mode too? · legend pool exhausted → fill from other rarities (existing S-12 rule)?
