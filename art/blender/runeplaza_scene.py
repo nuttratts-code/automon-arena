@@ -1,4 +1,4 @@
-# Automon Arena — "rune plaza on a grassy highland" battle scene (v4, set 132/134; spec claude/art-style.md §8).
+# Automon Arena — "rune plaza on a grassy highland" battle scene (v5, set 132/134; spec claude/art-style.md §8).
 # Ancient round stone plaza on a high meadow, standing stones with our own glowing rune glyphs,
 # a ruined arch on a far hill, layered hazy hills. Camera A: high, looking down, horizon ~40 % from top.
 # The 12 board cells get carved rings on the floor; standing stones stay out of the cells' screen area.
@@ -210,8 +210,10 @@ M_TERR = mat_vcol('terrain', detail=35, nfac=.22)
 M_GRASS = mat_vcol('grass', detail=2, nfac=.15, trans=.3)
 M_FLOWER = mat_vcol('flower', detail=1, nfac=.05)
 M_PLAZA = mat_plaza()
-M_STONE = mat_stone('stone')
-M_STONE2 = mat_stone('stone_old', base=(0.52, 0.52, 0.50), mossamt=.8)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import rock                                              # real-looking rock + rebuilt arch (set 134)
+M_STONE = rock.rock_mat('stone', moss=.45, wrap=haze_wrap)
+M_STONE2 = rock.rock_mat('stone_old', moss=.8, tint=(.92, .93, .9), wrap=haze_wrap)
 M_RUNE = mat_glow()
 
 # ---------------- terrain ----------------
@@ -382,7 +384,7 @@ def standing_stone(x, y, h, w, d, seed, glyphs=(), face_to=(0, -26), lean=(0, 0)
     r = np.random.default_rng(seed)
     v, q, t = stone_mesh(h, w, d, r, broken)
     ob = build_poly('stone', v, q, t); ob.data.materials.append(mat or M_STONE)
-    ss = ob.modifiers.new('s', 'SUBSURF'); ss.levels = ss.render_levels = 1 if FAST else 2
+    ss = ob.modifiers.new('s', 'SUBSURF'); ss.levels = ss.render_levels = 1 if FAST else 3
     d1 = ob.modifiers.new('d1', 'DISPLACE'); d1.texture = voro_tex; d1.strength = .16; d1.mid_level = .5; d1.texture_coords = 'OBJECT'
     d2 = ob.modifiers.new('d2', 'DISPLACE'); d2.texture = cloud_tex; d2.strength = .05; d2.mid_level = .5; d2.texture_coords = 'OBJECT'
     for p in ob.data.polygons: p.use_smooth = True
@@ -471,30 +473,8 @@ def wedge(cx, cz, cy, ri, ro, a0, a1, dep, mat=None):
     bv = o.modifiers.new('b', 'BEVEL'); bv.width = .14; bv.segments = 2
     o.data.materials.append(mat or M_STONE); return o
 
-ar = np.random.default_rng(7)
-ax, ay = ARCH; az = float(height(ax, ay)) - .8
-AW, AT, BH = 8.0, 2.2, 1.55            # opening width, pillar thickness, block height
-NB = 6                                 # blocks per pillar
-for side in (-1, 1):
-    px = ax + side * (AW / 2 + AT / 2)
-    for k in range(NB):
-        block(px + ar.uniform(-.12, .12), ay + ar.uniform(-.1, .1), az + BH * (k + .5), AT * ar.uniform(.95, 1.08), AT * .95, BH * .97,
-              rz=ar.uniform(-.04, .04), mat=M_STONE if k % 2 else M_STONE2)
-spring = az + BH * NB; ri = AW / 2; ro = AW / 2 + AT
-NW = 9
-for k in range(NW):                                       # full semicircle of voussoirs
-    a0 = math.pi * k / NW + .012; a1 = math.pi * (k + 1) / NW - .012
-    wedge(ax, spring, ay, ri, ro, a0, a1, AT * .95, M_STONE if k % 2 else M_STONE2)
-block(ax, ay, spring + ro + .45, AT * 1.1, AT * .95, .9, mat=M_STONE2)        # cap stone
-# broken wall running left from the arch, stepping down; a few fallen blocks on the right
-for j in range(5):
-    hgt = max(1, 4 - j - (j % 2))
-    for k in range(hgt):
-        block(ax - AW / 2 - AT - 1.2 - j * 2.2 + ar.uniform(-.1, .1), ay + .3, az + BH * (k + .5), 2.1, AT * .85, BH * .96,
-              rz=ar.uniform(-.05, .05), mat=M_STONE2)
-for j in range(4):
-    bx = ax + AW / 2 + AT + 2 + j * 1.9 + ar.uniform(-.5, .5); by = ay + ar.uniform(-3, 2)
-    block(bx, by, float(height(bx, by)) - .1, 2.0, AT * .9, BH, rx=ar.uniform(-.3, .3), ry=ar.uniform(-.4, .4), rz=ar.uniform(0, 3), mat=M_STONE2)
+ax, ay = ARCH; az = float(height(ax, ay)) - .3
+rock.build_arch(ax, ay, az, (M_STONE, M_STONE2), S=2.35)
 
 # ---------------- distant trees on the hills (clumps where the forest patches are) ----------------
 M_TREE = bpy.data.materials.new('tree'); M_TREE.use_nodes = True
@@ -603,6 +583,29 @@ cr.color_ramp.elements[1].position = 0.85; cr.color_ramp.elements[1].color = (0.
 nt.links.new(tc.outputs['Generated'], sep.inputs[0]); nt.links.new(sep.outputs['Z'], cr.inputs[0])
 nt.links.new(cr.outputs['Color'], bg.inputs['Color']); bg.inputs['Strength'].default_value = 0.8
 
+# ---------------- user's layout (made by hand in Blender, art/scene/runeplaza-v4-user.blend, 8 Nov) ----------------
+USER_EDITS = {
+    'stone': ((-15.592, 8.023, -0.405), (-0.053, -0.087, 1.337)),
+    'stone.001': (None, (-0.013, 0.021, 0.886)),
+    'stone.002': ((-10.678, 17.249, -0.298), None),
+    'stone.003': ((-10.039, 19.537, -0.36), (0.328, 1.304, 0.326)),      # knocked over
+    'stone.004': ((10.359, 17.468, -0.333), (0.012, 0.005, -0.638)),
+    'stone.005': ((15.047, 9.6, -1.08), (0.01, -0.009, -1.036)),
+    'stone.006': ((-12.616, -3.118, -2.789), (0.068, 0.097, 2.914)),     # sunk lower, turned round
+    'stone.007': ((10.625, -5.529, 0.012), (1.508, 0.135, 0.146)),       # lying down
+    'Icosphere.005': ((16.063, 7.069, -0.993), (1.748, -0.613, 3.278)),
+    'Icosphere.006': ((14.336, 5.606, 0.424), None),
+    'rune.006': ((0.202, -0.112, -0.931), (0.025, 0.029, 0.108)),
+    'far': ((0.389, 0.057, -0.532), None),
+}
+if os.environ.get('USER_LAYOUT', '1') == '1':
+    for nm, (loc, rot) in USER_EDITS.items():
+        o = bpy.data.objects.get(nm)
+        if o is None: print('USER_EDITS missing', nm); continue
+        if loc: o.location = loc
+        if rot: o.rotation_euler = rot
+    if 'Icosphere.011' in bpy.data.objects: bpy.data.objects.remove(bpy.data.objects['Icosphere.011'])
+
 # ---------------- camera A: high, pitched down; lens shift puts the horizon at 40 % from the top ----------------
 CAM_H = float(os.environ.get('CAM_H', 5.5)); CAM_Y = float(os.environ.get('CAM_Y', -20.0))
 LENS = float(os.environ.get('LENS', 21.0)); PITCH = math.radians(float(os.environ.get('PITCH', 12)))
@@ -638,14 +641,16 @@ for side, sx in (('P', -1), ('E', 1)):
             cells.append({'side': side, 'lane': li, 'col': ['front', 'mid', 'back'][ci],
                           'x': round(ax, 4), 'y': round(ay, 4), 'h': round(ay - by, 4)})
 hz = scr((0, 5000, CAM_H))[1]
-# check: no standing stone may overlap a unit box (cell foot .. 1.7 units up, ~0.6 h wide)
+# check: no stone/boulder may stand in front of a unit box (cell foot .. 1.7 units up, ~0.6 h wide)
 warn = []
-for (x, y, h, w, d, g) in STONES:
-    sx0, sy0 = scr((x - w / 2, y, float(height(x, y)))); sx1, sy1 = scr((x + w / 2, y, float(height(x, y)) + h))
+for o in bpy.data.objects:
+    if o.type != 'MESH' or not (o.name.startswith('stone') or o.name.startswith('Icosphere')): continue
+    wc = [o.matrix_world @ Vector(c) for c in o.bound_box]; pts = [scr(p) for p in wc]
+    x0, x1 = min(p[0] for p in pts), max(p[0] for p in pts); y0, y1 = min(p[1] for p in pts), max(p[1] for p in pts)
     for c in cells:
         bw = c['h'] * H / W * .35
-        if min(sx0, sx1) < c['x'] + bw and max(sx0, sx1) > c['x'] - bw and sy1 < c['y'] and sy0 > c['y'] - c['h'] and y < LANES[0] + (6 if c['lane'] else 0) + 1:
-            warn.append((x, y, c['side'] + c['col'][0] + str(c['lane'])))
+        if min(p.y for p in wc) < LANES[c['lane']] - .3 and x0 < c['x'] + bw and x1 > c['x'] - bw and y0 < c['y'] and y1 > c['y'] - c['h']:
+            warn.append((o.name, c['side'] + c['col'][0] + str(c['lane'])))
 print('horizon y', round(hz, 3), 'cells y', min(c['y'] for c in cells), max(c['y'] for c in cells),
       'x', min(c['x'] for c in cells), max(c['x'] for c in cells), 'h', min(c['h'] for c in cells), max(c['h'] for c in cells))
 print('stone overlaps', warn)

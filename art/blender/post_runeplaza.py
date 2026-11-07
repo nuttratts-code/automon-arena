@@ -116,6 +116,26 @@ bl2 = np.asarray(Image.fromarray((np.clip(blue * img * 1.4, 0, 1) * 255).astype(
 img = 1 - (1 - img) * (1 - bl2 * .6)
 img = np.clip(img * np.array([1.03, 1.01, .97]), 0, 1)
 
+# ---------------- "halfway" look (set 134, user picked option 2): real render, lightly painted + warm grade ----------------
+from scipy.ndimage import uniform_filter
+def kuwahara(im, r):
+    lum = im @ np.array([.3, .59, .11]); k = r + 1; o = r // 2
+    m = np.stack([uniform_filter(im[..., c], k) for c in range(3)], -1)
+    ml = uniform_filter(lum, k); vl = uniform_filter(lum * lum, k) - ml * ml
+    best = bv = None
+    for dy in (-o, o):
+        for dx in (-o, o):
+            sv = np.roll(vl, (dy, dx), (0, 1)); sm = np.roll(m, (dy, dx), (0, 1))
+            if best is None: best, bv = sm, sv
+            else: w = sv < bv; best = np.where(w[..., None], sm, best); bv = np.minimum(bv, sv)
+    return best
+PAINT = float(__import__('os').environ.get('PAINT', .45))
+if PAINT > 0:
+    img = img * (1 - PAINT) + kuwahara(img, 4) * PAINT
+lum = img @ np.array([.3, .59, .11])
+img = img + np.clip(1 - lum * 1.7, 0, 1)[..., None] * np.array([-.015, .0, .045])           + np.clip(lum * 1.4 - .45, 0, 1)[..., None] * np.array([.05, .025, -.035])    # cool shadows, golden lights
+img = np.clip(img, 0, 1)
+
 # ---------------- tilt-shift: blur grows toward the bottom edge (and softly at the far band) ----------------
 base = Image.fromarray((img * 255).astype(np.uint8))
 b_soft = np.asarray(base.filter(ImageFilter.GaussianBlur(1.6)), np.float32) / 255
