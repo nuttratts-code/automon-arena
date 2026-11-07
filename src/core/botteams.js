@@ -57,10 +57,10 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts, won = res.winner !== 1, ex = P.extra;
     const gain = side => (res.perm || []).filter(g => g.side === side);
     const em = endMatch(P, won, chars, rules, gain(0), !!rb);
-    if (R && em.second && !P.over) botTakeRune(P, 'sc'); // set 119: second chance → legend pick
-    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; if (R && res.winner === 1) botTakeRune(B, 'win'); }
+    if (R && em.second && !P.over) botTakeRune(P, 'sc', cm); // set 119: second chance → legend pick
+    if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; if (R && res.winner === 1) botTakeRune(B, 'win', cm); }
     if (opts.extra && P.over && P.hearts > 0 && P.round < opts.extra) continueExtra(P);
-    if (R && won && !P.over) botTakeRune(P, rb ? 'boss' : 'win');
+    if (R && won && !P.over) botTakeRune(P, rb ? 'boss' : 'win', cm);
     if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) } });
   }
   return P;
@@ -191,9 +191,13 @@ export function pickBotTeam(data, round, seed, tier = null) {
 // bonus (set 107 power-follow scaling + streak removed) · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
 export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
+// set 126 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
+// empty board) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
 export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
-  const pp = teamPower(myUnits, rules), target = pp * (stage.settings.foeBase ?? 100) / 100;
+  let pp = typeof myUnits === 'number' ? Math.max(0, myUnits) : teamPower(myUnits, rules);
+  if (!(pp > 0)) { const ws = data.rounds[k].map(t => t.pw).sort((a, b) => a - b); pp = ws.length ? ws[ws.length >> 1] : 0; }
+  const target = pp * (stage.settings.foeBase ?? 100) / 100;
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));
   const gap = x => (target > 0 ? Math.abs(Math.log(x.t.pw / target)) : x.t.pw);

@@ -1,5 +1,7 @@
 import { RULES } from './rules.js';
-import { allUnits, chargeOwner } from './shop.js';
+import { allUnits, chargeOwner, teamEntries } from './shop.js';
+import { teamPower } from './power.js';
+import { buildTeam } from './team.js';
 import { isInt, validateTeam } from './validate.js';
 import { burnShares } from './battle.js';
 import { rnValidate, rnCompactOk } from './runrunes.js';
@@ -45,9 +47,9 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc', 'fp'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 9) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 10) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 126: v10 = + fp (locked enemy power) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -56,6 +58,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svIntIn(st.bw, 0, 1000) || !svIntIn(st.bk, 0, 1000) || st.bw > st.wins || st.bk > st.wins) errors.push('ตัวนับบอสผิด');
   if (!svIntIn(st.ls, 0, 1000)) errors.push('ตัวนับแพ้ติดผิด');
   if (!svIntIn(st.ws, 0, 1000)) errors.push('ตัวนับชนะติดผิด');
+  if (!svIntIn(st.fp, 0, 1e9)) errors.push('พลังทีมล็อกศัตรูผิด');
   if (st.sc !== 0 && st.sc !== 1) errors.push('โอกาสสุดท้ายผิด');
   if (typeof st.extra !== 'boolean' || (st.extra && st.wins < S.winsToFinish)) errors.push('แมตช์พิเศษผิด');
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
@@ -117,6 +120,12 @@ export function validateStats(s, cm) {
   return Object.entries(s.dmg).every(([id, v]) => svOwn(cm, id) && svIntIn(v, 0, 1e12));
 }
 
+// set 126: a v9 run (before the locked enemy / flag tribes) → v10 · fp = the board power now (= what the old build would have used)
+function svUpV9(st, cm, rules) {
+  if (!svObj(st) || st.v !== 9 || !svObj(st.rn) || 'fp' in st || 'ft' in st.rn) return;
+  let fp = 0; try { fp = Math.round(teamPower(buildTeam(teamEntries(st), cm, rules), rules)); } catch (e) { fp = 0; }
+  st.v = 10; st.fp = fp; st.rn.ft = {};
+}
 // เซฟ: { sv, data, P, B, stats, startedAt }
 export function makeSave(P, B, stats, startedAt, hash) {
   return JSON.stringify({ sv: SAVE_VERSION, data: hash, P, B, stats, startedAt });
@@ -130,6 +139,7 @@ export function readSave(text, cm, rules, hash) {
   if (o.sv !== SAVE_VERSION) return { status: 'data', errors: ['เวอร์ชันเซฟไม่ตรง'] };
   if (svObj(o.P) && (o.P.v === 3 || o.P.v === 4)) return { status: 'data', errors: ['เซฟเวอร์ชันเก่า (ก่อนรูน set 94 / มีร้านรูน set 94)'] };
   if (o.data !== hash) return { status: 'data', errors: ['ค่าตัวละคร/กฎเปลี่ยนแล้ว'] };
+  for (const st of [o.P, o.B]) svUpV9(st, cm, rules);
   const a = validateRunState(o.P, cm, rules), b = validateRunState(o.B, cm, rules, { bot: true });
   const errors = [...a.errors.map(e => 'ผู้เล่น: ' + e), ...b.errors.map(e => 'บอท: ' + e)];
   if (!validateStats(o.stats, cm)) errors.push('สถิติผิด');

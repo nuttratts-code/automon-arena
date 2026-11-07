@@ -11,6 +11,7 @@
 import { RUN_STAGE } from './runboss.js';
 import { RUNE_RARITY, RUNE_SPEC, runeActive, enemyMultAt } from './stage.js';
 import { runeRecord } from './runes.js';
+import { TRIBES } from './rules.js';
 import { fail, done, loseGuard } from './shop.js';
 import { makeRng } from './rng.js';
 
@@ -24,7 +25,7 @@ export const RN_MAX_HELD = 80; // different runes held (sanity)
 // own random stream (st.rn.n) so rune rolls never shift the unit shop's rolls
 function rnDraw(st) { return makeRng((st.seed ^ 0x52554E45 ^ Math.imul(++st.rn.n, 0x85EBCA77)) >>> 0).next(); }
 export function newRunes() {
-  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, htu: 0, shadow: 0, ro: 0 }; // htu = heart trades used (set 119: one per X8 copy) // ro = rune card rerolls used this match (set 100)
+  return { n: 0, bag: {}, at: {}, pt: {}, ft: {}, offer: null, free: 0, traded: false, htu: 0, shadow: 0, ro: 0 }; // set 126: ft = flag tribes picked per copy (id → [tribe, …]) // htu = heart trades used (set 119: one per X8 copy) // ro = rune card rerolls used this match (set 100)
 }
 // rune record with its id · null = unknown / switched off / deleted
 export function rnRec(id, stage = RUN_STAGE) {
@@ -86,15 +87,31 @@ export function rnRerollOffer(st, stage = RUN_STAGE) {
   if (!rnMakeOffer(st, o.kind, stage, o.ids)) st.rn.offer = o; // nothing at all left → keep the old cards
   return done([cost ? `สุ่มการ์ดรูนใหม่ -${cost} เงิน` : 'สุ่มการ์ดรูนใหม่ (ฟรี)']);
 }
-export function rnTakeOffer(st, i, stage = RUN_STAGE) {
+// tribe = flag runes only (set 126, user T8 A): the tribe this copy counts · not a valid tribe = the rune record's tribe
+export function rnTakeOffer(st, i, stage = RUN_STAGE, tribe = null) {
   const o = st.rn && st.rn.offer;
   if (!o || !Number.isInteger(i) || i < 0 || i >= o.ids.length) return fail('ไม่มีรูนให้เลือก');
   const r = rnRec(o.ids[i], stage);
   st.rn.offer = null;
   if (!r || rnHeld(st, r.id) >= (r.max || 1)) return fail('รูนนี้ใช้ไม่ได้แล้ว');
   rnAdd(st, r);
-  return done([`ได้รูน ${r.name}${rnHeld(st, r.id) > 1 ? ` (มี ${rnHeld(st, r.id)} อัน)` : ''}`]);
+  let tr = '';
+  if (r.eff === 'flag') {
+    const t = TRIBES.includes(tribe) ? tribe : TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];
+    if (!st.rn.ft) st.rn.ft = {};
+    (st.rn.ft[r.id] = st.rn.ft[r.id] || []).push(t); tr = ` (เผ่า${t})`;
+  }
+  return done([`ได้รูน ${r.name}${tr}${rnHeld(st, r.id) > 1 ? ` (มี ${rnHeld(st, r.id)} อัน)` : ''}`]);
 }
+// tribes a flag rune may pick (set 126): tribes of the units on the board (extra tribes count) · empty board = every tribe
+export function rnFlagChoices(st, cm) {
+  const set = new Set();
+  for (const row of (st && st.board) || []) for (const u of row) if (u && cm[u.id]) for (const t of [cm[u.id].tribe, ...(cm[u.id].extraTribes || [])]) set.add(t);
+  const out = TRIBES.filter(t => set.has(t));
+  return out.length ? out : TRIBES.slice();
+}
+// tribes picked for flag rune id (one per copy held)
+export const rnFlagPicks = (st, id) => (st && st.rn && st.rn.ft && Array.isArray(st.rn.ft[id]) ? st.rn.ft[id] : []);
 export function rnSkipOffer(st) { if (st.rn) st.rn.offer = null; return done(); }
 function rnAdd(st, r) { st.rn.bag[r.id] = rnHeld(st, r.id) + 1; }
 
@@ -220,6 +237,7 @@ export function rnCompact(st) {
     const o = { id, n }, s = rnSlotOf(st, id), p = rnSlotOf(st, id, true); // worn unit on the board → its slot for the fight
     if (s) o.s = s;
     if (p) o.p = p;
+    const t = rnFlagPicks(st, id); if (t.length) o.t = t.slice(0, n); // set 126: flag tribes
     return o;
   });
 }
@@ -228,20 +246,21 @@ export function rnFromCompact(list, stage = RUN_STAGE) {
   for (const x of Array.isArray(list) ? list : []) {
     const r = rnRec(x && x.id, stage); if (!r) continue;
     if (rnNeedsSlot(r) && !x.s) continue;
-    out.push({ r, n: x.n, slot: x.s || null, partner: x.p || null });
+    out.push({ r, n: x.n, slot: x.s || null, partner: x.p || null, ...(Array.isArray(x.t) ? { tribes: x.t } : {}) });
   }
   return out;
 }
 export function rnCompactOk(list, rules) {
   return Array.isArray(list) && list.length <= RN_MAX_HELD && list.every(x => x && typeof x === 'object' && !Array.isArray(x)
-    && Object.keys(x).every(k => ['id', 'n', 's', 'p'].includes(k)) && typeof x.id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(x.id)
-    && Number.isInteger(x.n) && x.n >= 1 && x.n <= 9 && (x.s === undefined || rnSlotOk(x.s, rules)) && (x.p === undefined || rnSlotOk(x.p, rules)));
+    && Object.keys(x).every(k => ['id', 'n', 's', 'p', 't'].includes(k)) && typeof x.id === 'string' && /^[A-Z]{1,2}\d{1,3}$/.test(x.id)
+    && Number.isInteger(x.n) && x.n >= 1 && x.n <= 9 && (x.s === undefined || rnSlotOk(x.s, rules)) && (x.p === undefined || rnSlotOk(x.p, rules))
+    && (x.t === undefined || (Array.isArray(x.t) && x.t.length >= 1 && x.t.length <= x.n && x.t.every(t => TRIBES.includes(t)))));
 }
 
 // ---------- save check (st.rn) ----------
 export function rnValidate(rn, rules, stage = RUN_STAGE) {
   const errors = [], isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
-  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'htu', 'shadow', 'ro'];
+  const KEYS = ['n', 'bag', 'at', 'pt', 'ft', 'offer', 'free', 'traded', 'htu', 'shadow', 'ro'];
   if (!isObj(rn) || !Object.keys(rn).every(k => KEYS.includes(k)) || !KEYS.every(k => k in rn)) return ['รูน: ผิดรูปแบบ'];
   if (!isObj(rn.bag) || Object.keys(rn.bag).length > RN_MAX_HELD) errors.push('รูน: กระเป๋าผิด');
   else for (const [id, n] of Object.entries(rn.bag)) { const r = rnRec(id, stage); if (!r || !Number.isInteger(n) || n < 1 || n > (r.max || 1)) errors.push(`รูน ${id}: ผิด`); }
@@ -249,6 +268,8 @@ export function rnValidate(rn, rules, stage = RUN_STAGE) {
     if (!isObj(rn[k])) { errors.push('รูน: ช่องวางผิด'); continue; }
     for (const [id, s] of Object.entries(rn[k])) if (!isObj(rn.bag) || !rn.bag[id] || !(rnSlotOk(s, rules) || (Number.isInteger(s) && s >= 1 && s <= 1e9))) errors.push(`รูน ${id}: ช่องวางผิด`);
   }
+  if (!isObj(rn.ft) || Object.keys(rn.ft).length > RN_MAX_HELD) errors.push('รูน: เผ่าธงผิด');
+  else for (const [id, l] of Object.entries(rn.ft)) if (!isObj(rn.bag) || !Array.isArray(l) || l.length > (rn.bag[id] | 0) || !l.every(t => TRIBES.includes(t))) errors.push(`รูน ${id}: เผ่าธงผิด`);
   if (rn.offer !== null && !(isObj(rn.offer) && Object.keys(rn.offer).every(k => k === 'kind' || k === 'ids') && RN_OFFER_KEY[rn.offer.kind]
     && Array.isArray(rn.offer.ids) && rn.offer.ids.length >= 1 && rn.offer.ids.length <= 15 && rn.offer.ids.every(id => !!rnRec(id, stage)))) errors.push('รูนรางวัลผิด');
   if (!Number.isInteger(rn.n) || rn.n < 0 || rn.n > 1e9) errors.push('รูน: ตัวนับสุ่มผิด');

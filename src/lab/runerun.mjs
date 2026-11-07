@@ -30,7 +30,7 @@ const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
   let wasOver = false;
-  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, buildTeam(teamEntries(p), cm, RULES), p.round, p.seed, p.extra); pcts.push(f.pct); return f; }, m => {
+  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra); pcts.push(f.pct); return f; }, m => {
     if (m.second) seconds++;
     if (!m.extra) { if (m.boss && m.boss !== 'DUMMY') { const q = (nb[m.k] = nb[m.k] || [0, 0]); q[0]++; q[1] += m.winner !== 1 ? 1 : 0; } }
     const won = m.winner !== 1;

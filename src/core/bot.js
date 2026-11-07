@@ -1,4 +1,4 @@
-import { RULES, pickHintRow, rowsOfHint } from './rules.js';
+import { RULES, TRIBES, pickHintRow, rowsOfHint } from './rules.js';
 import { SLOT_ORDER, allUnits, buy, buyMerge, move, reroll, sell } from './shop.js';
 import { basePower } from './power.js';
 import { RUNE_RUN_ONLY } from './runes.js';
@@ -200,12 +200,20 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
 // "one" runes sit on the strongest board unit (level, then rarity), partner on the 2nd strongest
 const BOT_RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const rRank = r => RN_RARS.indexOf(r.rarity) * 2 + (RUNE_RUN_ONLY.includes(r.eff) ? 0 : 1);
-export function botTakeRune(st, kind) {
+// cm (set 126): flag runes (T8) count the bot's main board tribe (most units, extra tribes count · tie = first in TRIBES order)
+export function botFlagTribe(st, cm) {
+  if (!cm) return null;
+  const n = {};
+  for (const row of st.board) for (const u of row) if (u && cm[u.id]) for (const t of [cm[u.id].tribe, ...(cm[u.id].extraTribes || [])]) n[t] = (n[t] || 0) + 1;
+  let best = null; for (const t of TRIBES) if (n[t] && (!best || n[t] > n[best])) best = t;
+  return best;
+}
+export function botTakeRune(st, kind, cm = null) {
   let o = rnMakeOffer(st, kind);
   if (o && kind !== 'boss' && !o.ids.some(id => rnRec(id).rarity === 'legend') && rnRerollCost(st) === 0) { rnRerollOffer(st); o = st.rn.offer; }
   if (!o) return;
   let bi = 0; o.ids.forEach((id, i) => { if (rRank(rnRec(id)) > rRank(rnRec(o.ids[bi]))) bi = i; });
-  rnTakeOffer(st, bi);
+  rnTakeOffer(st, bi, undefined, botFlagTribe(st, cm));
 }
 export function botPlaceRunes(st, cm, rules = RULES) {
   const units = [], strength = u => u.level * 10 + BOT_RAR.indexOf(cm[u.id].rarity);

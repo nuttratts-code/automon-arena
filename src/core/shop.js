@@ -1,4 +1,6 @@
 import { makeRng } from './rng.js';
+import { teamPower } from './power.js';
+import { buildTeam, makeCharMap } from './team.js';
 import { RUN_STAGE } from './runboss.js';
 import { newRunes, rnFx, rnInterest, rnPermMul, rnSync } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
@@ -17,7 +19,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 9, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 119: v9 = + sc (second chance used) · hearts 5 · set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 10, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 126: v10 = + fp (team power at shop start → the locked enemy) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 5 · set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -26,7 +28,7 @@ export function newRun(chars, seed, rules = RULES) {
     rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
     // set 99 (user 6 Nov): bw = normal-match wins since the last boss fight (boss after bossEvery of them, core/runboss.js)
     // bk = bosses beaten (next boss = bk + 1; a lost boss comes back later) · extra = playing extra matches after the run was cleared
-    bw: 0, bk: 0, extra: false, ls: 0, ws: 0, sc: 0, // set 107: ws = wins in a row (normal or boss) → enemy power (pickFoe)
+    bw: 0, bk: 0, extra: false, ls: 0, ws: 0, sc: 0, fp: 0, // set 126 (user X9 A, lock for everyone): fp = board power when the shop round starts → pickFoe · set 107: ws = wins in a row (normal or boss) → enemy power (pickFoe)
   };
   return st;
 }
@@ -225,6 +227,7 @@ export function startRound(st, chars, rules = RULES) {
   if (lv > lvBefore && st.round > 1) msgs.push(`ร้านขึ้นเป็นระดับ ${lv} (ขึ้นเองตามรอบ)`);
   refill(st, chars, rules);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'shopStart', chars, rules, msgs);
+  try { st.fp = Math.round(teamPower(buildTeam(teamEntries(st), makeCharMap(chars), rules), rules)); } catch (e) { st.fp = 0; } // set 126: the enemy is locked from here (not re-picked at the fight)
   return done(msgs);
 }
 

@@ -58,11 +58,11 @@ function rnSpecFields(key, r, n, eq, u, units) {
 }
 
 // Static stat changes (done on the unit before the match, like a shop/permanent value)
-function rnSpecStatic(key, r, n, u) {
+function rnSpecStatic(key, r, n, u, ws = 0) {
   const num = q => (typeof r[q] === 'number' ? r[q] : (RUNE_SPEC[key].f.find(f => f[0] === q) || [, , 0])[2]);
   if (key === 'glass') { u.maxHp = Math.max(1, Math.floor(u.maxHp * (1 - Math.min(90, num('hpPct') * n) / 100))); u.hitAmp = (u.hitAmp || 0) + num('dmgPct') * n; return true; }
   if (key === 'fortress') { u.maxHp = Math.floor(u.maxHp * (1 + num('hpPct') * n / 100)); u.atk = Math.max(0, Math.floor(u.atk * (1 - Math.min(90, num('atkPct') * n) / 100))); return true; }
-  if (key === 'growth') { u.hitAmp = (u.hitAmp || 0) + Math.min(num('maxPct'), num('stepPct') * n); return true; } // stacks = ctx.winStreak (set by the caller)
+  if (key === 'growth') { u.hitAmp = (u.hitAmp || 0) + Math.min(num('maxPct') * n, num('stepPct') * n * ws); return true; } // ws = ctx.winStreak · set 126 (T11 A): copies multiply step AND cap
   if (key === 'hpToArmorHit') {
     const lost = Math.floor(u.maxHp * Math.min(90, num('hpPct')) / 100);
     u.maxHp = Math.max(1, u.maxHp - lost); u.armorHit = (u.armorHit || 0) + Math.floor(lost * num('rate') * n / 100); return true;
@@ -86,9 +86,19 @@ function rnSpecSkill(key, r, n, eq, u) {
 }
 
 // Tribe counted extra for the bonus (T8 ธงเผ่า) — the engine adds it to the board count, capped at maxTier
-function rnFlagExtra(r, n) { return { tribe: TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0], count: rnInt(r.count * n, 0, 9), maxTier: rnInt(r.maxTier, 2, 6) }; }
+// set 126 (user T8 A): each copy carries the tribe the player picked when taking it (e.tribes, one per copy) · same tribe twice = counted twice
+// no picks (old saves / old bot data) = the rune record's tribe for every copy
+export function rnFlagTribes(r, n, picked) {
+  const fb = TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];
+  return Array.from({ length: n }, (_, i) => (Array.isArray(picked) && TRIBES.includes(picked[i]) ? picked[i] : fb));
+}
+function rnFlagExtra(r, n, picked) {
+  const by = {};
+  for (const t of rnFlagTribes(r, n, picked)) by[t] = (by[t] || 0) + 1;
+  return Object.entries(by).map(([tribe, k]) => ({ tribe, count: rnInt(r.count * k, 0, 9), maxTier: rnInt(r.maxTier, 2, 6) }));
+}
 
-// units = buildTeam() output (not changed in place) · equips = [{ r: rune record, n: copies, slot: [row,lane], partner: [row,lane] }]
+// units = buildTeam() output (not changed in place) · equips = [{ r: rune record, n: copies, slot: [row,lane], partner: [row,lane], tribes?: [flag tribe per copy] }]
 // Returns { units, tribeExtra, skipped } — tribeExtra goes to simulate(opts.tribeExtra), skipped = runes with no battle effect.
 export function equipRunes(units, equips = [], ctx = {}) {
   const out = units.map(u => ({ ...u, extraTribes: (u.extraTribes || []).slice(), skills: (u.skills || []).map(s => ({ ...s })) }));
@@ -104,7 +114,7 @@ export function equipRunes(units, equips = [], ctx = {}) {
     const r = e.r, n = copies(e), kind = runeKind(r.eff);
     if (r.eff === 'addTribe') continue;
     if (RUNE_RUN_ONLY.includes(r.eff)) { skipped.push(r.id); continue; }
-    if (r.eff === 'flag') { tribeExtra.push(rnFlagExtra(r, n)); continue; }
+    if (r.eff === 'flag') { tribeExtra.push(...rnFlagExtra(r, n, e.tribes)); continue; }
     if (kind === 'stat') {
       const s = rnStatSkill(r, r.v * n); if (!s) { skipped.push(r.id); continue; }
       if (s.foe) { const a = rnAnchor(out); if (a) a.skills.push(s.skill); continue; }
@@ -119,7 +129,7 @@ export function equipRunes(units, equips = [], ctx = {}) {
     const targets = r.scope === 'enemy' ? [rnAnchor(out)].filter(Boolean) : out.filter(u => rnInScope(u, r, e));
     let used = false;
     for (const u of targets) {
-      if (rnSpecStatic(r.eff, r, r.eff === 'growth' ? rnInt(ctx.winStreak ?? 0, 0, 99) : n, u)) { used = true; continue; }
+      if (rnSpecStatic(r.eff, r, n, u, rnInt(ctx.winStreak ?? 0, 0, 99))) { used = true; continue; }
       const f = rnSpecFields(r.eff, r, n, e, u, out);
       if (f) { Object.assign(u, f); used = true; }
       const s = rnSpecSkill(r.eff, r, n, e, u);
