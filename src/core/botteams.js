@@ -186,7 +186,7 @@ export function pickBotTeam(data, round, seed, tier = null) {
   return { tier: t.tier, stage: k, span: 0, round: k + 1, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s };
 }
 // ---------- set 119 (user 7 Nov, G2 ก): the enemy = the real bot team closest in power to the player's team ----------
-// target = player board power (teamPower, runes not counted) × foeBase % · candidates = teams of the rounds within FOE_PICK.win of the
+// target = max(player board power (teamPower, runes not counted) × foeBase %, round median × foeFloor % (set 127)) · candidates = teams of the rounds within FOE_PICK.win of the
 // player's round · the FOE_PICK.near nearest by power ratio, one by seed + round · NEVER scaled in the normal run (pct 100), no win-streak
 // bonus (set 107 power-follow scaling + streak removed) · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
 export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
@@ -196,8 +196,11 @@ export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(
 export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
   let pp = typeof myUnits === 'number' ? Math.max(0, myUnits) : teamPower(myUnits, rules);
-  if (!(pp > 0)) { const ws = data.rounds[k].map(t => t.pw).sort((a, b) => a - b); pp = ws.length ? ws[ws.length >> 1] : 0; }
-  const target = pp * (stage.settings.foeBase ?? 100) / 100;
+  const ws = data.rounds[k].map(t => t.pw).sort((a, b) => a - b), med = ws.length ? ws[ws.length >> 1] : 0;
+  if (!(pp > 0)) pp = med;
+  // set 127 (user R1 = C): floor = the round cell's median power × foeFloor % (0 = off) → a weak / sandbagged board still meets the round's usual teams
+  const floor = med * Math.max(0, stage.settings.foeFloor ?? 100) / 100;
+  const target = Math.max(pp * (stage.settings.foeBase ?? 100) / 100, floor);
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));
   const gap = x => (target > 0 ? Math.abs(Math.log(x.t.pw / target)) : x.t.pw);
@@ -205,5 +208,5 @@ export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_S
   const near = cand.slice(0, FOE_PICK.near);
   const t = near[makeRng(((seed >>> 0) ^ Math.imul((round | 0) + 1, 0x27D4EB2F) ^ 0x7E57F0E5) >>> 0).int(near.length)].t;
   const pct = want;
-  return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, power: Math.round(pp) };
+  return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, power: Math.round(pp), floor: Math.round(floor) };
 }

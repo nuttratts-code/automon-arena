@@ -12,7 +12,7 @@ import { RN_RARS, rnMakeOffer, rnNeedsPartner, rnNeedsSlot, rnPlace, rnRec, rnRe
 //   → 2nd/3rd copies of a character that plays are worth buying, copies of one that sits on the bench are not
 //   + carry: the character furthest on its way to Lv3 gets that path valued extra (a player commits to one carry)
 // It spends its gold every round (gold carries over but earns nothing), rerolls to hunt copies (Lv3 reachable),
-// sells the unit that matters least when bench + board are full (selling refunds the full price), then plays the best 6.
+// sells the unit that matters least when bench + board are full (set 127: merged units refund 1 copy less per merge), then plays the best 6.
 // Value = base stat power (core/power.js, skills not counted) — what a player can read off the character cards.
 
 export const BOT_HINT = { 'หน้า': 0, 'กลาง': 1, 'ที่ไหนก็ได้': 1, 'หลัง': 2 };
@@ -178,7 +178,7 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
         if (!st.bench.includes(null)) for (const [row, lane] of SLOT_ORDER) if (!st.board[row][lane]) { dest = { at: 'board', row, lane }; break; }
         if (buy(st, best.i, dest, chars, rules).ok) continue;
       } else {
-        // full: sell the unit whose loss hurts least, if the new one is worth more (full refund → only the swap matters)
+        // full: sell the unit whose loss hurts least, if the new one is worth more (refund ≈ paid → mostly the swap matters)
         let worst = null;
         for (const { u, ref } of allUnits(st)) {
           if (u.id === carry) continue;

@@ -133,6 +133,15 @@ export const TESTS_RUNRUN = [
     const f1 = pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false); Q.board[1][1] = unit(Q, chars[chars.length - 1].id, 1);
     eq(pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false).team, f1.team, 'board change → same enemy (locked power)');
     ok(pickFoe(BOT_TEAMS, 0, 1, 5, false).team.length > 0, 'power 0 → median of the round cell');
+    // set 127 (R1 C): floor = round median × foeFloor % · weak board meets ≥ median-ish teams · strong board unchanged · 0 = off
+    const R7 = 7, med7 = (() => { const w = BOT_TEAMS.rounds[R7 - 1].map(t => t.pw).sort((a, b) => a - b); return w[w.length >> 1]; })();
+    const st0 = s => ({ ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: s } });
+    const weakOn = pickFoe(BOT_TEAMS, 1, R7, 9, false, st0(100)), weakOff = pickFoe(BOT_TEAMS, 1, R7, 9, false, st0(0));
+    eq(weakOn.floor, Math.round(med7), 'floor = median'); eq(weakOff.floor, 0, 'floor off');
+    const pwOf = f => BOT_TEAMS.rounds.flat().find(t => t.round === f.round && JSON.stringify(t.team) === JSON.stringify(f.team)).pw;
+    ok(pwOf(weakOn) > pwOf(weakOff), 'weak board + floor → stronger enemy than without floor');
+    const big = med7 * 3;
+    eq(pickFoe(BOT_TEAMS, big, R7, 9, false, st0(100)).team, pickFoe(BOT_TEAMS, big, R7, 9, false, st0(0)).team, 'board above floor → same enemy');
     const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft;
     const h = dataHash(chars, RULES), rs = readSave(makeSave(old, structuredClone(old), newStats(), 1, h), cm, RULES, h);
     eq([rs.status, rs.save && rs.save.P.v, rs.save && rs.save.P.fp > 0], ['ok', 10, true], 'v9 save → v10');

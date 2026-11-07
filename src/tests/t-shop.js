@@ -82,10 +82,23 @@ export const TESTS_SHOP = [
     st.board[0][0] = U(1, 1, 3, { atk: 2 }); st.bench[0] = U(2, 1, 3, { atk: 1 }); st.bench[1] = U(3, 1, 3);
     const r = move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars);
     ok(r.ok && r.merged === 2, 'ควรรวมได้');
-    eq([st.board[0][0].level, st.board[0][0].paid, st.board[0][0].perm.atk, allUnits(st).length], [2, 9, 3, 1], 'ผลรวมร่าง');
+    const hp1 = chars.find(c => c.id === 'HL-1').price; // set 127 (R2 A): merge loses 1 copy of sell value
+    eq([st.board[0][0].level, st.board[0][0].paid, st.board[0][0].perm.atk, allUnits(st).length], [2, Math.max(0, 9 - hp1), 3, 1], 'ผลรวมร่าง');
     st.bench[0] = U(4, 1, 3); st.bench[1] = U(5, 1, 3);
     const r2 = move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars);
     eq([r2.merged, st.board[0][0].level], [undefined, 1], '1+1+2 ไม่รวม (สลับที่แทน)');
+  }],
+  ['set 127 (R2 A): ขายหลังรวมร่าง เสียตัวละ 1 ต่อการรวม · ราคา 3: Lv1 3 · Lv2 6 · Lv3 15 · paid 0 ไม่ติดลบ', () => {
+    const chars = buildCharacterList().map(c => c.id === 'HL-1' ? { ...c, price: 3 } : c), st = newRun(chars, 4);
+    const U = (uid, level = 1, paid = 3) => ({ uid, id: 'HL-1', level, perm: {}, paid });
+    const lv2 = () => { st.board[0][0] = U(1); st.bench[0] = U(2); st.bench[1] = U(3); move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars); return st.board[0][0]; };
+    eq([lv2().level, st.board[0][0].paid], [2, 6], 'Lv2 = 9 − 3');
+    st.bench[0] = U(4, 2, 6); st.bench[1] = U(5, 2, 6);
+    const m = move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars);
+    ok(m.ok && m.merged === 3, 'Lv3 merge'); eq(st.board[0][0].paid, 15, 'Lv3 = 3 × 6 − 3');
+    st.gold = 0; ok(sell(st, { at: 'board', row: 0, lane: 0 }, chars).ok, 'sell'); eq(st.gold, 15, 'sell Lv3 refunds 15');
+    st.board[0][0] = U(7, 1, 0); st.bench[0] = U(8, 1, 0); st.bench[1] = U(9, 1, 0);
+    move(st, { at: 'bench', i: 0 }, { at: 'board', row: 0, lane: 0 }, chars); eq(st.board[0][0].paid, 0, 'paid 0 copies → floor 0');
   }],
   ['set 106: ลากการ์ดร้านไปทับตัวชนิดเดียวกัน Lv1 = ซื้อ + รวมร่างทันที · ม้านั่งเต็มก็ได้ · มีตัวเดียว/เงินไม่พอ/ต่างชนิด = ไม่ได้ ไม่เสียเงิน', () => {
     const chars = buildCharacterList(), st = newRun(chars, 4), price = chars.find(c => c.id === 'HL-1').price;
@@ -99,7 +112,7 @@ export const TESTS_SHOP = [
     st.gold = price - 1; ok(!buyMerge(st, 0, { at: 'board', row: 0, lane: 0 }, chars).ok, 'เงินไม่พอ'); st.gold = 50;
     const r = buyMerge(st, 0, { at: 'board', row: 0, lane: 0 }, chars);
     ok(r.ok && r.merged === 2, 'ควรรวมได้');
-    eq([st.board[0][0].level, st.board[0][0].paid, st.board[1][1], st.gold, st.shop[0].id, st.bench.filter(Boolean).length], [2, 6 + price, null, 50 - price, null, st.bench.length], 'ผล');
+    eq([st.board[0][0].level, st.board[0][0].paid, st.board[1][1], st.gold, st.shop[0].id, st.bench.filter(Boolean).length], [2, 6, null, 50 - price, null, st.bench.length], 'ผล'); // set 127: 3 + 3 + price − 1 copy (price)
     st.board[0][0] = U(3, 'HL-1', 2); st.board[1][1] = U(4, 'HL-1', 2); st.shop[1] = { id: 'HL-1', locked: false };
     ok(!buyMerge(st, 1, { at: 'board', row: 0, lane: 0 }, chars).ok, 'ทับตัวเลเวล 2 ไม่ได้ (ตัวที่ซื้อเป็นเลเวล 1)');
   }],

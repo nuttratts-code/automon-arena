@@ -259,7 +259,7 @@ export function sell(st, ref, chars, rules = RULES) {
   const u = get(st, ref);
   if (!u) return fail('ช่องนี้ว่าง');
   put(st, ref, null);
-  st.gold += u.paid; // เอกสาร: คืนเต็มราคาที่จ่ายไปทั้งหมด
+  st.gold += u.paid; // set 127 (S-2): paid = sell value (merge already took 1 copy off per merge)
   const msgs = [`ขาย ${u.id} ได้คืน ${u.paid}`];
   if (st.rn) { // set 94: rune เงา worn by this unit → a Lv1 copy comes back to the bench (times per run, paid 0) · set 109: worn by the unit, not the slot
     put(st, ref, u); const sh = rnFx(st).shadow.filter(x => x.uid === u.uid), times = sh.reduce((a, x) => a + x.times, 0); put(st, ref, null);
@@ -336,6 +336,8 @@ export function merge(st, srcRefs, destRef, chars, rules, extra = []) {
   const res = { uid: dest.uid, id: dest.id, level: dest.level + 1, perm: {}, paid: dest.paid };
   for (const k of PERM_KEYS) addPerm(res, k, dest.perm[k] || 0, rules);
   for (const s of srcs) { res.paid += s.paid; for (const k of PERM_KEYS) addPerm(res, k, s.perm[k] || 0, rules); }
+  // set 127 (user R2 = A): every merge loses 1 copy of the sell value (paid = what selling refunds) · 3-gold unit Lv1 3 · Lv2 6 · Lv3 15 · floor 0
+  const cp = (chars.find(x => x.id === res.id) || {}).price | 0; res.paid = Math.max(0, res.paid - cp);
   for (const r of srcRefs) put(st, r, null);
   put(st, destRef, res);
   rnSync(st, { from: srcs.map(x => x.uid), to: res.uid }); // set 109: runes worn by a merged copy stay on the result
