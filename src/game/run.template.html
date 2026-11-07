@@ -383,7 +383,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .rune-dot.off { color: var(--mute); background: var(--soft); }
 .perm-dot { right: auto; left: 8px; top: 8px; }
 /* bench + tribe cards */
-.benchbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; height: clamp(56px, 12vh, 92px); min-height: 0; }
+.benchbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; height: clamp(56px, 12vh, 92px); min-height: 0; }
 .benchrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; border: 0; padding: 0; min-height: 0; }
 .blbl { display: flex; flex-direction: column; justify-content: center; font-size: .8rem; color: var(--mute); }
 .blbl b { color: var(--ink); font-size: .88rem; }
@@ -393,36 +393,55 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .bench .shape { width: clamp(18px, 5.7vh, 44px); height: clamp(18px, 5.7vh, 44px); }
 .bench .uname { font-size: .8rem; }
 .bench .mon.has-lv { margin-bottom: 5px; }
-/* set 120 (user): unit details live next to the bench (no popup) · skill text first, then Lv tabs + stats · scrolls when long */
-.spane { min-width: 0; min-height: 0; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; display: grid; align-content: start; gap: 4px; font-size: .8rem; }
-.spane > .hint.empty { align-self: center; text-align: center; padding-top: 4px; }
-.spane .info { grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; }
-.spane .info > .mon .shape { width: 30px; height: 30px; }
-.spane .ihead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
-.spane .info h2 { font: 600 .9rem var(--f-body); margin: 0; }
-.spane .info .skill { display: block; background: transparent; border: 0; border-left: 3px solid var(--line); border-radius: 0; padding: 1px 0 1px 8px; font-size: .82rem; line-height: 1.4; }
+/* set 121 (user picked design 1): unit details = a floating card beside the tapped unit (prep #sidePane · battle #bPane) · never scrolls · tap elsewhere closes */
+.fcard { position: fixed; z-index: 30; left: 0; top: 0; width: clamp(300px, 40vw, 420px); max-height: calc(100dvh - 16px); overflow: visible; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: .8rem;
+  box-shadow: 0 10px 28px rgba(40,30,10,.28), 0 2px 6px rgba(40,30,10,.18); }
+.fcard[hidden], .fighting #sidePane, .app:not(.fighting) #bPane { display: none !important; }
+.fcard::before { content: ""; position: absolute; width: 14px; height: 14px; background: var(--panel); border: 1px solid var(--line); transform: rotate(45deg); top: var(--ay, 24px); }
+.fcard.toR::before { left: -8px; border-top: 0; border-right: 0; }
+.fcard.toL::before { right: -8px; border-bottom: 0; border-left: 0; }
+.fcard.toU::before { top: auto; bottom: -8px; left: var(--ax, 50%); border-top: 0; border-left: 0; }
+.fcard.noarrow::before { display: none; }
+.fcard.wide { width: min(620px, calc(100vw - 16px)); }
+.spane { display: grid; align-content: start; gap: 4px; }
+.spane .info { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+.spane .info > .mon { grid-row: 1; grid-column: 1; align-self: center; } .spane .info > .mon .shape { width: 48px; height: 48px; }
+.spane .info > div:not(.mon) { display: contents !important; }
+.spane .info > div:not(.mon) > * { grid-column: 1 / -1; min-width: 0; }
+.spane .info > div:not(.mon) > .ihead { grid-column: 2; grid-row: 1; }
+.spane .ihead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; min-height: 48px; }
+.spane .ihead > h2 { grid-column: 1; font: 600 .88rem var(--f-body); margin: 0; }
+.spane .ihead > .hint { grid-column: 1; font-size: .68rem; }
+.spane .ihead > .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.spane .acts button { height: 28px; padding: 0 10px; font-size: .74rem; border-radius: 8px; }
+.spane .acts .hint { font-size: .64rem; max-width: 10em; line-height: 1.2; }
+.spane .info .skill { display: block; background: transparent; border: 0; border-left: 3px solid var(--line); border-radius: 0; padding: 1px 0 1px 6px; font-size: .76rem; line-height: 1.32; }
 .spane .info .skill .tags { display: inline-flex; margin: 0 4px 0 0; vertical-align: baseline; }
-.spane .info .stats2 { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 0 12px; font-size: .74rem; }
+.spane .info .skill .tags .tag { font-size: .6rem; padding: 0 4px; }
+.spane .lvtabs { gap: 3px; } .spane .lvtabs button { height: 24px; padding: 0 8px; border-radius: 6px; font-size: .7rem; }
+.spane .info .stats2 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; font-size: .7rem; }
 .spane .info .stats2 .term { padding: 1px 0; border-bottom: 1px dotted var(--line); }
-.spane .info .stats2 b { font: 600 .78rem var(--f-mono); }
-.spane .lvtabs { gap: 3px; } .spane .lvtabs button { height: 24px; padding: 0 8px; border-radius: 6px; font-size: .72rem; }
-.spane .acts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
-.spane .acts button { height: 30px; padding: 0 10px; font-size: .78rem; border-radius: 8px; }
-.spane .acts .hint { font-size: .72rem; }
-/* set 120 (user): battle details in the dock (no popup) */
+.spane .info .stats2 b { font: 600 .74rem var(--f-mono); }
+.spane .cfoot { display: flex; align-items: center; gap: 8px; font-size: .66rem; }
+.spane .cfoot .termhelp { flex: 1; min-width: 0; }
+.spane .cfoot button { height: 22px; padding: 0 8px; font-size: .66rem; border-radius: 6px; flex: none; }
 .fighting .dock { height: clamp(70px, 16vh, 128px); grid-template-rows: minmax(0, 1fr); }
 .fighting .bctl { min-height: 0; }
-.bpane { min-width: 0; height: 100%; align-self: stretch; overflow-y: auto; display: grid; align-content: start; gap: 3px; padding-right: 4px; }
-.bpane .uinfo { grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; }
-.bpane .uinfo > .mon .shape { width: 28px; height: 28px; }
-.bpane .uinfo h2 { font: 600 .84rem var(--f-body); margin: 0; }
-.bpane .bhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.bpane { display: grid; align-content: start; gap: 4px; }
+.bpane .uinfo { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 3px 10px; align-items: start; }
+.bpane .uinfo > .mon { grid-row: 1; grid-column: 1; align-self: center; } .bpane .uinfo > .mon .shape { width: 40px; height: 40px; }
+.bpane .uinfo > div:not(.mon) { display: contents !important; }
+.bpane .uinfo > div:not(.mon) > * { grid-column: 1 / -1; min-width: 0; }
+.bpane .uinfo > div:not(.mon) > .bhead { grid-column: 2; grid-row: 1; }
+.bpane .bhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: 40px; }
+.bpane .uinfo h2 { font: 600 .84rem var(--f-body); margin: 0; flex: 1; min-width: 0; }
 .bpane .uinfo .live, .bpane .uinfo .live b { font-size: .76rem; }
-.bpane .lstats { display: flex; flex-wrap: wrap; gap: 2px 4px; }
-.bpane .lstat { padding: 0 6px; font-size: .72rem; display: inline-flex; gap: 4px; align-items: baseline; }
-.bpane .uinfo .skill { font-size: .78rem; }
-.bpane .bx { height: 24px; width: 24px; padding: 0; border-radius: 6px; font-size: .8rem; margin-left: auto; flex: none; }
-.bpane .bhead { align-items: center; }
+.bpane .lstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.bpane .lstat { padding: 0 6px; font-size: .7rem; gap: 0 4px; }
+.bpane .uinfo .skill { font-size: .74rem; }
+.bpane .bx { height: 26px; width: 26px; padding: 0; border-radius: 6px; font-size: .8rem; flex: none; order: 1; }
+.bpane .bhead > .hint { order: 2; flex-basis: 100%; font-size: .68rem; }
+.bpane > p.hint { font-size: .64rem; margin: 0; }
 #stop { height: 48px; padding: 0 16px; border-radius: 10px; flex: none; font: 600 .95rem var(--f-body); }
 #stop[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 /* set 120 (user): runes on the battle field · worn (one unit) = tag on its cell · team/row/tribe runes = strip above each side */
@@ -543,14 +562,15 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .board .uname, .arena .uname { font-size: .74rem; }
   .rune-dot { top: 3px; right: 3px; font-size: .6rem; padding: 0 4px; }
   .perm-dot { top: 3px; left: 4px; }
-  .benchbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: 62px; gap: 6px; }
-  .spane .ihead > .hint { display: none; }
-  .spane { padding: 3px 6px; font-size: .72rem; border-radius: 8px; gap: 2px; }
-  .spane .info > .mon { display: none; } .spane .info { grid-template-columns: minmax(0, 1fr); }
-  .spane .info h2 { font-size: .78rem; } .spane .info .skill { font-size: .72rem; line-height: 1.3; }
-  .spane .acts button { height: 26px; font-size: .72rem; padding: 0 8px; }
-  .bpane .uinfo > .mon { display: none; } .bpane .uinfo { grid-template-columns: minmax(0, 1fr); } .bpane .uinfo h2 { font-size: .74rem; }
-  .bpane .uinfo .skill, .bpane .uinfo .live, .bpane .lstat { font-size: .66rem; }
+  .benchbar { height: 62px; }
+  .fcard { padding: 8px 10px; width: clamp(290px, 42vw, 380px); }
+  .spane .info { grid-template-columns: 36px minmax(0, 1fr); } .spane .info > .mon .shape { width: 36px; height: 36px; } .spane .ihead { min-height: 36px; }
+  .spane .ihead > h2 { font-size: .8rem; } .spane .ihead > .hint { font-size: .62rem; }
+  .spane .info .skill { font-size: .7rem; line-height: 1.28; }
+  .spane .info .stats2 { font-size: .64rem; } .spane .info .stats2 b { font-size: .68rem; }
+  .spane .lvtabs button { height: 22px; font-size: .64rem; }
+  .bpane .uinfo { grid-template-columns: 32px minmax(0, 1fr); } .bpane .uinfo > .mon .shape { width: 32px; height: 32px; } .bpane .bhead { min-height: 32px; }
+  .bpane .uinfo h2 { font-size: .76rem; } .bpane .uinfo .skill, .bpane .uinfo .live, .bpane .uinfo .live b, .bpane .lstat { font-size: .64rem; }
   #stop { height: 34px; padding: 0 10px; font-size: .8rem; }
   .rnheads { font-size: .6rem; }
   .bfield { grid-template-rows: auto minmax(0, 1fr); }
@@ -655,7 +675,6 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 
   <div class="benchbar" id="benchbar">
     <div class="benchrow"><span class="blbl"><b>ม้านั่ง</b><span id="benchCnt">0/5</span></span><div class="bench" id="bench"></div></div>
-    <div class="spane" id="sidePane" aria-live="polite"></div>
   </div>
 
   <div class="dock" id="dock">
@@ -677,12 +696,14 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
         <button type="button" data-speed="16" aria-pressed="false">16×</button>
       </div>
       <div class="btext grow" id="btext"><span id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span><span id="ticker2"></span></div>
-      <div class="bpane grow" id="bPane" hidden></div>
       <button id="stop" type="button" aria-pressed="false">⏸ หยุด</button>
       <button id="skip" type="button">ข้ามไปผล</button>
       <label class="chk" title="เปิดไว้ = ทุกแมตช์ข้ามไปดูผลทันที (ดูรีเพลย์ทีหลังได้)"><input type="checkbox" id="autoSkip"> ข้ามทุกครั้ง</label>
     </div>
   </div>
+
+  <div class="fcard spane" id="sidePane" role="dialog" aria-label="รายละเอียดตัวละคร" hidden></div>
+  <div class="fcard bpane" id="bPane" role="dialog" aria-label="รายละเอียดตัวละครในแมตช์" hidden></div>
 
   <div class="result" id="result" hidden><div class="rbox" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
     <span class="hint" id="resultSub"></span>
@@ -1140,11 +1161,7 @@ function termEl(k, v, help) {
   d.addEventListener('click', show); d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } });
   return d;
 }
-function glossaryEl() {
-  const box = el('details', 'gloss'); box.append(el('summary', '', 'คำศัพท์ (ไฟ ช็อต มัลติฮิต ฯลฯ)'));
-  const ul = el('ul', 'msgs'); for (const [k, t] of GLOSSARY) { const li = el('li'); li.append(el('b', '', k + ': '), t); ul.append(li); }
-  box.append(ul); return box;
-}
+POPS.gloss = () => { const ul = el('ul', 'msgs'); for (const [k, t] of GLOSSARY) { const li = el('li'); li.append(el('b', '', k + ': '), t); ul.append(li); } return [phead('คำศัพท์', 'ไฟ ช็อต มัลติฮิต ฯลฯ'), ul, pacts()]; };
 // set 97: unit details (shop card / board / bench) · Lv1/2/3 tabs · buy + lock (shop) or sell (own unit)
 // set 120 (user): shown in the pane next to the bench, not a popup · skill text first · the pane follows the picked unit (by uid) or shop card
 let sel = null; // { uid } own unit · { at:'shop', i, id } shop card
@@ -1156,10 +1173,42 @@ function selRef() {
 function renderSide() {
   const pane = $('sidePane'), ref = selRef(); if (!ref) sel = null;
   const nodes = ref ? unitInfo(ref) : null;
-  pane.replaceChildren(...(nodes || [el('span', 'hint empty', 'แตะตัวละคร (ร้าน · บอร์ด · ม้านั่ง) เพื่อดูสกิลและค่าพลังตรงนี้')]));
   document.querySelectorAll('#app [data-ref].picked').forEach(n => n.classList.remove('picked'));
-  if (ref) { const n = document.querySelector(`#app [data-ref="${refKey(ref)}"]`); if (n) n.classList.add('picked'); }
+  if (!nodes) { sel = null; pane.hidden = true; pane.replaceChildren(); return; }
+  pane.replaceChildren(...nodes); pane.hidden = false;
+  const n = document.querySelector(`#app [data-ref="${refKey(ref)}"]`); if (n) n.classList.add('picked');
+  placeCard(pane, n, ref.at === 'shop');
 }
+// px of card content below the card's inner bottom (0 = everything fits, no scrolling)
+function cardOver(card) { const k = card.lastElementChild; if (!k || card.hidden) return 0; const r = card.getBoundingClientRect(); return Math.round(k.getBoundingClientRect().bottom - (r.bottom - parseFloat(getComputedStyle(card).paddingBottom))); }
+// set 121: put a floating card beside its anchor (left/right where it fits · shop cards prefer above) · arrow points at the anchor
+function placeCard(card, a, up) {
+  card.classList.remove('toR', 'toL', 'toU', 'noarrow', 'wide');
+  if (cardOver(card) > 1) card.classList.add('wide'); // too tall for the screen → a wider card (fewer lines) instead of a scrollbar
+  if (!a || !a.isConnected) { card.classList.add('noarrow'); return; }
+  const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight, W = innerWidth, H = innerHeight, g = 10, m = 8;
+  const cl = (v, lo, hi) => Math.min(Math.max(lo, v), Math.max(lo, hi));
+  const sideFits = W - r.right - g >= w + m || r.left - g >= w + m, upFits = r.top - g >= h + m;
+  let x, y, side;
+  if (up && upFits || !sideFits && upFits) { side = 'toU'; y = r.top - g - h; x = cl(r.left + r.width / 2 - w / 2, m, W - w - m); }
+  else { side = W - r.right >= r.left ? 'toR' : 'toL'; x = cl(side === 'toR' ? r.right + g : r.left - g - w, m, W - w - m); y = cl(r.top + r.height / 2 - h / 2, m, H - h - m); }
+  card.style.left = Math.round(x) + 'px'; card.style.top = Math.round(y) + 'px'; card.classList.add(side);
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  if (cx > x && cx < x + w && cy > y && cy < y + h) card.classList.add('noarrow'); // no room: card sits over the unit
+  card.style.setProperty('--ay', Math.round(cl(cy - y - 7, 12, h - 26)) + 'px');
+  card.style.setProperty('--ax', Math.round(cl(cx - x - 7, 12, w - 26)) + 'px');
+}
+// tap anywhere else (not the card, not another unit/shop card, not a popup) = close the card · Esc too
+const refHas = ref => ref && (ref.at === 'shop' ? !!(P.shop[ref.i] && P.shop[ref.i].id) : !!unitAt(ref));
+document.addEventListener('pointerdown', e => {
+  if (!P || e.target.closest('.fcard, dialog')) return;
+  if ($('app').classList.contains('fighting')) { if (bPick != null && !e.target.closest('#arena .cell, #dock')) bUnpick(); return; }
+  if ($('sidePane').hidden) return;
+  const t = e.target.closest('#app [data-ref]'); if (t && refHas(parseRef(t.dataset.ref))) return;
+  sel = null; renderSide();
+}, true);
+document.addEventListener('keydown', e => { if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return; if (bPick != null) bUnpick(); else if (sel) { sel = null; renderSide(); } });
+addEventListener('resize', () => { if (P && sel) renderSide(); if (bPick != null) renderBInfo(true); });
 function unitInfo(ref) {
   let id, level = 1, perm = {}, u = null;
   if (ref.at === 'shop') { id = P.shop[ref.i] && P.shop[ref.i].id; if (!id) return null; }
@@ -1187,14 +1236,14 @@ function unitInfo(ref) {
   right.append(lvBar);
   const st = el('div', 'stats2'), help = el('span', 'hint termhelp', 'แตะชื่อค่าเพื่อดูความหมาย');
   for (const [k, v] of statLine(id, vl, {}, true)) st.append(termEl(k, v, help));
-  right.append(st, help);
+  right.append(st);
   // ค่าถาวร: แยกแถว "ตอนนี้ (รวมถาวร)" ของเลเวลปัจจุบัน (ผู้ใช้เลือก)
   if (Object.values(perm).some(v => v)) {
     const now = el('div', 'stats2 now'); now.append(el('span', 'nowlbl', `ตอนนี้ Lv${level} (รวมถาวร)`));
     for (const [k, v] of statLine(id, level, perm, true)) now.append(termEl(k, v, help));
     right.append(now);
   }
-  right.append(glossaryEl());
+  const foot = el('div', 'cfoot'); foot.append(help, pbtn('คำศัพท์', () => openPop('gloss'))); right.append(foot);
   const pk = Object.entries(perm).filter(([, v]) => v);
   if (pk.length) right.append(el('span', 'perm', 'ค่าถาวร: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
   wrap.append(right);
@@ -1269,7 +1318,7 @@ document.addEventListener('pointermove', e => {
     drag.moved = true;
     const u = drag.ref.at === 'shop' ? null : unitAt(drag.ref), id = u ? u.id : P.shop[drag.ref.i].id;
     drag.ghost = shapeOf(id, u ? u.level : 0); drag.ghost.classList.add('ghost'); document.body.append(drag.ghost);
-    drag.src.classList.add('dragging');
+    drag.src.classList.add('dragging'); $('sidePane').hidden = true;
     for (const r of (u ? mergeTargets(u) : shopMergeTargets(id))) { const n = document.querySelector(`[data-ref="${refKey(r)}"]`); if (n && n !== drag.src) n.classList.add('mergeable'); }
   }
   drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px';
@@ -1284,7 +1333,7 @@ document.addEventListener('pointerup', e => {
   clearDrop();
   if (!d.moved) { tap(d.ref); return; }
   const to = dropAt(e.clientX, e.clientY, d.ref);
-  if (to && to.ref) act(d.ref, to.ref); else if (to && to.sell) doSell(d.ref);
+  if (to && to.ref) act(d.ref, to.ref); else if (to && to.sell) doSell(d.ref); else renderSide();
 });
 document.addEventListener('pointercancel', () => { if (drag && drag.ghost) drag.ghost.remove(); drag = null; clearDrop(); });
 document.addEventListener('keydown', e => { // keyboard: Enter / Space on a cell or shop card = details popup
@@ -1615,17 +1664,17 @@ $('arena').addEventListener('click', ev => {
   bPick = v.uid; renderBInfo(true);
 });
 // set 120 (user): live unit details sit in the dock (where the ticker is), not a popup
-function bUnpick() { bPick = null; document.querySelectorAll('#arena .cell.picked').forEach(x => x.classList.remove('picked')); $('bPane').hidden = true; $('btext').hidden = false; }
+function bUnpick() { bPick = null; document.querySelectorAll('#arena .cell.picked').forEach(x => x.classList.remove('picked')); $('bPane').hidden = true; }
 function renderBInfo(force) {
   if (bPick == null) return;
-  const box = $('bPane'); box.hidden = false; $('btext').hidden = true;
+  const box = $('bPane'); box.hidden = false;
   if (!force && (view.ver === bVer || performance.now() - bAt < 150)) return; // repaint ≤ ~7 times/sec while playing
   bVer = view.ver; bAt = performance.now();
   document.querySelectorAll('#arena .cell.picked').forEach(x => x.classList.remove('picked'));
   let v = bPick != null && view.units ? view.units.get(bPick) : null;
   if (v && !v.card.isConnected) { v = bUnitAt(v.cell); if (v) bPick = v.uid; } // replaced by a summon → show the one standing there now
   const bx = pbtn('✕', bUnpick, 'bx'); bx.setAttribute('aria-label', 'ปิดรายละเอียด');
-  if (!v) { box.replaceChildren(bx, el('span', 'hint', 'ไม่มีตัวนี้ในสนามแล้ว')); return; }
+  if (!v) { box.replaceChildren(bx, el('span', 'hint', 'ไม่มีตัวนี้ในสนามแล้ว')); placeCard(box, null); return; }
   v.cell.classList.add('picked');
   const c = CM[v.id] || { id: v.id, name: v.name, tribe: '', extraTribes: [], skills: [] }, L = (v.level || 1) - 1;
   const res = (view.result.units || []).find(x => x.uid === v.uid), ini = res && res.ini;
@@ -1662,7 +1711,8 @@ function renderBInfo(force) {
     right.append(g);
   } else right.append(el('span', 'hint', 'ไม่มีค่าเรียลไทม์ของแมตช์นี้'));
   const wrap = el('div', 'uinfo'); wrap.id = 'bInfo'; wrap.append(CM[v.id] ? unitShape(c, v.level) : el('span'), right);
-  box.replaceChildren(wrap, el('p', 'hint', 'ค่าเรียลไทม์ · ตัวเลข +/− = เปลี่ยนจากค่าตอนเริ่มแมตช์ · แตะตัวเดิมอีกครั้ง = ปิด'));
+  box.replaceChildren(wrap, el('p', 'hint', 'ค่าเรียลไทม์ · +/− = เปลี่ยนจากตอนเริ่ม · แตะที่อื่น = ปิด'));
+  placeCard(box, v.cell);
 }
 // match detail: opens on demand (built when first opened) · time buttons jump to that line in the battle log below
 // set 97: match details + battle log = one popup (built when opened)
