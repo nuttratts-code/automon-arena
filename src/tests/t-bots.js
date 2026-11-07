@@ -71,7 +71,8 @@ export const TESTS_BOTS = [
     eq(JSON.stringify(g1), JSON.stringify(genBotTeams(chars, RULES, o)), 'สร้างซ้ำได้ผลเดิม');
     eq(JSON.stringify(genBotTeams(chars, RULES, { ...o, cells: [0, 1] }).rounds.slice(0, 2)), JSON.stringify(g1.rounds.slice(0, 2)), 'แบ่งรอบให้หลายโปรเซสได้ผลเดิม');
     let m = 0; const P = simRun(chars, RULES, 5, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, () => m++);
-    ok(P.over && m === P.round && m >= 10 && m <= 19, `run จำลองกับทีมเตรียมจบได้ (${m} แมตช์)`);
+    ok(P.over && m === P.round && m >= RULES.shop.hearts + 1 && m <= 19, // set 133: lower bound = fewest matches a run can last (hearts + second chance), was 10 (seed luck)
+       `run จำลองกับทีมเตรียมจบได้ (${m} แมตช์)`);
     let x = 0; const Q = simRun(chars, RULES, 5, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, () => x++, RUN_STAGE, { extra: 40 });
     ok(Q.over && (Q.hearts <= 0 || Q.round >= 40) && x === Q.round, `extra matches play on until hearts run out (${x} matches, ${Q.wins} wins)`);
   }],

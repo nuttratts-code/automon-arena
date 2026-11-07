@@ -48,7 +48,7 @@ export const TESTS_SHOP = [
       for (let i = 0; i < 120; i++) { startRound(st, chars, R); st.shop.forEach(x => seen.add(cm[x.id].rarity)); }
       ok([...seen].every(r => allowed.includes(r)), `ระดับ ${lv} เจอความหายากที่ปิดอยู่`);
       eq(seen.has('ธรรมดา'), true, `ระดับ ${lv} ต้องเจอธรรมดา`);
-      if (lv >= 10) ok(seen.has('ตำนาน'), `ระดับ ${lv} ต้องเจอตำนาน`);
+      for (const r of allowed) if (oddsAt(lv)[r] >= 10) ok(seen.has(r), `ระดับ ${lv} ต้องเจอ${r}`); // set 133: follows the odds table (was: Lv10+ must show legend)
     }
   }],
   ['ร้าน: ความหายากที่ไม่มีตัวละคร ไม่ทำให้ร้านพัง', () => {
