@@ -1,4 +1,4 @@
-# Automon Arena — "rune plaza on a grassy highland" battle scene (v2, set 132; spec claude/art-style.md §8).
+# Automon Arena — "rune plaza on a grassy highland" battle scene (v4, set 132/134; spec claude/art-style.md §8).
 # Ancient round stone plaza on a high meadow, standing stones with our own glowing rune glyphs,
 # a ruined arch on a far hill, layered hazy hills. Camera A: high, looking down, horizon ~40 % from top.
 # The 12 board cells get carved rings on the floor; standing stones stay out of the cells' screen area.
@@ -49,7 +49,7 @@ COLS = (2.8, 6.0, 9.2)        # |x| of front / mid / back column
 PR = 12.3                     # plaza radius
 CELL_R = 1.2                  # carved ring under each cell
 CELLS = [(sx * cx, ly) for sx in (-1, 1) for ly in LANES for cx in COLS]
-ARCH = (46.0, 245.0)          # ruined arch on a far hill (right of centre)
+ARCH = (78.0, 250.0)          # ruined arch on top of a far hill (right of centre)
 
 def pr(x, y): return np.hypot(np.asarray(x) - PC[0], np.asarray(y) - PC[1])
 
@@ -63,20 +63,20 @@ def height(x, y):
     hills2 = sstep(380, 600, y) * (fbm(x * .004, y * .004, 9, 4) * 80 - 10)
     ridge = 1 - np.abs(2 * fbm(x * .0025, y * .0025, 7, 5) - 1)
     mount = sstep(900, 1400, y) * ridge ** 1.5 * 150
-    arch = 16 * np.exp(-((x - ARCH[0]) ** 2 + (y - ARCH[1]) ** 2) / (2 * 40 ** 2))
+    arch = 46 * np.exp(-((x - ARCH[0]) ** 2 + (y - ARCH[1]) ** 2) / (2 * 34 ** 2)) ** 1.3   # the arch's own hill
     return flat * (roll + side) + drop + hills + hills2 + mount + arch
 
 def ground_color(x, y, h):
     x = np.asarray(x, float); y = np.asarray(y, float)
-    g1 = np.array([0.22, 0.40, 0.12]); g2 = np.array([0.46, 0.60, 0.20]); g3 = np.array([0.72, 0.66, 0.32])
+    g1 = np.array([0.24, 0.36, 0.13]); g2 = np.array([0.47, 0.54, 0.22]); g3 = np.array([0.70, 0.64, 0.34])
     m = fbm(x * .03, y * .03, 23)[..., None]; m2 = sstep(.6, .8, fbm(x * .06, y * .06, 29))[..., None]
     c = g1 + (g2 - g1) * m; c = c + (g3 - c) * m2 * .55
     far = np.clip((y - 60) / 260, 0, 1)[..., None]
-    c = c + (np.array([0.20, 0.47, 0.18]) - c) * far * .7
+    c = c + (np.array([0.24, 0.45, 0.22]) - c) * far * .7
     worn = (1 - sstep(PR - .2, PR + 2.2, pr(x, y) + (fbm(x * .4, y * .4, 33) - .5) * 1.5))[..., None]
     c = c + (np.array([0.50, 0.44, 0.30]) - c) * worn * .45            # trodden ring round the plaza
-    dry = sstep(.6, .78, fbm(x * .09, y * .09, 91))[..., None] * (1 - worn)
-    c = c + (np.array([0.70, 0.62, 0.32]) - c) * dry * .45
+    dry = sstep(.55, .75, fbm(x * .09, y * .09, 91))[..., None] * (1 - worn)
+    c = c + (np.array([0.66, 0.58, 0.30]) - c) * dry * .55
     forest = sstep(.53, .62, fbm(x * .012, y * .012, 41))[..., None] * np.clip((y - 110) / 60, 0, 1)[..., None]
     c = c + (np.array([0.10, 0.24, 0.09]) - c) * forest * .8
     shade = sstep(.52, .7, fbm(x * .004 + 3.1, y * .004, 97))[..., None] * np.clip((y - 50) / 80, 0, 1)[..., None]
@@ -254,13 +254,20 @@ def plaza():
     gap = f2 - f1
     crack = 1 - sstep(.05, .13, gap)                                 # mortar lines with grass
     tone = SEED_TONE[sid]; mossy = SEED_MOSS[sid]
-    sl1 = np.array([0.62, 0.61, 0.56]); sl2 = np.array([0.72, 0.69, 0.62]); sl3 = np.array([0.56, 0.58, 0.55])
+    sl1 = np.array([0.50, 0.49, 0.45]); sl2 = np.array([0.64, 0.60, 0.53]); sl3 = np.array([0.46, 0.48, 0.47])
     c = sl1 + (sl2 - sl1) * tone[..., None]
     c = c + (sl3 - c) * sstep(.6, .9, fbm(X * .25, Y * .25, 77))[..., None] * .7
     lich = sstep(.62, .75, fbm(X * 1.8, Y * 1.8, 79))[..., None] * .35
     c = c + (np.array([0.78, 0.66, 0.44]) - c) * lich                # warm lichen flecks
-    mz = sstep(.55, .72, fbm(X * .7, Y * .7, 81) * .7 + mossy * .3 + crack * .25)[..., None]
-    c = c + (np.array([0.34, 0.46, 0.15]) - c) * mz * .75            # moss patches
+    mz = sstep(.48, .66, fbm(X * .7, Y * .7, 81) * .7 + mossy * .3 + crack * .3 + sstep(PR - 3, PR, pr(X, Y)) * .12)[..., None]
+    c = c + (np.array([0.33, 0.43, 0.14]) - c) * mz * .8             # moss patches (more toward the rim)
+    dirt = sstep(.5, .8, fbm(X * .45, Y * .45, 87))[..., None]
+    c = c * (1 - dirt * .22)                                         # dark weathering stains
+    rust = sstep(.66, .78, fbm(X * .9 + 4, Y * .9, 89))[..., None] * .4
+    c = c + (np.array([0.62, 0.42, 0.26]) - c) * rust                # rusty lichen like the target
+    hair = 1 - sstep(.0, .035, np.abs(fbm(X * .55, Y * .55, 93) - .5))  # hairline cracks inside slabs
+    hair = hair * sstep(.45, .6, fbm(X * .3, Y * .3, 95))
+    c = c * (1 - hair[..., None] * .45)
     c = c + (np.array([0.22, 0.36, 0.10]) - c) * crack[..., None] * .9
     # carved design: outer border ring, centre line between the sides, a ring under each board cell
     groove = np.zeros(X.shape); glow = np.zeros(X.shape)
@@ -281,10 +288,12 @@ def plaza():
     groove = np.maximum(groove, tick * .8)
     groove = groove * (1 - crack * .5)
     c = c * (1 - groove[..., None] * .55)
+    edge = sstep(.13, .22, gap)                                      # slab tops lighter than their worn edges
+    c = c * (.86 + .14 * edge[..., None])
     glow = glow * (1 - crack * .6)
-    Z = height(X, Y) + .09 - groove * .035 - crack * .03 + (fbm(X * 3, Y * 3, 83) - .5) * .015 \
-        + (tone - .5)[...] * .02
-    sr = pr(SEEDS[:, 0], SEEDS[:, 1]); gone = (sr > PR - 1.4) & (np.random.default_rng(9).random(len(SEEDS)) < .16)
+    Z = height(X, Y) + .09 - groove * .035 - crack * .05 - hair * .01 + (fbm(X * 3, Y * 3, 83) - .5) * .02 \
+        + (tone - .5) * .04 * (pr(X, Y) / PR)                       # outer slabs sit unevenly
+    sr = pr(SEEDS[:, 0], SEEDS[:, 1]); gone = (sr > PR - 2.2) & (np.random.default_rng(9).random(len(SEEDS)) < .26)
     gone &= ~((SEEDS[:, 1] < PC[1] - PR + 3) & (np.abs(SEEDS[:, 0]) < 4))
     keep = (R < PR) & ~gone[sid]
     global MISSING; MISSING = gone
@@ -535,8 +544,8 @@ def blades(N):
     verts = np.stack([p0, p1, p2], 1).reshape(-1, 3)
     faces = np.arange(m * K * 3).reshape(-1, 3)
     g = np.repeat(gc ** (1 / 2.2), K, axis=0) * rng.uniform(.78, 1.18, (m * K, 1)) * rng.uniform(.92, 1.08, (m * K, 3))
-    dryb = rng.random(m * K) < .12; g[dryb] = g[dryb] * .4 + np.array([.62, .56, .30]) * .6
-    base = (g * .45) ** 2.2; tip = np.clip(g * 1.25 + np.array([.06, .05, 0]), 0, 1) ** 2.2
+    dryb = rng.random(m * K) < .2; g[dryb] = g[dryb] * .4 + np.array([.62, .56, .30]) * .6
+    base = (g * .42) ** 2.2; tip = np.clip(g * 1.12 + np.array([.07, .04, -.02]), 0, 1) ** 2.2
     cols = np.stack([base, base, tip], 1).reshape(-1, 3)
     ob = build_mesh('grass', verts, faces, np.c_[cols, np.ones(len(cols))], smooth=False)
     ob.data.materials.append(M_GRASS); return len(faces)
@@ -584,15 +593,15 @@ def front_flowers(N):
 front_flowers(1500 if FAST else 7000)
 
 # ---------------- light / world ----------------
-bpy.ops.object.light_add(type='SUN', rotation=(math.radians(50), 0, math.radians(-38)))
-sun = bpy.context.object.data; sun.energy = 4.6; sun.color = (1.0, 0.90, 0.74); sun.angle = math.radians(2)
+bpy.ops.object.light_add(type='SUN', rotation=(math.radians(60), 0, math.radians(-42)))
+sun = bpy.context.object.data; sun.energy = 5.4; sun.color = (1.0, 0.85, 0.64); sun.angle = math.radians(1.5)
 wd = bpy.data.worlds.new('w'); sc.world = wd; wd.use_nodes = True; nt = wd.node_tree
 bg = nt.nodes['Background']; tc = nt.nodes.new('ShaderNodeTexCoord'); sep = nt.nodes.new('ShaderNodeSeparateXYZ')
 cr = nt.nodes.new('ShaderNodeValToRGB')
 cr.color_ramp.elements[0].position = 0.5; cr.color_ramp.elements[0].color = (0.62, 0.72, 0.84, 1)
 cr.color_ramp.elements[1].position = 0.85; cr.color_ramp.elements[1].color = (0.20, 0.38, 0.78, 1)
 nt.links.new(tc.outputs['Generated'], sep.inputs[0]); nt.links.new(sep.outputs['Z'], cr.inputs[0])
-nt.links.new(cr.outputs['Color'], bg.inputs['Color']); bg.inputs['Strength'].default_value = 1.1
+nt.links.new(cr.outputs['Color'], bg.inputs['Color']); bg.inputs['Strength'].default_value = 0.8
 
 # ---------------- camera A: high, pitched down; lens shift puts the horizon at 40 % from the top ----------------
 CAM_H = float(os.environ.get('CAM_H', 5.5)); CAM_Y = float(os.environ.get('CAM_Y', -20.0))
