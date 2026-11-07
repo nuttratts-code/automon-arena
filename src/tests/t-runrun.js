@@ -142,9 +142,10 @@ export const TESTS_RUNRUN = [
     ok(pwOf(weakOn) > pwOf(weakOff), 'weak board + floor → stronger enemy than without floor');
     const big = med7 * 3;
     eq(pickFoe(BOT_TEAMS, big, R7, 9, false, st0(100)).team, pickFoe(BOT_TEAMS, big, R7, 9, false, st0(0)).team, 'board above floor → same enemy');
-    // set 129 (user): floor 80 → 60 after 2 losses in a row (normal or boss) · any win → back to 80
+    // set 129 → 132 (user): floor 100 · from 2 losses in a row (normal or boss) −20 per loss, min 40 · any win → back to 100
     eq([0, 1, 2, 3, 4, 5, 9].map(n => foeFloorPct(n)), [100, 100, 80, 60, 40, 40, 40], 'floor % by losses in a row (set 132: −20 per loss from 2, min 40)');
-    eq(pickFoe(BOT_TEAMS, 1, R7, 9, false, undefined, undefined, 2).floor, Math.round(med7 * 0.6), 'ls 2 → floor median × 60%');
+    eq(pickFoe(BOT_TEAMS, 1, R7, 9, false, undefined, undefined, 2).floor, Math.round(med7 * 0.8), 'ls 2 → floor median × 80%');
+    eq(pickFoe(BOT_TEAMS, 1, R7, 9, false, undefined, undefined, 3).floor, Math.round(med7 * 0.6), 'ls 3 → floor median × 60%');
     const L = fresh(79); endMatch(L, false, chars, RULES, [], false); endMatch(L, false, chars, RULES, [], true); eq(L.ls, 2, 'boss loss counts');
     endMatch(L, true, chars, RULES, [], true); eq(L.ls, 0, 'boss win resets');
     const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft;
