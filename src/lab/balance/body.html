@@ -289,8 +289,9 @@
   <section id="view-result" class="view" hidden>
     <h2>ดูผล</h2>
     <div id="pane-analysis" hidden style="display:grid;gap:12px">
+    <div class="ana-setup" id="anaSetup">
     <div class="row" id="anaFoeRow">
-      <span class="status">คู่ต่อสู้</span>
+      <span class="status ana-lab">คู่ต่อสู้</span>
       <button type="button" id="anaFoeBot" aria-pressed="true">VS Bot</button>
       <button type="button" id="anaFoeBoss" aria-pressed="false">VS บอส</button>
       <button type="button" id="anaFoeRun" aria-pressed="false">รันจริง (บอท)</button>
@@ -305,7 +306,7 @@
       </span>
     </div>
     <div class="row" id="anaRuneRow">
-      <span class="status">รูน</span>
+      <span class="status ana-lab">รูน</span>
       <button type="button" id="anaRuneNone" aria-pressed="true">ไม่มี</button>
       <button type="button" id="anaRuneRand" aria-pressed="false">สุ่ม</button>
       <button type="button" id="anaRunePick" aria-pressed="false">เลือกเอง</button>
@@ -320,6 +321,7 @@
       <span class="status" id="msg">กด "วิเคราะห์" เพื่อวัดผล</span>
     </div>
     <div class="progress" aria-hidden="true"><div id="prog"></div></div>
+    </div>
     <div id="anaRuneRes" hidden style="display:grid;gap:8px">
     <h3 id="anaRuneTitle">ผลรูนแต่ละอัน</h3>
     <div class="tbl"><table>
@@ -334,27 +336,35 @@
       <div class="card"><b>–</b><span>แถบเลือดที่ลดได้เฉลี่ย</span></div>
       <div class="card"><b>–</b><span>เวลาเฉลี่ยต่อแมตช์</span></div>
     </div>
+    <div data-sec="boss" data-label="ผลต่อบอส" style="display:grid;gap:8px">
     <h3>ผลต่อบอส</h3>
     <div class="tbl"><table>
       <thead><tr><th>บอส</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th></tr></thead>
       <tbody id="bossPer"></tbody>
     </table></div>
+    </div>
+    <div data-sec="chars" data-label="ตัวละคร" style="display:grid;gap:8px">
     <h3>อันดับตัวละคร VS บอส (แตะเพื่อเปิดแก้)</h3>
     <div class="tbl"><table>
       <thead><tr><th>ตัวละคร</th><th>ความหายาก</th><th class="n">ชนะบอส %</th><th class="n">ต่างจากค่าเฉลี่ย</th><th class="n">ดาเมจ/แมตช์</th></tr></thead>
       <tbody id="bossRank"></tbody>
     </table></div>
     <p class="hint">ชนะบอส % = อัตราชนะของทีมที่มีตัวนี้ · ยังไม่มีเป้าสำหรับบอส จึงไม่มีป้าย "หลุด/ใกล้ขอบ" · ชนะ = ฆ่าบอสได้ หมดเวลา = ไม่ชนะ</p>
+    </div>
+    <div data-sec="tribes" data-label="เผ่า" style="display:grid;gap:8px">
     <h3>ผลเผ่า VS บอส (ชนะ % ของทีมที่เปิดโบนัสเผ่านั้น)</h3>
     <div class="tbl"><table>
       <thead id="bossTribeHead"></thead>
       <tbody id="bossTribe"></tbody>
     </table></div>
+    </div>
+    <div data-sec="mx" data-label="แมตช์ต้องสงสัย" style="display:grid;gap:8px">
     <h3>แมตช์ต้องสงสัย VS บอส (ดาเมจรวม ÷ HP รวม · สูงสุด 10 อันดับ)</h3>
     <div class="tbl"><table>
       <thead><tr><th>#</th><th>Lv</th><th>บอส</th><th class="n">เท่า</th><th class="n">แถบ</th><th class="n">เวลา</th><th>ผล</th><th>ทีม</th><th>รูน</th><th></th></tr></thead>
       <tbody id="bossTop"></tbody>
     </table></div>
+    </div>
     </div>
     <div id="anaRun" hidden style="display:grid;gap:12px">
     <div class="cards" id="runCards">
@@ -365,38 +375,50 @@
       <div class="card"><b>–</b><span>เวลาเฉลี่ยต่อแมตช์</span></div>
     </div>
     <p class="hint" id="runInfo"></p>
+    <div data-sec="boss" data-label="บอสในรัน" style="display:grid;gap:8px">
     <h3>บอสในรัน (แยกตามบอส × ครั้งที่)</h3>
     <div class="tbl"><table>
       <thead><tr><th>บอส</th><th class="n">ครั้งที่</th><th class="n">รอบ</th><th class="n">เจอ (แมตช์)</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th><th class="n">เลเวลรวมทีม</th><th class="n">ตัว Lv3</th><th>เผ่าหลักที่ชนะบอสนี้ได้ดีสุด / แย่สุด</th></tr></thead>
       <tbody id="runBoss"></tbody>
     </table></div>
     <p class="hint">เลเวลรวมทีม = ผลรวมเลเวล 6 ตัวตอนสู้ (6 = Lv1 ทั้งทีม · 18 = Lv3 ทั้งทีม) · เผ่าหลัก = เผ่าที่เปิดโบนัสและมีตัวมากสุดในทีม (นับเมื่อเจอบอสนั้น ≥ 5 ครั้ง)</p>
+    </div>
+    <div data-sec="round" data-label="ตามรอบ" style="display:grid;gap:8px">
     <h3>ตามรอบ</h3>
     <div class="tbl"><table>
       <thead><tr><th class="n">รอบ</th><th class="n">ยังเล่นอยู่</th><th class="n">ชนะ %</th><th class="n">ตัวในทีม</th><th class="n">เลเวลรวมทีม</th><th class="n">ตัว Lv3</th><th class="n">เวลา</th><th>คู่แข่ง</th></tr></thead>
       <tbody id="runRound"></tbody>
     </table></div>
+    </div>
+    <div data-sec="ends" data-label="จบรัน" style="display:grid;gap:8px">
     <h3>จบรันด้วยกี่ชนะ</h3>
     <div class="tbl"><table>
       <thead><tr><th class="n">ชนะ</th><th class="n">รัน</th><th class="n">%</th></tr></thead>
       <tbody id="runEnds"></tbody>
     </table></div>
+    </div>
+    <div data-sec="tribes" data-label="เผ่า" style="display:grid;gap:8px">
     <h3>เผ่าหลักของทีมสุดท้าย</h3>
     <div class="tbl"><table>
       <thead><tr><th>เผ่า</th><th class="n">ใช้ %</th><th class="n">ชนะครบ 10 %</th><th class="n">ชนะเฉลี่ย</th></tr></thead>
       <tbody id="runTribe"></tbody>
     </table></div>
+    </div>
+    <div data-sec="chars" data-label="ตัวละคร" style="display:grid;gap:8px">
     <h3>ตัวละครที่บอทใช้ (แตะเพื่อเปิดแก้)</h3>
     <div class="tbl"><table>
       <thead><tr><th>ตัวละคร</th><th>ความหายาก</th><th class="n">อยู่ในทีมสุดท้าย %</th><th class="n">เลเวลเฉลี่ย</th><th class="n">ชนะครบ 10 %</th><th class="n">ชนะเฉลี่ย</th><th class="n">ชนะแมตช์ % (ตอนลงสนาม)</th></tr></thead>
       <tbody id="runChars"></tbody>
     </table></div>
     <p class="hint">ทีมสุดท้าย = ทีมแมตช์สุดท้ายของรัน · ชนะครบ 10 % / ชนะเฉลี่ย = ของรันที่ทีมสุดท้ายมีตัวนี้ · ชนะแมตช์ % = ทุกแมตช์ที่ตัวนี้ลงสนาม (รวมบอส) · บอทเลือกตัวจากค่าพลังพื้นฐาน (ไม่อ่านสกิล) เหมือนผู้เล่นที่ดูการ์ด จึงตัวที่สกิลเก่งแต่ค่าพื้นฐานต่ำอาจถูกใช้น้อยกว่าคนจริง</p>
+    </div>
+    <div data-sec="teams" data-label="ทีมที่ชนะ" style="display:grid;gap:8px">
     <h3>ทีมที่ชนะครบ 10 บ่อยสุด (ตัวละครในทีมสุดท้าย)</h3>
     <div class="tbl"><table>
       <thead><tr><th>#</th><th>ทีม</th><th class="n">ครั้ง</th><th class="n">% ของรันที่ชนะครบ</th><th class="n">เลเวลรวมเฉลี่ย</th></tr></thead>
       <tbody id="runCombos"></tbody>
     </table></div>
+    </div>
     </div>
     <div id="anaBot" style="display:grid;gap:12px">
     <div class="cards" id="cards">
@@ -406,6 +428,25 @@
       <div class="card"><b>–</b><span>ความยาวแมตช์ Lv1 / ผสม (เป้า 20–40 วิ)</span></div>
     </div>
     <div class="legend" id="legend"></div>
+    <div data-sec="chars" data-label="ตัวละคร" style="display:grid;gap:8px">
+    <p class="hint">วิธีเดียวกับที่ Claude วัดก่อนเผยแพร่ · ทีมสุ่ม วัด 4 ชุด (เลเวลผสม Lv1 Lv2 Lv3) เมล็ดสุ่ม 4242 · ตัวเลข = ห่างจากเป้าของตัวนั้นกี่จุด · เป้า = ค่าเฉลี่ย + ตามความหายาก (ธรรมดา −10 · ไม่ธรรมดา −5 · หายาก 0 · หายากมาก +5 · ตำนาน +15 · ตัวที่มีสกิลร้านค้า −2) · หลุด = ผสมเกิน ±6 หรือเลเวลใดเกิน ±10 · ใกล้ขอบ = ผสม ≥5 หรือเลเวลใด ≥9 · 12,000 แมตช์ผลขยับได้ราว ±1 จุด ใกล้ขอบให้วัดซ้ำด้วย 24,000 · ไม่รวมค่าถาวรที่สะสมข้ามแมตช์</p>
+    <h3>อันดับตัวละคร (หลุดและใกล้ขอบอยู่บนสุด · แตะเพื่อเปิดแก้)</h3>
+    <div class="row rank-tools"><span class="seg" id="rankShow" role="group" aria-label="แสดง"><button type="button" data-show="" aria-pressed="true">ทุกตัว</button><button type="button" data-show="flag" aria-pressed="false">เฉพาะหลุด + ใกล้ขอบ</button></span><label class="status" for="rankRar">ความหายาก</label><select id="rankRar"><option value="">ทุกระดับ</option></select><span class="status" id="rankSortTxt"></span></div>
+    <p class="hint">แตะหัวคอลัมน์เพื่อเรียง (แตะซ้ำ = กลับด้าน) · เทียบระดับเดียวกัน = ชนะ % ผสม ลบค่าเฉลี่ยของตัวความหายากเดียวกัน (บวก = มีประโยชน์กว่าตัวระดับเดียวกัน) · อันดับในระดับ = ลำดับตามค่านั้น · ดาเมจที่ทำ / ที่รับ = ต่อแมตช์ (เลเวลผสม · ดาเมจที่รับมาก = ตัวรับหน้าแทนทีม) · รอดจบ % = ยังไม่ล้มตอนแมตช์จบ · ผลวัดเก่าที่ยังไม่มีค่าเหล่านี้แสดง –</p>
+    <div class="tbl tbl-fix"><table>
+      <thead id="rankHead"></thead>
+      <tbody id="rank"><tr><td colspan="9" class="status" style="white-space:normal">ยังไม่ได้วิเคราะห์</td></tr></tbody>
+    </table></div>
+    </div>
+    <div data-sec="tribes" data-label="เผ่า" style="display:grid;gap:8px">
+    <h3>ผลโบนัสเผ่า (เลเวล 1 ตามแผนเทสต์ tribe-rules · อยู่ในทีมที่ชนะ = เลเวลผสม)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>เผ่า</th><th>ขั้น</th><th class="n">โบนัสเพิ่มชนะ</th><th class="n">ชนะทีมผสม</th><th>ผล</th><th class="n">อยู่ในทีมที่ชนะ</th></tr></thead>
+      <tbody id="tribeRes"><tr><td colspan="6" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
+    </table></div>
+    <p class="hint">เป้าจาก tribe-rules: ขั้น 2 โบนัสเพิ่มอัตราชนะ +5 ถึง +15% · ขั้น 6 ชนะทีมผสมไม่เกิน 70% · ไม่มีเผ่าไหนอยู่ในทีมที่ชนะเกิน 50% · ขั้น 4 ยังไม่มีเป้า</p>
+    </div>
+    <div data-sec="mx" data-label="แมตช์ต้องสงสัย" style="display:grid;gap:8px">
     <h3>แมตช์ต้องสงสัย (ดาเมจรวมสองฝั่ง ÷ HP รวมสองฝั่ง · สูงสุด 10 อันดับ)</h3>
     <p class="hint">ดาเมจรวมทั้งสองฝั่ง ÷ HP สูงสุดรวมของทุกตัวในสนาม · ค่ามาก = ดาเมจไหลเกิน HP ที่มีจริง (ยื้อ/ฮีลวน/ตัวคูณซ้อน) · กด "ส่งไปลองสู้" เพื่อเปิดแมตช์นั้น (ใช้เมล็ดสุ่มจากทีม = ผลตรงกับตอนวัด)</p>
     <div class="tbl"><table>
@@ -413,20 +454,7 @@
       <tbody id="mxTop"><tr><td colspan="10" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
     </table></div>
     <div id="mxTopSum" style="display:grid;gap:4px"></div>
-    <p class="hint">วิธีเดียวกับที่ Claude วัดก่อนเผยแพร่ · ทีมสุ่ม วัด 4 ชุด (เลเวลผสม Lv1 Lv2 Lv3) เมล็ดสุ่ม 4242 · ตัวเลข = ห่างจากเป้าของตัวนั้นกี่จุด · เป้า = ค่าเฉลี่ย + ตามความหายาก (ธรรมดา −10 · ไม่ธรรมดา −5 · หายาก 0 · หายากมาก +5 · ตำนาน +15 · ตัวที่มีสกิลร้านค้า −2) · หลุด = ผสมเกิน ±6 หรือเลเวลใดเกิน ±10 · ใกล้ขอบ = ผสม ≥5 หรือเลเวลใด ≥9 · 12,000 แมตช์ผลขยับได้ราว ±1 จุด ใกล้ขอบให้วัดซ้ำด้วย 24,000 · ไม่รวมค่าถาวรที่สะสมข้ามแมตช์</p>
-    <h3>อันดับตัวละคร (หลุดและใกล้ขอบอยู่บนสุด · แตะเพื่อเปิดแก้)</h3>
-    <div class="row"><label class="status" for="rankRar">ความหายาก</label><select id="rankRar"><option value="">ทุกระดับ</option></select><span class="status" id="rankSortTxt"></span></div>
-    <p class="hint">แตะหัวคอลัมน์เพื่อเรียง (แตะซ้ำ = กลับด้าน) · เทียบระดับเดียวกัน = ชนะ % ผสม ลบค่าเฉลี่ยของตัวความหายากเดียวกัน (บวก = มีประโยชน์กว่าตัวระดับเดียวกัน) · อันดับในระดับ = ลำดับตามค่านั้น · ดาเมจที่ทำ / ที่รับ = ต่อแมตช์ (เลเวลผสม · ดาเมจที่รับมาก = ตัวรับหน้าแทนทีม) · รอดจบ % = ยังไม่ล้มตอนแมตช์จบ · ผลวัดเก่าที่ยังไม่มีค่าเหล่านี้แสดง –</p>
-    <div class="tbl"><table>
-      <thead id="rankHead"></thead>
-      <tbody id="rank"><tr><td colspan="9" class="status" style="white-space:normal">ยังไม่ได้วิเคราะห์</td></tr></tbody>
-    </table></div>
-    <h3>ผลโบนัสเผ่า (เลเวล 1 ตามแผนเทสต์ tribe-rules · อยู่ในทีมที่ชนะ = เลเวลผสม)</h3>
-    <div class="tbl"><table>
-      <thead><tr><th>เผ่า</th><th>ขั้น</th><th class="n">โบนัสเพิ่มชนะ</th><th class="n">ชนะทีมผสม</th><th>ผล</th><th class="n">อยู่ในทีมที่ชนะ</th></tr></thead>
-      <tbody id="tribeRes"><tr><td colspan="6" class="status">ยังไม่ได้วิเคราะห์</td></tr></tbody>
-    </table></div>
-    <p class="hint">เป้าจาก tribe-rules: ขั้น 2 โบนัสเพิ่มอัตราชนะ +5 ถึง +15% · ขั้น 6 ชนะทีมผสมไม่เกิน 70% · ไม่มีเผ่าไหนอยู่ในทีมที่ชนะเกิน 50% · ขั้น 4 ยังไม่มีเป้า</p>
+    </div>
     </div>
     </div>
   </section>

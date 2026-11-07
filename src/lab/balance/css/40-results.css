@@ -300,3 +300,21 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .rodds .rsum.bad { color: var(--hi); }
 .rsec details > summary { cursor: pointer; color: var(--mute); font-size: .85rem; }
 .rsec details[open] > summary { margin-bottom: 8px; }
+/* set 125: ดูผล — settings panel, picked-mode state, section tabs, clickable cards, fixed table header/name column */
+.ana-setup { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+.ana-setup .ana-lab { min-width: 4.5em; font-weight: 600; }
+#anaFoeRow > button[aria-pressed="true"], #anaRuneRow > button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#anaFoeRow > button[aria-pressed="true"]::before, #anaRuneRow > button[aria-pressed="true"]::before { content: "✓ "; }
+.rtabs { flex-wrap: wrap; }
+.rtabs button { display: inline-flex; gap: 6px; align-items: center; }
+.rt-badge { font-size: .72rem; font-weight: 600; padding: 1px 7px; border-radius: 99px; color: var(--hi); background: var(--hi-bg); }
+.card.jump { cursor: pointer; border: 1px solid transparent; }
+.card.jump:hover { border-color: var(--accent); }
+.card.jump:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.tbl-fix { max-height: 75vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+.tbl-fix thead th { position: sticky; top: 0; z-index: 2; background: var(--panel); box-shadow: inset 0 -1px 0 var(--line); }
+.tbl-fix .rk-name { position: sticky; left: 0; z-index: 1; background: var(--panel); box-shadow: inset -1px 0 0 var(--line); }
+.tbl-fix thead th.rk-name { z-index: 3; }
+.tbl-fix tr.click:hover td.rk-name { background: var(--soft); }
+.rank-tools { align-items: center; }
+@media (max-width: 520px) { .tbl-fix .rk-name { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; } }

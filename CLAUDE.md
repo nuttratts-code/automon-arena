@@ -20,6 +20,9 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - MVP1 = single-player/offline; don't propose systems beyond it. If behind build-plan.md → warn + suggest cuts. MVP2 = Ghost battle + online.
 - Placeholder art = coloured shapes + names; must not resemble the original game (the user makes real art).
 
+## UI work (user rule 7 Nov, set 125)
+- Every time Claude builds a new UI or reshapes an existing one (game page, Balance Room, check, runlog viewer, mockups, any artifact page), first invoke the design skill with the Skill tool: `frontend-design:frontend-design` (also `artifact-design` before writing a new artifact page). Follow it: plan → build → screenshot and critique (desktop + phone width) before the gate. Keep the existing palette/fonts of a page unless the user asks for a new look.
+
 ## Replies
 - Work the user does in tools (Balance Room, game page): name the tool, one step at a time, wait for "done".
 - "Why / how should" questions = short answer, change nothing until told.

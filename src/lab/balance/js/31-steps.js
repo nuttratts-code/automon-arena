@@ -1,10 +1,11 @@
 // ---------- ชุด 29: 4 ขั้น เลือกตัว → แก้ → ดูผล → บันทึก ----------
 const STEP_OF = { grid: 'pick', list: 'pick', chars: 'edit', tribes: 'edit', sim: 'edit', match: 'edit', stage: 'edit', rules: 'edit', analysis: 'result' }; // ชุด 36: แท็บวิเคราะห์แมตช์ // ชุด 30: บันทึกย้ายมาท้ายขั้นแก้ (3 ขั้น)
-var curTab = 'grid', lastPick = 'grid', lastEdit = 'chars', tribeSel = TRIBES[0]; // var: ฟอร์มเผ่าอ่านได้ตั้งแต่เริ่มหน้า
+var resultScrollY = 0, curTab = 'grid', lastPick = 'grid', lastEdit = 'chars', tribeSel = TRIBES[0]; // var: ฟอร์มเผ่าอ่านได้ตั้งแต่เริ่มหน้า
 function showTab(which) {
   if (which === 'save') which = 'chars'; // ค่าเก่าที่จำไว้ (ก่อนชุด 30)
   if (!STEP_OF[which]) which = 'grid';
   const step = STEP_OF[which], stepChanged = STEP_OF[curTab] !== step;
+  if (stepChanged && STEP_OF[curTab] === 'result') resultScrollY = window.scrollY;
   curTab = which;
   if (step === 'pick') lastPick = which;
   if (step === 'edit') lastEdit = which;
@@ -39,7 +40,7 @@ function showTab(which) {
   if (which === 'tribes') renderTribePick();
   if (!$('pane-sim').hidden) { renderSimTeams(); if (typeof renderDock === 'function') renderDock(); }
   else if (simView && simView.playing) { simView.pause(); $('simPlay').textContent = 'เล่น'; }
-  if (stepChanged) window.scrollTo({ top: 0 });
+  if (stepChanged) window.scrollTo({ top: step === 'result' ? resultScrollY : 0 }); // set 125: back to ดูผล = same place as before (e.g. after tapping a character to edit)
   try { localStorage.setItem('automon-balance-tab', which); } catch (e) {}
 }
 $('step-pick').addEventListener('click', () => showTab(lastPick));
