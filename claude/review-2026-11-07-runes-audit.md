@@ -33,3 +33,9 @@ OK as is: T1 ทอง, T2 ดอกเบี้ย (message at round start), X8
 - T3: A) cards shrink to fit up to 8 in one row (recommended) · B) keep 2 rows, shrink the board on phone.
 - X9: A) lock the enemy when the shop round starts + show the enemy team as mini board in the popup with rune names (recommended) · B) keep text, lock enemy only.
 - T4, X3: bug fixes (no design choice).
+
+# Part 3 — ride-along items + side effects (user: "anything else, do it in one go")
+11. Side effect of D1–D6 max 2 → 1 (or any max cut): rnValidate (core/runrunes.js) rejects a save holding n > max → a run in progress with 2 copies would fail to load → needs a clamp on load. Also the Balance Room saved config holds max 2: user must set it there too, or the next AMCFG1 import reverts it.
+12. Bot teams also carry runes (T8 flag with the fixed tribe, T11, D-runes) → after the fixes, regen bot teams (botgen) so enemies use the new rules.
+13. Pending bundle: boss/rune rules exist only in review files + code → write the rune rules into combat-rules (C) as part of this set (user-facing Thai doc).
+14. User-side reminders still open: Balance Room X8 'เงินที่ได้' = 25 + 💾 · C2 scope front vs team (import or set back).
