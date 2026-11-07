@@ -114,4 +114,27 @@ export const TESTS_RUNRUN = [
     const Q = fresh(42), q = unit(Q, commonId); Q.board[1][1] = q; give(Q, 'C3'); Q.rn.at.C3 = [1, 1]; // old save: slot array
     eq(rnCompact(Q).find(x => x.id === 'C3').s, [1, 1], 'old save slot still read');
   }],
+  ['set 126: T11 copies multiply step + cap · T8 each copy counts its picked tribe · enemy locked at shop start (st.fp) · v9 save migrates', () => {
+    const team = buildTeam([{ id: commonId, level: 1, row: 0, lane: 0 }], cm), T11 = rnRec('T11'), T8 = rnRec('T8');
+    const amp = (n, ws) => equipRunes(team, [{ r: T11, n }], { winStreak: ws }).units[0].hitAmp || 0;
+    eq([amp(1, 2), amp(2, 2), amp(1, 99), amp(2, 99)], [T11.stepPct * 2, T11.stepPct * 4, T11.maxPct, T11.maxPct * 2], 'T11 step × copies, cap × copies');
+    const fx = equipRunes(team, [{ r: T8, n: 3, tribes: ['ไฟ?', 'สายฟ้า', 'สายฟ้า'] }]).tribeExtra;
+    eq(fx.map(x => [x.tribe, x.count]).sort(), [[T8.tribe, T8.count], ['สายฟ้า', T8.count * 2]].sort(), 'T8 per-copy tribes (bad name → record tribe)');
+    const P = fresh(77); P.board[0][0] = unit(P, commonId);
+    ok(!rnTakeOffer(P, 0, undefined, 'วายุ').ok && !P.rn.ft.T8, 'no offer → fail, nothing stored');
+    P.rn.offer = { kind: 'win', ids: ['T8'] }; ok(rnTakeOffer(P, 0, undefined, 'วายุ').ok, 'take flag');
+    eq([P.rn.bag.T8, P.rn.ft.T8], [1, ['วายุ']], 'tribe stored');
+    eq(rnCompact(P).find(x => x.id === 'T8').t, ['วายุ'], 'compact carries t');
+    eq(rnFromCompact(rnCompact(P)).find(e => e.r.id === 'T8').tribes, ['วายุ'], 'fight list carries tribes');
+    ok(validateRunState(P, cm, RULES).ok, 'state with ft valid');
+    const Q = fresh(78); eq(Q.fp, 0, 'round 1 empty board → fp 0');
+    Q.board[0][0] = unit(Q, commonId); Q.gold = 99; startRound(Q, chars);
+    eq(Q.fp, Math.round(teamPower(buildTeam([{ id: commonId, level: 1, row: 0, lane: 0 }], cm))), 'fp = board power at shop start');
+    const f1 = pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false); Q.board[1][1] = unit(Q, chars[chars.length - 1].id, 1);
+    eq(pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false).team, f1.team, 'board change → same enemy (locked power)');
+    ok(pickFoe(BOT_TEAMS, 0, 1, 5, false).team.length > 0, 'power 0 → median of the round cell');
+    const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft;
+    const h = dataHash(chars, RULES), rs = readSave(makeSave(old, structuredClone(old), newStats(), 1, h), cm, RULES, h);
+    eq([rs.status, rs.save && rs.save.P.v, rs.save && rs.save.P.fp > 0], ['ok', 10, true], 'v9 save → v10');
+  }],
 ];
