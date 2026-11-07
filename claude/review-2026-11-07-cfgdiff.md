@@ -3,7 +3,7 @@
 Characters, tribe bonuses, game rules, mode settings: MATCH (the 10 chars were imported in set 129). Runes F4 F5 S3 S9: already deleted in the game (match). Differences below.
 Context: game bosses = set-129 bossrun output (Balance Room values × ~0.81–0.88, endlessPct from older k3 tuning); with the Balance Room bosses, bossrun measured k1 ≈ 50% win (target 75).
 
-**User picks (open):** Q1 bosses B1–B6: Balance Room / game · Q2 rune T2 ดอกเบี้ย deleted: Balance Room (delete) / game (keep) · Q3 custom rune C2 เกราะเหล็กคู่ missing from Balance Room: delete from game / keep (user re-adds on page).
+**User picks (DECIDED set 131: Q1 ยึดเกม · Q2 delete T2 · Q3 delete C2 — applied):** Q1 bosses B1–B6: Balance Room / game · Q2 rune T2 ดอกเบี้ย deleted: Balance Room (delete) / game (keep) · Q3 custom rune C2 เกราะเหล็กคู่ missing from Balance Room: delete from game / keep (user re-adds on page).
 
 DIFFERS — 38 cell(s)
 
