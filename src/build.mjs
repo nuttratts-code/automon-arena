@@ -16,7 +16,7 @@ const expand = tpl => {
 // Test files bundled into the system-check page: helpers first, then the topic files, then mechanics.js (it joins them into TESTS).
 const TESTS = ['tests/helpers.js', 'tests/runlog-fixture.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/t-skill-calc.js', 'tests/t-boss.js', 'tests/t-runrun.js', 'tests/mechanics.js'];
 const pages = [
-  ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', 'lab/runlogread.js', 'game/labels.js', ...TESTS]],
+  ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', 'lab/cfgdiff.js', 'lab/runlogread.js', 'game/labels.js', ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'lab/matchcode.js', 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],
   ['game/run.template.html', 'game.html', [...CORE, 'lab/matchcalc.js', 'lab/runlogread.js', 'lab/runlogview.js', 'game/view.js', 'game/labels.js']],
   ['lab/runlog.template.html', 'runlog.html', [...CORE, 'lab/runlogread.js', 'lab/runlogview.js']], // set 110: run-log viewer page (paste an ARUN1 code)
