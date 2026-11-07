@@ -51,3 +51,8 @@ G2 which real team in a match (power-follow removed): rec closest power to the p
 G3 balance: boss tuning (set 108) and pass rate were measured with 10 hearts → after build, measure normal-run pass rate with 5+1 hearts; user decides if bosses need retuning.
 G4 old saves (10 hearts, round > 20): save version bump → in-progress runs cleared with a notice (existing pattern).
 G5 texts: round-10 warning → shown on the "เล่นต่อ" button; end screen counts "ผ่าน" at 10 wins, extra-mode end at round 20 dummy score.
+
+## Gap answers (user 7 Nov: "take the recommendations")
+- G1 = ก: second chance fires when hearts would hit 0 (any cause, incl. X8), once per run. X8 unchanged (no recommendation was given on the trade count → keep 3 / min 2; flag again after G3 measurement if heart-trading dominates).
+- G2 = ก: closest-power real team from nearby rounds, unscaled.
+- G3–G5 as written. Spec is complete → build in set 119.
