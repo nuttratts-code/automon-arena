@@ -19,6 +19,8 @@ import { teamEntries } from '../core/shop.js';
 const argv = process.argv.slice(2), WRITE = argv.includes('--write');
 // set 127: --floor=N overrides the stage setting foeFloor for this measure (0 = no floor) → compare R1 on/off
 const FL = argv.find(a => a.startsWith('--floor=')); if (FL) RUN_STAGE.settings.foeFloor = +FL.slice(8);
+// set 129 measure (user B, 7 Nov): --dyn=STEP[,CAP[,START]] = floor starts START (default 0) · each win +STEP · each loss −STEP · clamp 0..CAP (default 100) → overrides foeFloor per match
+const DY = argv.find(a => a.startsWith('--dyn=')); const DYN = DY ? DY.slice(6).split(',').map(Number) : null;
 const args = argv.filter(a => !a.startsWith('--'));
 const runs = +args[0] || 600;
 const T1 = +(args[1] || 60), T2 = +(args[2] || 50), T3 = +(args[3] || 40);
@@ -31,8 +33,9 @@ let cleared = 0, seconds = 0; const nb = {}, lens = {};
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  let wasOver = false;
-  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra); pcts.push(f.pct); return f; }, m => {
+  let wasOver = false, fl = DYN ? (DYN[2] || 0) : 0;
+  const P = simRun(chars, RULES, seed, p => { const stg = DYN ? { ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: fl } } : RUN_STAGE; const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg); pcts.push(DYN ? fl : f.pct); return f; }, m => {
+    if (DYN) fl = Math.max(0, Math.min(DYN[1] ?? 100, fl + (m.winner !== 1 ? DYN[0] : -DYN[0])));
     if (m.second) seconds++;
     if (!m.extra) { if (m.boss && m.boss !== 'DUMMY') { const q = (nb[m.k] = nb[m.k] || [0, 0]); q[0]++; q[1] += m.winner !== 1 ? 1 : 0; } }
     const won = m.winner !== 1;
