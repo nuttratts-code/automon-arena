@@ -430,7 +430,7 @@ function renderStageSettings(box) {
   const g = fgrid();
   for (const [k, label, , lo, hi, unit] of STAGE_SETTINGS) g.append(fld(`${label}${unit ? ` (${unit})` : ''}`, stageNum(`stg-set-${k}`, stageCfg.settings[k], STAGE_BASE.settings[k], lo, hi, v => { stageCfg.settings[k] = v; })));
   const grow = el('p', 'desc', ''); stageSayEls.push([grow, () => { const st = stageCfg.settings; return 'ศัตรูด่านปกติ (HP + พลังโจมตี) × ' + [20, 25, 30, 40, 50].filter(n => n <= st.lastStage).map(n => `ด่าน ${n}: ${fmt(enemyMultAt(st, n))}`).join(' · '); }]);
-  box.append(el('p', 'hint', 'หลังด่าน 10 (เล่นต่อ) ได้รูนจากบอสเท่านั้น · ไม่ได้รูน = ของรางวัลแทน: ง่าย เงิน · กลาง ค่าถาวร · ยาก ตัวหายาก (ผู้ใช้ตัดสิน 29 ต.ค.) · ทีมศัตรูวัดไว้ถึงด่าน 19 · เกินนั้นใช้ทีมด่าน 19 แล้วคูณให้แรงขึ้นแบบทบต้น'), g, grow);
+  box.append(el('p', 'hint', 'ชุด 119: run ปกติ (หัวใจ 5 + โอกาสสุดท้าย 1 ครั้ง · ไม่เกิน 15 แมตช์) ศัตรู = ทีมบอทจริงไม่ขยายพลัง · บอสรอบ 5/10/15 ไม่บวก % แมตช์พิเศษ · แมตช์พิเศษ (หลังชนะครบ) ศัตรู + % ที่ตั้งไว้ · รอบสุดท้าย = หุ่นเป้า · ทีมบอทมีถึงรอบ 19 · ศัตรูแรงขึ้นแบบทบต้นเริ่มเมื่อถึงด่านที่ตั้ง (ตอนนี้รอบสุดท้าย 20 จึงไม่ถึง)'), g, grow);
 }
 function renderStage() {
   stageSayEls.length = 0;

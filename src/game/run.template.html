@@ -1383,7 +1383,7 @@ function renderDiff(fx) {
   const rb = runBossAt(P), want = foeWantPct(P.extra);
   $('foeLbl').hidden = !!rb; $('foePct').textContent = `${want}%`;
   $('bossChip').hidden = !rb; $('bossChip').textContent = rb ? `บอส: ${rb.boss.name}` : '';
-  diffText.hint = rb && isDummy(rb.boss) ? `รอบสุดท้าย: หุ่นเป้า เลือดไม่มีวันหมด ไม่โจมตี · ตีให้ได้ดาเมจมากที่สุดใน ${RUN_STAGE.settings.dummySec} วิ` : rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรูพลัง ${want}% ของทีมคุณ${P.ws ? ` (ชนะติดกัน ${P.ws} ครั้ง)` : ''} · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH('win')}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
+  diffText.hint = rb && isDummy(rb.boss) ? `รอบสุดท้าย: หุ่นเป้า เลือดไม่มีวันหมด ไม่โจมตี · ตีให้ได้ดาเมจมากที่สุดใน ${RUN_STAGE.settings.dummySec} วิ` : rb ? `รอบบอส · ชนะ = เลือกรูนฟรี 1 อัน (${RN_OFF_TH('boss')})` : `ศัตรู: ทีมบอทจริงพลังใกล้ทีมคุณ · แรง ${want}%${P.extra ? ' (แมตช์พิเศษ)' : ' (ไม่ขยายพลัง)'} · ชนะ = เงินตามปกติ + เลือกรูนฟรี 1 จาก ${RUN_STAGE.settings.offCards} ใบ (${RN_OFF_TH('win')}) · แพ้ = เสียหัวใจ ไม่ได้รูน`;
   if (rb) diffText.scout = `ศัตรู: บอส ${rb.boss.name}`;
   else if (!fx.scout) diffText.scout = 'ไม่เห็นทีมศัตรู (ต้องมีรูนส่องทีม)';
   else {

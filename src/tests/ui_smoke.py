@@ -61,11 +61,11 @@ with sync_playwright() as p:
         chk('เกราะไม้' in pg.inner_text('#board'),'rune name shown on the wearer')
         pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk(pg.is_visible('#runeWarn'),'wearer on the bench → warning')
         esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
-        # set 107: no modes · HUD shows enemy power % (100 + 5 per win in a row) · "?" popup = enemy % + card %
+        # set 119: no modes · HUD shows enemy strength % (100 normal run, no streak · 120 in extra matches) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
         pg.click('#diffInfo'); chk('ตำนาน 10%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
-        pg.evaluate("P.ws=3;render()"); chk(pg.inner_text('#foePct')=='115%','3 wins in a row → 115%')
-        pg.evaluate("P.ws=9;render()"); chk(pg.inner_text('#foePct')=='125%','streak cap +25%'); pg.evaluate("P.ws=0;render()")
+        pg.evaluate("P.ws=3;render()"); chk(pg.inner_text('#foePct')=='100%','set 119: win streak no longer raises the enemy')
+        pg.evaluate("P.extra=true;render()"); chk(pg.inner_text('#foePct')=='120%','extra matches → 120%'); pg.evaluate("P.ws=0;P.extra=false;render()")
         pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
         pg.evaluate("rnMakeOffer(P,'win');render()"); chk(pg.is_visible('#offerDlg') and len(pg.query_selector_all('#offer .rcard'))==3,'offer popup 3 cards')
         # set 100: reroll the cards — 1 free, then 3 gold
@@ -234,7 +234,11 @@ with sync_playwright() as p:
         # set 99: cleared run → "เล่นต่อ (แมตช์พิเศษ)" → back to prep with the hearts left, wins chip shows extra
         pg.evaluate("P.wins=10;P.bw=Math.min(P.bw,10);P.hearts=4;P.over=true;renderRunEnd();showScreen('runEnd')")
         chk(pg.is_visible('#endExtra') and 'ชนะครบ' in pg.inner_text('#endTitle'),'cleared run offers extra matches')
+        chk('20%' in pg.inner_text('#endExtraHint') and 'หุ่นเป้า' in pg.inner_text('#endExtraHint'),'set 119: warning on the extra-matches button')
         pg.click('#endExtra'); chk(in_prep() and pg.evaluate('P.extra') and not pg.evaluate('P.over') and 'พิเศษ' in pg.inner_text('#sWins'),'extra matches continue the run')
+        # set 119: second chance → legend pick popup, no reroll
+        pg.evaluate("rnMakeOffer(P,'sc');render()"); chk(pg.is_visible('#offerDlg') and 'โอกาสสุดท้าย' in pg.inner_text('#offerTitle') and pg.is_hidden('#offerReroll'),'second chance popup (no reroll)')
+        pg.click('#offerSkip'); chk(pg.is_hidden('#offerDlg'),'second chance popup closes')
         pg.evaluate('startNewRun()')
         print(w,'save/resume/end ok')
         pg.evaluate(KEEPNAME)
