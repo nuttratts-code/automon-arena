@@ -193,13 +193,15 @@ export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
 // set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
 // empty board) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
-export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES) {
+// set 129 (user 7 Nov): ls = losses in a row (normal + boss, st.ls) → foeFloorLose % once ls ≥ foeFloorLs, else foeFloor %
+export const foeFloorPct = (ls, stage = RUN_STAGE) => { const s = stage.settings; return Math.max(0, (ls | 0) >= (s.foeFloorLs ?? 2) ? (s.foeFloorLose ?? 60) : (s.foeFloor ?? 80)); };
+export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES, ls = 0) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
   let pp = typeof myUnits === 'number' ? Math.max(0, myUnits) : teamPower(myUnits, rules);
   const ws = data.rounds[k].map(t => t.pw).sort((a, b) => a - b), med = ws.length ? ws[ws.length >> 1] : 0;
   if (!(pp > 0)) pp = med;
   // set 127 (user R1 = C): floor = the round cell's median power × foeFloor % (0 = off) → a weak / sandbagged board still meets the round's usual teams
-  const floor = med * Math.max(0, stage.settings.foeFloor ?? 100) / 100;
+  const floor = med * foeFloorPct(ls, stage) / 100;
   const target = Math.max(pp * (stage.settings.foeBase ?? 100) / 100, floor);
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));

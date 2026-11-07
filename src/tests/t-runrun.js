@@ -7,7 +7,7 @@ import { incomeOf, newRun, startRound, reroll, sell, move, merge, applyBattlePer
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickFoe, foeWantPct } from '../core/botteams.js';
+import { pickFoe, foeWantPct, foeFloorPct } from '../core/botteams.js';
 import { teamPower } from '../core/power.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest, rnUnworn, rnWear } from '../core/runrunes.js';
@@ -142,6 +142,11 @@ export const TESTS_RUNRUN = [
     ok(pwOf(weakOn) > pwOf(weakOff), 'weak board + floor → stronger enemy than without floor');
     const big = med7 * 3;
     eq(pickFoe(BOT_TEAMS, big, R7, 9, false, st0(100)).team, pickFoe(BOT_TEAMS, big, R7, 9, false, st0(0)).team, 'board above floor → same enemy');
+    // set 129 (user): floor 80 → 60 after 2 losses in a row (normal or boss) · any win → back to 80
+    eq([foeFloorPct(0), foeFloorPct(1), foeFloorPct(2), foeFloorPct(5)], [80, 80, 60, 60], 'floor % by losses in a row');
+    eq(pickFoe(BOT_TEAMS, 1, R7, 9, false, undefined, undefined, 2).floor, Math.round(med7 * 0.6), 'ls 2 → floor median × 60%');
+    const L = fresh(79); endMatch(L, false, chars, RULES, [], false); endMatch(L, false, chars, RULES, [], true); eq(L.ls, 2, 'boss loss counts');
+    endMatch(L, true, chars, RULES, [], true); eq(L.ls, 0, 'boss win resets');
     const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft;
     const h = dataHash(chars, RULES), rs = readSave(makeSave(old, structuredClone(old), newStats(), 1, h), cm, RULES, h);
     eq([rs.status, rs.save && rs.save.P.v, rs.save && rs.save.P.fp > 0], ['ok', 10, true], 'v9 save → v10');

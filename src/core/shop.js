@@ -368,7 +368,8 @@ export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false
   st.lastWon = !!won;
   if (won) st.wins++; else st.hearts--;
   const second = loseGuard(st, msgs); // set 119: second chance (hearts would hit 0 → +1 heart once per run + legend rune pick)
-  if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) { st.bw++; st.ls = 0; } else st.ls++; // set 100: ls = normal losses in a row
+  if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) st.bw++;
+  st.ls = won ? 0 : (st.ls | 0) + 1; // set 129 (user): ls = losses in a row, boss too (any win resets) → pickFoe floor (foeFloorLose) · set 100: was normal only
   st.ws = won ? (st.ws | 0) + 1 : 0; // set 107: wins in a row (boss too) → stronger enemy
   if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish) || st.round >= (stage.settings.lastStage | 0)) st.over = true; // set 108: max rounds
   const out = done(msgs);

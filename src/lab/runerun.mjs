@@ -34,7 +34,7 @@ const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
   let wasOver = false, fl = DYN ? (DYN[2] || 0) : 0;
-  const P = simRun(chars, RULES, seed, p => { const stg = DYN ? { ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: fl } } : RUN_STAGE; const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg); pcts.push(DYN ? fl : f.pct); return f; }, m => {
+  const P = simRun(chars, RULES, seed, p => { const stg = DYN ? { ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: fl } } : RUN_STAGE; const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, undefined, p.ls | 0); pcts.push(DYN ? fl : f.pct); return f; }, m => {
     if (DYN) fl = Math.max(0, Math.min(DYN[1] ?? 100, fl + (m.winner !== 1 ? DYN[0] : -DYN[0])));
     if (m.second) seconds++;
     if (!m.extra) { if (m.boss && m.boss !== 'DUMMY') { const q = (nb[m.k] = nb[m.k] || [0, 0]); q[0]++; q[1] += m.winner !== 1 ? 1 : 0; } }

@@ -399,7 +399,10 @@ export const STAGE_SETTINGS = [
   // closest to player board power × foeBase % (nearby rounds) · no win-streak bonus (set 107 power-follow scaling + streak removed)
   ['foeBase', 'ศัตรู: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 100, 10, 400, '%'],
   // set 127 (user R1 = C, review-2026-11-07-system-compare): floor on the wanted power = median power of the round's bot teams × foeFloor % (0 = off) · ค่าเสนอ
-  ['foeFloor', 'ศัตรู: พลังขั้นต่ำ = ค่ากลางทีมบอทรอบนั้น × (0 = ปิด)', 100, 0, 200, '%'],
+  ['foeFloor', 'ศัตรู: พลังขั้นต่ำ = ค่ากลางทีมบอทรอบนั้น × (0 = ปิด)', 80, 0, 200, '%'],
+  // set 129 (user 7 Nov): after foeFloorLs losses in a row (normal or boss) the floor is foeFloorLose % instead · any win → back to foeFloor · ค่าเสนอ
+  ['foeFloorLs', 'ศัตรู: แพ้ติดกันกี่ครั้งจึงลดพลังขั้นต่ำ', 2, 1, 20, 'ครั้ง'],
+  ['foeFloorLose', 'ศัตรู: พลังขั้นต่ำตอนแพ้ติดกัน (0 = ปิด)', 60, 0, 200, '%'],
   // set 119: extra matches (after winsToFinish wins → เล่นต่อ) = the same real team + foeExtraPct % hp/atk (flat)
   ['foeExtraPct', 'แมตช์พิเศษ (หลังชนะครบ): ทีมศัตรูแรงขึ้น', 20, 0, 300, '%'],
   // boss (set 107, user D3 · set 119: extra matches only): a boss met in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)

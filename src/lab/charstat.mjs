@@ -21,7 +21,7 @@ const rows = []; // { id, lv, side, round, won, ds, ts }
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra), m => {
+  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, undefined, undefined, p.ls | 0), m => {
     if (m.boss || m.extra) return;
     const us = m.res.units || [];
     for (const side of [0, 1]) {
