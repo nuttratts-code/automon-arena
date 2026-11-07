@@ -81,9 +81,10 @@ with sync_playwright() as p:
         # set 97: tap = details popup only (never moves) · drag = buy / move / sell
         pg.evaluate("P.gold=60;render()")
         i=pg.evaluate("P.shop.findIndex(s=>s.id)")
-        pg.click('#shop [data-ref="s:%d"]' % i); chk(pg.is_visible('#dlg') and pg.query_selector('#info') is not None,'tap shop card opens popup')
-        pg.click('#pop button.primary'); chk(pg.is_hidden('#dlg') and pg.evaluate('P.bench[0]!==null'),'buy from popup goes to bench')
-        pg.click('#bench [data-ref="n:0"]'); chk(pg.is_visible('#dlg') and pg.evaluate('P.bench[0]!==null && P.board.flat().every(x=>!x)'),'tap own unit opens popup, does not move'); esc()
+        # set 120 (user): details live in the pane next to the bench (no popup) · skill text in the pane
+        pg.click('#shop [data-ref="s:%d"]' % i); chk(pg.is_hidden('#dlg') and pg.query_selector('#sidePane #info') is not None and pg.is_visible('#sidePane'),'tap shop card shows details in the bench pane (no popup)')
+        pg.click('#sidePane button.primary'); chk(pg.is_hidden('#dlg') and pg.evaluate('P.bench[0]!==null') and pg.evaluate("document.querySelector('#sidePane #info h2').textContent.startsWith(P.bench[0].id)"),'buy from pane goes to bench, pane follows the bought unit')
+        pg.click('#bench [data-ref="n:0"]'); chk(pg.is_hidden('#dlg') and pg.query_selector('#sidePane #info') is not None and pg.evaluate('P.bench[0]!==null && P.board.flat().every(x=>!x)'),'tap own unit shows pane, does not move')
         drag('#bench [data-ref="n:0"]','#board [data-ref="b:0:0"]')
         chk(pg.evaluate('P.bench[0]===null && P.board[0][0]!==null') and pg.is_hidden('#dlg'),'drag bench to board moves')
         j=pg.evaluate("P.shop.findIndex(s=>s.id&&CM[s.id].price<=P.gold)")
@@ -94,10 +95,7 @@ with sync_playwright() as p:
         pg.evaluate("(()=>{const i=P.bench.findIndex(Boolean); if(i>=0) act({at:'bench',i},{at:'board',row:1,lane:0});})()")
         # set 116 (mockup): bench row + inline tribe cards (desktop) · ⋯ menu holds new run · fight button shows units on the field
         chk(pg.inner_text('#benchCnt')==('%d/5' % pg.evaluate('P.bench.filter(Boolean).length')) and 'ลงสนาม' in pg.inner_text('#fight'),'bench count + fight button count')
-        if gh>520:
-            chk(len(pg.query_selector_all('#tribeRow .tcard[data-tribe]'))>=1,'tribe cards next to the bench')
-            pg.click('#tribeRow .tcard[data-tribe] >> nth=0'); chk(pg.query_selector('#pop .btbl') is not None,'tribe card opens its bonus table'); esc()
-        else: chk(pg.is_hidden('#tribeRow'),'phone: tribe cards hidden (HUD button instead)')
+        chk(pg.query_selector('#tribeRow') is None and pg.is_visible('#sidePane') and pg.is_visible('#tribeBtn'),'bench pane replaces tribe cards (tribes via HUD button)')
         pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
         pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup'); esc()
@@ -119,9 +117,15 @@ with sync_playwright() as p:
                 chk(fighting() and pg.is_visible('#arena') and len(pg.query_selector_all('#arena .side'))==2 and pg.is_hidden('.prepdock'),'battle on the same field: both teams shown, dock = battle controls')
                 noscroll('battle')
                 chk(pg.is_hidden('#benchbar') and pg.is_hidden('#runeBtn') and pg.is_visible('#battleTitle'),'battle: no bench row, HUD shows match title')
+                rk=pg.evaluate("(()=>{const u=[...view.units.values()].filter(v=>v.cell); const a=u.find(v=>v.side===0), b=u.find(v=>v.side===1); if(!a||!b) return 'none'; const L=[{id:'C3',n:1,s:[a.row,a.lane]},{id:'C2',n:1}], R=[{id:'C4',n:1,s:[b.row,b.lane]}]; placeRunes(L,R); const r=[a.cell.querySelector('.rune-dot')?.textContent||'', b.cell.querySelector('.rune-dot')?.textContent||'', $('rnL').textContent, $('rnR').textContent]; a.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); b.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); placeRunes([],[]); return r;})()")
+                chk(rk=='none' or (rk[0].startswith('◆') and rk[1].startswith('◆') and 'รูนทีม' in rk[2] and rk[3]==''),'set 120: runes shown on the battle field, both sides: '+str(rk))
                 cell=pg.query_selector('#arena .side-a .cell .unit')
                 if cell:
-                    cell.click(); chk(pg.is_visible('#dlg') and pg.query_selector('#bInfo') is not None,'tap unit in battle opens live popup'); esc()
+                    cell.click(); chk(pg.is_hidden('#dlg') and pg.is_visible('#bPane #bInfo') and pg.is_hidden('#btext'),'tap unit in battle shows live details in the dock (no popup)')
+                    pg.click('#stop'); t0=pg.evaluate('view.clock'); pg.wait_for_timeout(300)
+                    chk(pg.evaluate('!view.playing') and pg.evaluate('view.clock')==t0 and 'เล่นต่อ' in pg.inner_text('#stop'),'stop pauses the match')
+                    pg.click('#stop'); chk(pg.evaluate('view.playing || view.ended'),'stop again resumes')
+                    pg.click('#bPane .bx'); chk(pg.is_hidden('#bPane') and pg.is_visible('#btext'),'close details → ticker back')
             pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน
             if not res: chk(pg.is_visible('#rChips') and pg.inner_text('#resultTitle') in ('ชนะ!','แพ้','เสมอ') and pg.inner_text('#resultNext').startswith('ต่อไป'),'result card: big word + chips + next step')
             res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
