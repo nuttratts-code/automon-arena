@@ -96,3 +96,15 @@ Scope: all HL PL SF WY + PT-1 · edits as user chose (SF-5 self down + shock eve
 - 7 Nov 2026 set 129 after import rev 21 + botgen + bossrun (floor 80/60): cleared 45.5% · normal won 59.4% · second chance 83.2% · k1 won 82.3% · k2 reached 89.5% won 81.2% · k3 reached 14.2% won 75.3%.
 
 - set 132 (7 Nov): floor 100 −20/loss from 2 losses (min 40) + bossrun 600 60 62 50 --write → runerun 600: cleared 32.2% · normal won 52.2% · k1 63.3% · k2 reached 67.5% won 84.7% · second chance 90.8%
+
+## Set 133 (7 Nov) — new shop odds table (user, AMCFG1 rev 23) · runerun 600, same harness both sides
+| | old table (main 2405105) | new table (botgen 2400 regen) |
+|---|---|---|
+| run cleared | 32.2% | 30.3% |
+| normal rounds won | 52.2% | 51.0% |
+| boss k1 / k2 / k3 won | 63.3 / 84.7 / 81.1% | 77.7 / 78.4 / 82.8% |
+| second chance used | 90.8% | 92.8% |
+| first Lv3 common: runs · median round | 19.5% · r11 | 87.0% · r7 |
+| first Lv3 uncommon | 12.5% · r13 | 32.2% · r10 |
+| first Lv3 very rare / legend | 31.0% r13 / 2.8% r19 | 20.2% r16 / 0.3% r20 |
+Note: the feared "bosses harder" did not happen (k1 easier: more Lv2/Lv3 commons by round 5).
