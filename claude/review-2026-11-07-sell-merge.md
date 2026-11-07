@@ -17,4 +17,4 @@ Side effects (all options):
 - copies with paid 0 (rune เงา) / fast merge rune (2 copies) / buy+merge: refund floors at 0.
 - S line 14 (sell + rebuy loop) stays valid; sell skills (fireShopSkill) unchanged.
 
-## DECISION (user 7 Nov, set 127): option A. Build next chat (see review-2026-11-07-system-compare.md DECISIONS).
+## DECISION (user 7 Nov, set 127): option A — BUILT (set 127 build): merge() sets paid = sum − 1 copy price (floor 0); sell refunds paid.

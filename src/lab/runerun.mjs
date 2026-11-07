@@ -1,4 +1,4 @@
-// Set 95 → set 107: run results with the game's real flow · node lab/runerun.mjs [runs=600] [--write t1 t2 t3]
+// Set 95 → set 107: run results with the game's real flow · node lab/runerun.mjs [runs=600] [--write t1 t2 t3] [--floor=N]
 // set 108: bosses on fixed rounds (5 10 15 20 …, k by round, lost boss does not come back) · real bot teams (no scaling) up to round foeRealUntil
 // set 107 (user 6 Nov): no modes · the enemy is picked by the player's power + win streak (core/botteams.js pickFoe, like the game)
 // · both sides carry runes (player bot takes rune offers, bot teams have the runes their bot held) · the player bot = core/bot.js
@@ -17,6 +17,8 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { teamEntries } from '../core/shop.js';
 
 const argv = process.argv.slice(2), WRITE = argv.includes('--write');
+// set 127: --floor=N overrides the stage setting foeFloor for this measure (0 = no floor) → compare R1 on/off
+const FL = argv.find(a => a.startsWith('--floor=')); if (FL) RUN_STAGE.settings.foeFloor = +FL.slice(8);
 const args = argv.filter(a => !a.startsWith('--'));
 const runs = +args[0] || 600;
 const T1 = +(args[1] || 60), T2 = +(args[2] || 50), T3 = +(args[3] || 40);
