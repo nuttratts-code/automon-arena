@@ -30,13 +30,16 @@ if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first',
 
 const normal = [0, 0], byWs = {}, out = {}, teams = { 1: [], 2: [], 3: [] }, pcts = [];
 let cleared = 0, seconds = 0; const nb = {}, lens = {};
+// set 133: first round a Lv3 unit of each rarity is on the board (per run) → shop odds check
+const rarOf = Object.fromEntries(chars.map(c => [c.id, c.rarity])), lv3 = {};
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  let wasOver = false, fl = DYN ? (DYN[2] || 0) : 0;
+  const seen = {}; let wasOver = false, fl = DYN ? (DYN[2] || 0) : 0;
   const P = simRun(chars, RULES, seed, p => { const stg = DYN ? { ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: fl } } : RUN_STAGE; const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, undefined, p.ls | 0); pcts.push(DYN ? fl : f.pct); return f; }, m => {
     if (DYN) fl = Math.max(0, Math.min(DYN[1] ?? 100, fl + (m.winner !== 1 ? DYN[0] : -DYN[0])));
     if (m.second) seconds++;
+    for (const e of m.team || []) if (e.level >= 3) { const r0 = rarOf[e.id]; if (!seen[r0]) { seen[r0] = 1; (lv3[r0] = lv3[r0] || []).push(m.round); } }
     if (!m.extra) { if (m.boss && m.boss !== 'DUMMY') { const q = (nb[m.k] = nb[m.k] || [0, 0]); q[0]++; q[1] += m.winner !== 1 ? 1 : 0; } }
     const won = m.winner !== 1;
     if (!m.boss) { normal[0]++; normal[1] += won ? 1 : 0; const w = Math.min(5, m.ws); (byWs[w] = byWs[w] || [0, 0])[0]++; byWs[w][1] += won ? 1 : 0; }
@@ -51,6 +54,8 @@ console.log(`runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run c
 console.log(`normal rounds won ${pct(normal[1], normal[0])}% · by wins in a row: ` + Object.keys(byWs).map(k => `${k}${k === '5' ? '+' : ''}: ${pct(byWs[k][1], byWs[k][0])}% (${byWs[k][0]})`).join(' · '));
 for (const k of Object.keys(out)) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
 console.log(`set 119 normal run: second chance used ${pct(seconds, runs)}% of runs · bosses in the normal run: ` + Object.keys(nb).map(k => `k${k} reached ${pct(nb[k][0], runs)}% of runs · won ${pct(nb[k][1], nb[k][0])}%`).join(' · '));
+
+console.log('set 133 first Lv3 on board (share of runs · median round · p25/p75): ' + Object.keys(lv3).map(k => { const a = lv3[k].sort((x, y) => x - y); return `${k} ${pct(a.length, runs)}% · r${a[a.length >> 1]} (${a[a.length >> 2]}/${a[(a.length * 3) >> 2]})`; }).join(' · '));
 
 if (WRITE) {
   const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),
