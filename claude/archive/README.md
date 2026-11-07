@@ -17,6 +17,7 @@ V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน gi
 | next-set-61.md · review-2026-10-30-{other-tabs,rune-themes,stage-ux}.md | แผนชุด 61 + รายงานตรวจชุด 54–60 ที่ทำเสร็จแล้ว (ย้ายมา 31 ต.ค.) |
 | GEMINI-jules-cancelled.md | คู่มือ Jules/Gemini เดิม · ผู้ใช้ยกเลิก Jules 28 ต.ค. |
 | handoff-2026-10-30-full.md | handoff ฉบับเต็มก่อนย่อ (sets 38–53: import, anomaly SF-6, review, set B/D, repo migration) |
+| relay-2026-11-07-sets66-116.md | Relay entries sets 66–116 moved out of handoff.md (set 120) |
 
 - ทุกไฟล์ในโฟลเดอร์นี้อยู่ใน git แล้ว (30 ต.ค.) · เอกสารใน Project ของ claude.ai ไม่ใช้แล้ว
 - ลิงก์ฉบับเต็มเดิมที่ผูกกับไฟล์กฎ (artifact a800cc75… · 66c91205…) เป็นหน้าเก่า ไม่ตรงกับกฎปัจจุบัน

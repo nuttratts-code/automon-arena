@@ -101,7 +101,7 @@ with sync_playwright() as p:
         pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup'); esc()
         pg.evaluate("P.gold=%d;render()" % g0)
         res=[]; maxBoard=0; titles=[]; offers=0; first=True  # set 87: every round's title (the last match can be a boss round)
-        BUY="""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; tap({at:'shop',i}); const btn=document.querySelector('#pop button.primary'); if(!btn||btn.disabled){closePop();break;} btn.click();}})()"""
+        BUY="""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; tap({at:'shop',i}); const btn=document.querySelector('#sidePane button.primary'); if(!btn||btn.disabled)break; btn.click();}})()"""
         PLACE="""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()"""
         for rnd in range(14):
             if pg.evaluate('P.over'): break
@@ -122,10 +122,10 @@ with sync_playwright() as p:
                 cell=pg.query_selector('#arena .side-a .cell .unit')
                 if cell:
                     cell.click(); chk(pg.is_hidden('#dlg') and pg.is_visible('#bPane #bInfo') and pg.is_hidden('#btext'),'tap unit in battle shows live details in the dock (no popup)')
-                    pg.click('#stop'); t0=pg.evaluate('view.clock'); pg.wait_for_timeout(300)
-                    chk(pg.evaluate('!view.playing') and pg.evaluate('view.clock')==t0 and 'เล่นต่อ' in pg.inner_text('#stop'),'stop pauses the match')
-                    pg.click('#stop'); chk(pg.evaluate('view.playing || view.ended'),'stop again resumes')
-                    pg.click('#bPane .bx'); chk(pg.is_hidden('#bPane') and pg.is_visible('#btext'),'close details → ticker back')
+                    st=pg.evaluate("(()=>{if(view.ended) return 'ended'; $('stop').click(); return [view.playing, view.clock];})()"); pg.wait_for_timeout(300)  # JS click: the match may end any moment (result card covers the dock)
+                    chk(st=='ended' or (st[0]==False and pg.evaluate('view.clock')==st[1] and 'เล่นต่อ' in pg.inner_text('#stop')),'stop pauses the match')
+                    pg.evaluate("document.querySelector('#bPane .bx').click()"); chk(pg.is_hidden('#bPane') and pg.is_visible('#btext'),'close details → ticker back')
+                    pg.evaluate("$('stop').click()"); chk(pg.evaluate('view.playing || view.ended'),'stop again resumes')
             pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน
             if not res: chk(pg.is_visible('#rChips') and pg.inner_text('#resultTitle') in ('ชนะ!','แพ้','เสมอ') and pg.inner_text('#resultNext').startswith('ต่อไป'),'result card: big word + chips + next step')
             res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
