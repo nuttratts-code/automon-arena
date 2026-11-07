@@ -191,7 +191,7 @@ export function pickBotTeam(data, round, seed, tier = null) {
 // bonus (set 107 power-follow scaling + streak removed) · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
 export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
-// set 126 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
+// set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
 // empty board) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
 export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);

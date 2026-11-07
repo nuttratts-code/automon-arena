@@ -62,7 +62,7 @@ function rnSpecStatic(key, r, n, u, ws = 0) {
   const num = q => (typeof r[q] === 'number' ? r[q] : (RUNE_SPEC[key].f.find(f => f[0] === q) || [, , 0])[2]);
   if (key === 'glass') { u.maxHp = Math.max(1, Math.floor(u.maxHp * (1 - Math.min(90, num('hpPct') * n) / 100))); u.hitAmp = (u.hitAmp || 0) + num('dmgPct') * n; return true; }
   if (key === 'fortress') { u.maxHp = Math.floor(u.maxHp * (1 + num('hpPct') * n / 100)); u.atk = Math.max(0, Math.floor(u.atk * (1 - Math.min(90, num('atkPct') * n) / 100))); return true; }
-  if (key === 'growth') { u.hitAmp = (u.hitAmp || 0) + Math.min(num('maxPct') * n, num('stepPct') * n * ws); return true; } // ws = ctx.winStreak · set 126 (T11 A): copies multiply step AND cap
+  if (key === 'growth') { u.hitAmp = (u.hitAmp || 0) + Math.min(num('maxPct') * n, num('stepPct') * n * ws); return true; } // ws = ctx.winStreak · set 128 (T11 A): copies multiply step AND cap
   if (key === 'hpToArmorHit') {
     const lost = Math.floor(u.maxHp * Math.min(90, num('hpPct')) / 100);
     u.maxHp = Math.max(1, u.maxHp - lost); u.armorHit = (u.armorHit || 0) + Math.floor(lost * num('rate') * n / 100); return true;
@@ -86,7 +86,7 @@ function rnSpecSkill(key, r, n, eq, u) {
 }
 
 // Tribe counted extra for the bonus (T8 ธงเผ่า) — the engine adds it to the board count, capped at maxTier
-// set 126 (user T8 A): each copy carries the tribe the player picked when taking it (e.tribes, one per copy) · same tribe twice = counted twice
+// set 128 (user T8 A): each copy carries the tribe the player picked when taking it (e.tribes, one per copy) · same tribe twice = counted twice
 // no picks (old saves / old bot data) = the rune record's tribe for every copy
 export function rnFlagTribes(r, n, picked) {
   const fb = TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];

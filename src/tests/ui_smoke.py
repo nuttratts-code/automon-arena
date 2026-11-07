@@ -66,7 +66,7 @@ with sync_playwright() as p:
         chk('เกราะไม้' in pg.inner_text('#board'),'rune name shown on the wearer')
         pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk(pg.is_visible('#runeWarn'),'wearer on the bench → warning')
         esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
-        # set 126: T4 free reroll usable with 0 gold · T3 8 shop slots in one row · X3 merge hints at 2 · T8 pick tribe · X9 mini board + locked enemy
+        # set 128: T4 free reroll usable with 0 gold · T3 8 shop slots in one row · X3 merge hints at 2 · T8 pick tribe · X9 mini board + locked enemy
         gS=pg.evaluate('P.gold'); shop0=pg.evaluate('JSON.stringify(P.shop)')
         pg.evaluate("P.rn.free=1;P.gold=0;render()"); chk('ฟรี 1' in pg.inner_text('#reroll') and not pg.is_disabled('#reroll'),'T4: free reroll shows ฟรี + enabled with 0 gold')
         pg.click('#reroll'); chk(pg.evaluate('P.rn.free')==0 and pg.evaluate('P.gold')==0 and pg.is_disabled('#reroll'),'T4: free reroll used, then disabled (no gold)')

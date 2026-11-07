@@ -114,7 +114,7 @@ export const TESTS_RUNRUN = [
     const Q = fresh(42), q = unit(Q, commonId); Q.board[1][1] = q; give(Q, 'C3'); Q.rn.at.C3 = [1, 1]; // old save: slot array
     eq(rnCompact(Q).find(x => x.id === 'C3').s, [1, 1], 'old save slot still read');
   }],
-  ['set 126: T11 copies multiply step + cap · T8 each copy counts its picked tribe · enemy locked at shop start (st.fp) · v9 save migrates', () => {
+  ['set 128: T11 copies multiply step + cap · T8 each copy counts its picked tribe · enemy locked at shop start (st.fp) · v9 save migrates', () => {
     const team = buildTeam([{ id: commonId, level: 1, row: 0, lane: 0 }], cm), T11 = rnRec('T11'), T8 = rnRec('T8');
     const amp = (n, ws) => equipRunes(team, [{ r: T11, n }], { winStreak: ws }).units[0].hitAmp || 0;
     eq([amp(1, 2), amp(2, 2), amp(1, 99), amp(2, 99)], [T11.stepPct * 2, T11.stepPct * 4, T11.maxPct, T11.maxPct * 2], 'T11 step × copies, cap × copies');

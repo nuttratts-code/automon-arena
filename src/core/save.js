@@ -49,7 +49,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
   const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc', 'fp'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 10) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 126: v10 = + fp (locked enemy power) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 10) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 128: v10 = + fp (locked enemy power) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -120,7 +120,7 @@ export function validateStats(s, cm) {
   return Object.entries(s.dmg).every(([id, v]) => svOwn(cm, id) && svIntIn(v, 0, 1e12));
 }
 
-// set 126: a v9 run (before the locked enemy / flag tribes) → v10 · fp = the board power now (= what the old build would have used)
+// set 128: a v9 run (before the locked enemy / flag tribes) → v10 · fp = the board power now (= what the old build would have used)
 function svUpV9(st, cm, rules) {
   if (!svObj(st) || st.v !== 9 || !svObj(st.rn) || 'fp' in st || 'ft' in st.rn) return;
   let fp = 0; try { fp = Math.round(teamPower(buildTeam(teamEntries(st), cm, rules), rules)); } catch (e) { fp = 0; }

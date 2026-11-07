@@ -9,7 +9,7 @@ import { rnHeartTrade, rnMakeOffer, rnPlace, rnRerollOffer, rnSkipOffer, rnTakeO
 //   sec = seconds since the run started · slot refs as text: "B3" bench 3 · "F10" board row 1 lane 0 · "-" none
 //   'st' startRound · 'by' slot,dest buy · 'sl' ref sell · 'rr' shop reroll · 'lk' slot lock · 'bm' slot,dest buy+merge
 //   'mv' from,to move/merge · 'en' won(0/1),boss(0/1),gains match end (gains = [id,key,row,lane,amount] perm from the fight)
-//   'of' kind rune offer after a win · 'tk' i [tribe] take rune card (tribe = flag rune T8, set 126) · 'or' rune card reroll · 'sk' skip rune · 'ht' heart → gold
+//   'of' kind rune offer after a win · 'tk' i [tribe] take rune card (tribe = flag rune T8, set 128) · 'or' rune card reroll · 'sk' skip rune · 'ht' heart → gold
 //   'pl' runeId,slot("F10"/"-"),partner(0/1) place rune · 'ex' continue extra matches
 export const RLOG_VERSION = 1;
 export const RLOG_MAX = 20000; // entries per run; past this the journal stops (flag cut) · normal runs ≈ 300–1500 (ค่าเสนอ)
@@ -52,7 +52,7 @@ const rlInt = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi;
 const rlGold = x => rlInt(x, -1e6, 1e7);
 function rlArgsOk(e) {
   const t = e[0], a = e.slice(4), slot = x => rlInt(x, 0, 20), ref = x => typeof x === 'string' && rlUnref(x) !== undefined;
-  if (a.length !== RL_TYPES[t] && !(t === 'tk' && a.length === 2 && TRIBES.includes(a[1]))) return false; // set 126: tk may carry the flag tribe
+  if (a.length !== RL_TYPES[t] && !(t === 'tk' && a.length === 2 && TRIBES.includes(a[1]))) return false; // set 128: tk may carry the flag tribe
   switch (t) {
     case 'by': case 'bm': return slot(a[0]) && ref(a[1]);
     case 'sl': return ref(a[0]) && a[0] !== '-';
@@ -95,7 +95,7 @@ export function rlApply(st, e, chars, rules = RULES) {
     case 'mv': return move(st, rlUnref(a[0]), rlUnref(a[1]), chars, rules);
     case 'en': return endMatch(st, a[0] === 1, chars, rules, a[2].map(g => ({ id: g[0], key: g[1], row: g[2], lane: g[3], amount: g[4], side: 0 })), a[1] === 1);
     case 'of': { const o = rnMakeOffer(st, a[0]); return { ok: true, msgs: [], offer: o }; }
-    case 'tk': return rnTakeOffer(st, a[0], undefined, typeof a[1] === 'string' ? a[1] : null); // set 126: a[1] = flag tribe
+    case 'tk': return rnTakeOffer(st, a[0], undefined, typeof a[1] === 'string' ? a[1] : null); // set 128: a[1] = flag tribe
     case 'or': return rnRerollOffer(st);
     case 'sk': return rnSkipOffer(st);
     case 'ht': return rnHeartTrade(st);

@@ -200,7 +200,7 @@ export function botShop(st, chars, rules = RULES, opts = {}) {
 // "one" runes sit on the strongest board unit (level, then rarity), partner on the 2nd strongest
 const BOT_RAR = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก', 'ตำนาน'];
 const rRank = r => RN_RARS.indexOf(r.rarity) * 2 + (RUNE_RUN_ONLY.includes(r.eff) ? 0 : 1);
-// cm (set 126): flag runes (T8) count the bot's main board tribe (most units, extra tribes count · tie = first in TRIBES order)
+// cm (set 128): flag runes (T8) count the bot's main board tribe (most units, extra tribes count · tie = first in TRIBES order)
 export function botFlagTribe(st, cm) {
   if (!cm) return null;
   const n = {};

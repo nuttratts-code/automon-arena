@@ -25,7 +25,7 @@ export const RN_MAX_HELD = 80; // different runes held (sanity)
 // own random stream (st.rn.n) so rune rolls never shift the unit shop's rolls
 function rnDraw(st) { return makeRng((st.seed ^ 0x52554E45 ^ Math.imul(++st.rn.n, 0x85EBCA77)) >>> 0).next(); }
 export function newRunes() {
-  return { n: 0, bag: {}, at: {}, pt: {}, ft: {}, offer: null, free: 0, traded: false, htu: 0, shadow: 0, ro: 0 }; // set 126: ft = flag tribes picked per copy (id → [tribe, …]) // htu = heart trades used (set 119: one per X8 copy) // ro = rune card rerolls used this match (set 100)
+  return { n: 0, bag: {}, at: {}, pt: {}, ft: {}, offer: null, free: 0, traded: false, htu: 0, shadow: 0, ro: 0 }; // set 128: ft = flag tribes picked per copy (id → [tribe, …]) // htu = heart trades used (set 119: one per X8 copy) // ro = rune card rerolls used this match (set 100)
 }
 // rune record with its id · null = unknown / switched off / deleted
 export function rnRec(id, stage = RUN_STAGE) {
@@ -87,7 +87,7 @@ export function rnRerollOffer(st, stage = RUN_STAGE) {
   if (!rnMakeOffer(st, o.kind, stage, o.ids)) st.rn.offer = o; // nothing at all left → keep the old cards
   return done([cost ? `สุ่มการ์ดรูนใหม่ -${cost} เงิน` : 'สุ่มการ์ดรูนใหม่ (ฟรี)']);
 }
-// tribe = flag runes only (set 126, user T8 A): the tribe this copy counts · not a valid tribe = the rune record's tribe
+// tribe = flag runes only (set 128, user T8 A): the tribe this copy counts · not a valid tribe = the rune record's tribe
 export function rnTakeOffer(st, i, stage = RUN_STAGE, tribe = null) {
   const o = st.rn && st.rn.offer;
   if (!o || !Number.isInteger(i) || i < 0 || i >= o.ids.length) return fail('ไม่มีรูนให้เลือก');
@@ -103,7 +103,7 @@ export function rnTakeOffer(st, i, stage = RUN_STAGE, tribe = null) {
   }
   return done([`ได้รูน ${r.name}${tr}${rnHeld(st, r.id) > 1 ? ` (มี ${rnHeld(st, r.id)} อัน)` : ''}`]);
 }
-// tribes a flag rune may pick (set 126): tribes of the units on the board (extra tribes count) · empty board = every tribe
+// tribes a flag rune may pick (set 128): tribes of the units on the board (extra tribes count) · empty board = every tribe
 export function rnFlagChoices(st, cm) {
   const set = new Set();
   for (const row of (st && st.board) || []) for (const u of row) if (u && cm[u.id]) for (const t of [cm[u.id].tribe, ...(cm[u.id].extraTribes || [])]) set.add(t);
@@ -237,7 +237,7 @@ export function rnCompact(st) {
     const o = { id, n }, s = rnSlotOf(st, id), p = rnSlotOf(st, id, true); // worn unit on the board → its slot for the fight
     if (s) o.s = s;
     if (p) o.p = p;
-    const t = rnFlagPicks(st, id); if (t.length) o.t = t.slice(0, n); // set 126: flag tribes
+    const t = rnFlagPicks(st, id); if (t.length) o.t = t.slice(0, n); // set 128: flag tribes
     return o;
   });
 }

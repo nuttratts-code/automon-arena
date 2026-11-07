@@ -145,7 +145,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 #shopLv { font: 500 .7rem var(--f-mono); text-align: left; padding: 3px 7px; line-height: 1.3; color: var(--mute); display: grid; }
 #shopLv b { color: var(--ink); font-weight: 600; }
 #fight { font-size: 1.05rem; padding: 10px 26px; flex: 1; max-height: 90px; }
-.shop { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 8px; min-width: 0; } /* set 126: --n = shop slots (rune แผงใหญ่ → up to 8, one row) */
+.shop { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 8px; min-width: 0; } /* set 128: --n = shop slots (rune แผงใหญ่ → up to 8, one row) */
 .slot { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 1px; align-content: center; align-items: center; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; min-width: 0; }
 .slot > .mon { grid-row: 1 / 5; }
 .slot .shape { width: clamp(30px, 9vh, 60px); height: clamp(30px, 9vh, 60px); }
@@ -634,7 +634,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .slot { grid-template-columns: 1fr; justify-items: center; padding: 4px; } .slot > .mon { grid-row: auto; } .slot .sub { display: none; }
   .bctl { flex-wrap: wrap; }
 }
-/* set 126 (T3 A): 6–8 shop slots (rune แผงใหญ่) shrink to stacked cards so one row still fits — desktop + phone */
+/* set 128 (T3 A): 6–8 shop slots (rune แผงใหญ่) shrink to stacked cards so one row still fits — desktop + phone */
 .shop.many { gap: 6px; }
 .shop.many .slot { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 6px 4px 4px; column-gap: 0; }
 .shop.many .slot > .mon { grid-row: auto; }
@@ -1078,7 +1078,7 @@ const shapeOf = (id, level) => unitShape(CM[id], level); // ชุด 25: รู
 const refKey = r => r.at === 'board' ? `b:${r.row}:${r.lane}` : r.at === 'bench' ? `n:${r.i}` : `s:${r.i}`;
 const sameRef = (a, b) => a && b && refKey(a) === refKey(b);
 function unitAt(ref) { return ref.at === 'board' ? P.board[ref.row][ref.lane] : ref.at === 'bench' ? P.bench[ref.i] : null; }
-// set 126 (X3 bug): copies needed to merge = rune รวมร่างเร็ว on a unit of this kind (core rnFx().fast, same as shop.js) else S.mergeCount
+// set 128 (X3 bug): copies needed to merge = rune รวมร่างเร็ว on a unit of this kind (core rnFx().fast, same as shop.js) else S.mergeCount
 const mergeNeed = id => rnFx(P).fast[id] || S.mergeCount;
 function shopMergeTargets(id) { // set 106: Lv1 copies a shop card can be dropped on (buy + merge)
   const lv1 = allUnits(P).filter(x => x.u.id === id && x.u.level === 1);
@@ -1114,14 +1114,14 @@ POPS.shop = () => {
 $('shopLv').addEventListener('click', () => openPop('shop'));
 function render() {
   renderChips();
-  const freeR = P.rn.free | 0; // set 126 (T4 bug): free rerolls from rune มองหา are used first (core reroll) → show ฟรี + usable with 0 gold
+  const freeR = P.rn.free | 0; // set 128 (T4 bug): free rerolls from rune มองหา are used first (core reroll) → show ฟรี + usable with 0 gold
   $('rerollCost').textContent = freeR ? `· ฟรี ${freeR}` : `· ${S.rerollCost}`; $('reroll').setAttribute('aria-label', freeR ? `สุ่มร้านใหม่ฟรี (เหลือ ${freeR} ครั้ง)` : `สุ่มร้านใหม่ ${S.rerollCost} เงิน`);
   $('reroll').classList.toggle('free', !!freeR);
   $('reroll').disabled = (!freeR && P.gold < S.rerollCost) || P.over;
   renderShopLevel();
 
   const shop = $('shop'); shop.replaceChildren();
-  shop.style.setProperty('--n', String(P.shop.length)); shop.classList.toggle('many', P.shop.length > 5); // set 126 (T3 A): rune แผงใหญ่ up to 8 slots stay in one row
+  shop.style.setProperty('--n', String(P.shop.length)); shop.classList.toggle('many', P.shop.length > 5); // set 128 (T3 A): rune แผงใหญ่ up to 8 slots stay in one row
   P.shop.forEach((s, i) => {
     const ref = { at: 'shop', i };
     const card = el('div', 'slot'); card.dataset.ref = refKey(ref); card.tabIndex = 0;
@@ -1411,8 +1411,8 @@ function runeCard(r, extra) {
   const head = el('div', 'row'); head.append(el('span', 'rname grow', r.name), t);
   c.append(head, el('span', 'rtext', rnDesc(r)));
   const held = rnHeld(P, r.id); if (held) c.append(el('span', 'hint', `มีแล้ว ${held}/${r.max || 1}`));
-  if (held && r.eff === 'flag') c.append(el('span', 'hint flagtr', `เผ่าที่เลือก: ${rnFlagTribes(r, held, rnFlagPicks(P, r.id)).join(', ')}`)); // set 126 T8
-  if (held > 1 && r.eff === 'growth') c.append(el('span', 'hint', `มี ${held} อัน = +${r.stepPct * held}% ต่อด่าน สูงสุด ${r.maxPct * held}%`)); // set 126 T11
+  if (held && r.eff === 'flag') c.append(el('span', 'hint flagtr', `เผ่าที่เลือก: ${rnFlagTribes(r, held, rnFlagPicks(P, r.id)).join(', ')}`)); // set 128 T8
+  if (held > 1 && r.eff === 'growth') c.append(el('span', 'hint', `มี ${held} อัน = +${r.stepPct * held}% ต่อด่าน สูงสุด ${r.maxPct * held}%`)); // set 128 T11
   if (extra) c.append(extra);
   return c;
 }
@@ -1425,7 +1425,7 @@ function bagIcon() { // built with createElementNS (no innerHTML)
 }
 const rnBag = () => Object.entries(P.rn.bag).filter(([, n]) => n > 0);
 // win → pick 1 free rune: blocking popup (can't fight until picked or skipped)
-// set 126 (user T8 A): taking ธงเผ่า asks which tribe this copy counts (tribes on the board) · flagPick = offer card index while asking
+// set 128 (user T8 A): taking ธงเผ่า asks which tribe this copy counts (tribes on the board) · flagPick = offer card index while asking
 let flagPick = null;
 function flagPicker(i, r) {
   const box = el('div', 'flagpick'); box.id = 'flagPick';
@@ -1485,11 +1485,11 @@ POPS.rune = id => {
   const card = runeCard(r), ctl = el('div', 'row');
   if (rnNeedsSlot(r)) ctl.append(slotPick(id, false, 'สวมให้'));
   if (rnNeedsPartner(r)) ctl.append(slotPick(id, true, 'คู่'));
-  if (r.eff === 'scout') return [phead(`รูน ${r.name}`, 'ทีมศัตรูรอบนี้ (ล็อกตั้งแต่เริ่มรอบร้าน · เปลี่ยนทีมคุณแล้วศัตรูไม่เปลี่ยน)'), foeMini(), card, pacts(back(() => openPop('runes')))]; // set 126 X9
+  if (r.eff === 'scout') return [phead(`รูน ${r.name}`, 'ทีมศัตรูรอบนี้ (ล็อกตั้งแต่เริ่มรอบร้าน · เปลี่ยนทีมคุณแล้วศัตรูไม่เปลี่ยน)'), foeMini(), card, pacts(back(() => openPop('runes')))]; // set 128 X9
   return [phead(`รูน ${r.name}${n > 1 ? ` ×${n}` : ''}`, runeScopeLabel(r)), card, ...(ctl.childNodes.length ? [ctl] : []), pacts(back(() => openPop('runes')))];
 };
 $('runeBtn').addEventListener('click', () => openPop('runes'));
-// set 126 (user X9 A): enemy team as a mini board (enemy front column on the left, facing your team) + its rune names
+// set 128 (user X9 A): enemy team as a mini board (enemy front column on the left, facing your team) + its rune names
 function foeMini() {
   const wrap = el('div', 'foemini'); wrap.id = 'foeMini';
   const rb = runBossAt(P);
@@ -1571,7 +1571,7 @@ $('tribeBtn').addEventListener('click', () => openPop('tribes'));
 const RN_OFF_TH = k => { const st = RUN_STAGE.settings, RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss';
   return RUNE_RARITY.map(([r, th]) => [st[`${boss ? 'offBoss' : 'rar'}${RK[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
 let diffText = { hint: '', scout: '' };
-const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra) : null); // set 126 (user X9 A): locked at shop start (P.fp), not re-picked at the fight · // set 119: real team, +foeExtraPct only in extra matches
+const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra) : null); // set 128 (user X9 A): locked at shop start (P.fp), not re-picked at the fight · // set 119: real team, +foeExtraPct only in extra matches
 function renderDiff(fx) {
   const rb = runBossAt(P), want = foeWantPct(P.extra);
   $('foeLbl').hidden = !!rb; $('foePct').textContent = `${want}%`;
@@ -1589,7 +1589,7 @@ POPS.diff = () => {
   const S2 = RUN_STAGE.settings;
   const lines = rb ? [] : [el('p', 'hint', P.extra ? `แมตช์พิเศษ: ทีมบอทจริงที่พลังใกล้ทีมคุณ แรงขึ้น ${S2.foeExtraPct}%` : 'ศัตรูคือทีมบอทจริงที่พลังใกล้ทีมบนบอร์ดของคุณ (ไม่นับรูน) · ไม่ขยายพลัง'),
     el('p', 'hint', 'ทีมศัตรูเป็นทีมบอทที่เล่นแบบคนจริง (รวมร่าง + มีรูน)')];
-  return [phead(rb ? 'รอบบอส' : 'ศัตรูรอบนี้'), h, ...lines, ...(rnFx(P).scout && !rb ? [foeMini()] : [sc]), pacts()]; // set 126: X9 → mini board here too
+  return [phead(rb ? 'รอบบอส' : 'ศัตรูรอบนี้'), h, ...lines, ...(rnFx(P).scout && !rb ? [foeMini()] : [sc]), pacts()]; // set 128: X9 → mini board here too
 };
 $('diffInfo').addEventListener('click', () => openPop('diff'));
 // player team for a fight: runes equipped (rnFromCompact) → { units, opts }
