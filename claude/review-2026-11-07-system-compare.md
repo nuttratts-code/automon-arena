@@ -31,5 +31,24 @@ Nothing changed. Each item = risk + options; user picks. Items the user already 
 ## Never do (general lessons from other games)
 - Copy names/art/UI of another game (CLAUDE.md) · pay-to-win or loot boxes · hidden odds (we show shop odds — keep) · add systems beyond MVP1 (items, food, partner already cut) · balance by feel without measuring (we have Balance Room — keep using it).
 
+
+## Options in detail (user asked set 127b: fixes + pros/cons + impact for each)
+R1 enemy matching
+- A by round + wins (no power): + simple, getting stronger = winning more, no loophole · − strong/weak players get same foes → too easy/too hard swings · impact: stage.js/botteams pickFoe, re-measure G3, clear rate rises.
+- B power incl. runes+skills: + fair · − skills/runes hard to score, needs a new measure per rune/skill, every new rune needs a value · impact: big code + lab work.
+- C (rec) power match but floor = round median team (and/or cap at +N% above): + blocks sandbag, still adaptive, small code · − still rubber band above the floor · impact: one setting in Balance Room, re-measure G3.
+R2 sell: see sell-merge file (A Lv1/2/3 = 3/6/15). + buying has weight · − feels harsher, bots must be regen'd · impact: shop.js sell, bot.js, botgen, G3 stale.
+R3 second chance
+- A keep: + safety net, kind to new players · − = 6th heart, balance must assume it.
+- B only if wins ≥ N (e.g. 5): + reward for doing well, feels special · − weak players lose it (clear rate falls for them).
+- C heart only, no free legend rune: + keeps net, less power jump · − less exciting · impact: loseGuard + offer 'sc'; re-measure clear rate (was 18.5%).
+W1 unlimited copies: fix = cap per character (e.g. 18) or keep + watch gold runes · + blocks reroll-to-Lv3 · − pool tracking, bots too. Rec: keep for MVP1.
+W2 no perm caps: fix = caps per stat (SAP-style) only for ghosts · + MVP2 fair · − kills "infinite scaling" fun. Rec: decide at MVP2.
+W3 rune copies multiply: fix = diminishing returns (2nd copy 50%) or max copies 2 · + less legend stacking · − rune choices feel weaker. Rec: watch.
+W4 draw = player win: fix at MVP2 (draw = nobody loses heart). No change now.
+W5 late shop 30% legend: fix = keep commons 10–15% late · + commons stay useful · − slower to legends. Rec: user tunes table in Balance Room if wanted.
+W6 long fights: fix = measure real fight length first; if > ~40 s on phone → overtime start 180 → 60–90 s or faster playback · + less waiting · − overtime decides more fights.
+Tribe sizes uneven: fix = give Fire/Storm extra tribe on 2–3 existing characters · + 6 tier reachable · − changes balance, re-measure.
+
 ## DECISIONS (user fills)
 - R1: ? · R2: (sell-merge file) ? · R3: ? · W-items: keep for now unless user says otherwise.
