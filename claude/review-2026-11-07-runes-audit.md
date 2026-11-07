@@ -30,6 +30,6 @@ Checked game/run.template.html + built game.html (Playwright, 1366×768 and 844�
 OK as is: T1 ทอง, T2 ดอกเบี้ย (message at round start), X8 แลกหัวใจ (own button).
 
 ## Fix options part 2
-- T3: A) shop row scrolls sideways / cards shrink to fit up to 8 in one row (recommended) · B) cap shopSlots at +0 on phone…(no) · C) keep 2 rows but shrink board on phone.
+- T3: A) cards shrink to fit up to 8 in one row (recommended) · B) keep 2 rows, shrink the board on phone.
 - X9: A) lock the enemy when the shop round starts + show the enemy team as mini board in the popup with rune names (recommended) · B) keep text, lock enemy only.
 - T4, X3: bug fixes (no design choice).
