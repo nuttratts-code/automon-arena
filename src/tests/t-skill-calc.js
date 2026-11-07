@@ -504,7 +504,8 @@ const SC_SKILL = [
     return x;
   }],
   ['WN-4', 'ตีโดน → ชุบเพื่อนที่ down v ตัว ด้วย HP 20%', (c, L, i) => {
-    const glass = mk('ZG-1', { tribe: 'ทดสอบ', atk: L3(0), cdMs: NEVER, hp: L3(50) }), wall = scBag('ZW-1', { tribe: 'ทดสอบ' });
+    const glass = mk('ZG-1', { tribe: c.tribe, // set 129 import: WN-4 sameTribe → downed allies share its tribe
+      atk: L3(0), cdMs: NEVER, hp: L3(50) }), wall = scBag('ZW-1', { tribe: 'ทดสอบ' });
     const x = scRun([[c, L, 2, 0], [glass, 1, 0, 0], [glass, 1, 0, 1], [wall, 1, 1, 0], [wall, 1, 1, 1]], [[scPunch('ZP-1', 100, { cdMs: [2000, 2000, 2000] }), 1, 0, 0], [scPunch('ZP-2', 100, { cdMs: [2000, 2000, 2000] }), 1, 0, 1]]), me = x.uid(0, 2, 0);
     const h1 = scHits(x.r, me)[0], rev = x.r.events.filter(e => e.k === 'revive' && e.t === h1.t);
     eq(rev.length, sk('WN-4', L === 3 ? 1 : 0).v[i], 'allies revived on first hit');
