@@ -30,3 +30,10 @@ Q1 normal-run team pick: (a, rec) closest power to your team, unscaled (as now) 
 - NEW (user): "Demo": start hearts 10 → 5. On losing the last heart: 1 free heart + pick 1 of 3 random LEGEND runes, no reroll.
   Conflicts: shop.hearts 10 (rules.js) · with 5 hearts a normal run lasts ≤ 14 rounds (≤ 15 with the free heart) → boss at 15 only reachable via the free heart · boss reward is legend 1 of 2 (S-12), this is 1 of 3.
   Open: what "Demo" means (whole game vs a separate mode) · once per run? · normal run only or extra mode too? · legend pool exhausted → fill from other rarities (existing S-12 rule)?
+
+## Decided by user (7 Nov, later) — supersedes the open items above
+- Run capped at 15 matches for now (lastStage 50 → 15); extend later once there is more play data.
+- Applies to the live game for everyone ("Demo" = the current public game).
+- Start hearts 10 → 5. On the 5th loss (hearts would hit 0): +1 free heart AND pick 1 of 3 random legend runes (no reroll) — once per run, in normal run or extra mode. Legend pool empty → fill from other rarities (S-12 rule).
+- Math: 5 losses + 1 free heart → the 6th loss ends the run; 10 wins needs ≤ 15 matches → cap 15 fits exactly.
+- Still to confirm: extra mode +20% flat on the real team · round 15 = real boss #3 (training dummy at the last round removed for now) · boss #3 met in a normal run without the +20% extra-match bonus.
