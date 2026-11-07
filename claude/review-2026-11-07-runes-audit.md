@@ -39,3 +39,14 @@ OK as is: T1 ทอง, T2 ดอกเบี้ย (message at round start), X8
 12. Bot teams also carry runes (T8 flag with the fixed tribe, T11, D-runes) → after the fixes, regen bot teams (botgen) so enemies use the new rules.
 13. Pending bundle: boss/rune rules exist only in review files + code → write the rune rules into combat-rules (C) as part of this set (user-facing Thai doc).
 14. User-side reminders still open: Balance Room X8 'เงินที่ได้' = 25 + 💾 · C2 scope front vs team (import or set back).
+
+# DECISIONS (user, 7 Nov) — build these next set
+- T8 ธงเผ่า: **A** player picks the tribe (from tribes on the board) when taking the rune; card names the picked tribe; bot teams keep a tribe too.
+- T11 ห้ามแพ้: **A** copies multiply stepPct and maxPct.
+- D1–D6: **keep as is** (max 2, no guard; wrong use = player's choice). Different blood runes on the same unit already work. → no max cut, so item 11 (save clamp) is NOT needed.
+- T10: **A** keep.
+- T2: user deleted it in the Balance Room (not imported yet) → no change; comes in with the next AMCFG1 import.
+- T3 แผงใหญ่: **A** cards shrink so up to 8 shop slots fit in one row (desktop + phone 844×390); add ui_smoke check with 8 slots.
+- X9 ทำนาย: **A** enemy locked at shop-round start (stored in the run, saved; not re-picked at fight) + shown as a mini board with rune names, opened by tapping the X9 rune.
+- Bugs to fix (no choice): T4 free reroll button (show ฟรี, enabled with 0 gold) · X3 merge hints use the rune's merge count.
+- Ride-along: regen bot teams after T8/T11 change · write rune rules into combat-rules (C) · UI work → frontend-design skill first, screenshots desktop + phone.
