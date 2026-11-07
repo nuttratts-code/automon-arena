@@ -14,7 +14,6 @@ export const STAGE_USER = {
     { del: false, eff: 'multi', id: 'C1', max: 1, mode: 'flat', name: 'พายุ', on: true, rarity: 'legend', scope: 'tribe', theme: '', tribe: 'วายุ', v: 2 },
     { del: false, eff: 'hp', id: 'C3', max: 3, mode: 'pct', name: 'เกราะไม้', on: true, rarity: 'common', scope: 'one', theme: 'heal', tribe: 'เหล็กกล้า', v: 15 },
     { del: false, eff: 'armor', id: 'C5', max: 2, mode: 'pct', name: 'โล่เหล็กคู่', on: true, rarity: 'rare', scope: 'front', theme: 'armor', tribe: 'เหล็กกล้า', v: 20 },
-    { del: false, eff: 'hp', id: 'C2', max: 2, mode: 'pct', name: 'เกราะเหล็กคู่', on: true, rarity: 'rare', scope: 'team', theme: 'armor', tribe: 'เหล็กกล้า', v: 20 },
     { del: false, eff: 'cd', id: 'C4', max: 3, mode: 'pct', name: 'รองเท้าเก่า', on: true, rarity: 'common', scope: 'one', theme: '', tribe: 'เหล็กกล้า', v: 10 },
     { del: false, eff: 'cd', id: 'C6', max: 1, mode: 'pct', name: 'สวรรค์', on: true, rarity: 'legend', scope: 'tribe', theme: '', tribe: 'ภูติ', v: 30 },
     { del: false, eff: 'regen', id: 'C7', max: 2, name: 'ข่ายแสง', on: true, pct: 20, rarity: 'rare', scope: 'team', sec: 10, theme: '', tribe: 'เหล็กกล้า' },
@@ -46,7 +45,7 @@ export const STAGE_USER = {
     T10: { cdPct: 30, del: false, dmgPct: 50, eff: 'lastStand', max: 1, name: 'สองคนเพื่อนตาย', on: true, rarity: 'legend', scope: 'one', theme: '', tribe: 'เหล็กกล้า' },
     T11: { del: false, eff: 'growth', max: 2, maxPct: 30, name: 'ห้ามแพ้', on: true, rarity: 'rare', scope: 'team', stepPct: 3, theme: '', tribe: 'เหล็กกล้า' },
     T12: { del: false, dmgPct: 35, eff: 'glass', hpPct: 20, max: 1, name: 'เลือดเข้าตา', on: true, rarity: 'legend', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
-    T2: { cap: 20, del: false, eff: 'interest', gold: 1, max: 2, name: 'ดอกเบี้ย', on: true, per: 5, rarity: 'rare', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
+    T2: { cap: 20, del: true, eff: 'interest', gold: 1, max: 2, name: 'ดอกเบี้ย', on: true, per: 5, rarity: 'rare', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
     T3: { del: false, eff: 'shopSlots', max: 2, name: 'แผงใหญ่', on: true, rarity: 'rare', scope: 'team', slots: 1, theme: '', tribe: 'เหล็กกล้า' },
     T4: { del: false, eff: 'freeRoll', free: 1, max: 3, name: 'มองหา', on: true, rarity: 'common', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
     T5: { del: false, eff: 'hitDmg', max: 2, mode: 'pct', name: 'กองดาบเหล็ก', on: true, rarity: 'rare', scope: 'back', theme: '', tribe: 'เหล็กกล้า', v: 15 },
@@ -73,5 +72,5 @@ export const STAGE_USER = {
     X8: { del: false, eff: 'heartTrade', gold: 25, max: 3, minHearts: 2, name: 'หัวการค้า', on: true, rarity: 'common', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
     X9: { del: false, eff: 'scout', max: 1, name: 'ทำนาย', on: true, rarity: 'legend', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
   },
-  settings: { bossEvery: 5, bossLateFrom: 20, bossEveryLate: 10, growFrom: 20, growPct: 8, lastStage: 20 },
+  settings: { bossEvery: 5, bossEveryLate: 10, bossLateFrom: 20, growFrom: 20, growPct: 8, lastStage: 20 },
 };

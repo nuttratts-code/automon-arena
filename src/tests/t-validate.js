@@ -14,7 +14,7 @@ import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, st
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
     const d = stageDefaults();
-    eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom.map(c => c.id), ['C1', 'C3', 'C5', 'C2', 'C4', 'C6', 'C7', 'C8'], 'user custom runes (set 62, C7-C8 set 79)'); eq(stageBase().custom, [], 'code base has no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
+    eq(Object.keys(d.runes).length, 51, 'rune count'); eq(d.custom.map(c => c.id), ['C1', 'C3', 'C5', 'C4', 'C6', 'C7', 'C8'], 'user custom runes (set 62, C7-C8 set 79, C2 removed set 131)'); eq(stageBase().custom, [], 'code base has no custom runes'); eq(cleanStage(null), d, 'null → defaults'); eq(cleanStage(JSON.parse(JSON.stringify(d))), d, 'round trip');
     for (const s of RUNE_SPECIAL) for (const [k, , v, lo, hi, u] of s.f) ok(u === 'tribe' || (v >= lo && v <= hi), `${s.key}.${k} default out of range`);
     for (const r of STAGE_RUNES) ok(runeKind(r.eff), `${r.id} effect`);
     for (const b of STAGE_BOSSES) ok(b.phases.length === 1 && b.phases[0].rules.every(r => BOSS_RULES.some(q => q[0] === r.id)), `${b.id} rule`);
