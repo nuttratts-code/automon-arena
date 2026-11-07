@@ -44,3 +44,10 @@ Q1 normal-run team pick: (a, rec) closest power to your team, unscaled (as now) 
 - Second chance: on the 5th loss → +1 heart + pick 1 of 3 random legend runes, no reroll · once per run · normal or extra · empty legend pool → other rarities.
 - lastStage 50 → 20; extra-mode end = round 20 dummy. Growth from round 20 (8%) no longer reachable.
 - Docs to update: S-10, S-12, S-13 (+ version bump, core rule → +1.0), Balance Room setting labels.
+
+## Gaps found in the final spec (review, user to answer before build)
+G1 heart-trade rune X8 (hearts → 10 gold, min 2 hearts, up to 3): with 5 hearts, "5th loss" ≠ "hearts hit 0". Rec: trigger second chance when hearts would hit 0 (any cause), once per run; X8 min hearts stays 2.
+G2 which real team in a match (power-follow removed): rec closest power to the player's team from nearby rounds, unscaled (current rounds 1–10 behaviour) · alt random from that round's pool.
+G3 balance: boss tuning (set 108) and pass rate were measured with 10 hearts → after build, measure normal-run pass rate with 5+1 hearts; user decides if bosses need retuning.
+G4 old saves (10 hearts, round > 20): save version bump → in-progress runs cleared with a notice (existing pattern).
+G5 texts: round-10 warning → shown on the "เล่นต่อ" button; end screen counts "ผ่าน" at 10 wins, extra-mode end at round 20 dummy score.
