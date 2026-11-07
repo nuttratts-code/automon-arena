@@ -254,6 +254,26 @@ with sync_playwright() as p:
             chk(p2.is_visible('#resume') and 'คนใหม่' in p2.inner_text('#resume'),'rename from resume screen')
             p2.click('#resumeGo'); chk(p2.evaluate('RL && RL.nm')=='คนใหม่','renamed player goes on the resumed run journal')
             c2.close()
+            # set 117: app killed = localStorage wiped → name comes back from the viewer's private db doc (fake window.claude)
+            FAKE="""(()=>{const S=window.__nmSaved=%s;window.__nmSets=[];const q={add:()=>Promise.resolve(),set:()=>Promise.resolve(),get:()=>Promise.resolve({exists:false,docs:[]}),onSnapshot:()=>()=>{}};
+q.doc=()=>q;q.collection=()=>q;q.orderBy=()=>q;q.limit=()=>q;q.where=()=>q;
+const db={collection:()=>q,doc:p=>p==='data/users/u1/profile'?{get:()=>Promise.resolve(S?{exists:true,data:()=>({nm:S})}:{exists:false,data:()=>undefined}),set:d=>{window.__nmSets.push([p,d.nm]);return Promise.resolve();}}:q};
+const u={id:()=>Promise.resolve('u1'),isOwner:()=>Promise.resolve(false),canEdit:()=>Promise.resolve(false)};
+window.claude={use:n=>new Promise(r=>setTimeout(()=>r(n==='db'?db:n==='user'?u:null),300))};})()"""
+            for saved in ('"จากฐาน"','null'):
+                c3=b.new_context(viewport={'width':gw,'height':gh}); c3.add_init_script(FAKE%saved); p3=c3.new_page()
+                p3.route('**/*', lambda r: r.abort() if not r.request.url.startswith('file:') else r.continue_())
+                p3.on('pageerror', lambda e: errs.append((w,'pageerror dbname',str(e))))
+                p3.goto(f'file://{D}/game.html')
+                if saved!='null':
+                    p3.wait_for_function("document.getElementById('nameScr').hidden && P", timeout=5000)
+                    chk(p3.evaluate('playerName')=='จากฐาน' and p3.evaluate('RL.nm')=='จากฐาน' and p3.evaluate("localStorage.getItem('automon-player-name-v1')")=='จากฐาน','db name restored after app kill, run starts without asking')
+                else:
+                    chk(p3.is_visible('#nameScr'),'no db name: name screen stays')
+                    p3.wait_for_timeout(700); p3.fill('#nameIn','ใหม่ในฐาน'); p3.click('#nameGo')
+                    p3.wait_for_function('window.__nmSets.length>0', timeout=3000)
+                    chk(p3.evaluate('window.__nmSets')==[['data/users/u1/profile','ใหม่ในฐาน']],'typed name written to own db doc')
+                c3.close()
         # set 110: run-log viewer (runlog.html) · clean run (reload = no test hacks in CM/P) → code → no alert · edited code → red
         pg.reload()
         chk(in_prep() and pg.is_hidden('#nameScr'),'name set → game opens on prep')
