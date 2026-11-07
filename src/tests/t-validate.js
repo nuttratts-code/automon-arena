@@ -9,6 +9,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateConfig, validateTeam } from '../core/validate.js';
 import { mk, L3, u, eq, ok, randomTeam, dummy, fight, ev, NT } from './helpers.js';
 import { parseCfgCode, preImportCheck } from '../lab/cfgcode.js';
+import { cfgDiff, cfgDiffText } from '../lab/cfgdiff.js';
 import { STAGE_RUNES, STAGE_BOSSES, BOSS_RULES, bossPhaseWarn, stageDefaults, stageBase, cleanStage, bossAt, enemyMultAt, runeSkillOk, customDefault, runeText, runeActive, RUNE_SPECIAL, runeWithEff, runeKind, RUNE_COPIES, spotCode, spotInfo, phaseStatsAt, BOSS_RULE_GROUPS, BOSS_STAT_GROUPS, BOSS_PHASE_STATS } from '../core/stage.js';
 export const TESTS_VALIDATE = [
   ['โหมดด่าน: ข้อมูลรูน/บอสจากภายนอกถูกตรวจ (ค่าผิด/ไม่รู้จัก → ค่าเสนอ)', () => {
@@ -176,6 +177,16 @@ export const TESTS_VALIDATE = [
       let threw = false; try { parseCfgCode(bad); } catch (e) { threw = true; }
       ok(threw, 'รหัสผิดต้องถูกปฏิเสธ: ' + bad.slice(0, 40));
     }
+  }],
+  ['ชุด 130: เทียบรหัส AMCFG1 กับเกมทุกส่วน (แสดงเฉพาะช่องที่ไม่ตรง)', () => {
+    const d = stageDefaults(), c = buildCharacterList()[0];
+    const code = x => cfgDiff(parseCfgCode('AMCFG1 ' + JSON.stringify({ v: 1, config: x })));
+    const m = code({ chars: { [c.id]: { hp: c.hp } }, tribes: {}, stage: JSON.parse(JSON.stringify(d)) });
+    eq(m.rows, [], 'same as game = no rows'); ok(cfgDiffText(m).startsWith('MATCH'), 'MATCH text');
+    const s = JSON.parse(JSON.stringify(d)); s.bosses[0].hp += 1; s.bosses[0].phases[0].rules = []; s.runes.T2.del = !s.runes.T2.del; s.settings.foeBase = 150; s.custom.pop();
+    const r = code({ chars: { [c.id]: { hp: [1, 2, 3] } }, tribes: {}, stage: s });
+    eq(r.rows.map(x => x.part + ':' + x.id + ':' + x.field), ['chars:' + c.id + ':hp', 'runes:T2:del', 'custom:' + d.custom[d.custom.length - 1].id + ':(ทั้งตัว)', 'bosses:B1:hp', 'bosses:B1:phase1.rules', 'settings:foeBase:ค่า'], 'only differing cells, every part');
+    eq(code({ chars: {}, tribes: {} }).notes.length, 1, 'no stage part = note');
   }],
   ['ชุด 61: ไอเดียในรหัส AMCFG1 (ไม่บังคับ) ตรวจก่อนใช้', () => {
     const cfg = { chars: {}, tribes: {} };
