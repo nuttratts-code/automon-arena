@@ -17,7 +17,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 8, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 9, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 119: v9 = + sc (second chance used) · hearts 5 · set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -26,7 +26,7 @@ export function newRun(chars, seed, rules = RULES) {
     rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
     // set 99 (user 6 Nov): bw = normal-match wins since the last boss fight (boss after bossEvery of them, core/runboss.js)
     // bk = bosses beaten (next boss = bk + 1; a lost boss comes back later) · extra = playing extra matches after the run was cleared
-    bw: 0, bk: 0, extra: false, ls: 0, ws: 0, // set 107: ws = wins in a row (normal or boss) → enemy power (pickFoe)
+    bw: 0, bk: 0, extra: false, ls: 0, ws: 0, sc: 0, // set 107: ws = wins in a row (normal or boss) → enemy power (pickFoe)
   };
   return st;
 }
@@ -362,12 +362,20 @@ export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false
   if (won) for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchWin', chars, rules, msgs);
   st.lastWon = !!won;
   if (won) st.wins++; else st.hearts--;
+  const second = loseGuard(st, msgs); // set 119: second chance (hearts would hit 0 → +1 heart once per run + legend rune pick)
   if (boss) { st.bw = 0; if (won) st.bk++; } else if (won) { st.bw++; st.ls = 0; } else st.ls++; // set 100: ls = normal losses in a row
   st.ws = won ? (st.ws | 0) + 1 : 0; // set 107: wins in a row (boss too) → stronger enemy
   if (st.hearts <= 0 || (!st.extra && st.wins >= S.winsToFinish) || st.round >= (stage.settings.lastStage | 0)) st.over = true; // set 108: max rounds
-  const real = stage.settings.foeRealUntil | 0;
-  if (!st.over && real > 0 && st.round === real) msgs.push(`คำเตือน: ตั้งแต่รอบ ${real + 1} ศัตรูจะเก่งขึ้นมาก (ขยายพลังได้) รวมถึงบอสด้วย`); // set 108 (user)
-  return done(msgs);
+  const out = done(msgs);
+  if (second) out.second = true; // the caller then offers the legend rune pick (rnMakeOffer 'sc')
+  return out;
+}
+// set 119 (user 7 Nov, G1 ก): when hearts would hit 0 (any cause) the first time in a run → +1 heart (run goes on) · st.sc = 1 (used)
+export function loseGuard(st, msgs = []) {
+  if (st.hearts > 0 || st.sc) return false;
+  st.hearts = 1; st.sc = 1;
+  msgs.push('โอกาสสุดท้าย! ได้หัวใจคืน 1 ดวง + เลือกรูนตำนานฟรี 1 อัน (ครั้งเดียวต่อ run)');
+  return true;
 }
 // set 99 (user 6 Nov): after the run is cleared (wins = winsToFinish) the player may keep playing extra matches with the hearts left
 export function continueExtra(st, rules = RULES) {

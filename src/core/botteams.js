@@ -27,7 +27,8 @@ export const BOT_GEN = { runs: 2400, seed: 2310, perTribe: 40, refOpp: 30, pct: 
 // set 87: each tier holds BOT_PER teams → the 12 teams of a cell cover all 6 tribes twice (main tribe = most units)
 export const BOT_PER = 4;
 // number of round cells = the last round a main run can reach (10 wins + 9 losses = 19)
-export const botRounds = (rules = RULES) => rules.shop.winsToFinish + rules.shop.hearts - 1;
+// set 119: hearts 5 → a normal run ends by round 15, but extra matches go to round lastStage − 1 (19) before the dummy → cells for every fought round
+export const botRounds = (rules = RULES, stage = RUN_STAGE) => Math.max(rules.shop.winsToFinish + rules.shop.hearts - 1, (stage.settings.lastStage | 0) - 1);
 export const roundCell = (round, n) => Math.max(1, Math.min(n, round | 0)) - 1;
 
 // ---------- run จำลอง 1 รอบ (ผู้เล่น = บอท) · ใช้ทั้งสร้างทีมและวัดความยาวแมตช์ ----------
@@ -51,15 +52,16 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     const mine = teamEntries(P), myRn = R ? rnCompact(P) : [], ws = P.ws | 0;
     const foe = rb ? null : preset ? (Array.isArray(preset) ? { team: preset } : preset) : { team: teamEntries(B), rn: R ? rnCompact(B) : [], s: B.ws | 0 };
     const me = equipRunes(buildTeam(mine, cm, rules), rnFromCompact(myRn, stage), { winStreak: ws });
-    const fs = rb ? { units: runBossTeam(rb.boss, rb.k, stage), opts: runBossOpts(rb.boss, stage) } : foeSide(foe, cm, rules, stage, P.round);
+    const fs = rb ? { units: runBossTeam(rb.boss, rb.k, stage, P.extra), opts: runBossOpts(rb.boss, stage) } : foeSide(foe, cm, rules, stage, P.round);
     const res = simulate(me.units, fs.units, { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...fs.opts });
-    const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts, won = res.winner !== 1;
+    const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts, won = res.winner !== 1, ex = P.extra;
     const gain = side => (res.perm || []).filter(g => g.side === side);
-    endMatch(P, won, chars, rules, gain(0), !!rb);
+    const em = endMatch(P, won, chars, rules, gain(0), !!rb);
+    if (R && em.second && !P.over) botTakeRune(P, 'sc'); // set 119: second chance → legend pick
     if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; if (R && res.winner === 1) botTakeRune(B, 'win'); }
     if (opts.extra && P.over && P.hearts > 0 && P.round < opts.extra) continueExtra(P);
     if (R && won && !P.over) botTakeRune(P, rb ? 'boss' : 'win');
-    if (onMatch) onMatch({ stage: wins, round, gold, hearts, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) } });
+    if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) } });
   }
   return P;
 }
@@ -183,26 +185,21 @@ export function pickBotTeam(data, round, seed, tier = null) {
   const t = list[i];
   return { tier: t.tier, stage: k, span: 0, round: k + 1, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s };
 }
-// ---------- set 107 (user D1): the enemy follows the player's power ----------
-// want % = foeBase + foeStreak × wins in a row (cap foeStreakCap) · target = player board power (teamPower, runes not counted) × want
-// candidates = teams of the rounds within FOE_PICK.win of the player's round · the FOE_PICK.near nearest by power ratio, one by seed + round
-// pct = enemy hp/atk scale so its power meets the target (clamped) → a win streak always meets a stronger enemy
-export const FOE_PICK = { win: 3, near: 4, lo: 50, hi: 300 }; // ค่าเสนอ (internal)
-export function foeWantPct(ws, stage = RUN_STAGE) {
-  const S = stage.settings;
-  return (S.foeBase ?? 100) + Math.min(S.foeStreakCap ?? 25, (ws | 0) * (S.foeStreak ?? 5));
-}
-export function pickFoe(data, myUnits, round, seed, ws = 0, stage = RUN_STAGE, rules = RULES) {
-  const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(ws, stage);
-  const pp = teamPower(myUnits, rules), target = pp * want / 100;
+// ---------- set 119 (user 7 Nov, G2 ก): the enemy = the real bot team closest in power to the player's team ----------
+// target = player board power (teamPower, runes not counted) × foeBase % · candidates = teams of the rounds within FOE_PICK.win of the
+// player's round · the FOE_PICK.near nearest by power ratio, one by seed + round · NEVER scaled in the normal run (pct 100), no win-streak
+// bonus (set 107 power-follow scaling + streak removed) · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
+export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
+export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
+export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES) {
+  const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
+  const pp = teamPower(myUnits, rules), target = pp * (stage.settings.foeBase ?? 100) / 100;
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));
   const gap = x => (target > 0 ? Math.abs(Math.log(x.t.pw / target)) : x.t.pw);
   cand.sort((a, b) => gap(a) - gap(b) || a.d - b.d || a.j - b.j);
   const near = cand.slice(0, FOE_PICK.near);
   const t = near[makeRng(((seed >>> 0) ^ Math.imul((round | 0) + 1, 0x27D4EB2F) ^ 0x7E57F0E5) >>> 0).int(near.length)].t;
-  // set 108 (user): up to round foeRealUntil the enemy is the real team as it is (no scaling)
-  const real = (round | 0) <= (stage.settings.foeRealUntil | 0);
-  const pct = real || !(target > 0) ? 100 : Math.max(FOE_PICK.lo, Math.min(FOE_PICK.hi, Math.round(target / t.pw * 100)));
+  const pct = want;
   return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, power: Math.round(pp) };
 }

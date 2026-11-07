@@ -64,22 +64,29 @@ export const TESTS_RUNRUN = [
     P.over = false; startRound(P, chars); eq(P.rn.ro, 0, 'reset each match'); eq(rnRerollCost(P), 0, 'free again');
     rnMakeOffer(P, 'boss'); ok(rnRerollOffer(P).ok && rarOf(P.rn.offer.ids).join(',') === 'legend,legend', 'boss reroll = 2 legend');
   }],
-  ['set 107: enemy follows the player power · +5%/win in a row (cap +25%) · loss resets · boss win counts · same seed → same team', () => {
-    const P = fresh(31); eq(P.ws, 0, 'start'); eq(foeWantPct(P.ws), 100, 'start 100%');
-    endMatch(P, true, chars, RULES); eq(foeWantPct(P.ws), 105, '1 win');
-    endMatch(P, true, chars, RULES, [], true); eq(foeWantPct(P.ws), 110, 'boss win counts');
-    P.ws = 9; eq(foeWantPct(P.ws), 125, 'cap +25');
-    endMatch(P, false, chars, RULES); eq(foeWantPct(P.ws), 100, 'loss resets');
-    const me = buildTeam([{ id: commonId, level: 2, row: 0, lane: 0 }, { id: commonId, level: 1, row: 1, lane: 0 }], cm), pw = teamPower(me);
-    // set 108: up to round foeRealUntil (10) the enemy is the real team (pct 100) · later rounds are scaled to the target
-    const real = pickFoe(BOT_TEAMS, me, 4, 777, 5); eq(real.pct, 100, 'round 4 = real team, no scaling');
-    const R = RUN_STAGE.settings.foeRealUntil + 1, me2 = buildTeam(BOT_TEAMS.rounds[R - 1][0].team, cm), pw2 = teamPower(me2);
-    const a = pickFoe(BOT_TEAMS, me2, R, 777, 0), b = pickFoe(BOT_TEAMS, me2, R, 777, 0), c = pickFoe(BOT_TEAMS, me2, R, 777, 5);
+  ['set 119: enemy = real bot team closest in power · never scaled in the normal run (no streak) · extra matches +foeExtraPct · same seed → same team', () => {
+    eq(foeWantPct(false), 100, 'normal run 100%'); eq(foeWantPct(true), 100 + RUN_STAGE.settings.foeExtraPct, 'extra +20%'); eq(RUN_STAGE.settings.foeExtraPct, 20, 'user: +20');
+    for (const r of [4, 11, 15, 19]) eq(pickFoe(BOT_TEAMS, buildTeam(BOT_TEAMS.rounds[r - 1][0].team, cm), r, 777, false).pct, 100, `round ${r} normal = real team`);
+    const R = 12, me2 = buildTeam(BOT_TEAMS.rounds[R - 1][0].team, cm), pw2 = teamPower(me2);
+    const a = pickFoe(BOT_TEAMS, me2, R, 777, false), b = pickFoe(BOT_TEAMS, me2, R, 777, false), c = pickFoe(BOT_TEAMS, me2, R, 777, true);
     eq(JSON.stringify(a), JSON.stringify(b), 'deterministic');
     const pow = f => teamPower(rnFoeScale(buildTeam(f.team, cm), f.pct)); // round 0: no late growth
-    ok(Math.abs(pow(a) / pw2 - 1) < 0.08, `enemy ≈ my power (${(pow(a) / pw2).toFixed(2)})`); void pw;
-    ok(pow(c) > pow(a) * 1.15, 'streak 5 → stronger enemy');
+    ok(Math.abs(pow(a) / pw2 - 1) < 0.3, `enemy ≈ my power (${(pow(a) / pw2).toFixed(2)})`);
+    eq(JSON.stringify(c.team), JSON.stringify(a.team), 'extra = same team pick'); eq(c.pct, 120, 'extra scaled +20%');
     ok(Array.isArray(a.rn) && BOT_TEAMS.rounds.some(l => l.some(t => t.rn.length)), 'bot teams carry runes');
+  }],
+  ['set 119: heart trade X8 = 25 gold flat, once per copy (rune stays held) · second chance offer = legend cards, no reroll', () => {
+    const P = fresh(51); give(P, 'X8', 2);
+    eq(rnFx(P).heart.gold, 25, 'flat 25 (2 copies do not multiply)'); eq(rnFx(P).heart.left, 2, '2 uses');
+    const g = P.gold; ok(rnHeartTrade(P).ok && P.gold === g + 25 && P.hearts === RULES.shop.hearts - 1, 'trade');
+    ok(!rnHeartTrade(P).ok, 'once per round'); P.rn.traded = false;
+    ok(rnHeartTrade(P).ok && rnFx(P).heart.left === 0, 'second copy used'); P.rn.traded = false;
+    ok(!rnHeartTrade(P).ok && P.rn.bag.X8 === 2, 'all used → refused · rune still held');
+    const Q = fresh(52); Q.hearts = 1; const r = endMatch(Q, false, chars, RULES);
+    ok(r.second && !Q.over && Q.hearts === 1 && Q.sc === 1, 'second chance');
+    const o = rnMakeOffer(Q, 'sc'); ok(o && o.ids.length === RUN_STAGE.settings.offScL && o.ids.every(id => rnRec(id).rarity === 'legend'), 'legend cards');
+    ok(!rnRerollOffer(Q).ok, 'no reroll'); ok(rnTakeOffer(Q, 0).ok, 'take');
+    const r2 = endMatch(Q, false, chars, RULES); ok(!r2.second && Q.over && Q.hearts === 0, 'only once per run');
   }],
   ['set 109 bug fix: a "one" rune is worn by the UNIT (not the board slot) · swap / bench / merge / sell · unworn list for the warning', () => {
     const P = fresh(41), other = chars.find(c => c.id !== commonId).id;

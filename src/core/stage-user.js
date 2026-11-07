@@ -70,8 +70,8 @@ export const STAGE_USER = {
     X5: { atkPct: 20, del: false, eff: 'fortress', hpPct: 30, max: 2, name: 'ปักหลัก', on: true, rarity: 'rare', scope: 'front', theme: '', tribe: 'เหล็กกล้า' },
     X6: { del: false, eff: 'link', max: 2, name: 'สายสัมพันธ์', on: true, pct: 50, rarity: 'rare', scope: 'one', theme: '', tribe: 'เหล็กกล้า' },
     X7: { del: false, eff: 'buddy', max: 1, name: 'ตามมา', on: true, pct: 100, rarity: 'legend', scope: 'one', theme: '', tribe: 'เหล็กกล้า' },
-    X8: { del: false, eff: 'heartTrade', gold: 10, max: 3, minHearts: 2, name: 'หัวการค้า', on: true, rarity: 'common', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
+    X8: { del: false, eff: 'heartTrade', gold: 25, max: 3, minHearts: 2, name: 'หัวการค้า', on: true, rarity: 'common', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
     X9: { del: false, eff: 'scout', max: 1, name: 'ทำนาย', on: true, rarity: 'legend', scope: 'team', theme: '', tribe: 'เหล็กกล้า' },
   },
-  settings: { bossEvery: 5, bossLateFrom: 20, bossEveryLate: 10, growFrom: 20, growPct: 8, lastStage: 50 },
+  settings: { bossEvery: 5, bossLateFrom: 20, bossEveryLate: 10, growFrom: 20, growPct: 8, lastStage: 20 },
 };

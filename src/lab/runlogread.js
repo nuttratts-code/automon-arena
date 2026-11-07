@@ -29,7 +29,7 @@ export function rvSimMatch(x, CM, rules) {
     const e = equipRunes(buildTeam(x.a, CM), rnFromCompact(x.n || []), { winStreak: x.g | 0 });
     let fo;
     if (Array.isArray(x.b)) fo = foeSide({ team: x.b, pct: replayPct(x.d), rn: x.fn || [], s: x.fs | 0 }, CM, rules, RUN_STAGE, x.r);
-    else { const rec = runBossById(x.b.boss); if (!rec) return null; fo = { units: runBossTeam(rec, x.b.k), opts: runBossOpts(rec) }; }
+    else { const rec = runBossById(x.b.boss); if (!rec) return null; fo = { units: runBossTeam(rec, x.b.k, RUN_STAGE, x.b.x === 1), opts: runBossOpts(rec) }; }
     const r = simulate(e.units, fo.units, { ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}), ...fo.opts });
     return { winner: r.winner, timeMs: Math.floor(r.timeMs), gains: rlGains((r.perm || []).filter(g => g.side === 0)) };
   } catch (err) { return null; }

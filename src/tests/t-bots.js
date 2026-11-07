@@ -90,18 +90,19 @@ export const TESTS_BOTS = [
     };
     for (let i = 0; i < 20; i++) eq(play(50 + i) === play(50 + i), true, `run ${i} ผลไม่ตรงกัน`);
   }],
-  ['set 108: bosses on fixed rounds 5 10 15 20 30 40 · last round 50 = dummy · same seed+round same boss · random boss per match (repeats ok)', () => {
+  ['set 108/119: bosses on fixed rounds 5 10 15 · last round 20 = dummy · same seed+round same boss · random boss per match (repeats ok)', () => {
     const S = RUN_STAGE.settings, on = RUN_STAGE.bosses.filter(b => b.on);
-    eq([S.bossEvery, S.bossLateFrom, S.bossEveryLate, S.lastStage], [5, 20, 10, 50], 'user settings');
+    eq([S.bossEvery, S.bossLateFrom, S.bossEveryLate, S.lastStage], [5, 20, 10, 20], 'user settings (set 119: lastStage 20)');
     const rounds = []; for (let r = 1; r <= 60; r++) { const k = bossRoundK(r, S); if (k) rounds.push([r, k]); }
-    eq(JSON.stringify(rounds), JSON.stringify([[5, 1], [10, 2], [15, 3], [20, 4], [30, 5], [40, 6], [50, 7]]), 'boss rounds');
+    eq(JSON.stringify(rounds), JSON.stringify([[5, 1], [10, 2], [15, 3], [20, 4]]), 'boss rounds (round 20 = dummy)');
     for (let seed = 1; seed <= 30; seed++) {
       eq(runBossAt({ seed, round: 4 }), null, 'no boss on round 4');
       const b1 = runBossAt({ seed, round: 5 }); ok(b1 && b1.k === 1 && !isDummy(b1.boss), 'boss 1 on round 5');
       eq(JSON.stringify(runBossAt({ seed, round: 5 })), JSON.stringify(b1), 'เมล็ดเดิมได้บอสเดิม');
       eq(runBossAt({ seed, round: 10, bk: 0 }).k, 2, 'round 10 = boss 2 even after losing boss 1');
       eq(runBossAt({ seed, round: 25 }), null, 'no boss on round 25');
-      ok(isDummy(runBossAt({ seed, round: 50 }).boss), 'round 50 = dummy');
+      ok(isDummy(runBossAt({ seed, round: 20 }).boss), 'round 20 = dummy');
+      eq(runBossAt({ seed, round: 15 }).k, 3, 'round 15 = boss 3');
     }
     const ids = new Set(); for (let seed = 1; seed <= 60; seed++) ids.add(runBossAt({ seed, round: 5 }).boss.id);
     ok(ids.size >= Math.min(3, on.length), 'สุ่มบอสหลายตัว');
@@ -109,10 +110,14 @@ export const TESTS_BOTS = [
     const chars = buildCharacterList(); let seen = 0;
     for (let seed = 11; seed < 31; seed++) simRun(chars, RULES, seed, p => pickBotTeam(BOT_TEAMS, p.round, p.seed).team, m => {
       const k = bossRoundK(m.round, S);
-      if (m.boss) { seen++; ok(k > 0 && m.k === k, 'boss timing'); } else ok(k === 0, 'boss skipped');
+      if (m.boss === 'DUMMY') ok(m.round === S.lastStage, 'dummy = last round');
+      else if (m.boss) { seen++; ok(k > 0 && m.k === k, 'boss timing'); } else ok(k === 0, 'boss skipped');
       ok(m.round <= S.lastStage, 'max rounds');
     }, RUN_STAGE, { extra: 60 });
     ok(seen >= 1, 'met a boss');
+    // set 119: bossExtraPct only in extra matches
+    const bb = on[0], hpN = runBossTeam(bb, 3)[0].maxHp, hpX = runBossTeam(bb, 3, RUN_STAGE, true)[0].maxHp;
+    ok(hpX > hpN * 1.15, `extra boss 3 stronger (${hpN} → ${hpX})`); eq(runBossTeam(bb, 2, RUN_STAGE, true)[0].maxHp, runBossTeam(bb, 2)[0].maxHp, 'boss 2 same');
   }],
   ['set 108: dummy boss = endless HP, no attack, stops at dummySec with the player winning · damage = score', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars);

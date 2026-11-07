@@ -25,17 +25,19 @@ const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
 if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first', bt.errors.slice(0, 2)); process.exit(1); }
 
 const normal = [0, 0], byWs = {}, out = {}, teams = { 1: [], 2: [], 3: [] }, pcts = [];
-let cleared = 0;
+let cleared = 0, seconds = 0; const nb = {}, lens = {};
 const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
   let wasOver = false;
-  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, buildTeam(teamEntries(p), cm, RULES), p.round, p.seed, p.ws); pcts.push(f.pct); return f; }, m => {
+  const P = simRun(chars, RULES, seed, p => { const f = pickFoe(BOT_TEAMS, buildTeam(teamEntries(p), cm, RULES), p.round, p.seed, p.extra); pcts.push(f.pct); return f; }, m => {
+    if (m.second) seconds++;
+    if (!m.extra) { if (m.boss && m.boss !== 'DUMMY') { const q = (nb[m.k] = nb[m.k] || [0, 0]); q[0]++; q[1] += m.winner !== 1 ? 1 : 0; } }
     const won = m.winner !== 1;
     if (!m.boss) { normal[0]++; normal[1] += won ? 1 : 0; const w = Math.min(5, m.ws); (byWs[w] = byWs[w] || [0, 0])[0]++; byWs[w][1] += won ? 1 : 0; }
     else if (m.boss !== 'DUMMY') { (out[m.k] = out[m.k] || [0, 0])[0]++; out[m.k][1] += won ? 1 : 0; if (teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts }); }
     if (m.stage + (won ? 1 : 0) >= RULES.shop.winsToFinish && !wasOver && won) { wasOver = true; cleared++; }
-  }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: 25 });
+  }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: RUN_STAGE.settings.lastStage });
   void P;
 }
 const pct = (a, b) => (b ? (a / b * 100).toFixed(1) : '-');
@@ -43,6 +45,7 @@ pcts.sort((a, b) => a - b);
 console.log(`runs ${runs} · ${((Date.now() - t0) / 1000).toFixed(0)} s · run cleared ${pct(cleared, runs)}% · enemy scale % p10/p50/p90 ${pcts[Math.floor(pcts.length * 0.1)]}/${pcts[Math.floor(pcts.length / 2)]}/${pcts[Math.floor(pcts.length * 0.9)]}`);
 console.log(`normal rounds won ${pct(normal[1], normal[0])}% · by wins in a row: ` + Object.keys(byWs).map(k => `${k}${k === '5' ? '+' : ''}: ${pct(byWs[k][1], byWs[k][0])}% (${byWs[k][0]})`).join(' · '));
 for (const k of Object.keys(out)) console.log(`boss k${k}: reached ${out[k][0]} · won ${pct(out[k][1], out[k][0])}%`);
+console.log(`set 119 normal run: second chance used ${pct(seconds, runs)}% of runs · bosses in the normal run: ` + Object.keys(nb).map(k => `k${k} reached ${pct(nb[k][0], runs)}% of runs · won ${pct(nb[k][1], nb[k][0])}%`).join(' · '));
 
 if (WRITE) {
   const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),

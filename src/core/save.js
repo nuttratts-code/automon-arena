@@ -45,9 +45,9 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws'];
+  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 8) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 9) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -56,6 +56,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   if (!svIntIn(st.bw, 0, 1000) || !svIntIn(st.bk, 0, 1000) || st.bw > st.wins || st.bk > st.wins) errors.push('ตัวนับบอสผิด');
   if (!svIntIn(st.ls, 0, 1000)) errors.push('ตัวนับแพ้ติดผิด');
   if (!svIntIn(st.ws, 0, 1000)) errors.push('ตัวนับชนะติดผิด');
+  if (st.sc !== 0 && st.sc !== 1) errors.push('โอกาสสุดท้ายผิด');
   if (typeof st.extra !== 'boolean' || (st.extra && st.wins < S.winsToFinish)) errors.push('แมตช์พิเศษผิด');
   if (!svIntIn(st.hearts, 0, S.hearts)) errors.push('หัวใจผิด');
   if (typeof st.lastWon !== 'boolean' || typeof st.over !== 'boolean') errors.push('ค่าจริง/เท็จผิด');
@@ -151,7 +152,7 @@ export function readHistory(text, rules = RULES) {
   if (!Array.isArray(a)) return [];
   const idOk = x => typeof x === 'string' && /^[A-Z]{2}-\d{1,2}$/.test(x);
   return a.slice(0, HISTORY_MAX).filter(h => svObj(h) && svOnlyKeys(h, ['at', 'won', 'wins', 'hearts', 'rounds', 'team', 'top', 'topDmg', 'matches'])
-    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, 1000) && h.wins <= h.rounds && svIntIn(h.hearts, 0, rules.shop.hearts)
+    && svIntIn(h.at, 0, 1e15) && typeof h.won === 'boolean' && svIntIn(h.wins, 0, 1000) && h.wins <= h.rounds && svIntIn(h.hearts, 0, 50)
     && svIntIn(h.rounds, 0, 1000) && svIntIn(h.matches, 0, 1000) && (h.top === null || idOk(h.top)) && svIntIn(h.topDmg, 0, 1e12)
     && Array.isArray(h.team) && h.team.length <= rules.maxBoard && h.team.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level']) && idOk(u.id) && svIntIn(u.level, 1, rules.maxLevel)));
 }
@@ -191,7 +192,8 @@ export function checkReplay(x, cm, rules = RULES) {
   return validateTeam(x.a, cm, rules).ok && (isBossFoe(x.b) || validateTeam(x.b, cm, rules).ok);
 }
 // set 85: enemy side of a boss round = { boss: id, k } (core/runboss.js) · shape only, the game looks the boss up when replaying
-export const isBossFoe = b => svObj(b) && svOnlyKeys(b, ['boss', 'k']) && typeof b.boss === 'string' && /^[A-Za-z0-9_-]{1,16}$/.test(b.boss) && svIntIn(b.k, 1, 100);
+// set 119: + x: 1 = met in extra matches (boss gets bossExtraPct) · absent = normal run
+export const isBossFoe = b => svObj(b) && svOnlyKeys(b, ['boss', 'k', 'x']) && typeof b.boss === 'string' && /^[A-Za-z0-9_-]{1,16}$/.test(b.boss) && svIntIn(b.k, 1, 100) && (b.x === undefined || b.x === 1);
 // คืน { status: 'ok' | 'none' | 'data' | 'other' | 'bad', list } · other = ของ run อื่น (ทิ้งเงียบๆ) · ไม่เชื่อข้อมูล ตรวจทุกช่อง
 export function readReplays(text, cm, rules, hash, runSeed) {
   if (text == null || text === '') return { status: 'none', list: [] };
@@ -214,7 +216,7 @@ export function playRecord({ at, hash, runSeed, round, winsBefore, heartsBefore,
     res: result.winner === 0 ? 'w' : result.winner === 1 ? 'l' : 'd',
     timeMs: Math.floor(result.timeMs), storm: result.timeMs > rules.stormStartMs, aborted: result.aborted || null,
     team: playTeam(teamA), foe: boss ? [] : playTeam(teamB), foeSrc: boss ? 'boss' : foe ? 'set' : 'live', foeStage: foe && !boss ? foe.stage : null, foeSpan: foe && !boss ? foe.span : null,
-    boss: boss ? { boss: boss.boss, k: boss.k } : null,
+    boss: boss ? { boss: boss.boss, k: boss.k, ...(boss.x ? { x: 1 } : {}) } : null,
     runes: runes.map(x => x.id).slice(0, 80), diff,
   };
 }
@@ -224,7 +226,7 @@ export function checkPlayRecord(x, cm, rules = RULES) {
   const S = rules.shop, team = t => Array.isArray(t) && t.length <= rules.maxBoard && t.every(u => svObj(u) && svOnlyKeys(u, ['id', 'level', 'row', 'lane', 'perm'])
     && typeof u.id === 'string' && svOwn(cm, u.id) && svIntIn(u.level, 1, rules.maxLevel) && svIntIn(u.row, 0, rules.rows - 1) && svIntIn(u.lane, 0, rules.lanes - 1) && svIntIn(u.perm, 0, 100));
   return x.v === PLAY_VERSION && svIntIn(x.at, 0, 1e15) && typeof x.data === 'string' && /^[0-9a-f]{8}$/.test(x.data) && svIntIn(x.run, 0, 0xFFFFFFFF)
-    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, 1000) && x.winsBefore < x.round && svIntIn(x.heartsBefore, 0, S.hearts) && ['w', 'l', 'd'].includes(x.res)
+    && svIntIn(x.round, 1, 1000) && svIntIn(x.winsBefore, 0, 1000) && x.winsBefore < x.round && svIntIn(x.heartsBefore, 0, 50) && ['w', 'l', 'd'].includes(x.res)
     && svIntIn(x.timeMs, 0, 1e7) && typeof x.storm === 'boolean' && [null, 'hits', 'effects'].includes(x.aborted)
     && team(x.team) && team(x.foe) && ['set', 'live', 'boss'].includes(x.foeSrc)
     && (x.foeSrc === 'boss' ? isBossFoe(x.boss) && x.foe.length === 0 : x.boss === null)

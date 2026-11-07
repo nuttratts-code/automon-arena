@@ -58,7 +58,7 @@ function rlArgsOk(e) {
     case 'sl': return ref(a[0]) && a[0] !== '-';
     case 'mv': return ref(a[0]) && ref(a[1]) && a[0] !== '-' && a[1] !== '-';
     case 'lk': case 'tk': return slot(a[0]);
-    case 'of': return a[0] === 'win' || a[0] === 'boss';
+    case 'of': return a[0] === 'win' || a[0] === 'boss' || a[0] === 'sc'; // set 119: sc = second chance legend pick
     case 'en': return (a[0] === 0 || a[0] === 1) && (a[1] === 0 || a[1] === 1) && Array.isArray(a[2]) && a[2].length <= 200
       && a[2].every(g => Array.isArray(g) && g.length === 5 && typeof g[0] === 'string' && /^[A-Za-z0-9_-]{1,16}$/.test(g[0])
         && PERM_KEYS.includes(g[1]) && rlInt(g[2], 0, 2) && rlInt(g[3], 0, 1) && typeof g[4] === 'number' && Number.isFinite(g[4]));

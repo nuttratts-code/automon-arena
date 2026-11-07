@@ -41,7 +41,7 @@ export const RUNE_SPECIAL = [
   spec('interest', 'gold', 'team', 'ดอกเบี้ย', 'มีเงินเก็บทุก {per} ได้เพิ่ม {gold} (สูงสุด {cap})', [['per', 'ทุกๆ เงิน', 5, 1, 50, ''], ['gold', 'ได้เพิ่ม', 1, 0, 10, ''], ['cap', 'สูงสุด', 3, 0, 20, '']]),
   spec('shopSlots', 'gold', 'team', 'ร้านเพิ่มช่อง', 'ร้านเพิ่ม {slots} ช่อง', [['slots', 'ช่องเพิ่ม', 1, 0, 3, '']]),
   spec('freeRoll', 'gold', 'team', 'สุ่มร้านฟรี', 'สุ่มร้านฟรี {free} ครั้งต่อรอบ', [['free', 'ครั้งฟรี/รอบ', 1, 0, 5, '']]),
-  spec('heartTrade', 'gold', 'team', 'แลกหัวใจเป็นเงิน', 'ลดหัวใจ 1 ดวง ได้เงิน {gold} (รอบละครั้ง · ใช้ไม่ได้ถ้าหัวใจเหลือน้อยกว่า {minHearts})', [['gold', 'เงินที่ได้', 10, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
+  spec('heartTrade', 'gold', 'team', 'แลกหัวใจเป็นเงิน', 'ลดหัวใจ 1 ดวง ได้เงิน {gold} · ใช้ได้ครั้งเดียวต่อรูน 1 อัน (รอบละครั้ง · ใช้ไม่ได้ถ้าหัวใจเหลือน้อยกว่า {minHearts})', [['gold', 'เงินที่ได้', 25, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
   spec('lure', 'gold', 'one', 'ตัวนี้ออกในร้านบ่อยขึ้น', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ออกในร้านบ่อยขึ้น ×{mult}', [['mult', 'โอกาส ×', 3, 1, 10, '']]),
   spec('fastMerge', 'gold', 'one', 'รวมร่างเร็ว', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ใช้ {need} ตัวรวมร่าง (ปกติ 3)', [['need', 'ใช้กี่ตัว', 2, 2, 3, 'ตัว']]),
   spec('shadow', 'gold', 'one', 'ขายแล้วได้คืน', 'ขายแล้วได้ตัว Lv1 คืนที่ม้านั่ง ({times} ครั้ง/run)', [['times', 'ครั้ง/run', 1, 0, 3, '']]),
@@ -388,8 +388,6 @@ export const STAGE_SETTINGS = [
   // · the last round (lastStage) is the training-dummy boss (endless HP, no attack/skills, fight lasts dummySec → damage score)
   ['bossEvery', 'บอสทุกกี่รอบ (ช่วงแรก)', 5, 1, 50, 'รอบ'], ['bossLateFrom', 'ช่วงแรกถึงรอบ', 20, 1, 200, 'รอบ'], ['bossEveryLate', 'หลังจากนั้น บอสทุกกี่รอบ', 10, 1, 50, 'รอบ'],
   ['dummySec', 'บอสรอบสุดท้าย (หุ่นเป้า เลือดไม่หมด): สู้ได้นาน', 60, 10, 170, 'วิ'],
-  // set 108 (user): enemy = the real bot team as it is (no hp/atk scaling) up to round foeRealUntil · later rounds may be scaled (+ warning)
-  ['foeRealUntil', 'ทีมศัตรูเป็นทีมจริง (ไม่ขยายพลัง) ถึงรอบ', 10, 0, 200, 'รอบ'],
   // Set 107 (user 6 Nov): modes removed · every normal-round WIN offers offCards runes, each card rolls its rarity by rarC/rarR/rarL %
   // (rarity with nothing left → other rarities) · boss win = fixed counts offBoss* (pick 1 of 2 legend, user set 95)
   ['offCards', 'ชนะรอบปกติ: จำนวนการ์ดรูนให้เลือก', 3, 1, 5, 'ใบ'],
@@ -397,12 +395,18 @@ export const STAGE_SETTINGS = [
   ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 2, 0, 5, 'อัน'],
   // rune card reroll (set 100, user): rrFree free per match, then rrCost, +rrStep each time · resets every match · boss reward too
   ['rrFree', 'สุ่มการ์ดรูนใหม่ฟรีต่อรอบ', 1, 0, 9, 'ครั้ง'], ['rrCost', 'สุ่มการ์ดรูนใหม่ (เสียเงิน) ครั้งแรก', 3, 0, 50, 'เงิน'], ['rrStep', 'สุ่มการ์ดรูนใหม่: แพงขึ้นครั้งละ', 3, 0, 50, 'เงิน'],
-  // Enemy follows the player (set 107, user D1): enemy power = player board power × foeBase %, + foeStreak % per win in a row (cap foeStreakCap)
-  ['foeBase', 'ศัตรูเทียบพลังทีมคุณ', 100, 10, 400, '%'], ['foeStreak', 'ชนะติดกัน: ศัตรูแรงขึ้นครั้งละ', 5, 0, 100, '%'], ['foeStreakCap', 'ชนะติดกัน: เพิ่มได้สูงสุด', 25, 0, 400, '%'],
-  // boss (set 107, user D3): every boss in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)
-  ['bossExtraPct', 'บอสแมตช์พิเศษ (ตัวที่ 3 ขึ้นไป) แรงขึ้นอีกครั้งละ', 20, 0, 300, '%'],
+  // set 119 (user 7 Nov): enemy = a REAL bot team (pre-generated pool), never scaled in the normal run · picked as the team whose power is
+  // closest to player board power × foeBase % (nearby rounds) · no win-streak bonus (set 107 power-follow scaling + streak removed)
+  ['foeBase', 'ศัตรู: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 100, 10, 400, '%'],
+  // set 119: extra matches (after winsToFinish wins → เล่นต่อ) = the same real team + foeExtraPct % hp/atk (flat)
+  ['foeExtraPct', 'แมตช์พิเศษ (หลังชนะครบ): ทีมศัตรูแรงขึ้น', 20, 0, 300, '%'],
+  // boss (set 107, user D3 · set 119: extra matches only): a boss met in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)
+  ['bossExtraPct', 'บอสในแมตช์พิเศษ (ตัวที่ 3 ขึ้นไป) แรงขึ้นอีกครั้งละ', 20, 0, 300, '%'],
+  // set 119 (user): second chance — when hearts would hit 0 (once per run): +1 heart and pick 1 of offScL legend runes (no reroll)
+  ['offScL', 'โอกาสสุดท้าย (หัวใจหมดครั้งแรก): ให้เลือกรูนตำนาน', 3, 1, 5, 'อัน'],
   // Endless (user 29 Oct, set 52): play up to lastStage · past the measured baseline (stage 19) normal enemies grow growPct% per stage, compounding (ทวี)
-  ['lastStage', 'รอบสูงสุดต่อ run (รอบสุดท้าย = หุ่นเป้า)', 50, 10, 200, 'รอบ'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
+  // set 119: lastStage 20 → growth from round 20 is not reached now (kept for later)
+  ['lastStage', 'รอบสูงสุดต่อ run (รอบสุดท้าย = หุ่นเป้า · ถึงได้ในแมตช์พิเศษ)', 20, 10, 200, 'รอบ'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
 // set 108: boss rounds → k (1 = first boss) · 0 = no boss · the last round = 'dummy'
 export function bossRoundK(round, S) {

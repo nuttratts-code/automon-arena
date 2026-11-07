@@ -11,12 +11,12 @@
 import { RUN_STAGE } from './runboss.js';
 import { RUNE_RARITY, RUNE_SPEC, runeActive, enemyMultAt } from './stage.js';
 import { runeRecord } from './runes.js';
-import { fail, done } from './shop.js';
+import { fail, done, loseGuard } from './shop.js';
 import { makeRng } from './rng.js';
 
 // set 107 (user 6 Nov): modes ปกติ / ยาก / นรก REMOVED · normal win offer = 'win' (cards roll rarity by rarC/rarR/rarL %) · boss = 'boss'
 // the enemy follows the player's power + win streak instead (core/botteams.js pickFoe)
-export const RN_OFFER_KEY = { win: 'Win', boss: 'Boss' }; // key used only to check the kind (rarity settings: rarC/R/L · offBoss*)
+export const RN_OFFER_KEY = { win: 'Win', boss: 'Boss', sc: 'Sc' }; // set 119: sc = second chance (offScL legend, no reroll) // key used only to check the kind (rarity settings: rarC/R/L · offBoss*)
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
@@ -24,7 +24,7 @@ export const RN_MAX_HELD = 80; // different runes held (sanity)
 // own random stream (st.rn.n) so rune rolls never shift the unit shop's rolls
 function rnDraw(st) { return makeRng((st.seed ^ 0x52554E45 ^ Math.imul(++st.rn.n, 0x85EBCA77)) >>> 0).next(); }
 export function newRunes() {
-  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, shadow: 0, ro: 0 }; // ro = rune card rerolls used this match (set 100)
+  return { n: 0, bag: {}, at: {}, pt: {}, offer: null, free: 0, traded: false, htu: 0, shadow: 0, ro: 0 }; // htu = heart trades used (set 119: one per X8 copy) // ro = rune card rerolls used this match (set 100)
 }
 // rune record with its id · null = unknown / switched off / deleted
 export function rnRec(id, stage = RUN_STAGE) {
@@ -59,7 +59,8 @@ function rnRollRar(st, key, S) {
 export function rnMakeOffer(st, kind, stage = RUN_STAGE, avoid = []) {
   if (!st.rn || !RN_OFFER_KEY[kind]) return null;
   const S = stage.settings, key = RN_OFFER_KEY[kind], ids = [], skip = new Set(avoid);
-  const rars = kind === 'boss' ? RN_RARS.flatMap(rar => Array(S[`offBoss${RN_RAR_KEY[rar]}`] | 0).fill(rar))
+  const rars = kind === 'sc' ? Array(Math.max(1, S.offScL | 0)).fill('legend')
+    : kind === 'boss' ? RN_RARS.flatMap(rar => Array(S[`offBoss${RN_RAR_KEY[rar]}`] | 0).fill(rar))
     : Array.from({ length: Math.max(1, S.offCards | 0) }, () => rnRollRar(st, key, S));
   for (const rar of rars) {
     const r = rnPickFrom(st, rnPool(st, rar, stage, skip)) || rnPickFrom(st, rnPool(st, null, stage, skip))
@@ -78,6 +79,7 @@ export function rnRerollCost(st, stage = RUN_STAGE) {
 export function rnRerollOffer(st, stage = RUN_STAGE) {
   const o = st.rn && st.rn.offer;
   if (!o) return fail('ไม่มีการ์ดรูนให้สุ่มใหม่');
+  if (o.kind === 'sc') return fail('การ์ดโอกาสสุดท้ายสุ่มใหม่ไม่ได้');
   const cost = rnRerollCost(st, stage);
   if (st.gold < cost) return fail(`เงินไม่พอ (ต้องใช้ ${cost})`);
   st.gold -= cost; st.rn.ro++;
@@ -173,7 +175,7 @@ export function rnFx(st, stage = RUN_STAGE) {
       case 'interest': fx.intr = { per: Math.max(1, rnSpecNum(r, 'per')), gold: rnSpecNum(r, 'gold') * n, cap: rnSpecNum(r, 'cap') * n }; break;
       case 'shopSlots': fx.slots = Math.min(3, fx.slots + rnSpecNum(r, 'slots') * n); break;
       case 'freeRoll': fx.free += rnSpecNum(r, 'free') * n; break;
-      case 'heartTrade': fx.heart = { gold: rnSpecNum(r, 'gold') * n, min: Math.max(2, rnSpecNum(r, 'minHearts')) }; break;
+      case 'heartTrade': fx.heart = { gold: rnSpecNum(r, 'gold'), min: Math.max(2, rnSpecNum(r, 'minHearts')), left: Math.max(0, n - (st.rn.htu | 0)) }; break; // set 119 (user): each copy trades once, flat gold · the rune stays held
       case 'lure': if (u) fx.lure[u.id] = Math.max(fx.lure[u.id] || 1, rnSpecNum(r, 'mult')); break;
       case 'fastMerge': if (u) fx.fast[u.id] = Math.min(fx.fast[u.id] || 3, Math.max(2, rnSpecNum(r, 'need'))); break;
       case 'shadow': if (u) fx.shadow.push({ uid: u.uid, slot, times: rnSpecNum(r, 'times') * n }); break;
@@ -197,10 +199,13 @@ export function rnHeartTrade(st, stage = RUN_STAGE) {
   if (st.over || !st.rn) return fail('run จบแล้ว');
   const h = rnFx(st, stage).heart;
   if (!h) return fail('ไม่มีรูนแลกหัวใจ');
+  if (h.left < 1) return fail('รูนแลกหัวใจใช้ไปแล้ว (ใช้ได้ครั้งเดียวต่อรูน 1 อัน)');
   if (st.rn.traded) return fail('รอบนี้แลกไปแล้ว');
   if (st.hearts < h.min) return fail(`หัวใจต้องเหลืออย่างน้อย ${h.min} ดวง`);
-  st.hearts--; st.gold += h.gold; st.rn.traded = true;
-  return done([`แลกหัวใจ 1 ดวง ได้เงิน ${h.gold}`]);
+  st.hearts--; st.gold += h.gold; st.rn.traded = true; st.rn.htu = (st.rn.htu | 0) + 1;
+  const msgs = [`แลกหัวใจ 1 ดวง ได้เงิน ${h.gold}`];
+  loseGuard(st, msgs); // G1: second chance on any cause (min hearts ≥ 2 keeps this from firing today)
+  return done(msgs);
 }
 
 // Battle runes → equipRunes() list · 'one' runes without a slot do nothing · run-only runes are skipped by equipRunes itself
@@ -236,7 +241,7 @@ export function rnCompactOk(list, rules) {
 // ---------- save check (st.rn) ----------
 export function rnValidate(rn, rules, stage = RUN_STAGE) {
   const errors = [], isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
-  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'shadow', 'ro'];
+  const KEYS = ['n', 'bag', 'at', 'pt', 'offer', 'free', 'traded', 'htu', 'shadow', 'ro'];
   if (!isObj(rn) || !Object.keys(rn).every(k => KEYS.includes(k)) || !KEYS.every(k => k in rn)) return ['รูน: ผิดรูปแบบ'];
   if (!isObj(rn.bag) || Object.keys(rn.bag).length > RN_MAX_HELD) errors.push('รูน: กระเป๋าผิด');
   else for (const [id, n] of Object.entries(rn.bag)) { const r = rnRec(id, stage); if (!r || !Number.isInteger(n) || n < 1 || n > (r.max || 1)) errors.push(`รูน ${id}: ผิด`); }
@@ -249,7 +254,7 @@ export function rnValidate(rn, rules, stage = RUN_STAGE) {
   if (!Number.isInteger(rn.n) || rn.n < 0 || rn.n > 1e9) errors.push('รูน: ตัวนับสุ่มผิด');
   if (!Number.isInteger(rn.free) || rn.free < 0 || rn.free > 99) errors.push('รูน: สุ่มฟรีผิด');
   if (!Number.isInteger(rn.ro) || rn.ro < 0 || rn.ro > 999) errors.push('รูน: สุ่มการ์ดใหม่ผิด');
-  if (typeof rn.traded !== 'boolean') errors.push('รูน: แลกหัวใจผิด');
+  if (typeof rn.traded !== 'boolean' || !Number.isInteger(rn.htu) || rn.htu < 0 || rn.htu > 9) errors.push('รูน: แลกหัวใจผิด');
   if (!Number.isInteger(rn.shadow) || rn.shadow < 0 || rn.shadow > 99) errors.push('รูน: เงาผิด');
   return errors;
 }

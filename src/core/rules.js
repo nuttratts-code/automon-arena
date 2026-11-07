@@ -85,7 +85,7 @@ export const RULES = {
   shop: {
     startGold: 10, goldPerRound: 25, goldStep: 3, winBonus: 2, // set 96 (user picked A): round 1 = startGold, then +goldStep per round up to goldPerRound (10,13,16,19,22,25…) · goldStep 0 = flat goldPerRound (set 83: 25/25)
     slots: 5, rerollCost: 1, bench: 5,              // เอกสาร (set 89: reroll 1 → 2 · set 98: 2 → 1)
-    hearts: 10, winsToFinish: 10,                   // เอกสาร
+    hearts: 5, winsToFinish: 10,                    // เอกสาร (set 119: hearts 10 → 5 + one second chance)
     // set 88: 15 shop levels, odds per level (% , used as weights) (ค่าเสนอ · user accepted the table)
     // set 89 (user 5 Nov, claude/review-2026-11-05-set89-spec.md): no upgrade — level follows the round played (win or lose)
     // roundLevels[i] = shop level in round i + 1 · rounds past the table keep the last entry · default round n = level n

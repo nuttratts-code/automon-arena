@@ -35,7 +35,7 @@ for (const x of run.list) {
   try {
     const e = equipRunes(buildTeam(x.a, CM), rnFromCompact(x.n || []), { winStreak: x.g | 0 });
     const boss = !Array.isArray(x.b) ? runBossById(x.b.boss) : null;
-    const foe = Array.isArray(x.b) ? foeSide({ team: x.b, pct: replayPct(x.d), rn: x.fn || [], s: x.fs | 0 }, CM, RULES, RUN_STAGE, x.r) : boss ? { units: runBossTeam(boss, x.b.k), opts: {} } : null;
+    const foe = Array.isArray(x.b) ? foeSide({ team: x.b, pct: replayPct(x.d), rn: x.fn || [], s: x.fs | 0 }, CM, RULES, RUN_STAGE, x.r) : boss ? { units: runBossTeam(boss, x.b.k, RUN_STAGE, x.b.x === 1), opts: {} } : null;
     if (foe) r = simulate(e.units, foe.units, { ...(e.tribeExtra.length ? { tribeExtra: e.tribeExtra } : {}), ...foe.opts, detail });
   } catch (err) { r = null; }
   const same = r && r.winner === x.w && Math.floor(r.timeMs) === x.t; if (same) ok++;

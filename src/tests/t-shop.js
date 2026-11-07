@@ -156,7 +156,9 @@ export const TESTS_SHOP = [
   ['run: หัวใจหมดหรือชนะครบแล้วจบ', () => {
     const chars = buildCharacterList(), st = newRun(chars, 8);
     for (let i = 0; i < RULES.shop.hearts; i++) endMatch(st, false, chars);
-    ok(st.over && !startRound(st, chars).ok, 'ควรจบเมื่อหัวใจหมด');
+    ok(!st.over && st.hearts === 1 && st.sc === 1, 'set 119: hearts would hit 0 → second chance (+1 heart, once)');
+    endMatch(st, false, chars);
+    ok(st.over && st.hearts === 0 && !startRound(st, chars).ok, 'ควรจบเมื่อหัวใจหมด (หลังโอกาสสุดท้าย)');
     const w = newRun(chars, 8); for (let i = 0; i < RULES.shop.winsToFinish; i++) endMatch(w, true, chars);
     ok(w.over, 'ควรจบเมื่อชนะครบ');
   }],
@@ -169,7 +171,7 @@ export const TESTS_SHOP = [
     ok(!w.over && w.wins === S.winsToFinish + 5, 'extra wins do not end the run');
     while (w.hearts > 0) endMatch(w, false, chars);
     ok(w.over, 'hearts gone = game over');
-    const z = newRun(chars, 9); for (let i = 0; i < S.hearts; i++) endMatch(z, false, chars);
+    const z = newRun(chars, 9); for (let i = 0; i <= S.hearts; i++) endMatch(z, false, chars);
     ok(!continueExtra(z).ok, 'lost run cannot continue');
   }],
   ['set 99: boss counter · normal win +1 · boss fight resets it (win or lose) · boss win = next boss', () => {
