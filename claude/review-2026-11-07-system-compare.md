@@ -50,5 +50,9 @@ W5 late shop 30% legend: fix = keep commons 10–15% late · + commons stay usef
 W6 long fights: fix = measure real fight length first; if > ~40 s on phone → overtime start 180 → 60–90 s or faster playback · + less waiting · − overtime decides more fights.
 Tribe sizes uneven: fix = give Fire/Storm extra tribe on 2–3 existing characters · + 6 tier reachable · − changes balance, re-measure.
 
-## DECISIONS (user fills)
-- R1: ? · R2: (sell-merge file) ? · R3: ? · W-items: keep for now unless user says otherwise.
+## DECISIONS (user 7 Nov, set 127 — NOT built yet, build next chat)
+- **R1 = C:** keep power matching, add a floor. Spec (draft): core/botteams.js pickFoe line `target = pp × foeBase%` → `target = max(pp × foeBase%, floor)`, floor = median `pw` of bot teams in the match round's cell `data.rounds[k]` × new stage setting `foeFloor` (ค่าเสนอ 100% = median · 0 = off; Balance Room แท็บด่าน). Candidate window ±3 rounds unchanged. Tests: floor applied when board weak; unchanged when board ≥ floor. Docs: shop-merge-rules S-12 line set 119 + version bump.
+- **R2 = A:** sell after merge loses 1 copy per merge (3-gold unit: Lv1 3 · Lv2 6 · Lv3 15; formula Lv2 = paid − 1 copy price, Lv3 = 3 × Lv2 value − 1 copy price; floor 0 for paid-0 copies). Code: core/shop.js sell() (refund ≠ u.paid) + core/bot.js uses same sell. Then: regen bot teams (botgen, new hash) + re-run G3 (lab/runerun.mjs 600). Docs: S-2 line "ขาย = คืนเต็ม…" + sell-merge file. Show refund on the sell button/card.
+- **R3 = A:** keep second chance as is (no change).
+- W1–W6 + tribe sizes: keep / watch (no change in MVP1).
+- Order next chat: R2 + R1 code → unit tests → botgen regen → G3 measure → gate → merge → publish game + balance room.
