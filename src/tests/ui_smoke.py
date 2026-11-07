@@ -32,6 +32,11 @@ with sync_playwright() as p:
         fighting=lambda: pg.evaluate("document.getElementById('app').classList.contains('fighting')")
         in_prep=lambda: pg.is_visible('#app') and not fighting()
         def esc(): pg.evaluate("closePop()")
+        def pick_offer():  # set 124: picking a rune that must be worn auto-opens its #dlg popup (run.template renderRunes) → close it, else the next click is blocked (flaky gate fail, run 611)
+            if not pg.is_visible('#offerDlg'): return False
+            pg.click('#offer button')
+            if pg.evaluate("document.getElementById('dlg').open"): esc()
+            return True
         def drag(a,b):
             ba=pg.locator(a).bounding_box(); bb=pg.locator(b).bounding_box()
             x,y=ba['x']+ba['width']/2, ba['y']+ba['height']/2
@@ -113,8 +118,7 @@ with sync_playwright() as p:
         PLACE="""(()=>{for(let i=0;i<P.bench.length;i++){if(!P.bench[i])continue;const cells=[...document.querySelectorAll('#board .cell')];const free=cells.find(c=>!c.classList.contains('filled'));if(!free)break;act({at:'bench',i},parseRef(free.dataset.ref));}})()"""
         for rnd in range(14):
             if pg.evaluate('P.over'): break
-            if pg.is_visible('#offerDlg'): pg.click('#offer button'); offers+=1  # set 94: win → pick a free rune first
-            if pg.evaluate("document.getElementById('dlg').open"): esc()  # set 109: a rune that must be worn opens its popup after the pick
+            if pick_offer(): offers+=1  # set 94: win → pick a free rune first (set 109: worn-rune popup closed inside)
             pg.evaluate(BUY)
             # move from the bench to free board cells through act() (the same path a drag ends in)
             pg.evaluate(PLACE)
@@ -170,7 +174,7 @@ with sync_playwright() as p:
         chk(bm==[2,None,None,True],'shop card dropped on own copy = buy + merge, full bench ok '+str(bm))
         chk('down' not in pg.evaluate("GLOSSARY.map(x=>x.join(' ')).join(' ')"),'glossary has no English down')
         if not pg.evaluate('P.over'):
-            if pg.is_visible('#offerDlg'): pg.click('#offer button')
+            pick_offer()
             own=pg.evaluate("""(()=>{const ids=new Set(allUnits(P).map(x=>x.u.id)); const want=P.shop.filter(s=>s.id&&ids.has(s.id)).length; return [want, document.querySelectorAll('#shop .slot.owned').length];})()""")
             chk(own[0]==own[1],'shop owned highlight '+str(own))
             lv=pg.evaluate("""(()=>{const x=allUnits(P).find(x=>CM[x.u.id].skills.some(s=>!s.lv&&new Set(s.v).size>1)); if(!x) return 'none'; tap(x.ref); const b=document.querySelector('#info .lv-now'); closePop(); return b?b.textContent:'missing';})()""")
@@ -208,7 +212,7 @@ with sync_playwright() as p:
             pg.click('#endNew')
             pg.evaluate(BUY); pg.evaluate(PLACE)  # ซื้อและวางตัวลงบอร์ดอีกครั้ง ให้ทดสอบสกิลถาวรต่อได้
         # 2b สกิลถาวรระหว่างสู้ (22 ต.ค.): ใส่สกิลถาวรให้ตัวบนบอร์ด สู้ 1 แมตช์ แล้วค่าถาวรต้องติดตัว · 31 Oct: when matchStart (not 'set': a unit killed before its first attack never fires 'set' → ~1.3% random fails)
-        if pg.is_visible('#offerDlg'): pg.click('#offer button')
+        pick_offer()
         esc()
         got=pg.evaluate("""(()=>{const x=teamEntries(P)[0]; if(!x) return 'no unit'; const c=CM[x.id]; c.skills=[...c.skills,{when:'matchStart',do:'atkUp',to:'self',v:[1,1,1],perm:true}];
           const before=(P.board[x.row][x.lane].perm.atk||0); document.getElementById('fight').click(); if(!document.getElementById('app').classList.contains('fighting')&&confirmRunes) document.getElementById('fight').click(); return before;})()""")  # set 109: unworn-rune warning = press again
@@ -295,7 +299,7 @@ window.claude={use:n=>new Promise(r=>setTimeout(()=>r(n==='db'?db:n==='user'?u:n
         chk(in_prep() and pg.is_hidden('#nameScr'),'name set → game opens on prep')
         for k in range(3):
             if pg.evaluate('P.over'): break
-            if pg.is_visible('#offerDlg'): pg.click('#offer button')
+            pick_offer()
             pg.evaluate(BUY); pg.evaluate(PLACE); pg.click('#fight')
             if not fighting() and 'ยืนยัน' in pg.inner_text('#fight'): pg.click('#fight')
             pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000); pg.click('#next')
@@ -304,7 +308,7 @@ window.claude={use:n=>new Promise(r=>setTimeout(()=>r(n==='db'?db:n==='user'?u:n
         chk(code and pg.evaluate('parseRunCode(runCode(),CM,RULES).nm')=='ทดสอบ','run code carries the player name')
         # set 114: owner-only Log screen in the game · no Claude viewer (file page) = button hidden · fake db → live list + detail · paste box
         chk(pg.is_hidden('#logBtn'),'log button hidden when the viewer is not the owner/editor')
-        if pg.is_visible('#offerDlg'): pg.click('#offer button') # a win's rune offer is a modal dialog: it would block the Log button
+        pick_offer() # a win's rune offer is a modal dialog: it would block the Log button
         pg.evaluate('''(()=>{ const head={...RL, ev:undefined, n:RL.ev.length, parts:1, upd:Date.now(), round:P.round, wins:P.wins, hearts:P.hearts, gold:P.gold, over:0};
           delete head.ev; window.__lgFire=null;
           playDb={ collection(p){ if(p==='runlogs') return { orderBy(){return this;}, limit(){return this;}, onSnapshot(fn){ window.__lgFire=fn; fn({docs:[{id:'t1',exists:true,data:()=>head}]}); return ()=>{}; } };
