@@ -193,8 +193,11 @@ export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
 // set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
 // empty board) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
-// set 129 (user 7 Nov): ls = losses in a row (normal + boss, st.ls) → foeFloorLose % once ls ≥ foeFloorLs, else foeFloor %
-export const foeFloorPct = (ls, stage = RUN_STAGE) => { const s = stage.settings; return Math.max(0, (ls | 0) >= (s.foeFloorLs ?? 2) ? (s.foeFloorLose ?? 60) : (s.foeFloor ?? 80)); };
+// set 129 → 132 (user 7 Nov): ls = losses in a row (normal + boss, st.ls) · ls ≥ foeFloorLs → foeFloor − foeFloorStep × (ls − foeFloorLs + 1), not below foeFloorMin (or foeFloor if lower)
+export const foeFloorPct = (ls, stage = RUN_STAGE) => {
+  const s = stage.settings, fl = s.foeFloor ?? 100, k = (ls | 0) - (s.foeFloorLs ?? 2) + 1;
+  return Math.max(0, k > 0 ? Math.max(Math.min(fl, s.foeFloorMin ?? 40), fl - (s.foeFloorStep ?? 20) * k) : fl);
+};
 export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES, ls = 0) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
   let pp = typeof myUnits === 'number' ? Math.max(0, myUnits) : teamPower(myUnits, rules);
