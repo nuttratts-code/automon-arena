@@ -56,14 +56,14 @@ sky = sky + (cc - sky) * dens[..., None] * .35          # thin far streaks only
 sc_ = W / 1600
 field = np.zeros((H, W), np.float32); base_y = np.zeros((H, W), np.float32)
 crng = np.random.default_rng(21)
-CL = [(.10, .15, 150), (.36, .06, 125), (.58, .19, 90), (.78, .07, 165), (.97, .18, 120)]
+CL = [(.12, .17, 160), (.38, .08, 140), (.60, .22, 95), (.80, .09, 175), (.98, .20, 120)]
 for (cxf, cyf, R) in CL:
     R *= sc_; cx = cxf * W; cy = cyf * H + R * .35
     f = np.zeros((H, W), np.float32)
-    for k in range(70):
-        bx = cx + crng.normal(0, R * 1.1); by = cy - abs(crng.normal(0, R * .5)) - R * .1
+    for k in range(110):
+        bx = cx + crng.normal(0, R * .95); by = cy - abs(crng.normal(0, R * .7)) * (1.3 - min(1, abs(bx - cx) / (R * 2))) - R * .1
         br = R * crng.uniform(.18, .42) * (1.2 - abs(bx - cx) / (R * 3))
-        if br <= R * .14: continue
+        if br <= R * .2: continue
         x0, x1 = int(max(0, bx - br * 2)), int(min(W, bx + br * 2)); y0, y1 = int(max(0, by - br * 2)), int(min(H, by + br * 2))
         if x0 >= x1 or y0 >= y1: continue
         d2 = ((xx[y0:y1, x0:x1] - bx) ** 2 + (yy[y0:y1, x0:x1] - by) ** 2) / br ** 2
@@ -73,6 +73,14 @@ for (cxf, cyf, R) in CL:
 det = fbm(xx / (22 * sc_), yy / (22 * sc_), 70, 5)
 cd = sstep(.36, .56, field + (det - .5) * .55)
 cd = cd * sstep(.18, .32, field)
+body = np.asarray(Image.fromarray((np.clip(field, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(18 * sc_)), np.float32) / 255
+cd = cd * sstep(.2, .34, body)                                    # drop stray specks away from a cloud body
+from scipy import ndimage                                           # keep only big connected cloud bodies
+lab, nlab = ndimage.label(ndimage.binary_opening(cd > .25, iterations=int(10 * sc_)))   # cut thin necks first
+area = ndimage.sum(np.ones_like(cd), lab, range(1, nlab + 1))
+big = np.isin(lab, 1 + np.where(area > 6000 * sc_ ** 2)[0])
+keep = np.asarray(Image.fromarray((big * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
+cd = cd * keep
 lightf = np.roll(np.roll(field + (det - .5) * .45, 9, 0), 12, 1)  # sample toward the upper-left light
 litc = np.clip(.55 + (field + (det - .5) * .45 - lightf) * 3.2, 0, 1)
 under = np.clip(1 - (base_y - yy) / (90 * sc_), 0, 1) * (base_y > 0)

@@ -3,7 +3,7 @@
 # a ruined arch on a far hill, layered hazy hills. Camera A: high, looking down, horizon ~40 % from top.
 # The 12 board cells get carved rings on the floor; standing stones stay out of the cells' screen area.
 # Characters are NOT in the scene (the game draws sprites on top; cells -> <out>_cells.json).
-# Run: pip install bpy pillow ; python runeplaza_scene.py <out.png>   (env SAMPLES, W, H, FAST=1)
+# Run: pip install bpy pillow ; python runeplaza_scene.py <out.png>   (env SAMPLES, W, H, FAST=1, BLEND=1 saves <out>.blend)
 # Helpers (noise, build_mesh, haze, grass) come from meadow_scene.py (v1, rejected scene).
 import bpy, math, sys, os, json
 import numpy as np
@@ -63,7 +63,7 @@ def height(x, y):
     hills2 = sstep(380, 600, y) * (fbm(x * .004, y * .004, 9, 4) * 80 - 10)
     ridge = 1 - np.abs(2 * fbm(x * .0025, y * .0025, 7, 5) - 1)
     mount = sstep(900, 1400, y) * ridge ** 1.5 * 150
-    arch = 46 * np.exp(-((x - ARCH[0]) ** 2 + (y - ARCH[1]) ** 2) / (2 * 34 ** 2)) ** 1.3   # the arch's own hill
+    arch = 32 * np.exp(-((x - ARCH[0]) ** 2 + (y - ARCH[1]) ** 2) / (2 * 34 ** 2)) ** 1.3   # the arch's own hill
     return flat * (roll + side) + drop + hills + hills2 + mount + arch
 
 def ground_color(x, y, h):
@@ -216,7 +216,7 @@ M_RUNE = mat_glow()
 
 # ---------------- terrain ----------------
 terrain('near', -110, 110, -22, 150, 70 if FAST else 520, 60 if FAST else 420, ypow=1.4).data.materials.append(M_TERR)
-far = terrain('far', -3000, 3000, 130, 3200, 70 if FAST else 340, 50 if FAST else 240, ypow=1.7)
+far = terrain('far', -3000, 3000, 130, 3200, 70 if FAST else 420, 50 if FAST else 300, ypow=1.7)
 far.data.materials.append(M_TERR); far.location.z = -0.8
 
 # ---------------- plaza: concentric flagstones (Voronoi) + carved rings matching the 12 cells ----------------
@@ -259,8 +259,8 @@ def plaza():
     c = c + (sl3 - c) * sstep(.6, .9, fbm(X * .25, Y * .25, 77))[..., None] * .7
     lich = sstep(.62, .75, fbm(X * 1.8, Y * 1.8, 79))[..., None] * .35
     c = c + (np.array([0.78, 0.66, 0.44]) - c) * lich                # warm lichen flecks
-    mz = sstep(.48, .66, fbm(X * .7, Y * .7, 81) * .7 + mossy * .3 + crack * .3 + sstep(PR - 3, PR, pr(X, Y)) * .12)[..., None]
-    c = c + (np.array([0.33, 0.43, 0.14]) - c) * mz * .8             # moss patches (more toward the rim)
+    mz = sstep(.54, .72, fbm(X * .7, Y * .7, 81) * .7 + mossy * .3 + crack * .3 + sstep(PR - 3, PR, pr(X, Y)) * .12)[..., None]
+    c = c + (np.array([0.33, 0.43, 0.14]) - c) * mz * .6             # moss patches (more toward the rim)
     dirt = sstep(.5, .8, fbm(X * .45, Y * .45, 87))[..., None]
     c = c * (1 - dirt * .22)                                         # dark weathering stains
     rust = sstep(.66, .78, fbm(X * .9 + 4, Y * .9, 89))[..., None] * .4
@@ -651,6 +651,8 @@ print('horizon y', round(hz, 3), 'cells y', min(c['y'] for c in cells), max(c['y
 print('stone overlaps', warn)
 json.dump({'w': W, 'h': H, 'horizon': HORIZON, 'cells': cells}, open(BASE + '_cells.json', 'w'), indent=1)
 print('grass blades', nbl)
+if os.environ.get('BLEND') == '1':                       # scene file to open in Blender (sky is painted in post, not here)
+    bpy.ops.wm.save_as_mainfile(filepath=BASE + '.blend', compress=True)
 if os.environ.get('NORENDER') != '1':
     bpy.ops.render.render(write_still=True)
     print('DONE', BASE + '_raw.png')

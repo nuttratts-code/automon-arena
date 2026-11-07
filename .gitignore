@@ -8,3 +8,9 @@ src/runlog.html
 *.measure.json
 shots/
 __pycache__/
+
+# Blender scene files (large, local only)
+*.blend
+*.blend1
+art/scene/*_raw.png
+art/scene/runeplaza-*.png
