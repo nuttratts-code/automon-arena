@@ -78,3 +78,4 @@ Scope: all HL PL SF WY + PT-1 · edits as user chose (SF-5 self down + shock eve
 - V1.2 (24 Oct 2026): set 21 results
 - V1.1 (24 Oct 2026): set 19 results
 - V1.0 (23 Oct 2026): file created, config v43 results moved from handoff.md
+- 7 Nov 2026 set 119 (G3, lab/runerun.mjs 600 runs seed 8800, player bot with runes, hearts 5 + second chance, real unscaled foes, extra to round 20): run cleared 18.5% · normal rounds won 45.5% (by streak 0:34.7 1:48.1 2:56.8 3:62.1 4:66.0 5+:77.4) · second chance used 93.3% of runs · boss k1 54.5% (600) · k2 66.5% (319 = 53% of runs) · k3 74.8% (123; normal run 40 = 6.7%, won 70%).
