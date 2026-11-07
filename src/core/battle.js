@@ -435,7 +435,7 @@ export function simulate(teamA, teamB, opts = {}) {
     const list = revQ; revQ = [];
     for (const { u, v, s } of list) {
       if (!up(u)) continue;
-      const pool = F.filter(x => x.side === u.side && x.down && !x.summoned && !x.replaced);
+      const pool = F.filter(x => x.side === u.side && x.down && !x.summoned && !x.replaced && (!s.sameTribe || x.tribes.some(t => u.tribes.includes(t))));
       for (const x of pickN(pool, v, u.side)) { x.down = false; x.lastHitBy = null; reviveUnit(x, R.reviveAllyHpPct, 'ally', u, s); }
     }
   }

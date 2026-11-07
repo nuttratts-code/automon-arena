@@ -322,7 +322,7 @@ export const AT_ROWS = ['front', 'mid', 'back', 'any'], AT_LANES = ['same', 'oth
 export const atMatch = (at, myRow, myLane, row, lane) => (at.row === 'any' || ['front', 'mid', 'back'].indexOf(at.row) === row)
   && (at.lane === 'both' || (at.lane === 'same') === (lane === myLane));
 // ติ๊ก "เฉพาะเผ่าเดียวกัน" ได้กับผู้รับฝ่ายเราทุกแบบ ยกเว้นตัวเอง เผ่าเดียวกัน (ซ้ำ) ตัวถัดไปที่ซื้อ และแบ่งเกราะ
-export const sameTribeOk = s => ['self', 'tribeAllies', 'nextTribeBuy'].indexOf(s.to) < 0 && s.do !== 'shareArmor' && (ALLY_T.includes(s.to) || SHOP_T.includes(s.to));
+export const sameTribeOk = s => s.do === 'reviveDowned' || (['self', 'tribeAllies', 'nextTribeBuy'].indexOf(s.to) < 0 && s.do !== 'shareArmor' && (ALLY_T.includes(s.to) || SHOP_T.includes(s.to)));
 // ชุด 17: ติ๊ก "ไม่ให้ผลกับตัวอื่นที่ ID เดียวกัน" ได้กับผู้รับฝ่ายเรา ยกเว้นตัวเอง ตัวถัดไปที่ซื้อ แบ่งเกราะ และผลของตัวเองล้วน
 export const skipSameIdOk = s => ['self', 'nextTribeBuy'].indexOf(s.to) < 0 && s.do !== 'shareArmor' && !!DO_INFO[s.do] && DO_INFO[s.do].side !== 'self' && (ALLY_T.includes(s.to) || SHOP_T.includes(s.to));
 export const SKILL_TARGETS = [...new Set([...FOE_T, 'target', 'attacker', ...ALLY_T])];

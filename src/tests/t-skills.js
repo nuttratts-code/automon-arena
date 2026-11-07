@@ -71,6 +71,18 @@ export const TESTS_SKILLS = [
     eq(ev(r, 'heal', e => e.to === vu)[0].amount, 15, 'ฟื้น 50% ของ 30');
     ok(!validateConfig([mk('AA-1', { skills: [{ when: 'hit', do: 'lifesteal', to: 'self', v: L3(5) }] })]).ok, 'เผ่าเหล็กกล้าใช้ดูดเลือดไม่ได้');
   }],
+  ['ชุบเพื่อนที่ down อยู่ (WN-4): ติ๊ก sameTribe = ชุบเฉพาะเผ่าเดียวกับผู้ใช้ · ไม่ติ๊ก = ทุกเผ่า', () => {
+    const glass = (id, tribe) => mk(id, { tribe, hp: L3(50), cdMs: NEVER, atk: L3(0) });
+    const K = mk('K', { atk: L3(100), cdMs: L3(1000), hp: L3(100000) });
+    for (const same of [true, false]) {
+      const R = mk('R', { tribe: 'วายุ', atk: L3(1), cdMs: L3(3000), hp: L3(100000), skills: [{ when: 'hit', do: 'reviveDowned', to: 'self', v: L3(2), ...(same ? { sameTribe: true } : {}) }] });
+      const r = fight([R, glass('G1', 'วายุ'), glass('G2', 'ภูติ'), K], [u('G1', 0, 0), u('G2', 0, 1), u('R', 1, 0)], [u('K', 0, 0), u('K', 0, 1)]);
+      const ids = ev(r, 'revive', e => e.why === 'ally').map(e => e.who);
+      ok(ids.includes(uidOf(r, 0, 'G1')), 'วายุถูกชุบ');
+      eq(ids.includes(uidOf(r, 0, 'G2')), !same, same ? 'ภูติไม่ถูกชุบ' : 'ภูติถูกชุบ');
+    }
+    ok(!validateConfig([mk('AA-1', { tribe: 'ภูติ', skills: [{ when: 'hit', do: 'reviveDowned', to: 'self', v: L3(1), sameTribe: true }] })]).errors.some(e => e.includes('AA-1')), 'validate ยอมรับ sameTribe');
+  }],
   ['สกิลใหม่ 19 ต.ค.: ลด HP สูงสุด · down ทันที · ล้างสถานะ · แบ่งเกราะ · ฟื้นเป็นพลัง', () => {
     const C = mk('C', { atk: L3(0), cdMs: NEVER, skills: [{ when: 'matchStart', do: 'maxHpCut', to: 'enemyFront', v: L3(40) }] });
     let r = fight([C, dummy('B', { hp: L3(1000) })], [u('C')], [u('B')]);
