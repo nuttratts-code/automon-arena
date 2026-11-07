@@ -5,7 +5,7 @@ import { done } from '../core/shop.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { bossUnit } from '../core/boss.js';
 import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
-import { rarityOdds, runeActive, runeKind, RUNE_RARITY } from '../core/stage.js';
+import { runeActive, runeKind } from '../core/stage.js';
 import { pickBotTeam, simRun, tribeList } from '../core/botteams.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { dataHash } from '../core/save.js';
@@ -43,7 +43,7 @@ export function activeTribes(entries, map, rules) {
 // อันดับตัวละคร: อัตราชนะของทีมที่มีตัวนี้ ในแมตช์ทีมสุ่ม · พร้อมสัดส่วนทีมที่ชนะที่เปิดแต่ละเผ่า
 export async function charRanking(chars, rules, { n = 1500, seed = 101, level = 1, onProgress } = {}) {
   const map = makeCharMap(chars), rng = makeRng(seed);
-  const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0 }]));
+  const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0, taken: 0, units: 0, alive: 0 }]));
   const tribe = Object.fromEntries(TRIBES.map(t => [t, { teams: 0, winTeams: 0 }]));
   let decided = 0, totalTime = 0, aborted = 0, abortSample = null; // aborted = แมตช์ที่ตัวตัดนิรภัยหยุด (ชุด 17)
   const TOP = 10, top = []; // ชุด 38: แมตช์ต้องสงสัย (ดาเมจรวมสองฝั่ง ÷ HP สูงสุดรวมทุกตัวสองฝั่ง · A6) เก็บ 10 อันดับ
@@ -76,14 +76,15 @@ export async function charRanking(chars, rules, { n = 1500, seed = 101, level = 
     [A, B].forEach((team, side) => {
       const w = winScore(r, side);
       for (const id of new Set(team.map(e => e.id))) { stat[id].games++; stat[id].wins += w; }
-      for (const u of r.units.filter(u => u.side === side)) stat[u.id].dealt += u.dealt;
+      for (const u of r.units.filter(u => u.side === side)) { const q = stat[u.id]; if (!q) continue; q.dealt += u.dealt; q.taken += u.taken; q.units++; q.alive += u.down ? 0 : 1; } // set 122: + taken, survived
       for (const t of activeTribes(team, map, rules)) { tribe[t].teams++; if (r.winner === side) tribe[t].winTeams++; }
     });
     if (r.winner != null) decided++;
     if (i % 100 === 99) { onProgress && onProgress((i + 1) / n); await pause(); }
   }
   const rows = chars.map(c => ({ id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, games: stat[c.id].games,
-    win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0 }));
+    win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0,
+    taken: stat[c.id].games ? stat[c.id].taken / stat[c.id].games : 0, surv: stat[c.id].units ? stat[c.id].alive / stat[c.id].units * 100 : 0 }));
   const byRarity = {};
   for (const r of rows) (byRarity[r.rarity] = byRarity[r.rarity] || []).push(r.win);
   const rarityMean = Object.fromEntries(Object.entries(byRarity).map(([k, v]) => [k, v.reduce((a, b) => a + b, 0) / v.length]));
@@ -93,10 +94,10 @@ export async function charRanking(chars, rules, { n = 1500, seed = 101, level = 
 }
 
 // ---------- วิธีวัดมาตรฐาน (ชุด 13 · ใช้ร่วมกันระหว่างห้องบาลานซ์กับ lab/measure.mjs ผลจึงตรงกันเสมอ) ----------
-// เป้าอัตราชนะ = ค่าเฉลี่ยทั้งเกม + 5 จุดต่อราคา (เทียบราคา 5) − 2 จุดถ้ามีสกิลร้านค้า (combat-rules กฎบาลานซ์ตามความหายาก)
-export const TARGET_RULE = { slope: 5, shopDiscount: 2 };
+// set 122 (user picked A): target = game average + step by rarity (common −10 · uncommon −5 · rare 0 · very rare +5 · legend +15, the spacing agreed 20 Oct for prices 3/4/5/6/8, kept after set 107 prices 3/5/7/10/15) − 2 if it has a shop skill · was: 5 points per gold (combat-rules กฎบาลานซ์ตามความหายาก)
+export const TARGET_RULE = { byRarity: { 'ธรรมดา': -10, 'ไม่ธรรมดา': -5, 'หายาก': 0, 'หายากมาก': 5, 'ตำนาน': 15 }, shopDiscount: 2 };
 export const SHOP_WHEN_LIST = ['buy', 'sell', 'merge', 'matchEnd', 'matchWin', 'shopStart'];
-export const rawTarget = c => TARGET_RULE.slope * (c.price - 5) - (c.skills.some(s => SHOP_WHEN_LIST.includes(s.when)) ? TARGET_RULE.shopDiscount : 0);
+export const rawTarget = c => (TARGET_RULE.byRarity[c.rarity] ?? 0) - (c.skills.some(s => SHOP_WHEN_LIST.includes(s.when)) ? TARGET_RULE.shopDiscount : 0);
 export const targetsFor = (chars, mean) => { const off = chars.reduce((a, c) => a + rawTarget(c), 0) / chars.length; return Object.fromEntries(chars.map(c => [c.id, mean + rawTarget(c) - off])); };
 // เกณฑ์ผ่าน (combat-rules V1.23): เลเวลผสม ±6 · รายเลเวล ±10 · ใกล้ขอบ = ผสม ≥5 หรือรายเลเวล ≥9 · ความยาวแมตช์ 20–40 วิ
 export const MEASURE = { seed: 4242, band: 6, near: 5, lvBand: 10, quickN: 12000, fullN: 24000, levels: ['mix', 1, 2, 3], matchSec: [20, 40] };
@@ -111,7 +112,8 @@ export async function measureAll(chars, rules, { n = MEASURE.quickN, seed = MEAS
     const res = await charRanking(chars, rules, { n, seed, level: lv, onProgress: onProgress && (x => onProgress((i + x) / levels.length)) });
     const mean = res.rows.reduce((a, r) => a + r.win, 0) / res.rows.length;
     const tg = targetsFor(chars, mean);
-    out.levels[lv] = Object.fromEntries(res.rows.map(r => [r.id, { win: +r.win.toFixed(1), err: +(r.win - tg[r.id]).toFixed(1), games: r.games }]));
+    out.levels[lv] = Object.fromEntries(res.rows.map(r => [r.id, { win: +r.win.toFixed(1), err: +(r.win - tg[r.id]).toFixed(1), games: r.games,
+      vsTier: +r.vsRarity.toFixed(1), dealt: Math.round(r.dealt), taken: Math.round(r.taken), surv: +r.surv.toFixed(1) }])); // set 122: same-rarity compare + per-match damage/taken/survived
     out.avgTime[lv] = +res.avgTime.toFixed(1);
     out.aborted[lv] = res.aborted; out.abortSample = out.abortSample || res.abortSample;
     out.tribeWin = out.tribeWin || res.tribeWin;
@@ -179,13 +181,12 @@ function brEquip(rng, team, r) {
   return { r, n: 1, slot, partner };
 }
 // สุ่ม count รูน: ความหายากตามน้ำหนัก → รูนในความหายากนั้น · ได้ซ้ำ = จำนวนเพิ่ม (ไม่เกิน max) · เต็มแล้วสุ่มใหม่
+// set 122: rune-shop rarity odds (rarityOdds) were removed in set 95 → each rune in the pool has the same chance (st kept for callers)
 export function randomRunes(rng, team, pool, st, count) {
-  const odds = rarityOdds(st), out = [];
+  const out = [];
   for (let c = 0, guard = 0; c < count && guard < count * 20; guard++) {
-    let x = rng.next() * 100, rar = RUNE_RARITY[RUNE_RARITY.length - 1][0];
-    for (const [k] of RUNE_RARITY) { if (x < odds[k]) { rar = k; break; } x -= odds[k]; }
-    const list = pool.filter(r => r.rarity === rar && (out.find(e => e.r.id === r.id)?.n || 0) < (r.max || 1));
-    if (!list.length) continue;
+    const list = pool.filter(r => (out.find(e => e.r.id === r.id)?.n || 0) < (r.max || 1));
+    if (!list.length) break;
     const r = list[rng.int(list.length)], had = out.find(e => e.r.id === r.id);
     if (had) had.n++; else out.push(brEquip(rng, team, r));
     c++;
@@ -199,7 +200,7 @@ export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level =
   const map = makeCharMap(chars), pool = battleRunes(stage);
   const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
   const picked = pickIds.map(id => pool.find(r => r.id === id)).filter(Boolean);
-  const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0 }]));
+  const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0, taken: 0, units: 0, alive: 0 }]));
   const per = {}; // ต่อบอส: ชนะ แถบ เวลา + ต่อเผ่า
   const top = [], TOP = 10;
   let total = 0, aborted = 0;
@@ -228,7 +229,8 @@ export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level =
     }
   }
   const rows = chars.map(c => ({ id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, games: stat[c.id].games,
-    win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0 }));
+    win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0,
+    taken: stat[c.id].games ? stat[c.id].taken / stat[c.id].games : 0, surv: stat[c.id].units ? stat[c.id].alive / stat[c.id].units * 100 : 0 }));
   const bossRows = Object.values(per).map(P => ({ id: P.id, name: P.name, tribe: P.tribe, win: P.games ? P.wins / P.games * 100 : 0, bars: P.games ? P.bars / P.games : 0, time: P.games ? P.time / P.games / 1000 : 0,
     tribeWin: Object.fromEntries(TRIBES.map(t => [t, { teams: P.tr[t].teams, win: P.tr[t].teams ? P.tr[t].wins / P.tr[t].teams * 100 : null }])) }));
   const winAll = total ? bossRows.reduce((a, x) => a + x.win, 0) / bossRows.length : 0;

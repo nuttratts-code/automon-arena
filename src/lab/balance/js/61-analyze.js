@@ -101,24 +101,46 @@ function renderTop() {
     el('span', 'status', 'คอมโปต้องสงสัย: ' + (topComp && topComp[1] > 1 ? topComp[0] + ' (' + topComp[1] + ' ครั้ง)' : 'ไม่มีคอมโปซ้ำ')),
     el('span', 'status', 'สัญญาณผิดปกติ: ' + (w ? 'ดาเมจ ' + fmt(w.dmgPerHp) + '× HP รวมสองฝั่ง · ' + (w.timeMs / 1000).toFixed(0) + ' วิ · ฝั่งเดียว ' + Math.round(w.sideRatio * 100) + '%' : '—')));
 }
+const rankSort = { col: null, dir: 1 }; // set 122: table sort state (column title, 1 = low → high)
 function renderResults() {
   if (!lastRun) return;
   const { now, base, hasEdits } = lastRun, L = now.levels;
+  // set 122: sortable columns + rarity filter + same-rarity compare / damage / survived (old saved results lack them → –)
+  const M = L.mix, byRar = {};
+  for (const c of chars) { const v = M[c.id]?.vsTier; if (v != null) (byRar[c.rarity] = byRar[c.rarity] || []).push([c.id, v]); }
+  const tierRank = {}; for (const list of Object.values(byRar)) list.sort((a, b) => b[1] - a[1]).forEach(([id], i) => { tierRank[id] = `${i + 1}/${list.length}`; });
+  const ORDER = { out: 0, near: 1, ok: 2 };
+  const rows = chars.map(c => { const e = Object.fromEntries(MEASURE.levels.map(lv => [lv, L[lv][c.id].err])), x = M[c.id];
+    return { c, e, v: verdict(e), win: x.win, vt: x.vsTier, dl: x.dealt, tk: x.taken, sv: x.surv, tr: tierRank[c.id] }; });
+  const num = v => (v == null || Number.isNaN(v) ? null : v);
+  const COLS = [['ตัวละคร', '', r => r.c.id], ['ความหายาก', '', r => RARITIES.indexOf(r.c.rarity)], ['ชนะ % (ผสม)', 'n', r => r.win],
+    ...(hasEdits ? [['เทียบเดิม', 'n', r => r.win - base.levels.mix[r.c.id].win]] : []),
+    ['เทียบระดับเดียวกัน', 'n', r => num(r.vt)], ['อันดับในระดับ', 'n', r => (r.tr ? +r.tr.split('/')[0] : null)],
+    ['ดาเมจที่ทำ', 'n', r => num(r.dl)], ['ดาเมจที่รับ', 'n', r => num(r.tk)], ['รอดจบ %', 'n', r => num(r.sv)],
+    ['ห่างเป้า ผสม', 'n', r => r.e.mix], ['Lv1', 'n', r => r.e[1]], ['Lv2', 'n', r => r.e[2]], ['Lv3', 'n', r => r.e[3]], ['ผล', '', r => ORDER[r.v]]];
+  const sel = $('rankRar');
+  if (sel.options.length < 2) { for (const r of RARITIES) sel.append(new Option(`${r} · ราคา ${RULES.shop.prices[r]}`, r)); sel.addEventListener('change', renderResults); }
+  const sk = rankSort.col != null ? COLS.find(x => x[0] === rankSort.col) : null;
+  if (sk) { const f = sk[2], d = rankSort.dir; rows.sort((a, b) => { const x = f(a), y = f(b); if (x == null) return 1; if (y == null) return -1; return (x < y ? -1 : x > y ? 1 : 0) * d; }); }
+  else rows.sort((a, b) => ORDER[a.v] - ORDER[b.v] || Math.abs(b.e.mix) - Math.abs(a.e.mix));
+  $('rankSortTxt').textContent = sk ? `เรียงตาม ${sk[0]} ${rankSort.dir > 0 ? 'น้อย → มาก' : 'มาก → น้อย'}` : 'เรียง: หลุด/ใกล้ขอบก่อน';
   const head = document.createElement('tr');
-  for (const [t, c] of [['ตัวละคร'], ['ความหายาก'], ['ชนะ % (ผสม)', 'n'], ...(hasEdits ? [['เทียบเดิม', 'n']] : []), ['ห่างเป้า ผสม', 'n'], ['Lv1', 'n'], ['Lv2', 'n'], ['Lv3', 'n'], ['ผล']]) { const th = document.createElement('th'); th.textContent = t; if (c) th.className = c; head.append(th); }
+  for (const [t, c] of COLS) { const th = document.createElement('th'); th.textContent = t + (sk && sk[0] === t ? (rankSort.dir > 0 ? ' ▲' : ' ▼') : ''); th.className = (c ? c + ' ' : '') + 'click'; th.tabIndex = 0;
+    th.setAttribute('aria-sort', sk && sk[0] === t ? (rankSort.dir > 0 ? 'ascending' : 'descending') : 'none');
+    const go = () => { if (rankSort.col === t) rankSort.dir = -rankSort.dir; else { rankSort.col = t; rankSort.dir = 1; } renderResults(); };
+    th.addEventListener('click', go); th.addEventListener('keydown', ev => { if (ev.key === 'Enter') go(); }); head.append(th); }
   $('rankHead').replaceChildren(head);
-  const ORDER = { out: 0, near: 1, ok: 2 }, byId = Object.fromEntries(chars.map(c => [c.id, c]));
-  const rows = chars.map(c => { const e = Object.fromEntries(MEASURE.levels.map(lv => [lv, L[lv][c.id].err])); return { c, e, v: verdict(e), win: L.mix[c.id].win }; })
-    .sort((a, b) => ORDER[a.v] - ORDER[b.v] || Math.abs(b.e.mix) - Math.abs(a.e.mix));
   let out = 0, near = 0, off = 0;
-  $('rank').replaceChildren(...rows.map(({ c, e, v, win }) => {
-    if (v === 'out') out++; if (v === 'near') near++;
+  for (const r of rows) { if (r.v === 'out') out++; if (r.v === 'near') near++; }
+  const dash = v => (v == null ? '–' : null);
+  $('rank').replaceChildren(...rows.filter(r => !sel.value || r.c.rarity === sel.value).map(({ c, e, v, win, vt, dl, tk, sv, tr: rk }) => {
     const tr = document.createElement('tr'); tr.className = 'click'; tr.tabIndex = 0;
     const nameTd = td(`${c.id} ${c.name}`); nameTd.prepend(charBadge(c.id));
     const rarTd = td(''); rarTd.append(rarityTag(c.rarity));
     const errTd = (x, lim, nearLim) => td(sgn(x), 'err' + (Math.abs(x) > lim ? ' e-out' : Math.abs(x) >= nearLim ? ' e-near' : ''));
     tr.append(nameTd, rarTd, td(fmt(win), 'n'));
     if (hasEdits) tr.append(td(delta(win, base.levels.mix[c.id].win), 'n'));
+    tr.append(td(dash(vt) || sgn(vt), 'n'), td(rk || '–', 'n'), td(dash(dl) || String(dl), 'n'), td(dash(tk) || String(tk), 'n'), td(dash(sv) || fmt(sv, 0), 'n'));
     tr.append(errTd(e.mix, MEASURE.band, MEASURE.near), ...[1, 2, 3].map(lv => errTd(e[lv], MEASURE.lvBand, MEASURE.lvBand - 1)), td(pill(...VERDICT_TH[v])));
     const open = () => { showTab('chars'); setCurrent(c.id); $('editor').scrollIntoView({ block: 'start', behavior: 'smooth' }); };
     tr.addEventListener('click', open); tr.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
