@@ -642,7 +642,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 .shop.many .stxt { align-items: center; }
 .shop.many .slot .uname { text-align: center; font-size: .82rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
 .shop.many .slot .sub.tr, .shop.many .slot .stxt .rar { display: none; }
-.shop.many .slot .price { position: static; justify-self: center; padding: 0 6px; font-size: .8rem; }
+.shop.many .slot .price { position: static; grid-column: auto; justify-self: center; padding: 0 6px; font-size: .8rem; }
 .shop.many .slot .own { left: 50%; right: auto; transform: translateX(-50%); max-width: 96%; font-size: .62rem; padding: 0 5px; }
 @media (max-height: 520px) {
   .shop.many { gap: 3px; }
@@ -667,6 +667,13 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 .fmcell .rune-dot { position: static; font-size: .6rem; max-width: 100%; white-space: normal; }
 .fmrunes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
 .fmrune { font-size: .72rem; padding: 1px 7px; border-radius: 8px; background: var(--soft); border: 1px solid var(--line); }
+@media (max-height: 520px) {
+  .fmcell { min-height: 0; padding: 2px 3px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; column-gap: 4px; row-gap: 0; }
+  .fmcell > .mon { grid-row: 1 / 4; } .fmcell .shape { width: 22px; height: 22px; }
+  .fmcell .uname { font-size: .66rem; } .fmcell .fmlv { font-size: .58rem; }
+  .fmhead span { font-size: .62rem; }
+  .foemini + .rcard .rtext { display: none; }
+}
 #reroll.free { background: var(--tg-shop); color: var(--on-accent); border-color: var(--tg-shop); }
 @media (prefers-reduced-motion: reduce) { #rotate .phone { animation: none; } }
 </style>
