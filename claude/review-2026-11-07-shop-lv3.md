@@ -25,4 +25,7 @@ Recommended (Claude): **C** (×2–×3, ค่าเสนอ), optionally + mil
 All numbers ค่าเสนอ. Before building: HARD RULE 6 (fresh AMCFG1 → cfgdiff) · regen bot teams (botgen) · G3 measure (runerun 600) + charstat · gate · publish.
 
 ## DECISIONS
-(pending user)
+User DECIDED (set 133): **no C · odds table only** — user's table (set in Balance Room, ค่าเสนอ until measured):
+Lv1 100/0/0/0/0 · Lv2 80/20 · Lv3 70/30 · Lv4 55/45 · Lv5 45/50/5 · Lv6 40/50/10 · Lv7 35/45/20 · Lv8 30/40/25/5 · Lv9 25/35/30/10 · Lv10 20/30/35/15 · Lv11 14/25/40/20/1 · Lv12 10/20/40/25/5 · Lv13 10/15/35/30/10 · Lv14 10/10/30/35/15 · Lv15 5/10/30/30/25.
+Model: specific common seen r8 7.6 · r13 8.9 (old 5.5 / 6.1). Avg shop price r7 7.1→4.7, r10 8.7→6.0 → game ~3–4 rounds slower; fixed bosses 5/10/15 likely harder.
+Next: AMCFG1 → cfgdiff → import table → botgen → runerun 600 (clear %, boss k1–k3, round commons hit Lv3) → show user before publish.
