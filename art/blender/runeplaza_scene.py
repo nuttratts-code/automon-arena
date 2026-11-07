@@ -68,7 +68,7 @@ def height(x, y):
 
 def ground_color(x, y, h):
     x = np.asarray(x, float); y = np.asarray(y, float)
-    g1 = np.array([0.24, 0.44, 0.12]); g2 = np.array([0.50, 0.66, 0.20]); g3 = np.array([0.70, 0.68, 0.30])
+    g1 = np.array([0.22, 0.40, 0.12]); g2 = np.array([0.46, 0.60, 0.20]); g3 = np.array([0.72, 0.66, 0.32])
     m = fbm(x * .03, y * .03, 23)[..., None]; m2 = sstep(.6, .8, fbm(x * .06, y * .06, 29))[..., None]
     c = g1 + (g2 - g1) * m; c = c + (g3 - c) * m2 * .55
     far = np.clip((y - 60) / 260, 0, 1)[..., None]
@@ -466,7 +466,7 @@ sc.cycles.max_bounces = 4; sc.cycles.diffuse_bounces = 2; sc.cycles.glossy_bounc
 sc.render.resolution_x, sc.render.resolution_y = W, H; sc.render.resolution_percentage = 100
 sc.render.film_transparent = True                         # sky is painted in post (alpha = sky mask)
 sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_mode = 'RGBA'
-sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Punchy'
+sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Medium High Contrast'
 sc.render.filepath = BASE + '_raw.png'
 bpy.context.view_layer.update()
 
