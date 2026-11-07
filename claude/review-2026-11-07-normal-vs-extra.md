@@ -37,3 +37,10 @@ Q1 normal-run team pick: (a, rec) closest power to your team, unscaled (as now) 
 - Start hearts 10 → 5. On the 5th loss (hearts would hit 0): +1 free heart AND pick 1 of 3 random legend runes (no reroll) — once per run, in normal run or extra mode. Legend pool empty → fill from other rarities (S-12 rule).
 - Math: 5 losses + 1 free heart → the 6th loss ends the run; 10 wins needs ≤ 15 matches → cap 15 fits exactly.
 - Still to confirm: extra mode +20% flat on the real team · round 15 = real boss #3 (training dummy at the last round removed for now) · boss #3 met in a normal run without the +20% extra-match bonus.
+
+## FINAL spec for set 119 (user 7 Nov) — supersedes everything above
+- Normal run: max 15 matches. Start hearts 5. Enemy = real bot team from the pre-generated pool (bots that played like humans; NOT the player's team), unscaled, no win-streak bonus. Bosses at rounds 5/10/15, strength grows by boss number as now (bossAt k) but WITHOUT the +bossExtraPct 20% in a normal run.
+- Extra mode (after 10 wins → เล่นต่อ): continues up to round 20; round 20 = training dummy (last round). Enemy = real bot team of that round +20% hp/atk (flat). Boss at round 15 if met in extra mode: k=3 growth + 20%. Power-follow scaling + win-streak bonus (set 107) are not used anymore (maybe keep code, settings off).
+- Second chance: on the 5th loss → +1 heart + pick 1 of 3 random legend runes, no reroll · once per run · normal or extra · empty legend pool → other rarities.
+- lastStage 50 → 20; extra-mode end = round 20 dummy. Growth from round 20 (8%) no longer reachable.
+- Docs to update: S-10, S-12, S-13 (+ version bump, core rule → +1.0), Balance Room setting labels.
