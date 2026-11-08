@@ -279,6 +279,8 @@ const mainTribeOf = (team, map, rules) => {
   return act.slice().sort((a, b) => cnt(b) - cnt(a) || TRIBES.indexOf(a) - TRIBES.indexOf(b))[0];
 };
 const isDummyId = id => id === 'DUMMY';
+// set 141 (user C): a team counts as tribe X only when ≥ 4 of its units carry X (4/2 split) · else null (mixed)
+export const tribe4 = units => { const c = {}; for (const u of units || []) for (const t of new Set([u.tribe, ...(u.extraTribes || [])].filter(Boolean))) c[t] = (c[t] || 0) + 1; const best = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return best && best[1] >= 4 ? best[0] : null; };
 export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
@@ -291,7 +293,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
     let last = null, wasOver = false, fl = dyn ? (dyn[2] || 0) : 0; const seen = {};
     const pick = useTeams ? (p => {
       const stg = dyn ? { ...stage, settings: { ...stage.settings, foeFloor: fl } } : stage;
-      const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, rules, p.ls | 0); pcts.push(dyn ? fl : f.pct); return f;
+      const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, rules, p.ls | 0, p.ws | 0); pcts.push(dyn ? fl : f.pct); return f;
     }) : null;
     const P = simRun(chars, rules, (seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, pick, m => {
       if (dyn) fl = Math.max(0, Math.min(dyn[1] ?? 100, fl + (m.winner !== 1 ? dyn[0] : -dyn[0])));
@@ -306,7 +308,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
       else if (!isDummyId(m.boss)) {
         const K = (bk[m.k] ||= [0, 0]); K[0]++; K[1] += won1 ? 1 : 0;
         if (!m.extra) { const q = (nb[m.k] ||= [0, 0]); q[0]++; q[1] += won1 ? 1 : 0; }
-        if (keepTeams && teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts });
+        if (keepTeams && teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts, tr: tribe4(m.units), boss: m.boss, ex: !!m.extra }); // set 141: tr = tribe of ≥ 4 units (C split)
         const b = stage.bosses.find(x => x.id === m.boss) || { bars: 1, name: m.boss };
         const B = (boss[`${m.boss}#${m.k}`] ||= { id: m.boss, name: b.name, k: m.k, round: m.round, games: 0, wins: 0, bars: 0, maxBars: b.bars, ms: 0, lv: 0, lv3: 0, tribe: {} });
         B.games++; B.wins += w; B.bars += bossBarsGone(m.res, b); B.ms += m.timeMs; B.lv += lvs; B.lv3 += l3;

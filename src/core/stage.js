@@ -398,6 +398,12 @@ export const STAGE_SETTINGS = [
   // set 119 (user 7 Nov): enemy = a REAL bot team (pre-generated pool), never scaled in the normal run · picked as the team whose power is
   // closest to player board power × foeBase % (nearby rounds) · no win-streak bonus (set 107 power-follow scaling + streak removed)
   ['foeBase', 'ศัตรู: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 100, 10, 400, '%'],
+  // set 141 (user E2): extra matches pick with foeBaseExtra % instead of foeBase · ค่าเสนอ
+  ['foeBaseExtra', 'แมตช์พิเศษ: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 120, 10, 400, '%'],
+  // set 141 (user G1 H2 I3 J1 K2 M1 — replaces set 119 "no win streak"): from foeWsFrom wins in a row (boss wins count, any loss resets)
+  // the wanted power grows foeWsStep % per win (2 wins +10, 3 +20 …) · no cap · real teams only (tops out at the strongest team in reach) · bosses not scaled
+  ['foeWsFrom', 'ศัตรู: ชนะติดกันกี่ครั้งจึงเริ่มเลือกทีมที่แรงขึ้น', 2, 1, 20, 'ครั้ง'],
+  ['foeWsStep', 'ศัตรู: ชนะติดกันแต่ละครั้ง เลือกทีมแรงขึ้นอีก (0 = ปิด)', 10, 0, 100, '%'],
   // set 127 (user R1 = C, review-2026-11-07-system-compare): floor on the wanted power = median power of the round's bot teams × foeFloor % (0 = off) · ค่าเสนอ
   ['foeFloor', 'ศัตรู: พลังขั้นต่ำ = ค่ากลางทีมบอทรอบนั้น × (0 = ปิด)', 100, 0, 200, '%'],
   // set 129 → set 132 (user 7 Nov): from foeFloorLs losses in a row (normal or boss) the floor drops foeFloorStep % per loss
