@@ -1,6 +1,6 @@
 # workflow · code setup: build, test, docs (git repo)
 
-V1.28 · 31 Oct 2026 (CI runs the gate; commit rule matches CLAUDE.md; Jules removed) · V1.27 · 27 Oct 2026 · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action. V1.27 (set D): tests split into topic files, see section 2.
+V1.28 · 31 Oct 2026 (CI runs the gate; commit rule matches CLAUDE.md; Jules removed) · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action. V1.27 (set D): tests split into topic files, see section 2. · older versions: git log
 
 ## 1. Get the code
 - The source of truth is the git repo (`src/**`, `claude/**`). Clone/pull it; nothing is extracted from published pages any more.

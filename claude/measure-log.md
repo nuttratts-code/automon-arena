@@ -1,6 +1,6 @@
 # Measurement log per task set (Automon Arena)
 
-V1.6 · 7 Nov 2026 (set 127 build G3 added) · was V1.5 · 28 Oct 2026 (set 49 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md
+V1.6 · 7 Nov 2026 (set 127 build G3 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md · older versions: git log
 
 ## Set 127 build · G3 (7 Nov 2026 · R2 sell −1 copy/merge + R1 floor + set 128 lock, new bot teams)
 `node lab/runerun.mjs 600` (simple player bot, runes on) · same bot teams both columns · set 119 reference (10→5 hearts, no lock, full refund): cleared 18.5% · normal won 45.5% · second chance 93% · k1 54.5% · k2 reached 53% won 66.5%.

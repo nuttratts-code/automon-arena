@@ -1,6 +1,6 @@
 # Automon Arena code workflow (index)
 
-V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE.md) · V1.27 · 31 Oct 2026 (handoff headings match the real file; Jules removed) · V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo)
+V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE.md) · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo) · older versions: git log
 
 | Job | File | Old sections |
 | --- | --- | --- |
