@@ -83,7 +83,7 @@ function renderList() {
       const lvTd = td(''); lvTd.className = 'n'; const lvs = el('div', 'lv3 lvlab'); for (const x of ['1', '2', '3']) lvs.append(el('span', '', x)); lvTd.append(lvs);
       const sk = td(''); sk.className = 'skcell';
       if (!c.skills.length) sk.append(cell('ไม่มีสกิล', 'was'));
-      for (const s of c.skills) { const line = el('div', 'skline'); line.append(skillTags(s), skillLine(s)); sk.append(line); }
+      for (const g of skillGroups(c.skills)) { const line = el('div', 'skline'); line.append(skillTags(g[0]), skillGroupLine(g)); sk.append(line); } // ชุด 142: เมื่อเดียวกันรวมบรรทัด
       const bp = basePower(c).points, bud = RULES.power.budget[c.rarity];
       const ptTd = td(''); ptTd.className = 'n'; const pts = el('div', 'lv3'); pts.append(el('span', bp > bud ? 'over' : '', bp.toFixed(0)), el('span', 'was', `/ ${bud}`)); ptTd.append(pts);
       ptTd.title = bp > bud ? 'แต้มพื้นฐานเกินงบทั้งที่ยังไม่นับสกิล' : 'ยังเหลืองบให้สกิล ' + (bud - bp).toFixed(0) + ' แต้ม';

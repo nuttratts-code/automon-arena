@@ -35,6 +35,7 @@ with sync_playwright() as p:
         def pick_offer():  # set 124: picking a rune that must be worn auto-opens its #dlg popup (run.template renderRunes) → close it, else the next click is blocked (flaky gate fail, run 611)
             if not pg.is_visible('#offerDlg'): return False
             pg.click('#offer button')
+            if pg.query_selector('#flagPick'): pg.click('#flagPick [data-tribe]')  # set 142: ธงเผ่า asks the tribe first
             if pg.evaluate("document.getElementById('dlg').open"): esc()
             return True
         def drag(a,b):
@@ -101,7 +102,9 @@ with sync_playwright() as p:
         pg.evaluate("P.gold=2;render()"); chk(pg.is_disabled('#offerReroll'),'not enough gold → reroll disabled'); pg.evaluate("P.gold=%d;render()" % gR)
         pg.keyboard.press('Escape'); chk(pg.is_visible('#offerDlg'),'offer popup ignores Esc')
         pg.evaluate("document.getElementById('fight').click()"); chk(not fighting() and 'เลือกรูน' in pg.evaluate('JSON.stringify(msgs)'),'fight blocked until offer picked')
-        pg.click('#offer button'); chk(pg.is_hidden('#offerDlg') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
+        pg.click('#offer button')
+        if pg.query_selector('#flagPick'): pg.click('#flagPick [data-tribe]')  # set 142: the random first card can be ธงเผ่า (T8) → it asks the tribe first; was the flaky "offerDlg intercepts" gate fail
+        chk(pg.is_hidden('#offerDlg') and pg.evaluate('Object.values(P.rn.bag).reduce((a,b)=>a+b,0)')==2,'offer taken')
         esc()  # set 109: a picked rune that must be worn opens its popup
         pg.evaluate("P.gold=%d;P.rn.bag={};P.rn.at={};P.rn.pt={};render()" % g0)
         # set 97: tap = details popup only (never moves) · drag = buy / move / sell
