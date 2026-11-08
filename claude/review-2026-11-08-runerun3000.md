@@ -54,3 +54,18 @@ B4 สายฟ้า 8% vs เหล็กกล้า 80% = a lightning player
 Others: worst tribe 37–57%. Options: C1 (rec) cap: every tribe ≥ ~30% vs every boss at k1 (look at B4 rule vs shock/lightning
 first — find the cause in code before tuning, HARD RULE 5) · C2 keep counters as intended flavour (tell player the boss
 earlier = counter-play) · C3 only fix B4 สายฟ้า.
+
+## D. Table "ตามรอบ" (user data, 3000 runs) — how to read + what looks off
+Columns: ยังเล่นอยู่ = % of runs that played this round (main run + extra matches after 10 wins) · ชนะ % = of those matches,
+% not lost (draw = win) · round 20 = training dummy → always 100% (ignore).
+Win % by round: r1 55.5 · r2 61.2 · r3 46.4 · r4 59.6 · r5 boss 68.9 · r6 45.1 · r7 38.5 · r8 39.3 · r9 48.5 · r10 boss 72.1 ·
+r11 33.1 · r12 47.2 · r13 55.5 · r14 50.3 · r15 boss 73 · r16 40 · r17 61.2 · r18 69.1 · r19 72.6. Alive r8 94% → r10 67% → r12 47%.
+Readings (to verify next chat, not proven):
+- Zigzag = adaptive foe strength (any win → foe 100%, 2+ losses → −20% each) → wins and losses alternate by design.
+- Boss rounds (69–73%) are EASIER than the bot rounds around them (33–48%) → bosses feel like a free win; matches A/B.
+- Dip right after each boss (r6 45 · r11 33 · r16 40): a boss win resets foe strength to 100% (suspect) + teams power jump.
+  r7–r8 (~39%) is where runs start dying (alive 99 → 81%).
+- r17–19 high (61–73%) = survivorship: only ~11–17% of runs left, mostly strong boards in extra matches.
+Options (next chat): D1 (rec) after A/B retune, re-measure runerun 3000 and check boss rounds ≈ or below the bot rounds
+around them · D2 also look at r6–r8 / r11 difficulty (bot team power curve or foe-floor rule; ask user before touching) ·
+D3 page tweak: split main run vs extra matches per round so survivorship does not hide difficulty.
