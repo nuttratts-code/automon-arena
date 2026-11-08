@@ -1,9 +1,9 @@
-import { RULES, SHARE_TO, SHOP_WHEN, TRIBES } from './rules.js';
+import { RULES, SHARE_TO, SHOP_WHEN, TRIBES, upMul } from './rules.js';
 import { validateTeam } from './validate.js';
 // ตัวจัดทีมกลาง: ตัวละคร + เลเวล + ค่าถาวร → ทีมพร้อมสู้ · ทุกหน้า (เกม, Lab) ใช้ตัวนี้ตัวเดียว
 
 
-export const pctOf = (base, pct) => (pct ? Math.floor(base * (1 + pct / 100)) : base);
+export const pctOf = (base, pct) => (pct ? upMul(base, 1 + pct / 100) : base);
 
 export function makeCharMap(chars) {
   const m = Object.create(null);

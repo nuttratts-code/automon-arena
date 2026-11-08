@@ -26,7 +26,7 @@ export const TESTS_VALIDATE = [
     eq(bad.bosses[1].phases[0].rules, [{ id: 'healCut', v: 50 }], 'old rule/ruleV → phase 1 (value out of range → default)');
     const s2 = cleanStage({ runes: { T5: { name: ' <i>คมกริบ</i> ', max: 4 }, T6: { name: '', max: 1.5 }, T7: { max: 99 } }, settings: { lastStage: 50, growPct: 10, growFrom: 999 },
       bosses: [{ id: 'B1', spot: 'four', bars: 7, moveSec: 3 }, { id: 'B2', spot: 'fly', bars: 2.5, moveSec: 0 }] });
-    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['โล่ไม้คู่', 3, 3], 'bad name/max → default (common = 3)');
+    eq([s2.runes.T5.name, s2.runes.T5.max], ['iคมกริบ/i', 4], 'rune rename + stack'); eq([s2.runes.T6.name, s2.runes.T6.max, s2.runes.T7.max], ['โล่', 3, 3], 'bad name/max → default (common = 3)');
     eq([s2.bosses[0].spot, s2.bosses[0].bars, s2.bosses[0].moveSec], ['four', 7, 3], 'boss spot/bars'); eq([s2.bosses[1].spot, s2.bosses[1].bars, s2.bosses[1].moveSec], ['move', 5, d.bosses[1].moveSec], 'bad spot/bars → user default');
     eq(s2.settings.growFrom, 20, 'growFrom out of range'); eq(enemyMultAt(s2.settings, 19), 1, 'no growth before growFrom'); ok(Math.abs(enemyMultAt(s2.settings, 21) - 1.21) < 1e-9, 'compounding');
     // Set 64 boss phases: max 3 · at rising and < bars · max 2 rules, no dup · fx/spot only from phase 2 · second value / tribe cleaned

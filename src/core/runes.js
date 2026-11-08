@@ -4,7 +4,7 @@
 // Only effects the skill system cannot express become unit fields that battle.js reads (taunt, avoidDeath, link, bossDmg, …).
 // Run-flow runes (gold/shop/drop/scout) are listed in RUNE_RUN_ONLY and are ignored here — they belong to phase 2b.
 // Every number is the user's (Balance Room); this file adds no numbers of its own.
-import { TRIBES } from './rules.js';
+import { TRIBES, upMul, upGain } from './rules.js';
 import { RUNE_EFF, RUNE_SPEC, runeKind } from './stage.js';
 
 // Runes that only matter in the run flow (money, shop, drops, info) — no battle effect, phase 2b.
@@ -61,11 +61,11 @@ function rnSpecFields(key, r, n, eq, u, units) {
 function rnSpecStatic(key, r, n, u, ws = 0) {
   const num = q => (typeof r[q] === 'number' ? r[q] : (RUNE_SPEC[key].f.find(f => f[0] === q) || [, , 0])[2]);
   if (key === 'glass') { u.maxHp = Math.max(1, Math.floor(u.maxHp * (1 - Math.min(90, num('hpPct') * n) / 100))); u.hitAmp = (u.hitAmp || 0) + num('dmgPct') * n; return true; }
-  if (key === 'fortress') { u.maxHp = Math.floor(u.maxHp * (1 + num('hpPct') * n / 100)); u.atk = Math.max(0, Math.floor(u.atk * (1 - Math.min(90, num('atkPct') * n) / 100))); return true; }
+  if (key === 'fortress') { u.maxHp = upMul(u.maxHp, 1 + num('hpPct') * n / 100); u.atk = Math.max(0, Math.floor(u.atk * (1 - Math.min(90, num('atkPct') * n) / 100))); return true; }
   if (key === 'growth') { u.hitAmp = (u.hitAmp || 0) + Math.min(num('maxPct') * n, num('stepPct') * n * ws); return true; } // ws = ctx.winStreak · set 128 (T11 A): copies multiply step AND cap
   if (key === 'hpToArmorHit') {
     const lost = Math.floor(u.maxHp * Math.min(90, num('hpPct')) / 100);
-    u.maxHp = Math.max(1, u.maxHp - lost); u.armorHit = (u.armorHit || 0) + Math.floor(lost * num('rate') * n / 100); return true;
+    u.maxHp = Math.max(1, u.maxHp - lost); u.armorHit = (u.armorHit || 0) + upGain(lost, num('rate') * n); return true;
   }
   return false;
 }

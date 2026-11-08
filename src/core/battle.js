@@ -1,5 +1,5 @@
 import { makeRng } from './rng.js';
-import { DO_INFO, RULES, atMatch } from './rules.js';
+import { DO_INFO, RULES, atMatch, upGain, upMul } from './rules.js';
 import { phaseIndexAt, ruleMap, fxMap, spotCells } from './boss.js';
 // ตัวคำนวณการต่อสู้ตาม combat-rules V1.4
 // - ใส่ทีมเดิม + เมล็ดสุ่มเดิม ได้ผลเดิมทุกครั้ง (เซิร์ฟเวอร์ MVP2 จำลองซ้ำเพื่อตรวจได้) · ไม่อ่านเวลาเครื่อง
@@ -181,7 +181,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const atkOf = f => { // R1 บอสตีแรงขึ้น · R13 คลั่ง (×2)
     const a = f.atk + f.atkBonus;
     if (!BOSS || !f.boss) return a;
-    return Math.floor(a * (BR.atkUp ? 1 + BR.atkUp.v / 100 : 1) * (BR.desperate ? 2 : 1));
+    return upMul(a, (BR.atkUp ? 1 + BR.atkUp.v / 100 : 1) * (BR.desperate ? 2 : 1));
   };
   // ปิดสกิล: E2 แถวหลังเงียบช่วงแรก · R15 สุ่มปิดสกิลเป็นช่วง
   const silenced = f => !!BOSS && !f.boss && ((BR.backSilence && f.row === 2 && t <= BR.backSilence.v * 1000) || f.silenceUntil > t);
@@ -343,7 +343,7 @@ export function simulate(teamA, teamB, opts = {}) {
   function hurt(target, amount, src, pierce, why, det) {
     amount = Math.floor(amount);
     if (BOSS) amount = ruleDmg(target, amount, src, why);
-    if (why !== 'link' && why !== 'burn' && stormAt < t) { const o = otUp(); if (o > 0) amount = Math.floor(amount * (1 + o / 100)); } // set 98 overtime: all damage +% (link share already amplified · burn amplified at its source)
+    if (why !== 'link' && why !== 'burn' && stormAt < t) { const o = otUp(); if (o > 0) amount = upMul(amount, 1 + o / 100); } // set 98 overtime: all damage +% (link share already amplified · burn amplified at its source)
     if (amount <= 0 || target.down || target.barBreak) return 0;
     // รูนสายสัมพันธ์ (X6): คู่ที่เลือกรับดาเมจแทน % · รับแทนต่อไม่ได้
     if (target.linkPct > 0 && why !== 'link') {
@@ -394,7 +394,7 @@ export function simulate(teamA, teamB, opts = {}) {
     return absorbed;
   }
   function addArmor(f, v, why) {
-    v = Math.floor(v * amp(f.armorAmp)); // เกราะที่ได้รับ +% (ศัตรูลดได้ด้วย "ได้เกราะน้อยลง" · ต่ำสุด 0)
+    v = upMul(v, amp(f.armorAmp)); // เกราะที่ได้รับ +% (ศัตรูลดได้ด้วย "ได้เกราะน้อยลง" · ต่ำสุด 0)
     if (BOSS && !f.boss) { // R17 ผู้เล่นได้เกราะไม่ได้ · E4 เกราะผู้เล่นลดลง
       if (BR.noArmor && !shellOff()) return;
       if (BR.armorCut && !shellOff()) v = Math.floor(v * Math.max(0, 1 - BR.armorCut.v / 100));
@@ -463,9 +463,9 @@ export function simulate(teamA, teamB, opts = {}) {
       }
     }
   }
-  function cutCd(f, ms) { if (up(f)) { ms = Math.floor(ms * (1 + f.cdAmp / 100)); f.cdLeft = Math.max(0, f.cdLeft - ms); log('cdCut', { to: f.uid, ms }); } }
+  function cutCd(f, ms) { if (up(f)) { ms = upMul(ms, 1 + f.cdAmp / 100); f.cdLeft = Math.max(0, f.cdLeft - ms); log('cdCut', { to: f.uid, ms }); } }
   function heal(f, v, src, why) {
-    v = Math.floor(v * amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
+    v = upMul(v, amp(f.healAmp)); // ฟื้น HP ที่ได้รับ +% / ฟื้นน้อยลง (ชุด 6)
     if (BOSS && !f.boss && BR.healCut) v = Math.floor(v * Math.max(0, 1 - BR.healCut.v / 100)); // E3 ผู้เล่นฟื้นได้น้อยลง
     { const o = otCut(); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: healing −%
     if (!up(f) || v <= 0) return; // ฟื้น HP ไม่ช่วยตัวที่ HP ถึง 0 แล้ว (ต้องใช้สกิลลุกกลับมา)
@@ -473,7 +473,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (h > 0) {
       f.hp += h; log('heal', detailOn ? { to: f.uid, amount: h, ...(why ? { why } : {}), ...(BOSS && !f.boss && BR.healCut ? { rr: ['healCut'] } : {}) } : { to: f.uid, amount: h }); // A1: why (e.g. healHit) only with detail on
       // ฟื้นเป็นพลัง (PT-4): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
-      if (src && src.healToAtk > 0 && up(src)) { const a = Math.floor(h * src.healToAtk / 100); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
+      if (src && src.healToAtk > 0 && up(src)) { const a = upGain(h, src.healToAtk); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
     }
   }
   const buff = (x, what, amount) => log('buff', { to: x.uid, what, amount });
@@ -563,7 +563,7 @@ export function simulate(teamA, teamB, opts = {}) {
         break; }
       case 'reflectDebuff': for (const x of T()) { x.reflDebuff.push({ by: u, pct: v, si: s.idx ?? null }); buff(x, 'reflectDebuff', v); } break;
       case 'eatAllyBurn': { let sum = 0; for (const x of allies(u)) if (x.burn > 0) { sum += x.burn; x.burn = 0; x.noDecay = 0; x.noDecayPerm = false; log('cleanse', { to: x.uid, what: 'burn' }); }
-        const a = Math.floor(sum * v / 100); if (a > 0) { u.atkBonus += a; log('atkUp', { to: u.uid, amount: a }); permRec(u, s, u, a); } break; }
+        const a = upGain(sum, v); if (a > 0) { u.atkBonus += a; log('atkUp', { to: u.uid, amount: a }); permRec(u, s, u, a); } break; }
       case 'stealShock': for (const x of T()) if (up(x) && x.shock > 0) { // ดูดช็อต (SF-6): ช็อตบนเป้าลดลงเท่าที่ดูด ตัวเองได้ช็อตต่อฮิตเท่านั้น (ระหว่างสู้)
         const n = Math.floor(x.shock * v / 100); if (n <= 0) continue;
         x.shock -= n; u.shockHit += n;
@@ -575,11 +575,11 @@ export function simulate(teamA, teamB, opts = {}) {
       // ชุด 7: ผลแบบ % ของ ค่า ของ ใคร
       case 'dmgOf': for (const x of T()) hurt(x, ofVal(u, s, x, ctx) * v / 100, u, false, dwhy); break;
       case 'burnOf': case 'shockOf': for (const x of T()) addStatus(x, s.do === 'burnOf' ? 'burn' : 'shock', ofVal(u, s, x, ctx) * v / 100, why, u); break;
-      case 'atkOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.atkBonus += a; log('atkUp', { to: x.uid, amount: a }); permRec(u, s, x, a); } } break;
-      case 'hpOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, a); } } break;
-      case 'burnHitOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, a); } } break;
-      case 'shockHitOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, a); } } break;
-      case 'armorHitOf': for (const x of T()) { const a = Math.floor(ofVal(u, s, x, ctx) * v / 100); if (a > 0) { x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, a); } } break;
+      case 'atkOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.atkBonus += a; log('atkUp', { to: x.uid, amount: a }); permRec(u, s, x, a); } } break;
+      case 'hpOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, a); } } break;
+      case 'burnHitOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, a); } } break;
+      case 'shockHitOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, a); } } break;
+      case 'armorHitOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, a); } } break;
       case 'armorOf': for (const x of T()) { const a = ofVal(u, s, x, ctx) * v / 100; addArmor(x, a, why); permRec(u, s, x, a); } break;
       // F3 (28 Oct, user A): ค่าที่ใช้คิดอ่านครั้งเดียวตอนสกิลทำงาน → ทุกคนที่ได้ฟื้นได้ % ของค่าเดียวกัน (เดิมอ่านใหม่หลังฟื้นแต่ละคน PT-6 ฟื้นตัวเองก่อนแล้วคนถัดไปได้น้อยลง) · who=each (WN-5) ยังอ่านของแต่ละคน
       case 'healOf': { const once = s.of && s.of.who === 'each' ? null : ofVal(u, s, null, ctx); for (const x of T()) { const a = (once ?? ofVal(u, s, x, ctx)) * v / 100; heal(x, a, u); permRec(u, s, x, a); } break; }
@@ -603,7 +603,7 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'cdCut': for (const x of T()) { cutCd(x, v); permRec(u, s, x, v); } break;
       case 'cdPct': for (const x of T()) { x.cdMult *= Math.max(0.05, 1 - (v * (1 + x.cdAmp / 100)) / 100); log('cdPct', { to: x.uid, pct: v }); permRec(u, s, x, v); } break;
       case 'atkUp': for (const x of T()) { x.atkBonus += v; log('atkUp', { to: x.uid, amount: v }); permRec(u, s, x, v); } break;
-      case 'atkPct': for (const x of T()) { const a = Math.floor(atkOf(x) * v / 100); x.atkBonus += a; log('atkUp', { to: x.uid, amount: a }); permRec(u, s, x, a); } break;
+      case 'atkPct': for (const x of T()) { const a = upGain(atkOf(x), v); x.atkBonus += a; log('atkUp', { to: x.uid, amount: a }); permRec(u, s, x, a); } break;
       case 'hpUp': for (const x of T()) { x.maxHp += v; x.hp += v; buff(x, 'hpUp', v); permRec(u, s, x, v); } break;
       case 'multiUp': for (const x of T()) { x.multiBonus += v; buff(x, 'multiUp', v); permRec(u, s, x, v); } break;
       case 'burnHitUp': for (const x of T()) { x.burnHit += v; buff(x, 'burnHitUp', v); permRec(u, s, x, v); } break;
@@ -613,12 +613,12 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'cdAmp': for (const x of T()) { x.cdAmp += v; statNote(x, 'cdAmp', v); permRec(u, s, x, v); } break;
       case 'shockAmp': for (const x of T()) { x.shockAmp += v; statNote(x, 'shockAmp', v); permRec(u, s, x, v); } break;
       // ชุด 6: ค่าพลังเพิ่มทุกแบบ (+ ค่า / + %) · ผลที่ได้รับ/ที่ทำ +% · ผลใส่ศัตรู
-      case 'hpPct': for (const x of T()) { const a = Math.floor(x.maxHp * v / 100); x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, v); } break;
+      case 'hpPct': for (const x of T()) { const a = upGain(x.maxHp, v); x.maxHp += a; x.hp += a; buff(x, 'hpUp', a); permRec(u, s, x, v); } break;
       case 'armorHitUp': for (const x of T()) { x.armorHit += v; buff(x, 'armorHitUp', v); permRec(u, s, x, v); } break;
       case 'healHitUp': for (const x of T()) { x.healHit = (x.healHit || 0) + v; buff(x, 'healHitUp', v); permRec(u, s, x, v); } break; // ฟื้น/ฮิต + (28 ต.ค.)
-      case 'armorHitPct': for (const x of T()) { const a = Math.floor(x.armorHit * v / 100); x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, v); } break;
-      case 'burnHitPct': for (const x of T()) { const a = Math.floor(x.burnHit * v / 100); x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, v); } break;
-      case 'shockHitPct': for (const x of T()) { const a = Math.floor(x.shockHit * v / 100); x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, v); } break;
+      case 'armorHitPct': for (const x of T()) { const a = upGain(x.armorHit, v); x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, v); } break;
+      case 'burnHitPct': for (const x of T()) { const a = upGain(x.burnHit, v); x.burnHit += a; buff(x, 'burnHitUp', a); permRec(u, s, x, v); } break;
+      case 'shockHitPct': for (const x of T()) { const a = upGain(x.shockHit, v); x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, v); } break;
       case 'cdMsDown': for (const x of T()) { x.cdMs = Math.max(0, x.cdMs - v); buff(x, 'cdMsDown', v); permRec(u, s, x, v); } break;
       case 'healAmp': for (const x of T()) { x.healAmp += v; statNote(x, 'healAmp', v); permRec(u, s, x, v); } break;
       case 'hitAmp': for (const x of T()) { x.hitAmp += v; statNote(x, 'hitAmp', v); permRec(u, s, x, v); } break;
@@ -636,12 +636,12 @@ export function simulate(teamA, teamB, opts = {}) {
     const atk0 = n > 1 ? Math.max(1, part(atkOf(a))) : atkOf(a);
     const atkP = pow != null && pow !== 100 ? Math.max(1, Math.floor(atk0 * pow / 100)) : atk0; // R4 ตีโดนทุกตัว % · รูนคู่หู % ของการโจมตีปกติ
     const ha = hitAmpOf(a); // ชุด 66: รูนที่เปลี่ยนตามสถานการณ์ (เพื่อนล้ม / เหลือตัวเดียว)
-    const atk = ha || tg.dmgTakenAmp ? Math.floor(atkP * amp(ha) * amp(tg.dmgTakenAmp)) : atkP; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
+    const atk = ha || tg.dmgTakenAmp ? upMul(atkP, amp(ha) * amp(tg.dmgTakenAmp)) : atkP; // ดาเมจตี +% / ดาเมจที่โดน +% (ชุด 6)
     const absorbed = hurt(tg, atk, a, !!(BOSS && a.boss && BR.pierce), 'hit', // R31 บอสตีทะลุเกราะ
       detailOn ? { atk: a.atk, bonus: a.atkBonus, n, amp: ha, tribeAmp: a.hitAmpT || 0, takenAmp: tg.dmgTakenAmp, carried: carried ? 1 : 0 } : null);
     if (tg.avoidedAt === t && tg.avoidedBy === a) return; // รูนเลี่ยงจุดตาย: ยกเลิกทั้งฮิต (ดาเมจ ไฟ ช็อต)
     let taken = atk;
-    if (tg.shock > 0 && up(tg)) { const sd = Math.floor(tg.shock * amp(a.shockAmp) * amp(tg.shockTaken)); hurt(tg, sd, a, true, 'shock', detailOn ? { shock: tg.shock, amp: a.shockAmp, tribeAmp: a.shockAmpT || 0, takenAmp: tg.shockTaken } : null); taken += Math.max(0, sd); } // ช็อต: ดาเมจจริงเต็มค่าทุกฮิต · ชุด 34: ตีแบ่งหารเฉพาะค่าของผู้ตี ช็อตบนเป้าแตกเต็มค่า
+    if (tg.shock > 0 && up(tg)) { const sd = upMul(tg.shock, amp(a.shockAmp) * amp(tg.shockTaken)); hurt(tg, sd, a, true, 'shock', detailOn ? { shock: tg.shock, amp: a.shockAmp, tribeAmp: a.shockAmpT || 0, takenAmp: tg.shockTaken } : null); taken += Math.max(0, sd); } // ช็อต: ดาเมจจริงเต็มค่าทุกฮิต · ชุด 34: ตีแบ่งหารเฉพาะค่าของผู้ตี ช็อตบนเป้าแตกเต็มค่า
     if (first) { // โบนัสเผ่า: ฮิตแรกของชุด (ฮิตที่ถูกพาไปไม่นับ)
       if (a.tb.burn && a.sets % a.tb.burn[1] === 0) Q.S.push({ u: a, s: { do: 'burn', to: 'target', value: a.tb.burn[0], why: 'tribe' }, ctx: { target: tg } });
       if (a.tb.shock && a.sets % a.tb.shock[1] === 0) Q.S.push({ u: a, s: { do: 'shock', to: 'target', value: a.tb.shock[0], why: 'tribe' }, ctx: { target: tg } });
@@ -750,7 +750,7 @@ export function simulate(teamA, teamB, opts = {}) {
   }
   function bossTick() {
     if (!up(BOSS)) return;
-    ruleTag = 'enrage'; if (BR.enrage && t - enrageT >= R.bossTimers.enrageMs) { enrageT = t; const a = Math.floor(BOSS.atk * BR.enrage.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } } // E6
+    ruleTag = 'enrage'; if (BR.enrage && t - enrageT >= R.bossTimers.enrageMs) { enrageT = t; const a = upGain(BOSS.atk, BR.enrage.v); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } } // E6
     ruleTag = 'regen'; if (BR.regen && t % 1000 === 0) bossHeal(BOSS.barHp * BR.regen.v / 100); // R9
     ruleTag = 'armorGrow'; if (BR.armorGrow && t - growT >= R.bossTimers.armorGrowMs) { growT = t; addArmor(BOSS, BR.armorGrow.v, 'boss'); } // R10
     ruleTag = 'burnAura'; if (BR.burnAura && t - auraT >= R.bossTimers.burnAuraMs) { auraT = t; for (const x of enemies(BOSS)) addStatus(x, 'burn', BR.burnAura.v, 'boss', BOSS); } // R11
@@ -792,7 +792,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // ---------- เริ่มแมตช์ ----------
   for (const f of F) f.armor = f.startArmor;
   for (const f of F) { const st = TB(f.side, 'เหล็กกล้า'), p = st && st.b.hpPct ? st.b.hpPct[st.idx] : 0; // ชุด 32: HP สูงสุด +% (เกราะเริ่มยังคิดจาก HP เดิม)
-    if (p > 0) { f.armorBaseHp = f.maxHp; f.maxHp = Math.floor(f.maxHp * (1 + p / 100)); f.hp = f.maxHp; } }
+    if (p > 0) { f.armorBaseHp = f.maxHp; f.maxHp = upMul(f.maxHp, 1 + p / 100); f.hp = f.maxHp; } }
   const tbv = (side, tr, k) => { const x = TB(side, tr); return x && x.b[k] ? x.b[k][x.idx] || 0 : 0; };
   const burnDmgOn = [tbv(1, 'เพลิงเผา', 'burnDmgPct'), tbv(0, 'เพลิงเผา', 'burnDmgPct')]; // ดาเมจไฟบนตัวฝั่ง s +% จากโบนัสเพลิงเผาของอีกฝั่ง
   if (detailOn) for (const f of F) iniStats.set(f.uid, snapStats(f)); // ชุด 37: ค่าก่อนโบนัสเผ่า/สกิลเริ่มแมตช์
@@ -800,7 +800,7 @@ export function simulate(teamA, teamB, opts = {}) {
   for (const f of F) {
     const steel = TB(f.side, 'เหล็กกล้า'), fire = TB(f.side, 'เพลิงเผา'), bolt = TB(f.side, 'สายฟ้า'), wind = TB(f.side, 'วายุ'), spirit = TB(f.side, 'ภูติ');
     if (steel) {
-      const amt = Math.floor((f.armorBaseHp || f.maxHp) * steel.b.armorPct[steel.idx] / 100);
+      const amt = upGain(f.armorBaseHp || f.maxHp, steel.b.armorPct[steel.idx]);
       addArmor(f, amt, 'tribe');
       if (steel.b.restore[steel.idx]) { f.restoreLeft = steel.b.restore[steel.idx]; f.restoreAmt = amt; }
     }
@@ -864,7 +864,7 @@ export function simulate(teamA, teamB, opts = {}) {
     // ไฟทำดาเมจก่อนฮิตใน tick นั้น · set 98: ช่วงต่อเวลาเพิ่มสแตก
     stage = 'damage';
     if (t % R.burnIntervalMs === 0) for (const f of F.filter(f => up(f) && f.burn > 0)) {
-      const bAmt = Math.floor(f.burn * amp(f.burnTaken + burnDmgOn[f.side]) * (1 + otUp() / 100)); // set 98: overtime amp here (not in hurt) so burn credit matches // A7: credit burn to its appliers by share (metric only)
+      const bAmt = upMul(f.burn, amp(f.burnTaken + burnDmgOn[f.side]) * (1 + otUp() / 100)); // set 98: overtime amp here (not in hurt) so burn credit matches // A7: credit burn to its appliers by share (metric only)
       if (bAmt > 0) for (const [s, fr] of bShare.split(f.uid)) if (s >= 0) F[s].dealt += bAmt * fr;
       hurt(f, bAmt, null, false, 'burn', detailOn ? { burn: f.burn, takenAmp: f.burnTaken, tribeAmp: burnDmgOn[f.side] } : null); // โดนไฟแรงขึ้น (ชุด 6) · ชุด 32 โบนัสเพลิงเผา ดาเมจไฟ +%
       if (f.noDecayPerm) continue;
@@ -957,7 +957,7 @@ export function simulate(teamA, teamB, opts = {}) {
         // R14 (set 77b, user: same as R39): every HP-0 of a player unit, even when revived at once · heal capped at the current bar
         if (BOSS && !f.boss && BR.feedOnDown) byRule('feedOnDown', () => bossHeal(BOSS.barHp * BR.feedOnDown.v / 100));
         // R39 (set 77, user picked B): every time a player unit's HP hits 0 — counts even when it is revived right away · lasts to the end of this match only (also after a phase change), the boss record is not changed
-        if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = Math.floor(BOSS.atk * BR.downAtk.v / 100); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } });
+        if (BOSS && !f.boss && BR.downAtk && up(BOSS)) byRule('downAtk', () => { const a = upGain(BOSS.atk, BR.downAtk.v); if (a > 0) { BOSS.atkBonus += a; log('atkUp', { to: BOSS.uid, amount: a }); } });
         // R20 ชุบชีวิตไม่ได้ (เฉพาะฝั่งผู้เล่น ระหว่างเฟสนั้น) · รูนชุบ (U2) จำกัดครั้งด้วย s.lim และทำงานก่อนการลุกของเผ่าอสูร (ผู้ใช้เลือก Q5 U2)
         const noRev = !!(BOSS && !f.boss && BR.noRevive);
         const rv = noRev ? null : f.skills.find(s => s.do === 'revive' && s.when === 'selfDown' && usable(s) && (!s.lim || s.uses < s.lim) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));

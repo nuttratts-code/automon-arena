@@ -220,6 +220,10 @@ setRuleEdits(RULES, RULES_USER); // user's confirmed values (Balance Room import
 // lv = เลเวลที่สกิลนี้ใช้ได้ เช่น [3] = เฉพาะเลเวล 3 · ไม่ระบุ = ทุกเลเวล
 export const BATTLE_WHEN = ['passive', 'matchStart', 'set', 'hit', 'hits3', 'hitTaken', 'lowHp', 'armorBreak', 'selfDown', 'allyDown', 'enemyDown', 'kill'];
 // ค่าถาวรแบบความสามารถ (จากสกิลระหว่างสู้ที่ตั้งถาวร · ซ้อนกันได้ทุกแมตช์ ไม่มีเพดาน · ผู้ใช้เลือก 22 ต.ค.)
+// set 146 (user R3, combat-rules C-8 "+ %"): a "+%" that gains something still rounds down, but gives at least +1
+// when % > 0 and the base > 0 · reducers (m < 1 / pct ≤ 0) round down as before
+export const upGain = (base, pct) => { const g = Math.floor(base * pct / 100); return g < 1 && pct > 0 && base > 0 ? 1 : g; };
+export const upMul = (base, m) => { const r = Math.floor(base * m); return m > 1 && base > 0 && r <= base ? base + 1 : r; };
 export const PERM_ABIL = ['cdStart', 'shareArmor', 'healToAtk', 'armorAmp', 'cdAmp', 'shockAmp', 'burnNoDecay', 'healAmp', 'hitAmp', 'burnAmp'];
 // แบ่งเกราะถาวรแยกตามผู้รับ (ชุด 7): shareArmor = ทั้งทีม · share_<เป้า> = เป้าอื่น
 export const SHARE_TO = ['frontAlly', 'backAlly', 'frontBackAlly', 'frontLaneAlly', 'backLaneAlly', 'frontRowAllies', 'backRowAllies', 'allyLowest', 'allyRandom', 'allyRandom2', 'tribeAllies'];

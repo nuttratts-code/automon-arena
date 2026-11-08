@@ -4,7 +4,7 @@
 // agrees with the battle for that same match. Shop-time skills (HL-4 PL-2 WN-1 SF-7 WY-3) are not match events → t-shop.js.
 import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
-import { RULES } from '../core/rules.js';
+import { RULES, upGain } from '../core/rules.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { mxModel, mxLoss, mxAgg, mxAdd, mxWhy } from '../lab/matchcalc.js';
 import { NEVER, mk, L3, eq, ok, randomTeam } from './helpers.js';
@@ -625,7 +625,7 @@ const SC_RETIRED = [
     eq(x.res.get(want[0]).fin.healHit + x.res.get(want[1]).fin.healHit, allUp, 'receivers heal/hit at end (stat tab) = every +v they got');
     eq(x.res.get(me).fin.healHit, c.healHit[i], 'PT-6 own heal/hit unchanged (skipSameId: the other PT-6 does not feed it)');
     const a = scSk(x.r, me, 1, 'atkUp');
-    eq(a.map(e => e.amount), Array(hits).fill(Math.floor(c.healHit[i] * v1 / 100)).filter(n => n > 0), 'attack +v% of own heal/hit per hit (rounded down · a +0 is not logged)');
+    eq(a.map(e => e.amount), Array(hits).fill(upGain(c.healHit[i], v1)).filter(n => n > 0), 'attack +v% of own heal/hit per hit (rounded down, at least +1 — set 146 R3)');
     eq(x.res.get(me).fin.atk, c.atk[i] + a.reduce((s, e) => s + e.amount, 0), 'attack at end (stat tab)');
     return x;
   }],
