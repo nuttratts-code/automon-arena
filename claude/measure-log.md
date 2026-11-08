@@ -109,3 +109,4 @@ Scope: all HL PL SF WY + PT-1 · edits as user chose (SF-5 self down + shock eve
 | first Lv3 very rare / legend | 31.0% r13 / 2.8% r19 | 20.2% r16 / 0.3% r20 |
 Note: the feared "bosses harder" did not happen (k1 easier: more Lv2/Lv3 commons by round 5).
 - 8 Nov 2026 set 136 (step 5.5, lab/econ55.mjs 3000 runs, runerun flow): permanent sources PL-2 +12/+22 pts r6-15 · PT-3 +26.5 r16-20 · HL-4 −15/−35 · SF-7 −10/−38 · WY-3 −29 r1-5 · WN-1/WN-2 ≈0 · shock team p90 ≤7 (no runaway) · Lv1 legends −4/−5 pts r11+. Details: claude/review-2026-11-08-econ55.md.
+- 8 Nov 2026 set 137 (after AMCFG1 rev 32 import + botgen): runerun 600: cleared 23.7% · normal won 49.7% · k1 68.2% · k2 reached 71.7% won 71.6% · k3 reached 10.5% won 68.6% · second chance 94.0% · econ55 3000: PL-2 +31 pts r11-15 · PT-3 +22 r16-20 · HL-4/SF-7 better but SF-7 still −5…−25. Details: claude/review-2026-11-08-econ55.md
