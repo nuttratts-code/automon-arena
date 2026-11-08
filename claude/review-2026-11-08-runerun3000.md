@@ -23,3 +23,10 @@ Options (next chat, ask user):
 Touches game values → HARD RULE 6 first. After write: tell user which boss cells (mult10 / endlessPct /
 hp / atk) to set back in the Balance Room ด่าน tab + 💾. Version bump: none of the Thai docs list boss k2 numbers
 (boss rules still only in review files — pending bundle item).
+
+## Q2 (answered, no change yet). How to read the card "ชนะแมตช์ทีมบอท" (+ table by win streak)
+Code: lab/analyze.js line 305 · = % of matches vs bot teams (bosses + dummy excluded) the player bot did not lose,
+over ALL runs, main run AND extra matches. Draw counts as a win (`won1 = winner !== 1`, same as the game's heart rule).
+Foe strength adapts (foeFloor 100, −20 per loss from 2 losses in a row, min 40, any win → 100), so ~50% is by design;
+the by-streak table shows win % rising with streak = stronger boards keep winning.
+Possible later tweaks (only if user asks): split main vs extra · show draws separately.
