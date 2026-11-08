@@ -1,4 +1,4 @@
-# Workflow audit round 2 — deeper check (8 Nov 2026, set 153 · report only, nothing changed)
+# Workflow audit round 2 — deeper check (8 Nov 2026, set 153 · DECIDED: user picked F1 G1 H1 I1 J1 K1 — all applied in set 153; H1 = code task logged in handoff งานรอรวม)
 
 Round 1 (set 152): claude/archive/reviews/review-2026-11-08-workflow-audit.md. Round 2 also checked the docs against the code (src/tools/bootstrap.mjs, src/tools/cfgcode.mjs, src/lab/*, .github/workflows/tests.yml) and the review files under claude/.
 

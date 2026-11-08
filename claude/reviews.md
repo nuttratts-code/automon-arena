@@ -4,6 +4,16 @@ V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; whe
 
 | File | Topic | Status |
 | --- | --- | --- |
+| review-2026-11-08-runenames.md | Rune names DRAFT v2 — waiting for the user | open |
+| review-2026-11-08-runetext.md | Rune text rewrite DRAFT — waiting for the user | open |
+| archive/reviews/review-2026-11-08-workflow-audit2.md | Set 153 workflow audit round 2 (F–K) — all recommended picks applied | decided |
+| archive/reviews/review-2026-11-08-weekly.md | Set 151 2-week review W1–W10 — applied | decided |
+| archive/reviews/review-2026-11-08-boss-resisted.md | Set 149 boss A1 re-measure after R3 rounding — measure only | decided |
+| archive/reviews/review-2026-11-08-r3-rounding.md | Set 147 R3 rounding + AMCFG1 rev39 import before/after | decided |
+| archive/reviews/review-2026-11-08-runes.md | Set 144 rune system test + rune stats in real runs | decided |
+| archive/reviews/review-2026-11-08-skilltext.md | Shorter skill text — applied set 142 | decided |
+| archive/reviews/review-2026-11-08-cfgdiff-rev39.md | cfgdiff AMCFG1 rev39 (29 cells) — resolved set 147 | decided |
+| archive/reviews/review-2026-11-08-cfgdiff-rev38.md | cfgdiff AMCFG1 rev38 (76 cells) — superseded by rev39 | decided |
 | review-2026-11-08-runerun3000.md | Set 140: user analysis of Balance Room รันจริง 3000 runs — Q&A + to-do for next chat | open |
 | review-2026-11-08-econ55.md | Step 5.5 economy — what is left (set 136): PL-2 strong, PT-3, SF-7 weak | open |
 | archive/reviews/review-2026-11-08-workflow-audit.md | Set 152 workflow audit: unclear/conflicting rules (A–E) — A1 B1 C1 D1 applied | decided |

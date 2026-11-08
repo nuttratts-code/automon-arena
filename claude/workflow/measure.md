@@ -1,15 +1,16 @@
 # workflow · measuring balance (always ask permission first)
 
-V1.29 · 8 Nov 2026 (set 152: handoff item numbers → Relay block) · V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+V1.30 · 8 Nov 2026 (set 153: econ55/charstat gap logged · check ① scope) · V1.29 · 8 Nov 2026 (set 152: handoff item numbers → Relay block) · V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
 
 ## 00. Tools that play runs (review W5, set 151 — set 138 รันจริง and set 140 bossrun used an old flow)
 - runerun, bossrun, econ55, charstat and Balance Room รันจริง take their runs from `lab/analyze.js runPlayStats` — never a private copy of the run flow.
+- **Known gap (set 153 H1):** econ55.mjs and charstat.mjs still run their own `simRun` loop — move them to runPlayStats in the next code set (prove same output first); until then treat their numbers as approximate.
 - A set that changes the run flow (foe pick, runes, extra matches, shop, bosses) names in its Relay line which of these tools it re-checked.
 
 ## 0. The user measures balance (V1.25 · user chose 25 Oct · replaces sections 12 / 6 / 11 when importing values from the Balance Room)
 - The user measures with the "วิเคราะห์" button in the Balance Room (same measurer as lab/measure.mjs · measureAll) → the room saves the result in db results/latest · Claude continues from that result and **does not re-measure**
 - Outliers / near-limit characters = the user's intent → let them pass, do not tune power yourself, do not ask (a short name list in the summary is fine)
-- **Still do 2 checks (bug guards, not balance · user chose):** ① results/latest.edits must equal config/main (chars + tribes) = the result belongs to the saved value set ② aborted is 0 for every level (no match stopped by the safety cut-off) · either fails = tell the user, do not publish until the user re-measures/decides
+- **Still do 2 checks (bug guards, not balance · user chose):** ① (only when character or tribe values changed, set 153 I1) results/latest.edits must equal config/main (chars + tribes) = the result belongs to the saved value set ② aborted is 0 for every level (no match stopped by the safety cut-off) · either fails = tell the user, do not publish until the user re-measures/decides
 - Record the match count (n), seed, and the outlier/near-limit list from results/latest in measure-log every time
 - **Priority (V1.26):** handoff "บาลานซ์: กำลังปรับ" overrides everything · fixing skill mechanics that need measuring in that period = code/tests may be edited, but do not measure or publish that mechanic · log "รอวัด" in the handoff Relay block until the user says done
 - Check ① is the value set's "fingerprint": results/latest.edits must equal config/main in every value (both chars and tribes) · compare with a script, not by eye

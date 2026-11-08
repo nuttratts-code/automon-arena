@@ -1,10 +1,10 @@
 # workflow · bot teams, run length, replays, play data
 
-V1.27 · 8 Nov 2026 (set 152: old publish bullet removed) · V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · older versions: git log
+V1.28 · 8 Nov 2026 (set 153: botgen time) · V1.27 · 8 Nov 2026 (set 152: old publish bullet removed) · V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · older versions: git log
 
 ## 13. Bot teams and match length per round (V1.17 · set 23)
 - Bot teams live in core/botdata.js (auto-generated, never hand-edit) · it carries the game-data hash (dataHash in core/save.js)
-- **Every time character/rule values enter the game**: after measuring, run `node lab/botgen.mjs` (2,400 runs since set 96 — 1,200 left some late-win/early-round cells with < 5 tribes after the income ramp, player bot focus rotates over the 6 tribes · 228 teams = 19 round cells × 3 tiers × 4 (set 99; was 360 = wins × loss span), each cell covers all 6 tribes twice · `node lab/botgen.mjs 2400 4` = 4 processes · ~13 min · may run in the background alongside light work · do not run other heavy jobs at the same time, the machine has 2 cores), then build/test · if forgotten, test "ชุด 23" fails and the real game falls back to live-buying bots (does not break)
+- **Every time character/rule values enter the game**: after measuring, run `node lab/botgen.mjs` (2,400 runs since set 96 — 1,200 left some late-win/early-round cells with < 5 tribes after the income ramp, player bot focus rotates over the 6 tribes · 228 teams = 19 round cells × 3 tiers × 4 (set 99; was 360 = wins × loss span), each cell covers all 6 tribes twice · `node lab/botgen.mjs 2400 4` = 4 processes · ~6.5–13 min (not re-timed since set 99) · may run in the background alongside light work · do not run other heavy jobs at the same time, the machine has 2 cores), then build/test · if forgotten, test "ชุด 23" fails and the real game falls back to live-buying bots (does not break)
 - Measure match length per round: `node lab/runlen.mjs 2000 4242` (uses the bot teams in core/botdata.js · not a character measurement, but ask permission first per section 12) · summarize into the combat-rules test-values table + measure-log
 - Parking unpublished work: use a git branch (no src-next folder needed).
 - Publish: publish.md §3 (the old 3-try publish procedure of set 24 is retired, set 152).

@@ -1,6 +1,6 @@
 # workflow · relay between two accounts + publish ownership
 
-V1.2 · 8 Nov 2026 (set 152 audit: archive path · stale lock · docs to main · session branch) · V1.1 · 8 Nov 2026 (set 151 review W2 lock line + W3 no rebase) · V1.0 set 139: moved out of CLAUDE.md — decisions 27 Oct, 30 Oct, set 59. Open when the task involves: starting from a WIP branch, publishing an artifact, the other account, or updating the Relay block.
+V1.3 · 8 Nov 2026 (set 153 F1: lock line also in CLAUDE.md start of chat) · V1.2 · 8 Nov 2026 (set 152 audit: archive path · stale lock · docs to main · session branch) · V1.1 · 8 Nov 2026 (set 151 review W2 lock line + W3 no rebase) · V1.0 set 139: moved out of CLAUDE.md — decisions 27 Oct, 30 Oct, set 59. Open when the task involves: starting from a WIP branch, publishing an artifact, the other account, or updating the Relay block.
 
 Two Claude accounts take turns on this repo: when one hits its usage limit, the other picks up. Only ONE account works at a time.
 
