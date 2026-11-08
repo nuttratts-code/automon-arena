@@ -33,7 +33,8 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Placeholder art = coloured shapes + names; must not resemble the original game (the user makes real art).
 
 ## Decisions
-- Design/rules: offer 2–3 options + a recommended one, wait for confirmation (labels/buttons: claude/workflow/replies.md). Several topics in one message = ask once, do all in one pass.
+- Design/rules: offer 2–3 options + a recommended one, wait for confirmation.
+- **Every time the user must pick (always-on, not topic-only):** label A/B… with options A1/A2…, explain in text first, THEN call AskUserQuestion buttons (max 4 questions per call; more → next call). Details: claude/workflow/replies.md. Several topics in one message = ask once, do all in one pass.
 - Small things (text, colours, button position, internal code): decide and inform.
 - The user tunes character stats. New character: propose from the median table. Numbers in skills/rules: always ask first.
 - Unbalanced idea / loophole: warn directly first.
