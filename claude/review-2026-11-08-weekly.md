@@ -1,6 +1,7 @@
-# Weekly review — 2026-11-08 (rule D1, set 150)
+# 2-week review — 25 Oct to 8 Nov 2026 (rule D1, set 150; widened from 1 week at the user's request)
 
-Sources read: `git log --since='7 days ago' origin/main` (102 commits — the repo history starts 8 Nov, so older work is visible only through the Relay archives) · claude/handoff.md · archive/relay/relay-2026-11-08-sets117-137.md (sets 117–149) · grep of archive/relay/relay-2026-11-07-sets66-116.md. Claude cannot read old chats, so items come only from what the Relay recorded.
+Sources read: `git log origin/main` (102 commits — the repo history starts 8 Nov, so everything older is visible only through the archives) · claude/handoff.md · archive/relay/relay-2026-11-08-sets117-137.md (sets 117–149, read in full) · archive/relay/relay-2026-11-07-sets66-116.md (sets 66–116, grep) · archive/relay/relay-2026-10-31.md + relay-sets-54-61.md (sets 54–70, read in full) · relay-2026-11-04*/11-05/11-06 (grep) · archive/handoff-log.md (25–26 Oct) · archive/GEMINI-jules-cancelled.md. Claude cannot read old chats, so items come only from what the Relay recorded. Week 1 = 25 Oct–1 Nov (sets ~32–70) · week 2 = 1–8 Nov (sets ~70–150).
+First round of answers (W1–W4, 8 Nov): all "no preference" → asked again together with the new items.
 
 Status: **proposals only — nothing edited yet.** Each change waits for the user's A/B pick.
 
@@ -14,12 +15,14 @@ Status: **proposals only — nothing edited yet.** Each change waits for the use
 | W5 | เครื่องมือวัด (รันจริงใน Balance Room, bossrun) ใช้ขั้นตอนเกมเก่า → ตัวเลขผิด ต้องทำใหม่ (ชุด 138, 140) | measure.md | A1 |
 | W6 | gate ครั้งแรกล้มเพราะ ui_smoke ใช้รหัส/ชื่อรูนตายตัว หลังนำเข้าค่าใหม่ (ชุด 131, 146) | balance-import.md | A1 |
 | W7 | บรรทัด Publish ใน handoff ยาวสะสมประวัติ (เปลือง token ทุกแชท) | close-out skill | A1 |
+| W9 | ตั้งแต่ 31 ต.ค. ตกลงพักงาน Balance Room ไปทำเศรษฐกิจ 5.5 (เป้า ~14 พ.ย.) แต่สัปดาห์นี้งานส่วนใหญ่เป็นข้อความ/รูน/บอส · 5.5 ยังค้าง PL-2 PT-3 SF-7 · เหลือ 6 วัน | close-out skill (นับถอยหลัง MVP1) | A1 |
+| W10 | บั๊กที่ผู้ใช้เจอเองระหว่างเล่น ≥ 7 ครั้ง (ชุด 98 99 101 111 117 143 145) | ops-rules / publish.md | A1 |
 | W8 | ชื่อ C3 พุงชน/พุ่งชน วนอยู่ 3 ชุด (147–149) | ไม่แก้ (ครั้งเดียว) | A2 |
 
 ## Items
 
 ### W1 — gate false FAIL + flaky ui_smoke (repeat waste)
-- Evidence: set 133 "first gate run failed with no summary line printed = ui_smoke flake, cause not found, rerun PASS" · set 149 "1st gate run printed FAIL with 324/324 + summary line not found, re-run PASS" · flaky clicks set 95, set 124 (#dlg, fixed), set 139 (T8 flag, fixed set 143).
+- Evidence (both weeks, 7 incidents): set 55 (30 Oct) flaky 'battle perm skill' · 31 Oct perm test random seed (~1.3 % fails, fixed) · set 133 "first gate run failed with no summary line printed = ui_smoke flake, cause not found, rerun PASS" · set 149 "1st gate run printed FAIL with 324/324 + summary line not found, re-run PASS" · flaky clicks set 95, set 124 (#dlg, fixed), set 139 (T8 flag, fixed set 143).
 - Cost: each rerun ≈ 4 min + chat tokens; cause of the missing summary line still unknown (HARD RULE 5: don't patch blind).
 - Proposal:
   - **A1 (rule only)** — add to claude/workflow/publish.md: "Gate FAIL where every count passes (n/n) but the ui_smoke summary line is missing → re-run the gate ONCE (tests are skipped automatically). Second FAIL → stop and tell the user. Log every such rerun in the Relay line as `false-FAIL rerun`."
@@ -55,7 +58,19 @@ Status: **proposals only — nothing edited yet.** Each change waits for the use
 ### W8 — C3 name typo carried across sets 147–149
 - One-off (user todo: Balance Room C3 → พุ่งชน + 💾). Option A1: cfgdiff flags name cells that differ only by Thai tone marks. **A2 (recommended): nothing** — rare, small, and HARD RULE 6 already shows the cell.
 
-## Already fixed this week (no change needed)
+### W9 — MVP1 schedule drifting (warn rule has no trigger)
+- Evidence: 31 Oct user decision "(b) pause Balance Room/rune tooling work; next focus = MVP1 step 5.5 economy (28 Nov at risk)". build-plan: 5.5 target ~14 Nov (ค่าเสนอ), 6 polish/mobile 28 Nov. Sets 138–149 (8 Nov) were mostly Balance Room tabs, skill/rune text, rune names, bosses; 5.5 open decisions PL-2 +31 · PT-3 +22 · SF-7 weak (review-2026-11-08-econ55.md) unanswered. CLAUDE.md already says "if behind build-plan → warn + suggest cuts", but nothing makes Claude check.
+- Proposal — **A1 (recommended)** add to .claude/skills/close-out/SKILL.md: "Thai block gets 1 line: MVP1 countdown = days to the next build-plan target + step status (on time / behind → suggest cuts)." · A2 — nothing.
+
+### W10 — bugs found by the user while playing
+- Evidence: set 98 next-round button pressable again and again · set 99 enemy with 3 units · set 101 bot teams placed wrong · set 111 rune on a board slot carried to any unit · set 117 player name lost on app kill · set 143 WN-4 sameTribe dropped from text · set 145 rune texts not matching the engine (→ set 144 runecheck, good).
+- Proposal — **A1 (recommended)** add to claude/workflow/publish.md (bug section): "Every bug the user reports gets a test that fails before the fix and passes after, in the same commit; the Relay line names the test." (Not checked whether each of the 7 sets already did this.) · A2 — nothing.
+
+## Already fixed during the 2 weeks (no change needed)
+- Week 1: set 62 new core file missing from build CORE → broken balance room v127 published (31 Oct) → HARD RULE 2 + the gate (HARD RULE 3) + core/CORE test; no repeat since.
+- Week 1: import of config v156 (25 Oct) measured, then the user reverted and edited themselves; set 79 pre-import check DIFFERS → now HARD RULE 6 (cfgdiff before tuning, 7 Nov).
+- Week 1: Jules (Gemini) brief written, cancelled by the user 28 Oct — one-off; covered by the set 150 "prefer instructions, keep new tools small" habit.
+- Week 1: 2nd account could not see owner artifacts (31 Oct) → publish ownership + paste-message rules in workflow/relay.md.
 - Claude skipped choice buttons after the CLAUDE.md split → buttons back in core (set 139).
 - Flaky T8 tribe picker in ui_smoke → cause found and fixed (set 143).
 - Flaky #dlg popup on worn runes → fixed (set 124).
