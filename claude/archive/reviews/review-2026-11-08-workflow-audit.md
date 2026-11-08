@@ -1,4 +1,4 @@
-# Workflow audit — unclear / conflicting rules (8 Nov 2026, set 152 · report only, nothing changed)
+# Workflow audit — unclear / conflicting rules (8 Nov 2026, set 152 · DECIDED: user picked A1 B1 C1 D1 — all applied in set 152)
 
 Scope read: CLAUDE.md · claude/workflow.md · claude/workflow/*.md · claude/ops-rules.md · claude/handoff.md · .claude/skills/close-out/SKILL.md · claude/instructions.md.
 Labels follow replies.md. "Rec" = Claude's recommended option.
@@ -10,7 +10,7 @@ Labels follow replies.md. "Rec" = Claude's recommended option.
 | A-b | botteams.md §13 "Publish (V1.19)" | Third publish procedure (1st refused → cmp → 3rd passes) — old tool behaviour. | Delete the bullet, point to publish.md §3. |
 | A-c | publish.md §3 line 7 | Points to "CLAUDE.md 'Publish workflow'" — moved to relay.md in set 139. | Point to relay.md. |
 | A-d | publish.md §3 vs relay.md | publish.md: "publishing stays with the owner account (31 Oct)"; relay.md (set 59): any chat whose `Artifact read` says writer publishes; runlog viewer is owned by the 2nd account. | Keep relay.md rule (writer = may publish), drop the 31 Oct sentence. |
-| A-e | relay.md line 10 vs close-out skill + handoff | Archive path `claude/archive/relay-*.md` vs `claude/archive/relay/`. Both exist (old files at archive root, new in archive/relay/). | Use `archive/relay/` everywhere; move root relay-*.md files there. |
+| A-e | relay.md line 10 vs close-out skill + handoff | Archive path `claude/archive/relay-*.md` vs `claude/archive/relay/`. All files are already in archive/relay/. | Use `archive/relay/` everywhere; no file move needed. |
 | A-f | workflow.md lines 3, 41 | "archive … stays in the Project, not in the repo" — archive is in git now. | Remove "Project only". |
 | A-g | measure.md §0 + §12 | "handoff item 4" / "handoff item 1" — handoff has no numbered items any more. | Say "Relay block". |
 | A-h | setup.md §5 vs CLAUDE.md | "never commit code straight to main without the user's OK" vs "merge to main on GATE: PASS, no need to ask". | Rewrite: code reaches main only via merge after GATE: PASS. |

@@ -14,7 +14,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Balance/code detail | claude/ops-rules.md · claude/workflow.md | only when needed |
 
 ## HARD RULES — read first, never skip (violations caused real damage)
-1. **Close-out block (trigger: every merge to main, or the user says it's done/live, or ~15 turns in one chat).** Run the `close-out` skill (.claude/skills/close-out/SKILL.md): update + push claude/handoff.md, then the Thai block (ควรเปิดแชทใหม่ได้แล้ว · user todo · model · paste-message). Never continue into new work in the same chat after this block.
+1. **Close-out block (trigger: merging a code branch to main, or the user says it's done/live, or ~15 turns in one chat). Docs-only commits to main (🔒 lock line, Relay, review files) never trigger it (set 152 B1). At ~15 turns mid-set: finish the current step, push, write the WIP branch + next step in the Relay, then close out — the new chat continues the same set (set 152 C1).** Run the `close-out` skill (.claude/skills/close-out/SKILL.md): update + push claude/handoff.md, then the Thai block (ควรเปิดแชทใหม่ได้แล้ว · user todo · model · paste-message). Never continue into new work in the same chat after this block.
 2. New file in src/core or src/game = add it to `CORE` in src/build.mjs in the same commit (a missing entry only breaks the built page, not the tests).
 3. **Merge gate (rule 31 Oct, after set 62 shipped a broken build):** first run `cd src && node tools/bootstrap.mjs setup` (build + unit tests, ~3 min) until it passes, fixing every failure; only then run the full gate ONCE (rule 5 Nov: never use the slow gate to find test failures). Before merging to main, run `cd src && node tools/bootstrap.mjs gate` (build + tests + ui_smoke on the BUILT pages, installs python playwright if missing, ~4 min, prints GATE: PASS/FAIL; FAILS [] ERRORS [] required). The gate skips unit tests when setup passed on the exact same files < 6 h ago (round 2 D1, set 139: any edit → tests run again; `gate --full` forces; CI always runs everything). Unit tests alone are not enough — they run on source, not on the built html. If ui_smoke cannot run: set it up first (cloud: `pip install playwright`; ui_smoke uses /opt/pw-browsers/chromium); if still impossible, tell the user in Thai and wait for their decision. Never merge or publish silently untested. **Publish gate:** the chat that publishes must first `git fetch`, build from the LATEST main, and get GATE: PASS on that exact commit — the paste-message for the old chat says so; it reports the gate result in the Relay line.
 4. handoff.md says "บาลานซ์: กำลังปรับ" = do not import, do not measure. Overrides everything.
@@ -24,7 +24,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 
 ## Language
 - Think and write in English, including every doc Claude reads (claude/handoff.md, pending.md, ops-rules.md, workflow*, backlog.md, budget-notes.md, measure-log.md).
-- **Reply to the user in Thai**, short, no preamble, no recap. Start with what the user must do/decide; explain technical terms.
+- **Reply to the user in Thai**, short, no preamble, no recap. After the 3-line header below, details start with what the user must do/decide; explain technical terms.
 - **Reply format (user rule 8 Nov, set 150 B1):** every reply starts with 3 short Thai lines, then details below: ① ทำแล้ว/พบ: what was done or found · ② ต้องตัดสินใจ: what the user must approve/decide (or "ไม่มี") · ③ ไม่แน่ใจ: what Claude is unsure about (or "ไม่มี"). The user may stop reading after line 3.
 - End of each task set: Thai summary in chat (what the user must do/decide, what changed, pending) — do not expect the user to open handoff.md.
 - Docs the user reads stay Thai: combat-rules, tribe-rules, shop-merge-rules, build-plan. Never translate them. Files still in Thai that the user doesn't read: translate to English when opened.
@@ -52,7 +52,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 
 ## Git workflow
 - Start of every chat: `git fetch origin` → read the Relay block at the top of claude/handoff.md → open WIP branch named there, else branch from latest main (full relay rules: claude/workflow/relay.md).
-- Work on a branch `claude/<topic>`; commit + push after every meaningful step; never force-push. **Merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user (rule 2 Nov).** Gate FAIL or not runnable = do not merge, tell the user. Docs-only Relay commits go straight to main.
+- Work on a branch `claude/<topic>`; commit + push after every meaningful step; never force-push. **Merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user (rule 2 Nov); GitHub Actions must be green only before publishing (set 152).** Gate FAIL or not runnable = do not merge, tell the user. Docs-only commits (Relay, reviews, rule docs) go straight to main.
 - GitHub Actions runs the full gate on every push that changes code (docs-only pushes under claude/, art/, *.md are skipped, set 139). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — open them by URL from handoff.md Links (claude/workflow/relay.md + publish.md).
 
 ## Token saving

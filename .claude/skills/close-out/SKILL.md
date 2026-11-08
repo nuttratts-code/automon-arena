@@ -1,10 +1,10 @@
 ---
 name: close-out
-description: Automon Arena close-out block (HARD RULE 1). Use on every merge to main, when the user says the work is done/live, or after ~15 turns in one chat. Updates claude/handoff.md, pushes, and prints the Thai close-out message with a ready-to-paste prompt for the next chat.
+description: Automon Arena close-out block (HARD RULE 1). Use when a code branch is merged to main (docs-only commits do not count), when the user says the work is done/live, or after ~15 turns in one chat. Updates claude/handoff.md, pushes, and prints the Thai close-out message with a ready-to-paste prompt for the next chat.
 ---
 # Close-out (HARD RULE 1, moved here from CLAUDE.md in set 150)
 
-Run in this order. Never start new work in the same chat afterwards.
+Run in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
    - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step.

@@ -1,6 +1,6 @@
 # workflow · measuring balance (always ask permission first)
 
-V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+V1.29 · 8 Nov 2026 (set 152: handoff item numbers → Relay block) · V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
 
 ## 00. Tools that play runs (review W5, set 151 — set 138 รันจริง and set 140 bossrun used an old flow)
 - runerun, bossrun, econ55, charstat and Balance Room รันจริง take their runs from `lab/analyze.js runPlayStats` — never a private copy of the run flow.
@@ -11,7 +11,7 @@ V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) ·
 - Outliers / near-limit characters = the user's intent → let them pass, do not tune power yourself, do not ask (a short name list in the summary is fine)
 - **Still do 2 checks (bug guards, not balance · user chose):** ① results/latest.edits must equal config/main (chars + tribes) = the result belongs to the saved value set ② aborted is 0 for every level (no match stopped by the safety cut-off) · either fails = tell the user, do not publish until the user re-measures/decides
 - Record the match count (n), seed, and the outlier/near-limit list from results/latest in measure-log every time
-- **Priority (V1.26):** handoff "บาลานซ์: กำลังปรับ" overrides everything · fixing skill mechanics that need measuring in that period = code/tests may be edited, but do not measure or publish that mechanic · log "รอวัด" in handoff item 4 until the user says done
+- **Priority (V1.26):** handoff "บาลานซ์: กำลังปรับ" overrides everything · fixing skill mechanics that need measuring in that period = code/tests may be edited, but do not measure or publish that mechanic · log "รอวัด" in the handoff Relay block until the user says done
 - Check ① is the value set's "fingerprint": results/latest.edits must equal config/main in every value (both chars and tribes) · compare with a script, not by eye
 - Sections 6/12 still apply when: Claude changes skill mechanics that affect characters in use · the user asks Claude to measure
 
@@ -22,7 +22,7 @@ V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) ·
 - **Editing/adding skill mechanics without changing character values** (e.g. a new skill effect in the Balance Room skill editor): publish after all tests + ui_smoke pass, no measuring · if the changed mechanic affects skills used by characters → tell the user and ask permission to measure first
 - **Proving a changed mechanic does not affect characters in use** (V1.10 · used in set 17): check out the old commit into another folder (`git worktree add ../old <commit>`), then run 3,000 random-team matches with the same seed on old and new, comparing result signatures (winner, time, HP, every unit's damage) · identical in every match = no effect, no measuring needed · different = tell the user and ask permission to measure · this is not a win-rate measurement so no permission is needed
 - No permission needed for: fast tests (tests/run.js) · ui_smoke · non-simulating data checks (stacking skills without cooldown · zero values · instant down on enemies)
-- handoff.md item 1 must have the line "บาลานซ์: กำลังปรับ" or "บาลานซ์: เสร็จแล้ว" · กำลังปรับ = do not import config/main and do not measure until the user says done
+- The handoff Relay block must start with the line "บาลานซ์: กำลังปรับ" or "บาลานซ์: เสร็จแล้ว" · กำลังปรับ = do not import config/main and do not measure until the user says done
 - The user's draft is kept in the Balance Room (DRAFT_KEY) and survives a new chat, so no need to publish midway
 
 ## 6. Measuring balance (faster since 22 Oct · ask permission first, section 12)

@@ -1,4 +1,4 @@
-# workflow · importing values from the Balance Room (English · V1.33 · 8 Nov 2026 · set 151 review W6 step 4b)
+# workflow · importing values from the Balance Room (English · V1.34 · 8 Nov 2026 · set 152 audit: setup before gate, AMCFG1 = one input path, gate time) · V1.33 set 151 review W6 step 4b
 
 Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · older versions: git log
 
@@ -13,12 +13,13 @@ Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage
 
 ## 0. Fast import order (V1.31, user 5 Nov: fastest without losing any check · ~20 min instead of ~30)
 Heavy jobs run ONE at a time (2 cores), always in the background; do the light work while each one runs. Never skip a step below.
-1. Read config/main + results/latest in parallel (no out_dir) → pre-import check (edits.chars/tribes/rules == config) + §00 cfgdiff. Config `stage` (runes/bosses/mode settings) is imported item by item with tools/apply-stage.mjs for every cell the user chose "ยึด Balance Room" in §00 (V1.32 — before set 130 the stage tab was never imported, so the page and the game drifted apart).
+1. Input = the AMCFG1 paste for BOTH accounts (set 152 E-c, HARD RULE 6) → `tools/cfgcode.mjs`. The owner account may also read results/latest from the db (no out_dir) for the fingerprint check → pre-import check (edits.chars/tribes/rules == config) + §00 cfgdiff. Config `stage` (runes/bosses/mode settings) is imported item by item with tools/apply-stage.mjs for every cell the user chose "ยึด Balance Room" in §00 (V1.32 — before set 130 the stage tab was never imported, so the page and the game drifted apart).
 2. Copy core/characters.js to `core/characters.before.js` (inside core/ so its imports resolve) → `node tools/apply-config.mjs <main.json>` → `node tools/csv.mjs core/characters.before.js` → move `src/characters.csv` to `claude/characters.csv` → delete the .before copy.
 3. **Do not run the full test suite here** (it fails anyway until bot teams are rebuilt). Grep tests for the changed IDs (`grep -n "'ID'" tests/*.js`), fix tests on changed kits (old kit → retired test `ID@n` in SC_OLD/SC_RETIRED), check only them: `node tools/bootstrap.mjs test <ID>` (seconds). Commit + push.
 4. Background: `node lab/botgen.mjs` (~6.5 min). Meanwhile: draft the handoff Relay line, `Artifact read` the 3 Links URLs (writer check).
 5. Background: `node lab/bossrun.mjs 600 75 62 50` (no --write) → show the user before → after (§00 step 5) → after the user agrees: same command with --write. Commit + push.
-6. Background: `node tools/bootstrap.mjs gate` ONCE (~9 min). Meanwhile: finish handoff text.
+6. `node tools/bootstrap.mjs setup` until it passes (HARD RULE 3, set 152 D1 — fix every failure here, never in the gate).
+6b. Background: `node tools/bootstrap.mjs gate` ONCE (~4 min after a passing setup; longer if unit tests re-run). Meanwhile: finish handoff text.
 7. GATE: PASS → fast-forward main → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main → tell the user the cells to set back (§00 step 6).
 
 ## 8. Balance Room (ArtifactData)

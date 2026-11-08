@@ -1,6 +1,6 @@
 # Automon Arena code workflow (index)
 
-V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE.md) · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo) · older versions: git log
+V1.29 · 8 Nov 2026 (set 152 audit: import set without measuring · archive is in git) · V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE.md) · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md · older versions: git log
 
 | Job | File | Old sections |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE
 
 ## Task set (rule 10 · always)
 - 1 task set = decide → edit → test → publish once. Ask all decision questions at once as multiple choice; do not start heavy work until answered.
-- **Keep bug-fixing separate from value-import sets.** Import set = import → check → measure → publish. A bug that does not block → note in handoff. A blocking bug (tests fail) → ask the user: A fix in this set · B revert the values that broke it and publish the rest.
+- **Keep bug-fixing separate from value-import sets.** Import set = import → check → publish (the user measures in the Balance Room, measure.md §0). A bug that does not block → note in handoff. A blocking bug (tests fail) → ask the user: A fix in this set · B revert the values that broke it and publish the rest.
 - No publishing mid-set for small edits. End of set → update handoff.md.
 - Save context: do not search for a file you are about to read; do not read tools the job does not use.
 
@@ -31,12 +31,12 @@ V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE
 - Character values: `grep '^PL-3,' claude/characters.csv`, never print the whole file.
 - Use bootstrap summaries for test/measure/ui_smoke; no raw output. Screenshots only when checking a visual problem.
 - Subagents use more tokens overall → propose only when the main chat would otherwise fill up (measure.md 11).
-- Long chat mid-set → update handoff and tell the user to open a new chat.
+- Long chat mid-set (~15 turns) → CLAUDE.md HARD RULE 1 (set 152 C1): finish the current step, push, Relay = WIP branch + next step, close-out.
 
 ## handoff.md (same headings every time · status only · ≤ 1 screen)
 Relay (first line "บาลานซ์: กำลังปรับ/เสร็จแล้ว" · account + branch · last done · decisions · next step · open · publish versions · artifact access) → State (durable facts) → Pending bundle ("งานรอรวม") → Doc versions → Links → File index. Proposed-but-unmeasured values live in pending.md.
 
 ## Other docs
 - claude/backlog.md — parked work, not opened until picked up.
-- claude/archive/ — history, old measurements, decision reasons (in the Project only; open when the user asks "why").
+- claude/archive/ — history, old measurements, decision reasons (in git; open when the user asks "why").
 - CLAUDE.md (repo root) — standing instructions. (Jules/Gemini cancelled 28 Oct; old brief in archive/GEMINI-jules-cancelled.md.)
