@@ -32,3 +32,14 @@ the by-streak table shows win % rising with streak = stronger boards keep winnin
 Possible later tweaks (only if user asks): split main vs extra · show draws separately.
 Q2b: "แมตช์" column = matches played with that streak before them. Row "5 ขึ้นไป" = streak 5, 6, 7 … pooled
 (`Math.min(5, m.ws)`), incl. long streaks in extra matches → can exceed row 4. Possible tweak: rows 5 / 6–9 / 10+.
+
+## B. Per-boss win % spread too wide (user: lowest 49%, highest 79%)
+Table "บอสในรัน แยกแต่ละตัว" rows = boss × encounter (ครั้งที่ k) → compare rows with the SAME k only.
+6 bosses on (B1–B6, mult10 1.96–2.56). 3000 runs → ~500 matches per boss at k1 → noise ±4–5 pts, so a 30-pt gap is real
+(unless a row has < ~100 matches, e.g. k3 / extra-only rows).
+Likely cause: same as A cause 1 — bossrun scales each boss on no-rune teams; bosses whose rules interact with runes
+or with certain tribes drift by different amounts. Also tribe counters (column "เผ่าหลักที่ชนะได้ดีสุด/แย่สุด").
+Options (next chat, rides with A): B1 (rec) re-run fixed bossrun per boss on real-run teams → every boss hits the same
+target at each k (spread ≈ noise, target band e.g. ±5 pts — user's call) · B2 keep some spread on purpose
+(easy/hard bosses as variety; user names which) · B3 tune only the outliers by hand.
+Need from user: which boss + ครั้งที่ is 49% and which is 79%.
