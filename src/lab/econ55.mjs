@@ -12,10 +12,13 @@ import { dataHash } from '../core/save.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { makeCharMap } from '../core/team.js';
 
-const runs = +process.argv[2] || 600;
+const A = process.argv.slice(2), runs = +A.find(a => !a.startsWith('--')) || 600;
 const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
 if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first'); process.exit(1); }
+// --set=ID:v1,v2,v3 (repeatable) = scratch override of that character's 1st permanent skill values for this measure only
+for (const a of A.filter(a => a.startsWith('--set='))) { const [id, vs] = a.slice(6).split(':'), c = chars.find(x => x.id === id), s = c && (c.skills || []).find(s => s.perm || /^perm/.test(s.do));
+  if (!s) { console.log('no perm skill', id); process.exit(1); } s.v = vs.split(',').map(Number); console.log(`override ${id} v ${s.v.join('/')}`); }
 const isSrc = s => s.perm || /^perm/.test(s.do);
 const SRC = chars.filter(c => (c.skills || []).some(isSrc)).map(c => c.id);
 const LEG = chars.filter(c => c.rarity === 'ตำนาน').map(c => c.id);
