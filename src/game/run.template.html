@@ -1597,7 +1597,7 @@ $('tribeBtn').addEventListener('click', () => openPop('tribes'));
 const RN_OFF_TH = k => { const st = RUN_STAGE.settings, RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss';
   return RUNE_RARITY.map(([r, th]) => [st[`${boss ? 'offBoss' : 'rar'}${RK[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
 let diffText = { hint: '', scout: '' };
-const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra, undefined, undefined, P.ls | 0) : null); // set 129: P.ls = losses in a row → lower floor // set 128 (user X9 A): locked at shop start (P.fp), not re-picked at the fight · // set 119: real team, +foeExtraPct only in extra matches
+const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra, undefined, undefined, P.ls | 0, P.ws | 0) : null); // set 129: P.ls = losses in a row → lower floor // set 128 (user X9 A): locked at shop start (P.fp), not re-picked at the fight · // set 119: real team, +foeExtraPct only in extra matches
 function renderDiff(fx) {
   const rb = runBossAt(P), want = foeWantPct(P.extra);
   $('foeLbl').hidden = !!rb; $('foePct').textContent = `${want}%`;

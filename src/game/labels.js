@@ -455,6 +455,8 @@ function simLine0(e, S, U, cm) {
     case 'vanish': return ['◌ ', who(e.who), ` หายตัว ${e.ms / 1000} วิ (ตีไม่โดน ไฟ/พายุยังเข้า)`];
     case 'curse': return e.done === 0 ? ['☠ ', who(e.to), ' โดนคำสาป: ทีมตีบอสไม่ถึงเป้า → down'] : ['☠ ', who(e.to), ` ถูกสาป: ทีมต้องตีบอสให้ถึงเป้าใน ${e.ms / 1000} วิ ไม่งั้นล้ม`];
     case 'ruleBlock': return [who(e.to), ` ไม่โดน${WHY_SIM[e.why] || ''}`, ...(e.from != null ? [' จาก ', who(e.from)] : []), { t: `  (${bossRuleName(e.rule)})`, c: 'lg-rule' }];
+    case 'overload': return ['⚡ ', who(e.who), ` โอเวอร์โหลด${e.kind === 'burn' ? 'ไฟ' : 'ช็อต'}: ${e.amount} ที่กันไว้ติดตัวทั้งหมด`, { t: `  (${bossRuleName(e.kind === 'burn' ? 'burnOverload' : 'shockOverload')})`, c: 'lg-rule' }]; // set 142
+    case 'shellBreak': return ['💥 ', who(e.who), ` เปลือกแตก ${((e.until - e.t) / 1000)} วิ (ลดเกราะ/ห้ามได้เกราะ/สะท้อน ปิด)`, { t: `  (${bossRuleName('shellBreak')})`, c: 'lg-rule' }]; // set 142
     case 'avoid': return ['🛡 ', who(e.to), ' เลี่ยงจุดตาย (ฮิตนี้ไม่เข้า)', ...(e.from != null ? [' จาก ', who(e.from)] : [])];
     case 'end': return [`จบแมตช์: ${e.winner === 0 ? 'ทีมซ้ายชนะ' : e.winner === 1 ? 'ทีมขวาชนะ' : 'เสมอ'}`];
     default: return null;

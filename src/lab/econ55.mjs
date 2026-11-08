@@ -27,7 +27,7 @@ const BKS = ['1-5', '6-10', '11-15', '16-20'];
 const M = []; const t0 = Date.now();
 for (let r = 0; r < runs; r++) {
   const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, RUN_STAGE, undefined, p.ls | 0), m => {
+  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, RUN_STAGE, undefined, p.ls | 0, p.ws | 0), m => {
     if (m.boss === 'DUMMY' || !m.team?.length) return;
     M.push({ round: m.round, win: m.winner !== 1 ? 1 : 0, boss: !!m.boss, team: m.team.map(e => ({ id: e.id, level: e.level || 1, perm: e.perm || {} })) });
   }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: RUN_STAGE.settings.lastStage });
