@@ -13,3 +13,10 @@ Resisted tribe = team with ≥ 4 units of the boss's tribeResist tribe. Target k
 - **B2:** **cdSlow +36** (72 %) · enrage +17 · healCut +12 · phase fx (stunAll) +7 · hunter +6 · tribeResist +1 · resistWear −6 (counter, helps). → main cause = cdSlow 20/30/50 (ภูติ rely on cooldown skills).
 - **B4:** **shockImmune +14** · fastAtk +7 · tribeResist +6 · phase fx +5 · stunPulse +3 · shockOverload −10 (counter, helps). → main cause = shockImmune 50/60/80 (สายฟ้า damage is shock).
 - Notes: n600 run gave B1 35 / B2 44 / B4 26 (small samples) → use the n3000 numbers. Gains don't add up (rules interact). k1 all is already above target on B2/B4 (65/66) — any resisted-tribe fix there makes the boss easier overall unless paired with something else.
+
+## Set 150 tune (user: "Claude tunes all values this round, report only if impossible") · AMCFG1 rev 43 = game (cfgdiff MATCH)
+Scratch grid (n3000, same team pool) — levers tried: B1 armorBar/enrage/armorCut/shellBreak/resistWear/tribeWeak · B2 cdSlow/healCut/hp/resistWear/tribeWeak · B4 shockImmune/shockOverload/tribeResist/hp/stunPulse/tribeWeak.
+Finding: hp / atk / enrage / armorBar move "all" as much as "resisted" (gap all−resisted ≈ 30–40 stays); tribeResist itself is tiny (+1…+6). Only tribe-skewed levers close the gap: B2 healCut, B4 shockOverload; tribeWeak lowers "all" via the favoured tribe only.
+- **B2 applied:** healCut 50/70/90 → 30/50/70 · cdSlow 20/30/50 → 15/25/40 · tribeWeak เพลิงเผา 300 → 200. bossres n3000: k1 all 61 · fav 80 · resisted 41 · k2 all 54 · resisted 33 → on target.
+- **B4 applied:** shockOverload 20 → 6 · hp 530 → 560. bossres n3000: k1 all 66 (unchanged) · fav 81 · resisted 30 (was 24) · k2 all 53 · resisted 24 (was 21). Reaching resisted 40 needs all ≈ 73 (ov6 + no hp) — not reachable with values only.
+- **B1 not changed:** k1 resisted 29 (n113) wants up, but k2 resisted 48 already above its 30 target; every lever tried raises both (shell3: k1 36 / k2 56). Values-only fix not possible.
