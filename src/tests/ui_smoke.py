@@ -433,8 +433,14 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#simArena [data-key="0:0:0"]')
         pg.click('#simInfo .lvtabs [data-lv="3"]'); hp3=pg.evaluate("String(chars.find(c=>c.id==='PL-3').hp[2])")
         chk(('HP '+hp3) in pg.inner_text('#simInfo .stats2'),'sim info level toggle')
-        # set 79: stage tab reset button drops an old local rune/boss draft (two taps)
-        chk(pg.evaluate("(()=>{stageCfg.bosses[0].hp=999; stageChanged(); const e1=stageEdited(); const b=document.getElementById('stgReset'); b.click(); const mid=stageEdited(); b.click(); return e1 && mid && !stageEdited() && b.disabled && JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY)).bosses[0].hp===STAGE_BASE.bosses[0].hp})()"),'stage reset button')
+        # set 79: stage tab reset button (two taps) · set 146: only the open tab · r2: back to the last saved values (stageSaved), page defaults when nothing saved / no db
+        chk(pg.evaluate("""(async()=>{const wait=()=>new Promise(r=>setTimeout(r,50)); const b=document.getElementById('stgReset'); const nm=STAGE_RUNES[0].id;
+          stagePart='bosses'; renderStage(); stageCfg.runes[nm].name='ชื่อทดสอบ'; stageCfg.bosses[0].hp=999; stageChanged(); const e1=stageEdited(); b.click(); const mid=stageEdited(); b.click(); await wait();
+          let ok=e1 && mid && b.disabled && stageCfg.runes[nm].name==='ชื่อทดสอบ' && JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY)).bosses[0].hp===STAGE_BASE.bosses[0].hp;
+          const keepDb=db, snap=JSON.parse(JSON.stringify(stageCfg)); db={doc:()=>({get:async()=>({exists:true,data:()=>({rev:7,stage:snap})})})};
+          stagePart='runes'; renderStage(); stageCfg.runes[nm].name='อีกชื่อ'; stageChanged(); b.click(); b.click(); await wait();
+          ok=ok && stageCfg.runes[nm].name==='ชื่อทดสอบ';
+          db=null; b.click(); b.click(); await wait(); ok=ok && !stageEdited() && b.disabled; db=keepDb; renderStage(); return ok})()"""),'stage reset button')
         # set 68: boss mode preview draws the boss (not the hidden right team) · empty teams are never refilled with the sample team
         pg.evaluate("simFoeBoss=true; renderSimBoss(); simLast=null; renderSimTeams()")
         chk('(บอส)' in pg.evaluate("[...document.querySelectorAll('#simArena [data-key^=\"1:\"]')].map(u=>u.innerText).join()") and 'WY-3' not in pg.evaluate("[...document.querySelectorAll('#simArena .unit')].map(u=>u.textContent).join()"),'boss mode preview shows boss')

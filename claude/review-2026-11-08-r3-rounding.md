@@ -1,4 +1,4 @@
-# Review 8 Nov 2026 (set 146): R3 rounding (+% gains ≥ +1) + AMCFG1 rev39 import — before/after runerun 3000
+# Review 8 Nov 2026 (set 147): R3 rounding (+% gains ≥ +1) + AMCFG1 rev39 import — before/after runerun 3000
 Before = origin/main ad9d54c (set 145) · After = branch claude/dreamy-euler-6dlklr (R3 + rev39: 25 rune names, PT-4 name, C3 พุ่งชน, T12 scope one, C7 legend max 1, botgen regenerated).
 Same seed/flow (lab/runerun.mjs 3000). runecheck: before 49 ok + 4 warn (S7 S8 T5 T11 rounding to zero) → after 53 ok.
 

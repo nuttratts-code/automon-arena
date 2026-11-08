@@ -5,6 +5,12 @@ const STAGE_BASE = stageDefaults();
 let stageCfg = cleanStage(null), stagePart = 'runes';
 try { const d = JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY) || 'null'); if (d) stageCfg = cleanStage(d); } catch (e) {}
 const stageEdited = () => !same(stageCfg, STAGE_BASE);
+// set 146: the reset button works on the open tab only (runes tab = runes + custom runes + copies rule) — a full reset once wiped the user's rune names.
+const STAGE_PART_KEYS = { runes: ['runes', 'custom', 'copiesRule'], bosses: ['bosses'], settings: ['settings'] };
+const stagePartEdited = p => STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], STAGE_BASE[k])) || stageSavedDiff(p);
+// set 146 r2: the button also stays usable when the tab differs from the last saved values (loaded in 99-start / after 💾).
+let stageSaved = null;
+const stageSavedDiff = p => !!stageSaved && STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], stageSaved[k]));
 function stageCount() {
   let n = 0;
   for (const r of STAGE_RUNES) { const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id]; for (const k of new Set([...Object.keys(x), ...Object.keys(b)])) if (x[k] !== b[k]) n++; }
@@ -16,7 +22,7 @@ function stageCount() {
 function stageChanged() {
   try { localStorage.setItem(STAGE_DRAFT_KEY, JSON.stringify(stageCfg)); } catch (e) {}
   const n = stageCount();
-  if ($('stgReset')) $('stgReset').disabled = !n;
+  if ($('stgReset')) $('stgReset').disabled = !stagePartEdited(stagePart);
   $('stgDirty').textContent = n ? `แก้แล้ว ${n} จุด · ยังไม่ได้ส่งจนกว่าจะกด 💾 บันทึกให้ Claude` : 'ยังไม่ได้แก้ (ค่าที่แสดง = ค่าเสนอเริ่มต้น)';
 }
 const stageNum = (id, v, base, lo, hi, set, step = 1) => {
@@ -467,11 +473,22 @@ $('stgIdeaSend').addEventListener('click', async () => {
   $('stgIdeaSend').disabled = false;
 });
 
-// set 79: drop the local rune/boss draft and go back to the page defaults (= values Claude imported).
+// set 79: drop the local draft and go back to the page defaults (= values Claude imported) · set 146: only the open tab (STAGE_PART_KEYS).
 // Without it an old local draft blocks loading config/main forever (99-start: unsaved stage edits win). Two taps, like 'reset'.
+const STAGE_RESET_TXT = 'คืนค่าแท็บนี้';
 $('stgReset').addEventListener('click', () => {
   const b = $('stgReset');
-  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'คืนค่าด่านทั้งหมด'; }, 3000); return; }
-  b.dataset.confirm = ''; b.textContent = 'คืนค่าด่านทั้งหมด';
-  stageCfg = cleanStage(null); renderStage(); stageChanged();
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = STAGE_RESET_TXT; }, 3000); return; }
+  b.dataset.confirm = ''; b.textContent = STAGE_RESET_TXT;
+  stageResetPart(stagePart);
 });
+// set 146 r2: back to the LAST SAVED values (config/main, read fresh) — the user expects "คืนค่า" to bring back what they saved, not the game values.
+// No db (offline view) or nothing saved yet → the page defaults (= values Claude imported).
+async function stageResetPart(part) {
+  let base = null, from = 'ค่าในเกม';
+  if (db) { try { const cs = await db.doc('config/main').get(); const cfg = cs.exists ? cs.data() : null; if (cfg && cfg.stage) { base = cleanStage(cfg.stage); from = 'ค่าที่บันทึกล่าสุด' + (cleanRev(cfg.rev) ? ` (ครั้งที่ ${cleanRev(cfg.rev)})` : ''); } } catch (e) {} }
+  if (!base) base = cleanStage(null);
+  for (const k of STAGE_PART_KEYS[part]) stageCfg[k] = base[k];
+  stageCfg = cleanStage(stageCfg); renderStage(); stageChanged();
+  saveMsg('คืนแท็บนี้แล้ว: ' + from);
+}

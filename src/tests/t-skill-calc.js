@@ -625,7 +625,7 @@ const SC_RETIRED = [
     eq(x.res.get(want[0]).fin.healHit + x.res.get(want[1]).fin.healHit, allUp, 'receivers heal/hit at end (stat tab) = every +v they got');
     eq(x.res.get(me).fin.healHit, c.healHit[i], 'PT-6 own heal/hit unchanged (skipSameId: the other PT-6 does not feed it)');
     const a = scSk(x.r, me, 1, 'atkUp');
-    eq(a.map(e => e.amount), Array(hits).fill(upGain(c.healHit[i], v1)).filter(n => n > 0), 'attack +v% of own heal/hit per hit (rounded down, at least +1 — set 146 R3)');
+    eq(a.map(e => e.amount), Array(hits).fill(upGain(c.healHit[i], v1)).filter(n => n > 0), 'attack +v% of own heal/hit per hit (rounded down, at least +1 — set 147 R3)');
     eq(x.res.get(me).fin.atk, c.atk[i] + a.reduce((s, e) => s + e.amount, 0), 'attack at end (stat tab)');
     return x;
   }],
