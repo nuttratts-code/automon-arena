@@ -1,6 +1,6 @@
 # Automon Arena code workflow (index)
 
-V1.27 · 31 Oct 2026 (handoff headings match the real file; Jules removed) · V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo)
+V1.28 · 8 Nov 2026 (set 139: + relay/replies/ui topic files moved out of CLAUDE.md) · V1.27 · 31 Oct 2026 (handoff headings match the real file; Jules removed) · V1.26 · 28 Oct 2026 · translated to English + adapted for the git repo · read only when about to edit code · **open only the sub-file for the job at hand** · history V1.1–V1.21 → claude/archive/workflow-V1.21-full.md (stays in the Project, not in the repo)
 
 | Job | File | Old sections |
 | --- | --- | --- |
@@ -10,6 +10,9 @@ V1.27 · 31 Oct 2026 (handoff headings match the real file; Jules removed) · V1
 | Bot teams, run length, replays, play data | claude/workflow/botteams.md | 13 14 |
 | Import values from the Balance Room (ArtifactData) | claude/workflow/balance-import.md | 8 |
 | Character/skill data format | claude/workflow/data-format.md | 7 |
+| Relay between the 2 accounts, publish ownership + paste message | claude/workflow/relay.md | CLAUDE.md (set 139) |
+| Choice labels A1/B1, buttons, guiding the user in tools | claude/workflow/replies.md | CLAUDE.md (set 139) |
+| UI work (design skill first, screenshots) | claude/workflow/ui.md | CLAUDE.md (set 139) |
 
 ## Task set (rule 10 · always)
 - 1 task set = decide → edit → test → publish once. Ask all decision questions at once as multiple choice; do not start heavy work until answered.

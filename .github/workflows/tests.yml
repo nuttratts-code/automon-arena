@@ -4,8 +4,13 @@ name: tests
 # (Set 62 lesson: source tests passed while the built balance page was broken.)
 # Runs on every push to every branch (+ manual): the repo is public, so Actions minutes are free (decision 6 Nov, set 104).
 # The in-chat gate before merge (CLAUDE.md rule 3) still applies.
+# Set 139 (8 Nov): docs-only pushes (claude/, art/, *.md) skip this run — nothing in them is built into the pages.
 on:
   push:
+    paths-ignore:
+      - 'claude/**'
+      - 'art/**'
+      - '**/*.md'
   workflow_dispatch:
 
 permissions:

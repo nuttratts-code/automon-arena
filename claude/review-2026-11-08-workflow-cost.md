@@ -46,5 +46,9 @@ Measured on main c4d534c. Token counts are estimates (English ≈ 3.8 chars/toke
   - E3: leave as is.
 - Also (no decision needed, Claude does it): grep rule docs by id instead of full reads; move finished review files to claude/archive/reviews/ when A is done.
 
-## DECISIONS
-(pending user answer)
+## DECISIONS (8 Nov, set 139)
+- A1 built: Relay = newest 2 sets; sets 117–137 + publish history → archive/relay-2026-11-08-sets117-137.md (handoff 36 KB → 9 KB).
+- B3: keep the 63 s skill-pair test as is (do not re-propose).
+- C1 built: tests.yml paths-ignore claude/**, art/**, **/*.md.
+- D1: already done — Default environment setup script = `pip install playwright` (W1 cleared). The 2nd account's environment is separate.
+- E (user wording): CLAUDE.md as topic headings, open a topic only when the task touches it → CLAUDE.md keeps core rules (always auto-loaded, cannot be partly loaded) + a topic table; relay/publish-paste, choices/buttons, UI work moved verbatim to claude/workflow/{relay,replies,ui}.md. Close-out stays ~15 turns (not changed). CLAUDE.md 12.3 KB → 8.9 KB.
