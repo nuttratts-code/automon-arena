@@ -1,5 +1,5 @@
 import { simulate } from '../core/battle.js';
-import { RULES, TRIBES } from '../core/rules.js';
+import { RULES, TRIBES, upGain, upMul } from '../core/rules.js';
 import { makeCharMap, unitOf } from '../core/team.js';
 import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
 import { runeActive, runeKind, runeText, RUNE_SPEC, RUNE_COPIES } from '../core/stage.js';
@@ -79,28 +79,28 @@ function rcStat(chars, r, n) {
   const A = rcTeam(chars, base), D = rcDummy(chars, 2);
   const pair = (B = D, A2 = A) => rcPair(r, n, A2, B);
   switch (r.eff) {
-    case 'atk': { const { on, off } = pair(); return rcPerUnit(r, A, 'พลังโจมตี (ตอนตี)', (x, u) => (rcSets(x, u)[0] || {}).atk, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
-    case 'hp': { const { on, off } = pair(); return rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
+    case 'atk': { const { on, off } = pair(); return rcPerUnit(r, A, 'พลังโจมตี (ตอนตี)', (x, u) => (rcSets(x, u)[0] || {}).atk, b => (flat ? b + v : upMul(b, 1 + p)), on, off); }
+    case 'hp': { const { on, off } = pair(); return rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => (flat ? b + v : upMul(b, 1 + p)), on, off); }
     case 'armor': { const { on, off } = pair(); return rcPerUnit(r, A, 'เกราะตอนเริ่ม', rcStartArmor, b => b + (flat ? v : Math.floor(RC_P.hp * p)), on, off); }
     case 'armorHit': { const { on, off } = pair(); const per = (x, u) => { const h = rcSets(x, u).length; return h ? rcSum(x, 'armor', u, RC_W, e => e.t > 0) / h : null; };
-      return rcPerUnit(r, A, 'เกราะต่อการตี', per, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
+      return rcPerUnit(r, A, 'เกราะต่อการตี', per, b => (flat ? b + v : upMul(b, 1 + p)), on, off); }
     case 'cd': { const { on, off } = pair(); return rcPerUnit(r, A, 'เวลาระหว่างการตี (มิลลิวินาที)', rcGap, b => (flat ? Math.max(RULES.minCooldownMs || 0, b - v) : Math.round(b * (1 - p))), on, off); }
     case 'burn': case 'shock': { const k = r.eff, { on, off } = pair(); const per = (x, u) => (rcFirst(x, k, e => e.from === u) || {}).amount;
-      return rcPerUnit(r, A, k === 'burn' ? 'ไฟที่ทำให้ติดต่อฮิต' : 'ช็อตที่ทำให้ติดต่อฮิต', per, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
+      return rcPerUnit(r, A, k === 'burn' ? 'ไฟที่ทำให้ติดต่อฮิต' : 'ช็อตที่ทำให้ติดต่อฮิต', per, b => (flat ? b + v : upMul(b, 1 + p)), on, off); }
     case 'multi': { const { on, off } = pair(); return rcPerUnit(r, A, 'จำนวนฮิตต่อการตี', (x, u) => (rcSets(x, u)[0] || {}).hits, b => b + v, on, off); }
-    case 'hitDmg': { const { on, off } = pair(); return rcPerUnit(r, A, 'ดาเมจต่อฮิต', (x, u) => (rcHits(x, u)[0] || {}).amount, b => Math.floor(b * (1 + p)), on, off); }
+    case 'hitDmg': { const { on, off } = pair(); return rcPerUnit(r, A, 'ดาเมจต่อฮิต', (x, u) => (rcHits(x, u)[0] || {}).amount, b => upMul(b, 1 + p), on, off); }
     case 'burnAmp': { const { on, off } = pair(); const per = (x, u) => (rcFirst(x, 'burn', e => e.from === u) || {}).amount;
-      return rcPerUnit(r, A, 'ไฟที่ทำให้ติดต่อฮิต', per, b => Math.floor(b * (1 + p)), on, off); }
+      return rcPerUnit(r, A, 'ไฟที่ทำให้ติดต่อฮิต', per, b => upMul(b, 1 + p), on, off); }
     case 'shockAmp': { // shock damage shows when shock pops on the enemy: total shock damage over the window
       const { on, off } = pair(rcDummy(chars, 1)); const per = (x, u) => x.events.filter(e => e.k === 'dmg' && e.from === u && e.why === 'shock' && e.t <= RC_W).reduce((a, e) => a + e.amount, 0) || null;
       return rcPerUnit(r, A, 'ดาเมจช็อตรวม (20 วิแรก)', per, b => b * (1 + p), on, off).map(l => ({ ...l, ok: l.ok || (l.what.includes('นอก') ? l.ok : Math.abs(+l.got - +l.exp) <= Math.max(3, +l.exp * 0.03)) }));
     }
     case 'armorAmp': { const { on, off } = pair(); const per = (x, u) => { const h = rcSets(x, u).length; return h ? rcSum(x, 'armor', u, RC_W, e => e.t > 0) / h : null; };
-      return rcPerUnit(r, A, 'เกราะที่ได้ต่อการตี (จากเกราะ/ฮิต 10)', per, b => Math.floor(b * (1 + p)), on, off); }
+      return rcPerUnit(r, A, 'เกราะที่ได้ต่อการตี (จากเกราะ/ฮิต 10)', per, b => upMul(b, 1 + p), on, off); }
     case 'healAmp': case 'healHit': { // the enemy burns all of us (30) → hurt units → heal per own hit shows
       const { on, off } = pair(rcBurner(chars, 30));
       const per = (x, u) => (x.events.find(q => q.k === 'heal' && q.to === u && q.why === 'healHit') || {}).amount;
-      return rcPerUnit(r, A, 'ฟื้นต่อฮิต (ฟื้น/ฮิต 10 · โดนไฟอยู่)', per, q => (r.eff === 'healHit' ? q + v : Math.floor(q * (1 + p))), on, off);
+      return rcPerUnit(r, A, 'ฟื้นต่อฮิต (ฟื้น/ฮิต 10 · โดนไฟอยู่)', per, q => (r.eff === 'healHit' ? q + v : upMul(q, 1 + p)), on, off);
     }
     case 'lifesteal': { // heal at the moment of the first own hit (100 damage), healHit 0 here
       const A0 = rcTeam(chars), { on, off } = rcPair(r, n, A0, rcBurner(chars, 30));
@@ -113,7 +113,7 @@ function rcStat(chars, r, n) {
     case 'eBurn': case 'eShock': { const k = r.eff === 'eBurn' ? 'burn' : 'shock', { on, off } = pair();
       return rcPerUnit(r, A, k === 'burn' ? 'ไฟที่ติดตอนเริ่ม' : 'ช็อตที่ติดตอนเริ่ม', (x, u) => rcSum(x, k, u, 0), b => b + v, on, off, true); }
     case 'eDmgTaken': { const { on, off } = pair(); const per = (x, u) => (x.events.find(e => e.k === 'dmg' && e.to === u && e.why === 'hit') || {}).amount;
-      return rcPerUnit(r, A, 'ดาเมจที่โดนต่อฮิต (ตี 100)', per, b => Math.floor(b * (1 + p)), on, off, true); }
+      return rcPerUnit(r, A, 'ดาเมจที่โดนต่อฮิต (ตี 100)', per, b => upMul(b, 1 + p), on, off, true); }
     case 'eHealCut': { const B = rcDummy(chars, 2, { healHit: RC_P.x, atk: 1, cdMs: 2000, maxHp: 1e6, hp: 1e6 });
       const { on, off } = pair(B); const per = (x, u) => (x.events.find(e => e.k === 'heal' && e.to === u) || {}).amount;
       return rcPerUnit(r, A, 'ฟื้นต่อฮิต (ฟื้น/ฮิต 10)', per, b => Math.floor(b * (1 - p)), on, off, true); }
@@ -152,7 +152,7 @@ function rcSpecial(chars, r, n) {
       const { on, off } = rcPair(r, n, A2, B);
       const down = (on.events.find(e => e.k === 'down' && e.who === 0) || {}).t;
       const late = (x, u) => (x.events.find(e => e.k === 'dmg' && e.from === u && e.why === 'hit' && down != null && e.t > down) || {}).amount;
-      const exp = b => Math.floor(b * (1 + num('pct') * n / 100));
+      const exp = b => upMul(b, 1 + num('pct') * n / 100);
       return [rcLine('ช่อง1 ล้มก่อน', 'ล้ม', down != null ? `ล้มที่ ${down / 1000} วิ` : 'ไม่ล้ม', down != null),
         ...rcPerUnit(r, A2, 'ดาเมจต่อฮิตหลังเพื่อนล้ม', late, exp, on, off).filter(l => !l.what.startsWith('ช่อง1 '))];
     }
@@ -160,7 +160,7 @@ function rcSpecial(chars, r, n) {
       const boss = runBossTeam(DUMMY_BOSS, 1, RUN_STAGE);
       const a = rcPair(r, n, A, boss), b = rcPair(r, n, A, D);
       const hit = (x, u) => (rcHits(x, u)[0] || {}).amount;
-      return [...rcPerUnit(r, A, 'ดาเมจต่อฮิตใส่บอส', hit, q => Math.floor(q * (1 + num('dmgPct') * n / 100)), a.on, a.off),
+      return [...rcPerUnit(r, A, 'ดาเมจต่อฮิตใส่บอส', hit, q => upMul(q, 1 + num('dmgPct') * n / 100), a.on, a.off),
         ...rcPerUnit({ ...r, scope: '-' }, A, 'ดาเมจต่อฮิตใส่ศัตรูปกติ', hit, q => q, b.on, b.off).map(l => ({ ...l, what: l.what.replace(' (นอกขอบเขต ต้องไม่เปลี่ยน)', ' (ไม่ใช่บอส ต้องไม่เปลี่ยน)') }))];
     }
     case 'lastStand': { // everyone else has 1 hp and the enemy burns the whole team → only the rune unit is left
@@ -172,7 +172,7 @@ function rcSpecial(chars, r, n) {
       const dmg = x => (x.events.find(e => e.k === 'dmg' && e.from === me && e.why === 'hit' && e.t > from) || {}).amount;
       const gap = x => { const q = x.events.filter(e => e.k === 'set' && e.who === me && e.t > from); return q.length > 1 ? q[1].t - q[0].t : null; };
       return [rcLine('เพื่อนล้มหมด เหลือตัวใส่รูน', 'เหลือ 1', `${6 - on.events.filter(e => e.k === 'down' && e.who < 6).length}`, on.events.filter(e => e.k === 'down' && e.who < 6).length === 5),
-        rcLine('ดาเมจต่อฮิตตอนเหลือตัวเดียว', Math.floor(dmg(off) * (1 + num('dmgPct') * n / 100)), dmg(on) ?? '-'),
+        rcLine('ดาเมจต่อฮิตตอนเหลือตัวเดียว', upMul(dmg(off), 1 + num('dmgPct') * n / 100), dmg(on) ?? '-'),
         rcLine('เวลาระหว่างการตีตอนเหลือตัวเดียว (มิลลิวินาที)', Math.round(gap(off) * (1 - Math.min(90, num('cdPct') * n) / 100)), gap(on) ?? '-')];
     }
     case 'growth': {
@@ -180,19 +180,19 @@ function rcSpecial(chars, r, n) {
       for (const ws of [0, 3, 50]) {
         const { on, off } = rcPair(r, n, A, D, { ctx: { winStreak: ws } });
         const amp = Math.min(num('maxPct') * n, num('stepPct') * n * ws);
-        out.push(...rcPerUnit(r, A, `ดาเมจต่อฮิต (ชนะติด ${ws})`, (x, u) => (rcHits(x, u)[0] || {}).amount, b => Math.floor(b * (1 + amp / 100)), on, off).map(l => (ws ? l : { ...l, base: undefined }))); // no streak = no change expected
+        out.push(...rcPerUnit(r, A, `ดาเมจต่อฮิต (ชนะติด ${ws})`, (x, u) => (rcHits(x, u)[0] || {}).amount, b => upMul(b, 1 + amp / 100), on, off).map(l => (ws ? l : { ...l, base: undefined }))); // no streak = no change expected
       }
       return out;
     }
     case 'glass': { const { on, off } = rcPair(r, n, A, D);
       return [...rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => Math.floor(b * (1 - Math.min(90, num('hpPct') * n) / 100)), on, off),
-        ...rcPerUnit(r, A, 'ดาเมจต่อฮิต', (x, u) => (rcHits(x, u)[0] || {}).amount, b => Math.floor(b * (1 + num('dmgPct') * n / 100)), on, off)]; }
+        ...rcPerUnit(r, A, 'ดาเมจต่อฮิต', (x, u) => (rcHits(x, u)[0] || {}).amount, b => upMul(b, 1 + num('dmgPct') * n / 100), on, off)]; }
     case 'fortress': { const { on, off } = rcPair(r, n, A, D);
-      return [...rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => Math.floor(b * (1 + num('hpPct') * n / 100)), on, off),
+      return [...rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => upMul(b, 1 + num('hpPct') * n / 100), on, off),
         ...rcPerUnit(r, A, 'พลังโจมตี (ตอนตี)', (x, u) => (rcSets(x, u)[0] || {}).atk, b => Math.floor(b * (1 - Math.min(90, num('atkPct') * n) / 100)), on, off)]; }
     case 'hpToArmorHit': { const { on, off } = rcPair(r, n, A, D); const lost = Math.floor(1000 * Math.min(90, num('hpPct')) / 100);
       const per = (x, u) => { const h = rcSets(x, u).length; return h ? rcSum(x, 'armor', u, RC_W, e => e.t > 0) / h : null; };
-      return [...rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => b - lost, on, off), ...rcPerUnit(r, A, 'เกราะต่อการตี', per, b => b + Math.floor(lost * num('rate') * n / 100), on, off)]; }
+      return [...rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => b - lost, on, off), ...rcPerUnit(r, A, 'เกราะต่อการตี', per, b => b + upGain(lost, num('rate') * n), on, off)]; }
     case 'taunt': { // worn by the back-row unit (slot 6) → the enemy must still hit it first
       const slot = [2, 1], B = [{ ...rcDummy(chars, 1)[0], atk: 1, cdMs: 1000 }];
       const { on, off } = rcPair(r, n, A, B, { eqx: { slot } });
