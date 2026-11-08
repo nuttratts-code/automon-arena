@@ -79,7 +79,8 @@ export const TESTS_VALIDATE = [
     eq([w.runes.T1.eff, w.runes.T1.times, w.runes.T1.hpPct, 'gold' in w.runes.T1], ['revive', 2, 50, false], 'eco rune → special effect, old fields dropped');
     eq(w.runes.S5, stageDefaults().runes.S5, 'bad skill → rune default'); eq(w.runes.D3, stageDefaults().runes.D3, 'unknown effect ignored'); eq(w.runes.T2.gain, 'ภูติ', 'tribe field');
     eq(w.custom.map(x => [x.id, x.eff]), [['C1', 'bossDmg'], ['C2', 'skill'], ['C3', 'skill']], 'custom special / skill / old type skill');
-    eq(runeText(w.custom[0]), 'ตัวเดียว: ดาเมจใส่บอส +60%', 'special text shows non-natural scope');
+    eq(runeText(w.custom[0]), 'ตัวที่ใส่: ดาเมจใส่บอส +60%', 'special text shows non-natural scope');
+    eq(runeText(w.custom[0], true), 'ตัวที่ใส่: ดาเมจใส่บอส +60% (รวมช็อต ไม่นับไฟ)', 'Balance Room text adds the note');
     const sw = runeWithEff(w.runes.X10, 'gold'); eq([sw.eff, sw.scope, sw.gold, 'v' in sw, sw.name], ['gold', 'team', 2, false, 'ถ่วงเวลา'], 'switch effect keeps basics, leaves enemy scope');
     eq(cleanStage(JSON.parse(JSON.stringify(w))), w, 'switched runes round trip');
   }],

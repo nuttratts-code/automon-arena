@@ -1428,7 +1428,7 @@ $('newRun').addEventListener('click', () => {
 const RN_RAR_TH = Object.fromEntries(RUNE_RARITY), RN_RAR_CLS = { common: 'r0', rare: 'r2', legend: 'r4' };
 const RN_ROW_TH = ['หน้า', 'กลาง', 'หลัง'], RN_LANE_TH = ['บน', 'ล่าง'];
 const rnSlotTh = s => `${RN_ROW_TH[s[0]]}${RN_LANE_TH[s[1]]}`;
-const rnDesc = r => runeText(r) || `${runeScopeLabel(r)}: สกิลรูน (ทำงานตอนสู้)`;
+const rnDesc = r => runeText(r) || `${runeWho(r)}: ได้สกิล "${skillLine({ when: r.when, do: r.do, to: r.to, v: [r.v, r.v, r.v] }, 1)}"`; // set 145: skill runes show the real skill line
 // set 109: runes are worn by a unit (uid), not a board slot · partner runes show as "คู่"
 function runesOn(u) { return Object.keys(P.rn.bag).flatMap(id => [[rnUnitOf(P, id), ''], [rnUnitOf(P, id, true), ' (คู่)']].filter(([w]) => w === u).map(([, t]) => (rnRec(id) || { name: id }).name + t)); }
 const RN_WEAR_TH = { none: '⚠ ยังไม่ได้สวมให้ตัวไหน (ไม่ทำงาน)', bench: '⚠ ตัวที่สวมอยู่ม้านั่ง (ไม่ทำงานตอนสู้)' };

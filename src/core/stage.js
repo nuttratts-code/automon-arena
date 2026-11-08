@@ -37,40 +37,42 @@ const RUNE_V_MAX = 1e5;
 const spec = (key, theme, scope, label, text, f = []) => ({ key, theme, scope, label, text, f });
 export const RUNE_SPECIAL = [
   // เงิน/ร้าน
-  spec('gold', 'gold', 'team', 'ได้เงินทุกด่าน', 'ได้เงินเพิ่ม {gold} ทุกด่าน', [['gold', 'เงิน/ด่าน', 2, 0, 20, '']]),
-  spec('interest', 'gold', 'team', 'ดอกเบี้ย', 'มีเงินเก็บทุก {per} ได้เพิ่ม {gold} (สูงสุด {cap})', [['per', 'ทุกๆ เงิน', 5, 1, 50, ''], ['gold', 'ได้เพิ่ม', 1, 0, 10, ''], ['cap', 'สูงสุด', 3, 0, 20, '']]),
+  spec('gold', 'gold', 'team', 'ได้เงินทุกด่าน', 'หลังแต่ละแมตช์ → ได้เงิน +{gold}', [['gold', 'เงิน/ด่าน', 2, 0, 20, '']]),
+  spec('interest', 'gold', 'team', 'ดอกเบี้ย', 'หลังแต่ละแมตช์ → เงินที่เหลือทุก {per} ได้ +{gold} (สูงสุด {cap})', [['per', 'ทุกๆ เงิน', 5, 1, 50, ''], ['gold', 'ได้เพิ่ม', 1, 0, 10, ''], ['cap', 'สูงสุด', 3, 0, 20, '']]),
   spec('shopSlots', 'gold', 'team', 'ร้านเพิ่มช่อง', 'ร้านเพิ่ม {slots} ช่อง', [['slots', 'ช่องเพิ่ม', 1, 0, 3, '']]),
-  spec('freeRoll', 'gold', 'team', 'สุ่มร้านฟรี', 'สุ่มร้านฟรี {free} ครั้งต่อรอบ', [['free', 'ครั้งฟรี/รอบ', 1, 0, 5, '']]),
-  spec('heartTrade', 'gold', 'team', 'แลกหัวใจเป็นเงิน', 'ลดหัวใจ 1 ดวง ได้เงิน {gold} · ใช้ได้ครั้งเดียวต่อรูน 1 อัน (รอบละครั้ง · ใช้ไม่ได้ถ้าหัวใจเหลือน้อยกว่า {minHearts})', [['gold', 'เงินที่ได้', 25, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
-  spec('lure', 'gold', 'one', 'ตัวนี้ออกในร้านบ่อยขึ้น', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ออกในร้านบ่อยขึ้น ×{mult}', [['mult', 'โอกาส ×', 3, 1, 10, '']]),
-  spec('fastMerge', 'gold', 'one', 'รวมร่างเร็ว', 'ตัวที่เลือก (ที่มีอยู่แล้ว) ใช้ {need} ตัวรวมร่าง (ปกติ 3)', [['need', 'ใช้กี่ตัว', 2, 2, 3, 'ตัว']]),
-  spec('shadow', 'gold', 'one', 'ขายแล้วได้คืน', 'ขายแล้วได้ตัว Lv1 คืนที่ม้านั่ง ({times} ครั้ง/run)', [['times', 'ครั้ง/run', 1, 0, 3, '']]),
+  spec('freeRoll', 'gold', 'team', 'สุ่มร้านฟรี', 'สุ่มร้านฟรี {free} ครั้ง/แมตช์', [['free', 'ครั้งฟรี/รอบ', 1, 0, 5, '']]),
+  spec('heartTrade', 'gold', 'team', 'แลกหัวใจเป็นเงิน', 'แลกหัวใจ 1 ดวง → เงิน +{gold} (รูนละครั้ง · แมตช์ละครั้ง · หัวใจต้องมี ≥{minHearts})', [['gold', 'เงินที่ได้', 25, 1, 100, ''], ['minHearts', 'หัวใจขั้นต่ำ', 2, 2, 10, 'ดวง']]),
+  spec('lure', 'gold', 'one', 'ตัวนี้ออกในร้านบ่อยขึ้น', 'ตัวที่ใส่ออกในร้านบ่อยขึ้น ×{mult}', [['mult', 'โอกาส ×', 3, 1, 10, '']]),
+  spec('fastMerge', 'gold', 'one', 'รวมร่างเร็ว', 'ตัวที่ใส่ใช้ {need} ตัวรวมร่าง', [['need', 'ใช้กี่ตัว', 2, 2, 3, 'ตัว']]),
+  spec('shadow', 'gold', 'one', 'ขายแล้วได้คืน', 'เมื่อขายตัวที่ใส่ → ได้ตัวเดิม Lv1 คืนที่ม้านั่ง ({times} ครั้ง/เกม)', [['times', 'ครั้ง/run', 1, 0, 3, '']]),
   // เผ่า (Q4 B: นับเป็นเผ่าจริง ทั้งโบนัสเผ่าและสกิลที่เล็งเผ่า · ไม่ติดกฎเผ่าเพิ่มได้ 1)
-  spec('addTribe', 'tribe', 'one', 'ได้เผ่าเพิ่ม', 'ได้เผ่า{gain}เพิ่ม (นับเป็นเผ่าจริง)', [['gain', 'เผ่าที่ได้', '', 0, 0, 'tribe']]),
-  spec('flag', 'tribe', 'team', 'ธงเผ่า (นับเผ่าเพิ่ม)', 'เผ่าที่เลือกนับเพิ่ม {count} ตัว (รูนนี้พาไปได้ไม่เกินขั้น {maxTier} · เลือกเผ่าจากตัวบนบอร์ดตอนได้รูน แต่ละอันเลือกเอง)', [['count', 'นับเพิ่ม', 1, 0, 4, 'ตัว'], ['maxTier', 'ขั้นสูงสุด', 4, 2, 6, '']]),
+  spec('addTribe', 'tribe', 'one', 'ได้เผ่าเพิ่ม', '{who}: ได้เผ่า{gain}เพิ่ม', [['gain', 'เผ่าที่ได้', '', 0, 0, 'tribe']]),
+  spec('flag', 'tribe', 'team', 'ธงเผ่า (นับเผ่าเพิ่ม)', 'เผ่าที่เลือกนับเพิ่ม +{count} ตัว{tierCap}', [['count', 'นับเพิ่ม', 1, 0, 4, 'ตัว'], ['maxTier', 'ขั้นสูงสุด', 4, 2, 6, '']]),
   // ดาเมจ
-  spec('allyDownDmg', 'dmg', 'team', 'ดาเมจ + หลังเพื่อนล้ม', 'ดาเมจ +{pct}% หลังเพื่อนตัวไหนก็ได้ล้ม', [['pct', 'เพิ่ม', 20, 0, 300, '%']]),
-  spec('bossDmg', 'dmg', 'team', 'ดาเมจใส่บอส +', 'ดาเมจใส่บอส +{dmgPct}%', [['dmgPct', 'ดาเมจใส่บอส', 40, 0, 300, '%']]),
-  spec('lastStand', 'dmg', 'team', 'เหลือตัวเดียวแรงขึ้น', 'เหลือตัวเดียว: ดาเมจ +{dmgPct}% คูลดาวน์ −{cdPct}%', [['dmgPct', 'ดาเมจ', 50, 0, 300, '%'], ['cdPct', 'คูลดาวน์ลด', 30, 0, 80, '%']]),
-  spec('growth', 'dmg', 'team', 'ชนะติดกันแรงขึ้น', 'ชนะติดกัน ดาเมจ +{stepPct}% ต่อด่าน (สูงสุด {maxPct}%) แพ้แล้วรีเซ็ต · มีหลายอัน = คูณทั้ง % ต่อด่านและเพดาน', [['stepPct', 'ต่อด่าน', 3, 0, 50, '%'], ['maxPct', 'สูงสุด', 30, 0, 300, '%']]),
-  spec('glass', 'dmg', 'team', 'ดาเมจ + แลก HP −', 'ดาเมจ +{dmgPct}% แต่ HP สูงสุด −{hpPct}%', [['dmgPct', 'ดาเมจ', 35, 0, 300, '%'], ['hpPct', 'HP ลด', 20, 0, 90, '%']]),
-  spec('buddy', 'dmg', 'one', 'คู่หูตีตาม', 'ตัวนี้โจมตี → คู่ที่ผู้เล่นเลือกตีเป้าเดียวกันตาม {pct}% ของการโจมตีปกติ (ครั้งละชุด · ตีตามต่อไม่ได้)', [['pct', 'แรงตีตาม', 100, 1, 300, '%']]),
+  spec('allyDownDmg', 'dmg', 'team', 'ดาเมจ + หลังเพื่อนล้ม', 'เมื่อเพื่อนล้ม → {who} ดาเมจตีที่ทำ +{pct}%', [['pct', 'เพิ่ม', 20, 0, 300, '%']]),
+  spec('bossDmg', 'dmg', 'team', 'ดาเมจใส่บอส +', '{who}: ดาเมจใส่บอส +{dmgPct}%', [['dmgPct', 'ดาเมจใส่บอส', 40, 0, 300, '%']]),
+  spec('lastStand', 'dmg', 'team', 'เหลือตัวเดียวแรงขึ้น', 'เมื่อเหลือรอดตัวเดียว → {who} ดาเมจตีที่ทำ +{dmgPct}% คูลดาวน์ −{cdPct}%', [['dmgPct', 'ดาเมจ', 50, 0, 300, '%'], ['cdPct', 'คูลดาวน์ลด', 30, 0, 80, '%']]),
+  spec('growth', 'dmg', 'team', 'ชนะติดกันแรงขึ้น', 'ชนะติดกัน → {who} ดาเมจตีที่ทำ +{stepPct}% ต่อแมตช์ (สูงสุด {maxPct}%)', [['stepPct', 'ต่อด่าน', 3, 0, 50, '%'], ['maxPct', 'สูงสุด', 30, 0, 300, '%']]),
+  spec('glass', 'dmg', 'team', 'ดาเมจ + แลก HP −', '{who}: ดาเมจตีที่ทำ +{dmgPct}% · HP สูงสุด −{hpPct}%', [['dmgPct', 'ดาเมจ', 35, 0, 300, '%'], ['hpPct', 'HP ลด', 20, 0, 90, '%']]),
+  spec('buddy', 'dmg', 'one', 'คู่หูตีตาม', 'เมื่อตีโดน → คู่ที่เลือกตีเป้าเดียวกันอีก 1 ฮิต แรง {pct}%', [['pct', 'แรงตีตาม', 100, 1, 300, '%']]),
   // ป้องกัน/รอด
-  spec('fortress', 'heal', 'team', 'HP + แลกพลังโจมตี −', 'HP สูงสุด +{hpPct}% แต่พลังโจมตี −{atkPct}%', [['hpPct', 'HP เพิ่ม', 30, 0, 300, '%'], ['atkPct', 'พลังโจมตีลด', 20, 0, 90, '%']]),
-  spec('taunt', 'armor', 'one', 'โล่ + ล่อเป้า', 'เกราะ {armorPct}% ของ HP สูงสุด และศัตรูต้องตีตัวนี้ก่อน', [['armorPct', 'เกราะ', 30, 0, 300, '%']]),
-  spec('revive', 'survive', 'one', 'ฟื้นหลังล้ม', 'ฟื้น {times} ครั้ง/แมตช์ ด้วย HP {hpPct}%', [['times', 'ครั้ง/แมตช์', 1, 0, 3, ''], ['hpPct', 'HP ตอนฟื้น', 50, 1, 100, '%']]),
-  spec('avoidDeath', 'survive', 'one', 'เลี่ยงจุดตาย', 'ฮิตที่จะทำให้ล้มถูกยกเลิกทั้งหมด (ดาเมจ ไฟ ช็อตของฮิตนั้น) {times} ครั้ง/แมตช์', [['times', 'ครั้ง/แมตช์', 1, 1, 3, '']]),
+  spec('fortress', 'heal', 'team', 'HP + แลกพลังโจมตี −', '{who}: HP สูงสุด +{hpPct}% · พลังโจมตี −{atkPct}%', [['hpPct', 'HP เพิ่ม', 30, 0, 300, '%'], ['atkPct', 'พลังโจมตีลด', 20, 0, 90, '%']]),
+  spec('taunt', 'armor', 'one', 'โล่ + ล่อเป้า', 'ได้เกราะ {armorPct}% ของ HP สูงสุด · ศัตรูต้องตีตัวนี้ก่อน', [['armorPct', 'เกราะ', 30, 0, 300, '%']]),
+  spec('revive', 'survive', 'one', 'ฟื้นหลังล้ม', 'เมื่อล้ม → ลุกกลับมา HP {hpPct}% ({times} ครั้ง/แมตช์)', [['times', 'ครั้ง/แมตช์', 1, 0, 3, ''], ['hpPct', 'HP ตอนฟื้น', 50, 1, 100, '%']]),
+  spec('avoidDeath', 'survive', 'one', 'เลี่ยงจุดตาย', 'ฮิตที่จะทำให้ล้ม → ยกเลิกทั้งฮิต ({times} ครั้ง/แมตช์)', [['times', 'ครั้ง/แมตช์', 1, 1, 3, '']]),
   // User rune ideas 31 Oct (claude/review-2026-10-31-rune-ideas.md) · numbers = ค่าเสนอ, user tunes
-  spec('freeze', 'debuff', 'enemy', 'ศัตรูหยุดตอนเริ่มสู้', 'ตอนเริ่มสู้ ศัตรูหยุดทำทุกอย่าง {sec} วินาที (บอสหยุด {bossPct}% ของเวลานั้น)', [['sec', 'หยุดกี่วินาที', 3, 0, 10, 'วิ'], ['bossPct', 'บอสหยุด', 50, 0, 100, '%']]),
-  spec('regenLow', 'heal', 'team', 'ฮีลเพื่อนเลือดน้อยสุด ทุก x วิ', 'ทุก {sec} วินาที เพื่อนที่ HP เหลือน้อยที่สุดฟื้น {pct}% ของ HP สูงสุด', [['sec', 'ทุกกี่วินาที', 5, 1, 60, 'วิ'], ['pct', 'ฟื้น', 10, 0, 100, '%']]),
-  spec('regen', 'heal', 'team', 'ฮีลตัวในขอบเขต ทุก x วิ', 'ทุก {sec} วินาที ฟื้น {pct}% ของ HP สูงสุด (ทุกตัวในขอบเขต · ตัวเดียว = ตัวที่ใส่รูน)', [['sec', 'ทุกกี่วินาที', 5, 1, 60, 'วิ'], ['pct', 'ฟื้น', 5, 0, 100, '%']]),
-  spec('armorShare', 'armor', 'one', 'ได้เกราะ → แบ่งให้เพื่อนเผ่า', 'ตัวนี้ได้เกราะ → เพื่อนเผ่าเดียวกันสุ่ม {count} ตัวได้เกราะ {pct}% ของที่ได้ (เกราะที่แบ่งไปไม่ทำให้รูนทำงานซ้ำ)', [['pct', 'แบ่งให้', 50, 0, 300, '%'], ['count', 'กี่ตัว', 1, 1, 5, 'ตัว']]),
-  spec('hpToArmorHit', 'armor', 'one', 'แลก HP เป็นเกราะ/ฮิต', 'HP สูงสุด −{hpPct}% แล้วได้เกราะ/ฮิต +{rate}% ของ HP ที่ลดไป (ปัดลง)', [['hpPct', 'HP ลด', 50, 0, 90, '%'], ['rate', 'ได้เกราะ/ฮิต', 2, 0, 100, '% ของ HP ที่ลด']]),
-  spec('link', 'survive', 'one', 'คู่รับดาเมจแทน', 'ตัวนี้โดนตี → คู่ที่ผู้เล่นเลือกรับดาเมจแทน {pct}% (รับแทนต่อไม่ได้)', [['pct', 'รับแทน', 50, 1, 100, '%']]),
+  spec('freeze', 'debuff', 'enemy', 'ศัตรูหยุดตอนเริ่มสู้', 'เมื่อเริ่มแมตช์ → ศัตรูทุกตัว มึนงง {sec} วิ (บอส {bossPct}%)', [['sec', 'หยุดกี่วินาที', 3, 0, 10, 'วิ'], ['bossPct', 'บอสหยุด', 50, 0, 100, '%']]),
+  spec('regenLow', 'heal', 'team', 'ฮีลเพื่อนเลือดน้อยสุด ทุก x วิ', 'ทุก {sec} วิ → เพื่อน HP น้อยสุด ฟื้น HP {pct}% ของ HP สูงสุด', [['sec', 'ทุกกี่วินาที', 5, 1, 60, 'วิ'], ['pct', 'ฟื้น', 10, 0, 100, '%']]),
+  spec('regen', 'heal', 'team', 'ฮีลตัวในขอบเขต ทุก x วิ', 'ทุก {sec} วิ → {who} ฟื้น HP {pct}% ของ HP สูงสุด', [['sec', 'ทุกกี่วินาที', 5, 1, 60, 'วิ'], ['pct', 'ฟื้น', 5, 0, 100, '%']]),
+  spec('armorShare', 'armor', 'one', 'ได้เกราะ → แบ่งให้เพื่อนเผ่า', 'เมื่อได้เกราะ → เพื่อนเผ่าเดียวกันสุ่ม {count} ตัว ได้เกราะ {pct}% ของที่ได้', [['pct', 'แบ่งให้', 50, 0, 300, '%'], ['count', 'กี่ตัว', 1, 1, 5, 'ตัว']]),
+  spec('hpToArmorHit', 'armor', 'one', 'แลก HP เป็นเกราะ/ฮิต', 'HP สูงสุด −{hpPct}% → เกราะ/ฮิต +{rate}% ของ HP ที่ลด', [['hpPct', 'HP ลด', 50, 0, 90, '%'], ['rate', 'ได้เกราะ/ฮิต', 2, 0, 100, '% ของ HP ที่ลด']]),
+  spec('link', 'survive', 'one', 'คู่รับดาเมจแทน', 'เมื่อโดนดาเมจ → คู่ที่เลือกรับแทน {pct}%', [['pct', 'รับแทน', 50, 1, 100, '%']]),
   // อื่นๆ
-  spec('permUp', 'other', 'one', 'ค่าถาวร +', 'ค่าถาวรที่ได้ +{permPct}%', [['permPct', 'ค่าถาวร', 50, 0, 300, '%']]),
-  spec('scout', 'other', 'team', 'ส่องทีมศัตรู', 'ก่อนสู้เห็นทีมศัตรูเป็นบอร์ดย่อ (ตำแหน่ง เลเวล และรูนของศัตรู) · แตะรูนนี้เพื่อดู (ไม่มีรูนนี้ = ไม่เห็นอะไรเลย)'),
+  spec('permUp', 'other', 'one', 'ค่าถาวร +', 'ค่าถาวรที่ตัวที่ใส่ได้ +{permPct}%', [['permPct', 'ค่าถาวร', 50, 0, 300, '%']]),
+  spec('scout', 'other', 'team', 'ส่องทีมศัตรู', 'ก่อนสู้ แตะรูนนี้ → ดูทีมศัตรู (ตำแหน่ง เลเวล รูน)'),
 ];
+// Set 145 (user 8 Nov): extra explanation shown only in the Balance Room (RUNE_TEXT.full), like skill text notes
+const RUNE_NOTE = { interest: 'นับเงินที่เหลือก่อนรับรายได้ · ได้ตอนร้านเปิด', shopSlots: 'รวมทุกรูนไม่เกิน 3', heartTrade: 'รูนยังอยู่หลังใช้', lure: 'เทียบกับตัวระดับเดียวกัน · ใส่บนม้านั่งก็ได้', fastMerge: 'ปกติ 3 · ใส่บนม้านั่งก็ได้', shadow: 'ม้านั่งเต็ม = ไม่ได้', addTribe: 'นับเป็นเผ่าจริง ทั้งโบนัสเผ่าและสกิลที่เล็งเผ่า', flag: 'เลือกเผ่าจากตัวบนบอร์ดตอนได้รูน แต่ละอันเลือกเอง', allyDownDmg: 'ตั้งแต่เพื่อนตัวแรกล้มจนจบแมตช์ · ไม่ซ้อนตามจำนวนที่ล้ม', bossDmg: 'รวมช็อต ไม่นับไฟ', growth: 'แพ้แล้วนับใหม่ · หลายอัน = คูณทั้งค่าต่อแมตช์และเพดาน', buddy: 'ทุกฮิต · % ของพลังโจมตีคู่ · ฮิตที่พาไปไม่พาต่อ', taunt: 'บอสก็ถูกดึง · หลายตัวมีรูนนี้ = ตัวหน้าสุดก่อน', avoidDeath: 'ยกเลิกดาเมจ ไฟ ช็อตของฮิตนั้น · ไม่กันไฟที่ติดอยู่แล้ว', freeze: 'มึนงง = หยุดนับคูลดาวน์', regenLow: 'ทั้งทีมใช้ร่วมกัน 1 อัน', armorShare: 'เกราะที่แบ่งไปไม่ทำให้รูนทำงานซ้ำ', hpToArmorHit: 'ปัดลง', link: 'รวมไฟ/ช็อต · รับแทนต่อไม่ได้', scout: 'ไม่มีรูนนี้ = ไม่เห็นทีมศัตรู' };
 export const RUNE_SPEC = Object.fromEntries(RUNE_SPECIAL.map(s => [s.key, s]));
 // Effect kinds: stat (RUNE_EFFECTS, flat/% + value) · special (RUNE_SPECIAL, own fields) · 'skill' (one battle skill, Q1 A)
 export const runeKind = eff => eff === 'skill' ? 'skill' : RUNE_EFF[eff] ? 'stat' : RUNE_SPEC[eff] ? 'special' : '';
@@ -129,16 +131,29 @@ const RUNE_OLD_V = { T5: 'dmgPct', T6: 'armorPct', T7: 'cdPct', U3: 'cdPct', U5:
 export const runeSkillOk = s => !!s && BATTLE_WHEN.includes(s.when) && !!DO_INFO[s.do] && !DO_INFO[s.do].shop && !DO_INFO[s.do].of && s.do !== 'summon' && s.to !== 'allyAt' && skillTargets(s.when, s.do).includes(s.to);
 export const runeScopeLabel = x => x.scope === 'tribe' ? `เผ่า${x.tribe}` : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1];
 // Effect text of a rune record (skill runes: the page writes the skill line)
-export function runeText(x) {
-  const k = runeKind(x.eff);
+// Set 145 (user 8 Nov): same method as skill text — `<who>: <effect>` or `<when> → <who> <effect>`, the words skillLine uses,
+// game short · Balance Room sets RUNE_TEXT.full = true → explanation in (...). Text must match the engine (runes.js / battle.js / shop.js).
+export const RUNE_TEXT = { full: false };
+const RUNE_WHO = { one: 'ตัวที่ใส่', team: 'ทั้งทีม', enemy: 'ศัตรูทุกตัว' };
+export const runeWho = x => RUNE_WHO[x.scope] || runeScopeLabel(x);
+const RUNE_STAT_TH = { atk: 'พลังโจมตี +', hp: 'HP สูงสุด +', armor: 'ได้เกราะ', armorHit: 'เกราะ/ฮิต +', cd: 'คูลดาวน์ −', burn: 'ไฟต่อฮิต +', shock: 'ช็อตต่อฮิต +',
+  multi: 'มัลติฮิต +', healHit: 'ฟื้น/ฮิต +', hitDmg: 'ดาเมจตีที่ทำ +', burnAmp: 'ไฟที่ทำให้ติด +', shockAmp: 'ดาเมจช็อตที่ทำ +', armorAmp: 'เกราะที่ได้รับ +',
+  healAmp: 'ฟื้น HP ที่ได้รับ +', eCd: 'คูลดาวน์ช้าลง +', eMaxHp: 'HP สูงสุด −', eBurn: 'ติดไฟ', eShock: 'ติดช็อต', eDmgTaken: 'ดาเมจตีที่โดน +',
+  eHealCut: 'ฟื้น HP ที่ได้รับ −', eArmorCut: 'เกราะที่ได้รับ −' };
+export function runeText(x, full = RUNE_TEXT.full) {
+  const k = runeKind(x.eff), who = runeWho(x), note = n => (full && n ? ` (${n})` : '');
   if (k === 'special') {
-    const s = RUNE_SPEC[x.eff], t = s.text.replace(/\{(\w+)\}/g, (_, q) => String(x[q]));
-    return x.scope !== s.scope ? `${runeScopeLabel(x)}: ${t}` : t;
+    const s = RUNE_SPEC[x.eff];
+    const tierCap = x.eff === 'flag' && x.maxTier < RULES.tribeSteps.length ? ` (ไม่เกินขั้น ${x.maxTier})` : ''; // tribes have tribeSteps.length tiers → a higher cap does nothing
+    const t = s.text.replace(/\{(\w+)\}/g, (_, q) => q === 'who' ? who : q === 'tierCap' ? tierCap : String(x[q]));
+    return (x.scope !== s.scope && !s.text.includes('{who}') ? `${who}: ${t}` : t) + note(RUNE_NOTE[x.eff]);
   }
   if (k !== 'stat') return '';
-  const e = RUNE_EFF[x.eff];
-  const unit = x.mode === 'pct' ? (e[0] === 'armor' ? '% ของ HP สูงสุด' : '%') : e[5] === 'ms' ? ' มิลลิวินาที' : '';
-  return `${runeScopeLabel(x)}: ${e[1]}${e[0] === 'lifesteal' ? ' ' : ''}${x.v}${unit}`;
+  const nm = RUNE_STAT_TH[x.eff] || RUNE_EFF[x.eff][1];
+  let v = x.mode === 'flat' && x.eff === 'cd' ? `${x.v / 1000} วิ` : `${x.v}${x.mode === 'pct' ? '%' : ''}`;
+  if (x.eff === 'armor' && x.mode === 'pct') v += ' ของ HP สูงสุด';
+  if (x.eff === 'lifesteal') return `เมื่อตีโดน → ${who} ดูดเลือด ${v} ของดาเมจฮิตนั้น (รวมช็อตที่แตก)${note('ไม่นับไฟ')}`; // dealt = hit + popped shock (battle.js strike)
+  return `${who}: ${nm}${/[+−]$/.test(nm) ? '' : ' '}${v}`;
 }
 // Values an effect starts with when picked (ค่าเสนอ)
 function runeEffDefaults(eff) {
