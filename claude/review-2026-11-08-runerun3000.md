@@ -94,3 +94,15 @@ Check (2) first with a quick test: win % vs equal-power foes split by player Lv3
   (H2: ws 2 = +10, 3 = +20 …) · no cap (I3) · boss wins count, any loss resets, bosses themselves not scaled (J1) ·
   K2 = real bot teams only (no hp/atk add) → tops out at the strongest team in reach · M1 all bot-team matches (main + extra).
 - L3 add a 4th bot tier "very strong" (top real boards from the sim) so the streak has stronger real teams to reach.
+
+## Set 141 results (bossrun no --write, 600 runs, real-run teams) — NOTHING written to core/stage-user.js
+- Round 1 (scale only): every boss hits 60/50/45 (±3) · old bossrun skipped k3 since set 108 (bossesPerRun gone) → k3 was 63–83%.
+  Proposed: B1 hp 890 atk 36 ph 48/69 m10 2.37 e83 · B2 630/48 63/89 2.64 e101 · B3 400/56 72/101 2.27 e89 · B4 480/42 64/94 2.76 e101 ·
+  B5 400/26 33/42 2.50 e93 · B6 450/41 60/89 2.76 e93 (log: lab/bossrun.mjs 600 60 50 45, set 141 branch).
+- C (resisted tribe ≈ target−20): k1 resisted B1 เหล็กกล้า 20 · B2 ภูติ 21 · B3 อสูร 31 · B4 สายฟ้า 10 · B5 วายุ 35 · B6 เพลิงเผา 20.
+  Cause check: B2/B3/B5 tribeResist · B4 shockImmune (+tribeResist: both off 63%) · B6 burnImmune · B1 neither armorCut nor tribeResist (suspect reflect / noArmor).
+- Round 2 (N1, scale the cause rule): only B3 works (tribeResist 30→13 → 39%); B1/B2/B4/B6 hit floor 1 (rule erased) and still miss → rejected.
+- User (Q1, R2): redesign boss rules so the countered tribe keeps a way to win, write boss values TOGETHER with the new rules (next set):
+  B4 กระจก = overload (stores blocked shock; past a threshold it shocks/stuns itself) · B6 = same with burn · B1 = shell break
+  (hit X times → armorCut/reflect pause for N s, then return; find the real B1 cause first) · B2 = immunity that wears down per block ·
+  B3 = tribeResist 13. New rules = new BOSS_RULES entries (numbers = ค่าเสนอ, ask user) → bossrun searches the new rule's value per boss.
