@@ -39,3 +39,8 @@ V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked 
 ## Platform (decided 27 Oct)
 - Move code/docs to GitHub: done 27 Oct · Jules part cancelled by user 28 Oct
 - GitHub Action running build + tests automatically: DONE 28 Oct (`.github/workflows/tests.yml`, runs on every push; ui_smoke/measure stay local)
+
+## Hard tasks to retry with a new model (set 150, habit 6)
+- When a new Claude model comes out, pick the hardest item here and retry it; add any task Claude tried and could not finish.
+- Boss resisted-tribe win % ≈ 40 target (set 149: B1 29 · B2 36 · B4 24) — find a fix that keeps k1 all-tribe ≤ 60.
+- Match/run pacing "longer you play, longer you survive" (see Gameplay / pacing) — no solution found yet.
