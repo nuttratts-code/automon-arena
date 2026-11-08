@@ -38,6 +38,8 @@ const same = (a, b) => canon(a) === canon(b);
 const fmt = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toString();
 
 // ชื่อไทยของสกิล (WHEN_TH, DO_TH, TO_TH, skillLine) มาจาก game/labels.js
+// ชุด 141: ห้องบาลานซ์แสดงข้อความสกิลแบบสั้น + คำอธิบายที่ตัดออกใน (...) (เกมใช้แบบสั้นล้วน)
+SKILL_TEXT.full = true;
 const TB_STYLE = {
   'เหล็กกล้า': ['var(--t-steel)', 'square'], 'เพลิงเผา': ['var(--t-fire)', 'triangle'], 'สายฟ้า': ['var(--t-bolt)', 'diamond'],
   'วายุ': ['var(--t-wind)', 'circle'], 'ภูติ': ['var(--t-spirit)', 'hexagon'], 'อสูร': ['var(--t-fiend)', 'pentagon'],
