@@ -502,6 +502,37 @@ export const TESTS_BOSS = [
     const wy = bossFight([hitter('H', 100, 'allEnemies', { tribe: 'วายุ' })], [u('H', 0, 0)], b);
     eq(sumDmg(wy, bossUid(wy)), 100, 'วายุ 100 เท่าเดิม');
   }],
+  ['บอส R40 โอเวอร์โหลด (ชุด 142): ไฟ/ช็อตที่กันไว้สะสม ครบขีด → ติดบอสทั้งหมด แล้วนับใหม่', () => {
+    const st = (kind, v) => mk('S', { atk: L3(0), cdMs: L3(1000), hp: L3(50000), skills: [{ when: 'hit', do: kind, to: 'target', v: L3(v) }] });
+    const got = (r, kind) => ev(r, kind, e => e.to === bossUid(r)).map(e => e.amount);
+    const f = (kind, rules) => bossFight([st(kind, 10)], [u('S', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, rules)] }), { detail: true, rules: { ...BR_RULES, hardStopMs: 4500 } });
+    // shock 10 per hit · immune 100% · overload 25 → hits 1–2 store 20, hit 3 stores 30 ≥ 25 → 30 lands · hit 4 stores 10
+    const sh = f('shock', [rl('shockImmune', 100), rl('shockOverload', 25)]);
+    eq(got(sh, 'shock'), [30], 'ช็อต: ฮิต 3 ครบขีด 25 → ติด 30 ครั้งเดียว');
+    eq(ev(sh, 'overload').map(e => [e.kind, e.amount]), [['shock', 30]], 'มีเหตุการณ์ overload');
+    // burn immune 50% · 10 → 5 lands, 5 stored per hit · overload 10 → hit 2: 5 + 10 stored = 15
+    eq(got(f('burn', [rl('burnImmune', 50), rl('burnOverload', 10)]), 'burn').slice(0, 2), [5, 15], 'ไฟ: กัน 50% ฮิต 2 ครบขีด → 5 + ที่เก็บ 10');
+    eq(got(f('shock', [rl('shockImmune', 100)]), 'shock'), [], 'ไม่มีโอเวอร์โหลด = กันหมดเหมือนเดิม');
+  }],
+  ['บอส R41 ต้านค่อยๆ หมด (ชุด 142): ทุกฮิตปกติของเผ่าที่ต้าน ค่าต้านลด · ไม่ฟื้นข้ามเฟส', () => {
+    const h = mk('H', { atk: L3(100), cdMs: L3(1000), hp: L3(50000) });
+    const r = bossFight([h], [u('H', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('tribeResist', 50, null, 'เหล็กกล้า'), rl('resistWear', 20)])] }), { rules: { ...BR_RULES, hardStopMs: 4500 } });
+    eq(ev(r, 'dmg', e => e.to === bossUid(r) && e.why === 'hit').map(e => e.amount), [50, 70, 90, 100], 'ต้าน 50 → 30 → 10 → 0');
+    const two = bossFight([h], [u('H', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 1000, phases: [ph(0, [rl('tribeResist', 50, null, 'เหล็กกล้า'), rl('resistWear', 25)]), ph(1, [rl('tribeResist', 50, null, 'เหล็กกล้า')])] }), { rules: { ...BR_RULES, hardStopMs: 4500 } });
+    eq(ev(two, 'dmg', e => e.to === bossUid(two) && e.why === 'hit').map(e => e.amount).slice(0, 4), [50, 75, 75, 100], 'ฮิต 3 ชนเพดานแถบ (75) → เฟส 2 ไม่มีกฎนี้ ค่าต้านที่หมดไปไม่ฟื้น (100)');
+  }],
+  ['บอส R42 เปลือกแตก (ชุด 142): ตีปกติครบ X ฮิต → ปิดสะท้อน/ลดเกราะ N วิ แล้วกลับมา', () => {
+    const h = mk('H', { atk: L3(100), cdMs: L3(1000), hp: L3(50000) });
+    const r = bossFight([h], [u('H', 0, 0)], boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('reflect', 10), rl('shellBreak', 2, 2)])] }), { detail: true, rules: { ...BR_RULES, hardStopMs: 6500 } });
+    const hu = r.events[0].units.find(x => x.side === 0).uid;
+    // hits at 1 2 3 4 5 6 s · hit 2 breaks (until 4 s, the breaking hit itself is not reflected) → hit 3 no reflect · hit 4 + 5 count → 5 breaks again → 6 no reflect
+    eq(ev(r, 'dmg', e => e.to === hu && e.why === 'reflect').map(e => e.t), [1000, 4000], 'สะท้อนเฉพาะตอนเปลือกไม่แตก');
+    eq(ev(r, 'shellBreak').map(e => e.t), [2000, 5000], 'แตกที่ฮิต 2 และ 5');
+    const b = boss({ atk: 0, cdMs: NEVER, hp: 100000, phases: [ph(0, [rl('noArmor'), rl('shellBreak', 1, 3)])] });
+    const ar = mk('A', { atk: L3(10), cdMs: L3(1000), hp: L3(50000), armorHit: L3(5) });
+    const ra = bossFight([ar], [u('A', 0, 0)], b, { rules: { ...BR_RULES, hardStopMs: 1500 } });
+    ok(ev(ra, 'armor', e => e.to === ra.events[0].units.find(x => x.side === 0).uid).length === 1, 'เปลือกแตกแล้ว ห้ามได้เกราะปิด → ได้เกราะ/ฮิต');
+  }],
   ['บอส R29 สาป: ทีมตีบอสไม่ถึงเป้าใน 5 วิ = ตัวที่ถูกสาป down · ถึงเป้า = รอด', () => {
     const b = boss({ atk: 0, cdMs: NEVER, hp: 100000, bars: 100, phases: [ph(0, [rl('curse', 5, 10)])] }); // แถบละ 1000 · เป้า 10% = 100
     const weak = bossFight([mk('K', { atk: L3(10), cdMs: L3(1000), hp: L3(5000) })], [u('K', 0, 0)], b);

@@ -7,7 +7,7 @@ import { incomeOf, newRun, startRound, reroll, sell, move, merge, applyBattlePer
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickFoe, foeWantPct, foeFloorPct } from '../core/botteams.js';
+import { pickFoe, foeWantPct, foeFloorPct, foeWsPct } from '../core/botteams.js';
 import { teamPower } from '../core/power.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest, rnUnworn, rnWear } from '../core/runrunes.js';
@@ -72,8 +72,17 @@ export const TESTS_RUNRUN = [
     eq(JSON.stringify(a), JSON.stringify(b), 'deterministic');
     const pow = f => teamPower(rnFoeScale(buildTeam(f.team, cm), f.pct)); // round 0: no late growth
     ok(Math.abs(pow(a) / pw2 - 1) < 0.3, `enemy ≈ my power (${(pow(a) / pw2).toFixed(2)})`);
-    eq(JSON.stringify(c.team), JSON.stringify(a.team), 'extra = same team pick'); eq(c.pct, 120, 'extra scaled +20%');
+    eq(c.pct, 120, 'extra scaled +20%'); eq(RUN_STAGE.settings.foeBaseExtra, 120, 'set 141 user E2: extra pick ×120');
+    const pc = c.round, pa = a.round; ok(BOT_TEAMS.rounds.flat().find(t => JSON.stringify(t.team) === JSON.stringify(c.team)).pw >= BOT_TEAMS.rounds.flat().find(t => JSON.stringify(t.team) === JSON.stringify(a.team)).pw * 0.9 || pc >= pa, 'extra pick not weaker');
     ok(Array.isArray(a.rn) && BOT_TEAMS.rounds.some(l => l.some(t => t.rn.length)), 'bot teams carry runes');
+  }],
+  ['set 141: win streak (user G1 H2 I3 J1 K2) — wanted power +10% per win from 2 in a row, no cap, real teams only (pct stays 100)', () => {
+    eq(foeWsPct(0), 100, '0 wins'); eq(foeWsPct(1), 100, '1 win'); eq(foeWsPct(2), 110, '2 in a row +10'); eq(foeWsPct(3), 120, '3 +20'); eq(foeWsPct(12), 210, 'no cap');
+    const R = 9, me = buildTeam(BOT_TEAMS.rounds[R - 1][0].team, cm);
+    const pw = f => BOT_TEAMS.rounds.flat().find(t => JSON.stringify(t.team) === JSON.stringify(f.team)).pw;
+    const f0 = pickFoe(BOT_TEAMS, me, R, 31, false), f6 = pickFoe(BOT_TEAMS, me, R, 31, false, RUN_STAGE, RULES, 0, 6);
+    eq(f6.pct, 100, 'never scaled (real team)'); eq(f6.wsp, 150, 'ws 6 → +50%'); ok(pw(f6) > pw(f0), `streak picks a stronger real team (${pw(f0)} → ${pw(f6)})`);
+    ok(BOT_TEAMS.rounds.every(l => l.filter(t => t.tier === 'แรงมาก').length === 4), 'user L3: 4 แรงมาก teams per round');
   }],
   ['set 119: heart trade X8 = 25 gold flat, once per copy (rune stays held) · second chance offer = legend cards, no reroll', () => {
     const P = fresh(51); give(P, 'X8', 2);
@@ -134,7 +143,7 @@ export const TESTS_RUNRUN = [
     eq(pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false).team, f1.team, 'board change → same enemy (locked power)');
     ok(pickFoe(BOT_TEAMS, 0, 1, 5, false).team.length > 0, 'power 0 → median of the round cell');
     // set 127 (R1 C): floor = round median × foeFloor % · weak board meets ≥ median-ish teams · strong board unchanged · 0 = off
-    const R7 = 7, med7 = (() => { const w = BOT_TEAMS.rounds[R7 - 1].map(t => t.pw).sort((a, b) => a - b); return w[w.length >> 1]; })();
+    const R7 = 7, med7 = (() => { const w = BOT_TEAMS.rounds[R7 - 1].filter(t => t.tier !== 'แรงมาก').map(t => t.pw).sort((a, b) => a - b); return w[w.length >> 1]; })();
     const st0 = s => ({ ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: s } });
     const weakOn = pickFoe(BOT_TEAMS, 1, R7, 9, false, st0(100)), weakOff = pickFoe(BOT_TEAMS, 1, R7, 9, false, st0(0));
     eq(weakOn.floor, Math.round(med7), 'floor = median'); eq(weakOff.floor, 0, 'floor off');

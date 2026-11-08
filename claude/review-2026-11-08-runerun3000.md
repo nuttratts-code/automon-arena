@@ -83,3 +83,36 @@ Options (next chat, numbers = user's call): E1 (rec) extra matches get harder pe
 round (e.g. r11 +20, r15 +40, r19 +60) · E2 foeBase > 100 only in extra matches · E3 lock power at shop END
 (CONFLICTS with set 128 X9 A "lock at shop start, for everyone" → must ask user) · E4 keep (extra = reward for strong boards).
 Check (2) first with a quick test: win % vs equal-power foes split by player Lv3 count.
+
+## Set 141 decisions (user, 8 Nov) — cfgdiff rev 34 = MATCH (claude/review-2026-11-08-cfgdiff.md)
+- A1 bossrun on real-run teams (runes both sides, pickFoe) · B1 every boss same target per k (band ≈ ±5) · D1 re-measure after.
+- F targets: k1 60 · k2 50 · k3 45.
+- C (user's own rule, all k): per boss, favoured tribe (boss tribeWeak) wins > target+10 · resisted tribe (boss tribeResist) ≈ target−20 ·
+  measured per tribe, a team counts as tribe X only when ≥ 4 of 6 units are X (4/2). Find cause in code first (B4 vs สายฟ้า 8%).
+- E2 extra matches: new setting "pick power ×" for extra matches = 120% (ค่าเสนอ) · foeExtraPct 20 kept.
+- NEW (conflicts set 119 "no win streak", user confirmed G1): win streak raises foe pick target +10% per win from 2 wins in a row
+  (H2: ws 2 = +10, 3 = +20 …) · no cap (I3) · boss wins count, any loss resets, bosses themselves not scaled (J1) ·
+  K2 = real bot teams only (no hp/atk add) → tops out at the strongest team in reach · M1 all bot-team matches (main + extra).
+- L3 add a 4th bot tier "very strong" (top real boards from the sim) so the streak has stronger real teams to reach.
+
+## Set 141 results (bossrun no --write, 600 runs, real-run teams) — NOTHING written to core/stage-user.js
+- Round 1 (scale only): every boss hits 60/50/45 (±3) · old bossrun skipped k3 since set 108 (bossesPerRun gone) → k3 was 63–83%.
+  Proposed: B1 hp 890 atk 36 ph 48/69 m10 2.37 e83 · B2 630/48 63/89 2.64 e101 · B3 400/56 72/101 2.27 e89 · B4 480/42 64/94 2.76 e101 ·
+  B5 400/26 33/42 2.50 e93 · B6 450/41 60/89 2.76 e93 (log: lab/bossrun.mjs 600 60 50 45, set 141 branch).
+- C (resisted tribe ≈ target−20): k1 resisted B1 เหล็กกล้า 20 · B2 ภูติ 21 · B3 อสูร 31 · B4 สายฟ้า 10 · B5 วายุ 35 · B6 เพลิงเผา 20.
+  Cause check: B2/B3/B5 tribeResist · B4 shockImmune (+tribeResist: both off 63%) · B6 burnImmune · B1 neither armorCut nor tribeResist (suspect reflect / noArmor).
+- Round 2 (N1, scale the cause rule): only B3 works (tribeResist 30→13 → 39%); B1/B2/B4/B6 hit floor 1 (rule erased) and still miss → rejected.
+- User (Q1, R2): redesign boss rules so the countered tribe keeps a way to win, write boss values TOGETHER with the new rules (next set):
+  B4 กระจก = overload (stores blocked shock; past a threshold it shocks/stuns itself) · B6 = same with burn · B1 = shell break
+  (hit X times → armorCut/reflect pause for N s, then return; find the real B1 cause first) · B2 = immunity that wears down per block ·
+  B3 = tribeResist 13. New rules = new BOSS_RULES entries (numbers = ค่าเสนอ, ask user) → bossrun searches the new rule's value per boss.
+
+## Set 142 (8 Nov) — new boss rules + boss values written (branch claude/eloquent-tesla-nm1ia5)
+- B1 cause (600 runs, k1, rule off one at a time): armorCut + noArmor (เหล็กกล้า 23 → 53) · reflect +17 · boss armor fx +34 (hits every tribe).
+- User picks: A1 overload = stored blocked burn/shock lands on the boss at the threshold · B1 shell break turns off armorCut/noArmor/reflect · C1 resist wear kept across phases · D1 shell 3 s.
+- Code: R40 burnOverload / shockOverload · R41 resistWear · R42 shellBreak (core/battle.js, core/stage.js, labels, tests t-boss) · combat-rules V5.1.
+- Round 1 (search new rule only): B1/B2/B4 hit the edge (rule erased) · after the rescale the real causes were B1 enrage (เหล็กกล้า 27 → 53 off), B4 tribeResist + fastAtk.
+- Round 2 (E1 F1 H1 G1) and round 3 (knob list, user: "tune freely") → hitting 40 needed rules ≈ erased, B4 still 21 → user J2: floors (half old value, tribeResist ≥ 10, new rules fixed H1).
+- Written (J2): B1 tribeResist 15 enrage 3/3/4 shellBreak 5/3 · B2 tribeResist 15 resistWear 2 · B3 tribeResist 13 · B4 tribeResist 10 fastAtk(ph3) 15 shockOverload 20 · B6 burnOverload 10 · B5 untouched · hp/atk/mult10/endlessPct rescaled.
+- bossrun k1 resisted: B1 27 · B2 33 · B3 39 · B4 19 · B5 35 · B6 44 (want ≈ 40) · favoured k1 76–93 ✓.
+- runerun 3000: boss k1 60.8 · k2 50.7 · k3 49.5 · normal rounds 46.2% · run cleared 14.7%.

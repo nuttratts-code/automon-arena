@@ -288,6 +288,11 @@ export const BOSS_RULES = [
   ['barBlast', 'R38 แถบหาย 1 แถบ บอสระเบิดใส่ผู้เล่นทุกตัว', 20, 1, 10000, 'ดาเมจ'],
   // Set 77 (user 4 Nov): number ค่าเสนอ
   ['downAtk', 'R39 ผู้เล่นเลือดหมด 1 ครั้ง บอสตีแรงขึ้นจนจบแมตช์ (% ของพลังโจมตีบอส · นับแม้ถูกชุบทันที)', 10, 1, 500, '%'],
+  // Set 142 (user Q1 A1 B1 C1 D1): counterplay so the tribe a boss resists keeps a way to win · main value ค่าเสนอ (bossrun searches it per boss)
+  ['burnOverload', 'R40 โอเวอร์โหลดไฟ: ไฟที่บอสกันได้ (R24) สะสมครบเท่านี้ → ติดบอสทั้งหมดทะลุการกัน แล้วเริ่มนับใหม่', 30, 1, 100000, 'ไฟ'],
+  ['shockOverload', 'R40 โอเวอร์โหลดช็อต: ช็อตที่บอสกันได้ (R24) สะสมครบเท่านี้ → ติดบอสทั้งหมดทะลุการกัน แล้วเริ่มนับใหม่', 30, 1, 100000, 'ช็อต'],
+  ['resistWear', 'R41 ต้านเผ่าค่อยๆ หมด: ฮิตปกติของเผ่าที่บอสต้าน (R25) ลดค่าต้านลงฮิตละ (ไม่ต่ำกว่า 0 · ไม่ฟื้นข้ามเฟส)', 1, 0.01, 100, '%'],
+  ['shellBreak', 'R42 เปลือกแตก: ผู้เล่นตีปกติโดนบอสครบ X ฮิต → ปิดลดเกราะ / ห้ามได้เกราะ / สะท้อน ชั่วคราว', 10, 1, 1000, 'ฮิต', ['แตกนาน', 3, 1, 60, 'วิ']],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
@@ -307,7 +312,7 @@ export const BOSS_RULE_GROUPS = [
   ['🎯 เลือกเป้า / ตีหลายตัว', ['aoe', 'hunter', 'backStrike', 'execute']],
   ['⏱️ ทำเป็นจังหวะ ทุก X วิ', ['burnAura', 'shockAura', 'randomSilence', 'freezeRow', 'stunPulse', 'atkDrain', 'cdPulse']],
   ['⬇️ ผู้เล่นอ่อนลงตลอดเฟส', ['backSilence', 'healCut', 'armorCut', 'cdSlow', 'tribeOff', 'noArmor', 'frontBreak', 'noRevive']],
-  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'burnImmune', 'shockImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse']],
+  ['🛡️ บอสป้องกันตัว', ['hitCap', 'minHit', 'burnImmune', 'shockImmune', 'tribeWeak', 'tribeResist', 'frontOnly', 'backOnly', 'vanish', 'armorGrow', 'shieldPulse', 'cleansePulse', 'burnOverload', 'shockOverload', 'resistWear', 'shellBreak']],
   ['❤️ บอสฟื้นเลือด', ['lifesteal', 'regen', 'feedOnDown']],
   ['↩️ ตอบโต้', ['reflect', 'thorns', 'barBlast']],
   ['🌀 เปลี่ยนสนาม', ['rowSwap', 'earlyStorm']],
@@ -398,6 +403,12 @@ export const STAGE_SETTINGS = [
   // set 119 (user 7 Nov): enemy = a REAL bot team (pre-generated pool), never scaled in the normal run · picked as the team whose power is
   // closest to player board power × foeBase % (nearby rounds) · no win-streak bonus (set 107 power-follow scaling + streak removed)
   ['foeBase', 'ศัตรู: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 100, 10, 400, '%'],
+  // set 141 (user E2): extra matches pick with foeBaseExtra % instead of foeBase · ค่าเสนอ
+  ['foeBaseExtra', 'แมตช์พิเศษ: เลือกทีมบอทจริงที่พลังใกล้ทีมคุณ ×', 120, 10, 400, '%'],
+  // set 141 (user G1 H2 I3 J1 K2 M1 — replaces set 119 "no win streak"): from foeWsFrom wins in a row (boss wins count, any loss resets)
+  // the wanted power grows foeWsStep % per win (2 wins +10, 3 +20 …) · no cap · real teams only (tops out at the strongest team in reach) · bosses not scaled
+  ['foeWsFrom', 'ศัตรู: ชนะติดกันกี่ครั้งจึงเริ่มเลือกทีมที่แรงขึ้น', 2, 1, 20, 'ครั้ง'],
+  ['foeWsStep', 'ศัตรู: ชนะติดกันแต่ละครั้ง เลือกทีมแรงขึ้นอีก (0 = ปิด)', 10, 0, 100, '%'],
   // set 127 (user R1 = C, review-2026-11-07-system-compare): floor on the wanted power = median power of the round's bot teams × foeFloor % (0 = off) · ค่าเสนอ
   ['foeFloor', 'ศัตรู: พลังขั้นต่ำ = ค่ากลางทีมบอทรอบนั้น × (0 = ปิด)', 100, 0, 200, '%'],
   // set 129 → set 132 (user 7 Nov): from foeFloorLs losses in a row (normal or boss) the floor drops foeFloorStep % per loss
