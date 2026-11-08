@@ -1,6 +1,6 @@
 # workflow · publish and test the pages
 
-V1.32 · 8 Nov 2026 (set 156: points to skill publish-pages) · V1.31 · 8 Nov 2026 (set 153: CI rule G1, gate text points to CLAUDE.md) · V1.30 · 8 Nov 2026 (set 152 workflow audit: §3 = Artifact tool procedure, CI check before publish) · V1.29 · 8 Nov 2026 (set 151 review: W1 false-FAIL rerun 9.3 · W10 bug test 9.1a) · V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
+V1.32 · 8 Nov 2026 (set 157: points to skill publish-pages) · V1.31 · 8 Nov 2026 (set 153: CI rule G1, gate text points to CLAUDE.md) · V1.30 · 8 Nov 2026 (set 152 workflow audit: §3 = Artifact tool procedure, CI check before publish) · V1.29 · 8 Nov 2026 (set 151 review: W1 false-FAIL rerun 9.3 · W10 bug test 9.1a) · V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
 
 Step-by-step runbook: skill `.claude/skills/publish-pages/SKILL.md` (set 155). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
