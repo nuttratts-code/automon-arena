@@ -319,3 +319,4 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .rank-tools { align-items: center; }
 @media (max-width: 520px) { .tbl-fix .rk-name { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; } }
 #runCards { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } /* set 138: 7 run cards fit one row on desktop */
+#anaRun th.sortable { cursor: pointer; user-select: none; } #anaRun th.sortable:hover { color: var(--accent); } #anaRun th.sortable:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; } /* set 138b */

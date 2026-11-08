@@ -17,7 +17,7 @@ async function runPlayAnalysis() {
     $('msg').textContent = `กำลังจำลอง ${n.toLocaleString()} รัน…`;
     const t0 = Date.now();
     anaPlayRun = await runPlayStats(clone(chars), rulesNow(), stageCfg, { n, opp, onProgress: x => { $('prog').style.width = `${x * 100}%`; $('msg').textContent = `กำลังจำลอง ${Math.round(x * n).toLocaleString()} / ${n.toLocaleString()} รัน…`; } });
-    renderPlayRun(); renderAnaMode();
+    renderPlayRun(); runSortAll(); renderAnaMode();
     $('msg').textContent = `จำลองรันเสร็จ · ${n.toLocaleString()} รัน · ${anaPlayRun.matches.toLocaleString()} แมตช์ · ${Math.round((Date.now() - t0) / 1000)} วิ`
       + (anaPlayRun.aborted ? ` · ⚠ ${anaPlayRun.aborted} แมตช์ผิดปกติ ถูกตัวตัดนิรภัยหยุด` : '');
   } catch (e) {
@@ -97,3 +97,33 @@ function renderPlayRun() {
     return tr;
   }) : [runEmptyRow(5)]));
 }
+// ---------- Set 138b (user 8 Nov): every รันจริง table sorts by any column · 1st tap = low → high (▲) · 2nd tap = high → low (▼) ----------
+// Sorts the rendered rows by the cell text (number = first number in the cell, rarity = rarity order, else text) · kept after a new run.
+const runSortState = {}; // tbody id → { col, dir }
+function runCellKey(cell) {
+  const t = cell.textContent.trim(), ri = RARITIES.indexOf(t);
+  if (ri >= 0) return ri;
+  if (t === '' || t === '–' || t === '-') return null;
+  const m = cell.classList.contains('n') && t.replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+  return m ? +m[0] : t; // text columns: Thai order with numbers compared as numbers (ครั้งที่ 2 < ครั้งที่ 10)
+}
+function runSortApply(body) {
+  const st = runSortState[body.id], ths = body.closest('table').querySelectorAll('thead th');
+  ths.forEach((th, i) => {
+    th.textContent = th.dataset.label + (st && st.col === i ? (st.dir > 0 ? ' ▲' : ' ▼') : '');
+    th.setAttribute('aria-sort', st && st.col === i ? (st.dir > 0 ? 'ascending' : 'descending') : 'none');
+  });
+  const rows = [...body.rows]; if (!st || rows.length < 2 || rows[0].cells.length <= st.col) return;
+  const key = r => runCellKey(r.cells[st.col]);
+  rows.sort((a, b) => { const x = key(a), y = key(b); if (x == null) return 1; if (y == null) return -1;
+    const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'th', { numeric: true }); return c * st.dir; });
+  body.append(...rows);
+}
+for (const body of $('anaRun').querySelectorAll('tbody[id]')) {
+  body.closest('table').querySelectorAll('thead th').forEach((th, i) => {
+    th.dataset.label = th.textContent; th.classList.add('sortable'); th.tabIndex = 0; th.title = 'แตะเพื่อเรียง น้อย → มาก · แตะอีกครั้ง มาก → น้อย';
+    const go = () => { const s = runSortState[body.id]; runSortState[body.id] = s && s.col === i ? { col: i, dir: -s.dir } : { col: i, dir: 1 }; runSortApply(body); };
+    th.addEventListener('click', go); th.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
+  });
+}
+const runSortAll = () => { $('runInfo').textContent += ' · แตะหัวคอลัมน์เพื่อเรียง น้อย → มาก (แตะอีกครั้ง = มาก → น้อย)'; for (const body of $('anaRun').querySelectorAll('tbody[id]')) runSortApply(body); };
