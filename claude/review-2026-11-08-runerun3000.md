@@ -43,3 +43,14 @@ Options (next chat, rides with A): B1 (rec) re-run fixed bossrun per boss on rea
 target at each k (spread ≈ noise, target band e.g. ±5 pts — user's call) · B2 keep some spread on purpose
 (easy/hard bosses as variety; user names which) · B3 tune only the outliers by hand.
 Need from user: which boss + ครั้งที่ is 49% and which is 79%.
+User data (3000 runs, all k1 round 5, ~470–540 matches each → real gaps):
+B4 กระจกสะท้อน 49.5% (bars 4.4/5, 63.8s; เหล็กกล้า 80% / สายฟ้า 8%) · B5 จ้าวพายุ 57.3% (อสูร 80 / วายุ 37) ·
+B6 ปีศาจเพลิง 71% (วายุ 96 / สายฟ้า 37) · B1 โกเลม 75% (สายฟ้า 98 / เหล็กกล้า 57) · B2 จอมเวทย์ดำ 79.8% (เพลิงเผา 93 / ภูติ 57) ·
+B3 อสุรกายคลั่ง 79.8% (ภูติ 97 / สายฟ้า 55). Mean ≈ 68.7% vs last bossrun target1 60 → k1 also ~9 pts too easy on average.
+Bars 4.4–4.8/5 everywhere → losing teams nearly finish the boss (close fights, small scale changes move win % a lot).
+
+## C. Tribe counter inside one boss (new, from B data)
+B4 สายฟ้า 8% vs เหล็กกล้า 80% = a lightning player almost always loses boss 1 when B4 is drawn (random draw, 1 in 6).
+Others: worst tribe 37–57%. Options: C1 (rec) cap: every tribe ≥ ~30% vs every boss at k1 (look at B4 rule vs shock/lightning
+first — find the cause in code before tuning, HARD RULE 5) · C2 keep counters as intended flavour (tell player the boss
+earlier = counter-play) · C3 only fix B4 สายฟ้า.
