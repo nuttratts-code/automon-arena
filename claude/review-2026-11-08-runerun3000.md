@@ -69,3 +69,17 @@ Readings (to verify next chat, not proven):
 Options (next chat): D1 (rec) after A/B retune, re-measure runerun 3000 and check boss rounds ≈ or below the bot rounds
 around them · D2 also look at r6–r8 / r11 difficulty (bot team power curve or foe-floor rule; ask user before touching) ·
 D3 page tweak: split main run vs extra matches per round so survivorship does not hide difficulty.
+
+## E. Rounds 17–19 too easy (user: "bots can't keep up?") — measured 8 Nov, scratch script (runerun flow, 300 runs seed 8800)
+Per round, bot-team matches: my power (locked at shop start, set 128 X9 A) vs picked foe team power:
+r16 my 298 / foe 365 (×1.22) win 40% · r17 347 / 340 (×0.98) 59% · r18 358 / 355 (×0.99) 49% · r19 383 / 414 (×1.08) 70%.
+Player power above the strongest bot team in reach: ≤ 4% of matches → the bot pool is NOT running out.
+r16+ = 100% extra matches (foe also +20% hp/atk, foeExtraPct). Small n here (27–68) — user's 3000 runs show r17 61 · r18 69 · r19 73.
+Conclusion: foe POWER keeps up; the high win % is not a missing-teams problem. Likely causes (unproven):
+(1) survivorship — only runs that cleared 10 wins (~11–17%) play r16+, i.e. the best boards;
+(2) power formula undervalues late boards (Lv3 / full tribe bonus / runes) so "equal power" ≠ equal strength;
+(3) power is locked at shop START — late shops add more (more gold, Lv3 merges) before the fight.
+Options (next chat, numbers = user's call): E1 (rec) extra matches get harder per round: foeExtraPct 20 → +X% more each extra
+round (e.g. r11 +20, r15 +40, r19 +60) · E2 foeBase > 100 only in extra matches · E3 lock power at shop END
+(CONFLICTS with set 128 X9 A "lock at shop start, for everyone" → must ask user) · E4 keep (extra = reward for strong boards).
+Check (2) first with a quick test: win % vs equal-power foes split by player Lv3 count.
