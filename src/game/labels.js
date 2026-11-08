@@ -1,5 +1,6 @@
 import { CTX_WHEN, DO_INFO, LEGACY_OF, RULES, SHARE_TO, SHOP_PAIR, WHEN_KIND, cleanTags } from '../core/rules.js';
 import { BOSS_RULES, BOSS_PHASE_FX } from '../core/stage.js';
+import { ROWS } from '../core/characters.js';
 // คำอธิบายภาษาไทยของสกิล (ใช้แสดงผลเท่านั้น) · ใช้ร่วมกันทุกหน้า
 
 export const WHEN_TH = {
@@ -173,26 +174,81 @@ export const STAT_TH = { atk: 'พลังโจมตี', armor: 'เกร�
 export const WHO_TH = { self: 'ตัวนี้ (ผู้ถือสกิล)', each: 'ตัวที่ได้รับผลเอง (คิดแยกทีละตัว)', ctx: 'เป้าหมาย / ผู้ตี', allEnemies: 'ศัตรูทุกตัวรวมกัน', allAllies: 'เพื่อนทุกตัวรวมกัน (รวมตัวเอง)', laneEnemies: 'ศัตรูเลนเดียวกันรวมกัน', rowEnemies: 'ศัตรูแถวเดียวกับตัวนี้รวมกัน (ทั้ง 2 เลน)', laneAllies: 'เพื่อนเลนเดียวกันรวมกัน (รวมตัวเอง)', rowAllies: 'เพื่อนแถวเดียวกันรวมกัน (รวมตัวเอง · ทั้ง 2 เลน)' };
 export const whoTh = (who, when) => (who === 'ctx' ? (CTX_WHEN[when] === 'attacker' ? 'ผู้ตี' : 'เป้าหมาย') : who === 'each' ? 'ตัวที่ได้รับผลเอง' : who === 'self' ? 'ตัวนี้' : WHO_TH[who] || who);
 export const isLegacyDo = d => Object.prototype.hasOwnProperty.call(LEGACY_OF, d);
-export function skillLine(s, level, withDur = false) {
-  if (!s) return '';
-  const [name, unit, dur0] = DO_TH[s.do] || [s.do, ''];
-  const dur = s.perm ? 'perm' : dur0;
-  // ค่าแต่ละเลเวลเขียนครั้งเดียวแล้วต่อหน่วยท้าย เช่น "20 / 30 / 40%" · สกิลเฉพาะเลเวลแสดงเฉพาะค่าของเลเวลนั้น
-  const vals = valsText(s, unit, level);
-  // คำว่า "ร้านค้า:" ไม่ซ้ำในประโยค เพราะแท็กหลักบอกแล้ว
-  const when = (WHEN_TH[s.when] || s.when).replace(/^(ร้านค้า|หลังสู้): /, '');
-  const extra = extraText(s);
-  const sep = name.endsWith('+') || name.endsWith('−') ? '' : ' ';
-  // ดาเมจจากสกิลที่ทำงานตอนตี: บอกชัดว่าเป็นดาเมจเพิ่ม บวกจากดาเมจตีปกติ
-  const onAttack = ['hit', 'set', 'hits3'].includes(s.when) && EXTRA_DMG.has(s.do);
-  const nm = onAttack ? name.replace(/^ดาเมจ/, '+ ดาเมจเพิ่ม') : name;
-  const nm2 = s.do === 'summon' && s.summon ? `${nm.replace(/ \(.*$/, '')} ${s.summon} (เลเวลเดียวกัน ช่องเดิม)` : nm;
-  // 22 ต.ค.: เขียน "เมื่อ → ทำอะไร · ใส่/ให้ ใคร" แยกกันชัด กันอ่านเป็น "โดนตีโดยศัตรูตรงหน้า"
-  const info = DO_INFO[s.do] || {}, foe = info.side === 'foe' || info.side === 'pick' || (info.side === 'foeSelf' && s.to !== 'self');
-  const ofTxt = info.of && s.of ? ` ของ${STAT_TH[s.of.stat] || s.of.stat} ของ${whoTh(s.of.who, s.when)}` : '';
-  const toTxt = info.side === 'self' ? '' : ` · ${foe ? 'ใส่' : 'ให้'} ${toTh(s)}`; // ผลของตัวเอง (ดูดเลือด ลุก ชุบ ฯลฯ) ไม่ต้องบอกผู้รับ
-  return `${when} → ${nm2}${unit === '-' ? '' : sep + vals}${ofTxt}${onAttack ? ' (บวกจากดาเมจตีปกติ)' : ''}${toTxt}${dur && withDur ? ` [${DUR_TH[dur]}]` : ''}${extra ? ` (${extra})` : ''}`;
+// ชุด 141 (8 พ.ย.): ข้อความสกิลแบบสั้น "เมื่อ… → ใคร ได้อะไร ค่า" · เกมใช้แบบสั้น
+// ห้องบาลานซ์ตั้ง SKILL_TEXT.full = true → คำอธิบายที่ตัดออกกลับมาอยู่ใน (...) · ข้อความสร้างจากข้อมูลสกิล (ไม่เขียนมือรายตัว)
+export const SKILL_TEXT = { full: false };
+export const WHEN_SHORT = {
+  passive: 'ติดตัว', matchStart: 'เมื่อเริ่มแมตช์', set: 'เมื่อโจมตี (ทุกชุด)', hit: 'เมื่อตีโดน', hits3: 'เมื่อตีโดนครบ 3 ฮิต',
+  hitTaken: 'เมื่อโดนตี', get lowHp() { return RULES.lowHpPct === 50 ? 'เมื่อ HP ต่ำกว่าครึ่ง (ครั้งแรก)' : `เมื่อ HP ต่ำกว่า ${RULES.lowHpPct}% (ครั้งแรก)`; },
+  armorBreak: 'เมื่อเกราะตัวเองแตก', selfDown: 'เมื่อล้ม', allyDown: 'เมื่อเพื่อนล้ม', enemyDown: 'เมื่อศัตรูล้ม', kill: 'เมื่อทำศัตรูล้ม',
+  buy: 'เมื่อซื้อตัวนี้', sell: 'เมื่อขายตัวนี้', merge: 'เมื่อรวมร่าง', matchEnd: 'เมื่อจบแมตช์', matchWin: 'เมื่อชนะแมตช์', shopStart: 'เมื่อเริ่มรอบร้าน',
+};
+export const WHEN_NOTE = { hit: 'ทุกฮิต', hitTaken: 'จากศัตรูตัวไหนก็ได้', hits3: 'ในชุดเดียว', matchEnd: 'แพ้หรือชนะ', shopStart: 'อยู่บนบอร์ด' };
+export const TO_SHORT = {
+  target: 'เป้า', attacker: 'ผู้ตี', enemyFront: 'ศัตรูตรงหน้า', enemyMidRow: 'ศัตรูแถวกลางเลนเดียวกัน', enemyBackRow: 'ศัตรูแถวหลังเลนเดียวกัน',
+  enemyLane: 'ศัตรูทั้งเลนเดียวกัน', enemyFrontRow: 'ศัตรูแถวหน้า (2 เลน)', backAlly: 'เพื่อนข้างหลัง', frontBackAlly: 'เพื่อนหน้า-หลัง',
+  backLaneAlly: 'เพื่อนข้างหลังเลนเดียวกัน', nextTribeBuy: 'ตัวเผ่าเดียวกันที่ซื้อถัดไป',
+};
+export const TO_NOTE = {
+  attacker: 'ตัวที่เพิ่งตีเรา', enemyFront: 'ตัวหน้าสุดในเลนเดียวกัน', enemyMidRow: 'ไม่มี = ไม่มีผล', enemyBackRow: 'ไม่มี = ไม่มีผล', enemyLane: 'เลนว่าง = ไม่มีผล',
+  backAlly: 'ช่องติดกัน', backLaneAlly: 'ตัวใกล้สุด ข้ามช่องว่าง · ไม่มี = ไม่มีผล', nextTribeBuy: 'รวมตัวเดียวกัน',
+};
+// ชื่อผลแบบสั้น: [ชื่อ, ต่อท้ายค่า, คำอธิบาย (แสดงเฉพาะห้องบาลานซ์), แบบประโยค] · แบบ 'verb' = "ชื่อใส่ใคร ค่า" · 'own' = ไม่บอกผู้รับ
+export const DO_SHORT = {
+  reflect: ['สะท้อนดาเมจ', ' ของที่โดน', '', 'verb'], reflectOf: ['สะท้อนดาเมจ', '', '', 'verb'], counter: ['สวนกลับ', '', '', 'verb'],
+  execute: ['ทำให้ล้มทันที', '', 'ไม่สนเกราะ'], selfKo: ['ล้มตัวเองทันที', ''], splitAll: ['ตีศัตรูทุกตัวพร้อมกัน แบ่งดาเมจเท่ากัน', '', 'เฉพาะชุดนั้น', 'own'],
+  stealShock: ['ดูดช็อต', ' จากเป้า มาเป็นช็อตต่อฮิตตัวเอง', '', 'own'], reviveDowned: ['ชุบเพื่อนที่ล้ม (สุ่ม)', ' ด้วย HP 20%'],
+  lifesteal: ['ดูดเลือด', ' ของดาเมจฮิตนั้น (รวมช็อตที่แตก)'], allyStrike: ['ตีเป้าเดียวกันอีก', ''], cleanse: ['ล้างไฟ ช็อต แช่แข็ง มึนงง', ''],
+};
+const parenSplit = x => { const m = /^(.*?)\s*\(([^()]*)\)$/.exec(x); return m ? [m[1], m[2]] : [x, '']; };
+const charNameTh = id => { const r = ROWS.find(q => q[0] === id); return r ? r[1] : id; };
+// ผู้รับแบบสั้น → [ข้อความ, คำอธิบาย] · "เผ่าเดียวกัน" ต่อท้ายชื่อผู้รับ (ไม่ใส่วงเล็บ) · ไม่มีคำนี้ = ได้ทุกเผ่า
+export function toShort(s) {
+  let t, note = TO_NOTE[s.to] || '';
+  if (s.to === 'allyAt' && s.at) t = s.at.row === 'any' && s.at.lane === 'both' ? 'เพื่อนทุกตัว' : `เพื่อน${AT_ROW_TH[s.at.row] || ''}${s.at.lane === 'both' ? ' (2 เลน)' : AT_LANE_TH[s.at.lane] || ''}`, note = s.at.row === 'any' && s.at.lane === 'both' ? 'ไม่รวมตัวเอง' : '';
+  else if (TO_SHORT[s.to]) t = TO_SHORT[s.to];
+  else { const [a, n] = parenSplit(TO_TH[s.to] || s.to); t = a; note = note || n; }
+  if (s.sameTribe) { const [a, n] = parenSplit(t); t = `${a}เผ่าเดียวกัน${n ? ` (${n})` : ''}`; }
+  if (s.skipSameId) t += ' (ไม่รวมตัวชนิดเดียวกัน)';
+  return [t, note];
 }
+const ofShort = (s, foe) => {
+  const st = STAT_TH[s.of.stat] || s.of.stat, w = s.of.who;
+  const who = w === 'self' ? 'ตัวเอง' : w === 'each' ? 'ตัวนั้นเอง' : w === 'ctx' ? whoTh(w, s.when) : parenSplit(WHO_TH[w] || w)[0];
+  return ` ของ${/^[A-Z]/.test(st) ? ' ' : ''}${st}${/^[A-Z]/.test(who) ? ' ' : ''}${who}`;
+};
+export function skillLine(s, level, withDur = false, full = SKILL_TEXT.full) {
+  if (!s) return '';
+  const [name0, unit, dur0] = DO_TH[s.do] || [s.do, ''];
+  const dur = s.perm ? 'perm' : dur0;
+  const vals = valsText(s, unit, level), V = unit === '-' ? '' : vals;
+  const note = n => (full && n ? ` (${n})` : '');
+  const info = DO_INFO[s.do] || {};
+  const own = info.side === 'self' || s.to === 'self' || !s.to;
+  const foe = info.side === 'foe' || info.side === 'pick' || (info.side === 'foeSelf' && s.to !== 'self');
+  const onAttack = ['hit', 'set', 'hits3'].includes(s.when) && EXTRA_DMG.has(s.do);
+  const when = (WHEN_SHORT[s.when] || (WHEN_TH[s.when] || s.when).replace(/^(ร้านค้า|หลังสู้): /, '')) + note(WHEN_NOTE[s.when]);
+  let [nm, tail, dnote, form] = DO_SHORT[s.do] || [parenSplit(name0)[0], '', parenSplit(name0)[1]];
+  if (s.do === 'summon' && s.summon) [nm, tail, dnote, form] = [`เรียก ${charNameTh(s.summon)} มาแทนที่ช่องเดิม (เลเวลเดียวกัน)`, '', '', 'own'];
+  if (foe && EXTRA_DMG.has(s.do)) nm = nm.replace(/^ดาเมจ/, onAttack ? 'โดนดาเมจเพิ่ม' : 'โดนดาเมจ');
+  const sep = /[+−]$/.test(nm) || !V ? '' : ' ';
+  const eff = `${nm}${sep}${V}${info.of && s.of ? ofShort(s, foe) : ''}${tail}${note(dnote)}${onAttack ? note('บวกจากดาเมจตีปกติ') : ''}`;
+  const [rc, rnote] = own || form === 'own' ? ['', ''] : toShort(s), R = rc + note(rnote);
+  let body;
+  if (s.do === 'shareArmor') body = `ได้เกราะเท่าไหร่ แบ่ง ${vals} ให้${R}`;
+  else if (!R) body = eff;
+  else if (form === 'verb') body = `${nm}ใส่${R}${V ? ' ' + V : ''}${info.of && s.of ? ofShort(s, foe) : ''}${tail}`;
+  else body = `${R} ${!foe && /\+$/.test(nm) ? 'ได้' : ''}${eff}`;
+  const durTxt = dur === 'perm' ? ` ถาวร${note('ตลอด run')}` : dur === 'match' && withDur && full ? ' (ระหว่างสู้)' : '';
+  const ex = [
+    s.cd ? `คูลดาวน์สกิล ${s.cd / 1000} วิ${s.cdGrow ? ` (ยาวขึ้น ${s.cdGrow}% ทุกครั้งที่ใช้)` : ''}` : '',
+    s.chance != null && s.chance < 100 ? `โอกาส ${s.chance}%` : '',
+    Array.isArray(s.lv) && s.lv.length < 3 ? lvShort(s.lv) : '',
+    full && s.perm && info.perm ? `ถาวร: ได้${GIVE_TH[permKeyOf(s)]} ทุกครั้งที่ทำงาน` : '',
+  ].filter(Boolean).join(' · ');
+  return `${when} → ${body}${durTxt}${ex ? ` (${ex})` : ''}`;
+}
+export const lvShort = lv => { const l = [...lv].sort(); return l.length === 1 ? `Lv${l[0]}` : l.length === 2 && l[1] - l[0] === 1 ? `Lv${l[0]}–${l[1]}` : `Lv${l.join('/')}`; };
 // ชุด 24: ประโยคสกิลแสดงค่าครบทุกเลเวล (เช่น 5 / 10 / 20) และทำตัวหนาเฉพาะค่าของเลเวลปัจจุบัน · สร้าง DOM ด้วย textContent เท่านั้น
 export function skillLineEl(s, level, withDur = false) {
   const span = document.createElement('span');
@@ -200,11 +256,11 @@ export function skillLineEl(s, level, withDur = false) {
   const unit = (DO_TH[s.do] || [s.do, ''])[1];
   const lvs = Array.isArray(s.lv) && s.lv.length ? [...s.lv].sort() : [1, 2, 3];
   const raw = lvs.map(l => s.v[l - 1]), all = valsText(s, unit, 0), i = all ? line.indexOf(all) : -1;
-  const parts = raw.map(x => String(unit === 'ms' ? x / 1000 : x)), joined = parts.join(' / ');
+  const parts = raw.map(x => String(unit === 'ms' ? x / 1000 : x)), joined = parts.join('/');
   if (!level || i < 0 || new Set(raw).size === 1 || !lvs.includes(level) || !all.startsWith(joined)) { span.textContent = line; return span; }
   span.append(line.slice(0, i));
   parts.forEach((p, j) => {
-    if (j) span.append(' / ');
+    if (j) span.append('/');
     if (lvs[j] === level) { const b = document.createElement('b'); b.className = 'lv-now'; b.title = `ค่าของเลเวล ${level}`; b.textContent = p; span.append(b); } else span.append(p);
   });
   span.append(all.slice(joined.length) + line.slice(i + all.length));
@@ -215,7 +271,7 @@ export const valsText = (s, unit, level) => {
   const raw = lvs.map(l => s.v[l - 1]);
   return level ? fmtVal(unit, s.v[level - 1]) : unit === '-' ? ''
     : new Set(raw).size === 1 ? fmtVal(unit, raw[0])
-    : unit === 'ms' ? `${raw.map(x => x / 1000).join(' / ')} วิ` : `${raw.join(' / ')}${unit === '%' ? '%' : unit ? ' ' + unit : ''}`;
+    : unit === 'ms' ? `${raw.map(x => x / 1000).join('/')} วิ` : `${raw.join('/')}${unit === '%' ? '%' : unit ? ' ' + unit : ''}`;
 };
 export const extraText = s => [
     s.cd ? `คูลดาวน์สกิล ${s.cd / 1000} วิ${s.cdGrow ? ` (ยาวขึ้น ${s.cdGrow}% ทุกครั้งที่ใช้)` : ''}` : '',
