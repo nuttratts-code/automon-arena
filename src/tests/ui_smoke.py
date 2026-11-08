@@ -315,6 +315,27 @@ window.claude={use:n=>new Promise(r=>setTimeout(()=>r(n==='db'?db:n==='user'?u:n
                     p3.wait_for_function('window.__nmSets.length>0', timeout=3000)
                     chk(p3.evaluate('window.__nmSets')==[['data/users/u1/profile','ใหม่ในฐาน']],'typed name written to own db doc')
                 c3.close()
+            # set 136: run journal → db one write at a time per doc (overlap = rejected), first write fails → retried, all entries land
+            FK="""(()=>{const st=window.__st={docs:{},overlap:0,n:0,busy:{}};
+const ref=p=>({set(d){st.n++; if(st.busy[p]){st.overlap++;return Promise.reject({code:'resource_exhausted'});} if(st.n===1) return Promise.reject({code:'unavailable'});
+ st.busy[p]=1; return new Promise(r=>setTimeout(()=>{st.busy[p]=0; st.docs[p]=JSON.parse(JSON.stringify(d)); r();},60));}, collection(c){return {doc:id=>ref(p+'/'+c+'/'+id)};}});
+const db={doc:ref,collection:c=>({add:()=>Promise.resolve(),doc:id=>ref(c+'/'+id),orderBy(){return this},limit(){return this},onSnapshot(){return()=>{}},get:()=>Promise.resolve({docs:[]})})};
+window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
+            c4=b.new_context(viewport={'width':gw,'height':gh}); c4.add_init_script(FK); p4=c4.new_page()
+            p4.route('**/*', lambda r: r.abort() if not r.request.url.startswith('file:') else r.continue_())
+            p4.on('pageerror', lambda e: errs.append((w,'pageerror rlsend',str(e))))
+            p4.goto(f'file://{D}/game.html'); p4.fill('#nameIn','ส่ง'); p4.click('#nameGo')
+            for k in range(2):
+                p4.evaluate("(()=>{if(!document.getElementById('offerDlg').hidden){const b=document.querySelector('#offerDlg button:not(#offerReroll):not(#offerSkip)'); if(b) b.click(); try{closePop()}catch(e){}}})()")
+                p4.evaluate(BUY); p4.evaluate(PLACE)
+                p4.evaluate("document.getElementById('fight').click()")
+                if not p4.evaluate("document.getElementById('app').classList.contains('fighting')"): p4.evaluate("document.getElementById('fight').click()")
+                p4.click('#skip'); p4.wait_for_selector('#next', state='visible', timeout=60000); p4.click('#next')
+            p4.evaluate("window.dispatchEvent(new Event('pagehide'))")  # shop steps after the last match go on page hide (or the next match end)
+            p4.wait_for_function("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`,h=__st.docs['runlogs/'+id];return h&&h.n===RL.ev.length&&!rlPend.size;})()", timeout=20000)
+            r4=p4.evaluate("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`;return [__st.overlap, __st.docs['runlogs/'+id+'/parts/p0'].ev.length===RL.ev.length, __st.n];})()")
+            chk(r4[0]==0 and r4[1],'set 136: journal reaches the db after a failed write, no overlapping writes '+str(r4))
+            c4.close()
         # set 110: run-log viewer (runlog.html) · clean run (reload = no test hacks in CM/P) → code → no alert · edited code → red
         pg.reload()
         chk(in_prep() and pg.is_hidden('#nameScr'),'name set → game opens on prep')

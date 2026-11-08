@@ -885,11 +885,11 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* ไม่มีที่เก็บ */ } },
 };
-function saveRun() { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); saveLog(); }
+function saveRun(now = false) { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); saveLog(now); }
 // set 109 (user): run journal (core/runlog.js) · every action on P with gold before → after · saved with the run (same moments,
 // so a resumed run and its journal always match) · sent to the db (runlogs/<id> + parts) and added to the run code
 const RLOG_KEY = 'automon-run-log-v1', RLOG_PREV_KEY = 'automon-run-log-prev-v1';
-let RL = null, rlSent = { id: '', n: 0 };
+let RL = null;
 function J(t, args, fn) {
   const g0 = P.gold, snap = RL ? JSON.stringify(P) : '', r = fn();
   if (RL && (t === 'of' || (r && r.ok) || JSON.stringify(P) !== snap)) rlPush(RL, t, args, g0, P.gold, Date.now()); // a refused action that changed nothing is not kept
@@ -904,18 +904,43 @@ function resumeLog() {
     return r.firstBad < 0 && k(r.st) === k(P) ? o : null;
   } catch (e) { return null; }
 }
-function saveLog() { if (!RL) return; store.set(RLOG_KEY, JSON.stringify(RL)); sendLog(); }
-function sendLog() { // whole parts that changed since the last send · no db / no write right = skip silently (the run code still has it)
-  if (!RL || !playDb || playWait) return;
-  const id = `${RL.seed.toString(16)}-${RL.at}`, from = rlSent.id === id ? rlSent.n : 0, n = RL.ev.length;
-  try {
-    const run = playDb.doc('runlogs/' + id);
-    Promise.resolve(run.set({ v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
-      round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0, ...(RL.nm ? { nm: RL.nm } : {}) })).catch(() => {});
-    for (let k = Math.floor(from / RLOG_PART); k * RLOG_PART < n; k++) Promise.resolve(run.collection('parts').doc('p' + k).set({ k, ev: RL.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) })).catch(() => {});
-    rlSent = { id, n };
-  } catch (e) { /* เขียนไม่ได้ = ข้าม */ }
+function saveLog(now = false) { if (!RL) return; store.set(RLOG_KEY, JSON.stringify(RL)); if (now) sendLog(); }
+// set 136 (log fix): the db asks for ONE write at a time per document, only on real change (db contract). Before, every shop
+// action fired head + part writes at once without waiting and ignored errors → most writes were dropped and, mid-run, all
+// journal writes stopped while plays.add still landed (run 5c1dac96: 11 matches in plays, journal frozen after match 8).
+// Now: a snapshot is queued only at run start, match end, rename and when the page is hidden; one writer sends it (parts,
+// then head, each awaited); a failed send stays queued and is retried with backoff; sent counts move only after success.
+const rlDone = new Map(), rlKey = new Map(), rlPend = new Map(); // id → entries already stored in the db · id → newest unsent snapshot
+let rlBusy = false, rlWait = 0, rlFail = 0, rlErr = '';
+function sendLog() {
+  if (!RL) return;
+  const id = `${RL.seed.toString(16)}-${RL.at}`, n = RL.ev.length, key = JSON.stringify([n, RL.cut, RL.nm || '', P.round, P.wins, P.hearts, P.gold, P.over ? 1 : 0]);
+  if (rlKey.get(id) === key && !rlPend.has(id)) return; // nothing changed since the last stored copy
+  rlPend.set(id, { id, n, key, ev: RL.ev.slice(), head: { v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
+    round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0, ...(RL.nm ? { nm: RL.nm } : {}) } });
+  pumpLog();
 }
+async function pumpLog() { // no db / no write right = the queue just waits (the run code still has the journal)
+  if (rlBusy || rlWait || !playDb || playWait) return;
+  rlBusy = true;
+  while (rlPend.size) {
+    const s = rlPend.values().next().value; rlPend.delete(s.id);
+    try {
+      const run = playDb.doc('runlogs/' + s.id), done = Math.min(rlDone.get(s.id) || 0, s.n);
+      for (let k = Math.floor(done / RLOG_PART); k * RLOG_PART < s.n; k++) await run.collection('parts').doc('p' + k).set({ k, ev: s.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) });
+      await run.set(s.head);
+      rlDone.set(s.id, s.n); rlKey.set(s.id, s.key); rlFail = 0; rlErr = '';
+    } catch (e) {
+      if (!rlPend.has(s.id)) rlPend.set(s.id, s); // a newer snapshot of the same run replaces this one
+      rlFail++; rlErr = String((e && (e.code || e.message)) || e).slice(0, 80);
+      break;
+    }
+  }
+  rlBusy = false;
+  if (rlPend.size) rlWait = setTimeout(() => { rlWait = 0; pumpLog(); }, rlFail ? Math.min(120000, 5000 * 2 ** (rlFail - 1)) : 0);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') sendLog(); }); // app switched / tab closed: send what the shop phase added
+window.addEventListener('pagehide', () => sendLog());
 // ชุด 25 (7A): รีเพลย์ทุกแมตช์ใน run นี้ · เก็บทีม 2 ฝั่ง + ผล แยกจากเซฟ (core/save.js readReplays ตรวจทุกช่องตอนโหลด)
 const REPLAY_KEY = 'automon-run-replays-v1', PREV_REPLAY_KEY = 'automon-run-replays-prev-v1'; // set 105: previous run's replays kept for the run code
 let replays = [], replayMode = null;
@@ -925,7 +950,7 @@ let playDb, playWait = [];
 (async () => {
   try { playDb = window.claude && typeof window.claude.use === 'function' ? await window.claude.use('db') : null; } catch (e) { playDb = null; }
   const q = playWait; playWait = null; for (const r of q) logPlay(r);
-  sendLog();
+  pumpLog();
 })();
 function logPlay(rec) {
   if (!checkPlayRecord(rec, CM, RULES)) return; // ตรวจทุกช่องก่อนเขียน
@@ -961,7 +986,7 @@ function lgOpen() {
 const lgNum = x => (Number.isFinite(x) ? String(x) : '-');
 function lgList() {
   const rows = [...lgHeads.entries()];
-  $('logInfo').textContent = rows.length ? `${rows.length} run · เรียงจากเซฟล่าสุด · อัปเดตเอง` : 'ยังไม่มี log ในระบบ';
+  $('logInfo').textContent = (rows.length ? `${rows.length} run · เรียงจากเซฟล่าสุด · อัปเดตเอง` : 'ยังไม่มี log ในระบบ') + (rlErr ? ` · ส่ง log ของเครื่องนี้ไม่สำเร็จ (${rlErr}) จะลองใหม่เอง` : '');
   $('logList').replaceChildren(...rows.map(([id, h]) => {
     const tr = lvMk('tr', id === lgOpenId ? 'open' : ''), b = lvMk('button', '', id === lgOpenId ? 'กำลังดู' : 'ดู'); b.type = 'button';
     b.addEventListener('click', () => lgShow(id));
@@ -1012,10 +1037,10 @@ function startNewRun() {
   dummyDmg = 0; P = newRun(chars, seed); B = newRun(chars, (seed ^ 0xA5A5A5A5) >>> 0);
   msgs = []; stats = newStats(); startedAt = Date.now();
   const oldLog = store.get(RLOG_KEY); if (oldLog && oldLog.includes('"ev":[[')) store.set(RLOG_PREV_KEY, oldLog); // set 109: keep the last run's journal for the run code
-  RL = newRunLog(seed, DATA_HASH, startedAt, playerName); rlSent = { id: '', n: 0 };
+  RL = newRunLog(seed, DATA_HASH, startedAt, playerName);
   const old = store.get(REPLAY_KEY); if (old && old.includes('"list":[{')) store.set(PREV_REPLAY_KEY, old); // set 105: keep the finished run's replays for the run code
   replays = []; replayMode = null; saveReplays();
-  saveRun(); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
+  saveRun(true); // เซฟตอนเริ่ม run (ก่อนเปิดร้านรอบแรก) · ออกแล้วกลับมา = เริ่มรอบร้านใหม่ ร้านเดิม
   showScreen('prep');
   beginRound();
 }
@@ -1647,8 +1672,8 @@ $('fight').addEventListener('click', () => {
   replays.push(replayEntry(round, teamA, teamB, result, runes, streak, fd, fr, fs)); saveReplays(); // ชุด 25
   logPlay(playRecord({ at: Date.now(), hash: DATA_HASH, runSeed: P.seed, round, winsBefore, heartsBefore, result, teamA, teamB: rb ? [] : teamB, foe, boss: rb ? teamB : null, runes, diff: fd }));
   pendingEnd = { r, w }; replayMode = null;
-  if (P.over) { clearAt = P.hearts > 0 && !P.extra ? Date.now() : 0; store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, clearAt || Date.now())))); store.del(SAVE_KEY); saveLog(); }
-  else saveRun();
+  if (P.over) { clearAt = P.hearts > 0 && !P.extra ? Date.now() : 0; store.set(HIST_KEY, JSON.stringify(pushHistory(readHistory(store.get(HIST_KEY)), historyEntry(P, stats, clearAt || Date.now())))); store.del(SAVE_KEY); saveLog(true); }
+  else saveRun(true); // set 136: match end = journal sent to the db
   showNotice('');
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = true;
   $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ศัตรูพลัง ${foe.want}% · คู่แข่ง: ทีมบอทรอบ ${foe.round}` : '');
@@ -1930,7 +1955,7 @@ $('nameForm').addEventListener('submit', ev => {
 function setName(nm, mine) {
   playerName = nm; store.set(NAME_KEY, nm); showName();
   if (mine) nameSave(nm);
-  if (RL) { RL.nm = nm; saveLog(); } // a rename during a run goes on this run's journal too
+  if (RL) { RL.nm = nm; saveLog(true); } // a rename during a run goes on this run's journal too
   $('nameScr').hidden = true;
   const f = nameThen; nameThen = null; if (f) f();
 }
@@ -1956,7 +1981,7 @@ function nameSave(nm) {
   if (!saved) { if (playerName) nameSave(playerName); return; } // first time with the db: keep the device's name there too
   if (saved === playerName) return;
   if (!$('nameScr').hidden && nameThen && !$('nameIn').value.trim()) { setName(saved, false); return; } // still waiting on the first screen
-  if ($('nameScr').hidden) { playerName = saved; store.set(NAME_KEY, saved); showName(); if (RL) { RL.nm = saved; saveLog(); } }
+  if ($('nameScr').hidden) { playerName = saved; store.set(NAME_KEY, saved); showName(); if (RL) { RL.nm = saved; saveLog(true); } }
 })();
 document.querySelectorAll('.nameEdit').forEach(b => b.addEventListener('click', () => askName(null)));
 showName();
@@ -1974,8 +1999,8 @@ function boot() {
       if (rp.status === 'data') showNotice('เกมอัปเดตแล้ว รีเพลย์ของ run นี้จึงถูกซ่อน');
       if (rp.status === 'bad') showNotice('ข้อมูลรีเพลย์เสียหายหรือผิดรูปแบบ จึงถูกล้าง (เล่นต่อได้ตามปกติ)');
       if (rp.status !== 'ok') saveReplays();
-      RL = resumeLog(); rlSent = { id: '', n: 0 };
-      if (RL && playerName && RL.nm !== playerName) { RL.nm = playerName; saveLog(); } // set 110: renamed on the resume screen
+      RL = resumeLog();
+      if (RL && playerName && RL.nm !== playerName) { RL.nm = playerName; saveLog(true); } // set 110: renamed on the resume screen
       showScreen('prep'); beginRound();
     };
     $('resumeNew').onclick = () => { showNotice(''); startNewRun(); };
