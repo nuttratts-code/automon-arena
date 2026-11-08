@@ -1,6 +1,6 @@
 # Stat budget notes: how many points each stat costs (Automon Arena)
 
-V1.1 · 28 Oct 2026 · translated to English (content unchanged) · V1.0 22 Oct 2026 · paired with combat-rules V1.28 · computed with `node lab/cost.mjs`
+V1.1 · 28 Oct 2026 · translated to English (content unchanged) · paired with combat-rules V1.28 · computed with `node lab/cost.mjs` · older versions: git log
 
 > Every number here is **(ค่าเสนอ)** (proposed): from the base power-point formula, not yet measured against real win rates. Rough estimation aid only; balance measurement (±6) still decides.
 

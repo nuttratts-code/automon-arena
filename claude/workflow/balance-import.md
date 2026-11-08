@@ -1,6 +1,6 @@
 # workflow · importing values from the Balance Room (English · V1.32 · 7 Nov 2026)
 
-Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · V1.25 user measures · V1.26 batch 35 yellow clears itself + ui/main · V1.27 translated to English; apply-config now imports tribe bonuses (cfg.tribes); pre-import check results.edits == config.
+Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · older versions: git log
 
 ## 00. Check before tuning (V1.32, user rule set 130 · CLAUDE.md HARD RULE 6) — before ANY work that touches game values
 1. Ask the user for a fresh AMCFG1 (Balance Room → 💾 → "คัดลอกค่าให้ Claude"), save it to the scratchpad.

@@ -7,7 +7,7 @@
 // Git repo version (28 Oct 2026): source lives in the repo (src/), no extraction from published pages. Run from anywhere.
 // เกณฑ์ผ่านไม่เปลี่ยน: เทสต์ครบ · ui_smoke FAILS [] ERRORS [] · ไม่มีตัวหลุด (±6 ผสม / ±10 รายเลเวล) · วัดด้วยเมล็ด 4242
 // ชุด 17: แมตช์ที่ตัวตัดนิรภัยหยุด (บรรทัด "ผิดปกติ" จาก lab/measure.mjs) = ไม่ผ่าน
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { tmpdir } from 'os';
@@ -28,6 +28,15 @@ const lines = s => s.split('\n');
 const nonEmpty = s => lines(s).filter(l => l.trim() !== '');
 const say = (...a) => console.log(...a);
 let bad = 0;
+// D1 (8 Nov set 139 round 2): setup records the tree hash it passed on; gate skips unit tests when the tree is unchanged
+// (same files incl. uncommitted/untracked, stamp < 6 h old). CI (env CI) and `gate --full` always run everything.
+const STAMP = resolve(tmpdir(), 'automon-setup-pass.txt');
+const treeHash = () => { try {
+  const idx = resolve(tmpdir(), `automon-idx-${process.pid}`), root = sh('git', ['rev-parse', '--show-toplevel']).trim(), env = { GIT_INDEX_FILE: idx };
+  try { writeFileSync(idx, readFileSync(resolve(sh('git', ['rev-parse', '--absolute-git-dir']).trim(), 'index'))); } catch (e) {}
+  execFileSync('git', ['-C', root, 'add', '-A'], { env: { ...process.env, ...env }, stdio: 'ignore' });
+  const h = sh('git', ['-C', root, 'write-tree'], env).trim(); rmSync(idx, { force: true }); return h;
+} catch (e) { return ''; } };
 const flag = (ok, msg) => { if (!ok) bad++; say((ok ? '✅ ' : '❌ ') + msg); };
 
 function summarizeTests(out) {
@@ -63,6 +72,7 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   catch (e) { say('❌ build failed:', String(e.stderr || e.message).split('\n').slice(0, 6).join('\n')); process.exit(1); }
   const t = summarizeTests(sh('node', ['tests/run.js']));
   flag(t.ok, `tests ${t.total}${t.fails.length ? ' · ' + t.fails.join(' | ') : ''}`);
+  if (!bad) { const h = treeHash(); if (h) writeFileSync(STAMP, `${h} ${Date.now()}`); }
   say(bad ? 'Summary: problems, see above' : 'Summary: ready to edit code (build ok, all tests pass)');
   process.exit(bad ? 1 : 0);
 } else if (mode === 'test') { // V1.11: node tools/bootstrap.mjs test [คำในชื่อเทสต์ ...] = เฉพาะเทสต์ที่เกี่ยวข้อง (ระหว่างแก้) · ไม่ใส่คำ = ครบชุด
@@ -96,10 +106,13 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   const have = await run('python3', ['-c', 'import playwright']);
   if (/Error/.test(have.out)) { say('ติดตั้ง playwright (python) ...'); await run('pip', ['install', '-q', 'playwright']); }
   mkdirSync(SHOTS, { recursive: true });
-  const t = await run('node', ['tests/run.js']); // sequential on purpose: in parallel the CPU-heavy tests starve ui_smoke (its 240 s wait timed out, 31 Oct)
+  let skipT = false;
+  if (!process.env.CI && a1 !== '--full') { try { const [h, ms] = readFileSync(STAMP, 'utf8').trim().split(' '); skipT = !!h && h === treeHash() && Date.now() - +ms < 6 * 3600e3; } catch (e) {} }
+  const t = skipT ? { out: '', sec: 0, skipped: true } : await run('node', ['tests/run.js']); // sequential on purpose: in parallel the CPU-heavy tests starve ui_smoke (its 240 s wait timed out, 31 Oct)
   const u = await run('python3', ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW);
-  const ts = summarizeTests(t.out), us = summarizeUi(u.out);
-  flag(ts.ok, `เทสต์ ${ts.total} (${t.sec} วิ)${ts.fails.length ? '\n   ' + ts.fails.join('\n   ') : ''}`);
+  const us = summarizeUi(u.out);
+  if (t.skipped) say('✅ เทสต์: ข้าม — setup ผ่านแล้วบนไฟล์ชุดเดียวกัน (tree unchanged; ใช้ gate --full เพื่อรันซ้ำ)');
+  else { const ts = summarizeTests(t.out); flag(ts.ok, `เทสต์ ${ts.total} (${t.sec} วิ)${ts.fails.length ? '\n   ' + ts.fails.join('\n   ') : ''}`); }
   flag(us.ok, `ui_smoke ${us.detail} (${u.sec} วิ)`);
   if (!us.ok) say(lines(u.out).slice(-12).join('\n'));
   say(bad ? 'GATE: FAIL — do not merge/publish, tell the user' : 'GATE: PASS — ok to merge');

@@ -1,6 +1,6 @@
 # workflow · bot teams, run length, replays, play data
 
-V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · was V1.25 · 5 Nov 2026 (set 96: botgen 2,400 runs) · was V1.24 · 4 Nov 2026 (set 87: 360 teams, tribe focus) · was V1.23 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 (content kept, section numbers kept for references)
+V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · older versions: git log
 
 ## 13. Bot teams and match length per round (V1.17 · set 23)
 - Bot teams live in core/botdata.js (auto-generated, never hand-edit) · it carries the game-data hash (dataHash in core/save.js)
