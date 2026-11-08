@@ -18,6 +18,8 @@ const RC_SLOT = 3, RC_PARTNER = 4; // unit index wearing a 'one' rune (row 1 lan
 const rcSlotOf = i => [i >> 1, i & 1];
 const rcNum = (r, q) => (typeof r[q] === 'number' ? r[q] : ((RUNE_SPEC[r.eff] && RUNE_SPEC[r.eff].f.find(f => f[0] === q)) || [, , 0])[2]);
 const rcNear = (got, exp, tol = 1) => Math.abs(got - exp) <= Math.max(tol, Math.abs(exp) * 0.01);
+// unit numbers of the test board · runeCheckOne also replays at the game's real scale (median Lv1 character) to catch rounding that erases a rune
+let RC_P = { hp: 1000, atk: 100, cd: 2000, x: 10 };
 const rcF = x => (Number.isInteger(x) ? String(x) : (Math.round(x * 100) / 100).toString());
 
 // plain unit built from any character (fields battle.js needs) with every number replaced
@@ -25,7 +27,7 @@ function rcUnit(chars, i, o = {}) {
   const c0 = chars[i % chars.length], cm = makeCharMap(chars); // a different character per slot: tribe counts skip copies of the same character
   const [row, lane] = rcSlotOf(i);
   return { ...unitOf(c0, { id: c0.id, level: 1, row, lane }, RULES, cm), name: 'ช่อง' + (i + 1), tribe: TRIBES[i % TRIBES.length], extraTribes: [], skills: [],
-    maxHp: 1000, hp: 1000, atk: 100, cdMs: 2000, multi: 1, burnHit: 0, shockHit: 0, armorHit: 0, healHit: 0, startArmor: 0, row, lane, ...o };
+    maxHp: RC_P.hp, hp: RC_P.hp, atk: RC_P.atk, cdMs: RC_P.cd, multi: 1, burnHit: 0, shockHit: 0, armorHit: 0, healHit: 0, startArmor: 0, row, lane, ...o };
 }
 const rcTeam = (chars, o = {}, per = {}) => Array.from({ length: 6 }, (_, i) => rcUnit(chars, i, { ...o, ...(per[i] || {}) }));
 // passive enemy: huge hp, never hurts (cooldown 60 s, atk 0)
@@ -66,20 +68,20 @@ function rcPerUnit(r, A, label, read, expOf, on, off, foeSide = false, slot) {
     if (a == null || b == null) continue;
     const inside = foeSide || inS.has(uid);
     const name = foeSide ? `ศัตรู${uid - 5}` : `ช่อง${uid + 1}`;
-    out.push(inside ? rcLine(`${name} ${label}`, expOf(b), a) : rcLine(`${name} ${label} (นอกขอบเขต ต้องไม่เปลี่ยน)`, b, a, a === b));
+    out.push(inside ? { ...rcLine(`${name} ${label}`, expOf(b), a), base: rcF(b) } : rcLine(`${name} ${label} (นอกขอบเขต ต้องไม่เปลี่ยน)`, b, a, a === b));
   }
   return out;
 }
 // stat runes (RUNE_EFFECTS): each effect = how to read it in a fight + what the description promises
 function rcStat(chars, r, n) {
   const v = r.v * n, p = v / 100, flat = r.mode === 'flat';
-  const base = { burnHit: 10, shockHit: 10, armorHit: 10, healHit: 10 };
+  const base = { burnHit: RC_P.x, shockHit: RC_P.x, armorHit: RC_P.x, healHit: RC_P.x };
   const A = rcTeam(chars, base), D = rcDummy(chars, 2);
   const pair = (B = D, A2 = A) => rcPair(r, n, A2, B);
   switch (r.eff) {
     case 'atk': { const { on, off } = pair(); return rcPerUnit(r, A, 'พลังโจมตี (ตอนตี)', (x, u) => (rcSets(x, u)[0] || {}).atk, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
     case 'hp': { const { on, off } = pair(); return rcPerUnit(r, A, 'HP สูงสุด', rcMaxHp, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
-    case 'armor': { const { on, off } = pair(); return rcPerUnit(r, A, 'เกราะตอนเริ่ม', rcStartArmor, b => b + (flat ? v : Math.floor(1000 * p)), on, off); }
+    case 'armor': { const { on, off } = pair(); return rcPerUnit(r, A, 'เกราะตอนเริ่ม', rcStartArmor, b => b + (flat ? v : Math.floor(RC_P.hp * p)), on, off); }
     case 'armorHit': { const { on, off } = pair(); const per = (x, u) => { const h = rcSets(x, u).length; return h ? rcSum(x, 'armor', u, RC_W, e => e.t > 0) / h : null; };
       return rcPerUnit(r, A, 'เกราะต่อการตี', per, b => (flat ? b + v : Math.floor(b * (1 + p))), on, off); }
     case 'cd': { const { on, off } = pair(); return rcPerUnit(r, A, 'เวลาระหว่างการตี (มิลลิวินาที)', rcGap, b => (flat ? Math.max(RULES.minCooldownMs || 0, b - v) : Math.round(b * (1 - p))), on, off); }
@@ -103,7 +105,7 @@ function rcStat(chars, r, n) {
     case 'lifesteal': { // heal at the moment of the first own hit (100 damage), healHit 0 here
       const A0 = rcTeam(chars), { on, off } = rcPair(r, n, A0, rcBurner(chars, 30));
       const per = (x, uid) => { const h = rcHits(x, uid)[0]; if (!h) return null; return x.events.filter(q => q.k === 'heal' && q.to === uid && q.t === h.t).reduce((a2, e) => a2 + e.amount, 0); };
-      return rcPerUnit(r, A0, 'ฟื้นตอนฮิตแรก (ดาเมจ 100)', per, q => q + Math.floor(100 * p), on, off);
+      return rcPerUnit(r, A0, 'ฟื้นตอนฮิตแรก (ดาเมจ 100)', per, q => q + Math.floor(RC_P.atk * p), on, off);
     }
     // ---- effects on the enemy team (2 dummies: both must change) ----
     case 'eCd': { const B = rcDummy(chars, 2, { atk: 1, cdMs: 2000 }), { on, off } = pair(B); return rcPerUnit(r, A, 'เวลาระหว่างการตี (มิลลิวินาที)', rcGap, b => Math.round(b * (1 + p)), on, off, true); }
@@ -112,10 +114,10 @@ function rcStat(chars, r, n) {
       return rcPerUnit(r, A, k === 'burn' ? 'ไฟที่ติดตอนเริ่ม' : 'ช็อตที่ติดตอนเริ่ม', (x, u) => rcSum(x, k, u, 0), b => b + v, on, off, true); }
     case 'eDmgTaken': { const { on, off } = pair(); const per = (x, u) => (x.events.find(e => e.k === 'dmg' && e.to === u && e.why === 'hit') || {}).amount;
       return rcPerUnit(r, A, 'ดาเมจที่โดนต่อฮิต (ตี 100)', per, b => Math.floor(b * (1 + p)), on, off, true); }
-    case 'eHealCut': { const B = rcDummy(chars, 2, { healHit: 10, atk: 1, cdMs: 2000, maxHp: 1e6, hp: 1e6 });
+    case 'eHealCut': { const B = rcDummy(chars, 2, { healHit: RC_P.x, atk: 1, cdMs: 2000, maxHp: 1e6, hp: 1e6 });
       const { on, off } = pair(B); const per = (x, u) => (x.events.find(e => e.k === 'heal' && e.to === u) || {}).amount;
       return rcPerUnit(r, A, 'ฟื้นต่อฮิต (ฟื้น/ฮิต 10)', per, b => Math.floor(b * (1 - p)), on, off, true); }
-    case 'eArmorCut': { const B = rcDummy(chars, 2, { armorHit: 10, atk: 1, cdMs: 2000 });
+    case 'eArmorCut': { const B = rcDummy(chars, 2, { armorHit: RC_P.x, atk: 1, cdMs: 2000 });
       const { on, off } = pair(B); const per = (x, u) => (x.events.find(e => e.k === 'armor' && e.to === u && e.t > 0) || {}).amount;
       return rcPerUnit(r, A, 'เกราะต่อการตี (เกราะ/ฮิต 10)', per, b => Math.floor(b * (1 - p)), on, off, true); }
     default: return null;
@@ -178,7 +180,7 @@ function rcSpecial(chars, r, n) {
       for (const ws of [0, 3, 50]) {
         const { on, off } = rcPair(r, n, A, D, { ctx: { winStreak: ws } });
         const amp = Math.min(num('maxPct') * n, num('stepPct') * n * ws);
-        out.push(...rcPerUnit(r, A, `ดาเมจต่อฮิต (ชนะติด ${ws})`, (x, u) => (rcHits(x, u)[0] || {}).amount, b => Math.floor(b * (1 + amp / 100)), on, off));
+        out.push(...rcPerUnit(r, A, `ดาเมจต่อฮิต (ชนะติด ${ws})`, (x, u) => (rcHits(x, u)[0] || {}).amount, b => Math.floor(b * (1 + amp / 100)), on, off).map(l => (ws ? l : { ...l, base: undefined }))); // no streak = no change expected
       }
       return out;
     }
@@ -322,6 +324,14 @@ function rcRunOnly(chars, r, n) {
     default: return null;
   }
 }
+// special effects whose expectation follows the unit's own numbers (safe to replay at real scale)
+const RC_REAL_SPEC = ['glass', 'fortress', 'growth', 'allyDownDmg', 'bossDmg', 'hpToArmorHit'];
+// median Lv1 numbers of the real characters (x = median of the non-zero burn / shock / armor per hit / heal per hit values)
+function rcRealProfile(chars) {
+  const med = a => { const b = a.filter(v => typeof v === 'number' && v > 0).sort((p, q) => p - q); return b.length ? b[b.length >> 1] : 1; };
+  return { hp: med(chars.map(c => c.hp[0])), atk: med(chars.map(c => c.atk[0])), cd: med(chars.map(c => c.cdMs[0])),
+    x: med(chars.flatMap(c => [c.burn[0], c.shock[0], c.armorHit ? c.armorHit[0] : 0, c.healHit ? c.healHit[0] : 0])) };
+}
 // ---- public: every active rune of a stage → rows for the page / test ----
 export function runeCheckAll(chars, stage = RUN_STAGE) {
   const all = [...Object.entries(stage.runes || {}).map(([id, r]) => ({ ...r, id })), ...(stage.custom || []).map(r => ({ ...r }))].filter(runeActive);
@@ -340,8 +350,16 @@ export function runeCheckOne(chars, r, stage = RUN_STAGE) {
     } catch (e) { lines = [rcLine('ทดสอบ', 'ทำงานได้', 'error: ' + e.message, false)]; }
     row.tests.push({ n, lines: lines || [] });
   }
-  const flat = row.tests.flatMap(t => t.lines);
-  row.status = !flat.length ? 'info' : flat.every(l => l.ok) ? 'ok' : 'bad';
+  // real scale (set 144): the same scene with a median Lv1 character → in-scope values that do not move = the rune does nothing there
+  if (!runOnly && (kind === 'stat' || RC_REAL_SPEC.includes(r.eff))) {
+    const keep = RC_P; RC_P = rcRealProfile(chars);
+    try { const lines = (kind === 'stat' ? rcStat(chars, r, 1) : rcSpecial(chars, r, 1)) || []; row.real = { prof: RC_P, lines, zero: lines.filter(l => l.base != null && l.exp === l.base) }; }
+    catch (e) { row.real = { prof: RC_P, lines: [rcLine('ทดสอบค่าจริง', 'ทำงานได้', 'error: ' + e.message, false)], zero: [] }; }
+    RC_P = keep;
+  }
+  const flat = row.tests.flatMap(t => t.lines).concat(row.real ? row.real.lines : []);
+  row.status = !flat.length ? 'info' : !flat.every(l => l.ok) ? 'bad' : row.real && row.real.zero.length ? 'warn' : 'ok';
+  if (row.status === 'warn') row.note = `ที่ค่าจริงของตัวละคร (Lv1 กลางๆ: พลังโจมตี ${row.real.prof.atk} HP ${row.real.prof.hp}) ผลถูกปัดเศษหายใน ${row.real.zero.length} จุด เช่น ${row.real.zero[0].what} ${row.real.zero[0].base} → ${row.real.zero[0].got}`;
   if (!flat.length) row.note = row.note || 'ยังไม่มีวิธีวัดอัตโนมัติสำหรับผลนี้';
   return row;
 }

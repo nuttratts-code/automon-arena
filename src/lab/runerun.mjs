@@ -64,3 +64,10 @@ if (WRITE) {
   writeFileSync(f, src);
   console.log('core/stage-user.js written');
 }
+// set 144: rune stats (what-if without each held battle rune, main run only)
+if (S.runes) {
+  const R = S.runes, f = x => (x == null ? '-' : x.toFixed(1));
+  console.log(`runes (main-run matches ${R.matches}) · median uplift by rarity: ` + Object.entries(R.med).map(([k, v]) => `${k} ${f(v)}`).join(' · '));
+  for (const x of R.rows) console.log(`${x.id.padEnd(4)} ${x.rarity.padEnd(6)} held ${f(x.held).padStart(5)}% · games ${String(x.games).padStart(5)} · win ${f(x.win).padStart(5)}%` +
+    (x.runOnly ? ` · run-only: avg wins held ${f(x.wins)} vs not ${f(x.noWins)}` : ` · uplift ${f(x.uplift).padStart(5)} ±${f(x.se)} (n ${x.cfN}) · decided ${f(x.decided)}% · game ${f(x.game)}`) + (x.flags && x.flags.length ? '  [' + x.flags.join(' ') + ']' : '') + `  ${x.name}`);
+}
