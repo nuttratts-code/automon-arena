@@ -11,6 +11,7 @@ import { pickFoe, foeWantPct, foeFloorPct, foeWsPct } from '../core/botteams.js'
 import { teamPower } from '../core/power.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest, rnUnworn, rnWear } from '../core/runrunes.js';
+import { runeCheckAll } from '../lab/runecheck.js';
 import { eq, ok } from './helpers.js';
 
 const chars = buildCharacterList(), cm = makeCharMap(chars);
@@ -21,6 +22,12 @@ const unit = (P, id, level = 1) => ({ uid: P.uid++, id, level, perm: {}, paid: c
 const commonId = chars.find(c => c.rarity === chars[0].rarity).id;
 
 export const TESTS_RUNRUN = [
+  ['set 144: rune check — every active game rune does in a test fight / the shop what its description says (1 copy and max copies)', () => {
+    const rows = runeCheckAll(chars, RUN_STAGE), bad = rows.filter(r => r.status === 'bad');
+    ok(rows.length > 0, 'no active rune');
+    ok(!bad.length, bad.map(r => `${r.id} ${r.name}: ` + r.tests.flatMap(t => t.lines.filter(l => !l.ok).map(l => `n${t.n} ${l.what} คาด ${l.exp} ได้ ${l.got}`)).slice(0, 3).join(' · ')).join(' | '));
+    ok(rows.every(r => r.status !== 'info' || r.note), 'info rows must say why');
+  }],
   ['set 107: win offers = 3 cards, each rolls rarity 60/30/10 (user, no modes) · boss = 2 legend · distinct · pick adds to bag', () => {
     const P = fresh(11), S = RUN_STAGE.settings;
     eq([S.rarC, S.rarR, S.rarL], [60, 30, 10], 'user %');

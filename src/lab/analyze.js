@@ -7,6 +7,7 @@ import { bossUnit } from '../core/boss.js';
 import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
 import { runeActive, runeKind } from '../core/stage.js';
 import { pickFoe, simRun, tribeList } from '../core/botteams.js';
+import { rnFromCompact, rnAll } from '../core/runrunes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { dataHash } from '../core/save.js';
 // ตัววิเคราะห์บาลานซ์: ใช้ตัวคำนวณเดียวกับเกม · เมล็ดสุ่มเดิม = ทีมชุดเดิม จึงเทียบก่อน/หลังแก้ได้ตรงๆ
@@ -264,6 +265,58 @@ export async function runeUplift(chars, rules, stage, { foe = 'boss', bossIds, k
   return out.sort((a, b) => b.uplift - a.uplift);
 }
 
+// ---------- Set 144 (user 8 Nov): rune stats in real runs (main run only, extra matches excluded) ----------
+// held = share of runs that held the rune at some match · games/win = matches the player held it (normal + boss) and the win % there
+// what-if (battle runes): the SAME match is fought again without that rune (all its copies) → uplift = win % with − win % without,
+// decided = % of those matches whose result the rune changed · game = uplift × share of all main-run matches → points of the overall win %
+// run-only runes (money/shop) have no fight to replay → only held / avg wins of runs that held it vs runs that did not (biased: long runs see more offers)
+// flags (ค่าเสนอ, user to confirm): strong = uplift above the median of its rarity by > max(RUNE_FLAG.gap, 2 × SE) · weak = below by the same ·
+// big = game ≥ RUNE_FLAG.game points
+export const RUNE_FLAG = { gap: 3, game: 1 };
+function runeStatsNew(stage) {
+  const R = {}; for (const r of rnAll(stage)) R[r.id] = { id: r.id, name: r.name, rarity: r.rarity, eff: r.eff, runOnly: RUNE_RUN_ONLY.includes(r.eff), runs: 0, runWins: 0, runFin: 0, games: 0, wins: 0, copies: 0, firstRound: 0, cf: 0, cfSq: 0, cfN: 0, flipUp: 0, flipDown: 0 };
+  return { R, runsNoWins: {}, matches: 0 };
+}
+function runeStatsMatch(RS, m, map, rules, stage, held, whatIf) {
+  RS.matches++;
+  const won = m.winner !== 1 ? 1 : 0, list = (m.rn || []).filter(x => RS.R[x.id]);
+  for (const x of list) {
+    const R = RS.R[x.id];
+    if (!held.has(x.id)) { held.add(x.id); R.firstRound += m.round; }
+    R.games++; R.wins += won; R.copies += x.n;
+    if (!whatIf || R.runOnly || !m.fs) continue;
+    if (!rnFromCompact([x], stage).length) continue; // a 'one' rune nobody wears does nothing in this fight
+    const me = equipRunes(buildTeam(m.team, map, rules), rnFromCompact(m.rn.filter(y => y.id !== x.id), stage), { winStreak: m.ws | 0 });
+    const r2 = simulate(me.units, m.fs.units, { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...m.fs.opts });
+    const d = won - (r2.winner !== 1 ? 1 : 0);
+    R.cf += d; R.cfSq += d * d; R.cfN++; if (d > 0) R.flipUp++; else if (d < 0) R.flipDown++;
+  }
+}
+function runeStatsRun(RS, held, wins, fin) {
+  for (const id of Object.keys(RS.R)) { const R = RS.R[id]; if (held.has(id)) { R.runs++; R.runWins += wins; R.runFin += fin ? 1 : 0; } else { R.noRuns = (R.noRuns || 0) + 1; R.noWins = (R.noWins || 0) + wins; } }
+}
+function runeStatsOut(RS, n, normalGames) {
+  const pct = (a, b) => (b ? a / b * 100 : 0);
+  const rows = Object.values(RS.R).map(R => {
+    const up = R.cfN ? R.cf / R.cfN * 100 : null, sd = R.cfN > 1 ? Math.sqrt(Math.max(0, R.cfSq / R.cfN - (R.cf / R.cfN) ** 2)) : 0;
+    return { id: R.id, name: R.name, rarity: R.rarity, eff: R.eff, runOnly: R.runOnly, held: pct(R.runs, n), games: R.games, win: R.games ? pct(R.wins, R.games) : null,
+      copies: R.games ? R.copies / R.games : 0, firstRound: R.runs ? R.firstRound / R.runs : null, wins: R.runs ? R.runWins / R.runs : null, noWins: R.noRuns ? R.noWins / R.noRuns : null, fin: pct(R.runFin, R.runs),
+      uplift: up, se: R.cfN ? sd / Math.sqrt(R.cfN) * 100 : null, cfN: R.cfN, decided: R.cfN ? pct(R.flipUp + R.flipDown, R.cfN) : null, hurt: R.cfN ? pct(R.flipDown, R.cfN) : null,
+      game: up == null ? null : up * R.cfN / Math.max(1, RS.matches) };
+  });
+  const med = {};
+  for (const rar of new Set(rows.map(x => x.rarity))) { const a = rows.filter(x => x.rarity === rar && x.uplift != null && x.cfN >= 30).map(x => x.uplift).sort((p, q) => p - q); med[rar] = a.length ? a[a.length >> 1] : null; }
+  for (const x of rows) {
+    x.flags = [];
+    if (x.uplift == null || x.cfN < 30 || med[x.rarity] == null) continue;
+    const lim = Math.max(RUNE_FLAG.gap, 2 * x.se), d = x.uplift - med[x.rarity];
+    if (d > lim) x.flags.push('strong'); else if (-d > lim) x.flags.push('weak');
+    if (x.game >= RUNE_FLAG.game) x.flags.push('big');
+    x.vsMed = d;
+  }
+  return { rows: rows.sort((a, b) => (b.uplift ?? -1e9) - (a.uplift ?? -1e9) || b.held - a.held), med, matches: RS.matches };
+}
+
 // ---------- Set 86: full-run simulation with the human-like bot (core/bot.js) · Balance Room ดูผล "รันจริง" ----------
 // Set 138 (user 8 Nov): the SAME flow as lab/runerun.mjs (runerun prints from this function → page and terminal show the same numbers):
 // enemy = pickFoe (player power locked at shop start + floor, like the game) · both sides carry runes · after winsToFinish wins the run
@@ -281,16 +334,17 @@ const mainTribeOf = (team, map, rules) => {
 const isDummyId = id => id === 'DUMMY';
 // set 141 (user C): a team counts as tribe X only when ≥ 4 of its units carry X (4/2 split) · else null (mixed)
 export const tribe4 = units => { const c = {}; for (const u of units || []) for (const t of new Set([u.tribe, ...(u.extraTribes || [])].filter(Boolean))) c[t] = (c[t] || 0) + 1; const best = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return best && best[1] >= 4 ? best[0] : null; };
-export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, onProgress } = {}) {
+export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, runeWhatIf = true, onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
   const tribes = tribeList(chars), rarOf = Object.fromEntries(chars.map(c => [c.id, c.rarity]));
   const ends = Array(W + 1).fill(0), byRound = {}, boss = {}, ch = {}, tr = {}, combos = {};
   const normal = [0, 0], byWs = {}, bk = {}, nb = {}, lv3 = {}, pcts = [], teams = { 1: [], 2: [], 3: [] };
   for (const c of chars) ch[c.id] = { runs: 0, lvSum: 0, won: 0, winsSum: 0, mGames: 0, mWins: 0 };
+  const RS = runeStatsNew(stage); // set 144: per-rune stats (held, win %, what-if without the rune)
   let won = 0, rounds = 0, winsSum = 0, matches = 0, aborted = 0, timeSum = 0, lv3Final = 0, cleared = 0, seconds = 0, extraM = 0, extraW = 0;
   for (let r = 0; r < n; r++) {
-    let last = null, wasOver = false, fl = dyn ? (dyn[2] || 0) : 0; const seen = {};
+    let last = null, wasOver = false, fl = dyn ? (dyn[2] || 0) : 0; const seen = {}; const held = new Set();
     const pick = useTeams ? (p => {
       const stg = dyn ? { ...stage, settings: { ...stage.settings, foeFloor: fl } } : stage;
       const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, rules, p.ls | 0, p.ws | 0); pcts.push(dyn ? fl : f.pct); return f;
@@ -314,10 +368,12 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
         B.games++; B.wins += w; B.bars += bossBarsGone(m.res, b); B.ms += m.timeMs; B.lv += lvs; B.lv3 += l3;
         const t = mainTribeOf(m.team, map, rules) || '-'; const T = (B.tribe[t] ||= { games: 0, wins: 0 }); T.games++; T.wins += w;
       }
+      if (!m.extra) runeStatsMatch(RS, m, map, rules, stage, held, runeWhatIf);
       if (won1 && !wasOver && m.stage + 1 >= W) { wasOver = true; cleared++; }
       if (!m.extra) last = m; // set 138: the "final team" = last match of the main run (extra matches excluded)
     }, stage, { focus: tribes[r % tribes.length], runes: true, extra: stage.settings.lastStage }); // set 87: each run's bot leans toward one tribe in turn
     const mainWins = Math.min(W, P.wins), fin = mainWins >= W; if (fin) won++;
+    runeStatsRun(RS, held, mainWins, fin);
     ends[mainWins]++; rounds += last ? last.round : P.round; winsSum += mainWins;
     if (last) {
       const team = last.team;
@@ -347,6 +403,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
     chars: chars.map(c => { const x = ch[c.id]; return { id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, price: c.price, runs: x.runs, pick: pct(x.runs, n), lv: x.runs ? x.lvSum / x.runs : 0, won: pct(x.won, x.runs), wins: x.runs ? x.winsSum / x.runs : 0, mGames: x.mGames, mWin: pct(x.mWins, x.mGames) }; }),
     tribes: Object.entries(tr).map(([t, x]) => ({ tribe: t, runs: x.runs, share: pct(x.runs, n), won: pct(x.won, x.runs), wins: x.winsSum / x.runs })).sort((a, b) => b.runs - a.runs),
     combos: Object.values(combos).sort((a, b) => b.count - a.count).slice(0, RUN_SIM.top).map(C => ({ ids: C.ids, count: C.count, share: pct(C.count, won), lv: C.lv / C.count })),
+    runes: runeStatsOut(RS, n, normal[0]),
     ...(keepTeams ? { teams } : {}),
   };
 }

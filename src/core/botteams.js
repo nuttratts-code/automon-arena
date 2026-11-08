@@ -63,7 +63,7 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; if (R && res.winner === 1) botTakeRune(B, 'win', cm); }
     if (opts.extra && P.over && P.hearts > 0 && P.round < opts.extra) continueExtra(P);
     if (R && won && !P.over) botTakeRune(P, rb ? 'boss' : 'win', cm);
-    if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) } });
+    if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) }, fs }); // set 144: fs = enemy side as fought (rune what-if replays)
   }
   return P;
 }
