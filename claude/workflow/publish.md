@@ -1,6 +1,6 @@
 # workflow · publish and test the pages
 
-V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · V1.27 30 Oct 2026 (3: publish from disk to save tokens) · V1.26 26 Oct (translated to English; 3: publish sequence confirmed again) · split from workflow.md V1.21 (content kept, section numbers kept for references)
+V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
 
 ## 3. Publish (never force · always update the existing link · never create a new copy)
 - **Gate first:** `git fetch` → build from the LATEST main → `cd src && node tools/bootstrap.mjs gate` must print GATE: PASS on that exact commit. FAIL or cannot run = do not publish, tell the user.

@@ -1,6 +1,6 @@
 # คลังเอกสารเก่า Automon Arena
 
-V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน git) · เปิดเมื่อผู้ใช้ถาม "ทำไม" หรือต้องย้อนดูประวัติ/ผลวัดเก่าเท่านั้น · กฎที่ใช้อยู่ดูไฟล์กฎหลักใน claude/
+V1.2 · 8 Nov 2026 (set 139: reviews → archive/reviews/, relays → archive/relay/, index = claude/reviews.md) · V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน git) · เปิดเมื่อผู้ใช้ถาม "ทำไม" หรือต้องย้อนดูประวัติ/ผลวัดเก่าเท่านั้น · กฎที่ใช้อยู่ดูไฟล์กฎหลักใน claude/
 
 | ไฟล์ | เนื้อหา |
 | --- | --- |
@@ -8,16 +8,14 @@ V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน gi
 | tribe-rules-V1.18-full.md | กฎเผ่าฉบับเต็ม + ประวัติ V1.0–V1.18 + ผลวัดเผ่าเก่า (บาลานซ์รอบเบา 19–23 ต.ค.) + ตัวอย่าง HP เก่า |
 | shop-merge-rules-V1.9-full.md | กฎร้านค้าฉบับเต็ม + สูตรบาลานซ์รุ่นแรก (2.5% ต่อราคา) + ผลจำลอง 19 ต.ค. + ประวัติ V1.0–V1.9 |
 | build-plan-done.md | ส่วนของ build-plan ที่ทำเสร็จแล้ว (ย้ายออกจาก build-plan V1.45) |
-| review-2026-10-27/28*.md (4 ไฟล์) | รายงานตรวจที่ทำเสร็จแล้ว (ย้ายมา 30 ต.ค.) |
+| reviews/ | every decided review file (index: claude/reviews.md) |
+| relay/ | old Relay blocks moved out of handoff.md |
 | workflow-V1.21-full.md | workflow ฉบับเต็มก่อนแยกไฟล์ + บันทึกเวอร์ชัน V1.1–V1.21 |
 | Creature_Auto_Battler_Game_Bible 4.xlsx | Game Bible เดิม · ใช้เฉพาะส่วนที่กฎหลักไม่ได้เขียน (ร้านค้า รวมร่าง แรงก์ เซฟ Ghost Battle) · ผู้ใช้เลือกเก็บเป็นเอกสารเก่า 24 ต.ค. |
 | batomon_analysis_template_test.xlsx | วิเคราะห์เกมต้นแบบ · อ้างอิงเท่านั้น ไม่ใช่กฎเกมเรา |
-| relay-sets-54-61.md | บันทึก Relay ชุด 54–61 (rune/boss/stage UX, ผลรูน, จำนวนชิ้นตามความหายาก) ย้ายจาก handoff 31 ต.ค. |
-| relay-2026-10-31.md | Relay block ฉบับเต็มก่อนตัด (ชุด 62–64, รีวิว workflow, เทสต์ระบบ 31 ต.ค.) ย้ายจาก handoff 31 ต.ค. |
-| next-set-61.md · review-2026-10-30-{other-tabs,rune-themes,stage-ux}.md | แผนชุด 61 + รายงานตรวจชุด 54–60 ที่ทำเสร็จแล้ว (ย้ายมา 31 ต.ค.) |
+| next-set-61.md (+ reviews/review-2026-10-30-*) | แผนชุด 61 + รายงานตรวจชุด 54–60 ที่ทำเสร็จแล้ว (ย้ายมา 31 ต.ค.) |
 | GEMINI-jules-cancelled.md | คู่มือ Jules/Gemini เดิม · ผู้ใช้ยกเลิก Jules 28 ต.ค. |
 | handoff-2026-10-30-full.md | handoff ฉบับเต็มก่อนย่อ (sets 38–53: import, anomaly SF-6, review, set B/D, repo migration) |
-| relay-2026-11-07-sets66-116.md | Relay entries sets 66–116 moved out of handoff.md (set 120) |
 
 - ทุกไฟล์ในโฟลเดอร์นี้อยู่ใน git แล้ว (30 ต.ค.) · เอกสารใน Project ของ claude.ai ไม่ใช้แล้ว
 - ลิงก์ฉบับเต็มเดิมที่ผูกกับไฟล์กฎ (artifact a800cc75… · 66c91205…) เป็นหน้าเก่า ไม่ตรงกับกฎปัจจุบัน

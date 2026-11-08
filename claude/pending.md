@@ -1,9 +1,7 @@
-# pending.md — open balance items + proposed values not yet measured (V1.2 · English · checked 31 Oct 2026: all items still open, nothing measured since 26 Oct · V1.1 translated 26 Oct from V1.0)
+# pending.md — open balance items + proposed values not yet measured (V1.3 · 8 Nov 2026 set 139 round 2: rechecked vs code + measure-log, done/obsolete items removed — older list in git history)
 Open when doing a balance/import batch or when the user asks. Measure only when the user allows (ops-rules); balance status line lives at the top of handoff Relay.
 
 ## Open balance items (ask permission before each measurement · bundle with other questions)
-- Measure 48 characters at 24,000 (new storm) · PL-6 Lv2 +9.1–9.2 near the edge → 48,000 · runlen 2,000 runs seed 4242 after removing the permanent cap (`node lab/runlen.mjs 2000 4242`): check whether accumulating skills (PL-2 PT-3 WY-3 HL-4 HL-5) blow up late in a run.
-- Interim batch-24 result (not a rule): storm +10 blockable by armor → HL-3 +8.2 out · storm +10 piercing armor → all pass.
 - ⚠️ Tribes far apart (วายุ 50 vs เพลิงเผา/สายฟ้า 24) · unequal member counts (วายุ 13 · เพลิงเผา/สายฟ้า 8).
 - ⚠️ Tribe bonus tier 2 weak for 5 tribes · อสูร tier 6 strong (old result).
 - ⚠️ Per-hit accumulating skills have no cap (WY-8 multi-hit + every hit stacks) · WN-4 cooldown slow-down 40% compounds per hit (measured, passes).
@@ -12,10 +10,7 @@ Open when doing a balance/import batch or when the user asks. Measure only when 
 
 ## Proposed values not yet measured (+ "รอวัด")
 - (b32) 7 new tribe-bonus fields (T-4.2) · spirit instant-cast cap 3 sets · รอวัด (user measures).
-- (b27) permanent values uncapped · whole-run effect unknown.
-- (b24) sandstorm start 10 ×2 every wave, armor-blockable (number cap 10¹²) · bot teams use samples that lose ≤ range minimum · no sample = previous stage.
 - (b25 · screen only, no measure) replay max 40 matches per run · 13 patterns / border color by rarity.
-- (b23) bot teams 1,000 runs seed 2310 · samples 120 · reference teams 30 · ranks 25/50/75% · round spans 0–2/3–5/6–9.
 - (b22) run history 20 entries · save ≤ 200,000 chars.
 - (b21) mid-value table · tribe cooldown ranges.
 - (b20 measured) revive downed ally at HP 20% · reflect total debuff ≤ 100%.
@@ -24,6 +19,5 @@ Open when doing a balance/import batch or when the user asks. Measure only when 
 - (b16) cooldown slow-down % stacks multiplicatively.
 - (measured, confirm after real play) per-level thresholds ±10 · WY-8 no skill cooldown.
 - (b4 measured) summoned units count no tribe / no permanent values · split hits round down · min attack 1.
-- (not measured: across matches) PT-3 · WN-2 · WN-1 · HL-5 · SF-7 charge · permanent abilities · permanent % values stack additively.
-- (workflow) sub-agent measures balance when ≥ 6 characters.
+- (not measured: across matches) HL-5 · permanent % values stack additively. (PT-3 · WN-1/2 · SF-7 · permanent sources measured set 136/137 → claude/review-2026-11-08-econ55.md, open there.)
 - Effects with no user yet: reflect % damage of · skill cooldown lengthen · position-based ally · self instant down · heal/hit.

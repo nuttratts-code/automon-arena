@@ -1,6 +1,6 @@
 # workflow · measuring balance (always ask permission first)
 
-V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · V1.25 added section 0 (user measures) · V1.26 "กำลังปรับ" priority
+V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
 
 ## 0. The user measures balance (V1.25 · user chose 25 Oct · replaces sections 12 / 6 / 11 when importing values from the Balance Room)
 - The user measures with the "วิเคราะห์" button in the Balance Room (same measurer as lab/measure.mjs · measureAll) → the room saves the result in db results/latest · Claude continues from that result and **does not re-measure**
