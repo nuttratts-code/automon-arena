@@ -25,6 +25,7 @@ renderCharForm(); renderTribeForm(); refreshDirty();
     const sync = readSynced(), draft = JSON.stringify(diffs());
     const clean = draft === '{"chars":{},"tribes":{}}' || (sync && sync.draft === draft) && (!stageEdited() || same(stageCfg, cleanStage(cfg && cfg.stage))); // stage mode: unsaved rune/boss edits also block the load
     const sAt = cfg && typeof cfg.savedAt === 'string' ? cfg.savedAt : '', sRev = cleanRev(cfg && cfg.rev);
+    if (cfg && cfg.stage) stageSaved = cleanStage(cfg.stage); // set 146 r2: reset button target
     if (sync) { cfgRev = sync.rev || (sAt && sAt <= sync.at ? sRev : 0); showCfgVer(cfgRev, sync.at); }
     if (at && (!sync || at > sync.at)) {
       if (clean) {
