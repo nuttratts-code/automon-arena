@@ -34,13 +34,25 @@ const ruleOf = (b, id) => b.phases.flatMap(p => p.rules || []).find(r => r.id ==
 const dropRules = (b, ids) => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: (p.rules || []).filter(r => !ids.includes(r.id)) })) });
 const f0 = x => (Number.isNaN(x) ? '-' : x.toFixed(0));
 const T = [0, T1, T2, T3];
+// set 141 (user N1): per boss the rule found by the cause check (resisted tribe win % with the rule off) · B5 near target → none
+const KNOB = { B1: 'armorCut', B2: 'tribeResist', B3: 'tribeResist', B4: 'shockImmune', B6: 'burnImmune' };
+const knob = (b, id, f) => !id || f === 1 ? b : ({ ...b, phases: b.phases.map(p => ({ ...p, rules: (p.rules || []).map(r => r.id === id && typeof r.v === 'number' ? { ...r, v: Math.max(1, Math.round(r.v * f)) } : r) })) });
 // win % falls as the boss grows → search the value giving `target`
 function search(lo, hi, f, target, steps = 9) { for (let i = 0; i < steps; i++) { const mid = (lo + hi) / 2; if (f(mid) > target) lo = mid; else hi = mid; } return (lo + hi) / 2; }
 const out = [];
 for (const b of RUN_STAGE.bosses.filter(x => x.on)) {
   const before = [winPct(b, 1, teams[1]), winPct(b, 2, teams[2])];
-  const s = search(0.2, 4, x => winPct(scale(b, x), 1, teams[1]), T1);
-  const b1 = scale(b, s);
+  // set 141 (user N1): the rule that holds the resisted tribe down (cause check) is scaled by f (all phases, ≥ 1) so that tribe wins ≈ T1 − 20
+  // at k1, alternating with the hp/atk scale s (2 passes) · bosses without a KNOB entry keep their rules
+  const kn = KNOB[b.id], resT = ruleOf(b, 'tribeResist')?.tribe, R1 = teams[1].filter(t => t.tr === resT);
+  let f = 1, s = 1;
+  for (let pass = 0; pass < (kn && R1.length ? 2 : 1); pass++) {
+    s = search(0.2, 4, x => winPct(scale(knob(b, kn, f), x), 1, teams[1]), T1);
+    if (kn && R1.length) f = search(0, 1, x => winPct(scale(knob(b, kn, x), s), 1, R1), T1 - 20);
+  }
+  if (kn && R1.length) s = search(0.2, 4, x => winPct(scale(knob(b, kn, f), x), 1, teams[1]), T1);
+  const b1 = scale(knob(b, kn, f), s);
+  if (kn) console.log(`  ${b.id} ${kn}: ${b.phases.map(p => (p.rules || []).find(r => r.id === kn)?.v ?? '-').join('/')} → ${b1.phases.map(p => (p.rules || []).find(r => r.id === kn)?.v ?? '-').join('/')}`);
   const m10 = Math.round(search(0.5, 6, x => winPct({ ...b1, mult10: x }, 2, teams[2]), T2) * 100) / 100;
   let nb = { ...b1, mult10: m10 };
   const before3 = K3 && teams[3].length ? winPct(b, 3, teams[3]) : NaN;
@@ -65,6 +77,9 @@ if (WRITE) {
     const m = src.match(re); if (!m) { console.log('not found', nb.id); continue; }
     let line = m[1].replace(/ atk: \d+(\.\d+)?, bars:/, ` atk: ${nb.atk}, bars:`).replace(/ hp: \d+, id:/, ` hp: ${nb.hp}, id:`).replace(/mult10: [\d.]+/, `mult10: ${nb.mult10}`).replace(/endlessPct: -?\d+/, `endlessPct: ${nb.endlessPct}`);
     let i = 0; line = line.replace(/stats: \{ atk: \d+ \}/g, () => { while (i < nb.phases.length && typeof nb.phases[i].stats?.atk !== 'number') i++; return `stats: { atk: ${nb.phases[i++].stats.atk} }`; });
+    const kn = KNOB[nb.id];
+    if (kn) { const vals = nb.phases.flatMap(p => (p.rules || []).filter(r => r.id === kn).map(r => r.v)); let j = 0;
+      line = line.replace(new RegExp(`(\\{ id: '${kn}',(?: tribe: '[^']*',)? v: )\\d+`, 'g'), (_, a) => `${a}${vals[j++]}`); }
     src = src.replace(m[1], line);
   }
   writeFileSync(f, src);
