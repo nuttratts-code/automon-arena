@@ -30,3 +30,5 @@ over ALL runs, main run AND extra matches. Draw counts as a win (`won1 = winner 
 Foe strength adapts (foeFloor 100, −20 per loss from 2 losses in a row, min 40, any win → 100), so ~50% is by design;
 the by-streak table shows win % rising with streak = stronger boards keep winning.
 Possible later tweaks (only if user asks): split main vs extra · show draws separately.
+Q2b: "แมตช์" column = matches played with that streak before them. Row "5 ขึ้นไป" = streak 5, 6, 7 … pooled
+(`Math.min(5, m.ws)`), incl. long streaks in extra matches → can exceed row 4. Possible tweak: rows 5 / 6–9 / 10+.
