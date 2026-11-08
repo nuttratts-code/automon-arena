@@ -490,5 +490,5 @@ async function stageResetPart(part) {
   if (!base) base = cleanStage(null);
   for (const k of STAGE_PART_KEYS[part]) stageCfg[k] = base[k];
   stageCfg = cleanStage(stageCfg); renderStage(); stageChanged();
-  saveMsg('คืนแท็บนี้เป็น' + from + 'แล้ว');
+  saveMsg('คืนแท็บนี้แล้ว: ' + from);
 }

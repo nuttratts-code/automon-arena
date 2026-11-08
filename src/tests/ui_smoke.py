@@ -437,7 +437,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         chk(pg.evaluate("""(async()=>{const wait=()=>new Promise(r=>setTimeout(r,50)); const b=document.getElementById('stgReset'); const nm=STAGE_RUNES[0].id;
           stagePart='bosses'; renderStage(); stageCfg.runes[nm].name='ชื่อทดสอบ'; stageCfg.bosses[0].hp=999; stageChanged(); const e1=stageEdited(); b.click(); const mid=stageEdited(); b.click(); await wait();
           let ok=e1 && mid && b.disabled && stageCfg.runes[nm].name==='ชื่อทดสอบ' && JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY)).bosses[0].hp===STAGE_BASE.bosses[0].hp;
-          const keepDb=db; db={doc:()=>({get:async()=>({exists:true,data:()=>({rev:7,stage:JSON.parse(JSON.stringify(stageCfg))})})})};
+          const keepDb=db, snap=JSON.parse(JSON.stringify(stageCfg)); db={doc:()=>({get:async()=>({exists:true,data:()=>({rev:7,stage:snap})})})};
           stagePart='runes'; renderStage(); stageCfg.runes[nm].name='อีกชื่อ'; stageChanged(); b.click(); b.click(); await wait();
           ok=ok && stageCfg.runes[nm].name==='ชื่อทดสอบ';
           db=null; b.click(); b.click(); await wait(); ok=ok && !stageEdited() && b.disabled; db=keepDb; renderStage(); return ok})()"""),'stage reset button')
