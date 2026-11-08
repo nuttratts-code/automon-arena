@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Automon Arena weekly review (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ) (CLAUDE.md "Weekly review", rule D1 set 150 + workflow audit sets 152–153). Use when the user says "รีวิวสัปดาห์" (planned every Friday) or asks to review/audit the workflow, rules or docs for unclear or conflicting points. Finds user corrections and waste of the week, then audits the rule docs against each other and against the code, writes claude/review-YYYY-MM-DD-weekly.md, asks A/B per change, and edits only after approval.
+description: Automon Arena weekly review (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม) (CLAUDE.md "Weekly review", rule D1 set 150 + workflow audit sets 152–153). Use when the user says "รีวิวสัปดาห์" (planned every Friday) or asks to review/audit the workflow, rules or docs for unclear or conflicting points. Finds user corrections and waste of the week, checks whether the week's work actually followed the rules (UI, gate, values, publish, lock, close-out, doc versions), then audits the rule docs against each other and against the code, writes claude/review-YYYY-MM-DD-weekly.md, asks A/B per change, and edits only after approval.
 ---
 # Weekly review (D1 + workflow audit)
 
@@ -32,6 +32,20 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 7. **Review hygiene:** every claude/review-*.md has a row in reviews.md · drafts "waiting for the user" are listed in handoff "Open decisions" · decided/applied files are moved to claude/archive/reviews/ · after `git mv`, grep the old name and fix references.
 8. **Thai summary:** claude/instructions.md version and content match the current CLAUDE.md (redo it whenever CLAUDE.md changed).
 9. **handoff:** Relay = newest 2 sets · no finished lines left in the Relay · Publish line = current only · counts/facts in State still true · set numbers not used twice (a duplicate = parallel chats → tell the user).
+
+## 3b. Rule compliance — were the rules actually followed? (set 158, user request)
+The audit above checks the TEXT of the rules; this checks the WORK of the week against them. Sources: this week's Relay entries (handoff + claude/archive/relay/) and `git log`/`git diff` on origin/main — Claude cannot read old chats, so a rule with no trace counts as "not shown" (say so, don't call it proven). Per set of the week:
+1. **UI (ui.md / skill ui-work):** `git log --since='7 days ago' --format=%h origin/main -- src/game src/lab/balance 'src/*.template.html' src/lab/*.template.html` → each of those sets' Relay line has `UI: design skill ✓ · shots ✓`; reset/delete buttons were asked up front (no "built twice").
+2. **Gate (HARD RULE 3/5):** every code merge names GATE: PASS on that commit; a first-run FAIL or "re-run PASS" has its cause written down (set 149 did not).
+3. **New core/game files (HARD RULE 2):** `git log --since='7 days ago' --diff-filter=A --name-only --format= origin/main -- src/core src/game` → each one is in `CORE` in src/build.mjs.
+4. **Values (HARD RULE 6):** a set that changed game values has its cfgdiff review file + the "cells to set back" user todo; bossrun --write only after a shown before/after.
+5. **Publish:** each publish names its gate commit + CI green (set 153 G1) and updated the existing Links URL.
+6. **Relay / lock:** every set number is unique · each chat pushed a 🔒 line and none is left after its close-out · Relay = newest 2 sets.
+7. **Close-out (HARD RULE 1):** each merged code set ended with a close-out that printed the skill check (`สกิลใหม่: …`).
+8. **Doc versions:** a Thai rule doc / CLAUDE.md changed → its version line bumped, claude/instructions.md regenerated (user picked: caught here, set 158 B2), and handoff "Doc versions" matches the file headers:
+   `for f in combat-rules tribe-rules shop-merge-rules build-plan instructions; do h=$(sed -n 3p claude/$f.md | grep -oE '^V[0-9.]+'); grep -q "$f $h" claude/handoff.md || echo "DIFF $f file=$h"; done`
+9. **Measure:** measured only with permission (or a mechanic change), with a measure-log entry.
+Each miss → a report item: rule · set · evidence · why it was missed (rule not seen at that moment / trigger unclear / step forgotten) · where the fix belongs (skill description or step · merge-code check · hook · CLAUDE.md), with A1/A2 options. A rule missed twice → recommend moving it into a skill step or a merge-code check rather than adding more text.
 
 ## 4. Report
 - Write claude/review-YYYY-MM-DD-weekly.md: part 1 items, then audit items. Each item = label A, B… · where (file + line) · the problem with evidence · options A1/A2… with a recommendation. Pure wording fixes can be grouped into one item.

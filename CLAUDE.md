@@ -8,7 +8,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Relay between the 2 accounts · publish ownership + paste message | claude/workflow/relay.md | WIP branch from the other account, publishing, Relay block updates |
 | Publish + page tests | skill `publish-pages` (runbook) · claude/workflow/publish.md (rules) | publishing an artifact, running ui_smoke by hand |
 | Choices A1/B1 · buttons · guiding the user in tools | claude/workflow/replies.md | before asking the user to pick, or walking them through a tool |
-| UI work (design skill first) | claude/workflow/ui.md | building or reshaping any UI/page/mockup |
+| UI work (design skill first) | skill `ui-work` (runbook) · claude/workflow/ui.md (rules) | building or reshaping any UI/page/mockup — a new tab, table or button of numbers counts |
 | Balance import · cfgdiff · bossrun | skill `balance-import` (runbook) · claude/workflow/balance-import.md §00 (rules) | any task touching game values (HARD RULE 6) |
 | Chat start (fetch · Relay · 🔒 · branch) | skill `chat-start` (runbook; SessionStart hook prints the Relay) · claude/workflow/relay.md (rules) | first turn of every chat |
 | Code branch → main (setup · gate · merge · CI) | skill `merge-code` (runbook) · HARD RULE 3 (rules) | a set changed code and is ready |
