@@ -1,9 +1,9 @@
 # 2-week review — 25 Oct to 8 Nov 2026 (rule D1, set 150; widened from 1 week at the user's request)
 
 Sources read: `git log origin/main` (102 commits — the repo history starts 8 Nov, so everything older is visible only through the archives) · claude/handoff.md · archive/relay/relay-2026-11-08-sets117-137.md (sets 117–149, read in full) · archive/relay/relay-2026-11-07-sets66-116.md (sets 66–116, grep) · archive/relay/relay-2026-10-31.md + relay-sets-54-61.md (sets 54–70, read in full) · relay-2026-11-04*/11-05/11-06 (grep) · archive/handoff-log.md (25–26 Oct) · archive/GEMINI-jules-cancelled.md. Claude cannot read old chats, so items come only from what the Relay recorded. Week 1 = 25 Oct–1 Nov (sets ~32–70) · week 2 = 1–8 Nov (sets ~70–150).
-First round of answers (W1–W4, 8 Nov): all "no preference" → asked again together with the new items.
+First round of answers (W1–W4, 8 Nov): all "no preference" → asked again together with the new items; second round = every recommended pick.
 
-Status: **proposals only — nothing edited yet.** Each change waits for the user's A/B pick.
+Status: **APPLIED in set 151 (user picked, 8 Nov):** W1 A2 · W2 A1 · W3 A1 · W4 A1 · W5 A1 · W6 A1 · W7 A1 · W9 A1 · W10 A1 · W8 not changed (recommended A2).
 
 ## Thai summary for the user (1 line per item)
 | # | เกิดอะไร | เสนอแก้ที่ | แนะนำ |

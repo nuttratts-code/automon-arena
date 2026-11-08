@@ -1,6 +1,10 @@
 # workflow · measuring balance (always ask permission first)
 
-V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+
+## 00. Tools that play runs (review W5, set 151 — set 138 รันจริง and set 140 bossrun used an old flow)
+- runerun, bossrun, econ55, charstat and Balance Room รันจริง take their runs from `lab/analyze.js runPlayStats` — never a private copy of the run flow.
+- A set that changes the run flow (foe pick, runes, extra matches, shop, bosses) names in its Relay line which of these tools it re-checked.
 
 ## 0. The user measures balance (V1.25 · user chose 25 Oct · replaces sections 12 / 6 / 11 when importing values from the Balance Room)
 - The user measures with the "วิเคราะห์" button in the Balance Room (same measurer as lab/measure.mjs · measureAll) → the room saves the result in db results/latest · Claude continues from that result and **does not re-measure**
