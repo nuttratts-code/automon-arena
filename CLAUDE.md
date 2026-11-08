@@ -28,7 +28,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Work the user does in tools (Balance Room, game page): name the tool, one step at a time, wait for "done".
 - "Why / how should" questions = short answer, change nothing until told.
 - Characters as ID+name, e.g. PL-3 (name). Rules: C- combat · T- tribe · S- shop.
-- **Choice labels (user rule 8 Nov, set 136):** when the user must pick, label each question/topic with a capital letter A, B, C… and its options A1, A2, A3… (B1, B2…), so the user can answer e.g. "A2 B1". Never use other ad-hoc labels (F1, Q1, ก/ข) for choices. Review files under claude/ follow the same labels.
+- **Choice labels (user rule 8 Nov, set 136):** when the user must pick, label each question/topic with a capital letter A, B, C… and its options A1, A2, A3… (B1, B2…), so the user can answer e.g. "A2 B1". Never use other ad-hoc labels (F1, Q1, ก/ข) for choices. Review files under claude/ follow the same labels. **Buttons (user rule 8 Nov, set 136):** explain everything in normal chat text first (questions A, B… with options A1, A2… fully described in the text), then call AskUserQuestion with buttons only: question text = just the letter ("A"), option labels = just "A1", "A2"… (description = same short label), never repeat the explanation inside the dialog. Max 4 questions × 2–4 options per call; more → several calls in a row.
 
 ## Decisions
 - Design/rules: offer 2–3 options + a recommended one, wait for confirmation. Several topics in one message = ask once, do all in one pass.
