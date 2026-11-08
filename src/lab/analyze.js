@@ -6,7 +6,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { bossUnit } from '../core/boss.js';
 import { equipRunes, RUNE_RUN_ONLY } from '../core/runes.js';
 import { runeActive, runeKind } from '../core/stage.js';
-import { pickBotTeam, simRun, tribeList } from '../core/botteams.js';
+import { pickFoe, simRun, tribeList } from '../core/botteams.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { dataHash } from '../core/save.js';
 // ตัววิเคราะห์บาลานซ์: ใช้ตัวคำนวณเดียวกับเกม · เมล็ดสุ่มเดิม = ทีมชุดเดิม จึงเทียบก่อน/หลังแก้ได้ตรงๆ
@@ -265,56 +265,79 @@ export async function runeUplift(chars, rules, stage, { foe = 'boss', bossIds, k
 }
 
 // ---------- Set 86: full-run simulation with the human-like bot (core/bot.js) · Balance Room ดูผล "รันจริง" ----------
-// Each run = the same simRun the bot teams are generated from: shop rounds, boss rounds (stage being edited), hearts, 10 wins.
+// Set 138 (user 8 Nov): the SAME flow as lab/runerun.mjs (runerun prints from this function → page and terminal show the same numbers):
+// enemy = pickFoe (player power locked at shop start + floor, like the game) · both sides carry runes · after winsToFinish wins the run
+// goes on with extra matches up to lastStage · seed formula of runerun (8800). The training dummy is not counted as a boss.
 // opp 'teams' = the game's prepared bot teams (only when they were built from these exact values, else falls back to live)
 // opp 'live'  = a second bot plays its own run alongside every match (new team every match, no fixed pool)
-export const RUN_SIM = { seed: 8686, top: 10 };
+// dyn = [step, cap, start] (runerun --dyn) · keepTeams = collect boss-fight teams per k (runerun --write)
+export const RUN_SIM = { seed: 8800, top: 10 };
 export const botTeamsFit = (chars, rules) => !!BOT_TEAMS && BOT_TEAMS.hash === dataHash(chars, rules);
 const mainTribeOf = (team, map, rules) => {
   const act = activeTribes(team, map, rules); if (!act.length) return null;
   const cnt = t => new Set(team.filter(e => [map[e.id].tribe, ...(map[e.id].extraTribes || [])].includes(t)).map(e => e.id)).size;
   return act.slice().sort((a, b) => cnt(b) - cnt(a) || TRIBES.indexOf(a) - TRIBES.indexOf(b))[0];
 };
-export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', onProgress } = {}) {
+const isDummyId = id => id === 'DUMMY';
+export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
-  const pick = useTeams ? (P => pickBotTeam(BOT_TEAMS, P.round, P.seed).team) : null;
-  const tribes = tribeList(chars);
+  const tribes = tribeList(chars), rarOf = Object.fromEntries(chars.map(c => [c.id, c.rarity]));
   const ends = Array(W + 1).fill(0), byRound = {}, boss = {}, ch = {}, tr = {}, combos = {};
+  const normal = [0, 0], byWs = {}, bk = {}, nb = {}, lv3 = {}, pcts = [], teams = { 1: [], 2: [], 3: [] };
   for (const c of chars) ch[c.id] = { runs: 0, lvSum: 0, won: 0, winsSum: 0, mGames: 0, mWins: 0 };
-  let won = 0, rounds = 0, winsSum = 0, matches = 0, aborted = 0, timeSum = 0, lv3Final = 0;
+  let won = 0, rounds = 0, winsSum = 0, matches = 0, aborted = 0, timeSum = 0, lv3Final = 0, cleared = 0, seconds = 0, extraM = 0, extraW = 0;
   for (let r = 0; r < n; r++) {
-    let last = null;
+    let last = null, wasOver = false, fl = dyn ? (dyn[2] || 0) : 0; const seen = {};
+    const pick = useTeams ? (p => {
+      const stg = dyn ? { ...stage, settings: { ...stage.settings, foeFloor: fl } } : stage;
+      const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, rules, p.ls | 0); pcts.push(dyn ? fl : f.pct); return f;
+    }) : null;
     const P = simRun(chars, rules, (seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, pick, m => {
-      matches++; if (m.aborted) aborted++; timeSum += m.timeMs;
-      const w = m.winner === 0 ? 1 : 0, lvs = m.team.reduce((a, e) => a + e.level, 0), l3 = m.team.filter(e => e.level >= 3).length;
+      if (dyn) fl = Math.max(0, Math.min(dyn[1] ?? 100, fl + (m.winner !== 1 ? dyn[0] : -dyn[0])));
+      matches++; if (m.aborted) aborted++; timeSum += m.timeMs; if (m.second) seconds++;
+      const w = m.winner === 0 ? 1 : 0, won1 = m.winner !== 1, lvs = m.team.reduce((a, e) => a + e.level, 0), l3 = m.team.filter(e => e.level >= 3).length;
+      for (const e of m.team) if (e.level >= 3) { const q = rarOf[e.id]; if (q && !seen[q]) { seen[q] = 1; (lv3[q] ||= []).push(m.round); } }
       const R = (byRound[m.round] ||= { games: 0, wins: 0, gold: 0, lv: 0, lv3: 0, units: 0, boss: 0, ms: 0 });
-      R.games++; R.wins += m.winner !== 1 ? 1 : 0; R.gold += m.gold; R.lv += lvs; R.lv3 += l3; R.units += m.team.length; R.ms += m.timeMs; if (m.boss) R.boss++;
+      R.games++; R.wins += won1 ? 1 : 0; R.gold += m.gold; R.lv += lvs; R.lv3 += l3; R.units += m.team.length; R.ms += m.timeMs; if (m.boss) R.boss++;
       for (const id of new Set(m.team.map(e => e.id))) if (ch[id]) { ch[id].mGames++; ch[id].mWins += w; }
-      if (m.boss) {
+      if (m.extra) { extraM++; extraW += won1 ? 1 : 0; }
+      if (!m.boss) { normal[0]++; normal[1] += won1 ? 1 : 0; const q = (byWs[Math.min(5, m.ws)] ||= [0, 0]); q[0]++; q[1] += won1 ? 1 : 0; }
+      else if (!isDummyId(m.boss)) {
+        const K = (bk[m.k] ||= [0, 0]); K[0]++; K[1] += won1 ? 1 : 0;
+        if (!m.extra) { const q = (nb[m.k] ||= [0, 0]); q[0]++; q[1] += won1 ? 1 : 0; }
+        if (keepTeams && teams[m.k]) teams[m.k].push({ units: m.units, opts: m.opts });
         const b = stage.bosses.find(x => x.id === m.boss) || { bars: 1, name: m.boss };
         const B = (boss[`${m.boss}#${m.k}`] ||= { id: m.boss, name: b.name, k: m.k, round: m.round, games: 0, wins: 0, bars: 0, maxBars: b.bars, ms: 0, lv: 0, lv3: 0, tribe: {} });
         B.games++; B.wins += w; B.bars += bossBarsGone(m.res, b); B.ms += m.timeMs; B.lv += lvs; B.lv3 += l3;
         const t = mainTribeOf(m.team, map, rules) || '-'; const T = (B.tribe[t] ||= { games: 0, wins: 0 }); T.games++; T.wins += w;
       }
-      last = m;
-    }, stage, { focus: tribes[r % tribes.length] }); // set 87: each run's bot leans toward one tribe in turn (players differ)
-    const fin = P.wins >= W; if (fin) won++;
-    ends[Math.min(W, P.wins)]++; rounds += P.round; winsSum += P.wins;
+      if (won1 && !wasOver && m.stage + 1 >= W) { wasOver = true; cleared++; }
+      if (!m.extra) last = m; // set 138: the "final team" = last match of the main run (extra matches excluded)
+    }, stage, { focus: tribes[r % tribes.length], runes: true, extra: stage.settings.lastStage }); // set 87: each run's bot leans toward one tribe in turn
+    const mainWins = Math.min(W, P.wins), fin = mainWins >= W; if (fin) won++;
+    ends[mainWins]++; rounds += last ? last.round : P.round; winsSum += mainWins;
     if (last) {
       const team = last.team;
       lv3Final += team.filter(e => e.level >= 3).length;
       const best = {}; for (const e of team) best[e.id] = Math.max(best[e.id] || 0, e.level);
-      for (const [id, lv] of Object.entries(best)) if (ch[id]) { const c = ch[id]; c.runs++; c.lvSum += lv; c.won += fin ? 1 : 0; c.winsSum += P.wins; }
-      const t = mainTribeOf(team, map, rules) || '-'; const T = (tr[t] ||= { runs: 0, won: 0, winsSum: 0 }); T.runs++; T.won += fin ? 1 : 0; T.winsSum += P.wins;
+      for (const [id, lv] of Object.entries(best)) if (ch[id]) { const c = ch[id]; c.runs++; c.lvSum += lv; c.won += fin ? 1 : 0; c.winsSum += mainWins; }
+      const t = mainTribeOf(team, map, rules) || '-'; const T = (tr[t] ||= { runs: 0, won: 0, winsSum: 0 }); T.runs++; T.won += fin ? 1 : 0; T.winsSum += mainWins;
       if (fin) { const key = Object.keys(best).sort().join(' '); const C = (combos[key] ||= { ids: Object.keys(best).sort(), count: 0, lv: 0 }); C.count++; C.lv += team.reduce((a, e) => a + e.level, 0); }
     }
     if (r % 5 === 4) { onProgress && onProgress((r + 1) / n); await pause(); }
   }
   const pct = (a, b) => (b ? a / b * 100 : 0);
+  pcts.sort((a, b) => a - b);
+  const q = (a, f) => (a.length ? a[Math.min(a.length - 1, Math.floor(a.length * f))] : null);
   return {
     n, opp: useTeams ? 'teams' : 'live', askedTeams: opp === 'teams', matches, aborted,
-    won: pct(won, n), avgRounds: rounds / n, avgWins: winsSum / n, avgTime: matches ? timeSum / matches / 1000 : 0, lv3Final: lv3Final / n,
+    won: pct(won, n), cleared: pct(cleared, n), avgRounds: rounds / n, avgWins: winsSum / n, avgTime: matches ? timeSum / matches / 1000 : 0, lv3Final: lv3Final / n,
+    normalWin: pct(normal[1], normal[0]), normalGames: normal[0], second: pct(seconds, n), extra: { games: extraM, win: pct(extraW, extraM) },
+    foePct: pcts.length ? { p10: q(pcts, 0.1), p50: pcts[pcts.length >> 1], p90: q(pcts, 0.9) } : null,
+    byWs: Object.keys(byWs).map(Number).sort((a, b) => a - b).map(k => ({ ws: k, games: byWs[k][0], win: pct(byWs[k][1], byWs[k][0]) })),
+    bossK: Object.keys(bk).map(Number).sort((a, b) => a - b).map(k => ({ k, games: bk[k][0], win: pct(bk[k][1], bk[k][0]), mainReach: nb[k] ? pct(nb[k][0], n) : 0, mainWin: nb[k] ? pct(nb[k][1], nb[k][0]) : null })),
+    lv3First: Object.keys(lv3).map(k => { const a = lv3[k].sort((x, y) => x - y); return { rarity: k, share: pct(a.length, n), med: a[a.length >> 1], p25: a[a.length >> 2], p75: a[(a.length * 3) >> 2] }; }),
     ends: ends.map((c, w) => ({ wins: w, runs: c, pct: pct(c, n) })),
     rounds: Object.entries(byRound).map(([k, R]) => ({ round: +k, games: R.games, reach: pct(R.games, n), win: pct(R.wins, R.games), gold: R.gold / R.games, lv: R.lv / R.games, lv3: R.lv3 / R.games, units: R.units / R.games, boss: R.boss, time: R.ms / R.games / 1000 })).sort((a, b) => a.round - b.round),
     bosses: Object.values(boss).map(B => ({ id: B.id, name: B.name, k: B.k, round: B.round, games: B.games, reach: pct(B.games, n), win: pct(B.wins, B.games), bars: B.bars / B.games, maxBars: B.maxBars, time: B.ms / B.games / 1000, lv: B.lv / B.games, lv3: B.lv3 / B.games,
@@ -322,5 +345,6 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
     chars: chars.map(c => { const x = ch[c.id]; return { id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, price: c.price, runs: x.runs, pick: pct(x.runs, n), lv: x.runs ? x.lvSum / x.runs : 0, won: pct(x.won, x.runs), wins: x.runs ? x.winsSum / x.runs : 0, mGames: x.mGames, mWin: pct(x.mWins, x.mGames) }; }),
     tribes: Object.entries(tr).map(([t, x]) => ({ tribe: t, runs: x.runs, share: pct(x.runs, n), won: pct(x.won, x.runs), wins: x.winsSum / x.runs })).sort((a, b) => b.runs - a.runs),
     combos: Object.values(combos).sort((a, b) => b.count - a.count).slice(0, RUN_SIM.top).map(C => ({ ids: C.ids, count: C.count, share: pct(C.count, won), lv: C.lv / C.count })),
+    ...(keepTeams ? { teams } : {}),
   };
 }

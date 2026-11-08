@@ -4,7 +4,7 @@
 let anaPlayRun = null;
 function anaRunHint() {
   const fit = botTeamsFit(chars, rulesNow());
-  return 'บอทเล่นทั้งรันเหมือนคนจริง (ซื้อ/ขาย/สุ่มร้านเอง · แต่ละรันเอนไปเผ่าหนึ่งวนครบ 6 เผ่า · เจอบอสตามตั้งค่าด่าน · หัวใจหมด = จบ) · ใช้ค่าตัวละคร/กฎ/บอสที่กำลังแก้ · ยังไม่มีรูนในเกมจึงไม่ใส่รูน · ผลนี้เก็บแยก ไม่ทับผลวัดปกติ'
+  return 'บอทเล่นทั้งรันเหมือนคนจริง (ซื้อ/ขาย/สุ่มร้านเอง · แต่ละรันเอนไปเผ่าหนึ่งวนครบ 6 เผ่า · เจอบอสตามตั้งค่าด่าน · ศัตรูเลือกตามพลังทีมเหมือนในเกม · ทั้งสองฝั่งใส่รูน · หัวใจหมด = จบ · ชนะครบ 10 แล้วเล่นต่อถึงรอบสุดท้าย) · วิธีเดียวกับการวัด runerun ของ Claude: ค่าเดิม = ตัวเลขตรงกัน · ใช้ค่าตัวละคร/กฎ/บอสที่กำลังแก้ · ผลนี้เก็บแยก ไม่ทับผลวัดปกติ'
     + (fit ? '' : ' · ⚠ ค่าที่แก้ต่างจากค่าที่สร้างทีมบอทในเกม → "ทีมบอทในเกม" จะใช้บอทเล่นสดแทน');
 }
 $('anaRunOpp').addEventListener('change', renderAnaMode);
@@ -35,6 +35,26 @@ function renderPlayRun() {
   cards[2].firstChild.textContent = fmt(R.avgRounds);
   cards[3].firstChild.textContent = fmt(R.lv3Final);
   cards[4].firstChild.textContent = `${fmt(R.avgTime)} วิ`;
+  cards[5].firstChild.textContent = `${fmt(R.normalWin)}%`;
+  cards[6].firstChild.textContent = `${fmt(R.second)}%`;
+  $('runBossK').replaceChildren(...(R.bossK.length ? R.bossK.map(x => {
+    const tr = document.createElement('tr');
+    tr.append(td(`ครั้งที่ ${x.k}`), td(`${fmt(x.mainReach)}%`, 'n'), td(x.mainWin == null ? '–' : `${fmt(x.mainWin)}%`, 'n'), td(x.games.toLocaleString(), 'n'), td(`${fmt(x.win)}%`, 'n'));
+    return tr;
+  }) : [runEmptyRow(5)]));
+  $('runWs').replaceChildren(...(R.byWs.length ? R.byWs.map(x => {
+    const tr = document.createElement('tr');
+    tr.append(td(x.ws >= 5 ? '5 ขึ้นไป' : String(x.ws), 'n'), td(x.games.toLocaleString(), 'n'), td(`${fmt(x.win)}%`, 'n'));
+    return tr;
+  }) : [runEmptyRow(3)]));
+  const rOrder = ['ธรรมดา', 'ไม่ธรรมดา', 'หายาก', 'หายากมาก'];
+  $('runLv3').replaceChildren(...(R.lv3First.length ? R.lv3First.slice().sort((a, b) => rOrder.indexOf(a.rarity) - rOrder.indexOf(b.rarity)).map(x => {
+    const tr = document.createElement('tr'), rt = td(''); rt.append(rarityTag(x.rarity));
+    tr.append(rt, td(`${fmt(x.share)}%`, 'n'), td(`รอบ ${x.med}`, 'n'), td(`${x.p25}–${x.p75}`, 'n'));
+    return tr;
+  }) : [runEmptyRow(4)]));
+  $('runMeasureInfo').textContent = `รันหลัก = จนชนะครบ 10 หรือหัวใจหมด · ช่วงเล่นต่อ = แมตช์หลังชนะครบ 10 (${R.extra.games.toLocaleString()} แมตช์ · ชนะ ${fmt(R.extra.win)}%) · ชนะแมตช์ทีมบอทไม่นับบอสและหุ่นซ้อม`
+    + (R.foePct ? ` · พลังศัตรูเทียบทีมบอทจริง p10/p50/p90 = ${R.foePct.p10}/${R.foePct.p50}/${R.foePct.p90}%` : '');
   $('runInfo').textContent = `${R.n.toLocaleString()} รัน · คู่แข่ง: ${R.opp === 'teams' ? 'ทีมบอทในเกม 360 ทีม (เลือกตามจำนวนชนะ/แพ้ เหมือนในเกม)' : 'บอทเล่นสด ทีมใหม่ทุกแมตช์'}`
     + (R.askedTeams && R.opp !== 'teams' ? ' (ค่าที่แก้ไม่ตรงกับทีมบอทในเกม จึงใช้บอทเล่นสดแทน)' : '');
   // bosses

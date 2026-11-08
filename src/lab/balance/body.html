@@ -373,8 +373,28 @@
       <div class="card"><b>–</b><span>เล่นเฉลี่ย (รอบ)</span></div>
       <div class="card"><b>–</b><span>ตัว Lv3 ในทีมสุดท้าย</span></div>
       <div class="card"><b>–</b><span>เวลาเฉลี่ยต่อแมตช์</span></div>
+      <div class="card"><b>–</b><span>ชนะแมตช์ทีมบอท</span></div>
+      <div class="card"><b>–</b><span>ได้ใช้โอกาสที่สอง (ของรัน)</span></div>
     </div>
     <p class="hint" id="runInfo"></p>
+    <div data-sec="measure" data-label="ตัวเลขวัด" style="display:grid;gap:8px">
+    <h3>บอสครั้งที่ 1 / 2 / 3</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>บอส</th><th class="n">ถึงในรันหลัก (% ของรัน)</th><th class="n">ชนะในรันหลัก</th><th class="n">เจอทั้งหมด (รวมช่วงเล่นต่อ)</th><th class="n">ชนะทั้งหมด</th></tr></thead>
+      <tbody id="runBossK"></tbody>
+    </table></div>
+    <h3>ชนะแมตช์ทีมบอท แยกตามจำนวนชนะติดกันก่อนแมตช์</h3>
+    <div class="tbl"><table>
+      <thead><tr><th class="n">ชนะติดกัน</th><th class="n">แมตช์</th><th class="n">ชนะ %</th></tr></thead>
+      <tbody id="runWs"></tbody>
+    </table></div>
+    <h3>ตัว Lv3 ตัวแรกบนกระดาน แยกความหายาก</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ความหายาก</th><th class="n">รันที่ได้ Lv3</th><th class="n">รอบที่ได้ (ค่ากลาง)</th><th class="n">ช่วงรอบ (25–75%)</th></tr></thead>
+      <tbody id="runLv3"></tbody>
+    </table></div>
+    <p class="hint" id="runMeasureInfo"></p>
+    </div>
     <div data-sec="boss" data-label="บอสในรัน" style="display:grid;gap:8px">
     <h3>บอสในรัน (แยกตามบอส × ครั้งที่)</h3>
     <div class="tbl"><table>

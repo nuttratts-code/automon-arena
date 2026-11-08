@@ -318,3 +318,4 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 .tbl-fix tr.click:hover td.rk-name { background: var(--soft); }
 .rank-tools { align-items: center; }
 @media (max-width: 520px) { .tbl-fix .rk-name { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; } }
+#runCards { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } /* set 138: 7 run cards fit one row on desktop */
