@@ -13,7 +13,7 @@ import { buildTeam, makeCharMap } from '../core/team.js';
 import { validateTeam } from '../core/validate.js';
 import { eq, ok } from './helpers.js';
 export const TESTS_BOTS = [
-  ['set 99: bot teams = one cell per round (1–19) × ง่าย/กลาง/ยาก × 4 · pass the checker and match the game data', () => {
+  ['set 99: bot teams = one cell per round (1–19) × ง่าย/กลาง/ยาก/แรงมาก × 4 · pass the checker and match the game data', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), n = botRounds(RULES);
     const v = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars));
     ok(v.ok, 'ทีมบอทใช้ไม่ได้ (ค่าตัวละคร/กฎเปลี่ยน → รัน node lab/botgen.mjs ใหม่): ' + v.errors.slice(0, 3).join(' | '));
@@ -65,7 +65,7 @@ export const TESTS_BOTS = [
       a.team.length = 0; ok(BOT_TEAMS.rounds[k].every(t => t.team.length > 0), 'แก้ทีมที่ได้ไม่กระทบข้อมูลต้นฉบับ');
     }
     const seen = new Set(); for (let s = 1; s <= 40; s++) seen.add(pickBotTeam(BOT_TEAMS, 9, s).tier);
-    eq(seen.size, 3, 'สุ่มได้ครบ 3 ระดับ');
+    eq(seen.size, BOT_TIERS.length, 'สุ่มได้ครบทุกระดับ (ชุด 141: 4)');
     const o = { runs: 3, perTribe: 2, refOpp: 3 };
     const g1 = genBotTeams(chars, RULES, o);
     eq(JSON.stringify(g1), JSON.stringify(genBotTeams(chars, RULES, o)), 'สร้างซ้ำได้ผลเดิม');
