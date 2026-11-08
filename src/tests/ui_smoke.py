@@ -331,6 +331,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
                 p4.evaluate("document.getElementById('fight').click()")
                 if not p4.evaluate("document.getElementById('app').classList.contains('fighting')"): p4.evaluate("document.getElementById('fight').click()")
                 p4.click('#skip'); p4.wait_for_selector('#next', state='visible', timeout=60000); p4.click('#next')
+            p4.evaluate("window.dispatchEvent(new Event('pagehide'))")  # shop steps after the last match go on page hide (or the next match end)
             p4.wait_for_function("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`,h=__st.docs['runlogs/'+id];return h&&h.n===RL.ev.length&&!rlPend.size;})()", timeout=20000)
             r4=p4.evaluate("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`;return [__st.overlap, __st.docs['runlogs/'+id+'/parts/p0'].ev.length===RL.ev.length, __st.n];})()")
             chk(r4[0]==0 and r4[1],'set 136: journal reaches the db after a failed write, no overlapping writes '+str(r4))
