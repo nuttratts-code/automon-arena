@@ -74,6 +74,7 @@ export function simulate(teamA, teamB, opts = {}) {
   let muteLog = false; // F2: true ระหว่างทำผลถาวรของตัวที่ล้มจริง (ดู apply)
   let dCur = null; // สกิลที่กำลังทำผล (ลำดับสกิล + ชนิดผล) ให้ดาเมจที่เกิดจากสกิลรู้ที่มา
   let ruleTag = null; // set 75: boss rule id while its effect runs (log adds it as r, detail only · never changes results)
+  const shellOff = () => !!BR.shellBreak && t < shellUntil; // set 142 R42: boss shell broken right now
   const byRule = (id, fn) => { const o = ruleTag; ruleTag = id; try { return fn(); } finally { ruleTag = o; } };
   let dFrom = null; // uid ของผู้ใช้สกิลที่กำลังทำผล (คู่กับ dCur)
 
@@ -151,7 +152,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // บอส = นักสู้ตัวเดียวที่ยืนหลายช่อง (ผู้ใช้เลือก Q1 A) · สกิลที่เล็งแถว/เลนเจอบอสเมื่อช่องใดช่องหนึ่งตรง และโดนครั้งเดียวต่อการใช้สกิล
   // กฎของเฟสปัจจุบันอยู่ใน BR (id → { v, v2, tribe }) · ทีมปกติไม่มีบอส = ทุกตัวช่วยคืนค่ากลาง ผลเหมือนเดิมทุกประการ
   const BOSS = F.find(f => f.boss) || null;
-  let BR = Object.create(null), phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, stunT = 0, drainT = 0, cdpT = 0, shieldT = 0, cleanT = 0, curseQ = null, stormAt = R.stormStartMs;
+  let BR = Object.create(null), ovl = { burn: 0, shock: 0 }, shellHits = 0, shellUntil = -1, resistWorn = 0, phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, stunT = 0, drainT = 0, cdpT = 0, shieldT = 0, cleanT = 0, curseQ = null, stormAt = R.stormStartMs;
   const TICKSK = F.some(f => f.skills.some(s => s.when === 'tick')); // รูนที่ทำงานทุก x วินาที (ฮีลเป็นช่วง) · ไม่มี = ข้ามทั้งก้อน
   const rule = id => (BOSS ? BR[id] : null);
   const inLane = (f, lane) => (f.cells ? f.cells.some(i => (i & 1) === lane) : f.lane === lane);
@@ -321,7 +322,13 @@ export function simulate(teamA, teamB, opts = {}) {
         if (BR.minHit && amount < BR.minHit.v) return block('minHit'); // R23
         if (src.bossDmgPct) amount *= 1 + src.bossDmgPct / 100; // รูนล่าบอส (T9)
         if (BR.tribeWeak && src.tribes.includes(BR.tribeWeak.tribe)) { amount *= 1 + BR.tribeWeak.v / 100; note('tribeWeak'); } // R25
-        if (BR.tribeResist && src.tribes.includes(BR.tribeResist.tribe)) { amount *= Math.max(0, 1 - BR.tribeResist.v / 100); note('tribeResist'); }
+        if (BR.tribeResist && src.tribes.includes(BR.tribeResist.tribe)) { // set 142 R41 ต้านค่อยๆ หมด: every resisted normal hit wears the resist down (kept across phases, user C1)
+          const rv = Math.max(0, BR.tribeResist.v - resistWorn);
+          if (rv > 0) { amount *= 1 - rv / 100; note('tribeResist'); if (BR.resistWear && why === 'hit') resistWorn += BR.resistWear.v; }
+        }
+        if (BR.shellBreak && why === 'hit' && t >= shellUntil && ++shellHits >= BR.shellBreak.v) { // set 142 R42 เปลือกแตก: X normal hits → armorCut/noArmor/reflect off for v2 s (user B1)
+          shellHits = 0; shellUntil = t + BR.shellBreak.v2 * 1000; if (detailOn) log('shellBreak', { who: target.uid, until: shellUntil });
+        }
       }
       if (BR.desperate) { amount *= 1 + BR.desperate.v / 100; note('desperate'); } // R13 คลั่ง: โดนดาเมจเพิ่ม
       if (BR.weakSpot && target.weakUntil > t) { amount *= 1 + BR.weakSpot.v / 100; note('weakSpot'); } // R30 หลังย้ายที่
@@ -375,7 +382,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (BOSS && target.boss && amount > 0) { // R8 ดูดเลือด (ไม่เกินแถบปัจจุบัน) · E7 สะท้อนดาเมจกลับ (ของที่สะท้อนไม่สะท้อนต่อ)
       if (BR.lifesteal) { const v = amount * BR.lifesteal.v / 100; byRule('lifesteal', () => bossHeal(v)); }
       if (BR.thorns && src && !src.boss && why === 'hit' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: BR.thorns.v, why: 'reflect', r: 'thorns' }, ctx: { attacker: src } }); // R32 หนาม
-      if (BR.reflect && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect', r: 'reflect' }, ctx: { attacker: src } });
+      if (BR.reflect && !shellOff() && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect', r: 'reflect' }, ctx: { attacker: src } });
     }
     target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำล้ม = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
     if (detailOn) { const dd = { ...(dCur || {}), ...(det || {}) }; if (target.hp < 0) dd.over = Math.min(loss, -target.hp); log('dmg', { to: target.uid, from: src ? src.uid : null, amount, absorbed, why, ...(subHit && why === 'hit' ? { sub: 1 } : {}), ...(hitRules ? { rr: hitRules } : {}), d: dd }); } else
@@ -389,12 +396,12 @@ export function simulate(teamA, teamB, opts = {}) {
   function addArmor(f, v, why) {
     v = Math.floor(v * amp(f.armorAmp)); // เกราะที่ได้รับ +% (ศัตรูลดได้ด้วย "ได้เกราะน้อยลง" · ต่ำสุด 0)
     if (BOSS && !f.boss) { // R17 ผู้เล่นได้เกราะไม่ได้ · E4 เกราะผู้เล่นลดลง
-      if (BR.noArmor) return;
-      if (BR.armorCut) v = Math.floor(v * Math.max(0, 1 - BR.armorCut.v / 100));
+      if (BR.noArmor && !shellOff()) return;
+      if (BR.armorCut && !shellOff()) v = Math.floor(v * Math.max(0, 1 - BR.armorCut.v / 100));
     }
     if (why !== 'share') { const o = otCut(); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: new armor −% (share = already cut at the source)
     if (!(v > 0 && up(f))) return;
-    f.armor += v; log('armor', detailOn && BOSS && !f.boss && BR.armorCut ? { to: f.uid, amount: v, why, rr: ['armorCut'] } : { to: f.uid, amount: v, why });
+    f.armor += v; log('armor', detailOn && BOSS && !f.boss && BR.armorCut && !shellOff() ? { to: f.uid, amount: v, why, rr: ['armorCut'] } : { to: f.uid, amount: v, why });
     // แบ่งเกราะ (HL-8): เพื่อนทั้งทีมได้ % ของเกราะที่ตัวนี้ได้ · เกราะที่ได้จากการแบ่งไม่แบ่งต่อ (กันวนไม่จบ)
     if (why !== 'share') { // แบ่งเกราะ (ชุด 7): แยกตามผู้รับ · shareArmor = ทั้งทีม
       if (f.shareArmor > 0) for (const x of allies(f)) if (x !== f) addArmor(x, v * f.shareArmor / 100, 'share');
@@ -412,7 +419,11 @@ export function simulate(teamA, teamB, opts = {}) {
     // R24 (set 77, user 4 Nov: split burn/shock, % set per rule): boss takes (100 − X)% of burn/shock · 100% = fully immune
     const imm = BOSS && f.boss && (kind === 'burn' ? BR.burnImmune : kind === 'shock' ? BR.shockImmune : null);
     if (imm) {
-      v = Math.floor(v * Math.max(0, 1 - imm.v / 100));
+      const kept = Math.floor(v * Math.max(0, 1 - imm.v / 100)), ov = kind === 'burn' ? BR.burnOverload : BR.shockOverload;
+      if (ov) { // set 142 R40 โอเวอร์โหลด (user A1): blocked burn/shock is stored · at the threshold all of it lands on the boss (past the immunity), store restarts
+        ovl[kind] += v - kept; v = kept;
+        if (ovl[kind] >= ov.v) { v += ovl[kind]; if (detailOn) log('overload', { who: f.uid, kind, amount: ovl[kind] }); ovl[kind] = 0; }
+      } else v = kept;
       if (v <= 0) { if (detailOn) log('ruleBlock', { to: f.uid, from: by ? by.uid : null, why: kind, rule: imm.id }); return; }
     }
     f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null, ...(imm && detailOn ? { rr: [imm.id] } : {}) }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)

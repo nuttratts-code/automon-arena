@@ -22,7 +22,9 @@ import { RUN_STAGE, runBossAt, runBossTeam, runBossOpts } from './runboss.js';
 // - strength = win rate vs reference teams of the same cell → 25/50/75% rank = ง่าย/กลาง/ยาก (ค่าเสนอ)
 // - in play: 1 team of the picked tier from the round's cell by run seed + round (same team after loading a save)
 // - checked on load with the same team validator as the player · hash mismatch / bad data = unused (live bot instead)
-export const BOT_TIERS = ['ง่าย', 'กลาง', 'ยาก'];
+// set 141 (user L3): 4th tier แรงมาก = per tribe the strongest real board by teamPower (raises the ceiling the win-streak pick can reach)
+export const BOT_TIERS = ['ง่าย', 'กลาง', 'ยาก', 'แรงมาก'];
+export const BOT_TOP = 3; // index of the แรงมาก tier (picked by pw, not by win rate)
 export const BOT_GEN = { runs: 2400, seed: 2310, perTribe: 40, refOpp: 30, pct: [25, 50, 75], near: 5 }; // set 96: runs 1200 → 2400 · ค่าเสนอ
 // set 87: each tier holds BOT_PER teams → the 12 teams of a cell cover all 6 tribes twice (main tribe = most units)
 export const BOT_PER = 4;
@@ -61,7 +63,7 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     if (!preset && !rb) { endMatch(B, res.winner === 1, chars, rules, gain(1)); B.over = false; B.hearts = rules.shop.hearts; B.lastWon = P.lastWon; if (R && res.winner === 1) botTakeRune(B, 'win', cm); }
     if (opts.extra && P.over && P.hearts > 0 && P.round < opts.extra) continueExtra(P);
     if (R && won && !P.over) botTakeRune(P, rb ? 'boss' : 'win', cm);
-    if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) } });
+    if (onMatch) onMatch({ stage: wins, round, gold, hearts, extra: ex, second: !!em.second, team: mine, rn: myRn, ws, foe: foe ? foe.team : null, foeRn: foe ? foe.rn || [] : [], res, winner: res.winner, timeMs: res.timeMs, aborted: res.aborted || null, boss: rb ? rb.boss.id : null, k: rb ? rb.k : 0, units: me.units, opts: { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}) }, fs }); // set 144: fs = enemy side as fought (rune what-if replays)
   }
   return P;
 }
@@ -117,6 +119,7 @@ export function genBotTeams(chars, rules = RULES, opt = {}, pool = null) {
       const cand = tribes.flatMap(t => byT[t] || []), ref = pick(list, g.refOpp).map(x => foeSide(x, cm, rules));
       // ความแรง = อัตราชนะ (เสมอ = ครึ่ง) เมื่อสู้กับทีมอ้างอิงชุดเดียวกันของขั้น+ช่วงนั้น
       for (const c of cand) {
+        c.pw = Math.round(teamPower(buildTeam(c.team, cm, rules), rules) * 10) / 10;
         const me = equipRunes(buildTeam(c.team, cm, rules), rnFromCompact(c.rn || []), { winStreak: c.s | 0 }); let s = 0;
         for (const o of ref) { const w = simulate(me.units, o.units, { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...o.opts }).winner; s += w === 0 ? 1 : w == null ? 0.5 : 0; }
         c.power = Math.round((s / ref.length) * 1000) / 10;
@@ -126,18 +129,24 @@ export function genBotTeams(chars, rules = RULES, opt = {}, pool = null) {
       const rot = k % tribes.length, order = tribes.map((_, i) => tribes[(i + rot) % tribes.length]);
       const used = new Set(), useN = {}, perT = {}, out = [];
       for (let j = 0; j < BOT_TIERS.length * BOT_PER; j++) {
-        const ti = Math.floor(j / BOT_PER), want = order[j % order.length], tg = target[ti];
+        const ti = Math.floor(j / BOT_PER), want = order[j % order.length], tg = ti === BOT_TOP ? 0 : target[ti];
         let pool2 = cand.filter(c => !used.has(c) && c.tribe === want);
         if (!pool2.length) { // this tribe has no sample left → the tribe picked least so far
           const left = cand.filter(c => !used.has(c)); if (!left.length) break;
           const lo = Math.min(...left.map(c => perT[c.tribe] || 0)); pool2 = left.filter(c => (perT[c.tribe] || 0) === lo);
         }
         // nearest strength; among those within `near` points, the team whose characters were used least in this cell
+        if (ti === BOT_TOP) { // set 141: strongest board of this tribe by teamPower
+          const c = pool2.slice().sort((x, y) => y.pw - x.pw || x.round - y.round)[0];
+          used.add(c); perT[c.tribe] = (perT[c.tribe] || 0) + 1; for (const e of c.team) useN[e.id] = (useN[e.id] || 0) + 1;
+          out.push({ tier: BOT_TIERS[ti], from, round: c.round, power: c.power, pw: c.pw, rn: structuredClone(c.rn || []), s: c.s | 0, team: structuredClone(c.team) });
+          continue;
+        }
         const d = c => Math.abs(c.power - tg), best = Math.min(...pool2.map(d));
         const score = c => c.team.reduce((a, e) => a + (useN[e.id] || 0), 0);
         const c = pool2.filter(x => d(x) <= best + g.near).sort((x, y) => score(x) - score(y) || d(x) - d(y) || x.round - y.round)[0];
         used.add(c); perT[c.tribe] = (perT[c.tribe] || 0) + 1; for (const e of c.team) useN[e.id] = (useN[e.id] || 0) + 1;
-        out.push({ tier: BOT_TIERS[ti], from, round: c.round, power: c.power, pw: Math.round(teamPower(buildTeam(c.team, cm, rules), rules) * 10) / 10, rn: structuredClone(c.rn || []), s: c.s | 0, team: structuredClone(c.team) });
+        out.push({ tier: BOT_TIERS[ti], from, round: c.round, power: c.power, pw: c.pw, rn: structuredClone(c.rn || []), s: c.s | 0, team: structuredClone(c.team) });
       }
       return out;
     }
@@ -187,8 +196,8 @@ export function pickBotTeam(data, round, seed, tier = null) {
 }
 // ---------- set 119 (user 7 Nov, G2 ก): the enemy = the real bot team closest in power to the player's team ----------
 // target = max(player board power (teamPower, runes not counted) × foeBase %, round median × foeFloor % (set 127)) · candidates = teams of the rounds within FOE_PICK.win of the
-// player's round · the FOE_PICK.near nearest by power ratio, one by seed + round · NEVER scaled in the normal run (pct 100), no win-streak
-// bonus (set 107 power-follow scaling + streak removed) · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
+// player's round · the FOE_PICK.near nearest by power ratio, one by seed + round · NEVER scaled in the normal run (pct 100) · set 141: win streak
+// raises the wanted power (foeWsPct), extra matches use foeBaseExtra · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
 export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
 // set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
@@ -198,14 +207,18 @@ export const foeFloorPct = (ls, stage = RUN_STAGE) => {
   const s = stage.settings, fl = s.foeFloor ?? 100, k = (ls | 0) - (s.foeFloorLs ?? 2) + 1;
   return Math.max(0, k > 0 ? Math.max(Math.min(fl, s.foeFloorMin ?? 40), fl - (s.foeFloorStep ?? 20) * k) : fl);
 };
-export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES, ls = 0) {
+// set 141: ws = wins in a row before this match (st.ws, boss wins count) → wanted power × (1 + foeWsStep % per win from foeWsFrom) · no cap
+export const foeWsPct = (ws, stage = RUN_STAGE) => { const s = stage.settings, k = (ws | 0) - (s.foeWsFrom ?? 2) + 1; return 100 + (k > 0 ? Math.max(0, s.foeWsStep ?? 10) * k : 0); };
+export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_STAGE, rules = RULES, ls = 0, ws = 0) {
   const n = data.rounds.length, k = roundCell(round, n), want = foeWantPct(extra, stage);
   let pp = typeof myUnits === 'number' ? Math.max(0, myUnits) : teamPower(myUnits, rules);
-  const ws = data.rounds[k].map(t => t.pw).sort((a, b) => a - b), med = ws.length ? ws[ws.length >> 1] : 0;
+  // set 141: median over the 3 old tiers only (the แรงมาก tier would lift the floor)
+  const pws = data.rounds[k].filter(t => t.tier !== BOT_TIERS[BOT_TOP]).map(t => t.pw).sort((a, b) => a - b), med = pws.length ? pws[pws.length >> 1] : 0;
   if (!(pp > 0)) pp = med;
   // set 127 (user R1 = C): floor = the round cell's median power × foeFloor % (0 = off) → a weak / sandbagged board still meets the round's usual teams
   const floor = med * foeFloorPct(ls, stage) / 100;
-  const target = Math.max(pp * (stage.settings.foeBase ?? 100) / 100, floor);
+  const base = extra ? (stage.settings.foeBaseExtra ?? 120) : (stage.settings.foeBase ?? 100), wsp = foeWsPct(ws, stage);
+  const target = Math.max(pp * base / 100, floor) * wsp / 100;
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));
   const gap = x => (target > 0 ? Math.abs(Math.log(x.t.pw / target)) : x.t.pw);
@@ -213,5 +226,5 @@ export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_S
   const near = cand.slice(0, FOE_PICK.near);
   const t = near[makeRng(((seed >>> 0) ^ Math.imul((round | 0) + 1, 0x27D4EB2F) ^ 0x7E57F0E5) >>> 0).int(near.length)].t;
   const pct = want;
-  return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, power: Math.round(pp), floor: Math.round(floor) };
+  return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct, want, wsp, power: Math.round(pp), floor: Math.round(floor) };
 }

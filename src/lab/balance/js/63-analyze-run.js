@@ -90,6 +90,7 @@ function renderPlayRun() {
     tr.addEventListener('click', open); tr.addEventListener('keydown', ev => { if (ev.key === 'Enter') open(); });
     return tr;
   }));
+  renderRunRunes(R);
   $('runCombos').replaceChildren(...(R.combos.length ? R.combos.map((x, i) => {
     const tr = document.createElement('tr'), tc = td(x.ids.join(' '), 'mxt-team');
     tc.title = x.ids.map(id => `${id} ${(chars.find(q => q.id === id) || {}).name || ''}`).join('\n');
@@ -119,11 +120,55 @@ function runSortApply(body) {
     const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'th', { numeric: true }); return c * st.dir; });
   body.append(...rows);
 }
-for (const body of $('anaRun').querySelectorAll('tbody[id]')) {
+for (const body of $('anaRun').querySelectorAll('tbody[id]:not([data-nosort])')) {
   body.closest('table').querySelectorAll('thead th').forEach((th, i) => {
     th.dataset.label = th.textContent; th.classList.add('sortable'); th.tabIndex = 0; th.title = 'แตะเพื่อเรียง น้อย → มาก · แตะอีกครั้ง มาก → น้อย';
     const go = () => { const s = runSortState[body.id]; runSortState[body.id] = s && s.col === i ? { col: i, dir: -s.dir } : { col: i, dir: 1 }; runSortApply(body); };
     th.addEventListener('click', go); th.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
   });
 }
-const runSortAll = () => { $('runInfo').textContent += ' · แตะหัวคอลัมน์เพื่อเรียง น้อย → มาก (แตะอีกครั้ง = มาก → น้อย)'; for (const body of $('anaRun').querySelectorAll('tbody[id]')) runSortApply(body); };
+const runSortAll = () => { $('runInfo').textContent += ' · แตะหัวคอลัมน์เพื่อเรียง น้อย → มาก (แตะอีกครั้ง = มาก → น้อย)'; for (const body of $('anaRun').querySelectorAll('tbody[id]:not([data-nosort])')) runSortApply(body); };
+// ---------- Set 144 (user 8 Nov): runes in real runs (what-if without each rune) + rune check vs description ----------
+const RUNE_FLAG_TH = { strong: ['แรงเกินระดับ', 'bad'], big: ['ส่งผลกับเกมมาก', 'mid'], weak: ['อ่อนกว่าระดับ', 'mid'] };
+const rnTag = (text, cls) => { const s = document.createElement('span'); s.className = 'vtag ' + cls; s.textContent = text; return s; };
+function renderRunRunes(R) {
+  const X = R.runes; if (!X) { $('runRunes').replaceChildren(runEmptyRow(9)); return; }
+  $('runRunes').replaceChildren(...(X.rows.length ? X.rows.filter(x => x.games > 0 || x.held > 0).map(x => {
+    const tr = document.createElement('tr'), sum = td('');
+    for (const f of x.flags || []) sum.append(rnTag(...RUNE_FLAG_TH[f]), ' ');
+    if (x.runOnly) sum.append(Object.assign(document.createElement('span'), { className: 'status', textContent: `รูนเงิน/ร้าน · รันที่ได้ชนะเฉลี่ย ${fmt(x.wins)} (ไม่ได้ ${fmt(x.noWins)})` }));
+    else if (x.cfN < 30) sum.append(Object.assign(document.createElement('span'), { className: 'status', textContent: 'ข้อมูลน้อย (< 30 แมตช์)' }));
+    const up = td(x.uplift == null ? '–' : `${x.uplift >= 0 ? '+' : ''}${fmt(x.uplift)} ±${fmt(x.se)}`, 'n' + (x.flags && x.flags.includes('strong') ? ' d-down' : ''));
+    up.title = x.cfN ? `${x.cfN} แมตช์ · ค่ากลางของรูน${runeRarTh(x.rarity)} ${fmt(X.med[x.rarity])} แต้ม` : '';
+    tr.append(td(`${x.id} ${x.name}`), td(runeRarTh(x.rarity)), td(`${fmt(x.held)}%`, 'n'), td(x.firstRound == null ? '–' : fmt(x.firstRound), 'n'), td(x.win == null ? '–' : `${fmt(x.win)}% (${x.games})`, 'n'),
+      up, td(x.decided == null ? '–' : `${fmt(x.decided)}%`, 'n'), td(x.game == null ? '–' : `${x.game >= 0 ? '+' : ''}${fmt(x.game)}`, 'n' + (x.flags && x.flags.includes('big') ? ' d-down' : '')), sum);
+    return tr;
+  }) : [runEmptyRow(9)]));
+  $('runRunesInfo').textContent = `${X.matches.toLocaleString()} แมตช์ในรันหลัก · ค่ากลางผลของรูน: ` + Object.entries(X.med).map(([k, v]) => `${runeRarTh(k)} ${v == null ? '–' : fmt(v)}`).join(' / ')
+    + ` · เกณฑ์ (ค่าเสนอ): แรงเกิน/อ่อนกว่าระดับ = ห่างจากค่ากลางของรูนระดับเดียวกันเกิน ${RUNE_FLAG.gap} แต้ม (และเกินความคลาดเคลื่อน 2 เท่า) · ส่งผลกับเกมมาก = ผลต่อเกมรวม ≥ ${RUNE_FLAG.game} แต้ม · ±ตัวเลข = ความคลาดเคลื่อน (รันมากขึ้น = แคบลง)`;
+}
+const RC_TAG = { ok: ['ตรงคำอธิบาย', 'good'], warn: ['ตรง แต่ปัดเศษหาย', 'mid'], bad: ['ไม่ตรงคำอธิบาย', 'bad'], info: ['วัดอัตโนมัติไม่ได้', 'mid'] };
+function renderRuneCheck(rows) {
+  $('runeCheckTbl').replaceChildren(...rows.map(r => {
+    const tr = document.createElement('tr'), st = td(''), det = td('');
+    st.append(rnTag(...RC_TAG[r.status]));
+    const d = document.createElement('details'), sm = document.createElement('summary');
+    const lines = r.tests.flatMap(t => t.lines.map(l => ({ ...l, tag: r.max > 1 ? `${t.n} อัน` : '' }))).concat((r.real ? r.real.lines : []).map(l => ({ ...l, tag: 'ค่าจริง' })));
+    sm.textContent = r.note || `${lines.filter(l => l.ok).length}/${lines.length} จุดตรง`;
+    const ul = document.createElement('ul'); ul.style.margin = '4px 0'; ul.style.paddingLeft = '18px'; ul.style.minWidth = '22em';
+    for (const l of lines) { const li = document.createElement('li'); li.textContent = `${l.ok ? '✓' : '✗'} ${l.tag ? `[${l.tag}] ` : ''}${l.what}: คาด ${l.exp} · ได้ ${l.got}`; if (!l.ok) li.className = 'd-down'; ul.append(li); }
+    d.append(sm, ul); det.append(d);
+    tr.append(td(`${r.id} ${r.name}`), td(r.text), st, det);
+    return tr;
+  }));
+}
+$('runeCheckBtn').addEventListener('click', async () => {
+  const b = $('runeCheckBtn'); b.disabled = true; $('runeCheckMsg').textContent = 'กำลังตรวจ…';
+  await pause();
+  try {
+    const rows = runeCheckAll(clone(chars), stageCfg), c = k => rows.filter(r => r.status === k).length;
+    renderRuneCheck(rows.sort((a, z) => ['bad', 'warn', 'info', 'ok'].indexOf(a.status) - ['bad', 'warn', 'info', 'ok'].indexOf(z.status)));
+    $('runeCheckMsg').textContent = `${rows.length} รูน · ตรง ${c('ok')} · ปัดเศษหาย ${c('warn')} · ไม่ตรง ${c('bad')}${c('info') ? ` · วัดไม่ได้ ${c('info')}` : ''}`;
+  } catch (e) { $('runeCheckMsg').textContent = 'ตรวจไม่สำเร็จ: ' + e.message; }
+  finally { b.disabled = false; }
+});

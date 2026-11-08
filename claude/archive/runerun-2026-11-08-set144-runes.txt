@@ -1,0 +1,61 @@
+runs 3000 · 375 s · run cleared 14.7% · enemy scale % p10/p50/p90 100/100/100
+normal rounds won 46.2% · by wins in a row: 0: 46.2% (15300) · 1: 50.4% (6639) · 2: 41.5% (3580) · 3: 36.8% (1642) · 4: 47.7% (681) · 5+: 50.8% (781)
+boss k1: reached 3000 · won 60.8%
+boss k2: reached 2006 · won 50.7%
+boss k3: reached 535 · won 49.5%
+set 119 normal run: second chance used 98.5% of runs · bosses in the normal run: k1 reached 100.0% of runs · won 60.8% · k2 reached 66.9% of runs · won 50.7% · k3 reached 7.7% of runs · won 58.9%
+set 133 first Lv3 on board (share of runs · median round · p25/p75): ธรรมดา 87.9% · r7 (6/8) · หายากมาก 7.5% · r15 (14/16) · ไม่ธรรมดา 22.9% · r9 (8/11) · หายาก 8.3% · r14 (12/15)
+runes (main-run matches 32476) · median uplift by rarity: common 3.1 · rare 1.7 · legend 4.5
+S5   legend held  22.0% · games  3921 · win  69.2% · uplift  38.4 ±0.8 (n 3921) · decided 38.6% · game 4.6  [strong big]  ระดมยิง
+C7   rare   held   7.7% · games  1718 · win  54.1% · uplift  14.9 ±0.9 (n 1718) · decided 15.0% · game 0.8  [strong]  ข่ายแสง
+C1   legend held  24.7% · games  4051 · win  52.5% · uplift  14.2 ±0.6 (n 4051) · decided 14.8% · game 1.8  [strong big]  พายุ
+U6   rare   held   7.8% · games  1633 · win  52.8% · uplift  11.2 ±0.8 (n 1633) · decided 11.7% · game 0.6  [strong]  ปีก
+F6   legend held  23.2% · games  3657 · win  49.9% · uplift  10.0 ±0.5 (n 3657) · decided 10.3% · game 1.1  [strong big]  นรก
+X7   legend held  25.4% · games  3873 · win  49.1% · uplift   9.6 ±0.5 (n 3873) · decided 10.7% · game 1.1  [strong big]  ตามมา
+U2   legend held  24.0% · games  3364 · win  48.0% · uplift   7.8 ±0.5 (n 3364) · decided 8.0% · game 0.8  [strong]  หวนคืน
+U3   rare   held   7.3% · games  1490 · win  48.7% · uplift   5.6 ±0.7 (n 1490) · decided 7.0% · game 0.3  [strong]  กองรองเท้่าหนัง
+T6   common held   5.1% · games   946 · win  49.6% · uplift   5.6 ±0.8 (n 946) · decided 6.0% · game 0.2  โล่ไม้คู่
+S4   common held   5.0% · games   949 · win  47.8% · uplift   4.8 ±0.7 (n 949) · decided 5.1% · game 0.1  ประจุ
+X5   rare   held   8.4% · games  1542 · win  47.7% · uplift   4.7 ±0.7 (n 1542) · decided 6.9% · game 0.2  [strong]  ปักหลัก
+C6   legend held  23.4% · games  3314 · win  44.8% · uplift   4.6 ±0.4 (n 3314) · decided 4.9% · game 0.5  สวรรค์
+C8   legend held  23.1% · games  3348 · win  46.7% · uplift   4.5 ±0.4 (n 3348) · decided 6.2% · game 0.5  สตั้น
+C5   rare   held   7.8% · games  1572 · win  50.6% · uplift   4.5 ±0.6 (n 1572) · decided 5.4% · game 0.2  โล่เหล็กคู่
+D4   rare   held   7.6% · games  1499 · win  46.8% · uplift   4.4 ±0.6 (n 1499) · decided 4.8% · game 0.2  เลือดวายุ
+X10  common held   4.6% · games   905 · win  45.4% · uplift   4.3 ±0.8 (n 905) · decided 5.4% · game 0.1  ถ่วงเวลา
+X11  rare   held   8.4% · games  1739 · win  46.7% · uplift   4.3 ±0.5 (n 1739) · decided 5.4% · game 0.2  กัดกร่อน
+C4   common held   4.9% · games   917 · win  47.7% · uplift   3.4 ±0.7 (n 917) · decided 4.3% · game 0.1  รองเท้าเก่า
+U5   common held   4.2% · games   776 · win  48.7% · uplift   3.4 ±0.7 (n 776) · decided 3.9% · game 0.1  ไม้ขีดไฟ
+F2   legend held  24.5% · games  3511 · win  44.2% · uplift   3.2 ±0.3 (n 3511) · decided 3.6% · game 0.3  เปลวเพลิง
+S1   common held   4.8% · games   954 · win  45.5% · uplift   3.1 ±0.6 (n 954) · decided 3.4% · game 0.1  เกราะไม้คู่
+T7   common held   4.7% · games   903 · win  43.5% · uplift   3.1 ±0.7 (n 903) · decided 4.0% · game 0.1  กองรองเท้าเก่า
+T8   common held   5.1% · games  1055 · win  47.4% · uplift   2.7 ±0.5 (n 1055) · decided 2.7% · game 0.1  ธงเผ่า
+X4   legend held  24.1% · games  3711 · win  45.7% · uplift   2.7 ±0.3 (n 3711) · decided 2.9% · game 0.3  เลี่ยงจุดตาย
+D5   rare   held   8.2% · games  1599 · win  45.6% · uplift   2.4 ±0.4 (n 1599) · decided 2.6% · game 0.1  เลือดภูติ
+X1   legend held  25.7% · games  3638 · win  42.4% · uplift   1.7 ±0.2 (n 3638) · decided 1.7% · game 0.2  กระหายเลือด
+C3   common held   5.0% · games   929 · win  44.2% · uplift   1.7 ±0.5 (n 929) · decided 1.9% · game 0.0  เกราะไม้
+T5   rare   held   7.6% · games  1396 · win  44.3% · uplift   1.7 ±0.4 (n 1396) · decided 1.9% · game 0.1  กองดาบเหล็ก
+S2   common held   4.9% · games   976 · win  46.1% · uplift   1.6 ±0.4 (n 976) · decided 1.8% · game 0.0  โล่ไม้
+D1   rare   held   8.2% · games  1533 · win  46.4% · uplift   1.6 ±0.3 (n 1533) · decided 1.7% · game 0.1  เลือดเหล็กกล้า
+D6   rare   held   8.7% · games  1599 · win  44.3% · uplift   1.4 ±0.3 (n 1599) · decided 1.8% · game 0.1  เลือดอสูร
+D2   rare   held   7.2% · games  1388 · win  43.4% · uplift   0.9 ±0.3 (n 1388) · decided 1.0% · game 0.0  เลือดเพลิงเผา
+D3   rare   held   7.9% · games  1480 · win  44.5% · uplift   0.7 ±0.2 (n 1480) · decided 0.9% · game 0.0  เลือดสายฟ้า
+T11  rare   held   8.3% · games  1649 · win  44.6% · uplift   0.7 ±0.3 (n 1649) · decided 1.1% · game 0.0  ห้ามแพ้
+T10  legend held  26.1% · games  3651 · win  43.1% · uplift   0.7 ±0.1 (n 3651) · decided 0.7% · game 0.1  [weak]  สองคนเพื่อนตาย
+F1   legend held  24.0% · games  3355 · win  42.6% · uplift   0.7 ±0.2 (n 3355) · decided 0.8% · game 0.1  [weak]  เหล็กไหล
+F3   legend held  25.4% · games  3509 · win  42.0% · uplift   0.7 ±0.2 (n 3509) · decided 0.8% · game 0.1  [weak]  สนามสายฟ้า
+S8   common held   4.4% · games   830 · win  44.2% · uplift   0.6 ±0.4 (n 830) · decided 1.1% · game 0.0  ดาบไม้
+S6   common held   5.2% · games   940 · win  40.2% · uplift   0.4 ±0.2 (n 940) · decided 0.4% · game 0.0  คทาไม้คู่
+S7   common held   4.9% · games   962 · win  44.3% · uplift   0.4 ±0.3 (n 962) · decided 0.6% · game 0.0  ดาบไม้คู่
+T9   rare   held   8.1% · games  1594 · win  42.8% · uplift   0.3 ±0.2 (n 1594) · decided 0.4% · game 0.0  ล่าบอส
+T12  legend held  25.2% · games  3717 · win  43.7% · uplift  -0.2 ±0.5 (n 3717) · decided 8.3% · game -0.0  [weak]  เลือดเข้าตา
+X6   rare   held   8.2% · games  1534 · win  41.2% · uplift  -2.2 ±0.7 (n 1534) · decided 7.6% · game -0.1  [weak]  สายสัมพันธ์
+U4   rare   held   7.6% · games  1368 · win  39.5% · uplift  -5.3 ±1.0 (n 1368) · decided 14.0% · game -0.2  [weak]  ยั่วยุ
+X2   legend held  12.2% · games  2176 · win  43.7% · run-only: avg wins held 6.3 vs not 5.1  ดึงดูดตัว
+X9   legend held  11.9% · games  2166 · win  43.8% · run-only: avg wins held 6.5 vs not 5.0  ทำนาย
+X3   legend held  11.2% · games  2122 · win  46.5% · run-only: avg wins held 6.7 vs not 5.0  รวมร่างเร็ว
+U8   rare   held   5.3% · games   924 · win  42.0% · run-only: avg wins held 6.0 vs not 5.2  เงา
+U7   rare   held   5.2% · games  1043 · win  48.5% · run-only: avg wins held 6.7 vs not 5.1  คงทน
+T3   rare   held   4.5% · games   855 · win  46.5% · run-only: avg wins held 6.5 vs not 5.1  แผงใหญ่
+T4   common held   0.1% · games     9 · win  11.1% · run-only: avg wins held 4.0 vs not 5.2  มองหา
+X8   common held   0.0% · games     7 · win  28.6% · run-only: avg wins held 7.0 vs not 5.2  หัวการค้า
+T1   common held   0.0% · games     0 · win     -% · run-only: avg wins held - vs not 5.2  ร่ำรวย
