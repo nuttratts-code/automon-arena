@@ -666,7 +666,8 @@ export function simulate(teamA, teamB, opts = {}) {
   // ชุด 21 (ผู้ใช้เลือก 2A): ลำดับในคิวสถานะ/ฟื้น HP ไม่ขึ้นกับฝั่ง · เดิมทำตามลำดับที่เข้าคิว ซึ่งขึ้นกับว่าฝั่งไหนตีก่อนใน tick
   //   สถานะ: (1) ใส่ศัตรู (ไฟ ช็อต ดีบัฟ) ของทั้งสองฝั่ง → (2) ล้าง → (3) ผลฝ่ายเดียวกัน/ตัวเอง (บัฟ ค่าที่คิดจากไฟ/ช็อตศัตรู)
   //   ฟื้น HP: เรียงตามตำแหน่งตัวที่ใช้สกิล (แถว เลน ลำดับสกิล) · ฟื้นมีผลกับฝั่งตัวเองเท่านั้น จึงไม่ต้องดูฝั่ง
-  const sTier = it => { const i = DO_INFO[it.s.do]; if (!i) return 2; if (i.side === 'foe' || (i.side === 'foeSelf' && it.s.to !== 'self')) return 0; return it.s.do === 'cleanse' || it.s.do === 'cleansePct' ? 1 : 2; };
+  // set 137: a foe effect computed from a burn/shock value (PL-3 burnOf shock) runs after the plain foe statuses of the same tick (else the result depended on which side acted first)
+  const sTier = it => { const i = DO_INFO[it.s.do]; if (!i) return 2; if (i.side === 'foe' || (i.side === 'foeSelf' && it.s.to !== 'self')) return it.s.of && (it.s.of.stat === 'burn' || it.s.of.stat === 'shock') ? 0.5 : 0; return it.s.do === 'cleanse' || it.s.do === 'cleansePct' ? 1 : 2; };
   const hKey = it => ((it.u.row * 2 + it.u.lane) * 64 + (it.s.idx ?? 63));
   function drainSorted(list, key) {
     while (list.length && !aborted) {

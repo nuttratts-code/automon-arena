@@ -186,11 +186,32 @@ const SC_SKILL = [
     eq(x.res.get(back).fin.healHit, v1 * hits, 'back ally heal/hit at end (stat tab)');
     return x;
   }],
-  ['HL-3', 'ตีโดน → เกราะ/ฮิต +v', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('HL-3').v[i];
-    const hits = scHits(x.r, me).length, fin = x.res.get(me).fin;
-    eq(fin.armorHit, c.armorHit[i] + v * hits, 'armor/hit at end (stat tab)');
-    eq(scSk(x.r, me, 0, 'buff').map(e => e.amount), Array(hits).fill(v), 'armor/hit +v per hit');
+  // set 137: HL-3 now on hit taken · HL-5 burns the attacker · PL-3 burns 60% of the target's shock (old kits 'ID@1' kept below)
+  ['HL-3', 'โดนตี → เกราะ/ฮิต +v', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 3), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('HL-3').v[i];
+    const pr = scProcs(x.r, me, 0).filter(e => e.t <= 60000), got = scSk(x.r, me, 0, 'buff'), early = got.filter(e => e.t <= 60000);
+    ok(pr.length > 3, `skill fired ${pr.length} times`);
+    eq([early.length, got.every(e => e.amount === v)], [pr.length, true], 'armor/hit +v per hit taken (first 60 s)');
+    eq(x.res.get(me).fin.armorHit, c.armorHit[i] + v * got.length, 'armor/hit at end (stat tab) = base + all gains');
+    return x;
+  }],
+  ['HL-5', 'โดนตี → ติดไฟ v ใส่ผู้ตี', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 3), 1, 0, 0]]), me = x.uid(0, 0, 0), foe = x.uid(1, 0, 0), v = sk('HL-5').v[i];
+    const pr = scProcs(x.r, me, 0).filter(e => e.t <= 20000), got = x.r.events.filter(e => e.k === 'burn' && e.from === me && e.t <= 20000);
+    ok(pr.length > 3, `skill fired ${pr.length} times`);
+    eq(got.map(e => [e.to, e.amount]), Array(pr.length).fill([foe, v]), 'burn v to the attacker per hit taken');
+    return x;
+  }],
+  ['PL-3', 'ตีโดน → ติดไฟเป้า = v% ของช็อตบนเป้า (หลังช็อตของ tick นั้น)', (c, L, i) => {
+    const zs = mk('ZS-1', { tribe: 'ทดสอบ', atk: L3(1), cdMs: 1000, hp: L3(100000), shock: L3(5) });
+    const x = scRun([[c, L, 0, 0], [zs, 1, 0, 1]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), foe = x.uid(1, 0, 0), v = sk('PL-3').v[i], at = scLedger(x.r);
+    let n = 0;
+    x.r.events.forEach((e, ei) => {
+      if (e.k !== 'burn' || e.from !== me || e.t > 30000) return;
+      const want = Math.floor(at(ei).get(foe).shock * v / 100);
+      eq([e.to, e.amount], [foe, want], `t ${e.t}: burn = ${v}% of the target's shock`); n++;
+    });
+    ok(n > 3, `burned ${n} times`);
     return x;
   }],
   ['HL-7', 'โดนตี → พลังโจมตี +30% ของเกราะตัวเอง (เกราะก่อนฮิตของ tick)', (c, L, i) => {
@@ -204,13 +225,6 @@ const SC_SKILL = [
     ok(n > 3, 'skill gave attack at least 4 times');
     for (const e of got) sum += e.amount;
     eq(x.res.get(me).fin.atk, c.atk[i] + sum, 'attack at end (stat tab) = base + all gains');
-    return x;
-  }],
-  ['HL-5', 'ตัวเอง down → เพื่อนเผ่าเดียวกันข้างหลังเลนเดียวกัน ได้เกราะ v (ถาวร)', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0], [scC('HL-1'), 1, 1, 0], [scC('PT-1'), 1, 1, 1]], [[scPunch('ZP-1', 2000), 1, 0, 0]]), me = x.uid(0, 0, 0), v = sk('HL-5').v[i];
-    const got = scSk(x.r, me, 0, 'armor');
-    eq(got.map(e => [e.to, e.amount]), [[x.uid(0, 1, 0), v]], 'armor to the steel ally behind only');
-    eq(x.r.perm.filter(g => g.key && g.id === 'HL-1').map(g => g.amount), [v], 'kept as permanent');
     return x;
   }],
   // set 82: HL-8 now shares only to allies of its own tribe (old kit 'HL-8@1' = whole team, kept below)
@@ -238,16 +252,6 @@ const SC_SKILL = [
     }
     ok(n > 3, 'reflected at least 4 times');
     eq(tabSum, evSum, "tab 'ทำดาเมจ' → สะท้อน = skill damage");
-    return x;
-  }],
-  ['PL-3', 'ตัวเอง down → ติดไฟ v ศัตรูแถวหน้าทั้ง 2 เลน · ดาเมจไฟนับให้ PL-3', (c, L, i) => {
-    const x = scRun([[c, L, 0, 0], [scBag('ZW-1'), 1, 0, 1]], [[scPunch('ZP-1', 2000), 1, 0, 0], [scBag('ZB-1'), 1, 0, 1], [scBag('ZB-2'), 1, 1, 0]]), me = x.uid(0, 0, 0), v = sk('PL-3').v[i];
-    const got = x.r.events.filter(e => e.k === 'burn' && e.from === me);
-    eq(got.map(e => [e.to, e.amount]).sort(), [[x.uid(1, 0, 0), v], [x.uid(1, 0, 1), v]].sort(), 'burn to both front-row enemies');
-    // burn deals v, v−2, v−4 … each second (combat-rules) → all of it is PL-3's
-    let want = 0; for (let b = v; b > 0; b -= RULES.burnDecay ?? 2) want += b;
-    const tab = x.model.per.get(me).out.filter(q => q.why === 'burn').reduce((a, q) => a + q.amt, 0);
-    eq(tab, want * 2, "tab 'ทำดาเมจ' → ไฟ");
     return x;
   }],
   ['PL-7', 'ตีโดน → ติดไฟ v ศัตรูแถวหลังเลนเดียวกัน', (c, L, i) => {
@@ -533,8 +537,36 @@ const SC_OLD = { 'HL-2': [{ when: 'hitTaken', do: 'armor', to: 'self', v: [2, 4,
   // set 84: HL-2 before the own-tribe filter
   'HL-2@2': [{ when: 'hit', do: 'armorHitUp', to: 'frontAlly', v: [3, 6, 12] }],
   // set 92: SF-3 before the shock kit
-  'SF-3@1': [{ when: 'hitTaken', do: 'dmg', to: 'attacker', v: [2, 4, 8] }] };
+  'SF-3@1': [{ when: 'hitTaken', do: 'dmg', to: 'attacker', v: [2, 4, 8] }],
+  // set 137 (AMCFG1 rev 32): kits replaced
+  'HL-3@1': [{ when: 'hit', do: 'armorHitUp', to: 'self', v: [2, 4, 8] }],
+  'HL-5@1': [{ when: 'selfDown', do: 'armor', perm: true, sameTribe: true, to: 'backLaneAlly', v: [7, 14, 28] }],
+  'PL-3@1': [{ when: 'selfDown', do: 'burn', to: 'enemyFrontRow', v: [10, 20, 40] }] };
 const SC_RETIRED = [
+  ['PL-3@1', 'ตัวเอง down → ติดไฟ v ศัตรูแถวหน้าทั้ง 2 เลน · ดาเมจไฟนับให้ PL-3', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scBag('ZW-1'), 1, 0, 1]], [[scPunch('ZP-1', 2000), 1, 0, 0], [scBag('ZB-1'), 1, 0, 1], [scBag('ZB-2'), 1, 1, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const got = x.r.events.filter(e => e.k === 'burn' && e.from === me);
+    eq(got.map(e => [e.to, e.amount]).sort(), [[x.uid(1, 0, 0), v], [x.uid(1, 0, 1), v]].sort(), 'burn to both front-row enemies');
+    // burn deals v, v−2, v−4 … each second (combat-rules) → all of it is PL-3's
+    let want = 0; for (let b = v; b > 0; b -= RULES.burnDecay ?? 2) want += b;
+    const tab = x.model.per.get(me).out.filter(q => q.why === 'burn').reduce((a, q) => a + q.amt, 0);
+    eq(tab, want * 2, "tab 'ทำดาเมจ' → ไฟ");
+    return x;
+  }],
+  ['HL-5@1', 'ตัวเอง down → เพื่อนเผ่าเดียวกันข้างหลังเลนเดียวกัน ได้เกราะ v (ถาวร)', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0], [scC('HL-1'), 1, 1, 0], [scC('PT-1'), 1, 1, 1]], [[scPunch('ZP-1', 2000), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const got = scSk(x.r, me, 0, 'armor');
+    eq(got.map(e => [e.to, e.amount]), [[x.uid(0, 1, 0), v]], 'armor to the steel ally behind only');
+    eq(x.r.perm.filter(g => g.key && g.id === 'HL-1').map(g => g.amount), [v], 'kept as permanent');
+    return x;
+  }],
+  ['HL-3@1', 'ตีโดน → เกราะ/ฮิต +v', (c, L, i) => {
+    const x = scRun([[c, L, 0, 0]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
+    const hits = scHits(x.r, me).length, fin = x.res.get(me).fin;
+    eq(fin.armorHit, c.armorHit[i] + v * hits, 'armor/hit at end (stat tab)');
+    eq(scSk(x.r, me, 0, 'buff').map(e => e.amount), Array(hits).fill(v), 'armor/hit +v per hit');
+    return x;
+  }],
   ['HL-2', 'โดนตี → ได้เกราะ v', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scPunch('ZP-1', 1), 1, 0, 0]]), me = x.uid(0, 0, 0), v = c.skills[0].v[i];
     const pr = scProcs(x.r, me, 0).filter(e => e.t <= 5000), got = scSk(x.r, me, 0, 'armor').filter(e => e.t <= 5000);

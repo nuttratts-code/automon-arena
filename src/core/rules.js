@@ -316,7 +316,7 @@ export function upgradeSkill(s) {
 }
 export const FOE_T = ['enemyFront', 'enemyMidRow', 'enemyBackRow', 'enemyFrontRow', 'enemyLane', 'lowestHp', 'enemyRandom', 'allEnemies'];
 export const ALLY_T = ['self', 'frontAlly', 'backAlly', 'frontBackAlly', 'allyAt', 'frontLaneAlly', 'backLaneAlly', 'frontRowAllies', 'backRowAllies', 'allyLowest', 'allyRandom', 'allyRandom2', 'tribeAllies', 'allAllies'];
-export const SHOP_T = ['self', 'frontAlly', 'backAlly', 'backLaneAlly', 'frontBackAlly', 'allyAt', 'frontRowAllies', 'backRowAllies', 'allyRandom', 'allyRandom2', 'tribeAllies', 'nextTribeBuy', 'allAllies']; // nextTribeBuy = เพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ (SF-7 · 21 ต.ค.)
+export const SHOP_T = ['self', 'frontAlly', 'backAlly', 'backLaneAlly', 'frontBackAlly', 'allyAt', 'frontRowAllies', 'backRowAllies', 'allyRandom', 'allyRandom2', 'tribeAllies', 'nextTribeBuy', 'allAllies']; // nextTribeBuy = ตัวเผ่าเดียวกันตัวถัดไปที่ซื้อ รวมตัวชนิดเดียวกัน (set 137) (SF-7 · 21 ต.ค.)
 // ชุด 14 (ผู้ใช้เลือก): เพื่อนตามตำแหน่ง = เลือกแถว (หน้า/กลาง/หลัง/ทุกแถว) × เลน (เดียวกัน/อีกเลน/ทั้ง 2) · ไม่รวมตัวเอง · ไม่มี = ไม่มีผล
 export const AT_ROWS = ['front', 'mid', 'back', 'any'], AT_LANES = ['same', 'other', 'both'];
 export const atMatch = (at, myRow, myLane, row, lane) => (at.row === 'any' || ['front', 'mid', 'back'].indexOf(at.row) === row)

@@ -210,6 +210,7 @@ export const TESTS_SHOP = [
     const buyId = id => { st.shop[0].id = id; return buy(st, 0, null, chars); };
     buyId('QQ-1'); buyId('QQ-1');
     eq(st.charges.length, 1, 'ซื้อ 2 ใบ เก็บประจุ 1 อัน');
+    eq(st.bench[1].perm.shock, 1, 'set 137: ตัวชนิดเดียวกันก็ใช้ประจุได้');
     buyId(stranger.id); eq(st.charges.length, 1, 'ต่างเผ่า ไม่ใช้ประจุ');
     st.bench[0].level = 3; st.bench[1] = null; // จำลองว่าเจ้าของรวมร่างเป็น Lv3
     buyId(other.id);

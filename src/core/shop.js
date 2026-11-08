@@ -174,7 +174,7 @@ export function fireShopSkill(st, u, ref, when, chars, rules, msgs) {
   }
 }
 
-// ประจุรอใช้ (SF-7 · 21 ต.ค.): ตัวที่ซื้อใหม่ เผ่าตรงกับเจ้าของประจุ และไม่ใช่ตัวชนิดเดียวกัน → ได้ค่าถาวรตามเลเวลของเจ้าของประจุตอนนี้
+// ประจุรอใช้ (SF-7 · 21 ต.ค.): ตัวที่ซื้อใหม่ เผ่าตรงกับเจ้าของประจุ (set 137 user: รวมตัวชนิดเดียวกันด้วย) → ได้ค่าถาวรตามเลเวลของเจ้าของประจุตอนนี้
 // เจ้าของประจุถูกขายหมดแล้ว = ประจุหาย · ถูกรวมร่าง = ใช้ตัวชนิดเดียวกันที่เลเวลสูงสุดแทน
 export function chargeOwner(st, x) {
   const all = allUnits(st).map(y => y.u);
@@ -186,7 +186,6 @@ export function useCharges(st, u, chars, rules, msgs) {
   dropDeadCharges(st);
   const c = chars.find(x => x.id === u.id), mine = c ? [c.tribe, ...c.extraTribes] : [];
   st.charges = st.charges.filter(x => {
-    if (x.id === u.id) return true;
     const sc = chars.find(y => y.id === x.id), s = sc && sc.skills[x.si], give = s && DO_INFO[s.do] && DO_INFO[s.do].shop;
     if (!sc || !give) return false;
     if (![sc.tribe, ...sc.extraTribes].some(t => mine.includes(t))) return true;
