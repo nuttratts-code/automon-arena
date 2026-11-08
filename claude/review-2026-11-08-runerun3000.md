@@ -106,3 +106,13 @@ Check (2) first with a quick test: win % vs equal-power foes split by player Lv3
   B4 กระจก = overload (stores blocked shock; past a threshold it shocks/stuns itself) · B6 = same with burn · B1 = shell break
   (hit X times → armorCut/reflect pause for N s, then return; find the real B1 cause first) · B2 = immunity that wears down per block ·
   B3 = tribeResist 13. New rules = new BOSS_RULES entries (numbers = ค่าเสนอ, ask user) → bossrun searches the new rule's value per boss.
+
+## Set 142 (8 Nov) — new boss rules + boss values written (branch claude/eloquent-tesla-nm1ia5)
+- B1 cause (600 runs, k1, rule off one at a time): armorCut + noArmor (เหล็กกล้า 23 → 53) · reflect +17 · boss armor fx +34 (hits every tribe).
+- User picks: A1 overload = stored blocked burn/shock lands on the boss at the threshold · B1 shell break turns off armorCut/noArmor/reflect · C1 resist wear kept across phases · D1 shell 3 s.
+- Code: R40 burnOverload / shockOverload · R41 resistWear · R42 shellBreak (core/battle.js, core/stage.js, labels, tests t-boss) · combat-rules V5.1.
+- Round 1 (search new rule only): B1/B2/B4 hit the edge (rule erased) · after the rescale the real causes were B1 enrage (เหล็กกล้า 27 → 53 off), B4 tribeResist + fastAtk.
+- Round 2 (E1 F1 H1 G1) and round 3 (knob list, user: "tune freely") → hitting 40 needed rules ≈ erased, B4 still 21 → user J2: floors (half old value, tribeResist ≥ 10, new rules fixed H1).
+- Written (J2): B1 tribeResist 15 enrage 3/3/4 shellBreak 5/3 · B2 tribeResist 15 resistWear 2 · B3 tribeResist 13 · B4 tribeResist 10 fastAtk(ph3) 15 shockOverload 20 · B6 burnOverload 10 · B5 untouched · hp/atk/mult10/endlessPct rescaled.
+- bossrun k1 resisted: B1 27 · B2 33 · B3 39 · B4 19 · B5 35 · B6 44 (want ≈ 40) · favoured k1 76–93 ✓.
+- runerun 3000: boss k1 60.8 · k2 50.7 · k3 49.5 · normal rounds 46.2% · run cleared 14.7%.
