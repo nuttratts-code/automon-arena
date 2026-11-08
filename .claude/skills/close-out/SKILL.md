@@ -1,6 +1,6 @@
 ---
 name: close-out
-description: Automon Arena close-out block (HARD RULE 1). Use when a code branch is merged to main (docs-only commits do not count), when the user says the work is done/live, or after ~15 turns in one chat. Updates claude/handoff.md, pushes, and prints the Thai close-out message with a ready-to-paste prompt for the next chat.
+description: Automon Arena close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด). Use when a code branch is merged to main (docs-only commits do not count), when the user says the work is done/live, or after ~15 turns in one chat. Updates claude/handoff.md, pushes, and prints the Thai close-out message with a ready-to-paste prompt for the next chat.
 ---
 # Close-out (HARD RULE 1, moved here from CLAUDE.md in set 150)
 

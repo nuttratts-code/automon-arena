@@ -1,6 +1,6 @@
 ---
 name: publish-pages
-description: Automon Arena publish of the game / Balance Room / check pages (and runlog viewer) to their existing artifact links — writer check, latest main, gate, CI, Artifact publish, Relay update, or the paste-message when this account cannot publish. Use whenever a set publishes or the user says publish/เผยแพร่/ขึ้นเว็บ. Rules live in claude/workflow/publish.md §3 + relay.md and win if anything differs.
+description: Automon Arena publish (เผยแพร่ / ขึ้นเว็บ / อัปหน้า) of the game / Balance Room / check pages (and runlog viewer) to their existing artifact links — writer check, latest main, gate, CI, Artifact publish, Relay update, or the paste-message when this account cannot publish. Use whenever a set publishes or the user says publish/เผยแพร่/ขึ้นเว็บ. Rules live in claude/workflow/publish.md §3 + relay.md and win if anything differs.
 ---
 # Publish runbook (set 157 — skill from the close-out skill check)
 

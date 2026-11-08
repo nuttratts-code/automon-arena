@@ -10,7 +10,11 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Choices A1/B1 · buttons · guiding the user in tools | claude/workflow/replies.md | before asking the user to pick, or walking them through a tool |
 | UI work (design skill first) | claude/workflow/ui.md | building or reshaping any UI/page/mockup |
 | Balance import · cfgdiff · bossrun | skill `balance-import` (runbook) · claude/workflow/balance-import.md §00 (rules) | any task touching game values (HARD RULE 6) |
-| Measure · bot teams · data format · setup | claude/workflow/{measure,botteams,data-format,setup}.md | that work only |
+| Chat start (fetch · Relay · 🔒 · branch) | skill `chat-start` (runbook; SessionStart hook prints the Relay) · claude/workflow/relay.md (rules) | first turn of every chat |
+| Code branch → main (setup · gate · merge · CI) | skill `merge-code` (runbook) · HARD RULE 3 (rules) | a set changed code and is ready |
+| Rule / design change | skill `rule-change` (runbook) · Decisions + Docs below (rules) | the user proposes or asks to change how the game works |
+| Measure (Claude measures) · bot teams | skill `measure-balance` (runbook) · claude/workflow/{measure,botteams}.md (rules) | only when the user orders a measurement |
+| Data format · setup | claude/workflow/{data-format,setup}.md | that work only |
 | Balance/code detail | claude/ops-rules.md · claude/workflow.md | only when needed |
 
 ## HARD RULES — read first, never skip (violations caused real damage)
@@ -37,7 +41,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - **Ask everything up front, then run to the end (user rule 8 Nov, set 150 A1):** at the start of a task set, ask ALL questions needed to finish it in one go (one AskUserQuestion round, more calls only if > 4 questions); after the answers, work to the end without stopping. Stop mid-task only when: publishing an artifact · changing game values / writing the Balance Room db (HARD RULE 6 per-cell picks and bossrun before/after still apply — ask those up front when the data is already known) · a test/gate fails or the cause is unknown (HARD RULE 5) · something irreversible or outside the agreed scope.
 - **Weekly review (set 150 D1 · skill set 154):** when the user says "รีวิวสัปดาห์" (planned every Friday) or asks to audit the workflow/rules, run the `weekly-review` skill (.claude/skills/weekly-review/SKILL.md): user corrections + waste of the week, then the workflow audit checklist (rule vs rule, doc vs code, stale text, review hygiene) → claude/review-YYYY-MM-DD-weekly.md → A/B per change → edit only after approval.
 - **New tools:** prefer written instructions (topic file / skill) over new scripts; write code only when instructions cannot do the job, keep it small (set 150, habit 7).
-- Design/rules: offer 2–3 options + a recommended one, wait for confirmation.
+- Design/rules: offer 2–3 options + a recommended one, wait for confirmation (skill `rule-change`, set 158).
 - **Every time the user must pick (always-on, not topic-only):** label A/B… with options A1/A2…, explain in text first, THEN call AskUserQuestion buttons (max 4 questions per call; more → next call). Details: claude/workflow/replies.md. Several topics in one message = ask once, do all in one pass.
 - Small things (text, colours, button position, internal code): decide and inform.
 - The user tunes character stats. New character: propose from the median table. Numbers in skills/rules: always ask first.
@@ -51,7 +55,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - After confirmation: update docs immediately + short summary + bump that file's version (small +0.1 · core rule +1.0).
 
 ## Git workflow
-- Start of every chat: `git fetch origin` → read the Relay block at the top of claude/handoff.md → push the 🔒 lock line to main (relay.md; set 153 F1) → open WIP branch named there, else branch from latest main (full relay rules: claude/workflow/relay.md).
+- Start of every chat (skill `chat-start`, set 158): `git fetch origin` → read the Relay block at the top of claude/handoff.md → push the 🔒 lock line to main (relay.md; set 153 F1) → open WIP branch named there, else branch from latest main (full relay rules: claude/workflow/relay.md).
 - Work on a branch `claude/<topic>`; commit + push after every meaningful step; never force-push. **Merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user (rule 2 Nov); before publishing, the newest CI run on main for a commit that changed code must be green and no code changed after it (set 153 G1).** Gate FAIL or not runnable = do not merge, tell the user. Docs-only commits (Relay, reviews, rule docs) go straight to main.
 - GitHub Actions runs the full gate on every push that changes code (docs-only pushes under claude/, art/, *.md are skipped, set 139). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — open them by URL from handoff.md Links (claude/workflow/relay.md + publish.md).
 

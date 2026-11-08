@@ -1,6 +1,8 @@
 # workflow · bot teams, run length, replays, play data
 
-V1.28 · 8 Nov 2026 (set 153: botgen time) · V1.27 · 8 Nov 2026 (set 152: old publish bullet removed) · V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · older versions: git log
+V1.29 · 8 Nov 2026 (set 158: points to skill measure-balance) · V1.28 · 8 Nov 2026 (set 153: botgen time) · V1.27 · 8 Nov 2026 (set 152: old publish bullet removed) · V1.26 · 6 Nov 2026 (set 99: cells by round 1–19, 228 teams, user picked B; runs play extra matches) · older versions: git log
+
+Step-by-step runbook: skill `.claude/skills/measure-balance/SKILL.md` (set 158). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
 ## 13. Bot teams and match length per round (V1.17 · set 23)
 - Bot teams live in core/botdata.js (auto-generated, never hand-edit) · it carries the game-data hash (dataHash in core/save.js)

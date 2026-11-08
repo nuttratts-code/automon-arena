@@ -1,6 +1,8 @@
 # workflow · measuring balance (always ask permission first)
 
-V1.30 · 8 Nov 2026 (set 153: econ55/charstat gap logged · check ① scope) · V1.29 · 8 Nov 2026 (set 152: handoff item numbers → Relay block) · V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+V1.31 · 8 Nov 2026 (set 158: points to skill measure-balance) · V1.30 · 8 Nov 2026 (set 153: econ55/charstat gap logged · check ① scope) · V1.29 · 8 Nov 2026 (set 152: handoff item numbers → Relay block) · V1.28 · 8 Nov 2026 (set 151 review W5: run-playing tools share runPlayStats) · V1.27 · 27 Oct 2026 (translated to English) · split from workflow.md V1.21 · older versions: git log
+
+Step-by-step runbook: skill `.claude/skills/measure-balance/SKILL.md` (set 158). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
 ## 00. Tools that play runs (review W5, set 151 — set 138 รันจริง and set 140 bossrun used an old flow)
 - runerun, bossrun, econ55, charstat and Balance Room รันจริง take their runs from `lab/analyze.js runPlayStats` — never a private copy of the run flow.

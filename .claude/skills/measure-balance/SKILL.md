@@ -1,0 +1,15 @@
+---
+name: measure-balance
+description: Automon Arena balance measuring by Claude (วัดบาลานซ์ / วัดค่า / measure / botgen / runlen / ความยาวแมตช์) — permission first, 12,000 / 24,000 matches seed 4242, outlier + abnormal-match checks, measure-log entry, bot teams and match length after values change. Use only when the user orders a measurement or a skill-mechanic change affects characters in use. Normally the user measures in the Balance Room (วิเคราะห์ button) — then use balance-import instead. Rules live in claude/workflow/measure.md (§00 §0 §12 §6 §11) + botteams.md §13 and win if anything differs.
+---
+# Measure balance (set 158 — skill from measure.md + botteams.md)
+
+1. **Blocked?** handoff `บาลานซ์: กำลังปรับ` → do not measure; log it as "รอวัด". Stop.
+2. **Permission (§12):** ask the user before every measurement, together with the set's other questions (rule A1). Exceptions that need no permission: tests, ui_smoke, non-simulating data checks. Publishing character values = permission to measure first; never publish unmeasured character values.
+3. **Tuning round (only if the user orders tuning):** `cd src && node lab/formula.mjs <round> 12000 4242 - ID,ID` → `node tools/apply-tune.mjs ID,ID` → repeat until on target. One 12,000 round per problem; outliers / near-limit = user intent unless told otherwise (list names only).
+4. **Final:** `node tools/bootstrap.mjs final` (build + tests + ui_smoke + `lab/measure.mjs 24000 4242` in parallel, ~2.5 min) or `node tools/bootstrap.mjs measure 24000 4242` alone. Pass = mixed ±6 pts, per level ±10 pts. Near limit (mixed ≥5 / level ≥9) → re-measure with more matches before concluding.
+5. **Abnormal matches:** any `ผิดปกติ N แมตช์ …` line, or a run far slower than ~2.5 min → suspect endlessly stacking skills; find the cause, never publish (HARD RULE 5).
+6. **Proving a mechanic change does not move characters in use:** `git worktree add ../old <commit>` → same 3,000 random-team matches in both → compare.
+7. **After values entered the game:** `node lab/botgen.mjs` (rewrites core/botdata.js, never hand-edit) → match length `node lab/runlen.mjs 2000 4242` (ask permission with step 2) → summarize into the combat-rules test values. Run-playing tools must use `lab/analyze.js runPlayStats` (measure.md §00; econ55/charstat numbers approximate until moved).
+8. **Log:** claude/measure-log.md new section on top: set, date, n, seed, abnormal count, outlier/near-limit list (not in handoff). Delete temp .json files at set end.
+9. **Next:** code/data changed → `merge-code`; publish → `publish-pages`. Measuring 6+ characters → a sub-assistant only with the user's approval (§11).
