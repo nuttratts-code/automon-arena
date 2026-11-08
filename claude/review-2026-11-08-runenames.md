@@ -29,3 +29,8 @@ Flags: F1 F2 F3 F6 C1 C6 are weapon (item) names — clashes with the "runes, no
 | U7 (optional) | ค่าถาวรที่ได้ +20% | คงทน | จารึกถาวร | ฝังลึก |
 
 Kept as is: T1 ร่ำรวย · T3 แผงใหญ่ · T4 มองหา · X8 หัวการค้า · S5 ระดมยิง · X1 กระหายเลือด · X10 ถ่วงเวลา · X11 กัดกร่อน · T9 ล่าบอส · T12 เลือดเข้าตา · X5 ปักหลัก · U2 หวนคืน · X4 เลี่ยงจุดตาย · U4 ยั่วยุ · X7 คู่หู · U8 เงา · X9 ทำนาย · C7 ข่ายแสง · deleted: T2 S3 S9 F4 F5
+
+## v3 (after AMCFG1 rev 38, 8 Nov 13:00) — user names now in the Balance Room
+User set: X2 แม่เหล็ก · X3 ฟิวชั่น · T5 คมกริบ · T6 โล่ · T7 บทเพลง · U3 สายลม · U5 จุดไฟ · S1 ชุดเกราะ · S2 ปกป้อง · S4 ประจุไฟฟ้า · S6 คทา · S7 หอก · S8 ดาบ · F1 ค้อนเหล็กไหล · F2 กระบองเพลิง · F3 มีดสายฟ้า · F6 ดาบอสูร · T10 ผู้เหลือรอด · T11 บอลหิมะ · X6 ปัดป้อง · X7 คู่หู · C1 ธนูวายุ · C3 ปกป้อง · C4 ย่องเบา · C6 คทาภูติ (+ char PT-4 คทาแสง).
+Flags: S2 and C3 both "ปกป้อง" (different effects) · T6 โล่ S1 ชุดเกราะ S6 คทา S7 หอก S8 ดาบ F1 F2 F3 F6 C1 C6 are item/weapon names (clashes with the user's first ask "runes, not items").
+Still open (free names): C3 → กายแกร่ง · C5 โล่เหล็กคู่ → โล่เหล็ก (pairs with T6 โล่) · U6 ปีก → เงาแฝด · D1–D6 เลือด… → จิต… · T8 ธงเผ่า → รวมพลเผ่า · C8 สตั้น → ตะลึงงัน · U7 คงทน → จารึกถาวร (optional)
