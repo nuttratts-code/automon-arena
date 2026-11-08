@@ -39,10 +39,16 @@ const T = [0, T1, T2, T3];
 //   scale = existing rule × f in every phase (B1 enrage = cause after the rescale · B4 fastAtk) · otherwise the value itself (B6 burnOverload)
 const ADD = { B1: [{ id: 'shellBreak', v: 5, v2: 3 }], B2: [{ id: 'resistWear', v: 2 }], B4: [{ id: 'shockOverload', v: 20 }], B6: [{ id: 'burnOverload', v: 30 }] };
 const FIX = { B3: [['tribeResist', 13]], B4: [['tribeResist', 13]] };
-const KNOB = { B1: { id: 'enrage', scale: true, lo: 0, hi: 1.5 }, B4: { id: 'fastAtk', scale: true, lo: 0, hi: 1.5 }, B6: { id: 'burnOverload', lo: 1, hi: 3000, int: true } };
+// round 3 (user: tune freely until it matches): a list per boss, searched in order · the next knob is searched only when the one
+//   before hits its easy edge (kept there) · new counter rules first, then tribeResist, the boss's own rules last (keeps its identity)
+const KNOB = { B1: [{ id: 'shellBreak', lo: 1, hi: 10, int: true }, { id: 'tribeResist', lo: 1, hi: 30, int: true }, { id: 'enrage', scale: true, lo: 0, hi: 1 }],
+  B2: [{ id: 'resistWear', lo: 0.5, hi: 20, inc: true }, { id: 'tribeResist', lo: 1, hi: 30, int: true }],
+  B4: [{ id: 'shockOverload', lo: 1, hi: 100, int: true }, { id: 'tribeResist', lo: 1, hi: 13, int: true }, { id: 'fastAtk', scale: true, lo: 0, hi: 1 }],
+  B6: [{ id: 'burnOverload', lo: 1, hi: 3000, int: true }] };
 const withRule = (b, r) => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: [...(p.rules || []).filter(x => x.id !== r.id), { ...r }] })) });
 const setV = (b, id, v) => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: (p.rules || []).map(r => r.id === id ? { ...r, v } : r) })) });
-const kv = (K, x) => (K.int ? Math.max(K.lo, Math.round(x)) : Math.round(x * 100) / 100);
+const kv = (K, x) => (K.inc ? (x = -x, 0) : 0, K.int ? Math.max(K.lo, Math.round(x)) : Math.round(x * 100) / 100);
+const knobs = (b, Ks, xs) => Ks.reduce((y, K, i) => knob(y, K, xs[i]), b);
 const knob = (b, K, x) => !K ? b : K.scale ? ({ ...b, phases: b.phases.map(p => ({ ...p, rules: (p.rules || []).map(r => r.id === K.id ? { ...r, v: Math.max(1, Math.round(r.v0 * x)) } : r) })) }) : setV(b, K.id, kv(K, x));
 const prep = b => { let x = (FIX[b.id] || []).reduce((y, [id, v]) => setV(y, id, v), b); for (const r of ADD[b.id] || []) x = withRule(x, r);
   return { ...x, phases: x.phases.map(p => ({ ...p, rules: p.rules.map(r => ({ ...r, v0: r.v })) })) }; };
@@ -55,18 +61,29 @@ for (const b of RUN_STAGE.bosses.filter(x => x.on)) {
   // set 141 (user N1): the rule that holds the resisted tribe down (cause check) is scaled by f (all phases, ≥ 1) so that tribe wins ≈ T1 − 20
   // at k1, alternating with the hp/atk scale s (2 passes) · bosses without a KNOB entry keep their rules
   const K = KNOB[b.id], resT = ruleOf(b, 'tribeResist')?.tribe, R1 = teams[1].filter(t => t.tr === resT);
-  const bf = prep(b);
-  const [klo, khi] = K ? [K.lo, K.hi] : [0, 0];
-  let f = K ? (K.scale ? 1 : (klo + khi) / 2) : 0, s = 1;
-  for (let pass = 0; pass < (K && R1.length ? 3 : 1); pass++) {
-    s = search(0.2, 4, x => winPct(scale(knob(bf, K, f), x), 1, teams[1]), T1);
-    if (K && R1.length) f = search(klo, khi, x => winPct(scale(knob(bf, K, x), s), 1, R1), T1 - 20, 10);
+  const bf = prep(b), Ks = K || [];
+  const rng = k => (k.inc ? [-k.hi, -k.lo] : [k.lo, k.hi]), hard = k => (k.scale ? 1 : k.inc ? -k.lo : k.hi);
+  // start: every knob at its current value (scale 1 · rule value as set) or the hard end
+  const cur = k => { if (k.scale) return 1; const r = bf.phases.flatMap(p => p.rules).find(q => q.id === k.id); return r ? (k.inc ? -r.v : r.v) : hard(k); };
+  const xs = Ks.map(cur); let s = 1, edge = false;
+  for (let pass = 0; pass < (Ks.length && R1.length ? 3 : 1); pass++) {
+    s = search(0.2, 4, x => winPct(scale(knobs(bf, Ks, xs), x), 1, teams[1]), T1);
+    if (!Ks.length || !R1.length) break;
+    for (let i = 0; i < Ks.length; i++) xs[i] = cur(Ks[i]);
+    edge = false;
+    for (let i = 0; i < Ks.length; i++) {
+      const [lo, hi] = rng(Ks[i]);
+      xs[i] = search(lo, hi, x => { const t = xs.slice(); t[i] = x; return winPct(scale(knobs(bf, Ks, t), s), 1, R1); }, T1 - 20, 10);
+      if (xs[i] - lo > 0.01 * (hi - lo)) { edge = false; break; } // inside the range → done
+      xs[i] = lo; edge = true;
+    }
   }
-  if (K && R1.length) s = search(0.2, 4, x => winPct(scale(knob(bf, K, f), x), 1, teams[1]), T1);
-  const b1 = strip(scale(knob(bf, K, f), s));
+  if (Ks.length && R1.length) s = search(0.2, 4, x => winPct(scale(knobs(bf, Ks, xs), x), 1, teams[1]), T1);
+  const b1 = strip(scale(knobs(bf, Ks, xs), s));
   const vals = id => b1.phases.map(p => p.rules.find(r => r.id === id)?.v ?? '-').join('/');
   if (ADD[b.id] || FIX[b.id]) console.log(`  ${b.id} rules: ${[...(ADD[b.id] || []).map(r => r.id), ...(FIX[b.id] || []).map(q => q[0])].map(id => id + ' ' + vals(id)).join(' · ')}`);
-  if (K) console.log(`  ${b.id} searched ${K.id}: ${b.phases.map(p => p.rules.find(r => r.id === K.id)?.v ?? '-').join('/')} → ${vals(K.id)}${f <= K.lo + 0.01 || f >= K.hi - 0.01 ? ' · HIT THE EDGE' : ''}`);
+  for (const k of Ks) console.log(`  ${b.id} searched ${k.id}: ${b.phases.map(p => p.rules.find(r => r.id === k.id)?.v ?? '-').join('/')} → ${vals(k.id)}`);
+  if (edge) console.log(`  ${b.id} every knob at its easy edge`);
   const m10 = Math.round(search(0.5, 6, x => winPct({ ...b1, mult10: x }, 2, teams[2]), T2) * 100) / 100;
   let nb = { ...b1, mult10: m10 };
   const before3 = K3 && teams[3].length ? winPct(b, 3, teams[3]) : NaN;
