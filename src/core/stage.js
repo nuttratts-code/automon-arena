@@ -71,7 +71,7 @@ export const RUNE_SPECIAL = [
   spec('permUp', 'other', 'one', 'ค่าถาวร +', 'ค่าถาวรที่ตัวที่ใส่ได้ +{permPct}%', [['permPct', 'ค่าถาวร', 50, 0, 300, '%']]),
   spec('scout', 'other', 'team', 'ส่องทีมศัตรู', 'ก่อนสู้ แตะรูนนี้ → ดูทีมศัตรู (ตำแหน่ง เลเวล รูน)'),
 ];
-// Set 143 (user 8 Nov): extra explanation shown only in the Balance Room (RUNE_TEXT.full), like skill text notes
+// Set 145 (user 8 Nov): extra explanation shown only in the Balance Room (RUNE_TEXT.full), like skill text notes
 const RUNE_NOTE = { interest: 'นับเงินที่เหลือก่อนรับรายได้ · ได้ตอนร้านเปิด', shopSlots: 'รวมทุกรูนไม่เกิน 3', heartTrade: 'รูนยังอยู่หลังใช้', lure: 'เทียบกับตัวระดับเดียวกัน · ใส่บนม้านั่งก็ได้', fastMerge: 'ปกติ 3 · ใส่บนม้านั่งก็ได้', shadow: 'ม้านั่งเต็ม = ไม่ได้', addTribe: 'นับเป็นเผ่าจริง ทั้งโบนัสเผ่าและสกิลที่เล็งเผ่า', flag: 'เลือกเผ่าจากตัวบนบอร์ดตอนได้รูน แต่ละอันเลือกเอง', allyDownDmg: 'ตั้งแต่เพื่อนตัวแรกล้มจนจบแมตช์ · ไม่ซ้อนตามจำนวนที่ล้ม', bossDmg: 'รวมช็อต ไม่นับไฟ', growth: 'แพ้แล้วนับใหม่ · หลายอัน = คูณทั้งค่าต่อแมตช์และเพดาน', buddy: 'ทุกฮิต · % ของพลังโจมตีคู่ · ฮิตที่พาไปไม่พาต่อ', taunt: 'บอสก็ถูกดึง · หลายตัวมีรูนนี้ = ตัวหน้าสุดก่อน', avoidDeath: 'ยกเลิกดาเมจ ไฟ ช็อตของฮิตนั้น · ไม่กันไฟที่ติดอยู่แล้ว', freeze: 'มึนงง = หยุดนับคูลดาวน์', regenLow: 'ทั้งทีมใช้ร่วมกัน 1 อัน', armorShare: 'เกราะที่แบ่งไปไม่ทำให้รูนทำงานซ้ำ', hpToArmorHit: 'ปัดลง', link: 'รวมไฟ/ช็อต · รับแทนต่อไม่ได้', scout: 'ไม่มีรูนนี้ = ไม่เห็นทีมศัตรู' };
 export const RUNE_SPEC = Object.fromEntries(RUNE_SPECIAL.map(s => [s.key, s]));
 // Effect kinds: stat (RUNE_EFFECTS, flat/% + value) · special (RUNE_SPECIAL, own fields) · 'skill' (one battle skill, Q1 A)
@@ -131,7 +131,7 @@ const RUNE_OLD_V = { T5: 'dmgPct', T6: 'armorPct', T7: 'cdPct', U3: 'cdPct', U5:
 export const runeSkillOk = s => !!s && BATTLE_WHEN.includes(s.when) && !!DO_INFO[s.do] && !DO_INFO[s.do].shop && !DO_INFO[s.do].of && s.do !== 'summon' && s.to !== 'allyAt' && skillTargets(s.when, s.do).includes(s.to);
 export const runeScopeLabel = x => x.scope === 'tribe' ? `เผ่า${x.tribe}` : (RUNE_SCOPES.find(s => s[0] === x.scope) || [, x.scope])[1];
 // Effect text of a rune record (skill runes: the page writes the skill line)
-// Set 143 (user 8 Nov): same method as skill text — `<who>: <effect>` or `<when> → <who> <effect>`, the words skillLine uses,
+// Set 145 (user 8 Nov): same method as skill text — `<who>: <effect>` or `<when> → <who> <effect>`, the words skillLine uses,
 // game short · Balance Room sets RUNE_TEXT.full = true → explanation in (...). Text must match the engine (runes.js / battle.js / shop.js).
 export const RUNE_TEXT = { full: false };
 const RUNE_WHO = { one: 'ตัวที่ใส่', team: 'ทั้งทีม', enemy: 'ศัตรูทุกตัว' };
