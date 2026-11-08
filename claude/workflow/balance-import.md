@@ -1,6 +1,8 @@
-# workflow · importing values from the Balance Room (English · V1.35 · 8 Nov 2026 · set 153: check ① scope, cfgdiff file name, botgen time · V1.34 set 152 audit: setup before gate, AMCFG1 = one input path, gate time) · V1.33 set 151 review W6 step 4b
+# workflow · importing values from the Balance Room (English · V1.36 · 8 Nov 2026 · set 156: points to skill balance-import · V1.35 · 8 Nov 2026 · set 153: check ① scope, cfgdiff file name, botgen time · V1.34 set 152 audit: setup before gate, AMCFG1 = one input path, gate time) · V1.33 set 151 review W6 step 4b
 
 Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · older versions: git log
+
+Step-by-step runbook: skill `.claude/skills/balance-import/SKILL.md` (set 155). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
 ## 00. Check before tuning (V1.32, user rule set 130 · CLAUDE.md HARD RULE 6) — before ANY work that touches game values
 1. Ask the user for a fresh AMCFG1 (Balance Room → 💾 → "คัดลอกค่าให้ Claude"), save it to the scratchpad.

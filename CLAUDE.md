@@ -6,10 +6,10 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Topic | File | Open when |
 |---|---|---|
 | Relay between the 2 accounts · publish ownership + paste message | claude/workflow/relay.md | WIP branch from the other account, publishing, Relay block updates |
-| Publish + page tests | claude/workflow/publish.md | publishing an artifact, running ui_smoke by hand |
+| Publish + page tests | skill `publish-pages` (runbook) · claude/workflow/publish.md (rules) | publishing an artifact, running ui_smoke by hand |
 | Choices A1/B1 · buttons · guiding the user in tools | claude/workflow/replies.md | before asking the user to pick, or walking them through a tool |
 | UI work (design skill first) | claude/workflow/ui.md | building or reshaping any UI/page/mockup |
-| Balance import · cfgdiff · bossrun | claude/workflow/balance-import.md (§00) | any task touching game values (HARD RULE 6) |
+| Balance import · cfgdiff · bossrun | skill `balance-import` (runbook) · claude/workflow/balance-import.md §00 (rules) | any task touching game values (HARD RULE 6) |
 | Measure · bot teams · data format · setup | claude/workflow/{measure,botteams,data-format,setup}.md | that work only |
 | Balance/code detail | claude/ops-rules.md · claude/workflow.md | only when needed |
 
