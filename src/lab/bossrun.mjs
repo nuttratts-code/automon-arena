@@ -41,10 +41,11 @@ const ADD = { B1: [{ id: 'shellBreak', v: 5, v2: 3 }], B2: [{ id: 'resistWear', 
 const FIX = { B3: [['tribeResist', 13]], B4: [['tribeResist', 13]] };
 // round 3 (user: tune freely until it matches): a list per boss, searched in order · the next knob is searched only when the one
 //   before hits its easy edge (kept there) · new counter rules first, then tribeResist, the boss's own rules last (keeps its identity)
-const KNOB = { B1: [{ id: 'shellBreak', lo: 1, hi: 10, int: true }, { id: 'tribeResist', lo: 1, hi: 30, int: true }, { id: 'enrage', scale: true, lo: 0, hi: 1 }],
-  B2: [{ id: 'resistWear', lo: 0.5, hi: 20, inc: true }, { id: 'tribeResist', lo: 1, hi: 30, int: true }],
-  B4: [{ id: 'shockOverload', lo: 1, hi: 100, int: true }, { id: 'tribeResist', lo: 1, hi: 13, int: true }, { id: 'fastAtk', scale: true, lo: 0, hi: 1 }],
-  B6: [{ id: 'burnOverload', lo: 1, hi: 3000, int: true }] };
+// J2 (user, set 142 round 4): floors — a value may drop to half its old value at most, tribeResist ≥ 10, new rules fixed at H1 (B6 overload ≥ 10)
+const KNOB = { B1: [{ id: 'tribeResist', lo: 15, hi: 30, int: true }, { id: 'enrage', scale: true, lo: 0.5, hi: 1 }],
+  B2: [{ id: 'tribeResist', lo: 15, hi: 30, int: true }],
+  B4: [{ id: 'tribeResist', lo: 10, hi: 13, int: true }, { id: 'fastAtk', scale: true, lo: 0.5, hi: 1 }],
+  B6: [{ id: 'burnOverload', lo: 10, hi: 3000, int: true }] };
 const withRule = (b, r) => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: [...(p.rules || []).filter(x => x.id !== r.id), { ...r }] })) });
 const setV = (b, id, v) => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: (p.rules || []).map(r => r.id === id ? { ...r, v } : r) })) });
 const kv = (K, x) => (K.inc ? (x = -x, 0) : 0, K.int ? Math.max(K.lo, Math.round(x)) : Math.round(x * 100) / 100);
