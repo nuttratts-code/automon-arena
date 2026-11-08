@@ -83,3 +83,14 @@ Options (next chat, numbers = user's call): E1 (rec) extra matches get harder pe
 round (e.g. r11 +20, r15 +40, r19 +60) · E2 foeBase > 100 only in extra matches · E3 lock power at shop END
 (CONFLICTS with set 128 X9 A "lock at shop start, for everyone" → must ask user) · E4 keep (extra = reward for strong boards).
 Check (2) first with a quick test: win % vs equal-power foes split by player Lv3 count.
+
+## Set 141 decisions (user, 8 Nov) — cfgdiff rev 34 = MATCH (claude/review-2026-11-08-cfgdiff.md)
+- A1 bossrun on real-run teams (runes both sides, pickFoe) · B1 every boss same target per k (band ≈ ±5) · D1 re-measure after.
+- F targets: k1 60 · k2 50 · k3 45.
+- C (user's own rule, all k): per boss, favoured tribe (boss tribeWeak) wins > target+10 · resisted tribe (boss tribeResist) ≈ target−20 ·
+  measured per tribe, a team counts as tribe X only when ≥ 4 of 6 units are X (4/2). Find cause in code first (B4 vs สายฟ้า 8%).
+- E2 extra matches: new setting "pick power ×" for extra matches = 120% (ค่าเสนอ) · foeExtraPct 20 kept.
+- NEW (conflicts set 119 "no win streak", user confirmed G1): win streak raises foe pick target +10% per win from 2 wins in a row
+  (H2: ws 2 = +10, 3 = +20 …) · no cap (I3) · boss wins count, any loss resets, bosses themselves not scaled (J1) ·
+  K2 = real bot teams only (no hp/atk add) → tops out at the strongest team in reach · M1 all bot-team matches (main + extra).
+- L3 add a 4th bot tier "very strong" (top real boards from the sim) so the streak has stronger real teams to reach.
