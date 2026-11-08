@@ -1,4 +1,4 @@
-# Review 2026-11-08 — shorter skill text (draft, NOT applied)
+# Review 2026-11-08 — shorter skill text (APPLIED set 142 · final text = game output, "เมื่อ" prefix + E1 tribe word inline)
 Source: skillLine() in src/game/labels.js (template-generated; 51 skill rows). Old text = current game output.
 Proposed format: `<when> → <who> <effect> <values>`; self = no recipient; duration shown by the chip only, "ถาวร" word kept at the end.
 Phrase rules (user 8 Nov: keep "เมื่อ"): ทุกฮิตที่ตีโดน→เมื่อตีโดน · เมื่อโดนตี (จากศัตรูตัวไหนก็ได้)→เมื่อโดนตี · ตัวเองล้ม→เมื่อล้ม · every event trigger starts with เมื่อ (ติดตัว unchanged) · "1 / 2 / 4"→"1/2/4" · drop "(บวกจากดาเมจตีปกติ)" (word ดาเมจเพิ่ม covers it) · drop "(ไม่มี = ไม่มีผล)" · drop "[ระหว่างสู้]" · "เฉพาะ Lv1/2"→"(Lv1–2)" · summon shows the name, not the id.
