@@ -3,7 +3,6 @@
 Original creature auto-battler, *inspired by* Batomon Showdown but original: never copy its names, characters, art or text. The owner is no-code and controls both the big picture and the details; Claude is the coding assistant.
 
 ## HARD RULES — read first, never skip (violations caused real damage)
-0. **Plan first, wait for OK (user rule 8 Nov, set 137 — after Claude fixed + merged + published the log bug before saying anything).** Before ANY change (code, docs, values, Balance Room data, merge, publish), tell the user in Thai: the cause (with evidence) + exactly what will be changed + what they will see after; then STOP and wait for their OK. Investigation that changes nothing (reading code, reading the db, running tests on a scratch copy) may run first — a plan needs a known cause. An OK'd plan covers its own merge + publish after GATE: PASS (no second ask). Small things too: offer options, the user picks (see Decisions).
 1. **Close-out block (trigger: every merge to main, or the user says it's done/live, or ~15 turns in one chat).** Stop and output, in Thai: ควรเปิดแชทใหม่ได้แล้ว · what the user must do first · recommended model (Sonnet routine / Opus deep design or hard bugs / Haiku trivial) + 1-line reason · a ready-to-paste message for the new chat (next-task options go IN that message, not offered in the old chat). Update claude/handoff.md + push before it. Never continue into new work in the same chat after this block.
 2. New file in src/core or src/game = add it to `CORE` in src/build.mjs in the same commit (a missing entry only breaks the built page, not the tests).
 3. **Merge gate (rule 31 Oct, after set 62 shipped a broken build):** first run `cd src && node tools/bootstrap.mjs setup` (build + unit tests, ~3 min) until it passes, fixing every failure; only then run the full gate ONCE (rule 5 Nov: never use the slow gate to find test failures). Before merging to main, run `cd src && node tools/bootstrap.mjs gate` (build + tests + ui_smoke on the BUILT pages, installs python playwright if missing, ~4 min, prints GATE: PASS/FAIL; FAILS [] ERRORS [] required). Unit tests alone are not enough — they run on source, not on the built html. If ui_smoke cannot run: set it up first (cloud: `pip install playwright`; ui_smoke uses /opt/pw-browsers/chromium); if still impossible, tell the user in Thai and wait for their decision — never merge or publish silently untested. Never merge or publish silently untested. **Publish gate:** the chat that publishes must first `git fetch`, build from the LATEST main, and get GATE: PASS on that exact commit — the paste-message for the old chat says so; it reports the gate result in the Relay line.
@@ -29,10 +28,11 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Work the user does in tools (Balance Room, game page): name the tool, one step at a time, wait for "done".
 - "Why / how should" questions = short answer, change nothing until told.
 - Characters as ID+name, e.g. PL-3 (name). Rules: C- combat · T- tribe · S- shop.
+- **Choice labels (user rule 8 Nov, set 136):** when the user must pick, label each question/topic with a capital letter A, B, C… and its options A1, A2, A3… (B1, B2…), so the user can answer e.g. "A2 B1". Never use other ad-hoc labels (F1, Q1, ก/ข) for choices. Review files under claude/ follow the same labels.
 
 ## Decisions
 - Design/rules: offer 2–3 options + a recommended one, wait for confirmation. Several topics in one message = ask once, do all in one pass.
-- Small things (text, colours, button position, internal code): offer 2–3 options + a recommended one and wait for the user's pick (user rule 8 Nov, set 137; was 'decide and inform').
+- Small things (text, colours, button position, internal code): decide and inform.
 - The user tunes character stats. New character: propose from the median table. Numbers in skills/rules: always ask first.
 - Unbalanced idea / loophole: warn directly first.
 - **Conflict check (user rule 7 Nov, set 118 — the user may mistype):** before acting on ANY request, compare it with the current docs/code (rules, settings, earlier decisions). If it contradicts or changes something already decided, STOP and tell the user first in Thai: what exists now (doc + rule id + set), what the request would change, and every side effect/clash it creates — then wait for confirmation. Never silently follow the new wording, never silently keep the old one.
@@ -44,7 +44,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - After confirmation: update docs immediately + short summary + bump that file's version (small +0.1 · core rule +1.0).
 
 ## Git workflow
-- Work on a branch; **merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user again IF the work follows a plan the user OK'd (HARD RULE 0; rule 2 Nov)**. Gate FAIL or not runnable = do not merge, tell the user.
+- Work on a branch; **merge to main as soon as the merge gate gives GATE: PASS — no need to ask the user (rule 2 Nov)**. Gate FAIL or not runnable = do not merge, tell the user.
 - Setup/test: `cd src && node tools/bootstrap.mjs setup` (build + tests); GitHub Actions runs the full gate on every push to any branch (+ manual run; repo is public = free minutes, decision 6 Nov set 104). Published artifacts (game/balance room/check) are built from `src/` and published with the Artifact tool — see claude/workflow/publish.md.
 
 ## Relay between two Claude accounts (decision 27 Oct)
