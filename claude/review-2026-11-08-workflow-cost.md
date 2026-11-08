@@ -52,3 +52,11 @@ Measured on main c4d534c. Token counts are estimates (English ≈ 3.8 chars/toke
 - C1 built: tests.yml paths-ignore claude/**, art/**, **/*.md.
 - D1: already done — Default environment setup script = `pip install playwright` (W1 cleared). The 2nd account's environment is separate.
 - E (user wording): CLAUDE.md as topic headings, open a topic only when the task touches it → CLAUDE.md keeps core rules (always auto-loaded, cannot be partly loaded) + a topic table; relay/publish-paste, choices/buttons, UI work moved verbatim to claude/workflow/{relay,replies,ui}.md. Close-out stays ~15 turns (not changed). CLAUDE.md 12.3 KB → 8.9 KB.
+
+## Round 2 — tidy-up ideas (8 Nov, set 139, not decided; do in a NEW chat)
+- **A — review files:** 39 review-*.md sit in claude/ root (most decided) + archive/ mixes relays, reviews, xlsx. A1 (rec): move decided reviews → claude/archive/reviews/, relays → claude/archive/relay/, keep only OPEN reviews in claude/, add claude/reviews.md index (file · topic · open/decided). A2: index only, no moves. A3: leave.
+- **B — rule docs missing rules:** boss/rune rules (sets 69, 71, rune audit set 128) live only in review files + code, not in combat-rules/tribe-rules (pending since 4 Nov). B1 (rec): write them into combat-rules (C) now, user checks the Thai text. B2: keep waiting until the user next touches those docs.
+- **C — stale lists:** pending.md last checked 31 Oct (many imports since) · handoff State line "keep claude/stage-mode" contradicts W5 · results/latest stale note. C1 (rec): recheck every item against code/measure-log, delete done ones, show the user the removals. C2: leave.
+- **D — tests run twice per merge (~90 s):** setup runs unit tests, gate runs them again. D1: gate skips unit tests when setup passed on the same git tree in the same chat (records tree hash); CI still runs everything. D2: keep (current rule 5 Nov).
+- **E — Thai copy instructions.md drifts** (header says "may be incomplete"). E1: replace with a 1-page Thai summary of each CLAUDE.md section + topic files, regenerated on every rule change. E2: full Thai translation. E3: leave.
+- **F — version-history headers:** many docs start with long "V1.28 · … · V1.27 · …" lines read every open. F1: keep current version + last change only, older history = git log. F2: leave.
