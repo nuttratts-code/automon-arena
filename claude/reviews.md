@@ -4,6 +4,7 @@ V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; whe
 
 | File | Topic | Status |
 | --- | --- | --- |
+| review-2026-11-08-runerun3000.md | Set 140: user analysis of Balance Room รันจริง 3000 runs — Q&A + to-do for next chat | open |
 | review-2026-11-08-econ55.md | Step 5.5 economy — what is left (set 136): PL-2 strong, PT-3, SF-7 weak | open |
 | archive/reviews/review-2026-10-27.md | Review 27 Oct 2026 (Next 1) — report only, nothing changed | decided |
 | archive/reviews/review-2026-10-28-batch31.md | Batch 31 options: measured results as colours on the step-1 grid + tribe overview (28 Oct  | decided |
