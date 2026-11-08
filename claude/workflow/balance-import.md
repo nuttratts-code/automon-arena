@@ -1,4 +1,4 @@
-# workflow · importing values from the Balance Room (English · V1.32 · 7 Nov 2026)
+# workflow · importing values from the Balance Room (English · V1.33 · 8 Nov 2026 · set 151 review W6 step 4b)
 
 Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · older versions: git log
 
@@ -7,6 +7,7 @@ Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage
 2. `cd src && node tools/cfgdiff.mjs <file> --md ../claude/review-YYYY-MM-DD-cfgdiff.md` → lists ONLY differing cells across chars · tribe bonuses · game rules · runes · custom runes · bosses (every phase) · mode settings (แท็บด่าน). MATCH = go on. (Chars/tribes/rules in the code are only the fields the user changed vs the page defaults; the page defaults = game only if the Balance Room was published from the current main — check the Relay publish line.)
 3. DIFFERS → commit the review file to main (docs-only) and ask the user in Thai, per cell or per group: **ยึด Balance Room** (import it) or **ยึดเกม** (keep the game; user sets it back on the page). Wait for the answer. Never pick a side yourself.
 4. Do the work: Balance Room side → chars/tribes/rules: tools/apply-config.mjs (§0) · stage: `node tools/apply-stage.mjs <out>/main.json --take <part | part:id,…>` (e.g. `bosses:B1,runes:T2,settings:foeFloor`) → re-run cfgdiff: the taken cells must be gone.
+4b. **After an import that renames or changes runes/characters (review W6, set 151 — sets 131 and 146 failed the first gate):** `grep -n` each changed id/name in src/tests/ui_smoke.py and fix it BEFORE `setup` / `gate`.
 5. **bossrun / runerun --write / any tool that rewrites boss values: run WITHOUT --write first, show the user the before → after table (hp, atk, phase atk, mult10, endlessPct, win %), write only after the user agrees** (same seed → re-run with --write and check the printed values are the same).
 6. After the merge: publish the Balance Room (page defaults = game) and tell the user, cell by cell, what they must set back on the page (the "ยึดเกม" cells + any values Claude changed, e.g. bossrun) and press 💾 — otherwise their saved config still holds the old values and the next import reverts them.
 

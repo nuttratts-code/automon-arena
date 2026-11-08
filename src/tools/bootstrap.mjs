@@ -114,7 +114,7 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   if (t.skipped) say('✅ เทสต์: ข้าม — setup ผ่านแล้วบนไฟล์ชุดเดียวกัน (tree unchanged; ใช้ gate --full เพื่อรันซ้ำ)');
   else { const ts = summarizeTests(t.out); flag(ts.ok, `เทสต์ ${ts.total} (${t.sec} วิ)${ts.fails.length ? '\n   ' + ts.fails.join('\n   ') : ''}`); }
   flag(us.ok, `ui_smoke ${us.detail} (${u.sec} วิ)`);
-  if (!us.ok) say(lines(u.out).slice(-12).join('\n'));
+  if (!us.ok) { say(lines(u.out).slice(-12).join('\n')); const f = resolve(SHOTS, 'ui_smoke-last.txt'); try { writeFileSync(f, u.out); say('full ui_smoke output saved:', f); } catch (e) {} } // W1 (review 8 Nov): keep the whole output to find the missing-summary-line cause
   say(bad ? 'GATE: FAIL — do not merge/publish, tell the user' : 'GATE: PASS — ok to merge');
   process.exit(bad ? 1 : 0);
 } else if (mode === 'measure') {

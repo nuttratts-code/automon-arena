@@ -1,6 +1,6 @@
 # workflow · publish and test the pages
 
-V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
+V1.29 · 8 Nov 2026 (set 151 review: W1 false-FAIL rerun 9.3 · W10 bug test 9.1a) · V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
 
 ## 3. Publish (never force · always update the existing link · never create a new copy)
 - **Gate first:** `git fetch` → build from the LATEST main → `cd src && node tools/bootstrap.mjs gate` must print GATE: PASS on that exact commit. FAIL or cannot run = do not publish, tell the user.
@@ -25,6 +25,8 @@ V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 lev
 - **9.1 Saving time (V1.23 · user chose a+b on 25 Oct)**
   - a. **Every problem (bug, failing test, wrong page, stutter, slowness, etc.): do not edit code before the real cause is known** (V1.25: running tests/scripts to collect evidence is allowed · never guess-fix and then run tests to see if they pass) · confirm the cause with evidence (reproduce it, read the related code, read the error message, or measure), then fix · tell the user the cause with short evidence · smoothness/speed problems: measure in a browser emulating a 4× slowed phone (frame time + Layout/Paint/script split), measure before/after with the same script, report the numbers side by side · ชุด 30.4 guessed wrong on the first round, the biggest time loss
   - b. While editing use fast tests only · **run ui_smoke once after everything is done** (finish small jobs/cleanup first) · if code is edited after ui_smoke passed = it must run again (existing rule: never publish without testing the page), so do not edit anything after the run unless necessary
+  - a2. **Every bug the user reports (review W10, set 151 — ≥ 7 user-found bugs in 2 weeks):** add a test that fails before the fix and passes after, in the same commit; the Relay line names the test.
+- **9.3 Gate false FAIL (review W1, set 151):** GATE: FAIL where every count passes (n/n) but a ui_smoke summary line (FAILS / ERRORS / max board) is missing → re-run the gate ONCE (unit tests skip automatically). Second FAIL → stop and tell the user. Each such rerun goes in the Relay line as `false-FAIL rerun`; the gate saves the full ui_smoke output to `<tmp>/automon-shots/ui_smoke-last.txt` — read it to find the cause, fix the cause in its own set.
 - **9.2 An existing test breaks because of values the user tuned** (V1.25): evidence is needed before changing the test = the code diff against the published pages differs only in core/characters.js / imported rule values + the broken test cites character values directly · then change the test to not depend on values (read from data / check the mechanism) and tell the user · no evidence = treat it as a bug, follow 9.1a
 - While `final` runs, use the wait to update docs and handoff.md (do not touch the code being checked)
 - Level 1 results are for decisions along the way only, **never counted as a pass** · always report the number of matches used
