@@ -7,7 +7,10 @@ try { const d = JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY) || 'null'); if 
 const stageEdited = () => !same(stageCfg, STAGE_BASE);
 // set 146: the reset button works on the open tab only (runes tab = runes + custom runes + copies rule) — a full reset once wiped the user's rune names.
 const STAGE_PART_KEYS = { runes: ['runes', 'custom', 'copiesRule'], bosses: ['bosses'], settings: ['settings'] };
-const stagePartEdited = p => STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], STAGE_BASE[k]));
+const stagePartEdited = p => STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], STAGE_BASE[k])) || stageSavedDiff(p);
+// set 146 r2: the button also stays usable when the tab differs from the last saved values (loaded in 99-start / after 💾).
+let stageSaved = null;
+const stageSavedDiff = p => !!stageSaved && STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], stageSaved[k]));
 function stageCount() {
   let n = 0;
   for (const r of STAGE_RUNES) { const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id]; for (const k of new Set([...Object.keys(x), ...Object.keys(b)])) if (x[k] !== b[k]) n++; }
@@ -477,7 +480,15 @@ $('stgReset').addEventListener('click', () => {
   const b = $('stgReset');
   if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'กดอีกครั้งเพื่อยืนยัน'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = STAGE_RESET_TXT; }, 3000); return; }
   b.dataset.confirm = ''; b.textContent = STAGE_RESET_TXT;
-  const base = cleanStage(null);
-  for (const k of STAGE_PART_KEYS[stagePart]) stageCfg[k] = base[k];
-  stageCfg = cleanStage(stageCfg); renderStage(); stageChanged();
+  stageResetPart(stagePart);
 });
+// set 146 r2: back to the LAST SAVED values (config/main, read fresh) — the user expects "คืนค่า" to bring back what they saved, not the game values.
+// No db (offline view) or nothing saved yet → the page defaults (= values Claude imported).
+async function stageResetPart(part) {
+  let base = null, from = 'ค่าในเกม';
+  if (db) { try { const cs = await db.doc('config/main').get(); const cfg = cs.exists ? cs.data() : null; if (cfg && cfg.stage) { base = cleanStage(cfg.stage); from = 'ค่าที่บันทึกล่าสุด' + (cleanRev(cfg.rev) ? ` (ครั้งที่ ${cleanRev(cfg.rev)})` : ''); } } catch (e) {} }
+  if (!base) base = cleanStage(null);
+  for (const k of STAGE_PART_KEYS[part]) stageCfg[k] = base[k];
+  stageCfg = cleanStage(stageCfg); renderStage(); stageChanged();
+  saveMsg('คืนแท็บนี้เป็น' + from + 'แล้ว');
+}

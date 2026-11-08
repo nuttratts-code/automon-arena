@@ -26,7 +26,7 @@ $('save').addEventListener('click', async () => {
     const at = new Date().toISOString(), rev = cfgRev + 1;
     await db.doc('config/main').set({ ...diffs(), stage: stageCfg, savedAt: at, rev }); // stage = runes/bosses/settings (stage mode phase 1)
     await db.doc('ui/main').set(uiState(at)); // ชุด 35: สิ่งที่เลือก/เปิดค้างไว้ทั้งหมด (เปิดใหม่หรือเปลี่ยนเครื่องก็กลับมาครบ)
-    cfgRev = rev; markSynced(at); showCfgVer(rev, at);
+    cfgRev = rev; markSynced(at); showCfgVer(rev, at); stageSaved = cleanStage(stageCfg); stageChanged();
     saveMsg('บันทึกแล้ว (ค่าที่แก้ + ทีมในสนาม + สิ่งที่เลือกไว้) · บอก Claude ในแชทได้เลยว่าให้นำค่าไปใช้');
   } catch (e) {
     saveMsg('บันทึกไม่สำเร็จ: ' + (e && e.message ? e.message : 'ลองใหม่อีกครั้ง'));
