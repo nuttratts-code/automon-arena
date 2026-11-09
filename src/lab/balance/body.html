@@ -1,7 +1,7 @@
 <div class="wrap">
   <div>
     <h1>ห้องบาลานซ์ Automon</h1>
-    <p class="sub">1 เลือกตัว → 2 แก้ → 3 ดูผล · ปุ่ม "บันทึก" บนแถบกดได้ทุกหน้า · ใช้ตัวคำนวณเดียวกับเกม</p>
+    <p class="sub">ใช้ตัวคำนวณเดียวกับเกม · กด 💾 บันทึก (กดได้ทุกหน้า) เพื่อส่งค่าที่แก้ให้ Claude</p>
     <p class="status cfgver" id="cfgVer">ค่าที่ใช้อยู่: ยังไม่ได้โหลดค่าที่บันทึก</p>
   </div>
 
@@ -108,6 +108,23 @@
     <div id="pane-sim" hidden style="display:grid;gap:12px">
       <details class="hint sim-help"><summary>วิธีใช้หน้าลองสู้</summary> จัดทีมในสนามแล้วกด "จำลอง" · แตะตัวในรายการ = ลงช่องว่างแรก · แตะช่องในสนาม = เปลี่ยนตัว / เลเวล / เอาออก · กดค้างแล้วลากเพื่อย้ายหรือสลับช่อง (ลากข้ามฝั่งได้) · ใช้ค่าที่แก้อยู่ในห้องนี้ทันที (ยังไม่ต้องบันทึก) · ผลเหมือนเดิมทุกครั้งถ้าใช้เลขสุ่มเดิม · สกิลร้านค้าไม่ทำงานในการต่อสู้ · ตอนเล่นภาพ: ชื่อสกิลสีน้ำเงินลอยขึ้นเมื่อสกิลทำงาน · ตัวเลขแดง = ดาเมจ · เขียว = ฟื้น HP · ดาเมจทุกครั้งดูในแท็บ "ดูแมตช์"</details>
       <div class="simstage" id="simStageBox">
+          <details class="dock" id="simDock" open>
+            <summary><span class="status">ค้นหาตัวลงสนาม</span> <span class="hint dk-hint">แตะ = ลงช่องว่างแรก · ลากไปวางช่องไหนก็ได้ (มือถือกดค้างแล้วลาก)</span><span class="dk-toggle" aria-hidden="true"></span></summary>
+            <div class="dk-tools">
+              <input type="search" id="dockQ" class="cp-search" maxlength="30" placeholder="ค้นหาชื่อหรือ ID เช่น ไฟ, PL-3" aria-label="ค้นหาตัวละครลงสนาม" autocomplete="off">
+              <div class="seg" id="dockSide" role="group" aria-label="แตะแล้วลงทีมไหน"><button type="button" data-dside="0">ลงทีมซ้าย</button><button type="button" data-dside="1">ลงทีมขวา</button></div>
+            </div>
+            <div class="cp-tribes" id="dockTribes" role="group" aria-label="กรองตามเผ่า"></div>
+            <div class="dk-list" id="dockList"></div>
+          </details>
+          <div class="row simteamrow" id="simBossRow">
+            <span class="status">ฝั่งขวา</span>
+            <div class="seg" role="group" aria-label="ฝั่งขวาเป็นอะไร"><button type="button" id="simFoeTeam" aria-pressed="true">ทีม</button><button type="button" id="simFoeBoss" aria-pressed="false">บอส</button></div>
+            <select id="simBossPick" aria-label="เลือกบอส" hidden></select>
+            <label class="status" for="simBossK" id="simBossKLab" hidden>เจอครั้งที่</label>
+            <select id="simBossK" aria-label="เจอบอสครั้งที่" hidden><option value="1">1 (บอสตัวแรกของ run)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+            <span class="status" id="simBossInfo"></span>
+          </div>
           <div class="simctl">
             <button class="primary" id="simRun" type="button">จำลอง</button>
             <button id="simPlay" type="button" disabled>เล่น</button>
@@ -115,7 +132,7 @@
             <button id="simSkip" type="button">ข้ามไปผล</button>
             <span class="clock" id="simClock">0.0 วิ</span>
             <span class="grow"></span>
-            <span class="status">ความเร็ว</span>
+            <span class="status spd-lab">ความเร็ว</span>
             <button type="button" data-sspeed="0.5" aria-pressed="false">½×</button>
             <button type="button" data-sspeed="1" aria-pressed="true">1×</button>
             <button type="button" data-sspeed="2" aria-pressed="false">2×</button>
@@ -126,15 +143,6 @@
           <p class="status" id="simMsg"></p>
           <div class="simsum" id="simSum" hidden></div>
           <div class="benchrow"><span class="status">ม้านั่งสำรอง</span><div class="bench" id="simBench"></div></div>
-          <details class="dock" id="simDock" open>
-            <summary><span class="status">ค้นหาตัวลงสนาม</span> <span class="hint dk-hint">แตะ = ลงช่องว่างแรก · ลากไปวางช่องไหนก็ได้ (มือถือกดค้างแล้วลาก)</span><span class="dk-toggle" aria-hidden="true"></span></summary>
-            <div class="dk-tools">
-              <input type="search" id="dockQ" class="cp-search" maxlength="30" placeholder="ค้นหาชื่อหรือ ID เช่น ไฟ, PL-3" aria-label="ค้นหาตัวละครลงสนาม" autocomplete="off">
-              <div class="seg" id="dockSide" role="group" aria-label="แตะแล้วลงทีมไหน"><button type="button" data-dside="0">ลงทีมซ้าย</button><button type="button" data-dside="1">ลงทีมขวา</button></div>
-            </div>
-            <div class="cp-tribes" id="dockTribes" role="group" aria-label="กรองตามเผ่า"></div>
-            <div class="dk-list" id="dockList"></div>
-          </details>
           <div class="simtribes"><div id="simTribesL"></div><div id="simTribesR"></div></div>
           <div class="stage">
             <div class="heads">
@@ -153,14 +161,6 @@
             <label class="status"><input type="checkbox" id="simOffR" checked autocomplete="off"> ปิดโบนัสเผ่าฝั่งขวา</label>
             <label class="status" for="simSeed">เลขสุ่ม</label><input type="number" inputmode="numeric" id="simSeed" value="1" min="1" max="999999" style="width:90px">
             <button id="simCode" type="button">คัดลอกรหัสแมตช์</button>
-          </div>
-          <div class="row simteamrow" id="simBossRow">
-            <span class="status">ฝั่งขวา</span>
-            <div class="seg" role="group" aria-label="ฝั่งขวาเป็นอะไร"><button type="button" id="simFoeTeam" aria-pressed="true">ทีม</button><button type="button" id="simFoeBoss" aria-pressed="false">บอส</button></div>
-            <select id="simBossPick" aria-label="เลือกบอส" hidden></select>
-            <label class="status" for="simBossK" id="simBossKLab" hidden>เจอครั้งที่</label>
-            <select id="simBossK" aria-label="เจอบอสครั้งที่" hidden><option value="1">1 (บอสตัวแรกของ run)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
-            <span class="status" id="simBossInfo"></span>
           </div>
           <details class="dock" id="simRuneBox">
             <summary><span class="status">รูนของทีมซ้าย</span> <span class="hint dk-hint">ใส่รูนแล้วกด "จำลอง" · รูนเงิน/ร้าน/ส่องทีม ไม่มีผลในการต่อสู้ (เป็นเรื่องของ run)</span><span class="dk-toggle" aria-hidden="true"></span></summary>

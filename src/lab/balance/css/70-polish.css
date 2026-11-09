@@ -1,0 +1,51 @@
+/* set 161: UX review of every Balance Room tab — tap targets, small text, phone board, alignment */
+/* checkboxes: 13 px default box was too small to hit (WCAG 2.5.8 ≥ 24 px) → bigger box + the whole label is the target */
+input[type=checkbox], input[type=radio] { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); flex: none; cursor: pointer; vertical-align: -3px; }
+label:has(> input[type=checkbox]:not(.sw input)), label:has(> input[type=radio]) { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; }
+.sw { min-height: 32px; }
+.sw input { width: 40px; height: 24px; } .sw input::after { width: 20px; height: 20px; } .sw input:checked::after { transform: translateX(16px); }
+/* "อ่านเพิ่ม" link inside hints: bigger hit area without moving the text */
+.hint details summary { padding: 4px 2px; margin: -4px -2px; display: inline-block; }
+/* folded sections: keep the summary line a comfortable target */
+details > summary { min-height: 24px; }
+/* character form: points/budget never breaks inside "9 / 16" */
+.grid3 .bud { white-space: nowrap; }
+@media (max-width: 520px) { .grid3 .bud { font-size: .8rem; padding: 6px 6px; } }
+/* sim board text was 10 px (names) / 9.9 px (HP) → readable */
+.stage .uname { font-size: .74rem; }
+.stage .nums { font-size: .7rem; }
+.stage .lv { font-size: .62rem; }
+/* phone: the 6-column board was 360 px minimum and scrolled sideways (right back row hidden) → fit the screen */
+@media (max-width: 520px) {
+  .stage { padding: 8px 4px 10px; }
+  .stage .heads, .stage .arena { min-width: 0; grid-template-columns: 1fr 6px 1fr; gap: 3px; }
+  .stage .side { gap: 3px; }
+  .stage .heads > div { font-size: .68rem; }
+  .stage .cell { padding: 3px 1px; }
+  .stage .uname { font-size: .66rem; }
+  .stage .nums { font-size: .62rem; }
+}
+/* shop odds table: the row total sat high above the inputs → same line as the numbers */
+.rodds .rsum { padding-top: 9px; font-size: .78rem; }
+/* combined edit+try mode only makes sense side by side (wide screens) */
+@media (max-width: 700px) { #combo { display: none; } }
+/* phone: play controls in 2 short rows instead of 3 (speed buttons were wrapping alone) */
+@media (max-width: 520px) { .simctl { gap: 4px; } .simctl .spd-lab { display: none; } .simctl [data-sspeed] { padding: 6px 4px; min-width: 34px; font-size: .84rem; } .simctl .clock { padding: 3px 8px; } }
+/* Thai marks above/below the line were cut by overflow:hidden on one-line names (line-height 1.2) */
+.tg-chip .tg-name { line-height: 1.5; padding-block: 1px; }
+.stage .uname, .tname, .bcell .tname { line-height: 1.45; }
+/* list view on phones: the table scrolls sideways → keep the character name column in view (like the result tables) */
+@media (max-width: 700px) {
+  table.list td:first-child, table.list thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); min-width: 120px; box-shadow: 1px 0 0 var(--line); }
+}
+/* search/text boxes without their own style looked like bare browser inputs (26 px tall next to 42 px selects) → one base look; :where() keeps every existing specific rule in charge */
+:where(input[type=search], input[type=text]) { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; }
+:where(input[type=search], input[type=text]):focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+/* result tabs: 3–5 column tables were stretched to the full page width (numbers 300 px away from their label) → tables only as wide as their content; big tables still fill/scroll */
+#view-result .tbl:not(.tbl-fix) > table { width: auto; min-width: min(100%, 420px); }
+#view-result .tbl:not(.tbl-fix) > table :is(th, td) { padding-inline: 10px; }
+/* result sub-tabs (9 under รันจริง) wrapped into 2 rows on phones — the underline of the chosen tab then sat in the middle of the bar → one row that scrolls sideways, like the edit tabs */
+@media (max-width: 700px) {
+  .rtabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .rtabs button { flex: none; white-space: nowrap; }
+}

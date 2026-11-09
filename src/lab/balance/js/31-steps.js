@@ -22,7 +22,7 @@ function showTab(which) {
   $('tab-stage').setAttribute('aria-selected', String(which === 'stage'));
   $('tab-rules').setAttribute('aria-selected', String(which === 'rules'));
   // โหมดทำไปลองไป: แก้ตัวละคร/ลองสู้ แสดงทั้งสองส่วนพร้อมกัน (จอกว้างอยู่ข้างกัน จอแคบอยู่ต่อกัน)
-  const both = comboOn && (which === 'chars' || which === 'sim');
+  const both = comboOn && (which === 'chars' || which === 'sim') && !matchMedia('(max-width: 700px)').matches; // set 161: phone = no combo (button hidden; the two panes would just stack into one very long page)
   $('editor').classList.toggle('combo', both);
   document.querySelector('.wrap').classList.toggle('wide', both);
   $('pane-chars').hidden = !(which === 'chars' || both);
@@ -32,15 +32,16 @@ function showTab(which) {
   $('pane-analysis').hidden = which !== 'analysis';
   $('pane-stage').hidden = which !== 'stage'; if (which === 'stage') renderStage();
   $('pane-rules').hidden = which !== 'rules'; if (which === 'rules') renderRulesForm();
-  document.querySelector('#editor > details.gloss').hidden = which === 'stage' || which === 'rules'; // set 56: skill glossary is not about runes/bosses
+  document.querySelector('#editor > details.gloss').hidden = !(which === 'chars' || which === 'sim' || which === 'tribes'); // set 56: skill glossary is not about runes/bosses · set 161: nor game rules / match details (only where skills are edited or tried)
   $('pane-match').hidden = which !== 'match'; if (which === 'match') renderMatch();
-  $('saveBox').hidden = $('pane-chars').hidden && $('pane-tribes').hidden && $('pane-stage').hidden && $('pane-rules').hidden; $('ideaBox').hidden = which === 'stage'; // stage tab has its own idea box // ส่วนบันทึกอยู่ใต้ส่วนแก้ตัวละคร/โบนัสเผ่า
+  $('saveBox').hidden = $('pane-chars').hidden && $('pane-tribes').hidden && $('pane-stage').hidden && $('pane-rules').hidden; $('ideaBox').hidden = which === 'stage' || which === 'rules'; $('catalog').hidden = which === 'stage' || which === 'rules'; // set 161: skill ideas + skill library belong to characters, not to runes or game rules // stage tab has its own idea box // ส่วนบันทึกอยู่ใต้ส่วนแก้ตัวละคร/โบนัสเผ่า
   if (which === 'grid') renderGrid();
   if (which === 'list') renderList();
   if (which === 'tribes') renderTribePick();
   if (!$('pane-sim').hidden) { renderSimTeams(); if (typeof renderDock === 'function') renderDock(); }
   else if (simView && simView.playing) { simView.pause(); $('simPlay').textContent = 'เล่น'; }
   if (stepChanged) window.scrollTo({ top: step === 'result' ? resultScrollY : 0 }); // set 125: back to ดูผล = same place as before (e.g. after tapping a character to edit)
+  { const t = $('tab-' + which); const bar = t && t.parentElement; if (bar && bar.scrollWidth > bar.clientWidth) bar.scrollLeft += t.getBoundingClientRect().left - bar.getBoundingClientRect().left - (bar.clientWidth - t.offsetWidth) / 2; } // set 161: phone tab bar scrolls → keep the chosen tab visible
   try { localStorage.setItem('automon-balance-tab', which); } catch (e) {}
 }
 $('step-pick').addEventListener('click', () => showTab(lastPick));

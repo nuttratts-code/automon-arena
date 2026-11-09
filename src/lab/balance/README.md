@@ -8,7 +8,7 @@
 
 | Fragment | Content |
 |---|---|
-| `css/10…60-*.css` | styles, in cascade order (later files may override earlier ones) |
+| `css/10…70-*.css` | styles, in cascade order (later files may override earlier ones) · `70-polish.css` = set 161 UX review fixes (tap targets, phone board, table widths) — Balance Room only, not in the game page |
 | `body.html` | page markup |
 | `js/00-setup` `10-state` | aliases, constants, edited-values state |
 | `js/20-char-form` `21-tribe-form` `22-stage-form` | character / tribe forms · rune / boss / stage-mode settings tab (data in core/stage.js, saved as config/main.stage) |
