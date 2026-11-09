@@ -210,7 +210,8 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .pitem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; text-align: left; font-weight: 600; }
 .pitem small { font: 500 .72rem var(--f-body); color: var(--mute); display: block; }
 .pitem.off { opacity: .6; }
-.pitem i.tico { display: inline-block; width: 20px; height: 20px; background: var(--tc); }
+.pitem i.tico, .recap i.tico, .hibar i.tico { display: inline-block; width: 20px; height: 20px; background: var(--tc); flex: none; }
+.recap i.tico { width: 14px; height: 14px; }
 .pitem svg { width: 20px; height: 20px; color: var(--gold); }
 .pips { display: flex; gap: 2px; }
 .pips i { width: 6px; height: 12px; border-radius: 2px; background: var(--line); }
@@ -511,9 +512,27 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 #endMsgs { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; text-align: left; font-size: .92rem; color: var(--ink); gap: 4px; }
 #endMsgs:empty { display: none; }
 .rnext { margin: 0; font-size: .9rem; color: var(--mute); } .rnext:empty { display: none; }
+/* set 171: post-battle recap = facts only (top 3 damage dealers of your team + the one who took the most) */
+.recap { width: 100%; display: grid; gap: 6px; text-align: left; } .recap[hidden] { display: none; }
+.recap h3 { margin: 0; font: 600 .9rem var(--f-body); color: var(--mute); }
+.recap .rrow { display: grid; grid-template-columns: minmax(0, 7.5em) 1fr auto; align-items: center; gap: 10px; font-size: .92rem; }
+.recap .rname { display: flex; align-items: center; gap: 6px; min-width: 0; } .recap .rname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.6; }
+.recap .rbar { height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; }
+.recap .rbar i { display: block; height: 100%; border-radius: inherit; background: var(--tc, var(--accent)); }
+.recap .rnum { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3.5em; text-align: right; }
+.recap .rtank { margin: 2px 0 0; font-size: .88rem; color: var(--mute); } .recap .rtank b { color: var(--ink); font-variant-numeric: tabular-nums; }
+/* set 171: tribe highlight on the prep board (from the tribe popup) */
+.board .cell.thi, .bench .cell.thi { outline: 3px solid var(--accent); outline-offset: 1px; }
+.board .cell.tdim, .bench .cell.tdim { opacity: .35; }
+.hud .hudbtn { flex-shrink: 0; }
+.hibar { flex: none; min-height: 40px; padding: 0 12px; border-radius: 99px; border: 2px solid var(--tc); background: var(--panel); color: var(--ink); font: 500 .9rem var(--f-body); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+.hibar[hidden] { display: none; } .hibar .hit { overflow: hidden; text-overflow: ellipsis; max-width: 8em; }
+@media (min-width: 481px) and (max-width: 1279px) { .hibar .hit { display: none; } .hibar { padding: 0 8px; gap: 6px; } } /* set 171: HUD row is full there → tribe shape + ✕ only (name in the title + aria-label) */
+.app.fighting .hibar { display: none; }
 .racts { width: 100%; display: flex; gap: 10px; }
 .racts button { flex: 1; height: 48px; border-radius: 10px; font: 400 .95rem var(--f-body); background: var(--card); border-color: var(--arena-line); }
 .racts button.primary { flex: 1.4; font: 500 1.1rem var(--f-display); background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+@media (max-width: 480px) { .racts { flex-wrap: wrap; } .racts button { height: auto; min-height: 44px; padding: 6px 8px; line-height: 1.2; } .racts button.primary { flex-basis: 100%; order: -1; } } /* set 171: phone = main button on its own row (text was cut at 390 px) */
 /* unit popup: aligned 2-column stats + skill card */
 dialog { width: min(640px, calc(100vw - 24px)); border-radius: 18px; }
 .pop { padding: 20px; gap: 14px; }
@@ -613,6 +632,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .float { top: 30%; } /* set 159: was top 4px = on top of the skill tag */
   .result > .rbox { padding: 14px 18px; gap: 8px; border-radius: 14px; }
   #resultTitle { font-size: 2.1rem; } #resultTitle.small { font-size: 1.3rem; }
+  .recap { gap: 4px; } .recap .rrow, .recap .rtank { font-size: .8rem; } .recap h3 { font-size: .8rem; } .recap .rbar { height: 8px; }
   .rchips .bigchip { height: 28px; font-size: .9rem; }
   #endMsgs { padding: 6px 12px; font-size: .78rem; max-height: 76px; overflow: auto; }
   .racts button { height: 38px; font-size: .82rem; } .racts button.primary { font-size: .95rem; }
@@ -728,6 +748,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
     <span class="bigchip heart" id="sHearts" role="img" aria-label="หัวใจ 5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg><b id="sHeartsN">10</b></span>
     <span class="bigchip gold" id="sGold" role="img" aria-label="เงิน 10"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="sGoldN">10</b></span>
     <span class="grow prep-only"></span>
+    <button class="hibar prep-only" id="hiBar" type="button" hidden></button>
     <span class="htitle" id="battleTitle">แมตช์</span>
     <button class="hudbtn prep-only" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span>เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
     <button class="hudbtn prep-only" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span>รูน</span><span id="runeCnt">0</span><span class="badge warn" id="runeWarn" hidden></span></button>
@@ -798,6 +819,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
       <span class="bigchip win" id="rWins"></span>
       <span class="bigchip gold" id="rGold" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="rGoldN"></b></span>
     </div>
+    <div class="recap" id="recap" hidden></div>
     <ul class="msgs" id="endMsgs"></ul>
     <p class="rnext" id="resultNext"></p>
     <div class="racts">
@@ -911,6 +933,7 @@ function tribeBadge(tribe, extras = []) {
   return box;
 }
 const pill = (text, cls) => el('span', `pill ${cls}`, text);
+let hiTribe = null; // set 171: tribe lit up on the prep board (setHiTribe)
 let simLast = null; // { r, m } of the match shown (detail result)
 const simSeedLabel = () => null;
 <!--@include lab/balance/js/50-match-analysis.js-->
@@ -1097,6 +1120,7 @@ function showScreen(name) {
   $('resume').hidden = name !== 'resume'; $('runEnd').hidden = name !== 'runEnd';
   closePop(); if ($('offerDlg').open) $('offerDlg').close();
   if (name === 'battle' && $('mxDlg').open) $('mxDlg').close();
+  if (name !== 'prep' && hiTribe) setHiTribe(null);
   if (name !== 'battle') { $('result').hidden = true; $('replayTag').hidden = true; } // set 98: result card lived on over prep → "ไปรอบถัดไป" could be pressed again and again (free rounds)
 }
 function beginRound() {
@@ -1224,6 +1248,7 @@ function render() {
       if (Object.keys(u.perm).length) cell.append(el('span', 'perm-dot', '+ถาวร'));
       cell.append(box);
       cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
+      if (hiTribe) { const on = [c.tribe, ...(c.extraTribes || [])].includes(hiTribe); cell.classList.add(on ? 'thi' : 'tdim'); if (on) cell.style.setProperty('--tc', TRIBE_STYLE[hiTribe].color); }
     } else cell.setAttribute('aria-label', 'ช่องว่าง');
     if (u) { const rs = runesOn(u); if (rs.length) cell.append(el('span', 'rune-dot' + (ref.at === 'board' ? '' : ' off'), '◆ ' + rs.join(' · '))); } // set 109: runes worn by this unit (bench = not working)
     return cell;
@@ -1640,9 +1665,17 @@ POPS.tribe = t => {
     if (k === 'every' && !['burn', 'shock', 'extraHit'].some(x => (b[x] || []).some(y => y))) continue; // "every" only matters with its partner
     const tr = el('tr'); tr.append(el('td', '', TRIBE_LBL[k] || k), ...v.map((x, i) => el('td', RULES.tribeSteps[i] === st ? 'now' : '', String(x)))); tbl.append(tr);
   }
-  return [phead(`เผ่า${t}`, `บนบอร์ด ${counts[t] | 0} ตัว · ${st ? `ทำงานขั้น ${st}` : 'ยังไม่ทำงาน'}`, tribeIco(t)), tbl, pacts(back(() => openPop('tribes')))];
+  return [phead(`เผ่า${t}`, `บนบอร์ด ${counts[t] | 0} ตัว · ${st ? `ทำงานขั้น ${st}` : 'ยังไม่ทำงาน'}`, tribeIco(t)), tbl, pacts(back(() => openPop('tribes')), pbtn('ไฮไลต์บนบอร์ด', () => { closePop(); setHiTribe(t); }))];
 };
 $('tribeBtn').addEventListener('click', () => openPop('tribes'));
+// set 171 (E1): light up one tribe's units on board + bench · tap the strip to turn it off · cleared when a fight starts
+function setHiTribe(t) {
+  hiTribe = t && TRIBE_STYLE[t] ? t : null; const b = $('hiBar');
+  b.hidden = !hiTribe;
+  if (hiTribe) { b.style.setProperty('--tc', TRIBE_STYLE[hiTribe].color); b.replaceChildren(tribeIco(hiTribe), el('span', 'hit', hiTribe), el('b', '', '✕')); b.title = `กำลังไฮไลต์เผ่า${hiTribe} · แตะเพื่อปิด`; b.setAttribute('aria-label', `กำลังไฮไลต์เผ่า${hiTribe} แตะเพื่อปิด`); }
+  if (P) render();
+}
+$('hiBar').addEventListener('click', () => setHiTribe(null));
 // set 169: what the shapes mean · examples come from real characters (unitShape) so the legend can never drift from the cards
 POPS.legend = () => {
   const grid = (cls, items) => { const g = el('div', 'lgrid ' + cls); for (const [pic, txt] of items) { const c = el('div', 'lgi'); c.append(pic, el('span', '', txt)); g.append(c); } return g; };
@@ -1924,13 +1957,30 @@ function mxJump({ ev = null }) {
   const li = ev != null ? $('logList').querySelector(`li[data-ev="${ev}"]`) : null;
   if (li) { $('logList').querySelectorAll('.lg-hi').forEach(x => x.classList.remove('lg-hi')); li.classList.add('lg-hi'); li.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
 }
+// set 171 (C1): facts only · your side (side 0) · top 3 by damage dealt + the one who took the most damage
+function renderRecap(res) {
+  const box = $('recap'), us = ((res && res.units) || []).filter(u => u.side === 0);
+  const top = us.filter(u => u.dealt > 0).sort((a, b) => b.dealt - a.dealt).slice(0, 3);
+  if (!top.length) { box.hidden = true; box.replaceChildren(); return; }
+  const nm = u => (CM[u.id] && CM[u.id].name) || u.id, max = top[0].dealt, fmt = n => Math.round(n).toLocaleString('en-US');
+  const rows = top.map(u => {
+    const c = CM[u.id], r = el('div', 'rrow'), n = el('span', 'rname'), bar = el('span', 'rbar'), fill = el('i');
+    if (c && TRIBE_STYLE[c.tribe]) { n.append(tribeIco(c.tribe)); fill.style.setProperty('--tc', TRIBE_STYLE[c.tribe].color); }
+    n.append(el('span', '', nm(u))); fill.style.width = Math.max(4, Math.round(u.dealt / max * 100)) + '%'; bar.append(fill);
+    r.append(n, bar, el('span', 'rnum', fmt(u.dealt))); return r;
+  });
+  const tank = us.filter(u => u.taken > 0).sort((a, b) => b.taken - a.taken)[0];
+  box.replaceChildren(el('h3', '', 'ทำดาเมจมากสุดในทีมคุณ'), ...rows);
+  if (tank) { const p = el('p', 'rtank'); p.append(`รับดาเมจมากสุด: ${nm(tank)} `, el('b', '', fmt(tank.taken))); box.append(p); }
+  box.hidden = false;
+}
 function finishMatch() {
   renderBInfo(true); $('replayTag').hidden = true;
   if (replayMode) { // ชุด 25: รีเพลย์ แสดงผลอย่างเดียว ไม่แตะสถานะ run
     const x = replayMode.x;
     $('resultTitle').textContent = `รีเพลย์รอบ ${x.r}: ${resTh(x.w)}`; $('resultTitle').className = 'small ' + resCls(x.w);
     $('resultSub').textContent = `${(x.t / 1000).toFixed(1)} วิ`;
-    $('endMsgs').replaceChildren(); $('rChips').hidden = true; $('resultNext').textContent = '';
+    $('endMsgs').replaceChildren(); $('rChips').hidden = true; $('resultNext').textContent = ''; renderRecap(view.result);
     $('next').textContent = 'กลับ';
     $('result').hidden = false; return;
   }
@@ -1944,7 +1994,7 @@ function finishMatch() {
   $('rHeartsN').textContent = w === 1 ? (r.second ? `${P.hearts} (โอกาสสุดท้าย)` : `${P.hearts} (−1)`) : String(P.hearts); $('rHearts').setAttribute('aria-label', `หัวใจ ${P.hearts}${w === 1 ? ' เสียไป 1 ดวง' : ''}`);
   $('rWins').textContent = P.extra ? `ชนะ ${P.wins} · พิเศษ` : `ชนะ ${P.wins}/${S.winsToFinish}`;
   $('rGold').hidden = !(w !== 1 && S.winBonus && !P.over); $('rGoldN').textContent = `+${S.winBonus} โบนัสชนะ`;
-  $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m)));
+  $('endMsgs').replaceChildren(...(r.msgs || []).map(m => el('li', '', m))); renderRecap(lastResult);
   const offer = !P.over && P.rn.offer;
   $('resultNext').textContent = P.over ? 'ต่อไป: สรุป run' : offer ? `ต่อไป: เลือกรูน 1 จาก ${offer.ids.length} ใบ` : 'ต่อไป: จัดทีมรอบถัดไป';
   $('next').textContent = P.over ? 'ดูสรุป run' : offer ? 'เลือกรูน →' : 'ไปรอบถัดไป';
