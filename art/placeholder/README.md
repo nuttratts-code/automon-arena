@@ -17,3 +17,8 @@ python3 -I art/placeholder/build_picker.py <dir>/crawl-tiles <dir>/chars.json cl
 
 ## Next
 User picks in the picker → paste `ARTPICK …` code → chosen tiles copied to art/placeholder/tiles/ and embedded in the game build (after set 171 merges).
+
+## In the game (set 172)
+- Picks: `picks.txt` (user's ARTPICK code) → `build_art.py` → `tiles/<group>-<key>.png` (committed) + `src/game/art.js` (GAME_ART, generated; never edit by hand).
+- Change a pick: edit `picks.txt`, run `python3 -I art/placeholder/build_art.py --copy <crawl-tiles dir>`, rebuild.
+- Game page only (src/build.mjs page list, not CORE): `setUnitArt(GAME_ART.unit)` → view.js `unitShape` draws the sprite + a small tribe-shape badge (top-left); rarity ring traces the sprite. Bosses (B1–B4) drawn 1.25×. Floors/walls: shop = prep field, arena = battle field, result = run-end screen. Rune icon on every rune card (D1–D6 / F1–F6 share one icon with a tribe-colour frame). Credit line in the ? legend popup.

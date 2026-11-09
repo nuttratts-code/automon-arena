@@ -739,6 +739,26 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 .lgi i.tico { display: inline-block; width: 24px; height: 24px; background: var(--tc); } .lgpic { display: grid; place-items: center; min-height: 40px; }
 #reroll.free { background: var(--tg-shop); color: var(--on-accent); border-color: var(--tg-shop); }
 @media (prefers-reduced-motion: reduce) { #rotate .phone { animation: none; } }
+/* set 172: placeholder pixel art (CC0 Dungeon Crawl Stone Soup tiles · game/art.js) — sprite + tribe badge, tiled floors */
+.mon.art > div { overflow: visible; }
+.has-art { background: none !important; position: relative; }
+.has-art .spr { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+.has-art .tbadge { position: absolute; left: -3px; top: -3px; width: 30%; height: 30%; min-width: 9px; min-height: 9px; max-width: 16px; max-height: 16px; background: var(--tc); pointer-events: none; }
+.has-art .tbadge.s-square { border-radius: 2px; } .has-art .tbadge.s-circle { border-radius: 50%; }
+.arena .unit.is-boss .has-art .spr { transform: scale(1.25); transform-origin: 50% 85%; }
+.field.art-bg { background-color: #2a2418; border-color: #1b160f;
+  background-image: linear-gradient(rgba(10,8,5,.28), rgba(10,8,5,.28)), var(--art-shop-wall), var(--art-shop-floor);
+  background-repeat: no-repeat, repeat-x, repeat; background-size: auto, 48px 48px, 48px 48px; background-position: 0 0, 0 0, 0 0; image-rendering: pixelated; }
+.app.fighting .field.art-bg { background-image: linear-gradient(rgba(10,8,5,.3), rgba(10,8,5,.3)), var(--art-arena-wall), var(--art-arena-floor); }
+.field.art-bg .lbl, .field.art-bg .cols .lbl, .field.art-bg .heads .lbl { color: #f3ead8; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.field.art-bg .cell { border-color: rgba(255,255,255,.35); }
+.field.art-bg .cell.filled { background: rgba(20,16,12,.45); }
+.app:not(.fighting) .field.art-bg .uname, .app:not(.fighting) .field.art-bg .nums { color: #f3ead8; text-shadow: 0 1px 2px #000; }
+.field.art-bg .rnheads, .field.art-bg .rnheads * { color: #f3ead8; text-shadow: 0 1px 2px #000; }
+#runEnd.art-bg { background-color: #1d1a26; background-image: linear-gradient(rgba(10,8,5,.35), rgba(10,8,5,.35)), var(--art-result-wall), var(--art-result-floor);
+  background-repeat: no-repeat, repeat-x, repeat; background-size: auto, 48px 48px, 48px 48px; image-rendering: pixelated; }
+.rico { width: 32px; height: 32px; flex: none; image-rendering: pixelated; border-radius: 6px; background: rgba(20,16,12,.55); border: 2px solid var(--tc, transparent); padding: 1px; box-sizing: content-box; }
+.artcredit { font-size: .75rem; }
 </style>
 
 <div class="app" id="app">
@@ -939,6 +959,10 @@ const simSeedLabel = () => null;
 <!--@include lab/balance/js/50-match-analysis.js-->
 <!--@include lab/balance/js/51-match-units.js-->
 const chars = buildCharacterList(), CM = makeCharMap(chars);
+// set 172: placeholder pixel art (game page only) — sprites for units/bosses, tiled floors for shop / arena / run end
+setUnitArt(GAME_ART.unit);
+for (const [k, v] of Object.entries(GAME_ART.scene)) document.documentElement.style.setProperty('--art-' + k, `url("${v}")`);
+$('field').classList.add('art-bg'); $('runEnd').classList.add('art-bg');
 const S = RULES.shop;
 let infoLv = { key: '', lv: 1 }; // ชุด 26: เลเวลที่ดูในแผงรายละเอียด
 let P = null, B = null, msgs = [], speed = 4, confirmEmpty = false, confirmRunes = false, autoSkip = false; // set 106: default 4× · speed + auto-skip remembered (localStorage)
@@ -1510,6 +1534,8 @@ const RN_WEAR_TH = { none: '⚠ ยังไม่ได้สวมให้ต
 function runeCard(r, extra) {
   const c = el('div', 'rcard'); const t = el('span', 'rar ' + RN_RAR_CLS[r.rarity], RN_RAR_TH[r.rarity]);
   const head = el('div', 'row'); head.append(el('span', 'rname grow', r.name), t);
+  const ic = GAME_ART.rune[runeArtKey(r.id)]; // set 172: rune icon (tribe runes share one icon, framed in the tribe colour)
+  if (ic) { const im = document.createElement('img'); im.className = 'rico'; im.src = ic; im.alt = ''; if (TRIBE_STYLE[r.tribe]) im.style.setProperty('--tc', TRIBE_STYLE[r.tribe].color); head.prepend(im); }
   c.append(head, el('span', 'rtext', rnDesc(r)));
   const held = rnHeld(P, r.id); if (held) c.append(el('span', 'hint', `มีแล้ว ${held}/${r.max || 1}`));
   if (held && r.eff === 'flag') c.append(el('span', 'hint flagtr', `เผ่าที่เลือก: ${rnFlagTribes(r, held, rnFlagPicks(P, r.id)).join(', ')}`)); // set 128 T8
@@ -1683,10 +1709,11 @@ POPS.legend = () => {
   const tribes = Object.keys(TRIBE_STYLE).map(t => [tribeIco(t), t]);
   const rars = Object.keys(RARITY_CLASS).map(r => { const w = el('span', 'lgpic'); w.append(unitShape(sample(r), 1)); return [w, r]; });
   return [phead('สัญลักษณ์ในเกม'),
-    el('p', 'hint lgh', 'รูปทรง = เผ่า'), grid('t', tribes),
+    el('p', 'hint lgh', 'รูปทรง (มุมซ้ายบนของรูป) = เผ่า'), grid('t', tribes),
     el('p', 'hint lgh', 'ขอบรอบรูป = ความหายาก'), grid('r', rars),
     el('p', 'hint lgh', 'ดาวใต้รูป = เลเวล (★ เลเวล 1 · ★★ เลเวล 2 · ★★★ เลเวล 3)'),
-    el('p', 'hint lgh', `ซื้อตัวชนิดเดียวกัน ${S.mergeCount} ตัว = รวมร่างเป็นเลเวลถัดไปอัตโนมัติ`), pacts()];
+    el('p', 'hint lgh', `ซื้อตัวชนิดเดียวกัน ${S.mergeCount} ตัว = รวมร่างเป็นเลเวลถัดไปอัตโนมัติ`), pacts(),
+    el('p', 'hint artcredit', 'ภาพชั่วคราว: Dungeon Crawl Stone Soup tiles (CC0)')];
 };
 $('legendBtn').addEventListener('click', () => openPop('legend'));
 // enemy + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 107: no modes, the HUD shows the enemy power %
