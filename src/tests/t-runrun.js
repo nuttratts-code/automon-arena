@@ -28,7 +28,7 @@ export const TESTS_RUNRUN = [
     ok(!bad.length, bad.map(r => `${r.id} ${r.name}: ` + r.tests.flatMap(t => t.lines.filter(l => !l.ok).map(l => `n${t.n} ${l.what} คาด ${l.exp} ได้ ${l.got}`)).slice(0, 3).join(' · ')).join(' | '));
     ok(rows.every(r => r.status !== 'info' || r.note), 'info rows must say why');
   }],
-  ['set 107/171: win offers = 3 cards, each rolls rarity by RULES.runeOdds[round] (r1 85/15/0 start) · boss = 2 legend · distinct · pick adds to bag', () => {
+  ['set 107/171: win offers = 3 cards, each rolls rarity by RULES.runeOdds[round] (start table from the Balance Room, rev 57: r1 90/10/0) · boss = 2 legend · distinct · pick adds to bag', () => {
     const P = fresh(11), S = RUN_STAGE.settings;
     ok(!('rarC' in S) && !('rarR' in S) && !('rarL' in S), 'rarC/R/L moved to RULES.runeOdds');
     P.round = 1;

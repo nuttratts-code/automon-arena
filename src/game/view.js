@@ -50,9 +50,21 @@ export function patternOf(id, tribe) {
   return ((n - 1) + t * 2) % PATTERNS.length;
 }
 // คืนกล่องรูปตัวละคร (ใช้ทุกหน้า: ร้าน บอร์ด ม้านั่ง แผงข้อมูล หน้าจอสู้ ห้องบาลานซ์) · cls = คลาสขนาดของแต่ละหน้า
+// set 172: placeholder pixel art (game page only — it calls setUnitArt(GAME_ART.unit); the Balance Room never does, so it keeps shapes)
+let UNIT_ART = null;
+export function setUnitArt(map) { UNIT_ART = map || null; }
 export function unitShape(c, level, cls = 'shape') {
   const st = TRIBE_STYLE[c.tribe] || { color: 'var(--mute)', shape: 'square' };
   const wrap = el('div', `mon rr${RARITY_RING[c.rarity] || 0}`);
+  const art = UNIT_ART && UNIT_ART[c.id];
+  if (art) { // sprite + small tribe-shape badge (the tribe shape stays readable, legend unchanged) · rarity ring traces the sprite outline
+    const s = el('div', `${cls} has-art`), img = document.createElement('img');
+    img.className = 'spr'; img.src = art; img.alt = ''; img.draggable = false;
+    const b = el('i', `tbadge s-${st.shape}`); b.style.setProperty('--tc', st.color);
+    s.append(img, b); wrap.append(s); wrap.classList.add('art');
+    if (level) { wrap.append(el('span', 'lv', '★'.repeat(level))); wrap.classList.add('has-lv'); }
+    return wrap;
+  }
   const s = el('div', `${cls} s-${st.shape}`); s.style.setProperty('--tc', st.color);
   const svg = document.createElementNS(SVGNS, 'svg'), g = document.createElementNS(SVGNS, 'g');
   svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('class', 'pat'); svg.setAttribute('aria-hidden', 'true');
@@ -108,7 +120,7 @@ export class BattleView {
   addUnit(u) {
     {
       const c = this.charMap[u.id];
-      const card = el('div', 'unit');
+      const card = el('div', u.boss ? 'unit is-boss' : 'unit');
       const shape = unitShape(c, u.level);
       const name = el('div', 'uname', u.name);
       const hpBar = el('div', 'hp'), hpFill = el('div', 'hp-fill'), armorFill = el('div', 'armor-fill');

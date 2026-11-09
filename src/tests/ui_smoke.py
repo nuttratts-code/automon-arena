@@ -95,7 +95,7 @@ with sync_playwright() as p:
         pg.evaluate("P.gold=%d;P.shop=JSON.parse(%r);P.board=[[null,null],[null,null],[null,null]];P.bench=P.bench.map(()=>null);P.rn.bag={T4:1};P.rn.at={};P.rn.ft={};P.rn.offer=null;render()" % (gS, shop0))
         # set 119: no modes · HUD shows enemy strength % (100 normal run, no streak · 120 in extra matches) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
-        pg.click('#diffInfo'); chk('ธรรมดา 85% · หายาก 15%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
+        o0=pg.evaluate('RULES.runeOdds[0]'); pg.click('#diffInfo'); chk(('ธรรมดา %d%% · หายาก %d%%' % (o0['common'],o0['rare'])) in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card % (round-1 odds from RULES.runeOdds, set 172)'); esc()
         pg.evaluate("P.ws=3;render()"); chk(pg.inner_text('#foePct')=='100%','set 119: win streak no longer raises the enemy')
         pg.evaluate("P.extra=true;render()"); chk(pg.inner_text('#foePct')=='120%','extra matches → 120%'); pg.evaluate("P.ws=0;P.extra=false;render()")
         pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
@@ -133,6 +133,9 @@ with sync_playwright() as p:
         # set 169 (UI ease set 1): legend popup (6 tribes + 5 rarities) · fight button says what to do next and looks secondary until a unit is on the board
         pg.click('#legendBtn'); chk(pg.is_visible('#dlg') and pg.evaluate("document.querySelectorAll('#pop .lgi').length")==11,'legend button opens shapes/rarity/stars legend')
         pg.keyboard.press('Escape'); chk(pg.is_hidden('#dlg'),'legend closes with Esc')
+        # set 172: placeholder pixel art on the game page — board units are sprites (tribe badge kept), every char/boss/rune has art, shop + arena floors set
+        art=pg.evaluate("(()=>{const m=document.querySelector('#board .mon.art img.spr'),b=document.querySelector('#board .mon.art .tbadge');const miss=[...chars.map(c=>c.id),...STAGE_BOSSES.map(b=>b.id)].filter(id=>!GAME_ART.unit[id]);const rm=STAGE_RUNES.map(r=>r.id).filter(id=>!GAME_ART.rune[runeArtKey(id)]);const rc=runeCard(STAGE_RUNES[0]).querySelector('img.rico');return [!!(m&&m.naturalWidth),!!b,miss,rm,!!rc,$('field').classList.contains('art-bg'),getComputedStyle($('field')).backgroundImage.includes('data:image/png')]})()")
+        chk(art[0] and art[1] and not art[2] and not art[3] and art[4] and art[5] and art[6],'game art: sprite+badge on board, all units/bosses/runes have art, rune card icon, tiled floor '+str(art[:2]+art[4:])+' missing '+str(art[2]+art[3]))
         cue=pg.evaluate("(()=>{const B=[P.board,P.bench];P.board=P.board.map(r=>r.map(()=>null));P.bench=P.bench.map(()=>null);render();const a=[$('fightN').textContent,$('fight').classList.contains('wait'),$('fight').classList.contains('ready')];P.bench[0]={uid:P.uid++,id:chars[0].id,level:1,perm:{},paid:0};render();a.push($('fightN').textContent);P.board=B[0];P.bench=B[1];render();a.push($('fight').classList.contains('ready'));return a})()")
         chk('ซื้อตัว' in cue[0] and cue[1] and not cue[2] and 'ลากตัว' in cue[3] and cue[4],'fight button cue: empty = buy first + secondary · bench only = drag · units = ready: '+str(cue))
         # set 121: card beside the unit, inside the screen, no content cut off for ANY character (shop + own unit with perm), closes on outside tap / Esc
@@ -228,8 +231,9 @@ with sync_playwright() as p:
               const r=[t.includes('HP '+c.hp[2]), t.includes('เกราะ/ฮิต'), t.includes('ฟื้น/ฮิต'), document.querySelector('#info .lvtabs [aria-pressed="true"]').dataset.lv]; closePop(); return r;})()""")
             chk(tg!='none' and tg[:3]==[True,True,True] and tg[3]=='3','level toggle in info popup '+str(tg))
         # ชุด 25: รูปตัวละครรายตัว (ลวดลาย + ขอบความหายาก) · รีเพลย์ทุกแมตช์ · บันทึกการต่อสู้ละเอียด
-        mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon svg.pat g > *').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat'))]")
-        chk(mon[0]>0 and mon[1] and mon[2],'unit shapes have patterns '+str(mon))
+        # set 172: on the game page the pattern is replaced by a pixel sprite (+ tribe badge) — every unit picture must have one or the other
+        mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon img.spr').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat g > *')||(m.querySelector('img.spr')&&m.querySelector('.tbadge')))]")
+        chk(mon[0]>0 and mon[1] and mon[2],'unit pictures have a sprite+badge (or pattern) '+str(mon))
         chk(pg.evaluate('replays.length')==len(res) and pg.evaluate("readReplays(localStorage.getItem('automon-run-replays-v1'),CM,RULES,DATA_HASH,P.seed).status")=='ok','replays stored per match '+str(pg.evaluate('replays.length')))
         chk(pg.evaluate('parseRunCode(runCode(),CM,RULES).runs[0].list.length')==len(res),'run code carries this run (set 105)')
         pg.evaluate("openPop('runcode')"); chk(pg.input_value('#runCodeText').startswith('ARUN1 '),'run code box (clipboard fallback)'); pg.evaluate('closePop()')
@@ -410,6 +414,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         # 3 balance
         pg.goto(f'file://{D}/balance.html')
         chk(pg.is_hidden('#errs'),'balance errs shown')
+        chk(pg.evaluate("typeof GAME_ART==='undefined' && !document.querySelector('.mon.art')"),'balance room keeps coloured shapes (no game art, set 172)')
         # ชุด 29/30: 3 ขั้น เลือกตัว → แก้ (บันทึกท้ายหน้า) → ดูผล · หน้าแรก = ตารางเผ่า 6 × ความหายาก 5 · มือถือใช้แถบล่าง
         chk(pg.is_visible('#tgrid') and pg.get_attribute('#step-pick','aria-current')=='step','grid is first page')
         g=pg.evaluate("[document.querySelectorAll('#tgrid .tg-row').length, document.querySelectorAll('#tgrid .tg-cell').length, document.querySelectorAll('#tgrid .tg-chip').length, chars.length]")
