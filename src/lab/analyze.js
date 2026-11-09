@@ -198,8 +198,11 @@ export function randomRunes(rng, team, pool, st, count) {
 const bossWin = r => (r.winner === 0 ? 1 : 0);
 const bossBarsGone = (r, b) => { const u = r.units.find(x => x.side === 1); if (!u) return 0; const bh = Math.max(1, Math.floor(u.maxHp / b.bars)); return Math.max(0, Math.min(b.bars, b.bars - Math.ceil(u.hp / bh))); };
 // stage = cleanStage() object · bossIds = บอสที่วัด · k = บอสครั้งที่ · level = 1|2|3|'mix'
-export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level = 1, n = BOSS_MEASURE.n, seed = BOSS_MEASURE.seed, runeMode = 'none', runeCount = 1, pickIds = [], onProgress } = {}) {
-  const map = makeCharMap(chars), pool = battleRunes(stage);
+// set 168 step 8 (user D1): neutral = also fight the same team vs the same boss without weak/resist (paired) → per-tribe baseline · ~2× time
+// g2 = stage.boss2 (the page's edited v2 globals: curve, weak/resist defaults, Heat)
+export const neutralOf = b => (b.v2 ? { ...b, weakPct: 0, resistPct: 0 } : { ...b, phases: (b.phases || []).map(p => ({ ...p, rules: (p.rules || []).filter(r => r.id !== 'tribeWeak' && r.id !== 'tribeResist') })) });
+export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level = 1, n = BOSS_MEASURE.n, seed = BOSS_MEASURE.seed, runeMode = 'none', runeCount = 1, pickIds = [], neutral = false, onProgress } = {}) {
+  const map = makeCharMap(chars), pool = battleRunes(stage), g2 = stage.boss2 || undefined;
   const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
   const picked = pickIds.map(id => pool.find(r => r.id === id)).filter(Boolean);
   const stat = Object.fromEntries(chars.map(c => [c.id, { games: 0, wins: 0, dealt: 0, taken: 0, units: 0, alive: 0 }]));
@@ -208,18 +211,21 @@ export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level =
   let total = 0, aborted = 0;
   for (const b of bosses) {
     const rng = makeRng(seed + b.id.charCodeAt(1) * 7919 + k * 131);
-    const P = per[b.id] = { id: b.id, name: b.name, tribe: b.tribe, games: 0, wins: 0, bars: 0, time: 0, tr: Object.fromEntries(TRIBES.map(t => [t, { teams: 0, wins: 0 }])) };
+    const P = per[b.id] = { id: b.id, name: b.name, tribe: b.tribe, games: 0, wins: 0, bars: 0, time: 0, nWins: 0, tr: Object.fromEntries(TRIBES.map(t => [t, { teams: 0, wins: 0, nWins: 0 }])) };
+    const bN = neutral ? neutralOf(b) : null;
     for (let i = 0; i < n; i++) {
       const A = randomTeam(rng, chars, level);
       const eqs = runeMode === 'random' ? randomRunes(rng, A, pool, stage.settings, runeCount) : runeMode === 'pick' ? picked.map(r => brEquip(rng, A, r)) : [];
       const eq = equipRunes(buildTeam(A, map, rules), eqs);
-      const r = simulate(eq.units, [bossUnit(b, k)], { rules, log: false, tribeExtra: eq.tribeExtra });
+      const r = simulate(eq.units, [bossUnit(b, k, 0, g2)], { rules, log: false, tribeExtra: eq.tribeExtra });
       const w = bossWin(r), bars = bossBarsGone(r, b);
+      const wN = bN ? bossWin(simulate(equipRunes(buildTeam(A, map, rules), eqs).units, [bossUnit(bN, k, 0, g2)], { rules, log: false, tribeExtra: eq.tribeExtra })) : 0;
+      P.nWins += wN;
       if (r.aborted) aborted++;
       P.games++; P.wins += w; P.bars += bars; P.time += r.timeMs; total++;
       for (const id of new Set(A.map(e => e.id))) { stat[id].games++; stat[id].wins += w; }
       for (const u of r.units.filter(u => u.side === 0)) stat[u.id].dealt += u.dealt;
-      for (const t of activeTribes(A, map, rules)) { P.tr[t].teams++; P.tr[t].wins += w; }
+      for (const t of activeTribes(A, map, rules)) { P.tr[t].teams++; P.tr[t].wins += w; P.tr[t].nWins += wN; }
       { const dA = Math.round(r.units.filter(u => u.side === 0).reduce((s, u) => s + u.dealt, 0)), dB = Math.round(r.units.filter(u => u.side === 1).reduce((s, u) => s + u.dealt, 0));
         const hpT = r.units.reduce((s, u) => s + (u.maxHp || 0), 0), dmgTotal = dA + dB, dmgPerHp = +(dmgTotal / Math.max(1, hpT)).toFixed(2);
         if (top.length < TOP || dmgPerHp > top[top.length - 1].dmgPerHp) {
@@ -234,13 +240,14 @@ export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level =
     win: stat[c.id].games ? stat[c.id].wins / stat[c.id].games * 100 : 0, dealt: stat[c.id].games ? stat[c.id].dealt / stat[c.id].games : 0,
     taken: stat[c.id].games ? stat[c.id].taken / stat[c.id].games : 0, surv: stat[c.id].units ? stat[c.id].alive / stat[c.id].units * 100 : 0 }));
   const bossRows = Object.values(per).map(P => ({ id: P.id, name: P.name, tribe: P.tribe, win: P.games ? P.wins / P.games * 100 : 0, bars: P.games ? P.bars / P.games : 0, time: P.games ? P.time / P.games / 1000 : 0,
-    tribeWin: Object.fromEntries(TRIBES.map(t => [t, { teams: P.tr[t].teams, win: P.tr[t].teams ? P.tr[t].wins / P.tr[t].teams * 100 : null }])) }));
+    nWin: neutral && P.games ? P.nWins / P.games * 100 : null,
+    tribeWin: Object.fromEntries(TRIBES.map(t => [t, { teams: P.tr[t].teams, win: P.tr[t].teams ? P.tr[t].wins / P.tr[t].teams * 100 : null, nWin: neutral && P.tr[t].teams ? P.tr[t].nWins / P.tr[t].teams * 100 : null }])) }));
   const winAll = total ? bossRows.reduce((a, x) => a + x.win, 0) / bossRows.length : 0;
-  return { rows, bossRows, winAll, n, k, level, runeMode, runeCount, aborted, top };
+  return { rows, bossRows, winAll, n, k, level, runeMode, runeCount, aborted, top, neutral };
 }
 // รูนแต่ละอันเพิ่มอัตราชนะเท่าไร: ทีมเดิม คู่เดิม ใส่รูนนี้ 1 อัน กับไม่ใส่ · foe = 'boss' (บอสตามรายการ สลับกัน) หรือ 'team' (ทีมสุ่ม)
 export async function runeUplift(chars, rules, stage, { foe = 'boss', bossIds, k = 1, level = 1, n = BOSS_MEASURE.runeN, seed = BOSS_MEASURE.seed + 1, onProgress } = {}) {
-  const map = makeCharMap(chars), pool = battleRunes(stage);
+  const map = makeCharMap(chars), pool = battleRunes(stage), g2 = stage.boss2 || undefined;
   const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
   if (foe === 'boss' && !bosses.length) return [];
   const out = [];
@@ -252,8 +259,8 @@ export async function runeUplift(chars, rules, stage, { foe = 'boss', bossIds, k
       const eq = equipRunes(base, [brEquip(rng, A, ru)]);
       if (foe === 'boss') {
         const b = bosses[i % bosses.length];
-        on += bossWin(simulate(eq.units, [bossUnit(b, k)], { rules, log: false, tribeExtra: eq.tribeExtra }));
-        off += bossWin(simulate(buildTeam(A, map, rules), [bossUnit(b, k)], { rules, log: false }));
+        on += bossWin(simulate(eq.units, [bossUnit(b, k, 0, g2)], { rules, log: false, tribeExtra: eq.tribeExtra }));
+        off += bossWin(simulate(buildTeam(A, map, rules), [bossUnit(b, k, 0, g2)], { rules, log: false }));
       } else {
         const B = randomTeam(rng, chars, level);
         on += winScore(simulate(eq.units, buildTeam(B, map, rules), { rules, log: false, tribeExtra: eq.tribeExtra }), 0);

@@ -6,7 +6,7 @@ let stageCfg = cleanStage(null), stagePart = 'runes';
 try { const d = JSON.parse(localStorage.getItem(STAGE_DRAFT_KEY) || 'null'); if (d) stageCfg = cleanStage(d); } catch (e) {}
 const stageEdited = () => !same(stageCfg, STAGE_BASE);
 // set 146: the reset button works on the open tab only (runes tab = runes + custom runes + copies rule) — a full reset once wiped the user's rune names.
-const STAGE_PART_KEYS = { runes: ['runes', 'custom', 'copiesRule'], bosses: ['bosses'], settings: ['settings'] };
+const STAGE_PART_KEYS = { runes: ['runes', 'custom', 'copiesRule'], bosses: ['bosses', 'boss2'], settings: ['settings'] };
 const stagePartEdited = p => STAGE_PART_KEYS[p].some(k => !same(stageCfg[k], STAGE_BASE[k])) || stageSavedDiff(p);
 // set 146 r2: the button also stays usable when the tab differs from the last saved values (loaded in 99-start / after 💾).
 let stageSaved = null;
@@ -16,6 +16,8 @@ function stageCount() {
   for (const r of STAGE_RUNES) { const x = stageCfg.runes[r.id], b = STAGE_BASE.runes[r.id]; for (const k of new Set([...Object.keys(x), ...Object.keys(b)])) if (x[k] !== b[k]) n++; }
   n += Math.abs(stageCfg.custom.length - STAGE_BASE.custom.length) + stageCfg.custom.filter(c => c.id && STAGE_BASE.custom.some(b => b.id === c.id && !same(b, c))).length;
   for (const k of Object.keys(stageCfg.settings)) if (stageCfg.settings[k] !== STAGE_BASE.settings[k]) n++;
+  for (const [k] of BOSS2_SETTINGS) if (stageCfg.boss2[k] !== STAGE_BASE.boss2[k]) n++;
+  if (!same(stageCfg.boss2.heat, STAGE_BASE.boss2.heat)) n++;
   if (!same(stageCfg.bosses, STAGE_BASE.bosses)) n += Math.max(1, stageCfg.bosses.filter(b => { const o = STAGE_BASE.bosses.find(x => x.id === b.id); return !o || !same(o, b); }).length + Math.max(0, STAGE_BASE.bosses.length - stageCfg.bosses.length));
   return n;
 }
@@ -218,7 +220,7 @@ function bossVerdict(tKill, tDie) {
   return r < 0.9 ? ['บอสชนะ', 'bad'] : r <= 1.1 ? ['สูสี', 'mid'] : ['ทีมชนะ', 'good'];
 }
 function bossBar(bs) {
-  const bar = el('div', 'hpbar', ''); bar.title = `${bs.bars} แถบ × ${bossAt(bs, 1).barHp} HP`; bar.setAttribute('aria-hidden', 'true');
+  const bar = el('div', 'hpbar', ''); bar.title = `${bs.bars} แถบ × ${bossAt(bs, 1, 0, stageCfg.boss2).barHp} HP`; bar.setAttribute('aria-hidden', 'true');
   for (let i = 0; i < bs.bars; i++) { const c = document.createElement('i'); c.style.background = barColor(bs.bars - i); bar.append(c); } // ชุด 69: สีเดียวกับหลอดบอสในภาพการต่อสู้ (ซ้ายสุด = แถบแรกที่โดนตี)
   return bar;
 }
@@ -227,7 +229,7 @@ function bossVsTable(bs) {
   const hr = document.createElement('tr'); for (const h of ['ด่าน', 'HP', 'ตี/วิ', 'ทีมล้มบอสใน', 'บอสล้มทีมใน', '']) hr.append(el('th', '', h));
   t.append(hr);
   for (const k of [1, 2, 3, 4]) {
-    const stg = (() => { for (let r = 1; r <= 200; r++) if (bossRoundK(r, stageCfg.settings) === k) return r; return 0; })(), s = bossAt(bs, k), ref = STAGE_MEDIAN[stg], tr = document.createElement('tr');
+    const stg = (() => { for (let r = 1; r <= 200; r++) if (bossRoundK(r, stageCfg.settings) === k) return r; return 0; })(), s = bossAt(bs, k, 0, stageCfg.boss2), ref = STAGE_MEDIAN[stg], tr = document.createElement('tr');
     const hpC = el('td', 'n', String(s.hp)); hpC.append(el('span', 'bk', ` (${bs.bars} × ${s.barHp})`));
     const kC = el('td', '', ''); kC.append(el('span', 'bk', `${k} · `), `ด่าน ${stg}`);
     tr.append(kC, hpC, el('td', 'n', fmt(s.dps)));
@@ -270,13 +272,20 @@ function spotPicker(id, spot, set) {
   box.lastChild.append(pre, ml, el('p', 'spot-say', 'ตอนนี้: ' + spotLabel(spotCode(si.bits, si.move))));
   return box;
 }
+// Rule value boxes: main value · 2nd value · 3rd value (set 168 step 8: S1–S6 kit rules use v3)
+function ruleValFlds(id, q, r, br) {
+  const vals = [];
+  if (q[4]) vals.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
+  for (const [j, key] of [[6, 'v2'], [7, 'v3']]) if (Array.isArray(q[j])) vals.push(fld(`${q[j][0]} (${q[j][4]})`, stageNum(`${id}-${key}`, r[key], br ? br[key] : q[j][1], q[j][2], q[j][3], v => { r[key] = v; })));
+  return vals;
+}
 // "+ เพิ่มกฎ" picker: rules grouped by kind, rules already in the phase left out
-function bossRuleAdd(id, used, add) {
+function bossRuleAdd(id, used, add, ok = () => true) {
   const sel = document.createElement('select'); sel.id = id; sel.className = 'rule-add';
   sel.append(new Option('+ เพิ่มกฎ… (ไม่จำกัด)', ''));
   for (const [label, ids] of BOSS_RULE_GROUPS) {
     const g = document.createElement('optgroup'); g.label = label;
-    for (const rid of ids) if (!used.includes(rid)) g.append(new Option(BOSS_RULES.find(q => q[0] === rid)[1], rid));
+    for (const rid of ids) if (!used.includes(rid) && ok(rid)) g.append(new Option(BOSS_RULES.find(q => q[0] === rid)[1], rid));
     if (g.children.length) sel.append(g);
   }
   sel.disabled = sel.options.length <= 1;
@@ -347,16 +356,14 @@ function bossPhaseForms(bs, base, grp) {
       x.addEventListener('click', () => { p.rules.splice(k, 1); stageChanged(); renderStage(); });
       const nm = el('span', 'rule-name', ''); nm.append(el('span', 'rule-cat', bossRuleGroup(r.id)), document.createElement('br'), q[1]);
       head.append(el('span', 'rule-n', String(k + 1)), nm, x);
-      const vals = [];
-      if (q[4]) vals.push(fld(`ค่า (${q[5]})`, stageNum(`${id}-r${k}-v`, r.v, br ? br.v : q[2], q[3], q[4], v => { r.v = v; })));
-      if (Array.isArray(q[6])) vals.push(fld(`${q[6][0]} (${q[6][4]})`, stageNum(`${id}-r${k}-v2`, r.v2, br ? br.v2 : q[6][1], q[6][2], q[6][3], v => { r.v2 = v; })));
+      const vals = ruleValFlds(`${id}-r${k}`, q, r, br);
       if (q[6] === 'tribe') vals.push(fld('เผ่า', selectInput(`${id}-r${k}-tribe`, TRIBES.map(t => [t, t]), r.tribe, v => { r.tribe = v; stageChanged(); renderStage(); })));
       box.append(head); if (vals.length) box.append(fgrid(...vals));
       kids.push(box);
     });
     if (!p.rules.length) kids.push(el('p', 'fld full mute', 'ยังไม่มีกฎในเฟสนี้'));
     kids.push(fld('', bossRuleAdd(`${id}-add`, p.rules.map(r => r.id), v => { p.rules.push(bossRule(v)); stageChanged(); renderStage(); }), 'full'));
-    if (i) { // เฟสใหม่ใช้กฎของตัวเองแทนกฎเดิม → ปุ่มคัดลอกกฎเฟสก่อนมาก่อน แล้วค่อยแก้/เพิ่ม
+    if (i && !bs.v2) { // เฟสใหม่ใช้กฎของตัวเองแทนกฎเดิม (บอส v2: กฎเฟสก่อนยังอยู่ ไม่ต้องคัดลอก) → ปุ่มคัดลอกกฎเฟสก่อนมาก่อน แล้วค่อยแก้/เพิ่ม
       const prev = bs.phases[i - 1].rules.filter(r => !p.rules.some(z => z.id === r.id));
       const cp = el('button', 'rule-copy', `คัดลอกกฎจากเฟส ${i}${prev.length ? ` (${prev.length} ข้อ)` : ''}`); cp.type = 'button'; cp.id = `${id}-copy`; cp.disabled = !prev.length;
       cp.title = 'กฎของเฟสใหม่แทนกฎเดิมทั้งหมด · อยากให้กฎเดิมยังอยู่ ให้คัดลอกมา';
@@ -381,14 +388,101 @@ function bossPhaseForms(bs, base, grp) {
     add.addEventListener('click', () => { bs.phases.push(bossPhase(last.at + 1)); stageChanged(); renderStage(); });
     out.push(add);
   }
-  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎใหม่แทนกฎเดิม · เพิ่มเฟสได้ถึงจำนวนแถบ'), ...out);
+  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', bs.v2 ? 'เฟสของบอส (v2) · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎของเฟสใหม่เพิ่มต่อจากกฎเดิม (กฎเดิมยังอยู่ · ใส่กฎเดิมซ้ำ = เปลี่ยนค่า)' : 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎใหม่แทนกฎเดิม · เพิ่มเฟสได้ถึงจำนวนแถบ'), ...out);
   return sec;
+}
+// ---------- Set 168 step 8 (C-17.6 boss v2 · user B1 C1): global v2 settings, Heat ladder, per-boss growth table + weak/resist ----------
+const b2RuleName = id => { const q = BOSS_RULES.find(z => z[0] === id); return q ? q[1].split(/[:(·]/)[0].trim().slice(0, 32) : id; };
+// Confirm dialog (ui.md W4: names what will be lost) · <dialog> instead of window.confirm (blocked in sandboxed frames)
+function stageConfirm(text, yes, onYes) {
+  const d = document.createElement('dialog'); d.className = 'stg-confirm';
+  const p = el('p', '', text), row = el('div', 'row', '');
+  const ok = el('button', '', yes); ok.type = 'button'; ok.id = 'stgConfirmYes';
+  const no = el('button', '', 'ยกเลิก'); no.type = 'button'; no.id = 'stgConfirmNo';
+  ok.addEventListener('click', () => { d.close(); onYes(); });
+  no.addEventListener('click', () => d.close());
+  d.addEventListener('close', () => d.remove());
+  row.append(no, ok); d.append(p, row); document.body.append(d); d.showModal(); no.focus();
+}
+function renderBoss2Globals(box) {
+  const g2 = stageCfg.boss2, b2 = STAGE_BASE.boss2;
+  const f = document.createElement('fieldset'); f.className = 'boss2-glob'; f.id = 'stgBoss2';
+  f.append(Object.assign(document.createElement('legend'), { textContent: 'ค่ากลางบอส v2 · ใช้กับบอสทุกตัวที่เปิด "ระบบบอส v2"' }));
+  const g = fgrid();
+  for (const [k, label, , lo, hi, unit] of BOSS2_SETTINGS) g.append(fld(`${label} (${unit})`, stageNum(`stg-b2-${k}`, g2[k], b2[k], lo, hi, v => { g2[k] = v; }, k === 'g' || k === 'a' ? 0.05 : 1)));
+  const cur = el('p', 'b2-note', '');
+  stageSayEls.push([cur, () => `บอสตัวที่ 1–5 · HP × ${[1, 2, 3, 4, 5].map(k => fmt(g2.g ** (k - 1))).join(' / ')} · พลังตี × ${[1, 2, 3, 4, 5].map(k => fmt(1 + g2.a * (k - 1))).join(' / ')}`]);
+  f.append(g, cur);
+  // Heat ladder (F1): fixed order · boss k ≥ 3 gets the first k − 2 entries
+  const hs = el('div', 'heat', '');
+  hs.append(el('h4', '', 'ลำดับ Heat · บอสตัวที่ 3 ขึ้นไปได้กฎเพิ่มทุกเฟส'),
+    el('p', 'b2-note', `บอสตัวที่ k ได้ข้อ 1 ถึงข้อ k − 2 · ข้อที่อยู่ในชุดกฎของบอสแล้วจะข้ามไปข้อถัดไป · เกินรายการ = วนข้อ 1–2 แรงขึ้นครั้งละ ${fmt(g2.heatRepeatPct)}% · ใส่ได้ ${BOSS2_HEAT_MAX} ข้อ`));
+  const list = el('div', 'heat-list', '');
+  g2.heat.forEach((r, i) => {
+    const q = BOSS_RULES.find(z => z[0] === r.id); if (!q) return;
+    const br = b2.heat.find(z => z.id === r.id), rb = el('div', 'rule-box', ''), head = el('div', 'rule-head', '');
+    const btn = (txt, id, lab, dis, fn) => { const b = el('button', 'rule-x', txt); b.type = 'button'; b.id = id; b.title = lab; b.setAttribute('aria-label', `${lab} ${q[1]}`); b.disabled = dis; b.addEventListener('click', () => { fn(); stageChanged(); renderStage(); }); return b; };
+    const nm = el('span', 'rule-name', ''); nm.append(el('span', 'rule-cat', `บอสตัวที่ ${i + 3} ขึ้นไป`), document.createElement('br'), q[1]);
+    head.append(el('span', 'rule-n', String(i + 1)), nm,
+      btn('↑', `stg-heat-${i}-up`, 'เลื่อนขึ้น', i === 0, () => { g2.heat.splice(i - 1, 0, g2.heat.splice(i, 1)[0]); }),
+      btn('↓', `stg-heat-${i}-down`, 'เลื่อนลง', i === g2.heat.length - 1, () => { g2.heat.splice(i + 1, 0, g2.heat.splice(i, 1)[0]); }),
+      btn('✕', `stg-heat-${i}-del`, 'เอาออก', false, () => { g2.heat.splice(i, 1); }));
+    rb.append(head); const vals = ruleValFlds(`stg-heat-${i}`, q, r, br); if (vals.length) rb.append(fgrid(...vals));
+    list.append(rb);
+  });
+  if (!g2.heat.length) list.append(el('p', 'mute', 'ยังไม่มีกฎ Heat · บอสตัวที่ 3 ขึ้นไปจะไม่แรงขึ้นนอกจากค่า g/a'));
+  const add = bossRuleAdd('stg-heat-add', g2.heat.map(r => r.id), v => { g2.heat.push(bossRule(v)); stageChanged(); renderStage(); }, rid => BOSS_RULES.find(z => z[0] === rid)[6] !== 'tribe');
+  if (g2.heat.length >= BOSS2_HEAT_MAX) add.disabled = true;
+  const reset = el('button', '', 'คืนค่าเริ่มต้น Heat'); reset.type = 'button'; reset.id = 'stg-heat-reset'; reset.disabled = same(g2.heat, b2.heat);
+  reset.title = 'คืนเฉพาะลำดับ Heat เป็นค่าในเกม';
+  reset.addEventListener('click', () => stageConfirm(`คืนลำดับ Heat เป็นค่าในเกม (${b2.heat.map(r => b2RuleName(r.id)).join(' → ')})? ลำดับและค่าที่แก้ใน Heat ตอนนี้ (${g2.heat.length} ข้อ) จะหายไป · ค่ากลางอื่นและบอสไม่เปลี่ยน`, 'คืนค่า Heat',
+    () => { g2.heat = b2.heat.map(r => ({ ...r })); stageChanged(); renderStage(); }));
+  const tools = el('div', 'row heat-tools', ''); tools.append(add, reset);
+  hs.append(list, tools); f.append(hs); box.append(f);
+}
+function boss2Switch(bs) {
+  const l = el('label', 'sw', ''), c = document.createElement('input'); c.type = 'checkbox'; c.id = `stg-${bs.id}-v2`; c.checked = !!bs.v2;
+  c.addEventListener('change', () => { bs.v2 = c.checked; stageChanged(); renderStage(); });
+  l.title = 'v2 = โตตามค่ากลาง g/a + Heat · เฟสใหม่เพิ่มกฎต่อจากเดิม · แพ้/ต้านเผ่าจากค่ากลาง'; l.append(c, el('span', '', 'ระบบบอส v2')); return l;
+}
+// B1: v2 bosses have no mult10/endless — a live table of bosses 1–5 from g/a + the Heat rules they get
+function boss2Growth(bs, grp) {
+  const wrap = el('div', 'bvs-wrap fld full', '');
+  stageSayEls.push([wrap, () => {
+    const t = document.createElement('table'); t.className = 'bvs b2-grow';
+    const hr = document.createElement('tr'); for (const h of ['บอสตัวที่', 'HP', 'พลังตี', 'Heat ที่ได้เพิ่ม']) hr.append(el('th', '', h)); t.append(hr);
+    for (const k of [1, 2, 3, 4, 5]) {
+      const s = bossAt(bs, k, 0, stageCfg.boss2), heat = heatRules(bs, k, stageCfg.boss2), tr = document.createElement('tr');
+      const hp = el('td', 'n', String(s.hp)); hp.append(el('span', 'bk', ` ×${fmt(stageCfg.boss2.g ** (k - 1))}`));
+      const at = el('td', 'n', String(s.atk)); at.append(el('span', 'bk', ` ×${fmt(1 + stageCfg.boss2.a * (k - 1))}`));
+      const ht = el('td', 'heat-cell', heat.length ? heat.map(r => b2RuleName(r.id)).join(', ') : '–');
+      tr.append(el('td', '', String(k)), hp, at, ht); t.append(tr);
+    }
+    return [t];
+  }]);
+  const f = grp('ความแรงตามด่าน (ค่ากลาง v2 · แก้ g/a ด้านบนสุด)', wrap); f.classList.add('b2-wide'); return f;
+}
+// weak tribe + weak/resist % (empty = global default · weak is capped by weakCap)
+function boss2TribeGrp(bs, base, grp) {
+  const g2 = stageCfg.boss2;
+  const weak = selectInput(`stg-${bs.id}-weak`, [['', 'ไม่มี'], ...TRIBES.filter(t => t !== bs.tribe).map(t => [t, t])], bs.weak || '', v => { if (v) bs.weak = v; else delete bs.weak; stageChanged(); renderStage(); });
+  const opt = (k, label, hi) => {
+    const own = typeof bs[k] === 'number', w = el('span', 'b2-opt', ''), c = document.createElement('input'); c.type = 'checkbox'; c.id = `stg-${bs.id}-${k}-own`; c.checked = own;
+    c.addEventListener('change', () => { if (c.checked) bs[k] = g2[k]; else delete bs[k]; stageChanged(); renderStage(); });
+    const l = el('label', 'sw', ''); l.append(c, el('span', '', 'ตั้งเอง'));
+    w.append(l, own ? stageNum(`stg-${bs.id}-${k}`, bs[k], typeof base[k] === 'number' ? base[k] : g2[k], 0, hi, v => { bs[k] = v; }) : el('span', 'mute', `ค่ากลาง ${fmt(g2[k])}%`));
+    return fld(label, w, 'wide');
+  };
+  const cap = el('p', 'fld full b2-note', '');
+  stageSayEls.push([cap, () => { const wp = Math.min(bs.weakPct ?? g2.weakPct, g2.weakCap); return bs.weak ? `ใช้จริง: ${bs.weak} ตีแรงขึ้น ${fmt(wp)}%${(bs.weakPct ?? g2.weakPct) > g2.weakCap ? ` (ติดเพดาน ${fmt(g2.weakCap)}%)` : ''} · ${bs.tribe} ตีเบาลง ${fmt(bs.resistPct ?? g2.resistPct)}%` : `ไม่มีเผ่าที่แพ้ · ${bs.tribe} ตีเบาลง ${fmt(bs.resistPct ?? g2.resistPct)}%`; }]);
+  return grp('แพ้ / ต้านเผ่า (v2 · เผ่าที่ต้าน = เผ่าของบอส)', fld('เผ่าที่บอสแพ้', weak), opt('weakPct', 'แพ้: ตีแรงขึ้น %', 300), opt('resistPct', `ต้าน (${bs.tribe}): ตีเบาลง %`, 100), cap);
 }
 function renderStageBosses(box) {
   const help = document.createElement('details'); help.className = 'hint';
   const hs = document.createElement('summary'); hs.textContent = 'วิธีอ่านค่าบอส'; help.append(hs,
-    ' แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · ตารางเทียบใช้ทีมค่ากลางของผู้เล่น (ด่าน 5 ตี ~7/วิ HP ~756 · ด่าน 10 ตี ~14/วิ HP ~1140) เป็นค่าประมาณ ยังไม่นับเกราะและกฎพิเศษ · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง)');
+    ' แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · ตารางเทียบใช้ทีมค่ากลางของผู้เล่น (ด่าน 5 ตี ~7/วิ HP ~756 · ด่าน 10 ตี ~14/วิ HP ~1140) เป็นค่าประมาณ ยังไม่นับเกราะและกฎพิเศษ · บอส v2 (ชุด 168): ไม่ใช้ตัวคูณด่าน 10 แต่โตตามค่ากลางด้านบน (HP × g ยกกำลัง, พลังตี + a ต่อตัว) และบอสตัวที่ 3 ขึ้นไปได้กฎ Heat เพิ่ม · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง)');
   box.append(help);
+  renderBoss2Globals(box);
   stageCfg.bosses.forEach((bs, idx) => {
     const base = STAGE_BASE.bosses.find(x => x.id === bs.id) || bs, open = bossOpen === bs.id;
     const card = el('div', 'boss-card', ''); card.classList.toggle('off', !bs.on); card.classList.toggle('open', open);
@@ -398,7 +492,7 @@ function renderStageBosses(box) {
     ch.addEventListener('click', e => { e.stopPropagation(); toggle(); });
     const title = el('div', 'boss-title', ''); title.append(el('b', '', `${bs.id} ${bs.name}`), el('span', 'rune-meta', [bs.tribe, spotShort(bs.spot), ...bs.phases[0].rules.map(r => (BOSS_RULES.find(q => q[0] === r.id) || [, r.id])[1]), ...(bs.phases.length > 1 ? [`${bs.phases.length} เฟส`] : [])].join(' · ')));
     const barBox = el('div', 'hpwrap', ''), nums = el('span', 'boss-nums', '');
-    stageSayEls.push([barBox, () => [bossBar(bs)]], [nums, () => { const s = bossAt(bs, 1); return `HP ${s.hp} · ตี ${fmt(s.dps)}/วิ`; }]);
+    stageSayEls.push([barBox, () => [bossBar(bs)]], [nums, () => { const s = bossAt(bs, 1, 0, stageCfg.boss2); return `HP ${s.hp} · ตี ${fmt(s.dps)}/วิ`; }]);
     head.append(ch, tribeBadge(bs.tribe), title, barBox, nums, stageSwitch(`stg-on-${bs.id}`, bs.on, v => { bs.on = v; renderStage(); }));
     head.addEventListener('click', e => { if (!e.target.closest('label, input, button')) toggle(); });
     card.append(head);
@@ -411,9 +505,9 @@ function renderStageBosses(box) {
       const cdF = fld('คูลดาวน์ (วิ)', stageNum(`stg-${bs.id}-cdMs`, bs.cdMs / 1000, base.cdMs / 1000, 0.3, 60, v => { bs.cdMs = Math.round(v * 10) * 100; }, 0.1));
       body.append(
         grp('ตัวบอส', fld('ชื่อ', nm, 'wide'), fld('เผ่า', selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); })),
-          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
+          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6), fld('ระบบบอส', boss2Switch(bs), 'wide')),
         grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4), n('armorHit', 'เกราะ/ฮิต', 0, 1e4), n('healHit', 'ฟื้น/ฮิต (ไม่เกินแถบที่อยู่)', 0, 1e4)),
-        grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500)));
+        ...(bs.v2 ? [boss2Growth(bs, grp), boss2TribeGrp(bs, base, grp)] : [grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500))]));
       const spotG = grp('ที่ยืน (กดช่องเพื่อเลือก/เอาออก)', spotPicker(`stg-${bs.id}-spot`, bs.spot, v => { bs.spot = v; }),
         ...((spotInfo(bs.spot) || {}).move ? [n('moveSec', 'ย้ายที่ทุก (วิ)', 1, 60, v => { bs.moveSec = Math.round(v); })] : []));
       spotG.classList.add('boss-spot');
@@ -435,7 +529,7 @@ function renderStageBosses(box) {
 function renderStageSettings(box) {
   const g = fgrid();
   for (const [k, label, , lo, hi, unit] of STAGE_SETTINGS) g.append(fld(`${label}${unit ? ` (${unit})` : ''}`, stageNum(`stg-set-${k}`, stageCfg.settings[k], STAGE_BASE.settings[k], lo, hi, v => { stageCfg.settings[k] = v; })));
-  const grow = el('p', 'desc', ''); stageSayEls.push([grow, () => { const st = stageCfg.settings; return 'ศัตรูด่านปกติ (HP + พลังโจมตี) × ' + [20, 25, 30, 40, 50].filter(n => n <= st.lastStage).map(n => `ด่าน ${n}: ${fmt(enemyMultAt(st, n))}`).join(' · '); }]);
+  const grow = el('p', 'b2-note', ''); stageSayEls.push([grow, () => { const st = stageCfg.settings; return 'ศัตรูด่านปกติ (HP + พลังโจมตี) × ' + [20, 25, 30, 40, 50].filter(n => n <= st.lastStage).map(n => `ด่าน ${n}: ${fmt(enemyMultAt(st, n))}`).join(' · '); }]);
   box.append(el('p', 'hint', 'ชุด 119: run ปกติ (หัวใจ 5 + โอกาสสุดท้าย 1 ครั้ง · ไม่เกิน 15 แมตช์) ศัตรู = ทีมบอทจริงไม่ขยายพลัง · บอสรอบ 5/10/15 ไม่บวก % แมตช์พิเศษ · แมตช์พิเศษ (หลังชนะครบ) ศัตรู + % ที่ตั้งไว้ · รอบสุดท้าย = หุ่นเป้า · ทีมบอทมีถึงรอบ 19 · ศัตรูแรงขึ้นแบบทบต้นเริ่มเมื่อถึงด่านที่ตั้ง (ตอนนี้รอบสุดท้าย 20 จึงไม่ถึง)'), g, grow);
 }
 function renderStage() {

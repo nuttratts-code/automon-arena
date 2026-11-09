@@ -16,6 +16,7 @@ import { TESTS_SAVE } from './t-save.js';
 import { TESTS_VALIDATE } from './t-validate.js';
 import { TESTS_SKILL_CALC } from './t-skill-calc.js';
 import { TESTS_BOSS } from './t-boss.js';
+import { TESTS_BOSS_V2 } from './t-boss2.js';
 import { TESTS_RUNRUN } from './t-runrun.js';
 
 export const TESTS = [
@@ -28,6 +29,7 @@ export const TESTS = [
   ...TESTS_SAVE,
   ...TESTS_VALIDATE,
   ...TESTS_BOSS,
+  ...TESTS_BOSS_V2,
   ...TESTS_RUNRUN,
   ...TESTS_SKILL_CALC,
 ];

@@ -248,6 +248,7 @@ export class BattleView {
         if (this.wantLog) this.onLog(`${s} ${this.name(e.to)} โดน${WHY_TEXT[e.why] || ''} ${e.amount}${e.absorbed ? ` (เกราะกัน ${e.absorbed})` : ''}`);
         this.dirty.add(v); break;
       }
+      case 'chainAbsorb': { const v = this.units.get(e.to); v.armor = Math.max(0, v.armor - e.amount); this.dirty.add(v); break; } // set 168 S4: armor took the chain shock
       case 'armor': { const v = this.units.get(e.to); v.armor += e.amount; this.float(v, `+${e.amount} เกราะ`, 'n-armor'); this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ได้เกราะ ${e.amount}`); break; }
       case 'burnLeft': { const v = this.units.get(e.to); v.burn = e.total; this.dirty.add(v); break; } // ไฟลดลงหลังทำดาเมจ
       case 'burn': case 'shock': { const v = this.units.get(e.to); v[e.k] = e.total; this.dirty.add(v); this.wantLog && this.onLog(`${s} ${this.name(e.to)} ติด${e.k === 'burn' ? 'ไฟ' : 'ช็อต'} +${e.amount} (รวม ${e.total})`); break; }

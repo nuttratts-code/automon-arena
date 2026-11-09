@@ -152,7 +152,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // บอส = นักสู้ตัวเดียวที่ยืนหลายช่อง (ผู้ใช้เลือก Q1 A) · สกิลที่เล็งแถว/เลนเจอบอสเมื่อช่องใดช่องหนึ่งตรง และโดนครั้งเดียวต่อการใช้สกิล
   // กฎของเฟสปัจจุบันอยู่ใน BR (id → { v, v2, tribe }) · ทีมปกติไม่มีบอส = ทุกตัวช่วยคืนค่ากลาง ผลเหมือนเดิมทุกประการ
   const BOSS = F.find(f => f.boss) || null;
-  let BR = Object.create(null), ovl = { burn: 0, shock: 0 }, shellHits = 0, shellUntil = -1, resistWorn = 0, phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, stunT = 0, drainT = 0, cdpT = 0, shieldT = 0, cleanT = 0, curseQ = null, stormAt = R.stormStartMs;
+  let BR = Object.create(null), ovl = { burn: 0, shock: 0 }, shellHits = 0, shellUntil = -1, resistWorn = 0, phIdx = 0, barsGone = 0, barT = 0, moveT = 0, enrageT = 0, growT = 0, auraT = 0, shockT = 0, silT = 0, frzT = 0, vanT = 0, curseT = 0, stunT = 0, drainT = 0, cdpT = 0, shieldT = 0, cleanT = 0, curseQ = null, plates = -1, plateT = 0, shell = -1, shellT = 0, rage = 0, chainN = 0, mendT = 0, stormAt = R.stormStartMs;
   const TICKSK = F.some(f => f.skills.some(s => s.when === 'tick')); // รูนที่ทำงานทุก x วินาที (ฮีลเป็นช่วง) · ไม่มี = ข้ามทั้งก้อน
   const rule = id => (BOSS ? BR[id] : null);
   const inLane = (f, lane) => (f.cells ? f.cells.some(i => (i & 1) === lane) : f.lane === lane);
@@ -181,7 +181,7 @@ export function simulate(teamA, teamB, opts = {}) {
   const atkOf = f => { // R1 บอสตีแรงขึ้น · R13 คลั่ง (×2)
     const a = f.atk + f.atkBonus;
     if (!BOSS || !f.boss) return a;
-    return upMul(a, (BR.atkUp ? 1 + BR.atkUp.v / 100 : 1) * (BR.desperate ? 2 : 1));
+    return upMul(a, (BR.atkUp ? 1 + BR.atkUp.v / 100 : 1) * (BR.desperate ? 2 : 1) * (BR.rage && rage > 0 ? 1 + rage * BR.rage.v2 / 100 : 1)); // set 168 S3 โทสะ
   };
   // ปิดสกิล: E2 แถวหลังเงียบช่วงแรก · R15 สุ่มปิดสกิลเป็นช่วง
   const silenced = f => !!BOSS && !f.boss && ((BR.backSilence && f.row === 2 && t <= BR.backSilence.v * 1000) || f.silenceUntil > t);
@@ -329,6 +329,15 @@ export function simulate(teamA, teamB, opts = {}) {
         if (BR.shellBreak && why === 'hit' && t >= shellUntil && ++shellHits >= BR.shellBreak.v) { // set 142 R42 เปลือกแตก: X normal hits → armorCut/noArmor/reflect off for v2 s (user B1)
           shellHits = 0; shellUntil = t + BR.shellBreak.v2 * 1000; if (detailOn) log('shellBreak', { who: target.uid, until: shellUntil });
         }
+        // set 168 S1 เกราะแผ่น: each plate cuts normal-hit damage v2 % (shock strips plates, addStatus)
+        if (BR.plating && why === 'hit' && plates > 0) { amount *= Math.max(0, 1 - plates * BR.plating.v2 / 100); note('plating'); }
+        // set 168 S5 ม่านลม: a hit/skill smaller than v % of one bar deals v2 % less · big hits untouched
+        if (BR.galeGuard && (why === 'hit' || why === 'skill' || why === 'downSkill') && amount < BOSS.barHp * BR.galeGuard.v / 100) { amount *= Math.max(0, 1 - BR.galeGuard.v2 / 100); note('galeGuard'); }
+      }
+      // set 168 S6 เปลือกเพลิง: each layer cuts all damage v2 % · a player's normal hit strips 1 layer (burn ticks don't)
+      if (BR.flameShell && shell > 0 && why !== 'execute') {
+        amount *= Math.max(0, 1 - shell * BR.flameShell.v2 / 100); note('flameShell');
+        if (src && !src.boss && why === 'hit') { shell--; if (detailOn) log('flameShell', { who: target.uid, left: shell }); }
       }
       if (BR.desperate) { amount *= 1 + BR.desperate.v / 100; note('desperate'); } // R13 คลั่ง: โดนดาเมจเพิ่ม
       if (BR.weakSpot && target.weakUntil > t) { amount *= 1 + BR.weakSpot.v / 100; note('weakSpot'); } // R30 หลังย้ายที่
@@ -382,6 +391,10 @@ export function simulate(teamA, teamB, opts = {}) {
     if (BOSS && target.boss && amount > 0) { // R8 ดูดเลือด (ไม่เกินแถบปัจจุบัน) · E7 สะท้อนดาเมจกลับ (ของที่สะท้อนไม่สะท้อนต่อ)
       if (BR.lifesteal) { const v = amount * BR.lifesteal.v / 100; byRule('lifesteal', () => bossHeal(v)); }
       if (BR.thorns && src && !src.boss && why === 'hit' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: BR.thorns.v, why: 'reflect', r: 'thorns' }, ctx: { attacker: src } }); // R32 หนาม
+      if (src && !src.boss && why === 'hit') {
+        if (BR.rage && rage < BR.rage.v3 && amount >= BOSS.barHp * BR.rage.v / 100) { rage++; if (detailOn) log('rage', { who: target.uid, stacks: rage }); } // set 168 S3 โทสะ: big hit = +1 stack
+        if (BR.staticChain && up(src) && ++chainN >= BR.staticChain.v) { chainN = 0; Q.S.push({ u: target, s: { do: 'shock', to: 'attacker', value: BR.staticChain.v2, why: 'chain', r: 'staticChain' }, ctx: { attacker: src } }); } // set 168 S4 สายฟ้าสะท้อน (status step)
+      }
       if (BR.reflect && !shellOff() && src && !src.boss && why !== 'reflect' && up(src)) Q.D.push({ u: target, s: { do: 'dmg', to: 'attacker', value: Math.floor(amount * BR.reflect.v / 100), why: 'reflect', r: 'reflect' }, ctx: { attacker: src } });
     }
     target.lastHitBy = src && src.side !== target.side ? src : null; // ผู้ทำล้ม = ผู้ทำดาเมจครั้งสุดท้าย (ไฟ/พายุทราย = ไม่มี)
@@ -416,6 +429,7 @@ export function simulate(teamA, teamB, opts = {}) {
     v = Math.floor(v);
     if (v <= 0 || f.down) return;
     const by = src || credit;
+    if (why === 'chain' && f.armor > 0) { const a = Math.min(f.armor, v); f.armor -= a; v -= a; log('chainAbsorb', { to: f.uid, amount: a }); if (v <= 0) return; } // set 168 S4: the attacker's armor takes the chain shock first
     // R24 (set 77, user 4 Nov: split burn/shock, % set per rule): boss takes (100 − X)% of burn/shock · 100% = fully immune
     const imm = BOSS && f.boss && (kind === 'burn' ? BR.burnImmune : kind === 'shock' ? BR.shockImmune : null);
     if (imm) {
@@ -427,6 +441,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (v <= 0) { if (detailOn) log('ruleBlock', { to: f.uid, from: by ? by.uid : null, why: kind, rule: imm.id }); return; }
     }
     f[kind] += v; log(kind, { to: f.uid, amount: v, total: f[kind], why, from: by ? by.uid : null, ...(imm && detailOn ? { rr: [imm.id] } : {}) }); // from = ผู้ทำให้ติด (สรุปผลจำลองใช้)
+    if (kind === 'shock' && BOSS && f.boss && BR.plating && plates > 0) { plates--; if (detailOn) log('plating', { who: f.uid, left: plates }); } // set 168 S1: each shock that lands strips 1 plate
     if (kind === 'burn' && src && src.burnNoDecay) f.noDecayPerm = true;
     if (why !== 'reflect' && src && src.side !== f.side) reflectBack(f, src, kind, v);
   }
@@ -474,6 +489,7 @@ export function simulate(teamA, teamB, opts = {}) {
       f.hp += h; log('heal', detailOn ? { to: f.uid, amount: h, ...(why ? { why } : {}), ...(BOSS && !f.boss && BR.healCut ? { rr: ['healCut'] } : {}) } : { to: f.uid, amount: h }); // A1: why (e.g. healHit) only with detail on
       // ฟื้นเป็นพลัง (PT-4): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
       if (src && src.healToAtk > 0 && up(src)) { const a = upGain(h, src.healToAtk); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
+      if (BOSS && !f.boss && BR.rage && rage > 0) { rage--; if (detailOn) log('rage', { who: BOSS.uid, stacks: rage }); } // set 168 S3: a player heal calms 1 stack
     }
   }
   const buff = (x, what, amount) => log('buff', { to: x.uid, what, amount });
@@ -697,6 +713,8 @@ export function simulate(teamA, teamB, opts = {}) {
     phIdx = i;
     const p = BOSS.phases[i] || { rules: [], fx: [], spot: '' };
     BR = ruleMap(p);
+    if (BR.plating && plates < 0) { plates = BR.plating.v; plateT = t; } // set 168 S1/S6: state starts the first time the rule is live, then carries over phases
+    if (BR.flameShell && shell < 0) { shell = BR.flameShell.v; shellT = t; }
     const fx = fxMap(p);
     if (fx.armorBar != null) byRule('armorBar', () => addArmor(BOSS, BOSS.barHp * fx.armorBar / 100, 'boss')); // X1
     if ('cleanse' in fx) { BOSS.burn = BOSS.shock = BOSS.noDecay = 0; BOSS.noDecayPerm = false; byRule('cleanse', () => log('cleanse', { to: BOSS.uid })); } // X2
@@ -707,7 +725,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (BR.rowSwap) for (const x of F) if (!x.boss) { if (x.row === 0) x.row = 2; else if (x.row === 2) x.row = 0; } // R19
     if (BR.earlyStorm) stormAt = Math.min(stormAt, t); // R21
     if (BR.tribeOff) for (const x of F) if (!x.boss) x.tb = {}; // E5 ปิดโบนัสเผ่าที่ทำงานระหว่างสู้ (ค่าที่ได้ตอนเริ่มยังอยู่)
-    barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = stunT = drainT = cdpT = shieldT = cleanT = t;
+    barT = enrageT = growT = auraT = shockT = silT = frzT = vanT = curseT = stunT = drainT = cdpT = shieldT = cleanT = mendT = t;
     log('phase', { who: BOSS.uid, i, rules: p.rules.map(r => r.id), ...(detailOn ? { rd: p.rules.map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })) } : {}), ...(p.stats && Object.keys(p.stats).length ? { stats: { ...p.stats } } : {}), ...(p.spot && spotCells(p.spot) ? { cells: BOSS.cells.slice() } : {}) });
   }
   // ชุด 69 (user 1 Nov): บอสขึ้นแถบใหม่ = ล้างดีบัฟทุกอย่างที่ศัตรูใส่ไว้ (ไฟ ช็อต ไฟไม่ลด มึนงง แช่แข็ง คูลดาวน์ช้าลง
@@ -785,6 +803,10 @@ export function simulate(teamA, teamB, opts = {}) {
         if (x) { curseQ = { u: x, until: t + R.bossTimers.curseWindowMs, base: BOSS.taken }; log('curse', { to: x.uid, ms: R.bossTimers.curseWindowMs }); }
       }
     }
+    // set 168 signature timers
+    ruleTag = 'plating'; if (BR.plating && t - plateT >= BR.plating.v3 * 1000) { plateT = t; if (plates < BR.plating.v) { plates++; if (detailOn) log('plating', { who: BOSS.uid, left: plates }); } } // S1 งอกใหม่ 1 แผ่น
+    ruleTag = 'flameShell'; if (BR.flameShell && t - shellT >= BR.flameShell.v3 * 1000) { shellT = t; if (shell < BR.flameShell.v) { shell = BR.flameShell.v; if (detailOn) log('flameShell', { who: BOSS.uid, left: shell }); } } // S6 เต็มใหม่
+    ruleTag = 'mendPulse'; if (BR.mendPulse && t - mendT >= BR.mendPulse.v * 1000) { mendT = t; if (!(BOSS.burn > 0)) bossHeal(BOSS.barHp * BR.mendPulse.v2 / 100); else if (detailOn) log('ruleBlock', { to: BOSS.uid, why: 'heal', rule: 'mendPulse' }); } // S2 ไม่ฟื้นขณะติดไฟ
     ruleTag = null;
     if (BOSS.move && BOSS.slots.length > 1 && t - moveT >= BOSS.moveSec * 1000) { moveT = t; moveBoss(); }
   }

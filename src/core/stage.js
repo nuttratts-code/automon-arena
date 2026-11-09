@@ -308,6 +308,14 @@ export const BOSS_RULES = [
   ['shockOverload', 'R40 โอเวอร์โหลดช็อต: ช็อตที่บอสกันได้ (R24) สะสมครบเท่านี้ → ติดบอสทั้งหมดทะลุการกัน แล้วเริ่มนับใหม่', 30, 1, 100000, 'ช็อต'],
   ['resistWear', 'R41 ต้านเผ่าค่อยๆ หมด: ฮิตปกติของเผ่าที่บอสต้าน (R25) ลดค่าต้านลงฮิตละ (ไม่ต่ำกว่า 0 · ไม่ฟื้นข้ามเฟส)', 1, 0.01, 100, '%'],
   ['shellBreak', 'R42 เปลือกแตก: ผู้เล่นตีปกติโดนบอสครบ X ฮิต → ปิดลดเกราะ / ห้ามได้เกราะ / สะท้อน ชั่วคราว', 10, 1, 1000, 'ฮิต', ['แตกนาน', 3, 1, 60, 'วิ']],
+  // Set 168 (C-17.6 boss v2 signature mechanics, kits approved I1 · claude/review-2026-11-09-bosskits.md) · all numbers ค่าเสนอ
+  // index 7 = optional third value [label, default, min, max, unit] (stored as v3)
+  ['plating', 'S1 เกราะแผ่น: เริ่มมี X แผ่น แต่ละแผ่นลดดาเมจตีปกติที่บอสโดน · ช็อตที่ติดบอสได้ 1 ครั้ง = แผ่นหลุด 1 แผ่น', 5, 1, 20, 'แผ่น', ['ลดดาเมจต่อแผ่น', 10, 1, 20, '%'], ['งอกใหม่ 1 แผ่นทุก', 4, 1, 60, 'วิ']],
+  ['mendPulse', 'S2 ฟื้นเป็นจังหวะ: ทุก X วิ บอสฟื้นเลือด (% ของ 1 แถบ · ไม่เกินแถบปัจจุบัน) · ไม่ฟื้นขณะบอสติดไฟ', 5, 1, 60, 'วิ', ['ฟื้น', 25, 1, 100, '%']],
+  ['rage', 'S3 โทสะ: ฮิตของผู้เล่นที่แรงถึง X% ของ 1 แถบ = บอสตีแรงขึ้น 1 สแตก · ผู้เล่นฟื้นเลือด 1 ครั้ง = สแตกหาย 1', 8, 1, 100, '%', ['ตีแรงขึ้นต่อสแตก', 10, 1, 100, '%'], ['สแตกสูงสุด', 10, 1, 50, 'สแตก']],
+  ['staticChain', 'S4 สายฟ้าสะท้อน: ทุกฮิตที่ X ที่บอสโดน ผู้ตีติดช็อต · เกราะของผู้ตีรับช็อตนี้ก่อน', 3, 1, 20, 'ฮิต', ['ช็อต', 3, 1, 1000, 'ช็อต']],
+  ['galeGuard', 'S5 ม่านลม: ฮิต/สกิลที่ดาเมจต่ำกว่า X% ของ 1 แถบ เข้าน้อยลง · ฮิตใหญ่เข้าเต็ม', 4, 1, 100, '%', ['ลดดาเมจ', 60, 1, 100, '%']],
+  ['flameShell', 'S6 เปลือกเพลิง: X ชั้น แต่ละชั้นลดดาเมจที่บอสโดน · ฮิตปกติ 1 ครั้ง = ชั้นหลุด 1 ชั้น (ไฟไม่นับ) · เต็มใหม่ทุก Z วิ', 6, 1, 20, 'ชั้น', ['ลดดาเมจต่อชั้น', 8, 1, 20, '%'], ['เต็มใหม่ทุก', 6, 1, 60, 'วิ']],
 ];
 // Phase-change effects (set 64, Q5): [id, label, default, min, max, unit] · a phase may also switch the boss spot (X5 = phase.spot)
 export const BOSS_PHASE_FX = [
@@ -332,11 +340,12 @@ export const BOSS_RULE_GROUPS = [
   ['↩️ ตอบโต้', ['reflect', 'thorns', 'barBlast']],
   ['🌀 เปลี่ยนสนาม', ['rowSwap', 'earlyStorm']],
   ['🧩 ไขปริศนา', ['dpsCheck', 'curse', 'weakSpot']],
+  ['✨ สกิลเด่นบอสชุดใหม่', ['plating', 'mendPulse', 'rage', 'staticChain', 'galeGuard', 'flameShell']],
 ];
 export const bossRuleGroup = id => (BOSS_RULE_GROUPS.find(g => g[1].includes(id)) || [''])[0];
 // Phase-stat picker groups
 export const BOSS_STAT_GROUPS = [['⚔️ การโจมตี', ['atk', 'cdMs', 'multi']], ['🔥 ติดสถานะต่อฮิต', ['burn', 'shock']], ['🛡️ เกราะ / ฟื้นต่อฮิต', ['armorHit', 'healHit']]];
-export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
+export const bossRule = (id, v) => { const r = BOSS_RULES.find(q => q[0] === id); const o = { id, v: r && r[4] ? (v ?? r[2]) : 0 }; if (r && Array.isArray(r[6])) o.v2 = r[6][1]; if (r && Array.isArray(r[7])) o.v3 = r[7][1]; if (r && r[6] === 'tribe') o.tribe = TRIBES[0]; return o; };
 export const bossPhase = (at, rules = []) => ({ at, rules, fx: [], spot: '', stats: {} });
 // Set 71 (user 1 Nov): from phase 2 a phase may set new boss stats · [key in the boss record, label, min, max, whole number?]
 // value = at the boss's first appearance (atk grows with the stage like the base atk) · a stat a phase does not set = keeps the previous phase's value
@@ -441,6 +450,41 @@ export const STAGE_SETTINGS = [
   // set 119: lastStage 20 → growth from round 20 is not reached now (kept for later)
   ['lastStage', 'รอบสูงสุดต่อ run (รอบสุดท้าย = หุ่นเป้า · ถึงได้ในแมตช์พิเศษ)', 20, 10, 200, 'รอบ'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
+// ---------- Boss system v2 (set 168, C-17.6 · user A3 B2 C2 D1 E1 F1 G1 H1 · plan claude/plan-set168.md) ----------
+// Only bosses with v2: true use these (user B1, set 168 cont.): old bosses keep mult10/endlessPct until the user imports v2 bosses (HARD RULE 6).
+// Global settings [key, label, default, min, max, unit] · all ค่าเสนอ (user C1: g/a start near today's 2nd-boss multiplier ≈ 2.4–2.7)
+export const BOSS2_SETTINGS = [
+  ['g', 'HP บอสคูณต่อบอสถัดไป (g · HP = ฐาน × g^(k−1))', 2.5, 1, 10, '×'],
+  ['a', 'พลังโจมตีบอสเพิ่มต่อบอสถัดไป (a · ตี = ฐาน × (1 + a(k−1)))', 1.5, 0, 10, '×'],
+  ['weakPct', 'เผ่าที่บอสแพ้ ตีแรงขึ้น (ค่ากลาง)', 50, 0, 300, '%'],
+  ['weakCap', 'เผ่าที่บอสแพ้ ตีแรงขึ้นได้ไม่เกิน', 100, 0, 300, '%'],
+  ['resistPct', 'เผ่าที่บอสต้าน (เผ่าของบอสเอง) ตีเบาลง (ค่ากลาง)', 50, 0, 100, '%'],
+  ['heatRepeatPct', 'Heat เกินรายการ: วนข้อ 1–2 แรงขึ้นครั้งละ', 20, 0, 300, '%'],
+];
+// Heat ladder (F1): boss k ≥ 3 gets the first k − 2 entries · a rule the boss kit already has is skipped (next entry) ·
+// past the end: steps 1–2 again, each time × (1 + heatRepeatPct %) on that rule's value (capped at the rule's max)
+export const BOSS2_HEAT_MAX = 12;
+export const BOSS2_HEAT = [['atkUp', 20], ['fastAtk', 15], ['healCut', 30], ['armorCut', 30], ['regen', 2], ['aoe', 30]].map(([id, v]) => bossRule(id, v));
+export const boss2Base = () => ({ ...Object.fromEntries(BOSS2_SETTINGS.map(([k, , v]) => [k, v])), heat: BOSS2_HEAT.map(r => ({ ...r })) });
+function cleanBoss2(o, def, num, isObj) {
+  const out = { ...def, heat: def.heat.map(r => ({ ...r })) };
+  if (!isObj(o)) return out;
+  for (const [k, , , lo, hi] of BOSS2_SETTINGS) if (num(o[k], lo, hi)) out[k] = o[k];
+  if (Array.isArray(o.heat)) {
+    const list = [];
+    for (const r of o.heat.slice(0, BOSS2_HEAT_MAX)) {
+      const q = isObj(r) && BOSS_RULES.find(z => z[0] === r.id);
+      if (!q || q[0] === 'none' || q[6] === 'tribe' || list.some(x => x.id === q[0])) continue;
+      const x = bossRule(q[0]); if (q[4] && num(r.v, q[3], q[4])) x.v = r.v;
+      if (Array.isArray(q[6]) && num(r.v2, q[6][2], q[6][3])) x.v2 = r.v2;
+      if (Array.isArray(q[7]) && num(r.v3, q[7][2], q[7][3])) x.v3 = r.v3;
+      list.push(x);
+    }
+    out.heat = list;
+  }
+  return out;
+}
+
 // set 108: boss rounds → k (1 = first boss) · 0 = no boss · the last round = 'dummy'
 export function bossRoundK(round, S) {
   const r = round | 0, e = Math.max(1, S.bossEvery | 0), late = Math.max(0, S.bossLateFrom | 0), el = Math.max(1, S.bossEveryLate | 0);
@@ -460,6 +504,7 @@ export function stageBase() {
     custom: [],
     bosses: STAGE_BOSSES.map(b => JSON.parse(JSON.stringify(b))),
     settings: Object.fromEntries(STAGE_SETTINGS.map(([k, , v]) => [k, v])),
+    boss2: boss2Base(), // set 168: boss system v2 globals (only v2 bosses read them)
   };
 }
 
@@ -473,6 +518,7 @@ function cleanStageOn(o, out) {
   const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
   cleanRunes(o, out);
   if (isObj(o.settings)) for (const [k, , , lo, hi] of STAGE_SETTINGS) if (num(o.settings[k], lo, hi)) out.settings[k] = o.settings[k];
+  out.boss2 = cleanBoss2(o.boss2, out.boss2 || boss2Base(), num, isObj);
   if (Array.isArray(o.bosses) && o.bosses.length >= 1 && o.bosses.length <= 12) {
     const ids = new Set(), list = [];
     for (const x of o.bosses) {
@@ -488,6 +534,10 @@ function cleanStageOn(o, out) {
       if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
       if (num(x.endlessPct, 0, 500)) b.endlessPct = x.endlessPct;
       if (typeof x.on === 'boolean') b.on = x.on;
+      // set 168 v2: weak tribe (≠ own tribe) + optional per-boss weak/resist % (absent = boss2 default)
+      if (typeof x.v2 === 'boolean') b.v2 = x.v2;
+      if (TRIBES.includes(x.weak) && x.weak !== b.tribe) b.weak = x.weak; else if (b.weak === b.tribe) delete b.weak;
+      for (const [k, hi] of [['weakPct', 300], ['resistPct', 100]]) { if (num(x[k], 0, hi)) b[k] = x[k]; else if (x[k] === null) delete b[k]; }
       list.push(b);
     }
     if (list.length) out.bosses = list;
@@ -501,6 +551,7 @@ function cleanPhases(x, b, num, isObj) {
     const q = BOSS_RULES.find(z => z[0] === r.id); if (!q || q[0] === 'none') return null;
     const o = bossRule(q[0]); if (q[4]) o.v = num(r.v, q[3], q[4]) ? r.v : (def && def.id === q[0] ? def.v : q[2]);
     if (Array.isArray(q[6])) o.v2 = num(r.v2, q[6][2], q[6][3]) ? r.v2 : q[6][1];
+    if (Array.isArray(q[7])) o.v3 = num(r.v3, q[7][2], q[7][3]) ? r.v3 : q[7][1];
     if (q[6] === 'tribe') o.tribe = TRIBES.includes(r.tribe) ? r.tribe : TRIBES[0];
     return o;
   };
@@ -528,8 +579,17 @@ function cleanPhases(x, b, num, isObj) {
 }
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
+// Set 168 (C-17.6 C2): a v2 boss grows by the shared curve: HP × g^(k−1) · atk × (1 + a(k−1)) · bossExtraPct still stacks (3rd+ boss in extra matches)
+// → { hp, atk } multipliers · old bosses: both = bossMult
+let BOSS2_DEF = null;
+export const boss2Default = () => BOSS2_DEF || (BOSS2_DEF = stageDefaults().boss2);
+export function bossMults(b, k, extraPct = 0, g2 = boss2Default()) {
+  if (!b || !b.v2) { const m = bossMult(b, k, extraPct); return { hp: m, atk: m }; }
+  const n = Math.max(0, k - 1), x = (1 + extraPct / 100) ** Math.max(0, k - 2);
+  return { hp: g2.g ** n * x, atk: (1 + g2.a * n) * x };
+}
 export const bossMult = (b, k, extraPct = 0) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2) * (1 + extraPct / 100) ** Math.max(0, k - 2)); // set 107: extraPct = stage bossExtraPct (3rd+ boss = extra matches)
-export function bossAt(b, k, extraPct = 0) {
-  const m = bossMult(b, k, extraPct);
-  return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * m), armor: Math.round(b.armor * m), dps: b.atk * m * b.multi / (b.cdMs / 1000) };
+export function bossAt(b, k, extraPct = 0, g2) {
+  const { hp: m, atk: ma } = bossMults(b, k, extraPct, g2);
+  return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * ma), armor: Math.round(b.armor * m), dps: b.atk * ma * b.multi / (b.cdMs / 1000) };
 }

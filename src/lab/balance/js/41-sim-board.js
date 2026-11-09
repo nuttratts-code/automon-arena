@@ -47,7 +47,7 @@ function renderSimPreview() {
   }
   // set 68: โหมดบอส = ฝั่งขวาวาดบอสตัวที่เลือก (ทุกช่องที่ยืน) แทนทีมขวาที่เก็บไว้
   const bs = simFoeBoss ? simBossOf() : null;
-  if (bs) { const bu = bossUnit(bs, simBossK), bc = simBossChar(); m[bs.id] = bc; simView.charMap = m;
+  if (bs) { const bu = bossUnit(bs, simBossK, 0, stageCfg.boss2), bc = simBossChar(); m[bs.id] = bc; simView.charMap = m;
     units.push({ uid: uid++, side: 1, row: bu.row, lane: bu.lane, id: bs.id, name: bc.name, level: 1, hp: bu.hp, maxHp: bu.maxHp, armor: bu.startArmor || 0, cells: bu.move ? [bu.slots[0]] : bu.slots.slice() }); }
   simView.onProc = null;
   simView.load({ events: [{ t: 0, k: 'start', units, tribes: [{}, {}] }], timeMs: 0, winner: null, units: [] });
@@ -301,7 +301,7 @@ function runSim(auto, fromTeamSeed) {
   // ชุด 66: รูนของทีมซ้าย (ถ้าใส่ไว้) แปลงเป็นสกิล/ค่าติดตัวก่อนสู้ · บอสเป็นนักสู้ตัวเดียวที่ยืนหลายช่อง
   const eq = simRunes.length ? simEquip(buildTeam(A, m)) : null;
   const teamA = eq ? eq.units : buildTeam(A, m);
-  const teamB = simFoeBoss ? [bossUnit(simBossOf(), simBossK)] : buildTeam(B, m);
+  const teamB = simFoeBoss ? [bossUnit(simBossOf(), simBossK, 0, stageCfg.boss2)] : buildTeam(B, m);
   if (simFoeBoss) m[simBossId] = simBossChar();
   const r = simulate(teamA, teamB, { rules: rulesNow(), ...(fromTeamSeed ? {} : { seed }), tribesOff: [$('simOffL').checked, $('simOffR').checked], ...(eq ? { tribeExtra: eq.tribeExtra } : {}), detail: true }); // ชุด 36: จดส่วนประกอบดาเมจให้แท็บวิเคราะห์แมตช์
   const prev = simLast && simLast.r;
