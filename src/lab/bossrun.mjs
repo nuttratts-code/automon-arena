@@ -141,7 +141,10 @@ if (FIT) {
     console.log(`${b.id} power ×${P.toFixed(2)} · weak ${wOf(b)}→${w} · resist ${rOf(b)}→${r} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
   }
   const fitted = rows.map(x => x.fb), gFor = a => Math.round(search(1, 6, x => avg(fitted, 2, stOf(x, a)), T2) * 100) / 100;
-  const a = Math.round(search(0, 3, x => avg(fitted, 3, stOf(gFor(x), x)), T3, 7) * 100) / 100, g = gFor(a), st = stOf(g, a);
+  // with g refit for k2, k3 gets EASIER as a grows (k3/k2 ≈ g(1+2a)/(1+a) falls) → direction checked, not assumed
+  const k3At = x => avg(fitted, 3, stOf(gFor(x), x)), up = k3At(4) > k3At(0);
+  const a = Math.round(search(0, 4, x => (up ? -1 : 1) * k3At(x), (up ? -1 : 1) * T3, 7) * 100) / 100, g = gFor(a), st = stOf(g, a);
+  console.log(`a search: k3 ${up ? 'rises' : 'falls'} with a · a ${a} · g ${g} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
   for (const x of rows) { x.k2.push(winS(x.fb, 2, teams[2], st)); x.k3.push(winS(x.fb, 3, teams[3], st)); }
   const f = v => (Number.isNaN(v) ? '-' : v.toFixed(0)), ar = l => l.map(f).join('→');
   let md = `calibrator (report only) · reference teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} (+ tribe top-up ${[1, 2, 3].map(k => (XTRA[k] || []).length).join('/')} for weak/resist rows)\n`
