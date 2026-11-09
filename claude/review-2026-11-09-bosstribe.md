@@ -22,3 +22,20 @@ After AMCFG1 rev 52 import (9 chars) + botgen 2400 4. Current game boss values (
 | B6 ปีศาจเพลิง | 1 | วายุ | เพลิงเผา | 43 (54) | 24 (55) | 92 (79) | 65 (54) | 38 (29) | 63 (62) | 70 (267) | 64 (600) |
 | B6 ปีศาจเพลิง | 2 | วายุ | เพลิงเผา | 46 (65) | 22 (60) | 88 (51) | 44 (66) | 49 (55) | 68 (84) | 70 (40) | 54 (421) |
 | B6 ปีศาจเพลิง | 3 | วายุ | เพลิงเผา | 57 (14) | 10 (10) | 77 (13) | 41 (17) | 46 (13) | 81 (27) | 100 (3) | 59 (97) |
+
+## B2 candidates, 3000 runs (set 167 E2) — fav = เพลิงเผา teams, res = ภูติ teams · targets k1 all 60 / res ≈ 40 · k2 all 50 / res 30
+
+```
+teams k1 3000 k2 2065 k3 542 · 152s
+base (game now) | k1 all 60.5 · fav 81.6 (234) · res 32.7 (245) | k2 all 50.3 · fav 64.8 (310) · res 27.2 (298) | k3 all 52.4 · fav 54.1 (98) · res 36.5 (74)
+cause: tribeResist off | k1 all 61.0 · fav 81.6 (234) · res 33.1 (245) | k2 all 50.5 · fav 65.5 (310) · res 27.2 (298) | k3 all 52.6 · fav 54.1 (98) · res 37.8 (74)
+cause: healCut off | k1 all 62.4 · fav 82.1 (234) · res 38.8 (245) | k2 all 51.5 · fav 65.5 (310) · res 28.9 (298) | k3 all 53.3 · fav 54.1 (98) · res 37.8 (74)
+cause: cdSlow off | k1 all 85.2 · fav 95.7 (234) · res 60.4 (245) | k2 all 69.5 · fav 81.6 (310) · res 43.0 (298) | k3 all 69.6 · fav 72.4 (98) · res 58.1 (74)
+healCut 20/40/60 | k1 all 61.1 · fav 81.2 (234) · res 33.5 (245) | k2 all 50.5 · fav 64.8 (310) · res 26.8 (298) | k3 all 52.6 · fav 54.1 (98) · res 36.5 (74)
+healCut 10/30/50 | k1 all 61.4 · fav 81.2 (234) · res 34.7 (245) | k2 all 50.7 · fav 64.8 (310) · res 27.5 (298) | k3 all 52.8 · fav 54.1 (98) · res 37.8 (74)
+tribeResist 10 | k1 all 60.7 · fav 81.6 (234) · res 32.2 (245) | k2 all 50.5 · fav 65.5 (310) · res 27.5 (298) | k3 all 52.6 · fav 54.1 (98) · res 37.8 (74)
+healCut 20/40/60 + tribeResist 10 | k1 all 61.3 · fav 81.2 (234) · res 33.1 (245) | k2 all 50.7 · fav 65.5 (310) · res 27.2 (298) | k3 all 52.6 · fav 54.1 (98) · res 36.5 (74)
+```
+
+- Cause (HARD RULE 5): cdSlow is the only B2 rule with a big effect, and it hits every team (off → k1 all 85). tribeResist (worn down fast by resistWear 2) and healCut move the ภูติ teams by ≤ 6 pts. The ภูติ gap mainly comes from ภูติ teams being weaker after the rev 52 heal nerfs, not from B2.
+- No value-only change brings res to 40 without making B2 easier for everyone.
