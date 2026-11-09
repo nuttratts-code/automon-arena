@@ -95,7 +95,7 @@ with sync_playwright() as p:
         pg.evaluate("P.gold=%d;P.shop=JSON.parse(%r);P.board=[[null,null],[null,null],[null,null]];P.bench=P.bench.map(()=>null);P.rn.bag={T4:1};P.rn.at={};P.rn.ft={};P.rn.offer=null;render()" % (gS, shop0))
         # set 119: no modes · HUD shows enemy strength % (100 normal run, no streak · 120 in extra matches) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
-        pg.click('#diffInfo'); chk('ธรรมดา 85% · หายาก 15%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
+        o0=pg.evaluate('RULES.runeOdds[0]'); pg.click('#diffInfo'); chk(('ธรรมดา %d%% · หายาก %d%%' % (o0['common'],o0['rare'])) in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card % (round-1 odds from RULES.runeOdds, set 172)'); esc()
         pg.evaluate("P.ws=3;render()"); chk(pg.inner_text('#foePct')=='100%','set 119: win streak no longer raises the enemy')
         pg.evaluate("P.extra=true;render()"); chk(pg.inner_text('#foePct')=='120%','extra matches → 120%'); pg.evaluate("P.ws=0;P.extra=false;render()")
         pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
