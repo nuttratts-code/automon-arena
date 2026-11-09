@@ -25,7 +25,7 @@ Stop first if the handoff Relay says `บาลานซ์: กำลังป�
 
 ## D. Rebuild data
 10. Chars/tribes changed → background `node lab/botgen.mjs 2400 4` (~6.5–13 min). Meanwhile: draft the Relay line, `Artifact read` the Links URLs (writer check).
-11. Bosses affected → background `node lab/bossrun.mjs 600 75 62 50` (NO --write) → show the user the before → after table (hp, atk, phase atk, mult10, endlessPct, win %) → only after they agree: same command + `--write`, check the printed values are the same. Commit + push.
+11. Bosses affected → background `node lab/bossrun.mjs 600 75 62 50 --fit --md <file>` (report only; set 170: no --write, no mult10/endlessPct) → show the user the before → after table (power, hp, atk, phase atk, weak %, resist %, g, a, win %) → write only the cells they pick (tools/apply-stage.mjs). Commit + push.
 
 ## E. Gate → merge → publish
 12. `node tools/bootstrap.mjs setup` until it passes (fix every failure here).

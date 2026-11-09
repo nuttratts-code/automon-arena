@@ -38,7 +38,7 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 1. **UI (ui.md / skill ui-work):** `git log --since='7 days ago' --format=%h origin/main -- src/game src/lab/balance 'src/*.template.html' src/lab/*.template.html` → each of those sets' Relay line has `UI: design skill ✓ · shots ✓`; reset/delete buttons were asked up front (no "built twice").
 2. **Gate (HARD RULE 3/5):** every code merge names GATE: PASS on that commit; a first-run FAIL or "re-run PASS" has its cause written down (set 149 did not).
 3. **New core/game files (HARD RULE 2):** `git log --since='7 days ago' --diff-filter=A --name-only --format= origin/main -- src/core src/game` → each one is in `CORE` in src/build.mjs.
-4. **Values (HARD RULE 6):** a set that changed game values has its cfgdiff review file + the "cells to set back" user todo; bossrun --write only after a shown before/after.
+4. **Values (HARD RULE 6):** a set that changed game values has its cfgdiff review file + the "cells to set back" user todo; boss values written only after a shown before/after (bossrun --fit report → user picks; set 170).
 5. **Publish:** each publish names its gate commit + CI green (set 153 G1) and updated the existing Links URL.
 6. **Relay / lock:** every set number is unique · each chat pushed a 🔒 line and none is left after its close-out · Relay = newest 2 sets.
 7. **Close-out (HARD RULE 1):** each merged code set ended with a close-out that printed the skill check (`สกิลใหม่: …`).
