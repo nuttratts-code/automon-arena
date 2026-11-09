@@ -15,6 +15,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Bug · failing test/gate/CI/page | skill `find-cause` (runbook) · HARD RULE 5 (rules) | anything fails or the user reports a bug |
 | Rule / design change | skill `rule-change` (runbook) · Decisions + Docs below (rules) | the user proposes or asks to change how the game works |
 | Measure (Claude measures) · bot teams | skill `measure-balance` (runbook) · claude/workflow/{measure,botteams}.md (rules) | only when the user orders a measurement |
+| Brainstorm · expert panel | skill `brainstorm` (runbook · sources: claude/review-2026-11-09-brainstorm-skill.md) | the user asks for a brainstorm, expert debate, or "best way / tips" on a topic |
 | Data format · setup | claude/workflow/{data-format,setup}.md | that work only |
 | Balance/code detail | claude/ops-rules.md · claude/workflow.md | only when needed |
 
