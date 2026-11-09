@@ -320,3 +320,13 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
 @media (max-width: 520px) { .tbl-fix .rk-name { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; } }
 #runCards { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); } /* set 138: 7 run cards fit one row on desktop */
 #anaRun th.sortable { cursor: pointer; user-select: none; } #anaRun th.sortable:hover { color: var(--accent); } #anaRun th.sortable:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; } /* set 138b */
+/* set 160: รันจริง "ผลต่อสู้" table */
+.cb-tools { align-items: center; }
+.cb-tools input[type="search"] { min-width: 10em; flex: 1 1 10em; max-width: 16em; }
+.cb-tbl td.cb-out { min-width: 6.5em; }
+.cb-tbl td.cb-out .mx-bar { margin: 3px 0 0 auto; height: 5px; }
+.cb-tbl th.cb-src, .cb-tbl td.cb-src { background: color-mix(in srgb, var(--soft) 55%, transparent); }
+.cb-tbl tr.cb-low td { opacity: .55; }
+.cb-f { display: inline-flex; align-items: center; gap: 6px; }
+.cb-tbl td:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); box-shadow: inset -1px 0 0 var(--line); }
+.cb-tbl thead th:first-child { position: sticky; left: 0; z-index: 3; box-shadow: inset -1px -1px 0 var(--line); }

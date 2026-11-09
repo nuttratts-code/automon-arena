@@ -10,6 +10,7 @@ import { pickFoe, simRun, tribeList } from '../core/botteams.js';
 import { rnFromCompact, rnAll } from '../core/runrunes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
 import { dataHash } from '../core/save.js';
+import { mxCombatAdd } from './matchcalc.js';
 // ตัววิเคราะห์บาลานซ์: ใช้ตัวคำนวณเดียวกับเกม · เมล็ดสุ่มเดิม = ทีมชุดเดิม จึงเทียบก่อน/หลังแก้ได้ตรงๆ
 
 
@@ -334,13 +335,14 @@ const mainTribeOf = (team, map, rules) => {
 const isDummyId = id => id === 'DUMMY';
 // set 141 (user C): a team counts as tribe X only when ≥ 4 of its units carry X (4/2 split) · else null (mixed)
 export const tribe4 = units => { const c = {}; for (const u of units || []) for (const t of new Set([u.tribe, ...(u.extraTribes || [])].filter(Boolean))) c[t] = (c[t] || 0) + 1; const best = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return best && best[1] >= 4 ? best[0] : null; };
-export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, runeWhatIf = true, onProgress } = {}) {
+export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, runeWhatIf = true, combat = false, onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
   const tribes = tribeList(chars), rarOf = Object.fromEntries(chars.map(c => [c.id, c.rarity]));
   const ends = Array(W + 1).fill(0), byRound = {}, boss = {}, ch = {}, tr = {}, combos = {};
   const normal = [0, 0], byWs = {}, bk = {}, nb = {}, lv3 = {}, pcts = [], teams = { 1: [], 2: [], 3: [] };
   for (const c of chars) ch[c.id] = { runs: 0, lvSum: 0, won: 0, winsSum: 0, mGames: 0, mWins: 0 };
+  const CB = {}; // set 160: combat = per-character damage/heal/armor table (detail log on → slower)
   const RS = runeStatsNew(stage); // set 144: per-rune stats (held, win %, what-if without the rune)
   let won = 0, rounds = 0, winsSum = 0, matches = 0, aborted = 0, timeSum = 0, lv3Final = 0, cleared = 0, seconds = 0, extraM = 0, extraW = 0;
   for (let r = 0; r < n; r++) {
@@ -351,6 +353,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
     }) : null;
     const P = simRun(chars, rules, (seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, pick, m => {
       if (dyn) fl = Math.max(0, Math.min(dyn[1] ?? 100, fl + (m.winner !== 1 ? dyn[0] : -dyn[0])));
+      if (combat) mxCombatAdd(CB, m.res, 0);
       matches++; if (m.aborted) aborted++; timeSum += m.timeMs; if (m.second) seconds++;
       const w = m.winner === 0 ? 1 : 0, won1 = m.winner !== 1, lvs = m.team.reduce((a, e) => a + e.level, 0), l3 = m.team.filter(e => e.level >= 3).length;
       for (const e of m.team) if (e.level >= 3) { const q = rarOf[e.id]; if (q && !seen[q]) { seen[q] = 1; (lv3[q] ||= []).push(m.round); } }
@@ -371,7 +374,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
       if (!m.extra) runeStatsMatch(RS, m, map, rules, stage, held, runeWhatIf);
       if (won1 && !wasOver && m.stage + 1 >= W) { wasOver = true; cleared++; }
       if (!m.extra) last = m; // set 138: the "final team" = last match of the main run (extra matches excluded)
-    }, stage, { focus: tribes[r % tribes.length], runes: true, extra: stage.settings.lastStage }); // set 87: each run's bot leans toward one tribe in turn
+    }, stage, { focus: tribes[r % tribes.length], runes: true, extra: stage.settings.lastStage, detail: combat }); // set 87: each run's bot leans toward one tribe in turn
     const mainWins = Math.min(W, P.wins), fin = mainWins >= W; if (fin) won++;
     runeStatsRun(RS, held, mainWins, fin);
     ends[mainWins]++; rounds += last ? last.round : P.round; winsSum += mainWins;
@@ -405,5 +408,6 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
     combos: Object.values(combos).sort((a, b) => b.count - a.count).slice(0, RUN_SIM.top).map(C => ({ ids: C.ids, count: C.count, share: pct(C.count, won), lv: C.lv / C.count })),
     runes: runeStatsOut(RS, n, normal[0]),
     ...(keepTeams ? { teams } : {}),
+    ...(combat ? { combat: chars.filter(c => CB[c.id]).map(c => ({ id: c.id, name: c.name, tribe: c.tribe, rarity: c.rarity, ...CB[c.id] })) } : {}),
   };
 }
