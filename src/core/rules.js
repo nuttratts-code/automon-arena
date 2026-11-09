@@ -115,6 +115,7 @@ export const RULES = {
   // set 171 (user 9 Nov): rune card rarity odds by round, like the shop table (replaces stage settings rarC/rarR/rarL = 60/30/10 flat, set 107)
   // runeOdds[i] = odds (%, used as weights) of one card of a normal-round WIN offer in round i + 1 · rounds past the table keep the last row
   // starting values (ค่าเสนอ): r1 85/15/0 · r5 65/30/5 · r10 45/35/20 · r15 25/40/35, linear between
+  runeOddsRounds: 15,            // how many rows of runeOdds are used (1…15) · later rounds keep the last used row · set 171 (user: number of matches adjustable)
   runeOdds: [
       { common: 85, rare: 15, legend: 0 }, // r1
       { common: 80, rare: 19, legend: 1 }, // r2
@@ -176,6 +177,7 @@ export const RULE_SPEC = [
   ...RAR_RULES('shop.prices', 'ราคา', 1, 30, 'เงิน', 'shop', { int: true }),
   ...RULES.shop.roundLevels.map((_, i) => [`shop.roundLevels.${i}`, `รอบ ${i + 1}${i === RULES.shop.roundLevels.length - 1 ? ' ขึ้นไป' : ''} ระดับร้าน`, 1, RULES.shop.levelOdds.length, 'ระดับ', 'shopLv', { int: true }]),
   ...RULES.shop.levelOdds.flatMap((_, i) => RAR_RULES(`shop.levelOdds.${i}`, `ร้าน Lv${i + 1} โอกาสเจอ`, 0, 100, '%', 'shopOdds', { int: true })),
+  ['runeOddsRounds', 'จำนวนรอบในตารางรูน (รอบหลังจากนี้ใช้แถวสุดท้ายที่ใช้)', 1, RULES.runeOdds.length, 'รอบ', 'runeOdds', { int: true }],
   ...RULES.runeOdds.flatMap((_, i) => RUNE_ODDS_COLS.map(([k, th]) => [`runeOdds.${i}.${k}`, `รูน รอบ ${i + 1} โอกาสเจอ ${th}`, 0, 100, '%', 'runeOdds', { int: true }])),
   ...RAR_RULES('power.budget', 'งบแต้ม', 1, 1000, 'แต้ม', 'power'),
   ['power.burnStack', 'ไฟ 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],

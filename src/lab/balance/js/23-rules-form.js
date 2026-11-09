@@ -11,7 +11,7 @@ const RULE_HINT = {
   shop: 'ราคาเปลี่ยน = ราคาตัวละครทุกตัวในระดับนั้นเปลี่ยนตาม',
   shopLv: 'ช่องละ 1 รอบ · ใส่ระดับร้านของรอบนั้น · ช่องสุดท้ายใช้กับทุกรอบหลังจากนั้น',
   shopOdds: 'แถวละ 1 ระดับร้าน · ตัวเลขเทียบกันเองในแถว (รวมไม่ถึง 100 ก็ได้) · ถ้ารวมไม่เท่า 100 ช่อง "รวม" จะบอกโอกาสจริงหลังคิดสัดส่วนให้',
-  runeOdds: 'แถวละ 1 รอบ (ชนะรอบปกติ) · แต่ละการ์ดรูนในตัวเลือกสุ่มความหายากตามแถวของรอบนั้น · ตัวเลขเทียบกันเองในแถว (รวมไม่ถึง 100 ก็ได้) · รอบหลังแถวสุดท้ายใช้แถวสุดท้าย · ตั้งความหายากเป็น 0 = ไม่ออกเลย · รางวัลบอสกับโอกาสสุดท้ายไม่ใช้ตารางนี้ (ตั้งในแท็บด่าน)',
+  runeOdds: 'แถวละ 1 รอบ (ชนะรอบปกติ) · แต่ละการ์ดรูนในตัวเลือกสุ่มความหายากตามแถวของรอบนั้น · ตัวเลขเทียบกันเองในแถว (รวมไม่ถึง 100 ก็ได้) · รอบหลังแถวสุดท้ายใช้แถวสุดท้าย · ช่อง "จำนวนรอบในตาราง" = ใช้กี่แถวแรก (แถวที่เกินจางลง ไม่ถูกใช้) · ตั้งความหายากเป็น 0 = ไม่ออกเลย · รางวัลบอสกับโอกาสสุดท้ายไม่ใช้ตารางนี้ (ตั้งในแท็บด่าน)',
   power: 'ใช้คิด "แต้มพลัง" ที่แสดงในฟอร์มตัวละครเท่านั้น ไม่มีผลกับการต่อสู้',
   lock: 'ค่าโครงสร้างของเกมและตัวกันพัง ล็อกไว้ก่อน · ถ้าอยากเปลี่ยนข้อไหนบอก Claude ในแชท',
 };
@@ -59,7 +59,7 @@ function ruleLvStrip(items) {
 // shop.levelOdds.<lv>.<rarity>: table, one row per shop level + real % after normalising
 // set 171: cfg = { src: 'shop' | 'rune', idx: path part holding the row, cols: [[key, shown name]], head, row: i → row label, find: i → search text }
 const ODDS_SHOP = { src: 'shop', idx: 2, cols: RARITIES.map(r => [r, r]), head: 'ร้าน', row: i => `Lv${i + 1}`, find: i => `ร้าน Lv${i + 1} โอกาสเจอ ` + RARITIES.join(' ') };
-const ODDS_RUNE = { src: 'rune', idx: 1, cols: RUNE_ODDS_COLS, head: 'รอบ', row: i => `${i + 1}${i === RULES.runeOdds.length - 1 ? '+' : ''}`, find: i => `รูน รอบ ${i + 1} โอกาสเจอ ` + RUNE_ODDS_COLS.map(c => c[1]).join(' ') };
+const ODDS_RUNE = { src: 'rune', idx: 1, cols: RUNE_ODDS_COLS, head: 'รอบ', row: i => `${i + 1}${i === RULES.runeOddsRounds - 1 ? '+' : ''}`, find: i => `รูน รอบ ${i + 1} โอกาสเจอ ` + RUNE_ODDS_COLS.map(c => c[1]).join(' ') };
 const oddsRow = (cfg, i) => (cfg.src === 'rune' ? RULES.runeOdds[i] : RULES.shop.levelOdds[i]) || {};
 function ruleOddsTable(items, cfg = ODDS_SHOP) {
   const wrap = el('div', 'rtwrap', ''), t = el('table', 'rodds', ''), hr = el('tr', '', '');
@@ -76,6 +76,7 @@ function ruleOddsTable(items, cfg = ODDS_SHOP) {
   wrap.append(t); return wrap;
 }
 function ruleOddsSums() {
+  for (const tr of document.querySelectorAll('#rsec-runeOdds tbody tr')) { const i = tr.rowIndex - 1, off = i >= RULES.runeOddsRounds; tr.style.opacity = off ? '.45' : ''; const h = tr.firstChild; h.textContent = off ? `${i + 1} (ไม่ใช้)` : ODDS_RUNE.row(i); } // rows past runeOddsRounds are not used
   for (const td of document.querySelectorAll('#rform .rsum')) {
     const cfg = td.dataset.src === 'rune' ? ODDS_RUNE : ODDS_SHOP, o = oddsRow(cfg, Number(td.dataset.lv)), K = cfg.cols.map(c => c[0]), tot = K.reduce((s, r) => s + (o[r] || 0), 0);
     td.textContent = !tot ? 'รวม 0 = ไม่มีตัวเลย' : tot === 100 ? '100' : `${tot}\nจริง ${K.map(r => (o[r] ? Math.round(o[r] * 100 / tot) : '·')).join(' / ')}`;
@@ -134,7 +135,7 @@ function renderRulesForm() {
     let body;
     if (g === 'shopLv') body = ruleLvStrip(items);
     else if (g === 'shopOdds') body = ruleOddsTable(items);
-    else if (g === 'runeOdds') body = ruleOddsTable(items, ODDS_RUNE);
+    else if (g === 'runeOdds') { body = el('div', '', ''); const [p, l, lo, hi, u, , op] = items[0]; body.append(el('div', 'fgrid rgrid', '').appendChild(ruleField(p, l, lo, hi, u, op)).parentNode, ruleOddsTable(items.slice(1), ODDS_RUNE)); }
     else { body = el('div', 'fgrid rgrid', ''); for (const [path, label, lo, hi, unit, , op] of items) body.append(ruleField(path, label, lo, hi, unit, op)); }
     if (g === 'lock') {
       const d = document.createElement('details'), s = document.createElement('summary');
