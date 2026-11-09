@@ -11,7 +11,7 @@ description: Automon Arena close-out block (HARD RULE 1; ปิดงาน / �
 Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
-   - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step.
+   - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step (with a plan file: its name + next step number; a finished plan moves to claude/archive/, set 163 C1).
    - Relay keeps only the newest 2 sets; move older entries to claude/archive/relay/ (append to the newest relay-*.md archive file).
    - Update "Doc versions" if any doc version was bumped; update "Publish (current)" if something was published — that line keeps ONLY the current versions + the commit they came from; older entries go to the archive (review W7, set 151).
    - Remove this chat's 🔒 lock line from the Relay (workflow/relay.md, review W2).
