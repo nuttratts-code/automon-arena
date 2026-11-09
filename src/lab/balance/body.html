@@ -432,6 +432,23 @@
     </table></div>
     <p class="hint">ทีมสุดท้าย = ทีมแมตช์สุดท้ายของรัน · ชนะครบ 10 % / ชนะเฉลี่ย = ของรันที่ทีมสุดท้ายมีตัวนี้ · ชนะแมตช์ % = ทุกแมตช์ที่ตัวนี้ลงสนาม (รวมบอส) · บอทเลือกตัวจากค่าพลังพื้นฐาน (ไม่อ่านสกิล) เหมือนผู้เล่นที่ดูการ์ด จึงตัวที่สกิลเก่งแต่ค่าพื้นฐานต่ำอาจถูกใช้น้อยกว่าคนจริง</p>
     </div>
+    <div data-sec="combat" data-label="ผลต่อสู้" style="display:grid;gap:8px">
+    <h3>ผลต่อสู้รายตัว (ฝั่งผู้เล่น · เฉลี่ยต่อตัวที่ลงสนาม)</h3>
+    <div class="row cb-tools">
+      <span class="seg" id="cbUnit" role="group" aria-label="หน่วย"><button type="button" data-u="m" aria-pressed="true">ต่อแมตช์</button><button type="button" data-u="s" aria-pressed="false">ต่อวินาที</button></span>
+      <span class="seg" id="cbSrc" role="group" aria-label="ดาเมจ"><button type="button" data-s="" aria-pressed="true">ดาเมจรวม</button><button type="button" data-s="1" aria-pressed="false">แยกที่มา</button></span>
+      <span class="cb-f"><label class="status" for="cbRar">ความหายาก</label><select id="cbRar"><option value="">ทุกระดับ</option></select></span>
+      <span class="cb-f"><label class="status" for="cbTribe">เผ่า</label><select id="cbTribe"><option value="">ทุกเผ่า</option></select></span>
+      <input id="cbFind" type="search" placeholder="ค้นชื่อหรือรหัส" aria-label="ค้นชื่อหรือรหัสตัวละคร">
+      <span class="status" id="cbCount"></span>
+    </div>
+    <div class="legend" id="cbLegend"></div>
+    <div class="tbl tbl-fix"><table class="cb-tbl">
+      <thead id="cbHead"></thead>
+      <tbody id="runCombat"></tbody>
+    </table></div>
+    <p class="hint">ตัวเลขคิดแบบเดียวกับหน้าวิเคราะห์แมตช์ · นับทุกแมตช์ของรัน (รวมบอสและช่วงเล่นต่อ) เฉพาะฝั่งผู้เล่น · ลงสนาม = จำนวนครั้งที่ตัวนี้อยู่ในทีมตอนสู้ (2 ตัวซ้ำในทีม = 2 ครั้ง) · ดาเมจที่ทำ = ใส่ศัตรูเท่านั้น ไฟแบ่งให้ผู้ที่ทำให้ติดตามสัดส่วน · ตัวที่ถูกเรียกออกมานับให้ตัวที่เรียก (ดาเมจ ฮิล เกราะ ทำล้ม) · ทำล้ม = เป็นคนตีครั้งสุดท้ายก่อนศัตรูล้ม · เกราะกันได้ = ดาเมจที่โดนแต่เกราะรับไว้ · HP หายจริง = ไม่นับส่วนที่เกิน HP ที่เหลือ · ฮิล/เกราะที่ให้ = รวมให้ตัวเองและเพื่อน · ต่อวินาที = รวม ÷ เวลาแมตช์ที่ตัวนี้ลงสนาม · ลงสนามน้อยกว่า 30 ครั้ง = ตัวเลขยังแกว่ง (สีจาง)</p>
+    </div>
     <div data-sec="runes" data-label="รูน" style="display:grid;gap:8px">
     <h3>รูนในรันจริง: รูนไหนแรงเกินระดับ / ส่งผลกับเกมมากเกิน</h3>
     <p class="hint">ผลของรูน = เอาแมตช์จริงที่ผู้เล่นถือรูนนั้นมาสู้ซ้ำแบบไม่มีรูนนั้น (ทีมเดิม ศัตรูเดิม) แล้วดูว่าอัตราชนะต่างกันกี่แต้ม · ตัดสินผลแมตช์ = % ของแมตช์ที่ผลแพ้/ชนะเปลี่ยนเพราะรูนนี้ · ผลต่อเกมรวม = อัตราชนะรวมของทุกแมตช์เปลี่ยนไปกี่แต้มเพราะรูนนี้ (ผลของรูน × ความถี่ที่ได้ถือ) · นับเฉพาะรันหลัก</p>

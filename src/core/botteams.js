@@ -55,7 +55,7 @@ export function simRun(chars, rules, seed, opponent, onMatch, stage = RUN_STAGE,
     const foe = rb ? null : preset ? (Array.isArray(preset) ? { team: preset } : preset) : { team: teamEntries(B), rn: R ? rnCompact(B) : [], s: B.ws | 0 };
     const me = equipRunes(buildTeam(mine, cm, rules), rnFromCompact(myRn, stage), { winStreak: ws });
     const fs = rb ? { units: runBossTeam(rb.boss, rb.k, stage, P.extra), opts: runBossOpts(rb.boss, stage) } : foeSide(foe, cm, rules, stage, P.round);
-    const res = simulate(me.units, fs.units, { rules, log: false, ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...fs.opts });
+    const res = simulate(me.units, fs.units, { rules, ...(opts.detail ? { log: true, detail: true } : { log: false }), ...(me.tribeExtra.length ? { tribeExtra: me.tribeExtra } : {}), ...fs.opts });
     const wins = P.wins, round = P.round, gold = P.gold, hearts = P.hearts, won = res.winner !== 1, ex = P.extra;
     const gain = side => (res.perm || []).filter(g => g.side === side);
     const em = endMatch(P, won, chars, rules, gain(0), !!rb);

@@ -406,6 +406,15 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#step-pick'); pg.click('#tgrid .tg-chip[data-id="PL-4"]')
         chk(pg.is_visible('#pane-chars') and pg.evaluate('current')=='PL-4' and pg.inner_text('#sbEdit')=='PL-4','chip opens editor')
         pg.click('#tab-sim'); pg.click('#step-result'); chk(pg.is_visible('#pane-analysis') and pg.is_hidden('#pane-sim'),'result step')
+        # set 160: รันจริง combat table renders from fake data · filters hide rows · per-second toggle · source columns
+        cb=pg.evaluate("""(()=>{const mk=(id,n)=>({id,name:'',tribe:'',rarity:'',n,ms:n*30000,out:300*n,src:{hit:200*n,burn:100*n},taken:150*n,abs:20*n,loss:120*n,heal:10*n,armor:5*n,kills:0.5*n,alive:n/2});
+          anaPlayRun={...(anaPlayRun||{}),combat:[mk(chars[0].id,40),mk(chars[1].id,10)]}; renderRunCombat();
+          const a=$('runCombat').rows.length, h=$('cbHead').rows[0].cells.length; $('cbFind').value=chars[0].id; cbFilter();
+          const vis=[...$('runCombat').rows].filter(r=>!r.hidden).length; $('cbFind').value=''; cbFilter();
+          $('cbSrc').querySelector('[data-s="1"]').click(); const h2=$('cbHead').rows[0].cells.length;
+          $('cbUnit').querySelector('[data-u="s"]').click(); const ps=$('runCombat').querySelector(`tr[data-id="${chars[0].id}"]`).cells[3].firstChild.textContent;
+          $('cbUnit').querySelector('[data-u="m"]').click(); $('cbSrc').querySelector('[data-s=""]').click(); return [a,h,vis,h2,ps];})()""")
+        chk(cb[0]==2 and cb[1]==12 and cb[2]==1 and cb[3]==14 and cb[4]=='10','combat table rows/filter/source cols/per-sec '+str(cb))
         # ชุด 30: 3 ขั้น · ส่วนบันทึก + ไอเดีย + คลังสกิล (พับไว้) อยู่ท้ายขั้นแก้ (ใต้แก้ตัวละคร/โบนัสเผ่า ไม่อยู่ในลองสู้) · ไอเดียตามตัวที่แก้
         chk(pg.locator('#step-save').count()==0 and pg.eval_on_selector_all('#steps button[id^=step-]','e=>e.length')==3 and pg.is_visible('#steps #save'),'3 steps + save button on top bar')
         pg.click('#step-edit'); pg.click('#tab-chars')

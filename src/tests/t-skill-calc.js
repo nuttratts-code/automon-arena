@@ -6,7 +6,7 @@ import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RULES, upGain } from '../core/rules.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { mxModel, mxLoss, mxAgg, mxAdd, mxWhy } from '../lab/matchcalc.js';
+import { mxModel, mxLoss, mxAgg, mxAdd, mxWhy, mxCombatAdd } from '../lab/matchcalc.js';
 import { NEVER, mk, L3, eq, ok, randomTeam } from './helpers.js';
 import { makeRng } from '../core/rng.js';
 
@@ -685,4 +685,24 @@ const SC_FUZZ = ['แท็บวิเคราะห์ = ผลต่อส�
     scAgree({ r, units, model: mxModel(r, units), res: new Map(r.units.map(x => [x.uid, x])) }, `match ${k} (${A.map(u => u.id + 'L' + u.level).join(' ')} vs ${B.map(u => u.id + 'L' + u.level).join(' ')})`);
   }
 }];
-export const TESTS_SKILL_CALC = [...SC_BASE, ...SC_TESTS, ...SC_RETIRED_TESTS, SC_COVER, SC_FUZZ];
+// set 160: Balance Room "รันจริง" combat table (mxCombatAdd) = the match tab totals · detail log never changes the result
+const SC_COMBAT = ['ตารางผลต่อสู้รันจริง = แท็บวิเคราะห์: 150 แมตช์สุ่ม', () => {
+  const rng = makeRng(160), m = makeCharMap(SC_CH), near = (a, b) => Math.abs(a - b) < 1e-6 * Math.max(1, Math.abs(b));
+  for (let k = 0; k < 150; k++) {
+    const A = randomTeam(rng, SC_CH, 6, 'mix'), B = randomTeam(rng, SC_CH, 6, 'mix'), tag = `match ${k}`;
+    const r = simulate(buildTeam(A, m), buildTeam(B, m), { detail: true }), q = simulate(buildTeam(A, m), buildTeam(B, m), { log: false });
+    eq(q.winner, r.winner, tag + ' winner same with detail off'); eq(q.timeMs, r.timeMs, tag + ' time same');
+    const units = [...r.events[0].units, ...r.events.filter(e => e.k === 'summon').map(e => e.unit)], M = mxModel(r, units);
+    const acc = mxCombatAdd({}, r, 0), L = Object.values(acc), sum = f => L.reduce((a, x) => a + f(x), 0);
+    const mine = units.filter(u => u.side === 0), start0 = r.events[0].units.filter(u => u.side === 0);
+    ok(near(sum(x => x.out), M.tot[0]), `${tag} damage dealt ${sum(x => x.out)} = tab ${M.tot[0]}`);
+    ok(near(sum(x => Object.values(x.src).reduce((a, v) => a + v, 0)), sum(x => x.out)), tag + ' sources add up');
+    const fx = mine.reduce((a, u) => { const f = M.fxTot.get(u.uid); return a + (f ? f.heal + f.armor : 0); }, 0);
+    ok(near(sum(x => x.heal + x.armor), fx), `${tag} heal+armor given ${sum(x => x.heal + x.armor)} = tab ${fx}`);
+    eq(sum(x => x.n), start0.length, tag + ' appearances');
+    const dn = new Map(r.units.map(u => [u.uid, u.down]));
+    eq(sum(x => x.alive), start0.filter(u => !dn.get(u.uid)).length, tag + ' survivors');
+    ok(sum(x => x.kills) <= r.events.filter(e => e.k === 'down' && units.find(u => u.uid === e.who && u.side === 1)).length, tag + ' kills ≤ enemy downs');
+  }
+}];
+export const TESTS_SKILL_CALC = [...SC_BASE, ...SC_TESTS, ...SC_RETIRED_TESTS, SC_COVER, SC_FUZZ, SC_COMBAT];

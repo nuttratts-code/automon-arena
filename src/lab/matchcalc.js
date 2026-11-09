@@ -81,3 +81,33 @@ export function mxModel(r, units) {
 }
 // Sum of a record list split by source (tab 1/2 tables): { [why]: agg } + total amount
 export function mxBySrc(list) { const s = {}; let t = 0; for (const x of list) { const w = mxWhy(x.why); (s[w] ||= mxAgg()); mxAdd(s[w], x); t += x.amt; } return [s, t]; }
+
+// set 160: per-character combat totals for the Balance Room "รันจริง (บอท)" table. One detailed match (simulate detail on)
+// → acc[id] += this match, side `side` only. Same records as the match tab (mxRecords / mxFxGiven), so numbers agree.
+// Summoned units credit their summoner (damage, heal/armor given, kills); taken / armor blocked / survive = the unit itself.
+export const mxCombatNew = () => ({ n: 0, ms: 0, out: 0, src: {}, taken: 0, abs: 0, loss: 0, heal: 0, armor: 0, kills: 0, alive: 0 });
+export function mxCombatAdd(acc, r, side = 0) {
+  const st = r.events.find(e => e.k === 'start'); if (!st) return acc;
+  const sideOf = new Map(), owner = new Map(), idOf = new Map(), S = new Map();
+  for (const u of st.units) { sideOf.set(u.uid, u.side); if (u.side === side) { owner.set(u.uid, u.uid); idOf.set(u.uid, u.id); S.set(u.uid, mxCombatNew()); } }
+  for (const e of r.events) if (e.k === 'summon' && e.unit) { sideOf.set(e.unit.uid, e.unit.side); if (owner.has(e.from)) owner.set(e.unit.uid, owner.get(e.from)); }
+  const own = uid => (uid == null ? null : S.get(owner.get(uid)) || null);
+  const recs = mxRecords(r), last = new Map(); let ri = 0;
+  r.events.forEach((e, ei) => {
+    for (; ri < recs.length && recs[ri].ei <= ei; ri++) {
+      const x = recs[ri], foe = x.from != null && sideOf.get(x.from) !== sideOf.get(x.to);
+      if (foe) { last.set(x.to, x.from); const g = own(x.from); if (g) { const w = mxWhy(x.why); g.out += x.amt; g.src[w] = (g.src[w] || 0) + x.amt; } }
+      const t = S.get(x.to); if (t) { t.taken += x.amt; t.abs += x.abs; t.loss += Math.max(0, x.amt - x.abs - x.over); }
+    }
+    if (e.k === 'down' && sideOf.has(e.who) && sideOf.get(e.who) !== side) { const g = own(last.get(e.who)); if (g) g.kills++; }
+  });
+  for (const [uid, rows] of mxFxGiven(r)) { const g = own(uid); if (!g) continue;
+    for (const row of rows.values()) for (const { e } of row.list) if (e.k === 'heal' || e.k === 'armor') g[e.k] += e.amount || 0; }
+  const down = new Map((r.units || []).map(u => [u.uid, !!u.down]));
+  for (const [uid, g] of S) {
+    const a = (acc[idOf.get(uid)] ||= mxCombatNew());
+    a.n++; a.ms += r.timeMs || 0; a.out += g.out; a.taken += g.taken; a.abs += g.abs; a.loss += g.loss; a.heal += g.heal; a.armor += g.armor; a.kills += g.kills; a.alive += down.get(uid) ? 0 : 1;
+    for (const [w, v] of Object.entries(g.src)) a.src[w] = (a.src[w] || 0) + v;
+  }
+  return acc;
+}

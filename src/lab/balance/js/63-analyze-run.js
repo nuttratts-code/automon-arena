@@ -16,7 +16,7 @@ async function runPlayAnalysis() {
     const n = Math.max(1, Math.min(5000, +$('anaRunN').value || 300)), opp = $('anaRunOpp').value === 'live' ? 'live' : 'teams';
     $('msg').textContent = `กำลังจำลอง ${n.toLocaleString()} รัน…`;
     const t0 = Date.now();
-    anaPlayRun = await runPlayStats(clone(chars), rulesNow(), stageCfg, { n, opp, onProgress: x => { $('prog').style.width = `${x * 100}%`; $('msg').textContent = `กำลังจำลอง ${Math.round(x * n).toLocaleString()} / ${n.toLocaleString()} รัน…`; } });
+    anaPlayRun = await runPlayStats(clone(chars), rulesNow(), stageCfg, { n, opp, combat: true, onProgress: x => { $('prog').style.width = `${x * 100}%`; $('msg').textContent = `กำลังจำลอง ${Math.round(x * n).toLocaleString()} / ${n.toLocaleString()} รัน…`; } });
     renderPlayRun(); runSortAll(); renderAnaMode();
     $('msg').textContent = `จำลองรันเสร็จ · ${n.toLocaleString()} รัน · ${anaPlayRun.matches.toLocaleString()} แมตช์ · ${Math.round((Date.now() - t0) / 1000)} วิ`
       + (anaPlayRun.aborted ? ` · ⚠ ${anaPlayRun.aborted} แมตช์ผิดปกติ ถูกตัวตัดนิรภัยหยุด` : '');
@@ -91,6 +91,7 @@ function renderPlayRun() {
     return tr;
   }));
   renderRunRunes(R);
+  renderRunCombat();
   $('runCombos').replaceChildren(...(R.combos.length ? R.combos.map((x, i) => {
     const tr = document.createElement('tr'), tc = td(x.ids.join(' '), 'mxt-team');
     tc.title = x.ids.map(id => `${id} ${(chars.find(q => q.id === id) || {}).name || ''}`).join('\n');
@@ -172,3 +173,69 @@ $('runeCheckBtn').addEventListener('click', async () => {
   } catch (e) { $('runeCheckMsg').textContent = 'ตรวจไม่สำเร็จ: ' + e.message; }
   finally { b.disabled = false; }
 });
+
+// ---------- Set 160 (user 9 Nov): per-character combat table (damage by source, taken, armor, heal/armor given, kills, survive) ----------
+// Numbers come from lab/matchcalc.js mxCombatAdd (same records as the match tab). Filters/unit/source toggles only redraw this table.
+const cbView = { u: 'm', src: false };
+const CB_LOW = 30; // fewer appearances than this = numbers still swing (row faded)
+for (const r of RARITIES) $('cbRar').append(new Option(r, r));
+for (const t of TRIBES) $('cbTribe').append(new Option(t, t));
+const cbSeg = (id, key, set) => $(id).addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  for (const x of $(id).querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+  set(b.dataset[key]); renderRunCombat();
+});
+cbSeg('cbUnit', 'u', v => { cbView.u = v === 's' ? 's' : 'm'; });
+cbSeg('cbSrc', 's', v => { cbView.src = !!v; delete runSortState.runCombat; });
+$('cbRar').addEventListener('change', cbFilter); $('cbTribe').addEventListener('change', cbFilter); $('cbFind').addEventListener('input', cbFilter);
+function cbFilter() {
+  const rar = $('cbRar').value, tri = $('cbTribe').value, q = $('cbFind').value.trim().toLowerCase();
+  let shown = 0, all = 0;
+  for (const tr of $('runCombat').rows) {
+    if (!tr.dataset.id) continue; all++;
+    const c = chars.find(x => x.id === tr.dataset.id) || {};
+    const ok = (!rar || c.rarity === rar) && (!tri || c.tribe === tri || (c.extraTribes || []).includes(tri)) && (!q || `${c.id} ${c.name}`.toLowerCase().includes(q));
+    tr.hidden = !ok; if (ok) shown++;
+  }
+  $('cbCount').textContent = all ? `แสดง ${shown} / ${all} ตัว` : '';
+}
+function renderRunCombat() {
+  const R = anaPlayRun, body = $('runCombat'), head = $('cbHead');
+  const L = (R && R.combat) || [], per = cbView.u === 's';
+  const srcs = MX_SRC.filter(w => L.some(x => x.src[w] > 0));
+  const cols = [['ตัวละคร'], ['ความหายาก'], ['ลงสนาม', 'n', 'จำนวนครั้งที่ตัวนี้อยู่ในทีมตอนสู้'], ['ดาเมจที่ทำ', 'n', 'ดาเมจที่ใส่ศัตรู (แท่งสี = แยกที่มา)'],
+    ...(cbView.src ? srcs.map(w => [MX_NAME[w], 'n cb-src', `ดาเมจจาก${MX_NAME[w]}`]) : []),
+    ['ทำล้ม', 'n', 'จำนวนศัตรูที่ตัวนี้ตีครั้งสุดท้ายก่อนล้ม'], ['ดาเมจที่โดน', 'n'], ['เกราะกันได้', 'n', 'ส่วนของดาเมจที่โดนที่เกราะรับไว้'], ['HP หายจริง', 'n'],
+    ['ฮิลที่ให้', 'n', 'ฮิลที่ให้ตัวเองและเพื่อน'], ['เกราะที่ให้', 'n', 'เกราะที่ให้ตัวเองและเพื่อน'], ['รอดจบแมตช์', 'n', '% ของแมตช์ที่ยังไม่ล้มตอนจบ']];
+  const hr = document.createElement('tr');
+  cols.forEach(([label, cls, tip], i) => {
+    const th = document.createElement('th'); if (cls) th.className = cls; th.dataset.label = label; th.textContent = label;
+    th.classList.add('sortable'); th.tabIndex = 0; th.title = (tip ? tip + ' · ' : '') + 'แตะเพื่อเรียง น้อย → มาก · แตะอีกครั้ง มาก → น้อย';
+    const go = () => { const st = runSortState.runCombat; runSortState.runCombat = st && st.col === i ? { col: i, dir: -st.dir } : { col: i, dir: -1 }; runSortApply(body); };
+    th.addEventListener('click', go); th.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
+    hr.append(th);
+  });
+  head.replaceChildren(hr);
+  $('cbLegend').replaceChildren(...srcs.map(w => { const s = el('span', '', ''), d = el('i', 'mx-dot', ''); d.style.setProperty('--c', MX_COLOR[w]); s.append(d, MX_NAME[w]); return s; }));
+  if (!L.length) { body.replaceChildren(runEmptyRow(cols.length)); cbFilter(); return; }
+  const v = (x, k) => (per ? (x.ms > 0 ? x[k] / (x.ms / 1000) : 0) : x[k] / x.n);
+  const num = (x, k) => (per ? fmt(v(x, k), 1) : nf(v(x, k)));
+  const maxOut = Math.max(1, ...L.map(x => v(x, 'out')));
+  body.replaceChildren(...L.map(x => {
+    const c = chars.find(q => q.id === x.id) || x, tr = document.createElement('tr'); tr.dataset.id = x.id;
+    if (x.n < CB_LOW) { tr.classList.add('cb-low'); tr.title = `ลงสนามแค่ ${x.n} ครั้ง ตัวเลขยังแกว่ง`; }
+    const nameTd = td(`${x.id} ${c.name}`); nameTd.prepend(charBadge(x.id));
+    const rarTd = td(''); rarTd.append(rarityTag(c.rarity));
+    const outTd = td(num(x, 'out'), 'n cb-out'), sv = w => (per ? fmt(x.src[w] / (x.ms / 1000), 1) : nf(x.src[w] / x.n));
+    outTd.title = srcs.filter(w => x.src[w] > 0).map(w => `${MX_NAME[w]} ${sv(w)}`).join('\n');
+    outTd.append(mxBarSegs(v(x, 'out') / maxOut * 100, srcs.map(w => [x.src[w] || 0, MX_COLOR[w], `${MX_NAME[w]} ${sv(w)}`, x.out])));
+    tr.append(nameTd, rarTd, td(x.n.toLocaleString(), 'n'), outTd,
+      ...(cbView.src ? srcs.map(w => td(x.src[w] > 0 ? sv(w) : '–', 'n cb-src')) : []),
+      td(v(x, 'kills').toFixed(2), 'n'), td(num(x, 'taken'), 'n'), td(num(x, 'abs'), 'n'), td(num(x, 'loss'), 'n'),
+      td(num(x, 'heal'), 'n'), td(num(x, 'armor'), 'n'), td(`${fmt(x.alive / x.n * 100)}%`, 'n'));
+    return tr;
+  }));
+  if (!runSortState.runCombat) runSortState.runCombat = { col: 3, dir: -1 };
+  runSortApply(body); cbFilter();
+}
+renderRunCombat();
