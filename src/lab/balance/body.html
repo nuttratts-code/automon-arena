@@ -303,6 +303,7 @@
         <label class="status" for="anaBossPick">บอส</label><select id="anaBossPick"></select>
         <label class="status" for="anaBossK">บอสครั้งที่</label><input id="anaBossK" type="number" min="1" max="30" value="1" style="width:4em">
         <label class="status" for="anaLevel">เลเวลทีม</label><select id="anaLevel"><option value="mix">ผสม</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select>
+        <label class="status" title="สู้บอสตัวเดียวกันอีกรอบแต่ไม่มีเผ่าที่แพ้/ต้าน (ทีมเดิม) · ดูว่าระบบแพ้/ต้านทำให้เผ่าไหนได้เปรียบ/เสียเปรียบเท่าไร · ใช้เวลาประมาณ 2 เท่า"><input type="checkbox" id="anaNeutral"> เทียบบอสกลาง (ช้าลง ~2 เท่า)</label>
       </span>
     </div>
     <div class="row" id="anaRuneRow">
@@ -339,7 +340,7 @@
     <div data-sec="boss" data-label="ผลต่อบอส" style="display:grid;gap:8px">
     <h3>ผลต่อบอส</h3>
     <div class="tbl"><table>
-      <thead><tr><th>บอส</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th></tr></thead>
+      <thead><tr><th>บอส</th><th class="n">ชนะ %</th><th class="n">แถบที่ลดได้</th><th class="n">เวลา</th><th class="n" id="bossPerN" hidden>บอสกลาง %</th></tr></thead>
       <tbody id="bossPer"></tbody>
     </table></div>
     </div>
@@ -353,6 +354,7 @@
     </div>
     <div data-sec="tribes" data-label="เผ่า" style="display:grid;gap:8px">
     <h3>ผลเผ่า VS บอส (ชนะ % ของทีมที่เปิดโบนัสเผ่านั้น)</h3>
+    <p class="hint" id="bossTribeNote">วงเล็บ = ต่างจากค่าเฉลี่ยของบอสนั้น · ติ๊ก "เทียบบอสกลาง" ก่อนวิเคราะห์ เพื่อเทียบกับบอสตัวเดียวกันที่ไม่มีเผ่าที่แพ้/ต้าน</p>
     <div class="tbl"><table>
       <thead id="bossTribeHead"></thead>
       <tbody id="bossTribe"></tbody>

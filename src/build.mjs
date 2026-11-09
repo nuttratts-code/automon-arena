@@ -14,7 +14,7 @@ const expand = tpl => {
   return out;
 };
 // Test files bundled into the system-check page: helpers first, then the topic files, then mechanics.js (it joins them into TESTS).
-const TESTS = ['tests/helpers.js', 'tests/runlog-fixture.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/t-skill-calc.js', 'tests/t-boss.js', 'tests/t-runrun.js', 'tests/mechanics.js'];
+const TESTS = ['tests/helpers.js', 'tests/runlog-fixture.js', 'tests/t-combat.js', 'tests/t-skills.js', 'tests/t-skill-targets.js', 'tests/t-tribe.js', 'tests/t-shop.js', 'tests/t-bots.js', 'tests/t-save.js', 'tests/t-validate.js', 'tests/t-skill-calc.js', 'tests/t-boss.js', 'tests/t-boss2.js', 'tests/t-runrun.js', 'tests/mechanics.js'];
 const pages = [
   ['check.template.html', 'system-check.html', [...CORE, 'lab/matchcode.js', 'lab/matchcalc.js', 'lab/cfgcode.js', 'lab/cfgdiff.js', 'lab/runlogread.js', 'lab/runecheck.js', 'game/labels.js', ...TESTS]],
   ['lab/balance.template.html', 'balance.html', [...CORE, 'lab/analyze.js', 'lab/runecheck.js', 'lab/matchcode.js', 'lab/matchcalc.js', 'game/view.js', 'game/labels.js']],

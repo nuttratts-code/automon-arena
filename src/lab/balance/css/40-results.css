@@ -357,3 +357,19 @@ table.bvs { width: 100%; border-collapse: collapse; font-size: .84rem; } .bvs th
   .vf-row { grid-template-columns: auto 1fr auto; grid-template-areas: "tag name num" "bar bar bar" "why why why"; row-gap: 6px; padding: 10px; }
   .vf-bar { height: 14px; }
 }
+/* set 168 step 8: boss v2 globals + Heat ladder + growth table + neutral-boss column */
+.boss2-glob { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 12px 12px; margin: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.boss2-glob > legend { padding: 0 4px; font-weight: 700; font-size: .9rem; }
+.b2-note { margin: 0; overflow-wrap: anywhere; font-size: .82rem; color: var(--mute); }
+.boss2-glob .heat { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.boss2-glob .heat h4 { margin: 0; font-size: .9rem; }
+.heat-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.heat-list .rule-box { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; display: grid; gap: 6px; }
+.heat-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .heat-tools .rule-add { flex: 1 1 220px; width: auto; min-width: 0; max-width: 100%; }
+table.b2-grow td.heat-cell { white-space: normal; font-size: .8rem; color: var(--mute); }
+.b2-opt { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .b2-opt input[type=number] { width: 6em; }
+.b2-sub { font-size: .74rem; color: var(--mute); white-space: nowrap; }
+dialog.stg-confirm { max-width: min(420px, calc(100vw - 32px)); border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); padding: 16px; }
+dialog.stg-confirm::backdrop { background: rgb(0 0 0 / .4); }
+dialog.stg-confirm .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.boss-body > fieldset.b2-wide { grid-column: 1 / -1; }

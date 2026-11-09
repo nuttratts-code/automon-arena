@@ -79,7 +79,7 @@ async function runBossAnalysis() {
     const n = (ANA_BOSS_N[$('mN').value] || ANA_BOSS_N[12000])[0], k = anaBossKVal(), level = anaLevelVal();
     const withRunes = anaRune !== 'none', span = withRunes ? 0.6 : 1;
     $('msg').textContent = `กำลังวัด VS บอส (${n.toLocaleString()} แมตช์ × ${ids.length} บอส)…`;
-    const r = await bossRanking(clone(chars), rulesNow(), stageCfg, { bossIds: ids, k, level, n, runeMode: anaRune, runeCount: Math.max(1, Math.min(12, Math.round(+$('anaRuneN').value) || 1)), pickIds: anaPickIds,
+    const r = await bossRanking(clone(chars), rulesNow(), stageCfg, { bossIds: ids, k, level, n, runeMode: anaRune, runeCount: Math.max(1, Math.min(12, Math.round(+$('anaRuneN').value) || 1)), pickIds: anaPickIds, neutral: $('anaNeutral').checked,
       onProgress: x => { $('prog').style.width = `${span * x * 100}%`; } });
     anaBossRun = r;
     if (withRunes) { $('msg').textContent = 'กำลังวัดผลรูนแต่ละอัน…'; await anaRunRunes(span, 1 - span); }
@@ -100,7 +100,10 @@ function renderBossResults() {
   cards[1].firstChild.textContent = fmt(avg(x => x.bars));
   cards[2].firstChild.textContent = `${fmt(avg(x => x.time))} วิ`;
   $('bossPer').replaceChildren(...bs.map(b => { const tr = document.createElement('tr'); const bar = (stageCfg.bosses.find(x => x.id === b.id) || {}).bars || 0;
-    tr.append(td(`${b.id} ${b.name}`), td(fmt(b.win) + '%', 'n'), td(`${fmt(b.bars)} / ${bar}`, 'n'), td(fmt(b.time) + ' วิ', 'n')); return tr; }));
+    tr.append(td(`${b.id} ${b.name}`), td(fmt(b.win) + '%', 'n'), td(`${fmt(b.bars)} / ${bar}`, 'n'), td(fmt(b.time) + ' วิ', 'n'));
+    if (R.neutral) tr.append(td(`${fmt(b.nWin)}% (${sgn(b.win - b.nWin)})`, 'n')); return tr; }));
+  $('bossPerN').hidden = !R.neutral; // set 168 step 8 (user D1): neutral-boss baseline (same boss, no weak/resist, same teams)
+  $('bossTribeNote').textContent = R.neutral ? 'ช่องละ 2 บรรทัด: ชนะ % (ต่างจากค่าเฉลี่ยของบอสนั้น) · กลาง = ชนะ % ของทีมเดิมเมื่อบอสไม่มีเผ่าที่แพ้/ต้าน และส่วนต่าง (สี = ต่างจากบอสกลาง ≥ 10)' : 'วงเล็บ = ต่างจากค่าเฉลี่ยของบอสนั้น · ติ๊ก "เทียบบอสกลาง" ก่อนวิเคราะห์ เพื่อเทียบกับบอสตัวเดียวกันที่ไม่มีเผ่าที่แพ้/ต้าน';
   const mean = R.rows.filter(x => x.games).reduce((a, x) => a + x.win, 0) / Math.max(1, R.rows.filter(x => x.games).length);
   $('bossRank').replaceChildren(...R.rows.filter(x => x.games).sort((a, b) => b.win - a.win).map(x => {
     const c = chars.find(q => q.id === x.id) || x, tr = document.createElement('tr'); tr.className = 'click'; tr.tabIndex = 0;
@@ -116,8 +119,10 @@ function renderBossResults() {
   $('bossTribeHead').replaceChildren(head);
   $('bossTribe').replaceChildren(...TRIBES.map(t => {
     const tr = document.createElement('tr'), tTd = td(t); tTd.prepend(tribeBadge(t)); tr.append(tTd);
-    for (const b of bs) { const x = b.tribeWin[t]; const d = x.win == null ? null : x.win - b.win;
-      const c = td(x.win == null ? '–' : `${fmt(x.win)}% (${sgn(d)})`, 'n' + (d == null ? '' : d >= 10 ? ' d-up' : d <= -10 ? ' d-down' : '')); c.title = `${x.teams} ทีม · วงเล็บ = ต่างจากค่าเฉลี่ยของบอสนี้`; tr.append(c); }
+    for (const b of bs) { const x = b.tribeWin[t]; const d = x.win == null ? null : x.win - b.win, dn = x.win == null || x.nWin == null ? null : x.win - x.nWin, dc = R.neutral ? dn : d;
+      const c = td(x.win == null ? '–' : `${fmt(x.win)}% (${sgn(d)})`, 'n' + (dc == null ? '' : dc >= 10 ? ' d-up' : dc <= -10 ? ' d-down' : ''));
+      if (dn != null) { c.append(document.createElement('br'), cell(`กลาง ${fmt(x.nWin)} · ${sgn(dn)}`, 'b2-sub')); }
+      c.title = `${x.teams} ทีม · วงเล็บ = ต่างจากค่าเฉลี่ยของบอสนี้${dn != null ? ` · บอสกลาง (ไม่มีแพ้/ต้าน) ${fmt(x.nWin)}% → ต่าง ${sgn(dn)}` : ''}`; tr.append(c); }
     return tr;
   }));
   const RT = Object.fromEntries(Object.entries(stageCfg.runes).map(([id, r]) => [id, r.name]).concat(stageCfg.custom.map(r => [r.id, r.name])));

@@ -22,7 +22,7 @@ function simEquipList() {
 // ตัวละครจำลองของบอส (ให้แผงรายละเอียด/ภาพการต่อสู้แสดงชื่อและค่าพลังได้)
 function simBossChar() {
   const b = simBossOf(); if (!b) return null;
-  const at = bossAt(b, simBossK), b3 = v => [v, v, v];
+  const at = bossAt(b, simBossK, 0, stageCfg.boss2), b3 = v => [v, v, v];
   return { id: b.id, name: `${b.name} (บอส)`, tribe: b.tribe, extraTribes: [], rarity: RARITIES[RARITIES.length - 1], price: 0, rowHint: 'หน้า',
     hp: b3(at.hp), atk: b3(at.atk), cdMs: b3(b.cdMs), multi: b3(b.multi), burn: b3(b.burn), shock: b3(b.shock), armorHit: b3(0), healHit: b3(0), skills: [] };
 }
@@ -41,7 +41,7 @@ function renderSimBoss() {
   if (!on) $('simBossInfo').textContent = '';
   else if (!b) $('simBossInfo').textContent = 'ยังไม่มีบอสที่เปิดใช้ (เปิดในแท็บ "รูน / บอส")';
   else {
-    const at = bossAt(b, simBossK);
+    const at = bossAt(b, simBossK, 0, stageCfg.boss2);
     $('simBossInfo').textContent = `HP ${at.hp} · ${b.bars} แถบ (แถบละ ${at.barHp}) · พลังโจมตี ${at.atk} ทุก ${fmt(b.cdMs / 1000)} วิ · ${spotShort(b.spot)} · ${b.phases.length} เฟส`;
   }
 }
