@@ -1,6 +1,6 @@
 # workflow · UI work
 
-V1.2 · 8 Nov 2026 (set 158: points to skill ui-work; merge-code checks it) · V1.1 · 8 Nov 2026 (set 151 review W4 reset buttons) · V1.0 set 139: moved out of CLAUDE.md — user rule 7 Nov, set 125. Open whenever a task builds a new UI or reshapes an existing one.
+V1.3 · 9 Nov 2026 (set 159: phone audit) · V1.2 · 8 Nov 2026 (set 158: points to skill ui-work; merge-code checks it) · V1.1 · 8 Nov 2026 (set 151 review W4 reset buttons) · V1.0 set 139: moved out of CLAUDE.md — user rule 7 Nov, set 125. Open whenever a task builds a new UI or reshapes an existing one.
 
 Step-by-step runbook: skill `.claude/skills/ui-work/SKILL.md` (set 158). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
@@ -9,3 +9,4 @@ Step-by-step runbook: skill `.claude/skills/ui-work/SKILL.md` (set 158). This fi
 - Keep the existing palette/fonts of a page unless the user asks for a new look.
 - Placeholder art = coloured shapes + names; must not resemble the original game (the user makes real art). Art style notes: claude/art-style.md.
 - **Reset / delete / overwrite buttons (review W4, set 151 — set 146 reset button built twice):** ask up front (A1 rule) what the button returns to (game values · last saved · defaults) and what it covers (one tab · whole page); the button must open a confirm dialog that names what will be lost.
+- **Phone audit (set 159 A2 — set 159 first checked only 844×390, missed portrait + short screens until the user asked for every screen):** game-page work is checked at 1366×768 · 844×390 · 740×330 (phone + browser bars) · 667×375 · 390×844 portrait after "ใช้แนวตั้งต่อ", on EVERY screen the change can reach (name · rune offer · prep · unit card · popups · battle · result · match details · end · resume), with a late-game state (Lv 2–3, legend units, 2 skills) as well as round 1. Pass = no page scroll, tap targets ≥ 24 px (WCAG 2.5.8; aim 44), text ≥ 10 px (star badges exempt), no text clipped by overflow (Thai tone marks need line-height ≥ 1.3 under overflow hidden), no element off-screen outside a scrolling box. Runbook + audit snippet: skill ui-work step 4b.
