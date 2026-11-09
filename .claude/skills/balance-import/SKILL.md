@@ -8,6 +8,8 @@ Stop first if the handoff Relay says `บาลานซ์: กำลังป�
 
 ## A. Ask up front (one AskUserQuestion round, rule A1)
 1. Fresh AMCFG1 (set 166): **main account** (Balance Room `Artifact read` = writer) → ask only "กด 💾 แล้วหรือยัง", then read `config/main` + `results/latest` + open `ideas` with ArtifactData and build `amcfg.txt` yourself (format: balance-import.md §00 step 1). **2nd account** → ask the user: Balance Room → 💾 → "คัดลอกค่าให้ Claude" → paste. Save it to the scratchpad as `amcfg.txt`.
+   - Main account, exact steps (set 168, tested): ArtifactData `get` config/main + `get` results/latest + `list` ideas, each with `out_dir: <scratch>/db` → then build the code (skips the hidden `.<id>.json,by-others` marker files the tool also writes, which are empty):
+     `node -e 'const fs=require("fs"),D=process.argv[1],st=o=>{const x={...o};for(const k in x)if(k.startsWith("__"))delete x[k];return x},rd=f=>{const t=fs.readFileSync(f,"utf8");if(!t.trim())return null;const j=JSON.parse(t);return j.data||j};const c=st(rd(D+"/config/main.json")),l=st(rd(D+"/results/latest.json")),i=fs.readdirSync(D+"/ideas").filter(f=>!f.startsWith(".")).map(f=>rd(D+"/ideas/"+f)).filter(Boolean).map(st).filter(x=>["รอ Claude","ต้องเลือกก่อน"].includes(x.status)).slice(0,50);fs.writeFileSync(D+"/../amcfg.txt","AMCFG1 "+JSON.stringify({v:1,config:c,measured:l&&l.at?{at:l.at,edits:l.edits}:null,ideas:i}));console.log("rev",c.rev,"saved",c.savedAt,"ideas",i.length)' <scratch>/db`
 2. If characters or tribes changed: the user must have pressed "วิเคราะห์" before 💾 (check ①, set 153 I1).
 
 ## B. Compare (HARD RULE 6)
