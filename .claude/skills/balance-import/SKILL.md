@@ -7,7 +7,7 @@ description: Automon Arena import of game values from the Balance Room (นำ�
 Stop first if the handoff Relay says `บาลานซ์: กำลังปรับ` (HARD RULE 4). All commands run in `src/`. Heavy jobs (botgen, bossrun, gate) run ONE at a time in the background (2 cores); do light work meanwhile.
 
 ## A. Ask up front (one AskUserQuestion round, rule A1)
-1. Ask the user for a fresh AMCFG1: Balance Room → 💾 → "คัดลอกค่าให้ Claude" → paste. Save it to the scratchpad as `amcfg.txt`.
+1. Fresh AMCFG1 (set 166): **main account** (Balance Room `Artifact read` = writer) → ask only "กด 💾 แล้วหรือยัง", then read `config/main` + `results/latest` + open `ideas` with ArtifactData and build `amcfg.txt` yourself (format: balance-import.md §00 step 1). **2nd account** → ask the user: Balance Room → 💾 → "คัดลอกค่าให้ Claude" → paste. Save it to the scratchpad as `amcfg.txt`.
 2. If characters or tribes changed: the user must have pressed "วิเคราะห์" before 💾 (check ①, set 153 I1).
 
 ## B. Compare (HARD RULE 6)
