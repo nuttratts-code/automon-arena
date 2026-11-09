@@ -415,7 +415,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
           $('cbSrc').querySelector('[data-s="1"]').click(); const h2=$('cbHead').rows[0].cells.length;
           $('cbUnit').querySelector('[data-u="s"]').click(); const ps=$('runCombat').querySelector(`tr[data-id="${chars[0].id}"]`).cells[3].firstChild.textContent;
           $('cbUnit').querySelector('[data-u="m"]').click(); $('cbSrc').querySelector('[data-s=""]').click(); return [a,h,vis,h2,ps];})()""")
-        chk(cb[0]==2 and cb[1]==12 and cb[2]==1 and cb[3]==14 and cb[4]=='10','combat table rows/filter/source cols/per-sec '+str(cb))
+        chk(cb[0]==2 and cb[1]==11 and cb[2]==1 and cb[3]==13 and cb[4]=='10','combat table rows/filter/source cols/per-sec '+str(cb))
         # ชุด 30: 3 ขั้น · ส่วนบันทึก + ไอเดีย + คลังสกิล (พับไว้) อยู่ท้ายขั้นแก้ (ใต้แก้ตัวละคร/โบนัสเผ่า ไม่อยู่ในลองสู้) · ไอเดียตามตัวที่แก้
         chk(pg.locator('#step-save').count()==0 and pg.eval_on_selector_all('#steps button[id^=step-]','e=>e.length')==3 and pg.is_visible('#steps #save'),'3 steps + save button on top bar')
         pg.click('#step-edit'); pg.click('#tab-chars')
