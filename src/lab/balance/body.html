@@ -108,6 +108,15 @@
     <div id="pane-sim" hidden style="display:grid;gap:12px">
       <details class="hint sim-help"><summary>วิธีใช้หน้าลองสู้</summary> จัดทีมในสนามแล้วกด "จำลอง" · แตะตัวในรายการ = ลงช่องว่างแรก · แตะช่องในสนาม = เปลี่ยนตัว / เลเวล / เอาออก · กดค้างแล้วลากเพื่อย้ายหรือสลับช่อง (ลากข้ามฝั่งได้) · ใช้ค่าที่แก้อยู่ในห้องนี้ทันที (ยังไม่ต้องบันทึก) · ผลเหมือนเดิมทุกครั้งถ้าใช้เลขสุ่มเดิม · สกิลร้านค้าไม่ทำงานในการต่อสู้ · ตอนเล่นภาพ: ชื่อสกิลสีน้ำเงินลอยขึ้นเมื่อสกิลทำงาน · ตัวเลขแดง = ดาเมจ · เขียว = ฟื้น HP · ดาเมจทุกครั้งดูในแท็บ "ดูแมตช์"</details>
       <div class="simstage" id="simStageBox">
+          <div class="row simteamrow" id="simBossRow">
+            <span class="status">ฝั่งขวา</span>
+            <div class="seg" role="group" aria-label="ฝั่งขวาเป็นอะไร"><button type="button" id="simFoeTeam" aria-pressed="true">ทีม</button><button type="button" id="simFoeBoss" aria-pressed="false">บอส</button></div>
+            <select id="simBossPick" aria-label="เลือกบอส" hidden></select>
+            <label class="status" for="simBossK" id="simBossKLab" hidden>เจอครั้งที่</label>
+            <select id="simBossK" aria-label="เจอบอสครั้งที่" hidden><option value="1">1 (บอสตัวแรกของ run)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+            <span class="status" id="simBossInfo"></span>
+          </div>
+          <div class="benchrow"><span class="status">ม้านั่งสำรอง</span><div class="bench" id="simBench"></div></div>
           <details class="dock" id="simDock" open>
             <summary><span class="status">ค้นหาตัวลงสนาม</span> <span class="hint dk-hint">แตะ = ลงช่องว่างแรก · ลากไปวางช่องไหนก็ได้ (มือถือกดค้างแล้วลาก)</span><span class="dk-toggle" aria-hidden="true"></span></summary>
             <div class="dk-tools">
@@ -117,13 +126,15 @@
             <div class="cp-tribes" id="dockTribes" role="group" aria-label="กรองตามเผ่า"></div>
             <div class="dk-list" id="dockList"></div>
           </details>
-          <div class="row simteamrow" id="simBossRow">
-            <span class="status">ฝั่งขวา</span>
-            <div class="seg" role="group" aria-label="ฝั่งขวาเป็นอะไร"><button type="button" id="simFoeTeam" aria-pressed="true">ทีม</button><button type="button" id="simFoeBoss" aria-pressed="false">บอส</button></div>
-            <select id="simBossPick" aria-label="เลือกบอส" hidden></select>
-            <label class="status" for="simBossK" id="simBossKLab" hidden>เจอครั้งที่</label>
-            <select id="simBossK" aria-label="เจอบอสครั้งที่" hidden><option value="1">1 (บอสตัวแรกของ run)</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
-            <span class="status" id="simBossInfo"></span>
+          <div class="simtribes"><div id="simTribesL"></div><div id="simTribesR"></div></div>
+          <div class="stage">
+            <div class="heads">
+              <div><span class="team">ทีมซ้าย</span><span>หลัง</span><span>กลาง</span><span>หน้า</span></div>
+              <div></div>
+              <div><span class="team">ทีมขวา</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
+            </div>
+            <div class="arena" id="simArena"></div>
+            <div class="result" id="simOver" hidden><div><strong id="simOverTitle"></strong><button id="simOverReplay" type="button">ดูอีกครั้ง</button></div></div>
           </div>
           <div class="simctl">
             <button class="primary" id="simRun" type="button">จำลอง</button>
@@ -142,17 +153,6 @@
           </div>
           <p class="status" id="simMsg"></p>
           <div class="simsum" id="simSum" hidden></div>
-          <div class="benchrow"><span class="status">ม้านั่งสำรอง</span><div class="bench" id="simBench"></div></div>
-          <div class="simtribes"><div id="simTribesL"></div><div id="simTribesR"></div></div>
-          <div class="stage">
-            <div class="heads">
-              <div><span class="team">ทีมซ้าย</span><span>หลัง</span><span>กลาง</span><span>หน้า</span></div>
-              <div></div>
-              <div><span class="team">ทีมขวา</span><span>หน้า</span><span>กลาง</span><span>หลัง</span></div>
-            </div>
-            <div class="arena" id="simArena"></div>
-            <div class="result" id="simOver" hidden><div><strong id="simOverTitle"></strong><button id="simOverReplay" type="button">ดูอีกครั้ง</button></div></div>
-          </div>
           <div class="row simteamrow" id="simTeamRow">
             <button id="simRand" type="button">สุ่มทีม</button>
             <button id="simClear" type="button">ล้างทีม</button>

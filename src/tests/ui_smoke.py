@@ -443,8 +443,8 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         chk(pg.evaluate("document.getElementById('simRun').nextElementSibling.id")=='simPlay','sim run button before play')
         chk(pg.evaluate("[...document.querySelectorAll('#saveBox > .subsec, #saveBox > details')].map(x=>x.id).join(',')")=='ideaBox,catalog,editedBox','edited values last')
         chk(pg.input_value('#presetSide')=='0','preset side follows left tap')
-        # set 161: play controls sit right above the board · phone board fits (no sideways scroll) · glossary/ideas only where skills are edited
-        chk(pg.evaluate("!!(document.getElementById('simRun').compareDocumentPosition(document.querySelector('#simStageBox .stage')) & Node.DOCUMENT_POSITION_FOLLOWING) && !!(document.getElementById('simDock').compareDocumentPosition(document.getElementById('simRun')) & Node.DOCUMENT_POSITION_FOLLOWING)"),'sim: search → controls → board')
+        # set 161: search list right above the board (drag), play controls right under it · phone board fits (no sideways scroll) · glossary/ideas only where skills are edited
+        chk(pg.evaluate("!!(document.querySelector('#simStageBox .stage').compareDocumentPosition(document.getElementById('simRun')) & Node.DOCUMENT_POSITION_FOLLOWING) && !!(document.getElementById('simDock').compareDocumentPosition(document.querySelector('#simStageBox .stage')) & Node.DOCUMENT_POSITION_FOLLOWING)"),'sim: search → board → play controls')
         chk(pg.evaluate("(()=>{const s=document.querySelector('#simStageBox .stage');return s.scrollWidth<=s.clientWidth+1})()"),'sim board fits width '+str(w))
         pg.click('#tab-rules'); chk(pg.is_hidden('#editor > details.gloss') and pg.is_hidden('#ideaBox') and pg.is_hidden('#catalog') and pg.is_visible('#editedBox'),'rules tab: no skill glossary/ideas/library')
         pg.click('#tab-match'); chk(pg.is_hidden('#editor > details.gloss'),'match tab: no skill glossary')
