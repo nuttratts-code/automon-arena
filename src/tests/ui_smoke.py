@@ -718,7 +718,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#stg-%s-p1-r0-del'%bid); chk(pg.evaluate("stageCfg.bosses[0].phases[1].rules.map(r=>r.id).join()")=='regen,aoe','boss rule delete')
         # set 168 step 8: boss v2 globals (g edit -> growth table) · Heat ladder move + reset via confirm dialog
         b2k=pg.evaluate("JSON.stringify(stageCfg.boss2)")
-        pg.evaluate("stageCfg.bosses[0].v2=true; renderStage()")
+        pg.evaluate("renderStage()")
         pg.fill('#stg-b2-g','3'); pg.press('#stg-b2-g','Tab')
         h0=pg.evaluate("stageCfg.boss2.heat.map(r=>r.id)"); pg.click('#stg-heat-0-down')
         hv=pg.evaluate("(()=>{const t=document.querySelector('.b2-grow'); return [stageCfg.boss2.g, t?t.rows.length:0, t?t.rows[3].cells[1].textContent.startsWith(String(Math.round(stageCfg.bosses[0].hp*9))):false, stageCfg.boss2.heat[1].id];})()")

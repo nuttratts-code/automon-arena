@@ -9,7 +9,7 @@ export const slotKey = (row, lane) => row * 2 + lane;
 export const slotsOf = bits => [...bits].flatMap((b, i) => (b === '1' ? [i] : []));
 
 // boss record + k (1 = first appearance, 2 = second, 3+ = endless) → unit for simulate()
-// set 168: g2 = stage.boss2 (v2 bosses only · default = code base + stage-user)
+// set 168: g2 = stage.boss2 (curve + weak/resist + Heat · default = code base + stage-user) · set 170: every boss (the training dummy keeps no rules)
 export function bossUnit(b, k = 1, extraPct = 0, g2 = boss2Default()) { // set 107: extraPct = stage bossExtraPct (3rd+ boss)
   const si = spotInfo(b.spot) || { bits: '111111', move: false };
   const at = bossAt(b, k, extraPct, g2), ma = bossMults(b, k, extraPct, g2).atk;
@@ -26,7 +26,7 @@ export function bossUnit(b, k = 1, extraPct = 0, g2 = boss2Default()) { // set 1
     // boss extras read by battle.js
     boss: true, bars, barHp: Math.max(1, Math.floor(at.hp / bars)),
     slots: slots.length ? slots : [0], move: si.move, moveSec: Math.max(1, Math.floor(b.moveSec) || 8),
-    phases: (b.v2 ? bossV2Phases(b, k, g2) : (b.phases || [])).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '', stats: phaseUnitStats(p.stats, ma) })),
+    phases: (b.dummy ? b.phases || [] : bossV2Phases(b, k, g2)).map(p => ({ at: p.at, rules: (p.rules || []).map(r => ({ ...r })), fx: (p.fx || []).map(f => ({ ...f })), spot: p.spot || '', stats: phaseUnitStats(p.stats, ma) })),
   };
 }
 

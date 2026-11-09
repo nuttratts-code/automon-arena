@@ -11,14 +11,14 @@ const R = { ...NT, stormStartMs: 10000000, hardStopMs: 30000 };
 const G2 = { ...boss2Base(), g: 2, a: 1, weakPct: 50, weakCap: 80, resistPct: 40, heatRepeatPct: 50 };
 const v2boss = (o = {}) => ({
   id: 'B1', name: 'บอสทดสอบ', tribe: 'เหล็กกล้า', hp: 10000, atk: 0, cdMs: NEVER, multi: 1,
-  bars: 5, spot: 'all', moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, mult10: 3, endlessPct: 10, on: true,
+  bars: 5, spot: 'all', moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, on: true,
   phases: [{ at: 0, rules: [], fx: [], spot: '', stats: {} }], ...o,
 });
 const v2ph = (at, rules = []) => ({ at, rules, fx: [], spot: '', stats: {} });
 const v2rl = (id, v, v2, v3) => ({ id, v, ...(v2 != null ? { v2 } : {}), ...(v3 != null ? { v3 } : {}) });
 function v2fight(chars, A, b, opts = {}) {
   const team = buildTeam(A, makeCharMap(chars));
-  return simulate(team, [bossUnit(b, opts.k || 1, 0, G2)], { rules: R, ...opts });
+  return simulate(team, [bossUnit({ resistPct: 0, ...b }, opts.k || 1, 0, G2)], { rules: R, ...opts }); // set 170: fights neutral unless the test sets resistPct
 }
 const v2bossUid = r => r.events[0].units.find(x => x.side === 1).uid;
 const hits = (r, f = () => true) => ev(r, 'dmg', e => e.to === v2bossUid(r) && e.why === 'hit' && f(e));
@@ -26,49 +26,50 @@ const hits = (r, f = () => true) => ev(r, 'dmg', e => e.to === v2bossUid(r) && e
 const v2hitter = (id, atk, o = {}) => mk(id, { atk: L3(atk), cdMs: 1000, hp: L3(100000), ...o });
 
 export const TESTS_BOSS_V2 = [
-  ['บอส v2: สูตรกลาง C2 (HP × g^(k−1) · ตี × (1 + a(k−1))) · บอสเก่ายังใช้ mult10/endlessPct', () => {
-    const b2 = v2boss({ v2: true, atk: 10 }), old = v2boss({ atk: 10 });
+  ['บอส v2: สูตรกลาง C2 (HP × g^(k−1) · ตี × (1 + a(k−1))) · ชุด 170 ทุกบอส (ค่า v2/mult10/endlessPct เก่าไม่มีผล) · หุ่นเป้าไม่โต', () => {
+    const b2 = v2boss({ atk: 10 }), old = v2boss({ atk: 10, v2: false, mult10: 3, endlessPct: 10 });
     eq(bossMults(b2, 1, 0, G2), { hp: 1, atk: 1 }, 'k1');
     eq(bossMults(b2, 3, 0, G2), { hp: 4, atk: 3 }, 'k3: 2² · 1+2');
     eq(bossAt(b2, 3, 0, G2).hp, 40000, 'HP k3');
     eq(bossAt(b2, 3, 0, G2).atk, 30, 'atk k3');
     eq(+bossMults(b2, 3, 10, G2).hp.toFixed(4), 4.4, 'bossExtraPct ยังซ้อน');
-    eq(bossAt(old, 2, 0, G2).hp, 30000, 'บอสเก่า k2 = mult10');
-    eq(bossAt(old, 3).hp, 33000, 'บอสเก่า k3 = mult10 × (1+endless)');
+    eq(bossAt(old, 3, 0, G2).hp, 40000, 'v2:false / mult10 / endlessPct เก่า ไม่มีผล');
+    eq(bossMults({ ...b2, dummy: true }, 5, 20, G2), { hp: 1, atk: 1 }, 'หุ่นเป้าไม่โต');
     eq(bossUnit(b2, 2, 0, G2).maxHp, 20000, 'bossUnit ใช้สูตรใหม่');
   }],
-  ['บอส v2: เฟสเพิ่มสกิล (สกิลเฟสก่อนยังอยู่) · บอสเก่า = เฟสใหม่แทนเฟสเก่า', () => {
+  ['บอส v2: เฟสเพิ่มสกิล (สกิลเฟสก่อนยังอยู่) · ชุด 170 ทุกบอส · หุ่นเป้าไม่มีกฎ', () => {
     const phases = [v2ph(0, [v2rl('plating', 5, 10, 4)]), v2ph(1, [v2rl('reflect', 10)]), v2ph(2, [v2rl('aoe', 30)])];
-    const p = bossV2Phases(v2boss({ v2: true, phases, resistPct: 0 }), 1, G2).map(x => x.rules.map(r => r.id));
+    const p = bossV2Phases(v2boss({ phases, resistPct: 0 }), 1, G2).map(x => x.rules.map(r => r.id));
     eq(p, [['plating'], ['plating', 'reflect'], ['plating', 'reflect', 'aoe']], 'กฎสะสม');
-    eq(bossUnit(v2boss({ phases }), 1, 0, G2).phases.map(x => x.rules.map(r => r.id)), [['plating'], ['reflect'], ['aoe']], 'บอสเก่าไม่สะสม');
+    eq(bossUnit(v2boss({ phases, resistPct: 0, v2: false }), 1, 0, G2).phases.map(x => x.rules.map(r => r.id)), p, 'v2:false เก่าก็สะสม');
+    eq(bossUnit(v2boss({ phases: [v2ph(0)], dummy: true }), 3, 0, G2).phases[0].rules, [], 'หุ่นเป้า: ไม่มีต้านเผ่า/Heat');
   }],
   ['บอส v2: แพ้เผ่า = ค่ากลาง (ไม่เกินเพดาน) · ต้านเผ่าตัวเอง = ค่ากลาง · ตั้งรายบอสได้', () => {
     const rs = b => bossV2Phases(b, 1, G2)[0].rules;
-    eq(rs(v2boss({ v2: true, weak: 'สายฟ้า' })), [{ id: 'tribeWeak', v: 50, tribe: 'สายฟ้า' }, { id: 'tribeResist', v: 40, tribe: 'เหล็กกล้า' }], 'ค่ากลาง');
-    eq(rs(v2boss({ v2: true, weak: 'สายฟ้า', weakPct: 200, resistPct: 10 }))[0].v, 80, 'แพ้เผ่าติดเพดาน');
-    eq(rs(v2boss({ v2: true, weak: 'สายฟ้า', weakPct: 200, resistPct: 10 }))[1].v, 10, 'ต้านเผ่ารายบอส');
-    eq(rs(v2boss({ v2: true, resistPct: 0 })), [], 'ไม่มีเผ่าแพ้ + ต้าน 0 = ไม่มีกฎ');
+    eq(rs(v2boss({ weak: 'สายฟ้า' })), [{ id: 'tribeWeak', v: 50, tribe: 'สายฟ้า' }, { id: 'tribeResist', v: 40, tribe: 'เหล็กกล้า' }], 'ค่ากลาง');
+    eq(rs(v2boss({ weak: 'สายฟ้า', weakPct: 200, resistPct: 10 }))[0].v, 80, 'แพ้เผ่าติดเพดาน');
+    eq(rs(v2boss({ weak: 'สายฟ้า', weakPct: 200, resistPct: 10 }))[1].v, 10, 'ต้านเผ่ารายบอส');
+    eq(rs(v2boss({ resistPct: 0 })), [], 'ไม่มีเผ่าแพ้ + ต้าน 0 = ไม่มีกฎ');
   }],
   ['บอส v2: Heat — k3 +1 · k4 +2 · ข้ามกฎที่บอสมีแล้ว · เกินรายการ วนข้อ 1–2 แรงขึ้น', () => {
-    const b = v2boss({ v2: true, phases: [v2ph(0, [v2rl('fastAtk', 10)])] });
+    const b = v2boss({ phases: [v2ph(0, [v2rl('fastAtk', 10)])] });
     eq(heatRules(b, 1, G2), [], 'k1 ไม่มี');
     eq(heatRules(b, 2, G2), [], 'k2 ไม่มี');
     eq(heatRules(b, 3, G2).map(r => r.id), ['atkUp'], 'k3 +1');
     eq(heatRules(b, 4, G2).map(r => r.id), ['atkUp', 'healCut'], 'k4 ข้าม fastAtk ที่มีอยู่แล้ว');
     const g = { ...G2, heat: [bossRule('atkUp', 20), bossRule('regen', 2)] };
-    const h = heatRules(v2boss({ v2: true }), 5, g); // 3 steps, 2 in list → atkUp again × 1.5
+    const h = heatRules(v2boss(), 5, g); // 3 steps, 2 in list → atkUp again × 1.5
     eq(h.map(r => [r.id, r.v]), [['atkUp', 30], ['regen', 2]], 'วนข้อ 1 แรงขึ้น 50%');
     ok(bossV2Phases(b, 4, G2).every(p => p.rules.some(r => r.id === 'healCut')), 'Heat อยู่ทุกเฟส');
   }],
-  ['บอส v2: cleanStage — boss2 + v2/weak/weakPct/resistPct/v3 ผ่านตัวกรอง · ค่าผิด = ค่าเดิม', () => {
+  ['บอส v2: cleanStage — boss2 + weak/weakPct/resistPct/v3 ผ่านตัวกรอง · v2/mult10 เก่าถูกทิ้ง (ชุด 170) · ค่าผิด = ค่าเดิม', () => {
     const base = stageBase();
     const st = cleanStage({ boss2: { g: 3, a: 99, heat: [{ id: 'aoe', v: 20 }, { id: 'nope' }, { id: 'tribeWeak', v: 5 }, { id: 'aoe', v: 9 }] },
       bosses: [{ id: 'B1', v2: true, weak: 'สายฟ้า', weakPct: 70, resistPct: 500, phases: [{ at: 0, rules: [{ id: 'plating', v: 3, v2: 15, v3: 999 }] }] }] });
     eq(st.boss2.g, 3, 'g ผ่าน'); eq(st.boss2.a, stageDefaults().boss2.a, 'a เกินช่วง = ค่าเดิม (ค่าเกม)');
     eq(st.boss2.heat, [{ id: 'aoe', v: 20 }], 'Heat กรองกฎที่ไม่มี/ต้องเลือกเผ่า/ซ้ำ');
     const b = st.bosses.find(x => x.id === 'B1');
-    eq([b.v2, b.weak, b.weakPct, b.resistPct], [true, 'สายฟ้า', 70, stageDefaults().bosses.find(x => x.id === 'B1').resistPct], 'ค่ารายบอส (ต้านเกินช่วง = ค่าเดิม)');
+    eq([b.v2, b.mult10, b.weak, b.weakPct, b.resistPct], [undefined, undefined, 'สายฟ้า', 70, stageDefaults().bosses.find(x => x.id === 'B1').resistPct], 'ค่ารายบอส (ต้านเกินช่วง = ค่าเดิม)');
     eq(b.phases[0].rules[0], { id: 'plating', v: 3, v2: 15, v3: 4 }, 'v3 เกินช่วง = ค่าเริ่ม');
     eq(cleanStage({ bosses: [{ id: 'B9', tribe: 'เหล็กกล้า', weak: 'เหล็กกล้า' }] }).bosses[0].weak, undefined, 'แพ้เผ่าตัวเองไม่ได้');
   }],

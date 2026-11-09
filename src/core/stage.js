@@ -400,11 +400,11 @@ export function spotShort(spot) {
 }
 // kept for old callers: [id, label] of the presets + 'move'
 export const BOSS_SPOTS = [...BOSS_SPOT_PRESETS.map(p => [p[0], spotLabel(p[0])]), ['move', spotLabel('move')]];
-// Boss stats = at its first appearance (stage 5) · stage 10 = × mult10 · after stage 10 each boss + endlessPct%
+// Boss stats = at its first appearance (boss k = 1) · later bosses grow by the shared g/a curve (BOSS2_SETTINGS, set 168 C-17.6 · set 170: the only system)
 // bars = HP colour bars (user 29 Oct): each emptied bar counts as "enemy down" for skills · bar size = HP ÷ bars (keeps the count when the boss scales).
 // Set 71: armorHit / healHit = เกราะ/ฮิต · ฟื้น/ฮิต of the boss's normal hit (same as a unit's; heal never refills past the bar it is in)
 export const BOSS_STATS = [['bars', 'จำนวนแถบสีเลือด', 1, 20], ['moveSec', 'ย้ายที่ทุก (วิ) (เฉพาะแบบย้ายที่)', 1, 60], ['hp', 'HP', 1, 1e6], ['atk', 'พลังโจมตี', 0, 1e5], ['cdMs', 'คูลดาวน์ (มิลลิวินาที)', 300, 60000], ['multi', 'มัลติฮิต', 1, 10], ['armor', 'เกราะเริ่ม', 0, 1e6], ['burn', 'ไฟ/ฮิต', 0, 1e4], ['shock', 'ช็อต/ฮิต', 0, 1e4], ['armorHit', 'เกราะ/ฮิต', 0, 1e4], ['healHit', 'ฟื้น/ฮิต', 0, 1e4]];
-const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], mult10: 2, endlessPct: 15, on: true });
+const stageBoss = (id, name, tribe, hp, atk, cdMs, rule, ruleV, spot = 'all') => ({ id, name, tribe, hp, atk, cdMs, multi: 1, bars: 5, spot, moveSec: 8, armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [bossPhase(0, rule === 'none' ? [] : [bossRule(rule, ruleV)])], on: true });
 // Sized from the stage baseline (median player at stage 5: ~7 dmg/s, team HP ~756) → boss lasts ~60 s, kills the team in ~60 s.
 export const STAGE_BOSSES = [
   stageBoss('B1', 'ผู้เฝ้าประตู', 'เหล็กกล้า', 450, 25, 2000, 'armorCut', 50, 'all'),
@@ -442,7 +442,7 @@ export const STAGE_SETTINGS = [
   ['foeFloorMin', 'ศัตรู: พลังขั้นต่ำต่ำสุดตอนแพ้ติดกัน', 40, 0, 200, '%'],
   // set 119: extra matches (after winsToFinish wins → เล่นต่อ) = the same real team + foeExtraPct % hp/atk (flat)
   ['foeExtraPct', 'แมตช์พิเศษ (หลังชนะครบ): ทีมศัตรูแรงขึ้น', 20, 0, 300, '%'],
-  // boss (set 107, user D3 · set 119: extra matches only): a boss met in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of its own growth (endlessPct)
+  // boss (set 107, user D3 · set 119: extra matches only): a boss met in extra matches (3rd+) is bossExtraPct % stronger per boss, on top of the shared g/a growth
   ['bossExtraPct', 'บอสในแมตช์พิเศษ (ตัวที่ 3 ขึ้นไป) แรงขึ้นอีกครั้งละ', 20, 0, 300, '%'],
   // set 119 (user): second chance — when hearts would hit 0 (once per run): +1 heart and pick 1 of offScL legend runes (no reroll)
   ['offScL', 'โอกาสสุดท้าย (หัวใจหมดครั้งแรก): ให้เลือกรูนตำนาน', 3, 1, 5, 'อัน'],
@@ -451,7 +451,7 @@ export const STAGE_SETTINGS = [
   ['lastStage', 'รอบสูงสุดต่อ run (รอบสุดท้าย = หุ่นเป้า · ถึงได้ในแมตช์พิเศษ)', 20, 10, 200, 'รอบ'], ['growFrom', 'ศัตรูเริ่มแรงขึ้นตั้งแต่ด่าน', 20, 2, 200, 'ด่าน'], ['growPct', 'ศัตรูแรงขึ้นต่อด่าน (ทบต้น)', 8, 0, 100, '%'],
 ];
 // ---------- Boss system v2 (set 168, C-17.6 · user A3 B2 C2 D1 E1 F1 G1 H1 · plan claude/plan-set168.md) ----------
-// Only bosses with v2: true use these (user B1, set 168 cont.): old bosses keep mult10/endlessPct until the user imports v2 bosses (HARD RULE 6).
+// Set 170 (user A1): every boss uses these — the old per-boss mult10/endlessPct and the v2 switch are gone (saved v2/mult10/endlessPct keys are ignored).
 // Global settings [key, label, default, min, max, unit] · all ค่าเสนอ (user C1: g/a start near today's 2nd-boss multiplier ≈ 2.4–2.7)
 export const BOSS2_SETTINGS = [
   ['g', 'HP บอสคูณต่อบอสถัดไป (g · HP = ฐาน × g^(k−1))', 2.5, 1, 10, '×'],
@@ -504,7 +504,7 @@ export function stageBase() {
     custom: [],
     bosses: STAGE_BOSSES.map(b => JSON.parse(JSON.stringify(b))),
     settings: Object.fromEntries(STAGE_SETTINGS.map(([k, , v]) => [k, v])),
-    boss2: boss2Base(), // set 168: boss system v2 globals (only v2 bosses read them)
+    boss2: boss2Base(), // set 168: boss system v2 globals (every boss, set 170)
   };
 }
 
@@ -531,11 +531,8 @@ function cleanStageOn(o, out) {
       if (validSpot(x.spot)) b.spot = x.spot;
       for (const [k, , lo, hi] of BOSS_STATS) if (num(x[k], lo, hi) && (!['bars', 'moveSec', 'multi'].includes(k) || Number.isInteger(x[k]))) b[k] = x[k];
       b.phases = cleanPhases(x, b, num, isObj);
-      if (num(x.mult10, 0.1, 20)) b.mult10 = x.mult10;
-      if (num(x.endlessPct, 0, 500)) b.endlessPct = x.endlessPct;
       if (typeof x.on === 'boolean') b.on = x.on;
       // set 168 v2: weak tribe (≠ own tribe) + optional per-boss weak/resist % (absent = boss2 default)
-      if (typeof x.v2 === 'boolean') b.v2 = x.v2;
       if (TRIBES.includes(x.weak) && x.weak !== b.tribe) b.weak = x.weak; else if (b.weak === b.tribe) delete b.weak;
       for (const [k, hi] of [['weakPct', 300], ['resistPct', 100]]) { if (num(x[k], 0, hi)) b[k] = x[k]; else if (x[k] === null) delete b[k]; }
       list.push(b);
@@ -580,15 +577,14 @@ function cleanPhases(x, b, num, isObj) {
 
 // Boss stats at a stage (k = 1 first boss, 2 second, 3+ endless) — for display now, battle later.
 // Set 168 (C-17.6 C2): a v2 boss grows by the shared curve: HP × g^(k−1) · atk × (1 + a(k−1)) · bossExtraPct still stacks (3rd+ boss in extra matches)
-// → { hp, atk } multipliers · old bosses: both = bossMult
+// → { hp, atk } multipliers
 let BOSS2_DEF = null;
 export const boss2Default = () => BOSS2_DEF || (BOSS2_DEF = stageDefaults().boss2);
 export function bossMults(b, k, extraPct = 0, g2 = boss2Default()) {
-  if (!b || !b.v2) { const m = bossMult(b, k, extraPct); return { hp: m, atk: m }; }
+  if (!b || b.dummy) return { hp: 1, atk: 1 }; // set 170: training dummy (endless HP, no attack) does not grow
   const n = Math.max(0, k - 1), x = (1 + extraPct / 100) ** Math.max(0, k - 2);
   return { hp: g2.g ** n * x, atk: (1 + g2.a * n) * x };
 }
-export const bossMult = (b, k, extraPct = 0) => (k <= 1 ? 1 : b.mult10 * (1 + b.endlessPct / 100) ** Math.max(0, k - 2) * (1 + extraPct / 100) ** Math.max(0, k - 2)); // set 107: extraPct = stage bossExtraPct (3rd+ boss = extra matches)
 export function bossAt(b, k, extraPct = 0, g2) {
   const { hp: m, atk: ma } = bossMults(b, k, extraPct, g2);
   return { hp: Math.round(b.hp * m), barHp: Math.round(b.hp * m / b.bars), atk: Math.round(b.atk * ma), armor: Math.round(b.armor * m), dps: b.atk * ma * b.multi / (b.cdMs / 1000) };

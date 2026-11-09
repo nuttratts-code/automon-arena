@@ -55,7 +55,7 @@ export const TESTS_VALIDATE = [
     eq(bossPhaseWarn({ spot: 'm000011' }, { rules: [{ id: 'weakSpot' }], spot: '' }), [], 'R30 ok on custom move');
     eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'execute' }, { id: 'aoe' }], spot: '' }).length, 1, 'warn R7+R4'); eq(bossPhaseWarn({ spot: 'one' }, { rules: [{ id: 'frontOnly' }], spot: 'all' }), [], 'R26 ok on all');
     eq(bossAt(STAGE_BOSSES[0], 1).barHp, Math.round(STAGE_BOSSES[0].hp / 5), 'bar size');
-    const b = STAGE_BOSSES[0]; eq(bossAt(b, 1).hp, b.hp, 'first boss'); eq(bossAt(b, 2).hp, Math.round(b.hp * b.mult10), 'stage 10'); eq(bossAt(b, 3).hp, Math.round(b.hp * b.mult10 * (1 + b.endlessPct / 100)), 'endless');
+    const b = STAGE_BOSSES[0]; eq(bossAt(b, 1).hp, b.hp, 'first boss'); const g2 = stageDefaults().boss2; eq(bossAt(b, 2, 0, g2).hp, Math.round(b.hp * g2.g), 'boss 2 = × g'); eq(bossAt(b, 3, 0, g2).hp, Math.round(b.hp * g2.g ** 2), 'boss 3 = × g²');
   }],
   ['รูน v2 (ชุด 53): รูนค่าพลัง/รูนที่เพิ่มเอง/ความหายาก ถูกตรวจ', () => {
     const r = cleanStage({ runes: { T5: { dmgPct: 25 }, U6: { mode: 'pct', v: 2 }, S1: { eff: 'eCd', scope: 'team', v: 9e9 }, X10: { eff: 'atk', scope: 'enemy' }, D2: { rarity: 'legend', max: 2 }, F1: { rarity: 'epic', pct: 50 } } });

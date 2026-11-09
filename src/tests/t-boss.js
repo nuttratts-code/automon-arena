@@ -2,6 +2,7 @@
 // ตัวช่วยอยู่ helpers.js · ค่าทุกตัวในเทสต์ตั้งเองในไฟล์นี้ ไม่ผูกกับค่าที่ผู้ใช้ปรับในห้องบาลานซ์
 import { simulate } from '../core/battle.js';
 import { bossUnit } from '../core/boss.js';
+import { boss2Default } from '../core/stage.js';
 import { equipRunes } from '../core/runes.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { NEVER, mk, L3, dummy, u, NT, ev, eq, ok } from './helpers.js';
@@ -13,7 +14,7 @@ const BR_RULES = { ...NT, stormStartMs: 10000000, hardStopMs: 60000 };
 // บอสสำหรับเทสต์: HP 1000 แถบ 5 (แถบละ 200) ยืนทุกช่อง ไม่มีกฎ
 const boss = (o = {}) => ({
   id: 'B1', name: 'บอสทดสอบ', tribe: 'เหล็กกล้า', hp: 1000, atk: 10, cdMs: 1000, multi: 1,
-  bars: 5, spot: 'all', moveSec: 8, armor: 0, burn: 0, shock: 0, mult10: 2, endlessPct: 15, on: true,
+  bars: 5, spot: 'all', moveSec: 8, armor: 0, burn: 0, shock: 0, resistPct: 0, on: true,
   phases: [{ at: 0, rules: [], fx: [], spot: '' }], ...o,
 });
 const ph = (at, rules = [], fx = [], spot = '') => ({ at, rules, fx, spot });
@@ -53,12 +54,12 @@ export const TESTS_BOSS = [
     eq(ev(r, 'bar').length, 1, 'แถบหมด 1 แถบพอดี');
     eq(ev(r, 'proc', e => e.when === 'enemyDown').length, 1, 'สกิล "ศัตรู down" ทำงาน 1 ครั้ง (แถบละครั้ง ไม่ซ้ำ)');
   }],
-  ['บอส: เปลี่ยนเฟสเมื่อแถบหมดตามที่ตั้ง · กฎเฟสใหม่แทนที่กฎเก่า', () => {
+  ['บอส: เปลี่ยนเฟสเมื่อแถบหมดตามที่ตั้ง · กฎเฟสใหม่เพิ่มต่อจากกฎเก่า (C-17.6 · ชุด 170 ทุกบอส)', () => {
     const b = boss({ phases: [ph(0, [rl('armorCut', 50)]), ph(1, [rl('noArmor')])] });
     const r = bossFight([hitter('H', 250)], [u('H', 0, 0)], b);
     const p = ev(r, 'phase');
     eq(p.length >= 2, true, 'มีเหตุการณ์เปลี่ยนเฟส');
-    eq(p[p.length - 1].rules, ['noArmor'], 'กฎของเฟสล่าสุด');
+    eq(p[p.length - 1].rules, ['armorCut', 'noArmor'], 'กฎของเฟสล่าสุด = กฎเดิม + กฎใหม่');
   }],
   ['บอส R22: ตี 1 ครั้งเข้าได้ไม่เกิน % ของ 1 แถบ · R23: ฮิตต่ำกว่าเกณฑ์ไม่เข้า', () => {
     const cap = bossFight([hitter('H', 250)], [u('H', 0, 0)], boss({ phases: [ph(0, [rl('hitCap', 10)])] }));
@@ -305,7 +306,7 @@ export const TESTS_BOSS = [
     ok(after.length >= 4 && after.every(e => e.amount === 30), 'เฟส 3 ยังตี 30 (ใช้ค่าเฟส 2)');
     const times = [...new Set(after.map(e => e.t))]; ok(times.length >= 2 && times[1] - times[0] === 500, 'เฟส 3 คูลดาวน์ 0.5 วิ');
     eq(after.filter(e => e.t === times[0]).length, 2, 'มัลติฮิต 2 ยังอยู่');
-    const k2 = bossUnit(b, 2).phases[1].stats; eq(k2.atk, 60, 'ด่าน 10: พลังโจมตีเฟสคูณตามด่าน (× 2)');
+    const k2 = bossUnit(b, 2).phases[1].stats; eq(k2.atk, Math.round(30 * (1 + boss2Default().a)), 'บอสตัวที่ 2: พลังโจมตีเฟสโตตามค่ากลาง (× (1 + a))');
   }],
   ['บอส: เกราะ/ฮิต + ฟื้น/ฮิต ของบอส (ชุด 71) · ฟื้นไม่เกินแถบที่อยู่', () => {
     const tank = mk('T', { atk: L3(0), cdMs: NEVER, hp: L3(5000) });

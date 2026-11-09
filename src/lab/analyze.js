@@ -200,7 +200,7 @@ const bossBarsGone = (r, b) => { const u = r.units.find(x => x.side === 1); if (
 // stage = cleanStage() object · bossIds = บอสที่วัด · k = บอสครั้งที่ · level = 1|2|3|'mix'
 // set 168 step 8 (user D1): neutral = also fight the same team vs the same boss without weak/resist (paired) → per-tribe baseline · ~2× time
 // g2 = stage.boss2 (the page's edited v2 globals: curve, weak/resist defaults, Heat)
-export const neutralOf = b => (b.v2 ? { ...b, weakPct: 0, resistPct: 0 } : { ...b, phases: (b.phases || []).map(p => ({ ...p, rules: (p.rules || []).filter(r => r.id !== 'tribeWeak' && r.id !== 'tribeResist') })) });
+export const neutralOf = b => ({ ...b, weakPct: 0, resistPct: 0 }); // set 170: every boss is v2 (weak/resist live in weakPct/resistPct)
 export async function bossRanking(chars, rules, stage, { bossIds, k = 1, level = 1, n = BOSS_MEASURE.n, seed = BOSS_MEASURE.seed, runeMode = 'none', runeCount = 1, pickIds = [], neutral = false, onProgress } = {}) {
   const map = makeCharMap(chars), pool = battleRunes(stage), g2 = stage.boss2 || undefined;
   const bosses = (bossIds && bossIds.length ? bossIds.map(id => stage.bosses.find(b => b.id === id)) : stage.bosses.filter(b => b.on)).filter(Boolean);
@@ -331,7 +331,7 @@ function runeStatsOut(RS, n, normalGames) {
 // goes on with extra matches up to lastStage · seed formula of runerun (8800). The training dummy is not counted as a boss.
 // opp 'teams' = the game's prepared bot teams (only when they were built from these exact values, else falls back to live)
 // opp 'live'  = a second bot plays its own run alongside every match (new team every match, no fixed pool)
-// dyn = [step, cap, start] (runerun --dyn) · keepTeams = collect boss-fight teams per k (runerun --write)
+// dyn = [step, cap, start] (runerun --dyn) · keepTeams = collect boss-fight teams per k (bossrun · bossref)
 export const RUN_SIM = { seed: 8800, top: 10 };
 export const botTeamsFit = (chars, rules) => !!BOT_TEAMS && BOT_TEAMS.hash === dataHash(chars, rules);
 const mainTribeOf = (team, map, rules) => {

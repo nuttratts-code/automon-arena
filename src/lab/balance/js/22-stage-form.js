@@ -363,13 +363,6 @@ function bossPhaseForms(bs, base, grp) {
     });
     if (!p.rules.length) kids.push(el('p', 'fld full mute', 'ยังไม่มีกฎในเฟสนี้'));
     kids.push(fld('', bossRuleAdd(`${id}-add`, p.rules.map(r => r.id), v => { p.rules.push(bossRule(v)); stageChanged(); renderStage(); }), 'full'));
-    if (i && !bs.v2) { // เฟสใหม่ใช้กฎของตัวเองแทนกฎเดิม (บอส v2: กฎเฟสก่อนยังอยู่ ไม่ต้องคัดลอก) → ปุ่มคัดลอกกฎเฟสก่อนมาก่อน แล้วค่อยแก้/เพิ่ม
-      const prev = bs.phases[i - 1].rules.filter(r => !p.rules.some(z => z.id === r.id));
-      const cp = el('button', 'rule-copy', `คัดลอกกฎจากเฟส ${i}${prev.length ? ` (${prev.length} ข้อ)` : ''}`); cp.type = 'button'; cp.id = `${id}-copy`; cp.disabled = !prev.length;
-      cp.title = 'กฎของเฟสใหม่แทนกฎเดิมทั้งหมด · อยากให้กฎเดิมยังอยู่ ให้คัดลอกมา';
-      cp.addEventListener('click', () => { for (const r of prev) p.rules.push({ ...r }); stageChanged(); renderStage(); });
-      kids.push(cp);
-    }
     if (i) BOSS_PHASE_FX.forEach((f, j) => {
       const on = p.fx.find(z => z.id === f[0]), c = document.createElement('input'); c.type = 'checkbox'; c.id = `${id}-fx-${f[0]}`; c.checked = !!on;
       c.addEventListener('change', () => { if (c.checked) p.fx.push({ id: f[0], v: f[2] }); else p.fx = p.fx.filter(z => z.id !== f[0]); stageChanged(); renderStage(); });
@@ -388,7 +381,7 @@ function bossPhaseForms(bs, base, grp) {
     add.addEventListener('click', () => { bs.phases.push(bossPhase(last.at + 1)); stageChanged(); renderStage(); });
     out.push(add);
   }
-  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', bs.v2 ? 'เฟสของบอส (v2) · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎของเฟสใหม่เพิ่มต่อจากกฎเดิม (กฎเดิมยังอยู่ · ใส่กฎเดิมซ้ำ = เปลี่ยนค่า)' : 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎใหม่แทนกฎเดิม · เพิ่มเฟสได้ถึงจำนวนแถบ'), ...out);
+  const sec = el('section', 'boss-phases', ''); sec.append(el('h4', '', 'เฟสของบอส · แถบสีเลือดหายครบ = เข้าเฟสใหม่ กฎของเฟสใหม่เพิ่มต่อจากกฎเดิม (กฎเดิมยังอยู่ · ใส่กฎเดิมซ้ำ = เปลี่ยนค่า) · เพิ่มเฟสได้ถึงจำนวนแถบ'), ...out);
   return sec;
 }
 // ---------- Set 168 step 8 (C-17.6 boss v2 · user B1 C1): global v2 settings, Heat ladder, per-boss growth table + weak/resist ----------
@@ -407,7 +400,7 @@ function stageConfirm(text, yes, onYes) {
 function renderBoss2Globals(box) {
   const g2 = stageCfg.boss2, b2 = STAGE_BASE.boss2;
   const f = document.createElement('fieldset'); f.className = 'boss2-glob'; f.id = 'stgBoss2';
-  f.append(Object.assign(document.createElement('legend'), { textContent: 'ค่ากลางบอส v2 · ใช้กับบอสทุกตัวที่เปิด "ระบบบอส v2"' }));
+  f.append(Object.assign(document.createElement('legend'), { textContent: 'ค่ากลางบอส · ใช้กับบอสทุกตัว' }));
   const g = fgrid();
   for (const [k, label, , lo, hi, unit] of BOSS2_SETTINGS) g.append(fld(`${label} (${unit})`, stageNum(`stg-b2-${k}`, g2[k], b2[k], lo, hi, v => { g2[k] = v; }, k === 'g' || k === 'a' ? 0.05 : 1)));
   const cur = el('p', 'b2-note', '');
@@ -440,12 +433,7 @@ function renderBoss2Globals(box) {
   const tools = el('div', 'row heat-tools', ''); tools.append(add, reset);
   hs.append(list, tools); f.append(hs); box.append(f);
 }
-function boss2Switch(bs) {
-  const l = el('label', 'sw', ''), c = document.createElement('input'); c.type = 'checkbox'; c.id = `stg-${bs.id}-v2`; c.checked = !!bs.v2;
-  c.addEventListener('change', () => { bs.v2 = c.checked; stageChanged(); renderStage(); });
-  l.title = 'v2 = โตตามค่ากลาง g/a + Heat · เฟสใหม่เพิ่มกฎต่อจากเดิม · แพ้/ต้านเผ่าจากค่ากลาง'; l.append(c, el('span', '', 'ระบบบอส v2')); return l;
-}
-// B1: v2 bosses have no mult10/endless — a live table of bosses 1–5 from g/a + the Heat rules they get
+// B1 (set 170: every boss): growth = shared g/a — a live table of bosses 1–5 from g/a + the Heat rules they get
 function boss2Growth(bs, grp) {
   const wrap = el('div', 'bvs-wrap fld full', '');
   stageSayEls.push([wrap, () => {
@@ -460,7 +448,7 @@ function boss2Growth(bs, grp) {
     }
     return [t];
   }]);
-  const f = grp('ความแรงตามด่าน (ค่ากลาง v2 · แก้ g/a ด้านบนสุด)', wrap); f.classList.add('b2-wide'); return f;
+  const f = grp('ความแรงตามด่าน (ค่ากลาง · แก้ g/a ด้านบนสุด)', wrap); f.classList.add('b2-wide'); return f;
 }
 // weak tribe + weak/resist % (empty = global default · weak is capped by weakCap)
 function boss2TribeGrp(bs, base, grp) {
@@ -475,12 +463,12 @@ function boss2TribeGrp(bs, base, grp) {
   };
   const cap = el('p', 'fld full b2-note', '');
   stageSayEls.push([cap, () => { const wp = Math.min(bs.weakPct ?? g2.weakPct, g2.weakCap); return bs.weak ? `ใช้จริง: ${bs.weak} ตีแรงขึ้น ${fmt(wp)}%${(bs.weakPct ?? g2.weakPct) > g2.weakCap ? ` (ติดเพดาน ${fmt(g2.weakCap)}%)` : ''} · ${bs.tribe} ตีเบาลง ${fmt(bs.resistPct ?? g2.resistPct)}%` : `ไม่มีเผ่าที่แพ้ · ${bs.tribe} ตีเบาลง ${fmt(bs.resistPct ?? g2.resistPct)}%`; }]);
-  return grp('แพ้ / ต้านเผ่า (v2 · เผ่าที่ต้าน = เผ่าของบอส)', fld('เผ่าที่บอสแพ้', weak), opt('weakPct', 'แพ้: ตีแรงขึ้น %', 300), opt('resistPct', `ต้าน (${bs.tribe}): ตีเบาลง %`, 100), cap);
+  return grp('แพ้ / ต้านเผ่า (เผ่าที่ต้าน = เผ่าของบอส)', fld('เผ่าที่บอสแพ้', weak), opt('weakPct', 'แพ้: ตีแรงขึ้น %', 300), opt('resistPct', `ต้าน (${bs.tribe}): ตีเบาลง %`, 100), cap);
 }
 function renderStageBosses(box) {
   const help = document.createElement('details'); help.className = 'hint';
   const hs = document.createElement('summary'); hs.textContent = 'วิธีอ่านค่าบอส'; help.append(hs,
-    ' แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · ตารางเทียบใช้ทีมค่ากลางของผู้เล่น (ด่าน 5 ตี ~7/วิ HP ~756 · ด่าน 10 ตี ~14/วิ HP ~1140) เป็นค่าประมาณ ยังไม่นับเกราะและกฎพิเศษ · บอส v2 (ชุด 168): ไม่ใช้ตัวคูณด่าน 10 แต่โตตามค่ากลางด้านบน (HP × g ยกกำลัง, พลังตี + a ต่อตัว) และบอสตัวที่ 3 ขึ้นไปได้กฎ Heat เพิ่ม · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง)');
+    ' แถบสีเลือด: ตีหมด 1 แถบ = นับเป็นศัตรูล้ม 1 ครั้ง (สกิลแบบ "ศัตรูล้ม" ทำงาน) · ค่าบอส = ตอนเจอครั้งแรก (ด่าน 5) · ด่าน 10 = × ตัวคูณ · หลังด่าน 10 บอสแต่ละตัวแรงขึ้นอีก % · ตารางเทียบใช้ทีมค่ากลางของผู้เล่น (ด่าน 5 ตี ~7/วิ HP ~756 · ด่าน 10 ตี ~14/วิ HP ~1140) เป็นค่าประมาณ ยังไม่นับเกราะและกฎพิเศษ · ความแรงบอส (ชุด 168 · ชุด 170 ใช้กับบอสทุกตัว): โตตามค่ากลางด้านบน (HP × g ยกกำลัง, พลังตี + a ต่อตัว) และบอสตัวที่ 3 ขึ้นไปได้กฎ Heat เพิ่ม · สกิลพิเศษของบอส ส่งเป็นไอเดียด้านล่างก่อน (ขั้นที่ 2 Claude ทำให้ใช้ได้จริง)');
   box.append(help);
   renderBoss2Globals(box);
   stageCfg.bosses.forEach((bs, idx) => {
@@ -505,9 +493,9 @@ function renderStageBosses(box) {
       const cdF = fld('คูลดาวน์ (วิ)', stageNum(`stg-${bs.id}-cdMs`, bs.cdMs / 1000, base.cdMs / 1000, 0.3, 60, v => { bs.cdMs = Math.round(v * 10) * 100; }, 0.1));
       body.append(
         grp('ตัวบอส', fld('ชื่อ', nm, 'wide'), fld('เผ่า', selectInput(`stg-${bs.id}-tribe`, TRIBES.map(t => [t, t]), bs.tribe, v => { bs.tribe = v; stageChanged(); renderStage(); })),
-          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6), fld('ระบบบอส', boss2Switch(bs), 'wide')),
+          n('bars', 'แถบสีเลือด', 1, 20, v => { bs.bars = Math.round(v); bs.phases = bs.phases.filter((p, i) => !i || p.at < bs.bars); renderStage(); }), n('hp', 'HP รวม', 1, 1e6), n('armor', 'เกราะเริ่ม', 0, 1e6)),
         grp('การโจมตี', n('atk', 'พลังโจมตี', 0, 1e5), cdF, n('multi', 'มัลติฮิต', 1, 10, v => { bs.multi = Math.round(v); }), n('burn', 'ไฟ/ฮิต', 0, 1e4), n('shock', 'ช็อต/ฮิต', 0, 1e4), n('armorHit', 'เกราะ/ฮิต', 0, 1e4), n('healHit', 'ฟื้น/ฮิต (ไม่เกินแถบที่อยู่)', 0, 1e4)),
-        ...(bs.v2 ? [boss2Growth(bs, grp), boss2TribeGrp(bs, base, grp)] : [grp('ความแรงตามด่าน', n('mult10', 'ด่าน 10 ×', 0.1, 20, null, 0.1), n('endlessPct', 'หลังด่าน 10 +% ต่อตัว', 0, 500))]));
+        boss2Growth(bs, grp), boss2TribeGrp(bs, base, grp));
       const spotG = grp('ที่ยืน (กดช่องเพื่อเลือก/เอาออก)', spotPicker(`stg-${bs.id}-spot`, bs.spot, v => { bs.spot = v; }),
         ...((spotInfo(bs.spot) || {}).move ? [n('moveSec', 'ย้ายที่ทุก (วิ)', 1, 60, v => { bs.moveSec = Math.round(v); })] : []));
       spotG.classList.add('boss-spot');

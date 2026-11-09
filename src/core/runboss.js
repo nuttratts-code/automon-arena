@@ -26,7 +26,7 @@ export function runBossAt(st, stage = RUN_STAGE) {
 // (player side wins) → total damage dealt is the run's score (leaderboard later, MVP2)
 export const DUMMY_ID = 'DUMMY';
 export const DUMMY_BOSS = Object.freeze({ id: DUMMY_ID, name: 'หุ่นเป้า', tribe: 'เหล็กกล้า', hp: 1e9, atk: 0, cdMs: 60000, multi: 1, bars: 1, spot: 'all', moveSec: 8,
-  armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [{ at: 0, rules: [], fx: [], spot: '', stats: {} }], mult10: 1, endlessPct: 0, on: true, dummy: true });
+  armor: 0, burn: 0, shock: 0, armorHit: 0, healHit: 0, phases: [{ at: 0, rules: [], fx: [], spot: '', stats: {} }], on: true, dummy: true });
 export const isDummy = b => !!b && b.id === DUMMY_ID;
 // simulate() options for a boss fight: the dummy stops at dummySec (player wins)
 export const runBossOpts = (b, stage = RUN_STAGE) => (isDummy(b) ? { stopMs: Math.max(1, stage.settings.dummySec | 0) * 1000 } : {});
