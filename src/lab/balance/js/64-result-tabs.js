@@ -8,6 +8,7 @@ function secShow(block, key) {
   if (!secs.some(x => x.dataset.sec === key)) key = secs[0] && secs[0].dataset.sec;
   for (const x of secs) x.hidden = x.dataset.sec !== key;
   for (const b of box.querySelectorAll(':scope > .rtabs button')) b.setAttribute('aria-selected', String(b.dataset.sec === key));
+  { const bar = box.querySelector(':scope > .rtabs'), t = bar && bar.querySelector(`button[data-sec="${key}"]`); if (t && bar.scrollWidth > bar.clientWidth) bar.scrollLeft += t.getBoundingClientRect().left - bar.getBoundingClientRect().left - (bar.clientWidth - t.offsetWidth) / 2; } // set 161: keep the chosen sub-tab in view on phones
   try { localStorage.setItem('automon-balance-rsec-' + block, key); } catch (e) {}
 }
 function secBadge(block, key, text) {
@@ -45,3 +46,12 @@ for (const b of $('rankShow').children) b.addEventListener('click', () => setRan
   cardJump(c[0], 'anaBot', 'chars', () => setRankShow(true)); cardJump(c[1], 'anaBot', 'chars', () => setRankShow(true));
   cardJump(c[2], 'anaBot', 'tribes'); cardJump(c[3], 'anaBot', 'mx');
   for (const x of $('bossCards').children) cardJump(x, 'anaBoss', 'boss'); }
+// set 161: arrow keys / Home / End move between tabs of any tab bar (WAI-ARIA tabs pattern) — every tab bar on this page is built from buttons with role=tab or inside role=tablist
+document.addEventListener('keydown', ev => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
+  const cur = ev.target.closest && ev.target.closest('[role=tablist] > [role=tab]'); if (!cur) return;
+  const all = [...cur.parentElement.querySelectorAll(':scope > [role=tab]')].filter(b => !b.hidden && !b.disabled && b.offsetParent !== null);
+  const i = all.indexOf(cur); if (i < 0) return;
+  const j = ev.key === 'Home' ? 0 : ev.key === 'End' ? all.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : -1) + all.length) % all.length;
+  ev.preventDefault(); all[j].focus(); all[j].click();
+});
