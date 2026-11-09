@@ -1,4 +1,4 @@
-// Set 88: re-tune run bosses against real-run teams · node lab/bossrun.mjs [runs] [target1] [target2] [target3] [--write]
+// Set 88: re-tune run bosses against real-run teams · node lab/bossrun.mjs [runs] [target1] [target2] [target3] [--write] · [--tribes [--md file]] = report only (set 167)
 // set 91: 3rd boss (round 15, bossesPerRun 3) → target3 tunes each boss's endlessPct (k3 = mult10 × (1 + endlessPct/100)) · skipped when bossesPerRun < 3
 // set 141 (user A1): teams come from the SAME flow as runerun / Balance Room "รันจริง" (lab/analyze.js runPlayStats: pickFoe +
 //   win streak, runes on both sides, extra matches) — before set 141 it used the old no-rune simRun + pickBotTeam flow, so real
@@ -18,7 +18,7 @@ import { dataHash } from '../core/save.js';
 import { RUN_STAGE, runBossTeam } from '../core/runboss.js';
 import { makeCharMap } from '../core/team.js';
 import { runPlayStats } from './analyze.js';
-const args = process.argv.slice(2).filter(a => !a.startsWith('--')), WRITE = process.argv.includes('--write');
+const args = process.argv.slice(2).filter((a, i, l) => !a.startsWith('--') && l[i - 1] !== '--md'), WRITE = process.argv.includes('--write');
 const runs = +args[0] || 600, T1 = +(args[1] || 60), T2 = +(args[2] || 50), T3 = +(args[3] || 45), K3 = true; // set 141: bossesPerRun no longer exists (set 108 fixed boss rounds) → the old check skipped k3 since then
 const chars = buildCharacterList(), cm = makeCharMap(chars);
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
@@ -27,6 +27,28 @@ const t0 = Date.now();
 const S = await runPlayStats(chars, RULES, RUN_STAGE, { n: runs, keepTeams: true });
 const teams = S.teams;
 console.log(`teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+// set 167 (user A1): --tribes = report only, nothing is tuned or written · per boss: player win % per team tribe (tribe4, else ผสม) × k
+//   + cause check (each rule off in every phase → k1/k2 win % all / weak tribe / resisted tribe) · --md <file> also writes the tables
+if (process.argv.includes('--tribes')) {
+  const TR = ['เพลิงเผา', 'สายฟ้า', 'วายุ', 'ภูติ', 'เหล็กกล้า', 'อสูร', 'ผสม'], ALL = ['all', ...TR];
+  const fight = (b, k) => { const c = { all: [0, 0] }; for (const t of teams[k]) { const w = simulate(t.units, runBossTeam(b, k, RUN_STAGE, t.ex), { ...t.opts, rules: RULES, log: false }).winner !== 1 ? 1 : 0;
+    for (const key of ['all', t.tr || 'ผสม']) { c[key] ??= [0, 0]; c[key][0]++; c[key][1] += w; } } return c; };
+  const p = a => (a && a[0] ? (100 * a[1] / a[0]).toFixed(0) : '-');
+  let md = `teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · runs ${runs} · cell = player win % (teams)\n`;
+  for (const b of RUN_STAGE.bosses.filter(x => x.on)) {
+    const r0 = b.phases[0].rules || [], weak = r0.find(r => r.id === 'tribeWeak')?.tribe, res = r0.find(r => r.id === 'tribeResist')?.tribe;
+    md += `\n### ${b.id} ${b.name} · weak ${weak || '-'} · resist ${res || '-'}\n| k | ${ALL.join(' | ')} |\n|${'---|'.repeat(ALL.length + 1)}\n`;
+    for (const k of [1, 2, 3]) { const c = fight(b, k); md += `| ${k} | ${ALL.map(t => `${p(c[t])} (${c[t]?.[0] || 0})`).join(' | ')} |\n`; }
+    md += '\ncause (rule off → k1 all/weak/resist · k2 all/weak/resist):\n';
+    for (const id of [...new Set(b.phases.flatMap(ph => (ph.rules || []).map(r => r.id)))]) {
+      const nb = { ...b, phases: b.phases.map(ph => ({ ...ph, rules: (ph.rules || []).filter(r => r.id !== id) })) }, c1 = fight(nb, 1), c2 = fight(nb, 2);
+      md += `- ${id}: k1 ${[c1.all, c1[weak], c1[res]].map(p).join('/')} · k2 ${[c2.all, c2[weak], c2[res]].map(p).join('/')}\n`;
+    }
+  }
+  console.log(md);
+  const mi = process.argv.indexOf('--md'); if (mi > 0 && process.argv[mi + 1]) writeFileSync(process.argv[mi + 1], md);
+  process.exit(0);
+}
 const scale = (b, s) => ({ ...b, hp: Math.max(10, Math.round(b.hp * s / 10) * 10), atk: Math.max(1, Math.round(b.atk * s)),
   phases: b.phases.map(p => ({ ...p, stats: typeof p.stats?.atk === 'number' ? { ...p.stats, atk: Math.max(1, Math.round(p.stats.atk * s)) } : p.stats })) });
 const winPct = (b, k, list) => { if (!list.length) return NaN; let w = 0; for (const t of list) { const res = simulate(t.units, runBossTeam(b, k, RUN_STAGE, t.ex), { ...t.opts, rules: RULES, log: false }); w += res.winner !== 1 ? 1 : 0; } return (w / list.length) * 100; };
