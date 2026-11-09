@@ -61,6 +61,13 @@ img.px { image-rendering: pixelated; image-rendering: crisp-edges; display: bloc
 .meta .id { font: 500 .78rem var(--f-mono); color: var(--mute); }
 .meta .nm { font-family: var(--f-display); font-weight: 500; font-size: 1rem; line-height: 1.25; }
 .meta .rar { font-size: .8rem; color: var(--mute); }
+.card.boss .hero { width: 76px; height: 76px; } .card.boss .hero img { width: 72px; height: 72px; }
+.card.rune .hero img { width: 48px; height: 48px; }
+.chips { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.chips i { width: 26px; height: 26px; border: 3px solid var(--c); border-radius: 7px; background: var(--soft); display: grid; place-items: center; }
+.chips i img { width: 16px; height: 16px; }
+.runeRow { position: absolute; left: 12px; top: 12px; display: flex; gap: 6px; }
+.runeRow img { width: 32px; height: 32px; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.45); border-radius: 8px; padding: 2px; box-sizing: content-box; }
 .opts { display: flex; gap: 6px; margin-top: 6px; }
 .opts button { position: relative; width: 44px; height: 44px; padding: 0; border: 2px solid var(--line); border-radius: 9px; background: var(--soft); cursor: pointer; display: grid; place-items: center; }
 .opts button img { width: 32px; height: 32px; }
@@ -93,6 +100,8 @@ footer { margin-top: 40px; font-size: .85rem; color: var(--mute); }
   <div class="scenes" id="scenes"></div>
 
   <div id="tribes"></div>
+  <section class="tribe" style="--tc: var(--ink)"><h2><i></i>บอส</h2><p class="mute">ในเกมจะแสดงใหญ่กว่าตัวปกติ</p><div class="grid" id="bosses"></div></section>
+  <section class="tribe" style="--tc: var(--mute)"><h2><i></i>รูน</h2><p class="mute">ผูกรูปกับรหัสรูน (ไม่ใช่ชื่อ) ถ้าเปลี่ยนชื่อรูนภายหลัง รูปไม่หลุด · รูนเผ่ากับสนามเผ่าใช้รูปเดียวกันทั้งกลุ่ม ต่างกันที่กรอบสีเผ่า · คำอธิบายตัดตัวเลขออก (ตัวเลขอยู่ในห้องบาลานซ์)</p><div class="grid" id="runes"></div></section>
 
   <footer>
     <p>ที่มา: Dungeon Crawl Stone Soup tiles (github.com/crawl/tiles, ชุด Nov-2015) · สัญญาอนุญาต CC0 1.0 · ไม่ใช้ไฟล์ที่อยู่ในรายการ "ไม่ทราบสัญญาอนุญาต" ของชุดนี้</p>
@@ -108,7 +117,8 @@ try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); pick = s.pick || 
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ pick, scene: scenePick })); } catch (e) {} };
 const el = (t, cls, txt) => { const e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const px = (name, size) => { const i = el('img', 'px'); i.src = D.img[name]; i.alt = ''; i.width = size; i.height = size; return i; };
-const cur = id => D.pick[id][(pick[id] || 1) - 1];
+const OPTS = Object.assign({}, D.pick, D.runePick, D.bossPick);
+const cur = id => OPTS[id][(pick[id] || 1) - 1];
 const byId = Object.fromEntries(D.chars.map(r => [r[0], r]));
 
 function renderScenes() {
@@ -128,6 +138,7 @@ function renderScenes() {
       [[team, 'side'], [foe, 'side foe']].forEach(([ids, cls]) => { const g = el('div', cls); ids.forEach(id => { const u = el('div', 'unit'); u.append(px(cur(id), 64)); g.append(u); }); row.append(g); });
       st.append(row);
     } else if (key === 'shop') {
+      const rr = el('div', 'runeRow'); ['T1','S3','U4'].forEach(id => rr.append(px(cur(id), 32))); st.append(rr);
       const hud = el('div', 'hud'); hud.append(px('_gold', 32), el('span', null, '10'), px('heart', 32), el('span', null, '5')); st.append(hud);
       const row = el('div', 'shopRow'); ['HL-1','PL-1','SF-1','WY-1','PT-1'].forEach(id => { const u = el('div', 'unit'); u.append(px(cur(id), 64)); row.append(u); }); st.append(row);
     } else {
@@ -148,7 +159,7 @@ function renderChars() {
       const id = r[0], c = el('article', 'card'), hero = el('div', 'hero'); hero.append(px(cur(id), 64));
       const m = el('div', 'meta'); m.append(el('div', 'id', id), el('div', 'nm', r[1]), el('div', 'rar', r[4] + (r[3] ? ' · เผ่าเพิ่ม ' + r[3] : '')));
       const o = el('div', 'opts');
-      D.pick[id].forEach((n, i) => { const b = el('button'); b.type = 'button'; b.title = n; b.setAttribute('aria-label', id + ' ตัวเลือก ' + (i + 1)); b.setAttribute('aria-pressed', String((pick[id] || 1) === i + 1)); b.append(px(n, 32), el('span', null, String(i + 1))); b.onclick = () => { if (i) pick[id] = i + 1; else delete pick[id]; save(); renderChars(); renderScenes(); updateCode(); }; o.append(b); });
+      D.pick[id].forEach((n, i) => { const b = el('button'); b.type = 'button'; b.title = n; b.setAttribute('aria-label', id + ' ตัวเลือก ' + (i + 1)); b.setAttribute('aria-pressed', String((pick[id] || 1) === i + 1)); b.append(px(n, 32), el('span', null, String(i + 1))); b.onclick = () => { if (i) pick[id] = i + 1; else delete pick[id]; save(); renderAll(); }; o.append(b); });
       m.append(o); c.append(hero, m); g.append(c);
     });
     sec.append(g); box.append(sec);
@@ -156,7 +167,7 @@ function renderChars() {
 }
 
 function codeText() {
-  const ch = Object.keys(pick).filter(k => byId[k]).map(k => k + ':' + pick[k]);
+  const ch = Object.keys(pick).filter(k => OPTS[k]).map(k => k + ':' + pick[k]);
   const sc = Object.keys(scenePick).filter(k => scenePick[k]).map(k => k + ':B');
   return ch.length || sc.length ? 'ARTPICK ' + [...ch, ...sc].join(' ') : '';
 }
@@ -166,7 +177,40 @@ document.getElementById('copy').onclick = async () => {
   try { await navigator.clipboard.writeText(t); b.textContent = 'คัดลอกแล้ว'; } catch (e) { b.textContent = 'คัดลอกไม่ได้ เลือกข้อความเอง'; }
   setTimeout(() => { b.textContent = 'คัดลอก'; }, 1800);
 };
-renderScenes(); renderChars(); updateCode();
+function optButtons(id, label, size) {
+  const o = el('div', 'opts');
+  OPTS[id].forEach((n, i) => { const b = el('button'); b.type = 'button'; b.title = n.replace('r:', ''); b.setAttribute('aria-label', label + ' ตัวเลือก ' + (i + 1)); b.setAttribute('aria-pressed', String((pick[id] || 1) === i + 1)); b.append(px(n, 32), el('span', null, String(i + 1))); b.onclick = () => { if (i) pick[id] = i + 1; else delete pick[id]; save(); renderAll(); }; o.append(b); });
+  return o;
+}
+function renderBosses() {
+  const g = document.getElementById('bosses'); g.replaceChildren();
+  const tc = Object.fromEntries(TRIBES);
+  D.bosses.forEach(([id, nm, tribe]) => {
+    const c = el('article', 'card boss'); c.style.setProperty('--tc', 'var(' + (tc[tribe] || '--mute') + ')');
+    const hero = el('div', 'hero'); hero.append(px(cur(id), 72));
+    const m = el('div', 'meta'); m.append(el('div', 'id', id), el('div', 'nm', nm), el('div', 'rar', 'เผ่า' + tribe), optButtons(id, id, 32));
+    c.append(hero, m); g.append(c);
+  });
+}
+const RAR = { common: 'ธรรมดา', rare: 'หายาก', legend: 'ตำนาน' };
+function renderRunes() {
+  const g = document.getElementById('runes'); g.replaceChildren();
+  const seen = {};
+  D.runes.forEach(([id, nm, rar, txt]) => {
+    const grp = /^[DF][1-6]$/.test(id) ? id[0] : id;
+    if (seen[grp]) return; seen[grp] = 1;
+    const c = el('article', 'card rune'); c.style.setProperty('--tc', 'var(--line)');
+    const hero = el('div', 'hero'); hero.append(px(cur(grp), 48));
+    const m = el('div', 'meta');
+    if (grp.length === 1) {
+      m.append(el('div', 'id', grp + '1–' + grp + '6'), el('div', 'nm', grp === 'D' ? 'รูนเผ่า (6 อัน)' : 'สนามเผ่า (6 อัน)'), el('div', 'rar', grp === 'D' ? 'ตัวที่ใส่ได้เผ่าเพิ่ม' : 'ทั้งทีมได้ผลตามเผ่า'));
+      const ch = el('div', 'chips'); TRIBES.forEach(([, cv]) => { const i = el('i'); i.style.setProperty('--c', 'var(' + cv + ')'); i.append(px(cur(grp), 16)); ch.append(i); }); m.append(ch);
+    } else m.append(el('div', 'id', id + ' · ' + (RAR[rar] || rar)), el('div', 'nm', nm), el('div', 'rar', txt));
+    m.append(optButtons(grp, grp, 32)); c.append(hero, m); g.append(c);
+  });
+}
+function renderAll() { renderScenes(); renderChars(); renderBosses(); renderRunes(); updateCode(); }
+renderAll();
 </script>
 </body>
 </html>
