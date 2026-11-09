@@ -112,6 +112,26 @@ export const RULES = {
     prices: { 'ธรรมดา': 3, 'ไม่ธรรมดา': 5, 'หายาก': 7, 'หายากมาก': 10, 'ตำนาน': 15 }, // set 107 (user): 3/5/7/10/15   // ราคาตามความหายาก (ตัวตรวจค่าเช็กให้ตรงกัน)
     mergeCount: 3,                                  // เอกสาร
   },
+  // set 171 (user 9 Nov): rune card rarity odds by round, like the shop table (replaces stage settings rarC/rarR/rarL = 60/30/10 flat, set 107)
+  // runeOdds[i] = odds (%, used as weights) of one card of a normal-round WIN offer in round i + 1 · rounds past the table keep the last row
+  // starting values (ค่าเสนอ): r1 85/15/0 · r5 65/30/5 · r10 45/35/20 · r15 25/40/35, linear between
+  runeOdds: [
+      { common: 85, rare: 15, legend: 0 }, // r1
+      { common: 80, rare: 19, legend: 1 }, // r2
+      { common: 76, rare: 22, legend: 2 }, // r3
+      { common: 70, rare: 26, legend: 4 }, // r4
+      { common: 65, rare: 30, legend: 5 }, // r5
+      { common: 61, rare: 31, legend: 8 }, // r6
+      { common: 57, rare: 32, legend: 11 }, // r7
+      { common: 53, rare: 33, legend: 14 }, // r8
+      { common: 49, rare: 34, legend: 17 }, // r9
+      { common: 45, rare: 35, legend: 20 }, // r10
+      { common: 41, rare: 36, legend: 23 }, // r11
+      { common: 37, rare: 37, legend: 26 }, // r12
+      { common: 33, rare: 38, legend: 29 }, // r13
+      { common: 29, rare: 39, legend: 32 }, // r14
+      { common: 25, rare: 40, legend: 35 }, // r15
+  ],
 };
 
 // ---------- set 76: "กฎเกม" tab in the Balance Room ----------
@@ -119,9 +139,11 @@ export const RULES = {
 // opts.scale = stored ÷ scale is shown (ms → วิ) · opts.step = input step (shown units) · opts.int = whole numbers only
 // opts.bool = 0/1 switch · opts.lock = reason (shown, not editable: structure of the game or a safety stop)
 // The user's confirmed edits live in core/rules-user.js (RULES_USER) and are merged into RULES right below.
+export const RUNE_ODDS_COLS = [['common', 'ธรรมดา'], ['rare', 'หายาก'], ['legend', 'ตำนาน']]; // same keys as stage.js RUNE_RARITY (kept here: rules.js must not import stage.js)
 export const RULE_GROUPS = [
   ['storm', 'ช่วงต่อเวลา'], ['burn', 'ไฟ'], ['fight', 'การสู้ทั่วไป'], ['boss', 'จังหวะกฎบอส'],
   ['shop', 'ร้านค้าและ run'], ['shopLv', 'ระดับร้านตามรอบ (ร้านขึ้นเองทุกรอบที่เล่น แพ้หรือชนะก็นับ)'], ['shopOdds', 'โอกาสเจอแต่ละความหายากตามระดับร้าน (% · ระดับเดียวกันรวมไม่ถึง 100 ก็ได้ คิดเป็นสัดส่วน)'], ['power', 'งบค่าพลัง (ใช้แสดงผลและเช็กงบเท่านั้น)'], ['lock', 'ล็อกไว้ (ไม่ควรปรับ)'],
+  ['runeOdds', 'โอกาสการ์ดรูนตามรอบ (ชนะรอบปกติ)'],
 ];
 const SEC = { scale: 1000, step: 0.1 };
 const RAR_RULES = (key, label, lo, hi, unit, group, opts = {}) => RARITIES.map(r => [`${key}.${r}`, `${label} ${r}`, lo, hi, unit, group, opts]);
@@ -154,6 +176,7 @@ export const RULE_SPEC = [
   ...RAR_RULES('shop.prices', 'ราคา', 1, 30, 'เงิน', 'shop', { int: true }),
   ...RULES.shop.roundLevels.map((_, i) => [`shop.roundLevels.${i}`, `รอบ ${i + 1}${i === RULES.shop.roundLevels.length - 1 ? ' ขึ้นไป' : ''} ระดับร้าน`, 1, RULES.shop.levelOdds.length, 'ระดับ', 'shopLv', { int: true }]),
   ...RULES.shop.levelOdds.flatMap((_, i) => RAR_RULES(`shop.levelOdds.${i}`, `ร้าน Lv${i + 1} โอกาสเจอ`, 0, 100, '%', 'shopOdds', { int: true })),
+  ...RULES.runeOdds.flatMap((_, i) => RUNE_ODDS_COLS.map(([k, th]) => [`runeOdds.${i}.${k}`, `รูน รอบ ${i + 1} โอกาสเจอ ${th}`, 0, 100, '%', 'runeOdds', { int: true }])),
   ...RAR_RULES('power.budget', 'งบแต้ม', 1, 1000, 'แต้ม', 'power'),
   ['power.burnStack', 'ไฟ 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],
   ['power.shockStack', 'ช็อต 1 หน่วย นับเป็นดาเมจ', 0, 100, 'ดาเมจ', 'power', { step: 0.1 }],

@@ -28,11 +28,12 @@ export const TESTS_RUNRUN = [
     ok(!bad.length, bad.map(r => `${r.id} ${r.name}: ` + r.tests.flatMap(t => t.lines.filter(l => !l.ok).map(l => `n${t.n} ${l.what} คาด ${l.exp} ได้ ${l.got}`)).slice(0, 3).join(' · ')).join(' | '));
     ok(rows.every(r => r.status !== 'info' || r.note), 'info rows must say why');
   }],
-  ['set 107: win offers = 3 cards, each rolls rarity 60/30/10 (user, no modes) · boss = 2 legend · distinct · pick adds to bag', () => {
+  ['set 107/171: win offers = 3 cards, each rolls rarity by RULES.runeOdds[round] (r1 85/15/0 start) · boss = 2 legend · distinct · pick adds to bag', () => {
     const P = fresh(11), S = RUN_STAGE.settings;
-    eq([S.rarC, S.rarR, S.rarL], [60, 30, 10], 'user %');
+    ok(!('rarC' in S) && !('rarR' in S) && !('rarL' in S), 'rarC/R/L moved to RULES.runeOdds');
+    P.round = 1;
     const N = 600;
-    for (const [m, want] of [['win', [60, 30, 10]]]) {
+    for (const [m, want] of [['win', [RULES.runeOdds[0].common, RULES.runeOdds[0].rare, RULES.runeOdds[0].legend]]]) {
       const c = { common: 0, rare: 0, legend: 0 };
       for (let i = 0; i < N; i++) { const o = rnMakeOffer(P, m); eq(o.ids.length, 3, '3 cards'); ok(new Set(o.ids).size === 3, `${m} distinct`); for (const r of rarOf(o.ids)) c[r]++; }
       ['common', 'rare', 'legend'].forEach((r, i) => ok(Math.abs(c[r] / (N * 3) * 100 - want[i]) < 5, `${m} ${r} ≈ ${want[i]}% (got ${(c[r] / (N * 3) * 100).toFixed(1)})`));
@@ -41,6 +42,15 @@ export const TESTS_RUNRUN = [
     const id = P.rn.offer.ids[0], r = rnTakeOffer(P, 0);
     ok(r.ok && P.rn.bag[id] === 1 && P.rn.offer === null, 'take → bag, offer cleared');
     ok(!rnTakeOffer(P, 0).ok, 'no offer → fail');
+  }],
+  ['set 171: rune card odds follow the round (RULES.runeOdds) · past the table = last row · edited table is used', () => {
+    const P = fresh(21), N = 600, pct = (round, rar) => { P.round = round; let n = 0; for (let i = 0; i < N; i++) n += rarOf(rnMakeOffer(P, 'win').ids).filter(r => r === rar).length; return n / (N * 3) * 100; };
+    eq(RULES.runeOdds.length, 15, '15 round rows');
+    ok(RULES.runeOdds.every(o => o.common + o.rare + o.legend === 100), 'start table rows sum to 100');
+    for (const r of [1, 5, 10, 15, 19]) { const o = RULES.runeOdds[Math.min(r, 15) - 1]; for (const k of ['common', 'rare', 'legend']) { const g = pct(r, k); ok(Math.abs(g - o[k]) < 5, `r${r} ${k} ≈ ${o[k]}% (got ${g.toFixed(1)})`); } }
+    ok(pct(1, 'legend') === 0, 'round 1 never offers legend');
+    const keep = RULES.runeOdds[0]; RULES.runeOdds[0] = { common: 0, rare: 0, legend: 100 };
+    ok(pct(1, 'legend') === 100, 'edited row 1 = all legend'); RULES.runeOdds[0] = keep;
   }],
   ['set 94: copies per run cap offers (maxed rune never shows) · pool empty → filled from other rarities / no offer', () => {
     const P = fresh(12);

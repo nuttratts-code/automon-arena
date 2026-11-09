@@ -60,6 +60,14 @@ export function validateConfig(chars, rules = RULES) {
     if (!Array.isArray(RL) || !RL.length) errors.push('ร้านค้า: ตารางระดับร้านตามรอบผิด');
     else RL.forEach((v, i) => { if (!Number.isInteger(v) || v < 1 || v > (Array.isArray(LO) ? LO.length : 0)) errors.push(`ร้านค้า: รอบ ${i + 1} ระดับร้านผิด (ต้องเป็น 1–${Array.isArray(LO) ? LO.length : '?'})`); });
   }
+  // set 171: rune card odds by round · ≥ 1 row, each row numbers ≥ 0 for common/rare/legend with total > 0
+  const RO = rules.runeOdds;
+  if (!Array.isArray(RO) || !RO.length) errors.push('รูน: ตารางโอกาสการ์ดตามรอบผิด');
+  else RO.forEach((o, i) => {
+    const K = ['common', 'rare', 'legend'];
+    if (!o || typeof o !== 'object' || K.some(k => !isNum(o[k]) || o[k] < 0)) errors.push(`รูน: รอบ ${i + 1} มีโอกาสผิด`);
+    else if (!K.some(k => o[k] > 0)) errors.push(`รูน: รอบ ${i + 1} โอกาสรวมเป็น 0`);
+  });
   // แต่ละเผ่าต้องมีอย่างน้อย N ตัวที่ต่างกัน (นับเผ่าเพิ่มด้วย)
   for (const t of TRIBES) {
     const n = chars.filter(c => c && (c.tribe === t || (Array.isArray(c.extraTribes) && c.extraTribes.includes(t)))).length;

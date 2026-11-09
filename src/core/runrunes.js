@@ -11,13 +11,13 @@
 import { RUN_STAGE } from './runboss.js';
 import { RUNE_RARITY, RUNE_SPEC, runeActive, enemyMultAt } from './stage.js';
 import { runeRecord } from './runes.js';
-import { TRIBES } from './rules.js';
+import { RULES, TRIBES } from './rules.js';
 import { fail, done, loseGuard } from './shop.js';
 import { makeRng } from './rng.js';
 
-// set 107 (user 6 Nov): modes ปกติ / ยาก / นรก REMOVED · normal win offer = 'win' (cards roll rarity by rarC/rarR/rarL %) · boss = 'boss'
+// set 107 (user 6 Nov): modes ปกติ / ยาก / นรก REMOVED · normal win offer = 'win' (cards roll rarity by RULES.runeOdds[round], set 171) · boss = 'boss'
 // the enemy follows the player's power + win streak instead (core/botteams.js pickFoe)
-export const RN_OFFER_KEY = { win: 'Win', boss: 'Boss', sc: 'Sc' }; // set 119: sc = second chance (offScL legend, no reroll) // key used only to check the kind (rarity settings: rarC/R/L · offBoss*)
+export const RN_OFFER_KEY = { win: 'Win', boss: 'Boss', sc: 'Sc' }; // set 119: sc = second chance (offScL legend, no reroll) // key used only to check the kind (rarity: RULES.runeOdds · offBoss*)
 export const RN_RARS = RUNE_RARITY.map(r => r[0]); // common, rare, legend
 const RN_RAR_KEY = { common: 'C', rare: 'R', legend: 'L' };
 export const RN_MAX_HELD = 80; // different runes held (sanity)
@@ -48,10 +48,12 @@ function rnPool(st, rarity, stage, skip) {
 function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) * list.length)] : null; }
 
 // ---------- reward after a win (offer: pick 1 of N) ----------
-// kind 'win' → offCards cards, each rolls its rarity by rarC/rarR/rarL % · 'boss' = fixed counts offBoss*
+// kind 'win' → offCards cards, each rolls its rarity by RULES.runeOdds[round] (set 171) · 'boss' = fixed counts offBoss*
 // a rarity with nothing left is filled from any rarity · nothing at all = no offer · skip = ids to avoid if possible (reroll)
-function rnRollRar(st, key, S) {
-  const w = RN_RARS.map(r => Math.max(0, S[`rar${RN_RAR_KEY[r]}`] | 0)), tot = w.reduce((a, b) => a + b, 0);
+// set 171: odds come from RULES.runeOdds by the round just won (st.round) · rounds past the table keep the last row
+function rnRollRar(st) {
+  const T = RULES.runeOdds, o = T[Math.max(1, Math.min(T.length, st.round | 0)) - 1] || {};
+  const w = RN_RARS.map(r => Math.max(0, +o[r] || 0)), tot = w.reduce((a, b) => a + b, 0);
   if (!tot) return RN_RARS[0];
   let x = rnDraw(st) * tot;
   for (let i = 0; i < w.length; i++) { if (x < w[i]) return RN_RARS[i]; x -= w[i]; }
@@ -62,7 +64,7 @@ export function rnMakeOffer(st, kind, stage = RUN_STAGE, avoid = []) {
   const S = stage.settings, key = RN_OFFER_KEY[kind], ids = [], skip = new Set(avoid);
   const rars = kind === 'sc' ? Array(Math.max(1, S.offScL | 0)).fill('legend')
     : kind === 'boss' ? RN_RARS.flatMap(rar => Array(S[`offBoss${RN_RAR_KEY[rar]}`] | 0).fill(rar))
-    : Array.from({ length: Math.max(1, S.offCards | 0) }, () => rnRollRar(st, key, S));
+    : Array.from({ length: Math.max(1, S.offCards | 0) }, () => rnRollRar(st));
   for (const rar of rars) {
     const r = rnPickFrom(st, rnPool(st, rar, stage, skip)) || rnPickFrom(st, rnPool(st, null, stage, skip))
       || rnPickFrom(st, rnPool(st, null, stage, new Set(ids))); // reroll: the old cards may come back only when nothing else is left

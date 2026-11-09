@@ -417,10 +417,9 @@ export const STAGE_SETTINGS = [
   // · the last round (lastStage) is the training-dummy boss (endless HP, no attack/skills, fight lasts dummySec → damage score)
   ['bossEvery', 'บอสทุกกี่รอบ (ช่วงแรก)', 5, 1, 50, 'รอบ'], ['bossLateFrom', 'ช่วงแรกถึงรอบ', 20, 1, 200, 'รอบ'], ['bossEveryLate', 'หลังจากนั้น บอสทุกกี่รอบ', 10, 1, 50, 'รอบ'],
   ['dummySec', 'บอสรอบสุดท้าย (หุ่นเป้า เลือดไม่หมด): สู้ได้นาน', 60, 10, 170, 'วิ'],
-  // Set 107 (user 6 Nov): modes removed · every normal-round WIN offers offCards runes, each card rolls its rarity by rarC/rarR/rarL %
+  // Set 107 (user 6 Nov): modes removed · every normal-round WIN offers offCards runes, each card rolls its rarity by RULES.runeOdds[round] (set 171: moved to the กฎเกม tab, was rarC/rarR/rarL 60/30/10)
   // (rarity with nothing left → other rarities) · boss win = fixed counts offBoss* (pick 1 of 2 legend, user set 95)
   ['offCards', 'ชนะรอบปกติ: จำนวนการ์ดรูนให้เลือก', 3, 1, 5, 'ใบ'],
-  ['rarC', 'ชนะรอบปกติ: โอกาสการ์ดธรรมดา', 60, 0, 100, '%'], ['rarR', 'ชนะรอบปกติ: โอกาสการ์ดหายาก', 30, 0, 100, '%'], ['rarL', 'ชนะรอบปกติ: โอกาสการ์ดตำนาน', 10, 0, 100, '%'],
   ['offBossC', 'ชนะบอส: ให้เลือกรูนธรรมดา', 0, 0, 5, 'อัน'], ['offBossR', 'ชนะบอส: ให้เลือกรูนหายาก', 0, 0, 5, 'อัน'], ['offBossL', 'ชนะบอส: ให้เลือกรูนตำนาน', 2, 0, 5, 'อัน'],
   // rune card reroll (set 100, user): rrFree free per match, then rrCost, +rrStep each time · resets every match · boss reward too
   ['rrFree', 'สุ่มการ์ดรูนใหม่ฟรีต่อรอบ', 1, 0, 9, 'ครั้ง'], ['rrCost', 'สุ่มการ์ดรูนใหม่ (เสียเงิน) ครั้งแรก', 3, 0, 50, 'เงิน'], ['rrStep', 'สุ่มการ์ดรูนใหม่: แพงขึ้นครั้งละ', 3, 0, 50, 'เงิน'],

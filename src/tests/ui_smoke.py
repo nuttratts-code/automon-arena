@@ -95,7 +95,7 @@ with sync_playwright() as p:
         pg.evaluate("P.gold=%d;P.shop=JSON.parse(%r);P.board=[[null,null],[null,null],[null,null]];P.bench=P.bench.map(()=>null);P.rn.bag={T4:1};P.rn.at={};P.rn.ft={};P.rn.offer=null;render()" % (gS, shop0))
         # set 119: no modes · HUD shows enemy strength % (100 normal run, no streak · 120 in extra matches) · "?" popup = enemy % + card %
         chk(pg.query_selector('[data-diff]') is None and pg.inner_text('#foePct')=='100%','no mode buttons, enemy 100%')
-        pg.click('#diffInfo'); chk('ตำนาน 10%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
+        pg.click('#diffInfo'); chk('ธรรมดา 85% · หายาก 15%' in pg.inner_text('#diffHint') and '100%' in pg.inner_text('#diffHint'),'enemy % + card %'); esc()
         pg.evaluate("P.ws=3;render()"); chk(pg.inner_text('#foePct')=='100%','set 119: win streak no longer raises the enemy')
         pg.evaluate("P.extra=true;render()"); chk(pg.inner_text('#foePct')=='120%','extra matches → 120%'); pg.evaluate("P.ws=0;P.extra=false;render()")
         pg.click('#diffInfo'); chk('ไม่เห็นทีมศัตรู' in pg.inner_text('#scoutBox'),'enemy hidden without scout rune'); esc()
@@ -734,6 +734,11 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         rb=pg.evaluate("[RULES.shop.levelOdds[0]['ธรรมดา'], document.querySelector('#rchip-shopOdds .sb').textContent, !document.querySelector('#rule-shop-levelOdds-0-ธรรมดา').nextElementSibling.hidden, document.querySelector('#rform .rsum').textContent]")
         chk(rb[0]==80 and rb[1]=='1' and rb[2] and rb[3].startswith(str(80+pg.evaluate("RARITIES.slice(1).reduce((s,r)=>s+(RULES.shop.levelOdds[0][r]||0),0)"))),'rules odds edit: value + badge + was + total '+str(rb))
         pg.click('#rsec-shopOdds .rreset'); chk(pg.evaluate("Object.keys(ruleEdits).length===0 && RULES.shop.levelOdds[0]['ธรรมดา']===RULES_BASE.shop.levelOdds[0]['ธรรมดา']"),'rules group reset')
+        # set 171: rune card odds by round table (15 rows x 3) in the same tab
+        pg.click('#rchip-runeOdds'); pg.fill('#rule-runeOdds-0-legend','7'); pg.press('#rule-runeOdds-0-legend','Tab')
+        rn=pg.evaluate("[document.querySelectorAll('#rsec-runeOdds tbody tr').length, RULES.runeOdds[0].legend, document.querySelector('#rsec-runeOdds .rsum').textContent, document.querySelector('#rchip-runeOdds .sb').textContent]")
+        chk(rn[0]==15 and rn[1]==7 and rn[3]=='1' and rn[2].startswith('107'),'rules rune odds table: 15 rows + edit + total '+str(rn))
+        pg.click('#rsec-runeOdds .rreset'); chk(pg.evaluate("RULES.runeOdds[0].legend===RULES_BASE.runeOdds[0].legend && Object.keys(ruleEdits).length===0"),'rules rune odds reset')
         pg.fill('#ruleFind','ราคา'); chk(pg.evaluate("[...document.querySelectorAll('#rform .rsec')].filter(s=>!s.hidden).map(s=>s.dataset.g).join()")=='shop','rules search')
         pg.fill('#ruleFind',''); pg.click('#rchip-all'); pg.evaluate("document.getElementById('tab-sim').click()")
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
