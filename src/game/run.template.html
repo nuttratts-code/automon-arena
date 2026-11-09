@@ -80,7 +80,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .bosschip { font: 600 .78rem var(--f-body); color: var(--bad); }
 #diffInfo { padding: 4px 10px; }
-#newRun { padding: 4px 10px; font-size: .76rem; }
+#newRun { padding: 8px 14px; font-size: .8rem; min-height: 40px; }
 
 /* field: my team (prep) or both teams (battle) + bench */
 .main { display: grid; min-height: 0; }
@@ -255,7 +255,7 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 #logScr ol.steps .note { display: block; font-size: .78rem; }
 #logCode { width: 100%; box-sizing: border-box; min-height: 70px; font: 500 .78rem ui-monospace, Menlo, monospace; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: inherit; resize: vertical; }
 #nameIn { flex: 1 1 180px; min-width: 0; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: inherit; }
-.nameEdit { font-size: 12px; padding: 2px 8px; }
+.nameEdit { font-size: 12px; padding: 2px 10px; min-height: 32px; }
 #rotate { display: none; }
 
 /* แผงรายละเอียด (popup) */
@@ -411,21 +411,21 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .spane .info > div:not(.mon) > .ihead { grid-column: 2; grid-row: 1; }
 .spane .ihead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; min-height: 48px; }
 .spane .ihead > h2 { grid-column: 1; font: 600 .88rem var(--f-body); margin: 0; }
-.ihead h2 .rar { font-size: .74em; font-weight: 600; vertical-align: 1px; } /* set 159 */
+.ihead h2 .rar { font-size: .82em; font-weight: 600; vertical-align: 1px; } /* set 159 */
 .spane .ihead > .hint { grid-column: 1; font-size: .68rem; }
 .spane .ihead > .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 .spane .acts button { height: 28px; padding: 0 10px; font-size: .74rem; border-radius: 8px; }
 .spane .acts .hint { font-size: .64rem; max-width: 10em; line-height: 1.2; }
 .spane .info .skill { display: block; background: transparent; border: 0; border-left: 3px solid var(--line); border-radius: 0; padding: 1px 0 1px 6px; font-size: .76rem; line-height: 1.32; }
 .spane .info .skill .tags { display: inline-flex; margin: 0 4px 0 0; vertical-align: baseline; }
-.spane .info .skill .tags .tag { font-size: .6rem; padding: 0 4px; }
+.spane .info .skill .tags .tag { font-size: .64rem; padding: 0 4px; }
 .spane .lvtabs { gap: 3px; } .spane .lvtabs button { height: 24px; padding: 0 8px; border-radius: 6px; font-size: .7rem; }
 .spane .info .stats2 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; font-size: .7rem; }
 .spane .info .stats2 .term { padding: 1px 0; border-bottom: 1px dotted var(--line); }
 .spane .info .stats2 b { font: 600 .74rem var(--f-mono); }
 .spane .cfoot { display: flex; align-items: center; gap: 8px; font-size: .66rem; }
 .spane .cfoot .termhelp { flex: 1; min-width: 0; }
-.spane .cfoot button { height: 22px; padding: 0 8px; font-size: .66rem; border-radius: 6px; flex: none; }
+.spane .cfoot button { height: 26px; padding: 0 8px; font-size: .66rem; border-radius: 6px; flex: none; }
 .fighting .dock { height: clamp(70px, 16vh, 128px); grid-template-rows: minmax(0, 1fr); }
 .fighting .bctl { min-height: 0; }
 .bpane { display: grid; align-content: start; gap: 4px; }
@@ -567,10 +567,10 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .fcard { padding: 8px 10px; width: clamp(320px, 48vw, 400px); } /* set 159: 290 px squeezed the title into 3 lines */
   .spane .acts button { white-space: nowrap; }
   .spane .info { grid-template-columns: 36px minmax(0, 1fr); } .spane .info > .mon .shape { width: 36px; height: 36px; } .spane .ihead { min-height: 36px; }
-  .spane .ihead > h2 { font-size: .8rem; } .spane .ihead > .hint { font-size: .62rem; }
+  .spane .ihead > h2 { font-size: .8rem; } .spane .ihead > .hint { font-size: .66rem; }
   .spane .info .skill { font-size: .7rem; line-height: 1.28; }
   .spane .info .stats2 { font-size: .64rem; } .spane .info .stats2 b { font-size: .68rem; }
-  .spane .lvtabs button { height: 22px; font-size: .64rem; }
+  .spane .lvtabs button { height: 26px; min-width: 40px; font-size: .66rem; } /* set 159: tap targets ≥ 24 px (WCAG 2.5.8) */
   .bpane .uinfo { grid-template-columns: 32px minmax(0, 1fr); } .bpane .uinfo > .mon .shape { width: 32px; height: 32px; } .bpane .bhead { min-height: 32px; }
   .bpane .uinfo h2 { font-size: .76rem; } .bpane .uinfo .skill, .bpane .uinfo .live, .bpane .uinfo .live b, .bpane .lstat { font-size: .64rem; }
   #stop { height: 34px; padding: 0 10px; font-size: .8rem; }
@@ -587,7 +587,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .prepdock { grid-template-columns: 76px minmax(0, 1fr) 104px; gap: 5px; }
   .dock .left { gap: 1px; }
   #reroll { flex-direction: column; gap: 0; font-size: .85rem; border-radius: 8px; padding: 2px; line-height: 1.15; } #reroll svg { display: none; } #rerollCost { font-size: .72rem; }
-  #shopLv { font-size: .6rem; padding: 0; line-height: 1.15; }
+  #shopLv { font-size: .66rem; padding: 2px 0; min-height: 22px; line-height: 1.15; } /* set 159: was 11 px tall, 9.6 px text */
   #fight { border-radius: 8px; padding: 2px; } #fight .fbig { font-size: 1.1rem; } #fight .fsm { font-size: .7rem; }
   .shop { gap: 5px; }
   .slot { padding: 4px 6px; column-gap: 6px; border-radius: 8px; align-content: center; }
@@ -607,7 +607,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .arena .shape { width: clamp(22px, 9.5vh, 46px); height: clamp(22px, 9.5vh, 46px); }
   .arena .chips { display: none; }
   .hp { height: 7px; }
-  .nums { font-size: .6rem; gap: 0 4px; } .armor-text::before { content: "+"; } /* set 159: "เกราะ" hidden (.wd) */
+  .nums { font-size: .64rem; gap: 0 4px; } .armor-text::before { content: "+"; } /* set 159: "เกราะ" hidden (.wd) */
   .float { top: 4px; font-size: .95rem; padding: 0 5px; }
   .sktag { top: 3px; left: 3px; font-size: .6rem; padding: 0 5px; }
   .float { top: 30%; } /* set 159: was top 4px = on top of the skill tag */
@@ -634,6 +634,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .arena .shape { width: 26px; height: 26px; } .arena .mon.has-lv { margin-bottom: 0; }
   .arena .uname { text-align: left; } .arena .hp { width: 100%; } .arena .nums { justify-content: flex-start; }
   .arena .nums { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
+  .spane .lvtabs button { height: 24px; }
   .float { top: 1px; font-size: .85rem; } .sktag { top: auto; bottom: 2px; } /* free strips above/below the centred text */
 }
 /* small phones sideways: shape + price on one row, name (2 lines) below · set 159: the old 1-column card was ~100 px tall in a 66 px dock → page scrolled, bottom cut */
@@ -654,6 +655,17 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .prepdock .left { grid-area: left; } .prepdock .right { grid-area: right; } .shop { grid-area: shop; }
   .slot { grid-template-columns: 1fr; justify-items: center; padding: 4px; } .slot > .mon { grid-row: auto; } .slot .sub { display: none; }
   .bctl { flex-wrap: wrap; }
+  /* set 159: portrait kept running off-screen (page 886 px wide on a 390 px phone) */
+  .hud { flex-wrap: wrap; row-gap: 6px; } .hud h1, .wd { display: none; } .nw { display: inline; }
+  .hudbtn { height: 36px; padding: 0 10px; } #runeBtn > span:not([id]) { display: none; }
+  .slot .uname { font-size: .74rem; white-space: normal; text-align: center; line-height: 1.3; padding-block: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .slot .stxt { padding-bottom: 0; align-items: center; } .slot .price { position: static; justify-self: center; font-size: .8rem; padding: 0 6px; }
+  .slot .shape { width: 40px; height: 40px; }
+  .spane .ihead { grid-template-columns: minmax(0, 1fr); } .spane .ihead > .acts { grid-column: 1; grid-row: auto; flex-direction: row; flex-wrap: wrap; } .spane .acts button { flex: 1 1 auto; white-space: nowrap; }
+  .arena .cell { overflow: hidden; padding: 2px; } .arena .shape { width: 30px; height: 30px; } .arena .mon.has-lv { margin-bottom: 4px; }
+  .arena .uname { font-size: .62rem; } .arena .nums { font-size: .58rem; } .arena .chips { display: none; } .arena .hp { width: 94%; height: 6px; }
+  .sktag { top: 2px; left: 2px; right: 2px; max-width: none; font-size: .56rem; padding: 0 4px; } .float { top: 30%; font-size: .9rem; padding: 0 4px; }
+  .fighting .dock { height: auto; } .bctl { row-gap: 6px; } #btext { flex-basis: 100%; order: 9; } #ticker2 { display: none; }
 }
 /* set 128 (T3 A): 6–8 shop slots (rune แผงใหญ่) shrink to stacked cards so one row still fits — desktop + phone */
 .shop.many { gap: 6px; }
@@ -807,6 +819,11 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 <div class="screen" id="runEnd" hidden><section class="panel">
   <h2 id="endTitle"></h2>
   <p class="hint" id="endSummary"></p>
+<!-- set 159: actions right under the result (phone: they were below a long scroll) -->
+  <p class="hint" id="endExtraHint" hidden>คำเตือน: แมตช์พิเศษศัตรูจะเก่งขึ้นมาก (ทีมศัตรูแรงขึ้น <span id="endExtraPct">20</span>% · บอสแรงขึ้นด้วย) เล่นต่อด้วยหัวใจที่เหลือถึงรอบ <span id="endExtraLast">20</span> (รอบสุดท้าย = หุ่นเป้า) · หัวใจหมด = จบเกม</p>
+  <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
+  <div class="row"><button id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
+  <p class="hint">กดคัดลอกแล้วส่งโค้ดนี้ให้เจ้าของเกม (เช่นทาง LINE) เพื่อให้ดูเงิน การซื้อ ทีม และผลทุกแมตช์ของ run นี้ได้</p>
   <h3>ทีมสุดท้าย</h3>
   <div class="endteam" id="endTeam"></div>
   <h3>สถิติ run</h3>
@@ -815,10 +832,6 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   <ol class="msgs" id="endHistory"></ol>
   <h3>รีเพลย์แมตช์ใน run นี้</h3>
   <ol class="msgs replays" id="endReplays"></ol>
-  <p class="hint" id="endExtraHint" hidden>คำเตือน: แมตช์พิเศษศัตรูจะเก่งขึ้นมาก (ทีมศัตรูแรงขึ้น <span id="endExtraPct">20</span>% · บอสแรงขึ้นด้วย) เล่นต่อด้วยหัวใจที่เหลือถึงรอบ <span id="endExtraLast">20</span> (รอบสุดท้าย = หุ่นเป้า) · หัวใจหมด = จบเกม</p>
-  <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
-  <div class="row"><button class="primary" id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
-  <p class="hint">กดคัดลอกแล้วส่งโค้ดนี้ให้เจ้าของเกม (เช่นทาง LINE) เพื่อให้ดูเงิน การซื้อ ทีม และผลทุกแมตช์ของ run นี้ได้</p>
   <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
 </section></div>
 
@@ -1067,6 +1080,7 @@ function startNewRun() {
 }
 // set 97: prep and battle share one screen (#app · .fighting = battle on the same field) · resume / runEnd = full-screen overlays
 function showScreen(name) {
+  if (name !== 'prep' && typeof hideToast === 'function') hideToast(); // set 159: prep toasts floated over the end/resume screens
   $('app').hidden = name !== 'prep' && name !== 'battle';
   $('app').classList.toggle('fighting', name === 'battle');
   $('resume').hidden = name !== 'resume'; $('runEnd').hidden = name !== 'runEnd';
@@ -1926,7 +1940,7 @@ function renderRunEnd() {
   $('endTitle').textContent = allRounds ? `จบ run: เล่นครบ ${P.round} รอบ` : P.extra ? `จบแมตช์พิเศษ: ชนะรวม ${P.wins} ครั้ง` : won ? `จบ run: ชนะครบ ${S.winsToFinish} แมตช์` : 'จบ run: หัวใจหมด';
   $('endSummary').textContent = `ชนะ ${P.wins}/${S.winsToFinish} · หัวใจเหลือ ${P.hearts}/${S.hearts} · เล่น ${P.round} รอบ` + (dummyDmg ? ` · ดาเมจใส่หุ่นเป้า ${dummyDmg}` : '');
   // set 99 (user 6 Nov): a cleared run may go on with extra matches (hearts left · lose them all = game over)
-  $('endExtra').hidden = !canExtra; $('endExtraHint').hidden = !canExtra;
+  $('endExtra').hidden = !canExtra; $('endExtraHint').hidden = !canExtra; $('endNew').classList.toggle('primary', !canExtra); // set 159: one main button (extra matches first when offered)
   $('endExtraPct').textContent = String(RUN_STAGE.settings.foeExtraPct | 0); $('endExtraLast').textContent = String(RUN_STAGE.settings.lastStage | 0); // set 119 (G5): the warning sits on the เล่นต่อ button
   // set 106 (G5): final team as pictures, laid out like the board (หลัง กลาง หน้า × 2 lanes)
   const team = [];
