@@ -159,7 +159,8 @@ export class BattleView {
     } else v.hpFill.style.width = `${(hp / v.maxHp) * 100}%`;
     v.armorFill.style.width = `${Math.min(100, (v.armor / v.maxHp) * 100)}%`;
     v.hpText.textContent = `${hp}/${v.maxHp}`;
-    v.armorText.textContent = v.armor > 0 ? `เกราะ ${v.armor}` : '';
+    // set 159: the word hides on short phone screens (.wd) → "+6" in the armor colour, same as the armor bar
+    if (v.armor > 0) { const w = document.createElement('span'); w.className = 'wd'; w.textContent = 'เกราะ '; v.armorText.replaceChildren(w, `${v.armor}`); } else v.armorText.textContent = '';
     v.burnEl.textContent = v.burn > 0 ? `ไฟ ${v.burn}` : '';
     v.shockEl.textContent = v.shock > 0 ? `ช็อต ${v.shock}` : '';
     v.burnEl.hidden = !(v.burn > 0); v.shockEl.hidden = !(v.shock > 0);

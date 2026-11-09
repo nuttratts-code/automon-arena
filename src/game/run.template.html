@@ -126,7 +126,7 @@ section.panel { background: var(--panel); border: 1px solid var(--line); border-
 .mon.rr3 { filter: drop-shadow(2px 0 0 var(--rc)) drop-shadow(-2px 0 0 var(--rc)) drop-shadow(0 2px 0 var(--rc)) drop-shadow(0 -2px 0 var(--rc)); }
 .mon.rr4 { filter: drop-shadow(2.5px 0 0 var(--rc)) drop-shadow(-2.5px 0 0 var(--rc)) drop-shadow(0 2.5px 0 var(--rc)) drop-shadow(0 -2.5px 0 var(--rc)) drop-shadow(0 0 4px var(--rc)); }
 .lv { color: #fff; font-size: .55rem; letter-spacing: -1px; padding-top: 6px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
-.uname { font-size: .7rem; font-weight: 600; line-height: 1.2; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uname { font-size: .7rem; font-weight: 600; line-height: 1.35; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .uid { font: 500 .6rem var(--f-mono); color: var(--mute); }
 .perm-dot { position: absolute; top: 3px; right: 4px; font: 600 .58rem var(--f-mono); color: var(--accent); }
 .rune-dot { position: absolute; left: 3px; bottom: 2px; font-size: .58rem; color: var(--gold); font-weight: 700; max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -392,7 +392,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .bench .cell.filled { background: var(--panel); border: 1px solid var(--line); }
 .bench .shape { width: clamp(18px, 5.7vh, 44px); height: clamp(18px, 5.7vh, 44px); }
 .bench .uname { font-size: .8rem; }
-.bench .mon.has-lv { margin-bottom: 5px; }
+.bench .mon.has-lv { margin-bottom: 8px; } /* set 159: Lv stars touched the name */
 /* set 121 (user picked design 1): unit details = a floating card beside the tapped unit (prep #sidePane · battle #bPane) · never scrolls · tap elsewhere closes */
 .fcard { position: fixed; z-index: 30; left: 0; top: 0; width: clamp(300px, 40vw, 420px); max-height: calc(100dvh - 16px); overflow: visible; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: .8rem;
   box-shadow: 0 10px 28px rgba(40,30,10,.28), 0 2px 6px rgba(40,30,10,.18); }
@@ -411,6 +411,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .spane .info > div:not(.mon) > .ihead { grid-column: 2; grid-row: 1; }
 .spane .ihead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; min-height: 48px; }
 .spane .ihead > h2 { grid-column: 1; font: 600 .88rem var(--f-body); margin: 0; }
+.ihead h2 .rar { font-size: .74em; font-weight: 600; vertical-align: 1px; } /* set 159 */
 .spane .ihead > .hint { grid-column: 1; font-size: .68rem; }
 .spane .ihead > .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 .spane .acts button { height: 28px; padding: 0 10px; font-size: .74rem; border-radius: 8px; }
@@ -465,7 +466,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .slot > .mon { grid-row: auto; }
 .slot .shape { width: clamp(30px, 7.3vh, 56px); height: clamp(30px, 7.3vh, 56px); }
 .stxt { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 14px; }
-.slot .uname { font-size: 1rem; text-align: left; }
+.slot .uname { font-size: 1rem; text-align: left; white-space: normal; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* set 159: wrap, no … */
 .slot .sub.tr { font: 400 .8rem var(--f-body); color: var(--ink); opacity: .8; }
 .slot .stxt .rar { font-size: .76rem; align-self: flex-start; }
 .slot .price { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; background: var(--gold-bg); color: var(--gold-ink); border-radius: 10px; padding: 0 8px; font: 500 .95rem var(--f-display); }
@@ -563,7 +564,8 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .rune-dot { top: 3px; right: 3px; font-size: .6rem; padding: 0 4px; }
   .perm-dot { top: 3px; left: 4px; }
   .benchbar { height: 62px; }
-  .fcard { padding: 8px 10px; width: clamp(290px, 42vw, 380px); }
+  .fcard { padding: 8px 10px; width: clamp(320px, 48vw, 400px); } /* set 159: 290 px squeezed the title into 3 lines */
+  .spane .acts button { white-space: nowrap; }
   .spane .info { grid-template-columns: 36px minmax(0, 1fr); } .spane .info > .mon .shape { width: 36px; height: 36px; } .spane .ihead { min-height: 36px; }
   .spane .ihead > h2 { font-size: .8rem; } .spane .ihead > .hint { font-size: .62rem; }
   .spane .info .skill { font-size: .7rem; line-height: 1.28; }
@@ -591,7 +593,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .slot { padding: 4px 6px; column-gap: 6px; border-radius: 8px; align-content: center; }
   .slot .shape { width: 32px; height: 32px; }
   .stxt { padding-bottom: 0; gap: 0; }
-  .slot .uname { font-size: .74rem; white-space: normal; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .slot .uname { font-size: .74rem; white-space: normal; line-height: 1.3; padding-block: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
   .slot .sub.tr, .slot .stxt .rar { display: none; }
   .slot .price { position: static; background: transparent; padding: 0; font-size: .74rem; justify-self: start; grid-column: 2; }
   .slot .price::before { width: 8px; height: 8px; }
@@ -605,9 +607,10 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .arena .shape { width: clamp(22px, 9.5vh, 46px); height: clamp(22px, 9.5vh, 46px); }
   .arena .chips { display: none; }
   .hp { height: 7px; }
-  .nums { font-size: .6rem; }
+  .nums { font-size: .6rem; gap: 0 4px; } .armor-text::before { content: "+"; } /* set 159: "เกราะ" hidden (.wd) */
   .float { top: 4px; font-size: .95rem; padding: 0 5px; }
   .sktag { top: 3px; left: 3px; font-size: .6rem; padding: 0 5px; }
+  .float { top: 30%; } /* set 159: was top 4px = on top of the skill tag */
   .result > .rbox { padding: 14px 18px; gap: 8px; border-radius: 14px; }
   #resultTitle { font-size: 2.1rem; } #resultTitle.small { font-size: 1.3rem; }
   .rchips .bigchip { height: 28px; font-size: .9rem; }
@@ -622,7 +625,25 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .nform { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } .nform label { grid-column: 1 / -1; font-size: .85rem; }
   #nameIn { height: 42px; } button.big { height: 42px; font-size: 1.05rem; padding: 0 18px; }
 }
-@media (max-width: 760px) and (orientation: landscape) { .slot { grid-template-columns: 1fr; justify-items: center; text-align: center; } .slot .uname { text-align: center; } .slot .sub.tr { display: none; } .slot .price { grid-column: auto; justify-self: center; } }
+/* set 159: very short screens (phone sideways with browser bars, ≤ 360 px tall): units side by side (shape left, text right) — stacked, the name/HP were cut */
+@media (max-height: 360px) {
+  .board .unit { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; }
+  .board .shape { width: 30px; height: 30px; } .board .mon.has-lv { margin-bottom: 0; }
+  .arena .unit { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 5px; row-gap: 1px; align-content: center; justify-items: stretch; padding: 0 4px; }
+  .arena .unit > .mon { grid-row: 1 / span 3; grid-column: 1; align-self: center; } .arena .unit > :not(.mon) { grid-column: 2; }
+  .arena .shape { width: 26px; height: 26px; } .arena .mon.has-lv { margin-bottom: 0; }
+  .arena .uname { text-align: left; } .arena .hp { width: 100%; } .arena .nums { justify-content: flex-start; }
+  .arena .nums { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
+  .float { top: 1px; font-size: .85rem; } .sktag { top: auto; bottom: 2px; } /* free strips above/below the centred text */
+}
+/* small phones sideways: shape + price on one row, name (2 lines) below · set 159: the old 1-column card was ~100 px tall in a 66 px dock → page scrolled, bottom cut */
+@media (max-width: 760px) and (orientation: landscape) {
+  .slot { grid-template-columns: auto auto; justify-content: center; align-content: center; column-gap: 6px; row-gap: 0; text-align: center; padding: 3px 4px; }
+  .slot > .mon { grid-row: 1; grid-column: 1; } .slot .shape { width: 26px; height: 26px; }
+  .slot .price { grid-row: 1; grid-column: 2; justify-self: start; }
+  .slot .stxt { grid-row: 2; grid-column: 1 / -1; align-items: center; }
+  .slot .uname { text-align: center; font-size: .68rem; } .slot .sub.tr { display: none; }
+}
 /* portrait phone: ask to rotate (button continues in portrait) */
 @media (orientation: portrait) and (max-width: 700px) {
   #rotate:not(.dismissed) { display: grid; position: fixed; inset: 0; z-index: 80; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
@@ -1127,7 +1148,7 @@ function renderChips() {
 function shopLvText() { const lv = shopLvOf(P), nx = lvForRound(P.round + 1); return `ร้าน Lv ${lv}/${shopLevels()}${nx > lv ? ` · รอบหน้า Lv ${nx}` : ''} · รอบหน้าได้เงิน ${baseIncomeAt(P.round + 1)}${S.winBonus ? ` (ชนะ +${S.winBonus})` : ''}`; }
 function renderShopLevel() {
   const lv = shopLvOf(P), nx = lvForRound(P.round + 1), b = $('shopLv');
-  const t = el('b', ''); t.append(el('span', 'wd', 'ร้าน '), `Lv ${lv}/${shopLevels()}${nx > lv ? ` → ${nx}` : ''}`);
+  const t = el('b', ''); t.append(el('span', 'wd', 'ร้าน '), `Lv ${lv}`, el('span', 'wd', `/${shopLevels()}`), nx > lv ? ` → ${nx}` : ''); // set 159: phone = "Lv 1 → 2 · +13" (full text in the shop popup)
   const nx2 = el('span', ''); nx2.append(' · ', el('span', 'wd', 'รอบหน้า '), `+${baseIncomeAt(P.round + 1)}`);
   b.replaceChildren(t, nx2);
 }
@@ -1153,10 +1174,10 @@ function render() {
     card.setAttribute('role', 'button');
     if (!s.id) { card.classList.add('empty'); card.setAttribute('aria-label', 'ขายแล้ว'); shop.append(card); return; }
     const c = CM[s.id];
-    card.setAttribute('aria-label', `${c.id} ${c.name} ราคา ${c.price}`);
+    card.setAttribute('aria-label', `${c.id} ${c.name} ${c.rarity} ราคา ${c.price}`);
     if (s.locked) card.classList.add('locked');
     if (c.price > P.gold) card.classList.add('cant');
-    const txt = el('span', 'stxt'); txt.append(el('span', 'uname', c.name), el('span', 'sub tr', [c.tribe, ...c.extraTribes].join(' + ')), rarityTag(c.rarity));
+    const txt = el('span', 'stxt'); txt.append(el('span', 'uname', c.name), el('span', 'sub tr', [c.tribe, ...c.extraTribes].join(' + '))); // set 159: rarity = ring colour, text only in the floating card
     card.append(shapeOf(c.id), txt, el('span', 'price', String(c.price)));
     // ชุด 24: ไฮไลต์ตัวที่มีอยู่แล้วบนบอร์ด/ม้านั่ง · มี Lv1 ครบ (รวมร่าง − 1) ตัว = ซื้อแล้วรวมร่างได้
     const mine = allUnits(P).filter(x => x.u.id === c.id), lv1 = mine.filter(x => x.u.level === 1).length;
@@ -1292,7 +1313,8 @@ function unitInfo(ref) {
   const wrap = el('div', 'info'); wrap.id = 'info'; wrap.append(shapeOf(id, vl));
   const right = el('div'); right.style.display = 'grid'; right.style.gap = '4px'; right.style.minWidth = '0';
   const extra = c.extraTribes.length ? ` + ${c.extraTribes.join(', ')}` : '';
-  const head = el('div', 'ihead'); head.append(el('h2', '', `${c.id} ${c.name} · เลเวล ${level}`), (() => { const h = el('span', 'hint', `${c.tribe}${extra} · `); h.append(rarityTag(c.rarity), ` · แถวแนะนำ ${rowHintTh(c.rowHint)}`); return h; })());
+  const head = el('div', 'ihead'); const h2 = el('h2', '', `${c.id} ${c.name} `); h2.append(rarityTag(c.rarity)); // set 159: rarity sits by the name (shop slots show it by ring colour only)
+  head.append(h2, el('span', 'hint', `${c.tribe}${extra} · แถว${rowHintTh(c.rowHint)}`));
   right.append(head);
   // สกิลเฉพาะเลเวลอื่น แสดงจาง · ค่าในคำอธิบายขีดเส้นใต้ตามเลเวลที่เลือกดู · set 120: skill text first (the pane is small)
   // set 142: skills with the same trigger share one line (skillGroups) · battle log stays per skill
@@ -1613,8 +1635,7 @@ function renderDiff(fx) {
 POPS.diff = () => {
   const rb = runBossAt(P), h = el('p', '', diffText.hint), sc = el('p', 'scout hint', diffText.scout); h.id = 'diffHint'; sc.id = 'scoutBox';
   const S2 = RUN_STAGE.settings;
-  const lines = rb ? [] : [el('p', 'hint', P.extra ? `แมตช์พิเศษ: ทีมบอทจริงที่พลังใกล้ทีมคุณ แรงขึ้น ${S2.foeExtraPct}%` : 'ศัตรูคือทีมบอทจริงที่พลังใกล้ทีมบนบอร์ดของคุณ (ไม่นับรูน) · ไม่ขยายพลัง'),
-    el('p', 'hint', 'ทีมศัตรูเป็นทีมบอทที่เล่นแบบคนจริง (รวมร่าง + มีรูน)')];
+  const lines = rb ? [] : [el('p', 'hint', (P.extra ? `แมตช์พิเศษ: แรงขึ้น ${S2.foeExtraPct}% · ` : '') + 'พลังเทียบกับทีมบนบอร์ดคุณ (ไม่นับรูน) · บอทเล่นแบบคนจริง (รวมร่าง + มีรูน)')];
   return [phead(rb ? 'รอบบอส' : 'ศัตรูรอบนี้'), h, ...lines, ...(rnFx(P).scout && !rb ? [foeMini()] : [sc]), pacts()]; // set 128: X9 → mini board here too
 };
 $('diffInfo').addEventListener('click', () => openPop('diff'));
@@ -1639,7 +1660,7 @@ const view = new BattleView($('arena'), CM, {
 view.onProc = e => {
   const v = view.units.get(e.who); if (!v || view.fast || !v.cell) return;
   let t = v.cell.querySelector('.sktag'); if (!t) { t = el('span', 'sktag'); v.cell.append(t); }
-  t.textContent = `สกิล: ${String(DO_TH[e.what] || 'ทำงาน').split(/[,(·]/)[0].trim()}`; v.cell.classList.add('skilling');
+  t.textContent = String(DO_TH[e.what] || 'สกิลทำงาน').split(/[,(·]/)[0].trim(); t.title = 'สกิล'; v.cell.classList.add('skilling');
   const cell = v.cell; clearTimeout(cell.skT); cell.skT = setTimeout(() => { t.remove(); cell.classList.remove('skilling'); }, 1400 / Math.min(view.speed || 1, 4));
 };
 $('fight').addEventListener('click', () => {
@@ -1677,7 +1698,7 @@ $('fight').addEventListener('click', () => {
   else saveRun(true); // set 136: match end = journal sent to the db
   showNotice('');
   showScreen('battle'); $('result').hidden = true; $('replayTag').hidden = true;
-  $('battleTitle').textContent = `แมตช์รอบ ${round}` + (rb ? ` · บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? ` · ศัตรูพลัง ${foe.want}% · คู่แข่ง: ทีมบอทรอบ ${foe.round}` : '');
+  $('battleTitle').textContent = rb ? `บอส: ${rb.boss.name} (ครั้งที่ ${rb.k})` : foe ? `คู่แข่ง: ทีมบอทรอบ ${foe.round}` : `แมตช์รอบ ${round}`; // set 159: round = HUD, enemy % = chip
   hideToast(); // set 106 (B4): shop warnings must not cover the field
   viewMap(teamB); view.speed = speed; view.load(shown); resetLog(); placeRunes(runes, rb ? [] : fr); view.play();
   if (autoSkip) view.skip();
