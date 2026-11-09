@@ -52,7 +52,7 @@ function rnPickFrom(st, list) { return list.length ? list[Math.floor(rnDraw(st) 
 // a rarity with nothing left is filled from any rarity · nothing at all = no offer · skip = ids to avoid if possible (reroll)
 // set 171: odds come from RULES.runeOdds by the round just won (st.round) · rounds past the table keep the last row
 function rnRollRar(st) {
-  const T = RULES.runeOdds, o = T[Math.max(1, Math.min(T.length, st.round | 0)) - 1] || {};
+  const T = RULES.runeOdds, n = Math.max(1, Math.min(T.length, RULES.runeOddsRounds | 0)), o = T[Math.max(1, Math.min(n, st.round | 0)) - 1] || {};
   const w = RN_RARS.map(r => Math.max(0, +o[r] || 0)), tot = w.reduce((a, b) => a + b, 0);
   if (!tot) return RN_RARS[0];
   let x = rnDraw(st) * tot;

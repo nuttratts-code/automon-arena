@@ -49,6 +49,7 @@ export const TESTS_RUNRUN = [
     ok(RULES.runeOdds.every(o => o.common + o.rare + o.legend === 100), 'start table rows sum to 100');
     for (const r of [1, 5, 10, 15, 19]) { const o = RULES.runeOdds[Math.min(r, 15) - 1]; for (const k of ['common', 'rare', 'legend']) { const g = pct(r, k); ok(Math.abs(g - o[k]) < 5, `r${r} ${k} ≈ ${o[k]}% (got ${g.toFixed(1)})`); } }
     ok(pct(1, 'legend') === 0, 'round 1 never offers legend');
+    const rr = RULES.runeOddsRounds; RULES.runeOddsRounds = 3; ok(Math.abs(pct(15, 'legend') - RULES.runeOdds[2].legend) < 4 && pct(2, 'legend') < 10, 'runeOddsRounds 3 = round 15 uses row 3'); RULES.runeOddsRounds = rr;
     const keep = RULES.runeOdds[0]; RULES.runeOdds[0] = { common: 0, rare: 0, legend: 100 };
     ok(pct(1, 'legend') === 100, 'edited row 1 = all legend'); RULES.runeOdds[0] = keep;
   }],

@@ -62,6 +62,7 @@ export function validateConfig(chars, rules = RULES) {
   }
   // set 171: rune card odds by round · ≥ 1 row, each row numbers ≥ 0 for common/rare/legend with total > 0
   const RO = rules.runeOdds;
+  if (Array.isArray(RO) && (!Number.isInteger(rules.runeOddsRounds) || rules.runeOddsRounds < 1 || rules.runeOddsRounds > RO.length)) errors.push(`รูน: จำนวนรอบในตารางต้องเป็น 1–${RO.length}`);
   if (!Array.isArray(RO) || !RO.length) errors.push('รูน: ตารางโอกาสการ์ดตามรอบผิด');
   else RO.forEach((o, i) => {
     const K = ['common', 'rare', 'legend'];

@@ -1691,7 +1691,7 @@ POPS.legend = () => {
 $('legendBtn').addEventListener('click', () => openPop('legend'));
 // enemy + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 107: no modes, the HUD shows the enemy power %
 const RN_OFF_TH = k => { const st = RUN_STAGE.settings, RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss',
-    ro = RULES.runeOdds[Math.max(1, Math.min(RULES.runeOdds.length, P.round | 0)) - 1] || {}, tot = RUNE_RARITY.reduce((s, [r]) => s + (+ro[r] || 0), 0) || 1; // set 171: odds of this round (RULES.runeOdds)
+    ro = RULES.runeOdds[Math.max(1, Math.min(RULES.runeOddsRounds, P.round | 0)) - 1] || {}, tot = RUNE_RARITY.reduce((s, [r]) => s + (+ro[r] || 0), 0) || 1; // set 171: odds of this round (RULES.runeOdds)
   return RUNE_RARITY.map(([r, th]) => [boss ? st[`offBoss${RK[r]}`] | 0 : Math.round((+ro[r] || 0) * 100 / tot), th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
 let diffText = { hint: '', scout: '' };
 const nextFoe = () => (BOT_OK ? pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra, undefined, undefined, P.ls | 0, P.ws | 0) : null); // set 129: P.ls = losses in a row → lower floor // set 128 (user X9 A): locked at shop start (P.fp), not re-picked at the fight · // set 119: real team, +foeExtraPct only in extra matches

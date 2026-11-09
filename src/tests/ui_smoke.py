@@ -746,6 +746,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#rchip-runeOdds'); pg.fill('#rule-runeOdds-0-legend','7'); pg.press('#rule-runeOdds-0-legend','Tab')
         rn=pg.evaluate("[document.querySelectorAll('#rsec-runeOdds tbody tr').length, RULES.runeOdds[0].legend, document.querySelector('#rsec-runeOdds .rsum').textContent, document.querySelector('#rchip-runeOdds .sb').textContent]")
         chk(rn[0]==15 and rn[1]==7 and rn[3]=='1' and rn[2].startswith('107'),'rules rune odds table: 15 rows + edit + total '+str(rn))
+        pg.fill('#rule-runeOddsRounds','10'); pg.press('#rule-runeOddsRounds','Tab'); chk(pg.evaluate("RULES.runeOddsRounds===10 && document.querySelectorAll('#rsec-runeOdds tbody tr')[12].textContent.includes('ไม่ใช้')"),'rules rune rounds 10 dims later rows')
         pg.click('#rsec-runeOdds .rreset'); chk(pg.evaluate("RULES.runeOdds[0].legend===RULES_BASE.runeOdds[0].legend && Object.keys(ruleEdits).length===0"),'rules rune odds reset')
         pg.fill('#ruleFind','ราคา'); chk(pg.evaluate("[...document.querySelectorAll('#rform .rsec')].filter(s=>!s.hidden).map(s=>s.dataset.g).join()")=='shop','rules search')
         pg.fill('#ruleFind',''); pg.click('#rchip-all'); pg.evaluate("document.getElementById('tab-sim').click()")
