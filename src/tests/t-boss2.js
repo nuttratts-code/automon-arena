@@ -65,7 +65,7 @@ export const TESTS_BOSS_V2 = [
     const base = stageBase();
     const st = cleanStage({ boss2: { g: 3, a: 99, heat: [{ id: 'aoe', v: 20 }, { id: 'nope' }, { id: 'tribeWeak', v: 5 }, { id: 'aoe', v: 9 }] },
       bosses: [{ id: 'B1', v2: true, weak: 'สายฟ้า', weakPct: 70, resistPct: 500, phases: [{ at: 0, rules: [{ id: 'plating', v: 3, v2: 15, v3: 999 }] }] }] });
-    eq(st.boss2.g, 3, 'g ผ่าน'); eq(st.boss2.a, base.boss2.a, 'a เกินช่วง = ค่าเดิม');
+    eq(st.boss2.g, 3, 'g ผ่าน'); eq(st.boss2.a, stageDefaults().boss2.a, 'a เกินช่วง = ค่าเดิม (ค่าเกม)');
     eq(st.boss2.heat, [{ id: 'aoe', v: 20 }], 'Heat กรองกฎที่ไม่มี/ต้องเลือกเผ่า/ซ้ำ');
     const b = st.bosses.find(x => x.id === 'B1');
     eq([b.v2, b.weak, b.weakPct, b.resistPct], [true, 'สายฟ้า', 70, stageDefaults().bosses.find(x => x.id === 'B1').resistPct], 'ค่ารายบอส (ต้านเกินช่วง = ค่าเดิม)');
