@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตัวอย่าง UI ชุด 1</title>
+<style>
+:root{--bg:#efe9df;--panel:#fbf8f3;--card:#fff;--ink:#231f1a;--mute:#6b6258;--line:#d8cfc2;--soft:#f1ebe1;--arena:#e3d6c1;--arena-line:#c9b89c;--accent:#2d5f7c;--on-accent:#fff;--gold:#9a6b00;--gold-bg:#f7e7bf;--heart:#b3263a;--heart-bg:#f8dfe3;--r-unc:#2f7d3a;--r-rare:#1d5fb8;--r-epic:#7a3fb0;--r-legend:#8f6200;--t-steel:#6e7d8c;--t-fire:#d9542b;--t-bolt:#d6a11a;--t-wind:#2f9c7b;--t-spirit:#7d62c6;--t-fiend:#a92f48;--cue:#b5531c;--cue-bg:#fff1e3;
+--f-display:"Mitr","IBM Plex Sans Thai",Tahoma,sans-serif;--f-body:"IBM Plex Sans Thai","Noto Sans Thai",Tahoma,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#17140f;--panel:#211d17;--card:#2a251d;--ink:#efe8dc;--mute:#a89e90;--line:#3a332a;--soft:#2a251d;--arena:#2b251c;--arena-line:#4a3f30;--accent:#8cc0de;--on-accent:#10202a;--gold:#f0c860;--gold-bg:#3a2f14;--heart:#f07a8c;--heart-bg:#3a1c22;--r-unc:#7fd18c;--r-rare:#7fb2f0;--r-epic:#c9a2f2;--r-legend:#f0c860;--t-steel:#97a6b5;--t-fire:#f0764b;--t-bolt:#f0c445;--t-wind:#4cc49e;--t-spirit:#a48ce8;--t-fiend:#e0566f;--cue:#f39a6a;--cue-bg:#3a2417}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 var(--f-body)}
+main{max-width:1000px;margin:0 auto;padding:16px}
+h1{font:600 1.15rem var(--f-display);margin:0 0 4px}
+h2{font:600 .98rem var(--f-display);margin:0 0 2px}
+p{margin:0}
+.hint{font-size:.78rem;color:var(--mute)}
+section.demo{margin:22px 0 0}
+.note{display:grid;gap:4px;margin:6px 0 10px}
+button{font:600 .85rem var(--f-body);border-radius:8px;padding:7px 12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;min-height:36px}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.steps button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+
+/* mock screen */
+.screen{background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:8px;max-width:844px;position:relative}
+.hud{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hud b.t{font:600 .95rem var(--f-display);margin-right:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font:600 .82rem var(--f-mono)}
+.chip.gold{background:var(--gold-bg);color:var(--gold);border-color:transparent}
+.chip.heart{background:var(--heart-bg);color:var(--heart);border-color:transparent}
+.hb{height:32px;border-radius:16px;padding:0 12px;font:400 .82rem var(--f-body);min-height:0}
+.hb.q{width:32px;padding:0;font:600 .95rem var(--f-display);border-color:var(--accent);color:var(--accent)}
+.grow{flex:1}
+.board{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:6px;background:var(--arena);border:1px solid var(--arena-line);border-radius:10px;padding:8px;min-height:130px}
+.slot{border:1px dashed var(--arena-line);border-radius:8px;display:grid;place-items:center;min-height:52px;position:relative}
+.dock{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:stretch}
+.left{display:grid;gap:6px;align-content:start}
+.shop{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.unit{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 4px;display:grid;justify-items:center;gap:3px;font:600 .7rem var(--f-body);min-height:62px;position:relative}
+.unit small{font:500 .62rem var(--f-mono);color:var(--gold)}
+.unit.unc{border:2px solid var(--r-unc)}.unit.rare{border:2px solid var(--r-rare)}.unit.epic{border:2px solid var(--r-epic)}.unit.legend{border:2px solid var(--r-legend);background:var(--gold-bg)}
+.shape{width:24px;height:24px;background:var(--c)}
+.sq{--c:var(--t-steel);border-radius:3px}.tri{--c:var(--t-fire);clip-path:polygon(50% 4%,96% 92%,4% 92%)}.dia{--c:var(--t-bolt);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}.cir{--c:var(--t-wind);border-radius:50%}.hex{--c:var(--t-spirit);clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%)}.pen{--c:var(--t-fiend);clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
+.fight{min-width:128px;display:grid;align-content:center;justify-items:center;gap:2px;padding:6px 10px;border-radius:10px;position:relative;font-family:var(--f-display)}
+.fight .big{font:500 1.15rem var(--f-display)}
+.fight .sm{font:400 .72rem var(--f-body);opacity:.92;text-align:center}
+.fight.cue{box-shadow:0 0 0 3px var(--cue-bg),0 0 0 5px var(--cue)}
+.fight.dim{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.pulse{animation:pulse 1.4s ease-in-out 3}
+@keyframes pulse{50%{box-shadow:0 0 0 6px var(--cue-bg),0 0 0 8px var(--cue)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.hintdot{position:absolute;inset:-5px;border:2px solid var(--cue);border-radius:11px;pointer-events:none}
+.tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--cue);color:#fff;font:600 .68rem var(--f-body);padding:1px 8px;border-radius:99px;white-space:nowrap}
+.dimz{opacity:.4}
+
+/* legend popup */
+.pop{position:absolute;inset:44px 10px auto auto;width:min(340px,92%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:grid;gap:8px;z-index:3}
+.pop h2{display:flex;justify-content:space-between;align-items:center}
+.lg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.lgi{display:grid;justify-items:center;gap:2px;font-size:.72rem;text-align:center;padding:4px;border-radius:8px;background:var(--soft)}
+.rbox{width:26px;height:20px;border-radius:5px;background:var(--card)}
+
+/* power panel before/after */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:700px}
+.pp{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:6px}
+.pp .hd{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.lvs{display:flex;gap:4px}.lvs span{font:600 .7rem var(--f-mono);padding:2px 8px;border-radius:99px;border:1px solid var(--line)}.lvs span.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.st{display:grid;grid-template-columns:1fr auto;font:500 .8rem var(--f-mono);padding:2px 0;border-bottom:1px solid var(--soft)}
+.st.z{color:var(--mute);opacity:.45}
+.badge{display:inline-block;font:600 .68rem var(--f-body);padding:1px 8px;border-radius:99px;background:var(--soft);color:var(--mute)}
+@media (max-width:620px){.cmp{grid-template-columns:1fr}.dock{grid-template-columns:1fr}.shop{grid-template-columns:repeat(5,1fr)}.fight{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+<h1>ตัวอย่าง UI ชุด 1 (ยังไม่ได้แตะเกมจริง)</h1>
+<p class="hint">ใช้สี ฟอนต์ และรูปทรงเดิมของเกมทั้งหมด มี 3 ตัวอย่าง: ปุ่มสู้ที่บอกขั้นตอน · ปุ่ม ? อธิบายสัญลักษณ์ · แผงค่าพลังที่ทำค่า 0 ให้จาง</p>
+
+<!-- 1: cue on the fight button -->
+<section class="demo">
+  <h2>1 · ปุ่มสู้บอกว่าต้องทำอะไรต่อ</h2>
+  <div class="note"><p class="hint">ไม่เพิ่มแถวใหม่ ข้อความรองบนปุ่มสู้เปลี่ยนตามสถานะ และมีกรอบส้มชี้จุดที่ต้องแตะ หายไปเองหลังผู้เล่นทำถูกครั้งแรก (แตะปุ่มด้านล่างเพื่อดูแต่ละขั้น)</p></div>
+  <div class="steps" id="steps">
+    <button type="button" data-s="0" aria-pressed="true">เริ่มรอบ 1 (ยังไม่มีตัว)</button>
+    <button type="button" data-s="1" aria-pressed="false">ซื้อแล้ว อยู่ม้านั่ง</button>
+    <button type="button" data-s="2" aria-pressed="false">วางบนบอร์ดแล้ว</button>
+  </div>
+  <div class="screen" id="scr">
+    <div class="hud">
+      <b class="t">Automon Arena</b><span class="hint">รอบ 1 · ชนะ 0/10</span>
+      <span class="chip heart">♥ 5</span><span class="chip gold">● 10</span>
+      <span class="grow"></span>
+      <button class="hb" type="button">เผ่า 0/0</button><button class="hb" type="button">รูน 0</button><button class="hb q" type="button" aria-label="อธิบายสัญลักษณ์" id="qbtn">?</button>
+    </div>
+    <div class="board" id="board">
+      <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    </div>
+    <div class="dock">
+      <div class="left"><button type="button">⟳ สุ่มใหม่ · 1</button><button type="button">ร้าน Lv 1</button></div>
+      <div class="shop" id="shop"></div>
+      <button class="primary fight cue pulse" id="fightb" type="button"><span class="big" id="ft">เริ่มสู้</span><span class="sm" id="fn">ซื้อตัวจากร้านก่อน</span></button>
+    </div>
+    <div class="pop" id="pop" hidden>
+      <h2>สัญลักษณ์ในเกม <button type="button" id="close" aria-label="ปิด" style="min-height:32px">✕</button></h2>
+      <p class="hint">รูปทรง = เผ่า</p>
+      <div class="lg">
+        <div class="lgi"><span class="shape sq"></span>เหล็กกล้า</div><div class="lgi"><span class="shape tri"></span>เพลิงเผา</div><div class="lgi"><span class="shape dia"></span>สายฟ้า</div>
+        <div class="lgi"><span class="shape cir"></span>วายุ</div><div class="lgi"><span class="shape hex"></span>ภูติ</div><div class="lgi"><span class="shape pen"></span>อสูร</div>
+      </div>
+      <p class="hint">ขอบการ์ด = ความหายาก (มีชื่อกำกับ ไม่ใช้สีอย่างเดียว)</p>
+      <div class="lg">
+        <div class="lgi"><span class="rbox" style="border:1px solid var(--line)"></span>ธรรมดา</div><div class="lgi"><span class="rbox" style="border:2px solid var(--r-unc)"></span>ไม่ธรรมดา</div><div class="lgi"><span class="rbox" style="border:2px solid var(--r-rare)"></span>หายาก</div>
+        <div class="lgi"><span class="rbox" style="border:2px solid var(--r-epic)"></span>หายากมาก</div><div class="lgi"><span class="rbox" style="border:2px solid var(--r-legend);background:var(--gold-bg)"></span>ตำนาน</div><div class="lgi"><b style="font:600 .8rem var(--f-mono);color:var(--gold)">★★</b>= เลเวล 2</div>
+      </div>
+      <p class="hint">ซื้อ 3 ตัวเดียวกัน = รวมร่างเป็นเลเวลถัดไปอัตโนมัติ</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3: power panel -->
+<section class="demo">
+  <h2>2 · แผงค่าพลัง: ค่า 0 จางลง ยังเห็นครบทุกบรรทัด</h2>
+  <div class="note"><p class="hint">ตำแหน่งแต่ละบรรทัดคงที่ เทียบตัวละครได้เหมือนเดิม (ตามที่คุณเลือกในชุด 26 ให้แสดงทุกค่า) แต่ตาจับค่าที่มีผลได้เร็วขึ้น ซ้ายคือแบบเดิม ขวาคือแบบใหม่</p></div>
+  <div class="cmp">
+    <div class="pp"><div class="hd"><b>ก่อน</b><div class="lvs"><span class="on">Lv1</span><span>Lv2</span><span>Lv3</span></div></div>
+      <div class="st"><span>พลังโจมตี</span><span>12</span></div><div class="st"><span>เลือด</span><span>85</span></div><div class="st"><span>เกราะ</span><span>0</span></div><div class="st"><span>ไฟเผา</span><span>0</span></div><div class="st"><span>ช็อต</span><span>4</span></div><div class="st"><span>มัลติฮิต</span><span>0</span></div></div>
+    <div class="pp"><div class="hd"><b>หลัง</b><div class="lvs"><span class="on">Lv1</span><span>Lv2</span><span>Lv3</span></div></div>
+      <div class="st"><span>พลังโจมตี</span><span>12</span></div><div class="st"><span>เลือด</span><span>85</span></div><div class="st z"><span>เกราะ</span><span>0</span></div><div class="st z"><span>ไฟเผา</span><span>0</span></div><div class="st"><span>ช็อต</span><span>4</span></div><div class="st z"><span>มัลติฮิต</span><span>0</span></div>
+      <span class="badge">ค่าจาง = ตัวนี้ไม่มีค่านั้น</span></div>
+  </div>
+</section>
+</main>
+<script>
+const shopData=[['sq','unc','เหล็ก A','Lv1'],['tri','','เพลิง B','Lv1'],['dia','rare','ฟ้า C','Lv1'],['cir','epic','วายุ D','Lv1'],['pen','legend','อสูร E','Lv1']];
+const shop=document.getElementById('shop'),board=document.getElementById('board'),fb=document.getElementById('fightb'),ft=document.getElementById('ft'),fn=document.getElementById('fn');
+function unit(d,tag){const u=document.createElement('div');u.className='unit '+d[1];const s=document.createElement('span');s.className='shape '+d[0];const n=document.createElement('span');n.textContent=d[2];const l=document.createElement('small');l.textContent='★';u.append(s,n,l);if(tag){const t=document.createElement('span');t.className='tag';t.textContent=tag;u.append(t)}return u}
+function show(step){
+  shop.replaceChildren();board.replaceChildren();
+  fb.classList.remove('cue','pulse','dim');
+  for(let i=0;i<5;i++){const u=unit(shopData[i],step===0&&i===0?'แตะเพื่อซื้อ':'');if(step===0&&i===0){u.style.boxShadow='0 0 0 3px var(--cue-bg),0 0 0 5px var(--cue)'}shop.append(u)}
+  for(let i=0;i<6;i++){const sl=document.createElement('div');sl.className='slot';if(step===2&&i===1)sl.append(unit(shopData[0]));if(step===1&&i===1){sl.style.boxShadow='0 0 0 3px var(--cue-bg),0 0 0 5px var(--cue)';const t=document.createElement('span');t.className='tag';t.textContent='วางที่นี่';sl.append(t)}board.append(sl)}
+  if(step===0){ft.textContent='เริ่มสู้';fn.textContent='ซื้อตัวจากร้านก่อน';fb.classList.add('dim')}
+  if(step===1){ft.textContent='เริ่มสู้';fn.textContent='ลากตัวไปวางบนบอร์ด';fb.classList.add('dim')}
+  if(step===2){ft.textContent='เริ่มสู้';fn.textContent='พร้อมแล้ว · ลงสนาม 1/6 ตัว';fb.classList.add('cue','pulse')}
+}
+document.getElementById('steps').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;for(const x of document.querySelectorAll('#steps button'))x.setAttribute('aria-pressed',x===b);show(+b.dataset.s)});
+const pop=document.getElementById('pop');
+document.getElementById('qbtn').onclick=()=>{pop.hidden=!pop.hidden};
+document.getElementById('close').onclick=()=>{pop.hidden=true};
+show(0);
+</script>
+</body>
+</html>
