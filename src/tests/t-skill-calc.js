@@ -260,12 +260,12 @@ const SC_SKILL = [
     eq(got.map(e => [e.to, e.amount]), Array(hits).fill([x.uid(1, 2, 0), v]), 'burn per hit to the back enemy in my lane');
     return x;
   }],
-  ['PL-4', 'ตีโดน → พลังโจมตี +30% ของไฟบนศัตรูเลนเดียวกัน', (c, L, i) => {
+  ['PL-4', 'ตีโดน → พลังโจมตี +15% ของไฟบนศัตรูเลนเดียวกัน', (c, L, i) => {
     const x = scRun([[c, L, 0, 0]], [[scBag('ZB-1'), 1, 0, 0]]), me = x.uid(0, 0, 0), foe = x.uid(1, 0, 0), v = sk('PL-4').v[i];
     const got = scSk(x.r, me, 0, 'atkUp'); let n = 0;
     for (const p of scProcs(x.r, me, 0).filter(e => e.t <= 60000)) {
       const b = x.r.events.filter(e => e.k === 'burn' && e.to === foe && e.t === p.t).pop(); // own burn/hit lands first (statuses on enemies before self effects)
-      const want = Math.floor((b ? b.total : 0) * v / 100), g = got.filter(e => e.t === p.t);
+      const want = upGain(b ? b.total : 0, v), g = got.filter(e => e.t === p.t); // set 167: game rounding (set 147 R3, at least +1): Lv1 burn 4 × 15% → +1
       if (want > 0) { eq(g.map(e => e.amount), [want], `t ${p.t}: atk + (burn ${b.total})`); n++; }
     }
     ok(n > 3, 'gained attack at least 4 times');
