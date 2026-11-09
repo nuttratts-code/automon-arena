@@ -36,10 +36,10 @@ export const dummyScore = res => Math.round((res && res.units || []).filter(u =>
 export const runBossById = (id, stage = RUN_STAGE) => (id === DUMMY_ID ? DUMMY_BOSS : stage.bosses.find(b => b.id === id) || null);
 // set 119 (user): bossExtraPct (3rd+ boss, % each) only for a boss met in extra matches (extra = true) · normal run = growth by k only
 export const bossExtraOf = (extra, stage = RUN_STAGE) => (extra ? stage.settings.bossExtraPct | 0 : 0);
-export const runBossTeam = (b, k, stage = RUN_STAGE, extra = false) => [bossUnit(b, k, bossExtraOf(extra, stage))];
+export const runBossTeam = (b, k, stage = RUN_STAGE, extra = false) => [bossUnit(b, k, bossExtraOf(extra, stage), stage.boss2 || undefined)]; // set 168: v2 bosses read stage.boss2 (curve + Heat)
 // boss as a character card for the battle view / unit panels (same shape as the Balance Room's simBossChar)
 export function runBossChar(b, k, stage = RUN_STAGE, extra = false) {
-  const at = bossAt(b, k, bossExtraOf(extra, stage)), b3 = v => [v, v, v];
+  const at = bossAt(b, k, bossExtraOf(extra, stage), stage.boss2 || undefined), b3 = v => [v, v, v];
   return { id: b.id, name: `${b.name} (บอส)`, tribe: b.tribe, extraTribes: [], rarity: 'ตำนาน', price: 0, rowHint: 'หน้า',
     hp: b3(at.hp), atk: b3(at.atk), cdMs: b3(b.cdMs), multi: b3(b.multi), burn: b3(b.burn || 0), shock: b3(b.shock || 0), armorHit: b3(0), healHit: b3(0), skills: [] };
 }

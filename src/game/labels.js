@@ -387,7 +387,7 @@ const bossRuleRow = id => BOSS_RULES.find(q => q[0] === id) || BOSS_PHASE_FX.fin
 export function bossRuleName(id, short = false) {
   if (id === 'untargetable') return 'X3 บอสตีไม่โดนชั่วคราว';
   const q = bossRuleRow(id); if (!q) return String(id);
-  const m = /^([RX]\d+) /.exec(q[1]);
+  const m = /^([RXS]\d+) /.exec(q[1]); // set 168: S1–S6 = boss v2 signature rules
   return short && m ? m[1] : q[1];
 }
 // one rule with its numbers, e.g. 'R15 ทุก X วิ สุ่มผู้เล่น 1 ตัวใช้สกิลไม่ได้ (8 วิ · ใช้ไม่ได้นาน 4 วิ)'
@@ -396,6 +396,7 @@ export function bossRuleText(r) {
   const vals = [];
   if (q[4] && r.v != null) vals.push(`${r.v}${q[5] === '%' ? '%' : ' ' + q[5]}`);
   if (Array.isArray(q[6]) && r.v2 != null) vals.push(`${q[6][0]} ${r.v2}${q[6][4] === '%' ? '%' : ' ' + q[6][4]}`);
+  if (Array.isArray(q[7]) && r.v3 != null) vals.push(`${q[7][0]} ${r.v3}${q[7][4] === '%' ? '%' : ' ' + q[7][4]}`);
   if (q[6] === 'tribe' && r.tribe) vals.push(`เผ่า${r.tribe}`);
   return vals.length ? `${q[1]} (${vals.join(' · ')})` : q[1];
 }
