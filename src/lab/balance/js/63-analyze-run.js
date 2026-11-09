@@ -92,6 +92,7 @@ function renderPlayRun() {
   }));
   renderRunRunes(R);
   renderRunCombat();
+  renderVerdict();
   $('runCombos').replaceChildren(...(R.combos.length ? R.combos.map((x, i) => {
     const tr = document.createElement('tr'), tc = td(x.ids.join(' '), 'mxt-team');
     tc.title = x.ids.map(id => `${id} ${(chars.find(q => q.id === id) || {}).name || ''}`).join('\n');
@@ -176,7 +177,7 @@ $('runeCheckBtn').addEventListener('click', async () => {
 
 // ---------- Set 160 (user 9 Nov): per-character combat table (damage by source, taken, armor, heal/armor given, kills, survive) ----------
 // Numbers come from lab/matchcalc.js mxCombatAdd (same records as the match tab). Filters/unit/source toggles only redraw this table.
-const cbView = { u: 'm', src: false };
+const cbView = { u: 'm', src: false, lv: 0 }; // set 165: lv 0 = every level · 1–3 = only matches fielded at that level
 const CB_LOW = 30; // fewer appearances than this = numbers still swing (row faded)
 for (const r of RARITIES) $('cbRar').append(new Option(r, r));
 for (const t of TRIBES) $('cbTribe').append(new Option(t, t));
@@ -185,6 +186,7 @@ const cbSeg = (id, key, set) => $(id).addEventListener('click', ev => {
   for (const x of $(id).querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
   set(b.dataset[key]); renderRunCombat();
 });
+cbSeg('cbLv', 'lv', v => { cbView.lv = [1, 2, 3].includes(+v) ? +v : 0; });
 cbSeg('cbUnit', 'u', v => { cbView.u = v === 's' ? 's' : 'm'; });
 cbSeg('cbSrc', 's', v => { cbView.src = !!v; delete runSortState.runCombat; });
 $('cbRar').addEventListener('change', cbFilter); $('cbTribe').addEventListener('change', cbFilter); $('cbFind').addEventListener('input', cbFilter);
@@ -201,7 +203,7 @@ function cbFilter() {
 }
 function renderRunCombat() {
   const R = anaPlayRun, body = $('runCombat'), head = $('cbHead');
-  const L = (R && R.combat) || [], per = cbView.u === 's';
+  const L = (R && (cbView.lv ? R.combatLv && R.combatLv[cbView.lv] : R.combat)) || [], per = cbView.u === 's';
   const srcs = MX_SRC.filter(w => L.some(x => x.src[w] > 0));
   const cols = [['ตัวละคร'], ['ความหายาก'], ['ลงสนาม', 'n', 'จำนวนครั้งที่ตัวนี้อยู่ในทีมตอนสู้'], ['ดาเมจที่ทำ', 'n', 'ดาเมจที่ใส่ศัตรู (แท่งสี = แยกที่มา)'],
     ...(cbView.src ? srcs.map(w => [MX_NAME[w], 'n cb-src', `ดาเมจจาก${MX_NAME[w]}`]) : []),
@@ -239,3 +241,66 @@ function renderRunCombat() {
   runSortApply(body); cbFilter();
 }
 renderRunCombat();
+
+// ---------- Set 165 (user 9 Nov, brainstorm A1 · picks A1 B1 C1 E2): "สรุปแรง/อ่อน" — one verdict per character ----------
+// Win % in the matches the character was fielded, compared with the median of the SAME rarity (and the same level when a level is picked).
+// lab/analyze.js charFlags does the maths (unit-tested) · the bar: centre = that median, shaded band = the allowed gap, fill = this character.
+const vfView = { lv: 0 };
+const VF_TH = { strong: ['แรงไป', 'bad'], weak: ['อ่อนไป', 'mid'], ok: ['โอเค', 'good'], nobase: ['เทียบไม่ได้', 'na'], low: ['ข้อมูลน้อย', 'na'] };
+const VF_ORDER = { strong: 0, weak: 1, ok: 2, nobase: 3, low: 4 };
+const VF_SPAN = 25; // the bar shows −25 … +25 points around the median (further = clipped at the edge)
+$('vfLv').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  for (const x of $('vfLv').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+  vfView.lv = [1, 2, 3].includes(+b.dataset.lv) ? +b.dataset.lv : 0; renderVerdict();
+});
+function vfRows(R, L) {
+  return charFlags(R.chars.map(x => {
+    const c = chars.find(q => q.id === x.id) || x;
+    return { id: x.id, name: c.name, rarity: c.rarity, g: L ? x.lvG[L - 1] : x.mGames, w: L ? x.lvW[L - 1] : Math.round(x.mWin * x.mGames / 100) };
+  }));
+}
+function vfBar(x) {
+  const bar = el('span', 'vf-bar', ''); bar.setAttribute('aria-hidden', 'true');
+  const pos = v => 50 + Math.max(-VF_SPAN, Math.min(VF_SPAN, v)) / VF_SPAN * 50;
+  if (x.d != null) {
+    const band = el('i', 'vf-band', ''); band.style.left = `${pos(-x.lim)}%`; band.style.width = `${pos(x.lim) - pos(-x.lim)}%`;
+    const fill = el('i', 'vf-fill', ''), a = pos(Math.min(0, x.d)), b = pos(Math.max(0, x.d));
+    fill.style.left = `${a}%`; fill.style.width = `${Math.max(1.5, b - a)}%`;
+    bar.append(band, fill);
+  }
+  bar.append(el('i', 'vf-mid', ''));
+  return bar;
+}
+function vfWhy(x, L) {
+  const at = L ? ` ที่ Lv${L}` : '';
+  if (x.flag === 'low') return `ลงสนาม${at} ${x.g.toLocaleString()} แมตช์ (ต้องมีอย่างน้อย ${CHAR_FLAG.floor} ถึงจะตัดสินได้)`;
+  if (x.flag === 'nobase') return `ชนะ ${fmt(x.win)}% · ตัว${x.rarity}ที่มีข้อมูลพอมีไม่ถึง ${CHAR_FLAG.minPeers} ตัว จึงยังเทียบไม่ได้`;
+  return `ชนะตอนลงสนาม ${fmt(x.win)}% · ค่ากลางตัว${x.rarity}${at} ${fmt(x.base)}% · ${x.g.toLocaleString()} แมตช์ · เกณฑ์ ±${fmt(x.lim)}`;
+}
+function renderVerdict() {
+  const R = anaPlayRun, L = vfView.lv, list = $('vfList');
+  $('vfHint').textContent = `เทียบอัตราชนะของแมตช์ที่ตัวนี้ลงสนาม กับค่ากลางของตัวที่ความหายากเดียวกัน${L ? ' และเลเวลเดียวกัน' : ''} · แรงไป / อ่อนไป = ห่างจากค่ากลางเกิน ${CHAR_FLAG.gap} แต้ม และเกิน 2 เท่าของความคลาดเคลื่อน (ค่าเสนอ) · ลงสนามไม่ถึง ${CHAR_FLAG.floor} แมตช์ = ข้อมูลน้อย · แถบ: เส้นกลาง = ค่ากลาง · แถบจาง = ช่วงที่ยังโอเค · แถบเข้ม = ตัวนี้ (ซ้าย = ชนะน้อยกว่า · ขวา = ชนะมากกว่า) · ตัวที่ลงสนามตอนทีมเก่งอยู่แล้วจะดูชนะเยอะ จึงใช้เป็นตัวชี้ว่าควรไปดูตัวไหน ไม่ใช่คำตัดสินสุดท้าย · แตะแถวเพื่อเปิดแก้ตัวละคร`;
+  if (!R || !R.chars) {
+    list.replaceChildren(el('li', 'vf-empty', 'ยังไม่มีผล: เลือกคู่ต่อสู้ "รันจริง (บอท)" แล้วกดวิเคราะห์ ป้ายแรง/อ่อนจะขึ้นที่นี่'));
+    $('vfCount').replaceChildren(); secBadge('anaRun', 'verdict', ''); return;
+  }
+  if (L && !R.chars.every(x => Array.isArray(x.lvG))) { list.replaceChildren(el('li', 'vf-empty', 'ผลนี้วัดก่อนมีการแยกเลเวล กดวิเคราะห์ใหม่อีกครั้ง')); $('vfCount').replaceChildren(); return; }
+  const rows = vfRows(R, L).filter(x => x.g > 0 || !L).sort((a, b) => VF_ORDER[a.flag] - VF_ORDER[b.flag]
+    || (a.flag === 'weak' ? a.d - b.d : a.flag === 'low' ? b.g - a.g : (b.d ?? 0) - (a.d ?? 0)));
+  const n = {}; for (const x of rows) n[x.flag] = (n[x.flag] || 0) + 1;
+  $('vfCount').replaceChildren(...['strong', 'weak', 'ok', 'nobase', 'low'].filter(f => n[f]).map(f => el('span', `vtag ${VF_TH[f][1]}`, `${VF_TH[f][0]} ${n[f]}`)));
+  secBadge('anaRun', 'verdict', vfView.lv === 0 && (n.strong || n.weak) ? String((n.strong || 0) + (n.weak || 0)) : '');
+  if (!rows.length) { list.replaceChildren(el('li', 'vf-empty', `ไม่มีตัวไหนลงสนามที่ Lv${L}`)); return; }
+  list.replaceChildren(...rows.map(x => {
+    const li = el('li', `vf-row f-${x.flag}`, ''); li.tabIndex = 0; li.dataset.id = x.id;
+    const name = el('span', 'vf-name', ''); name.append(charBadge(x.id), el('b', '', `${x.id} ${x.name}`), rarityTag(x.rarity));
+    const num = el('span', 'vf-num', x.d == null ? '–' : `${x.d > 0 ? '+' : ''}${fmt(x.d)}`);
+    li.append(el('span', `vtag ${VF_TH[x.flag][1]}`, VF_TH[x.flag][0]), name, vfBar(x), num, el('span', 'vf-why', vfWhy(x, L)));
+    li.title = `${x.id} ${x.name}: ${VF_TH[x.flag][0]} · ${vfWhy(x, L)}`;
+    const open = () => { showTab('chars'); setCurrent(x.id); $('editor').scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+    li.addEventListener('click', open); li.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); open(); } });
+    return li;
+  }));
+}
+renderVerdict();

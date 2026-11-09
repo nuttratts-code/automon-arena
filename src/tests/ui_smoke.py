@@ -420,6 +420,16 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
           $('cbUnit').querySelector('[data-u="s"]').click(); const ps=$('runCombat').querySelector(`tr[data-id="${chars[0].id}"]`).cells[3].firstChild.textContent;
           $('cbUnit').querySelector('[data-u="m"]').click(); $('cbSrc').querySelector('[data-s=""]').click(); return [a,h,vis,h2,ps];})()""")
         chk(cb[0]==2 and cb[1]==11 and cb[2]==1 and cb[3]==13 and cb[4]=='10','combat table rows/filter/source cols/per-sec '+str(cb))
+        # set 165: combat table level picker reads combatLv · "สรุปแรง/อ่อน" verdict list from fake run data (badges, level filter, low data)
+        vf=pg.evaluate("""(()=>{const mk=(id,n)=>({id,name:'',tribe:'',rarity:'',n,ms:n*30000,out:300*n,src:{hit:300*n},taken:150*n,abs:20*n,loss:120*n,heal:10*n,armor:5*n,kills:0.5*n,alive:n/2});
+          anaPlayRun.combatLv={1:[],2:[mk(chars[2].id,7)],3:[]}; $('cbLv').querySelector('[data-lv="2"]').click(); const c2=$('runCombat').rows.length+':'+$('runCombat').rows[0].dataset.id;
+          $('cbLv').querySelector('[data-lv="0"]').click();
+          const R=chars[0].rarity, same=chars.filter(c=>c.rarity===R).slice(0,5), wr=[50,52,54,56,80];
+          anaPlayRun.chars=chars.map(c=>{const i=same.indexOf(c), g=i>=0?200:10, w=i>=0?wr[i]*2:5; return {id:c.id,mGames:g,mWin:w/g*100,lvG:[0,i>=0?200:0,0],lvW:[0,i>=0?w:0,0]};});
+          renderVerdict(); const strong=[...$('vfList').querySelectorAll('.vf-row.f-strong')].map(x=>x.dataset.id), all=$('vfList').children.length, low=$('vfList').querySelectorAll('.f-low').length;
+          $('vfLv').querySelector('[data-lv="2"]').click(); const l2=$('vfList').children.length; $('vfLv').querySelector('[data-lv="0"]').click();
+          return [c2, strong.join(), same[4].id, all, low, l2, chars.length];})()""")
+        chk(vf[0]=='1:'+pg.evaluate('chars[2].id') and vf[1]==vf[2] and vf[3]==vf[6] and vf[4]==vf[6]-5 and vf[5]==5,'verdict list + level pickers '+str(vf))
         # ชุด 30: 3 ขั้น · ส่วนบันทึก + ไอเดีย + คลังสกิล (พับไว้) อยู่ท้ายขั้นแก้ (ใต้แก้ตัวละคร/โบนัสเผ่า ไม่อยู่ในลองสู้) · ไอเดียตามตัวที่แก้
         chk(pg.locator('#step-save').count()==0 and pg.eval_on_selector_all('#steps button[id^=step-]','e=>e.length')==3 and pg.is_visible('#steps #save'),'3 steps + save button on top bar')
         pg.click('#step-edit'); pg.click('#tab-chars')

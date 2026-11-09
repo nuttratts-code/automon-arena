@@ -86,10 +86,11 @@ export function mxBySrc(list) { const s = {}; let t = 0; for (const x of list) {
 // → acc[id] += this match, side `side` only. Same records as the match tab (mxRecords / mxFxGiven), so numbers agree.
 // Summoned units credit their summoner (damage, heal/armor given, kills); taken / armor blocked / survive = the unit itself.
 export const mxCombatNew = () => ({ n: 0, ms: 0, out: 0, src: {}, taken: 0, abs: 0, loss: 0, heal: 0, armor: 0, kills: 0, alive: 0 });
-export function mxCombatAdd(acc, r, side = 0) {
+// set 165: accLv (optional) = { [level]: { [id]: totals } } — the same numbers split by the unit's level at the start of the fight
+export function mxCombatAdd(acc, r, side = 0, accLv = null) {
   const st = r.events.find(e => e.k === 'start'); if (!st) return acc;
-  const sideOf = new Map(), owner = new Map(), idOf = new Map(), S = new Map();
-  for (const u of st.units) { sideOf.set(u.uid, u.side); if (u.side === side) { owner.set(u.uid, u.uid); idOf.set(u.uid, u.id); S.set(u.uid, mxCombatNew()); } }
+  const sideOf = new Map(), owner = new Map(), idOf = new Map(), lvOf = new Map(), S = new Map();
+  for (const u of st.units) { sideOf.set(u.uid, u.side); if (u.side === side) { owner.set(u.uid, u.uid); idOf.set(u.uid, u.id); lvOf.set(u.uid, u.level | 0); S.set(u.uid, mxCombatNew()); } }
   for (const e of r.events) if (e.k === 'summon' && e.unit) { sideOf.set(e.unit.uid, e.unit.side); if (owner.has(e.from)) owner.set(e.unit.uid, owner.get(e.from)); }
   const own = uid => (uid == null ? null : S.get(owner.get(uid)) || null);
   const recs = mxRecords(r), last = new Map(); let ri = 0;
@@ -104,10 +105,32 @@ export function mxCombatAdd(acc, r, side = 0) {
   for (const [uid, rows] of mxFxGiven(r)) { const g = own(uid); if (!g) continue;
     for (const row of rows.values()) for (const { e } of row.list) if (e.k === 'heal' || e.k === 'armor') g[e.k] += e.amount || 0; }
   const down = new Map((r.units || []).map(u => [u.uid, !!u.down]));
-  for (const [uid, g] of S) {
-    const a = (acc[idOf.get(uid)] ||= mxCombatNew());
+  const put = (a, uid, g) => {
     a.n++; a.ms += r.timeMs || 0; a.out += g.out; a.taken += g.taken; a.abs += g.abs; a.loss += g.loss; a.heal += g.heal; a.armor += g.armor; a.kills += g.kills; a.alive += down.get(uid) ? 0 : 1;
     for (const [w, v] of Object.entries(g.src)) a.src[w] = (a.src[w] || 0) + v;
+  };
+  for (const [uid, g] of S) {
+    put(acc[idOf.get(uid)] ||= mxCombatNew(), uid, g);
+    if (accLv) put((accLv[lvOf.get(uid)] ||= {})[idOf.get(uid)] ||= mxCombatNew(), uid, g);
   }
   return acc;
+}
+// ---------- set 165 (kept here: bundled in balance.html AND system-check.html, so the check page runs its test)
+// ---------- set 165 (user 9 Nov, brainstorm A1): "สรุปแรง/อ่อน" verdict per character from real bot runs ----------
+// rows = [{ id, rarity, g (matches fielded), w (won) }] at one level (or all levels) → each row + { win, se, base, d, lim, flag }
+// base = median win % of the SAME rarity (rows with g ≥ floor) · flag (ค่าเสนอ, user picked C1): strong / weak = |win − base| > max(gap, 2 × SE)
+// · low = fewer than floor matches · nobase = fewer than minPeers same-rarity rows with enough data (nothing fair to compare with) · ok otherwise
+export const CHAR_FLAG = { gap: 5, floor: 30, minPeers: 3 };
+export function charFlags(rows, opt = CHAR_FLAG) {
+  const out = rows.map(x => { const win = x.g ? x.w / x.g * 100 : null, p = x.g ? x.w / x.g : 0; return { ...x, win, se: x.g ? Math.sqrt(p * (1 - p) / x.g) * 100 : null }; });
+  const base = {};
+  for (const rar of new Set(out.map(x => x.rarity))) {
+    const a = out.filter(x => x.rarity === rar && x.g >= opt.floor).map(x => x.win).sort((p, q) => p - q);
+    base[rar] = a.length >= opt.minPeers ? (a.length % 2 ? a[a.length >> 1] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : null;
+  }
+  for (const x of out) {
+    x.base = base[x.rarity]; x.d = x.base == null || x.win == null ? null : x.win - x.base; x.lim = x.se == null ? null : Math.max(opt.gap, 2 * x.se);
+    x.flag = x.g < opt.floor ? 'low' : x.base == null ? 'nobase' : x.d > x.lim + 1e-9 ? 'strong' : -x.d > x.lim + 1e-9 ? 'weak' : 'ok';
+  }
+  return out;
 }
