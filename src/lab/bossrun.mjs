@@ -9,7 +9,7 @@
 //   the resisted tribe: win % with tribeResist off, and with burn/shock immunity off (HARD RULE 5: cause before tuning)
 // set 168 (C-17.6 H1, plan step 7): --ref = fixed reference teams (lab/bossref.json, node lab/bossref.mjs) instead of fresh runs ·
 //   --tribes adds a neutral-boss baseline (no rules, no Heat, stats = median of the enabled bosses) and shows each boss cell vs it ·
-//   --fit [--md file] = calibrator for v2 bosses (report only, never writes): one power factor per boss (hp + atk + phase atk) so
+//   --fit [--md file] = calibrator for v2 bosses (report only, never writes; widened set 168 cont. 3: + weak/resist per boss, g + a — see the --fit block): one power factor per boss (hp + atk + phase atk) so
 //   k1 all ≈ target1 on the reference teams, then the shared HP growth g (C2) so the k2 average ≈ target2, then k3 is reported
 //   · the old tuning (no flag) refuses v2 bosses (mult10/endlessPct are not used by them)
 // prints old → new values · --write rewrites core/stage-user.js bosses (hp, atk, phase atk, mult10, endlessPct + set 142 counter rules)
@@ -110,25 +110,47 @@ const prep = b => { let x = (FIX[b.id] || []).reduce((y, [id, v]) => setV(y, id,
 const strip = b => ({ ...b, phases: b.phases.map(p => ({ ...p, rules: p.rules.map(({ v0, ...r }) => r) })) });
 // win % falls as the boss grows → search the value giving `target`
 function search(lo, hi, f, target, steps = 9) { for (let i = 0; i < steps; i++) { const mid = (lo + hi) / 2; if (f(mid) > target) lo = mid; else hi = mid; } return (lo + hi) / 2; }
-// set 168 --fit (C-17.6 B2 H1): calibrator for v2 bosses, report only
+// set 168 --fit (C-17.6 B2 H1 · widened set 168 cont. 3, user A1): calibrator for v2 bosses, report only (never writes)
+// ① per boss, 2 passes + a final power pass: power (hp + atk + phase atk) → k1 all ≈ T1 · weakPct (≤ weakCap) → weak tribe k1 ≈ T1 + 10
+//    · resistPct → resisted tribe (= boss tribe) k1 ≈ T1 − 20 (tribe rows use the reference top-up teams too)
+// ② shared curve: for each a, g so the k2 average ≈ T2; a searched so the k3 average ≈ T3 (Heat as set, not tuned)
 if (FIT) {
   const L = RUN_STAGE.bosses.filter(x => x.on && x.v2);
   if (!L.length) { console.log('no v2 boss to fit'); process.exit(0); }
-  const winS = (b, k, list, stage) => { let w = 0; for (const t of list) w += simulate(t.units, bossTeamOf(b, k, t, stage), { ...t.opts, rules: RULES, log: false }).winner !== 1 ? 1 : 0; return 100 * w / list.length; };
-  const avg = (bs, k, stage) => bs.reduce((a, b) => a + winS(b, k, teams[k], stage), 0) / bs.length;
-  const g0 = RUN_STAGE.boss2.g, rows = [];
+  const g2 = RUN_STAGE.boss2, TW = T1 + 10, TR = T1 - 20;
+  const winS = (b, k, list, stage = RUN_STAGE) => { if (!list.length) return NaN; let w = 0; for (const t of list) w += simulate(t.units, bossTeamOf(b, k, t, stage), { ...t.opts, rules: RULES, log: false }).winner !== 1 ? 1 : 0; return 100 * w / list.length; };
+  const avg = (bs, k, stage) => bs.reduce((s, b) => s + winS(b, k, teams[k], stage), 0) / bs.length;
+  const tribeTeams = (k, tr) => (tr ? [...teams[k], ...(XTRA[k] || [])].filter(t => t.tr === tr) : []);
+  const wOf = b => Math.min(b.weakPct ?? g2.weakPct, g2.weakCap), rOf = b => b.resistPct ?? g2.resistPct;
+  const stOf = (g, a) => ({ ...RUN_STAGE, boss2: { ...g2, g, a } });
+  const rows = [];
   for (const b of L) {
-    const p = search(0.2, 4, x => winS(scale(b, x), 1, teams[1], RUN_STAGE), T1);
-    rows.push({ b, p, fb: scale(b, p), k1: [winS(b, 1, teams[1], RUN_STAGE)], k2: [winS(b, 2, teams[2], RUN_STAGE)], k3: [winS(b, 3, teams[3], RUN_STAGE)] });
+    const wt = b.weak && b.weak !== b.tribe ? tribeTeams(1, b.weak) : [], rt = tribeTeams(1, b.tribe);
+    let P = 1, w = wOf(b), r = rOf(b);
+    const mk = (p, ww, rr) => scale({ ...b, weakPct: ww, resistPct: rr }, p);
+    for (let pass = 0; pass < 2; pass++) {
+      P = search(0.2, 4, x => winS(mk(x, w, r), 1, teams[1]), T1);
+      if (wt.length) w = Math.round(search(0, g2.weakCap, x => -winS(mk(P, x, r), 1, wt), -TW) / 5) * 5;
+      if (rt.length) r = Math.round(search(0, 100, x => winS(mk(P, w, x), 1, rt), TR));
+    }
+    P = search(0.2, 4, x => winS(mk(x, w, r), 1, teams[1]), T1);
+    const fb = mk(P, w, r);
+    rows.push({ b, P, fb, w0: wOf(b), r0: rOf(b), wt, rt,
+      k1: [winS(b, 1, teams[1]), winS(fb, 1, teams[1])], kw: [winS(b, 1, wt), winS(fb, 1, wt)], kr: [winS(b, 1, rt), winS(fb, 1, rt)],
+      k2: [winS(b, 2, teams[2])], k3: [winS(b, 3, teams[3])] });
+    console.log(`${b.id} power ×${P.toFixed(2)} · weak ${wOf(b)}→${w} · resist ${rOf(b)}→${r} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
   }
-  const fitted = rows.map(r => r.fb), stOf = g => ({ ...RUN_STAGE, boss2: { ...RUN_STAGE.boss2, g } });
-  const g = Math.round(search(1, 6, x => avg(fitted, 2, stOf(x)), T2) * 100) / 100, st = stOf(g);
-  for (const r of rows) { r.k1.push(winS(r.fb, 1, teams[1], st)); r.k2.push(winS(r.fb, 2, teams[2], st)); r.k3.push(winS(r.fb, 3, teams[3], st)); }
-  const f = x => x.toFixed(0);
-  let md = `calibrator (report only) · reference teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · targets k1 ${T1} · k2 ${T2} (k3 reported)\n`
-    + `shared curve: g ${g0} → ${g} (HP × g^(k−1)) · a ${RUN_STAGE.boss2.a} kept · Heat as set\n\n| boss | power | hp | atk | phase atk | k1 % | k2 % | k3 % |\n|---|---|---|---|---|---|---|---|\n`;
-  for (const r of rows) md += `| ${r.b.id} ${r.b.name} | ×${r.p.toFixed(2)} | ${r.b.hp}→${r.fb.hp} | ${r.b.atk}→${r.fb.atk} | ${r.b.phases.map(q => q.stats?.atk ?? '-').join('/')}→${r.fb.phases.map(q => q.stats?.atk ?? '-').join('/')} | ${r.k1.map(f).join('→')} | ${r.k2.map(f).join('→')} | ${r.k3.map(f).join('→')} |\n`;
-  md += `| average | | | | | ${f(rows.reduce((a, r) => a + r.k1[1], 0) / rows.length)} | ${f(rows.reduce((a, r) => a + r.k2[1], 0) / rows.length)} | ${f(rows.reduce((a, r) => a + r.k3[1], 0) / rows.length)} |\n`;
+  const fitted = rows.map(x => x.fb), gFor = a => Math.round(search(1, 6, x => avg(fitted, 2, stOf(x, a)), T2) * 100) / 100;
+  const a = Math.round(search(0, 3, x => avg(fitted, 3, stOf(gFor(x), x)), T3, 7) * 100) / 100, g = gFor(a), st = stOf(g, a);
+  for (const x of rows) { x.k2.push(winS(x.fb, 2, teams[2], st)); x.k3.push(winS(x.fb, 3, teams[3], st)); }
+  const f = v => (Number.isNaN(v) ? '-' : v.toFixed(0)), ar = l => l.map(f).join('→');
+  let md = `calibrator (report only) · reference teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} (+ tribe top-up ${[1, 2, 3].map(k => (XTRA[k] || []).length).join('/')} for weak/resist rows)\n`
+    + `targets: k1 all ${T1} · weak tribe k1 ${TW} · resisted tribe k1 ${TR} · k2 average ${T2} · k3 average ${T3}\n`
+    + `shared curve: g ${g2.g} → ${g} (HP × g^(k−1)) · a ${g2.a} → ${a} (atk × (1 + a(k−1))) · Heat as set\n\n`
+    + `| boss | power | hp | atk | phase atk | weak % (tribe · teams) | resist % (tribe · teams) | k1 all | k1 weak | k1 resist | k2 % | k3 % |\n|---|---|---|---|---|---|---|---|---|---|---|---|\n`;
+  for (const x of rows) md += `| ${x.b.id} ${x.b.name} | ×${x.P.toFixed(2)} | ${x.b.hp}→${x.fb.hp} | ${x.b.atk}→${x.fb.atk} | ${x.b.phases.map(q => q.stats?.atk ?? '-').join('/')}→${x.fb.phases.map(q => q.stats?.atk ?? '-').join('/')} | ${x.w0}→${x.fb.weakPct} (${x.b.weak || '-'} · ${x.wt.length}) | ${x.r0}→${x.fb.resistPct} (${x.b.tribe} · ${x.rt.length}) | ${ar(x.k1)} | ${ar(x.kw)} | ${ar(x.kr)} | ${ar(x.k2)} | ${ar(x.k3)} |\n`;
+  const m = (key, i) => f(rows.reduce((s, x) => s + x[key][i], 0) / rows.length);
+  md += `| average | | | | | | | ${m('k1', 0)}→${m('k1', 1)} | ${m('kw', 0)}→${m('kw', 1)} | ${m('kr', 0)}→${m('kr', 1)} | ${m('k2', 0)}→${m('k2', 1)} | ${m('k3', 0)}→${m('k3', 1)} |\n`;
   console.log(md);
   const mi = process.argv.indexOf('--md'); if (mi > 0 && process.argv[mi + 1]) writeFileSync(process.argv[mi + 1], md);
   process.exit(0);
