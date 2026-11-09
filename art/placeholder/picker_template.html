@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placeholder Art Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root {
+  --bg: #efe9df; --panel: #fbf8f3; --card: #ffffff; --ink: #231f1a; --mute: #6b6258; --line: #d8cfc2; --soft: #f1ebe1; --pick: #231f1a;
+  --t-steel: #6e7d8c; --t-fire: #d9542b; --t-bolt: #d6a11a; --t-wind: #2f9c7b; --t-spirit: #7d62c6; --t-fiend: #a92f48;
+  --f-display: "Mitr", "IBM Plex Sans Thai", Tahoma, sans-serif;
+  --f-body: "IBM Plex Sans Thai", "Noto Sans Thai", Tahoma, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17140f; --panel: #211d17; --card: #2a251d; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d; --pick: #f0c860;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #17140f; --panel: #211d17; --card: #2a251d; --ink: #efe8dc; --mute: #a89e90; --line: #3a332a; --soft: #2a251d; --pick: #f0c860;
+  --t-steel: #97a6b5; --t-fire: #f0764b; --t-bolt: #f0c445; --t-wind: #4cc49e; --t-spirit: #a48ce8; --t-fiend: #e0566f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 120px; }
+h1, h2 { font-family: var(--f-display); font-weight: 600; margin: 0; }
+h1 { font-size: 1.7rem; line-height: 1.2; }
+h2 { font-size: 1.2rem; margin: 36px 0 4px; }
+p { margin: 6px 0; max-width: 68ch; }
+.mute { color: var(--mute); }
+img.px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+/* scenes */
+.scenes { display: grid; gap: 18px; margin-top: 14px; }
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.scene header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.scene header b { font-family: var(--f-display); font-weight: 500; font-size: 1.05rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { font: 600 .9rem var(--f-body); min-height: 40px; min-width: 64px; padding: 0 14px; border: 0; background: var(--card); color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.stage { position: relative; border-radius: 10px; overflow: hidden; image-rendering: pixelated; background-size: 64px 64px; min-height: 260px; }
+.stage .wall { position: absolute; inset: 0 0 auto 0; height: 64px; background-size: 64px 64px; image-rendering: pixelated; box-shadow: 0 6px 12px rgba(0,0,0,.35); }
+.stage .row { position: absolute; left: 0; right: 0; top: 84px; bottom: 14px; display: flex; justify-content: space-between; align-items: center; padding: 0 4%; gap: 8px; }
+.side { display: grid; grid-template-columns: repeat(3, 64px); gap: 10px 8px; }
+.side.foe img { transform: scaleX(-1); }
+.unit { position: relative; }
+.unit::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -3px; height: 8px; border-radius: 50%; background: rgba(0,0,0,.35); z-index: -1; }
+.stage .shopRow { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 0 10px; }
+.stage .shopRow .unit { background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.4); border-radius: 10px; padding: 4px; }
+.hud { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; background: rgba(0,0,0,.55); color: #fff; padding: 4px 10px; border-radius: 10px; font: 600 .9rem var(--f-mono); align-items: center; }
+.hud img { width: 32px; height: 32px; }
+.banner { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); background: rgba(0,0,0,.6); color: #fff; padding: 8px 22px; border-radius: 12px; font: 600 1.4rem var(--f-display); white-space: nowrap; }
+/* characters */
+.tribe { margin-top: 10px; }
+.tribe h2 { display: flex; align-items: center; gap: 10px; }
+.tribe h2 i { width: 14px; height: 14px; border-radius: 3px; background: var(--tc); display: inline-block; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 10px; margin-top: 10px; }
+.card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--tc); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
+.hero { width: 76px; height: 76px; background: var(--soft); border-radius: 10px; display: grid; place-items: center; }
+.hero img { width: 64px; height: 64px; }
+.meta .id { font: 500 .78rem var(--f-mono); color: var(--mute); }
+.meta .nm { font-family: var(--f-display); font-weight: 500; font-size: 1rem; line-height: 1.25; }
+.meta .rar { font-size: .8rem; color: var(--mute); }
+.opts { display: flex; gap: 6px; margin-top: 6px; }
+.opts button { position: relative; width: 44px; height: 44px; padding: 0; border: 2px solid var(--line); border-radius: 9px; background: var(--soft); cursor: pointer; display: grid; place-items: center; }
+.opts button img { width: 32px; height: 32px; }
+.opts button[aria-pressed="true"] { border-color: var(--pick); box-shadow: 0 0 0 2px var(--pick) inset; }
+.opts button span { position: absolute; top: -7px; left: -5px; font: 600 .7rem var(--f-mono); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0 4px; color: var(--ink); }
+button:focus-visible { outline: 3px solid var(--pick); outline-offset: 2px; }
+/* summary bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); }
+.bar div { max-width: 1080px; margin: 0 auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.bar code { font: 500 .85rem var(--f-mono); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; flex: 1 1 260px; min-height: 40px; display: flex; align-items: center; overflow-wrap: anywhere; }
+.bar button { font: 600 .9rem var(--f-body); min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); cursor: pointer; }
+footer { margin-top: 40px; font-size: .85rem; color: var(--mute); }
+@media (max-width: 560px) {
+  .stage { min-height: 300px; }
+  .side { grid-template-columns: repeat(3, 40px); gap: 8px 4px; }
+  .side img { width: 40px; height: 40px; }
+  .stage .row { padding: 0 8px; }
+  .banner { font-size: 1.1rem; top: 76px; }
+  .stage.result { min-height: 340px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>ภาพชั่วคราวสำหรับหน้าเกม</h1>
+  <p>ภาพพิกเซล 32 px จากชุด Dungeon Crawl Stone Soup (CC0 ใช้ฟรี ไม่ต้องให้เครดิต) ขยาย 2 เท่าแบบไม่เบลอ · ยังไม่ได้ใส่ในเกม</p>
+  <p class="mute">ฉากหลัง: กด A / B เพื่อเทียบ · ตัวละคร: รูปใหญ่คือตัวที่เลือกอยู่ แตะ 1 / 2 / 3 เพื่อเปลี่ยน · เสร็จแล้วกด "คัดลอก" แล้ววางข้อความในแชท</p>
+
+  <h2>ฉากหลัง</h2>
+  <div class="scenes" id="scenes"></div>
+
+  <div id="tribes"></div>
+
+  <footer>
+    <p>ที่มา: Dungeon Crawl Stone Soup tiles (github.com/crawl/tiles, ชุด Nov-2015) · สัญญาอนุญาต CC0 1.0 · ไม่ใช้ไฟล์ที่อยู่ในรายการ "ไม่ทราบสัญญาอนุญาต" ของชุดนี้</p>
+  </footer>
+</main>
+<div class="bar"><div><code id="code">ยังไม่ได้เปลี่ยน (ใช้ตัวเลือก 1 ทั้งหมด)</code><button id="copy" type="button">คัดลอก</button></div></div>
+<script>
+const D = /*DATA*/null;
+const TRIBES = [['เหล็กกล้า','--t-steel'],['เพลิงเผา','--t-fire'],['สายฟ้า','--t-bolt'],['วายุ','--t-wind'],['ภูติ','--t-spirit'],['อสูร','--t-fiend']];
+const KEY = 'automon-artpick-v1';
+let pick = {}; let scenePick = {};
+try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); pick = s.pick || {}; scenePick = s.scene || {}; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ pick, scene: scenePick })); } catch (e) {} };
+const el = (t, cls, txt) => { const e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const px = (name, size) => { const i = el('img', 'px'); i.src = D.img[name]; i.alt = ''; i.width = size; i.height = size; return i; };
+const cur = id => D.pick[id][(pick[id] || 1) - 1];
+const byId = Object.fromEntries(D.chars.map(r => [r[0], r]));
+
+function renderScenes() {
+  const box = document.getElementById('scenes'); box.replaceChildren();
+  const team = ['HL-6','PL-5','SF-6','WY-3','PT-8','WN-6'], foe = ['WN-7','SF-4','PL-6','HL-8','PT-2','WY-6'];
+  D.scenes.forEach(([key, label, opts]) => {
+    const s = el('section', 'scene'), h = el('header'), seg = el('div', 'seg');
+    h.append(el('b', null, label));
+    const v = scenePick[key] || 0;
+    opts.forEach((o, i) => { const b = el('button', null, i ? 'B' : 'A'); b.type = 'button'; b.setAttribute('aria-pressed', String(i === v)); b.title = o[0] + ' + ' + o[1]; b.onclick = () => { scenePick[key] = i; save(); renderScenes(); updateCode(); }; seg.append(b); });
+    h.append(seg); s.append(h);
+    const [floor, wall] = opts[v];
+    const st = el('div', 'stage ' + key); st.style.backgroundImage = 'url(' + D.img[floor] + ')';
+    const w = el('div', 'wall'); w.style.backgroundImage = 'url(' + D.img[wall] + ')'; st.append(w);
+    if (key === 'arena') {
+      const row = el('div', 'row');
+      [[team, 'side'], [foe, 'side foe']].forEach(([ids, cls]) => { const g = el('div', cls); ids.forEach(id => { const u = el('div', 'unit'); u.append(px(cur(id), 64)); g.append(u); }); row.append(g); });
+      st.append(row);
+    } else if (key === 'shop') {
+      const hud = el('div', 'hud'); hud.append(px('_gold', 32), el('span', null, '10'), px('heart', 32), el('span', null, '5')); st.append(hud);
+      const row = el('div', 'shopRow'); ['HL-1','PL-1','SF-1','WY-1','PT-1'].forEach(id => { const u = el('div', 'unit'); u.append(px(cur(id), 64)); row.append(u); }); st.append(row);
+    } else {
+      st.append(el('div', 'banner', 'ชนะ!'));
+      const row = el('div', 'shopRow'); team.forEach(id => { const u = el('div', 'unit'); u.append(px(cur(id), 64)); row.append(u); }); st.append(row);
+    }
+    s.append(st); box.append(s);
+  });
+}
+
+function renderChars() {
+  const box = document.getElementById('tribes'); box.replaceChildren();
+  TRIBES.forEach(([t, cv]) => {
+    const sec = el('section', 'tribe'); sec.style.setProperty('--tc', 'var(' + cv + ')');
+    const h = el('h2'); h.append(el('i'), document.createTextNode('เผ่า' + t)); sec.append(h);
+    const g = el('div', 'grid');
+    D.chars.filter(r => r[2] === t).forEach(r => {
+      const id = r[0], c = el('article', 'card'), hero = el('div', 'hero'); hero.append(px(cur(id), 64));
+      const m = el('div', 'meta'); m.append(el('div', 'id', id), el('div', 'nm', r[1]), el('div', 'rar', r[4] + (r[3] ? ' · เผ่าเพิ่ม ' + r[3] : '')));
+      const o = el('div', 'opts');
+      D.pick[id].forEach((n, i) => { const b = el('button'); b.type = 'button'; b.title = n; b.setAttribute('aria-label', id + ' ตัวเลือก ' + (i + 1)); b.setAttribute('aria-pressed', String((pick[id] || 1) === i + 1)); b.append(px(n, 32), el('span', null, String(i + 1))); b.onclick = () => { if (i) pick[id] = i + 1; else delete pick[id]; save(); renderChars(); renderScenes(); updateCode(); }; o.append(b); });
+      m.append(o); c.append(hero, m); g.append(c);
+    });
+    sec.append(g); box.append(sec);
+  });
+}
+
+function codeText() {
+  const ch = Object.keys(pick).filter(k => byId[k]).map(k => k + ':' + pick[k]);
+  const sc = Object.keys(scenePick).filter(k => scenePick[k]).map(k => k + ':B');
+  return ch.length || sc.length ? 'ARTPICK ' + [...ch, ...sc].join(' ') : '';
+}
+function updateCode() { document.getElementById('code').textContent = codeText() || 'ยังไม่ได้เปลี่ยน (ใช้ตัวเลือก 1 และฉาก A ทั้งหมด)'; }
+document.getElementById('copy').onclick = async () => {
+  const t = codeText() || 'ARTPICK ทั้งหมดตัวเลือก 1 ฉาก A'; const b = document.getElementById('copy');
+  try { await navigator.clipboard.writeText(t); b.textContent = 'คัดลอกแล้ว'; } catch (e) { b.textContent = 'คัดลอกไม่ได้ เลือกข้อความเอง'; }
+  setTimeout(() => { b.textContent = 'คัดลอก'; }, 1800);
+};
+renderScenes(); renderChars(); updateCode();
+</script>
+</body>
+</html>

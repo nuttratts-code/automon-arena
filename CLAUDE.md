@@ -37,7 +37,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 
 ## Scope
 - MVP1 = single-player/offline; don't propose systems beyond it. If behind build-plan.md → warn + suggest cuts. MVP2 = Ghost battle + online.
-- Placeholder art = coloured shapes + names; must not resemble the original game (the user makes real art).
+- Placeholder art (set 172): game page = free CC0 pixel tiles from Dungeon Crawl Stone Soup (art/placeholder/, credits there); Balance Room / check page = coloured shapes + names. Must not resemble the original game (the user makes real art later).
 
 ## Decisions
 - **Ask everything up front, then run to the end (user rule 8 Nov, set 150 A1):** at the start of a task set, ask ALL questions needed to finish it in one go (one AskUserQuestion round, more calls only if > 4 questions); after the answers, work to the end without stopping. Stop mid-task only when: publishing an artifact · changing game values / writing the Balance Room db (HARD RULE 6 per-cell picks and bossrun before/after still apply — ask those up front when the data is already known) · a test/gate fails or the cause is unknown (HARD RULE 5) · something irreversible or outside the agreed scope.
