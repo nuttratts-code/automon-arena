@@ -2,7 +2,7 @@
 // Every value here is set in this file (not tied to the user's values).
 import { simulate } from '../core/battle.js';
 import { bossUnit, bossV2Phases, heatRules } from '../core/boss.js';
-import { bossAt, bossMults, boss2Base, cleanStage, stageBase, BOSS_RULES, BOSS_RULE_GROUPS, bossRule } from '../core/stage.js';
+import { bossAt, bossMults, boss2Base, cleanStage, stageBase, stageDefaults, BOSS_RULES, BOSS_RULE_GROUPS, bossRule } from '../core/stage.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { NEVER, mk, L3, u, NT, ev, eq, ok } from './helpers.js';
 import { bossRuleText, bossRuleName } from '../game/labels.js';
@@ -68,9 +68,9 @@ export const TESTS_BOSS_V2 = [
     eq(st.boss2.g, 3, 'g ผ่าน'); eq(st.boss2.a, base.boss2.a, 'a เกินช่วง = ค่าเดิม');
     eq(st.boss2.heat, [{ id: 'aoe', v: 20 }], 'Heat กรองกฎที่ไม่มี/ต้องเลือกเผ่า/ซ้ำ');
     const b = st.bosses.find(x => x.id === 'B1');
-    eq([b.v2, b.weak, b.weakPct, b.resistPct], [true, 'สายฟ้า', 70, undefined], 'ค่ารายบอส');
+    eq([b.v2, b.weak, b.weakPct, b.resistPct], [true, 'สายฟ้า', 70, stageDefaults().bosses.find(x => x.id === 'B1').resistPct], 'ค่ารายบอส (ต้านเกินช่วง = ค่าเดิม)');
     eq(b.phases[0].rules[0], { id: 'plating', v: 3, v2: 15, v3: 4 }, 'v3 เกินช่วง = ค่าเริ่ม');
-    eq(cleanStage({ bosses: [{ id: 'B1', weak: 'เหล็กกล้า' }] }).bosses[0].weak, undefined, 'แพ้เผ่าตัวเองไม่ได้');
+    eq(cleanStage({ bosses: [{ id: 'B9', tribe: 'เหล็กกล้า', weak: 'เหล็กกล้า' }] }).bosses[0].weak, undefined, 'แพ้เผ่าตัวเองไม่ได้');
   }],
   ['บอส v2: กฎ S1–S6 อยู่ในกลุ่มตัวเลือก + ข้อความมีค่าที่ 3', () => {
     for (const id of ['plating', 'mendPulse', 'rage', 'staticChain', 'galeGuard', 'flameShell']) {
