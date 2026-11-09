@@ -231,8 +231,9 @@ with sync_playwright() as p:
               const r=[t.includes('HP '+c.hp[2]), t.includes('เกราะ/ฮิต'), t.includes('ฟื้น/ฮิต'), document.querySelector('#info .lvtabs [aria-pressed="true"]').dataset.lv]; closePop(); return r;})()""")
             chk(tg!='none' and tg[:3]==[True,True,True] and tg[3]=='3','level toggle in info popup '+str(tg))
         # ชุด 25: รูปตัวละครรายตัว (ลวดลาย + ขอบความหายาก) · รีเพลย์ทุกแมตช์ · บันทึกการต่อสู้ละเอียด
-        mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon svg.pat g > *').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat'))]")
-        chk(mon[0]>0 and mon[1] and mon[2],'unit shapes have patterns '+str(mon))
+        # set 172: on the game page the pattern is replaced by a pixel sprite (+ tribe badge) — every unit picture must have one or the other
+        mon=pg.evaluate("[document.querySelectorAll('.mon').length, document.querySelectorAll('.mon img.spr').length>0, [...document.querySelectorAll('.mon')].every(m=>m.querySelector('svg.pat g > *')||(m.querySelector('img.spr')&&m.querySelector('.tbadge')))]")
+        chk(mon[0]>0 and mon[1] and mon[2],'unit pictures have a sprite+badge (or pattern) '+str(mon))
         chk(pg.evaluate('replays.length')==len(res) and pg.evaluate("readReplays(localStorage.getItem('automon-run-replays-v1'),CM,RULES,DATA_HASH,P.seed).status")=='ok','replays stored per match '+str(pg.evaluate('replays.length')))
         chk(pg.evaluate('parseRunCode(runCode(),CM,RULES).runs[0].list.length')==len(res),'run code carries this run (set 105)')
         pg.evaluate("openPop('runcode')"); chk(pg.input_value('#runCodeText').startswith('ARUN1 '),'run code box (clipboard fallback)'); pg.evaluate('closePop()')
