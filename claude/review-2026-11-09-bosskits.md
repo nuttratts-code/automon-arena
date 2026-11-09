@@ -1,4 +1,4 @@
-# Boss kit draft v1 — set 168 (C-17.6 · user picks A3 B2 C2 D1 E1 F1 G1 H1) — WAITING FOR USER APPROVAL
+# Boss kit draft v1 — set 168 (C-17.6 · user picks A3 B2 C2 D1 E1 F1 G1 H1) — APPROVED by user (I1, 9 Nov)
 
 Every number here is a proposal (ค่าเสนอ); final values come from the calibrator + HARD RULE 6 per-cell picks. Kit = signature (new mechanic) → phase 2 adds punish → phase 3 adds twist (rules stack, C-17.6). Max 1 stun/silence/freeze per boss. Weak/resist multipliers = global default + per-boss override + cap (E1); they are not counted as kit rules.
 

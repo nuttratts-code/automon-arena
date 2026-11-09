@@ -4,7 +4,7 @@ Decisions: A3 B2 C2 D1 E1 F1 G1 H1 (review-2026-11-09-brainstorm-boss.md) · kit
 Tick each step when done + pushed. Numbers = proposals; HARD RULE 6 before any value lands in the game.
 
 - [x] 1. Brainstorm + user picks + C-17.6 doc + this plan (docs → main)
-- [ ] 2. User approves kit draft v1 (review-2026-11-09-bosskits.md) — signature mechanics, punish/twist picks, Heat ladder order (values stay proposals)
+- [x] 2. User approved (I1, 9 Nov) kit draft v1 (review-2026-11-09-bosskits.md) — signature mechanics, punish/twist picks, Heat ladder order (values stay proposals)
 - [ ] 3. stage.js: global boss settings (g, a, weakDefault, weakCap, resistDefault, heat ladder list) · bossMult → C2 (hp × g^(k−1), atk × (1 + a(k−1))) · mult10/endlessPct ignored (old saves still load) · phase mode "add" for v2 bosses · check: t-boss unit tests
 - [ ] 4. battle.js: 6 new rules (plating, mendPulse, rage, staticChain, galeGuard, flameShell) + phase-add + Heat rules injected for k ≥ 3 + weak cap · each rule a unit test (on/off) · BOSS_RULES entries + Thai labels
 - [ ] 5. runboss.js/boss.js: pass k → Heat · validate.js/cleanStage for new fields (HARD RULE 7)
