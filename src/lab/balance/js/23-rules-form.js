@@ -4,13 +4,14 @@
 // shop odds as a level × rarity table with row totals, round→shop level as a compact strip, locked rules folded.
 const ruleShow = (v, op) => (op.bool ? (v ? 1 : 0) : op.scale ? +(v / op.scale).toFixed(3) : v);
 const ruleShowTxt = v => (Array.isArray(v) ? v.join(' / ') : String(v));
-const RULE_CHIP = { storm: 'ช่วงต่อเวลา', burn: 'ไฟ', fight: 'การสู้', boss: 'จังหวะบอส', shop: 'ร้าน / run', shopLv: 'ระดับร้านตามรอบ', shopOdds: 'โอกาสเจอ', power: 'งบพลัง', lock: '🔒 ล็อก' };
+const RULE_CHIP = { storm: 'ช่วงต่อเวลา', burn: 'ไฟ', fight: 'การสู้', boss: 'จังหวะบอส', shop: 'ร้าน / run', shopLv: 'ระดับร้านตามรอบ', shopOdds: 'โอกาสเจอ', runeOdds: 'โอกาสรูนตามรอบ', power: 'งบพลัง', lock: '🔒 ล็อก' };
 const RULE_HINT = {
   storm: 'ช่วงต่อเวลา (แทนพายุทราย ชุด 98): เริ่มเมื่อแมตช์ยาวถึงเวลาที่ตั้ง แล้วเพิ่ม 1 สแตกทุกช่วง · ทุกสแตก ดาเมจทุกแบบ + และตีเร็วขึ้น + · ฟื้น HP และเกราะที่ได้ใหม่ − (หยุดที่ 100%) · % ต่อสแตก: ช่วงแรก → ช่วงสอง → หลังจากนั้น (ไม่มีเพดาน) · เกราะที่มีอยู่แล้วไม่ลด',
   boss: 'จังหวะเวลาของกฎบอสที่เดิมฝังไว้ (ความแรงของแต่ละกฎปรับในแท็บ รูน / บอส) · ชื่อกฎในแท็บบอสแสดงเวลาใหม่หลังนำค่าเข้าเกม',
   shop: 'ราคาเปลี่ยน = ราคาตัวละครทุกตัวในระดับนั้นเปลี่ยนตาม',
   shopLv: 'ช่องละ 1 รอบ · ใส่ระดับร้านของรอบนั้น · ช่องสุดท้ายใช้กับทุกรอบหลังจากนั้น',
   shopOdds: 'แถวละ 1 ระดับร้าน · ตัวเลขเทียบกันเองในแถว (รวมไม่ถึง 100 ก็ได้) · ถ้ารวมไม่เท่า 100 ช่อง "รวม" จะบอกโอกาสจริงหลังคิดสัดส่วนให้',
+  runeOdds: 'แถวละ 1 รอบ (ชนะรอบปกติ) · แต่ละการ์ดรูนในตัวเลือกสุ่มความหายากตามแถวของรอบนั้น · ตัวเลขเทียบกันเองในแถว (รวมไม่ถึง 100 ก็ได้) · รอบหลังแถวสุดท้ายใช้แถวสุดท้าย · ตั้งความหายากเป็น 0 = ไม่ออกเลย · รางวัลบอสกับโอกาสสุดท้ายไม่ใช้ตารางนี้ (ตั้งในแท็บด่าน)',
   power: 'ใช้คิด "แต้มพลัง" ที่แสดงในฟอร์มตัวละครเท่านั้น ไม่มีผลกับการต่อสู้',
   lock: 'ค่าโครงสร้างของเกมและตัวกันพัง ล็อกไว้ก่อน · ถ้าอยากเปลี่ยนข้อไหนบอก Claude ในแชท',
 };
@@ -56,24 +57,28 @@ function ruleLvStrip(items) {
   return g;
 }
 // shop.levelOdds.<lv>.<rarity>: table, one row per shop level + real % after normalising
-function ruleOddsTable(items) {
+// set 171: cfg = { src: 'shop' | 'rune', idx: path part holding the row, cols: [[key, shown name]], head, row: i → row label, find: i → search text }
+const ODDS_SHOP = { src: 'shop', idx: 2, cols: RARITIES.map(r => [r, r]), head: 'ร้าน', row: i => `Lv${i + 1}`, find: i => `ร้าน Lv${i + 1} โอกาสเจอ ` + RARITIES.join(' ') };
+const ODDS_RUNE = { src: 'rune', idx: 1, cols: RUNE_ODDS_COLS, head: 'รอบ', row: i => `${i + 1}${i === RULES.runeOdds.length - 1 ? '+' : ''}`, find: i => `รูน รอบ ${i + 1} โอกาสเจอ ` + RUNE_ODDS_COLS.map(c => c[1]).join(' ') };
+const oddsRow = (cfg, i) => (cfg.src === 'rune' ? RULES.runeOdds[i] : RULES.shop.levelOdds[i]) || {};
+function ruleOddsTable(items, cfg = ODDS_SHOP) {
   const wrap = el('div', 'rtwrap', ''), t = el('table', 'rodds', ''), hr = el('tr', '', '');
-  hr.append(el('th', '', 'ร้าน'), ...RARITIES.map(r => el('th', '', r.replace(/^ไม่/, 'ไม่\u200b').replace(/(.)มาก$/, '$1\u200bมาก'))), el('th', '', 'รวม'));
+  hr.append(el('th', '', cfg.head), ...cfg.cols.map(([, r]) => el('th', '', r.replace(/^ไม่/, 'ไม่\u200b').replace(/(.)มาก$/, '$1\u200bมาก'))), el('th', '', 'รวม'));
   const head = el('thead', '', ''); head.append(hr); const body = el('tbody', '', ''); t.append(head, body);
   const rows = new Map();
-  for (const it of items) { const lv = Number(it[0].split('.')[2]); if (!rows.has(lv)) rows.set(lv, []); rows.get(lv).push(it); }
+  for (const it of items) { const lv = Number(it[0].split('.')[cfg.idx]); if (!rows.has(lv)) rows.set(lv, []); rows.get(lv).push(it); }
   for (const [lv, its] of rows) {
-    const tr = el('tr', '', ''); tr.dataset.find = `ร้าน Lv${lv + 1} โอกาสเจอ ` + RARITIES.join(' ');
-    tr.append(el('th', '', `Lv${lv + 1}`));
+    const tr = el('tr', '', ''); tr.dataset.find = cfg.find(lv);
+    tr.append(el('th', '', cfg.row(lv)));
     for (const [path, label, lo, hi, , , op] of its) { const td = el('td', '', ''), { i, was } = ruleInput(path, lo, hi, op, label); td.append(i, was); tr.append(td); }
-    const sum = el('td', 'rsum mono', ''); sum.dataset.lv = lv; tr.append(sum); body.append(tr);
+    const sum = el('td', 'rsum mono', ''); sum.dataset.lv = lv; sum.dataset.src = cfg.src; tr.append(sum); body.append(tr);
   }
   wrap.append(t); return wrap;
 }
 function ruleOddsSums() {
   for (const td of document.querySelectorAll('#rform .rsum')) {
-    const o = RULES.shop.levelOdds[Number(td.dataset.lv)] || {}, tot = RARITIES.reduce((s, r) => s + (o[r] || 0), 0);
-    td.textContent = !tot ? 'รวม 0 = ไม่มีตัวเลย' : tot === 100 ? '100' : `${tot}\nจริง ${RARITIES.map(r => (o[r] ? Math.round(o[r] * 100 / tot) : '·')).join(' / ')}`;
+    const cfg = td.dataset.src === 'rune' ? ODDS_RUNE : ODDS_SHOP, o = oddsRow(cfg, Number(td.dataset.lv)), K = cfg.cols.map(c => c[0]), tot = K.reduce((s, r) => s + (o[r] || 0), 0);
+    td.textContent = !tot ? 'รวม 0 = ไม่มีตัวเลย' : tot === 100 ? '100' : `${tot}\nจริง ${K.map(r => (o[r] ? Math.round(o[r] * 100 / tot) : '·')).join(' / ')}`;
     td.classList.toggle('bad', !tot);
   }
 }
@@ -129,6 +134,7 @@ function renderRulesForm() {
     let body;
     if (g === 'shopLv') body = ruleLvStrip(items);
     else if (g === 'shopOdds') body = ruleOddsTable(items);
+    else if (g === 'runeOdds') body = ruleOddsTable(items, ODDS_RUNE);
     else { body = el('div', 'fgrid rgrid', ''); for (const [path, label, lo, hi, unit, , op] of items) body.append(ruleField(path, label, lo, hi, unit, op)); }
     if (g === 'lock') {
       const d = document.createElement('details'), s = document.createElement('summary');
