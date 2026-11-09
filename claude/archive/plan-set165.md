@@ -6,4 +6,4 @@ User picks (9 Nov): focus Balance Room first · A1 new first result sub-tab in �
 2. [x] lab/analyze.js runPlayStats: chars[].lv {1,2,3: {g,w}} + combatLv · new pure charFlags(rows) (median of same rarity, gap 5, 2×SE, 30 floor) · check: unit test
 3. [x] lab/balance body.html + js/63-analyze-run.js: sub-tab "สรุปแรง/อ่อน" (badge + reason, cards on phone) + level picker on it and on the combat table · css
 4. [x] screenshots 1100 / 390 / dark · ui_smoke check for the new tab
-5. [ ] setup → gate → merge → CI → publish balance room (ask) → close-out
+5. [x] setup → gate → merge → CI → publish balance room (ask) → close-out
