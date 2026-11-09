@@ -212,3 +212,21 @@ cause (rule off → k1 all/weak/resist · k2 all/weak/resist):
 - burnAura: k1 67/97/20 · k2 65/96/57
 - burnImmune: k1 61/100/43 · k2 67/96/77
 - aoe: k1 60/97/10 · k2 66/98/55
+
+## Round 2 — widened calibrator (user A1, combat-rules V7.1 · node lab/bossrun.mjs 0 60 50 45 --fit · starts from the round-1 values above)
+
+calibrator (report only) · reference teams k1 300 · k2 300 · k3 300 (+ tribe top-up 94/0/9 for weak/resist rows)
+targets: k1 all 60 · weak tribe k1 70 · resisted tribe k1 40 · k2 average 50 · k3 average 45
+shared curve: g 3.17 → 2.09 (HP × g^(k−1)) · a 1.5 → 2.55 (atk × (1 + a(k−1))) · Heat as set
+
+| boss | power | hp | atk | phase atk | weak % (tribe · teams) | resist % (tribe · teams) | k1 all | k1 weak | k1 resist | k2 % | k3 % |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| B1 โกเลม | ×1.01 | 890→890 | 36→36 | -/47/68→-/47/68 | 300→250 (สายฟ้า · 52) | 15→0 (เหล็กกล้า · 30) | 60→60 | 79→71 | 23→30 | 41→38 | 19→29 |
+| B2 จอมเวทย์ดำ | ×0.98 | 680→660 | 52→51 | -/68/98→-/66/96 | 200→125 (เพลิงเผา · 30) | 15→0 (ภูติ · 47) | 61→60 | 80→73 | 23→32 | 55→64 | 39→64 |
+| B3 อสุรกายคลั่ง | ×0.96 | 360→350 | 52→50 | -/66/94→-/63/90 | 100→75 (ภูติ · 47) | 13→33 (อสูร · 30) | 61→57 | 79→68 | 60→47 | 42→41 | 25→47 |
+| B4 กระจกสะท้อน | ×1.01 | 600→600 | 50→50 | -/76/110→-/76/111 | 100→100 (เหล็กกล้า · 30) | 10→0 (สายฟ้า · 52) | 61→62 | 77→77 | 19→27 | 51→55 | 28→50 |
+| B5 จ้าวพายุ | ×0.98 | 510→500 | 33→32 | -/42/54→-/41/53 | 50→5 (อสูร · 30) | 30→20 (วายุ · 30) | 60→59 | 90→73 | 40→47 | 49→47 | 30→43 |
+| B6 ปีศาจเพลิง | ×0.93 | 410→380 | 37→34 | -/54/80→-/50/74 | 200→10 (วายุ · 30) | 30→0 (เพลิงเผา · 30) | 57→64 | 93→77 | 20→27 | 62→56 | 38→43 |
+| average | | | | | | | 60→61 | 83→73 | 31→35 | 50→50 | 30→46 |
+
+Notes: first run had the a-search direction wrong (a → 0.15, g stuck at its max 6, k2 68) — fixed: with g refit for k2, k3 gets easier as a rises. Resisted tribe still 27–32 % on B1 B2 B4 B6 with resist 0 → the cause is the kit (signature/punish rules), not resistPct; the cause check in the tribe report shows which rule. Per-boss k2/k3 spread (k3 29–64) is not fitted: the curve is shared by design (C2).
