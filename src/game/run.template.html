@@ -707,6 +707,16 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .fmhead span { font-size: .62rem; }
   .foemini + .rcard .rtext { display: none; }
 }
+/* set 169: UI ease set 1 */
+#legendBtn { font: 600 1rem var(--f-display); color: var(--accent); border-color: var(--accent); }
+#fight.wait { background: var(--panel); color: var(--ink); border-color: var(--line); }
+#fight.ready { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.info .stats2 .term.zero { color: var(--mute); } .info .stats2 .term.zero b { color: var(--mute); font-weight: 400; opacity: .8; }
+.lgh { margin: 6px 0 3px; }
+@media (max-height: 460px) { #pop .lgi { min-height: 44px; } #pop .lgpic { min-height: 34px; } } .lgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lgi { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 4px 2px; border-radius: 8px; background: var(--soft); font-size: .74rem; text-align: center; min-height: 52px; }
+@media (min-width: 520px) { .lgrid.t { grid-template-columns: repeat(6, minmax(0, 1fr)); } .lgrid.r { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.lgi i.tico { display: inline-block; width: 24px; height: 24px; background: var(--tc); } .lgpic { display: grid; place-items: center; min-height: 40px; }
 #reroll.free { background: var(--tg-shop); color: var(--on-accent); border-color: var(--tg-shop); }
 @media (prefers-reduced-motion: reduce) { #rotate .phone { animation: none; } }
 </style>
@@ -724,6 +734,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
     <button class="hudbtn prep-only" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
     <button class="hudbtn prep-only" id="logBtn" type="button" aria-label="Log การเล่น (เห็นเฉพาะเจ้าของเกม)" hidden><span>Log</span></button>
     <button class="hudbtn" id="diffInfo" type="button" aria-label="ศัตรูรอบนี้และรางวัล"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="var(--t-fiend)" stroke-width="1.8"/></svg><span id="foeLbl"><span class="wd">ศัตรูแรง </span><span class="nw">ศัตรู </span><b id="foePct">100%</b></span><span class="bosschip" id="bossChip" hidden></span></button>
+    <button class="hudbtn round prep-only" id="legendBtn" type="button" aria-label="อธิบายสัญลักษณ์" title="อธิบายสัญลักษณ์: รูปทรง ขอบ ดาว">?</button>
     <span class="menuwrap prep-only"><button class="hudbtn round" id="menuBtn" type="button" aria-label="เมนู" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></button>
       <span class="menu" id="menu" hidden><button id="newRun" type="button">เริ่ม run ใหม่</button></span></span>
   </div>
@@ -1234,7 +1245,10 @@ function render() {
   const rb = runBossAt(P);
   $('fight').disabled = P.over;
   $('fightT').textContent = confirmEmpty || confirmRunes ? 'ยืนยันสู้' : rb ? 'สู้บอส' : 'เริ่มสู้';
-  $('fightN').textContent = `ลงสนาม ${entries.length}/6 ตัว`;
+  // set 169 (brainstorm UI ease): the button says what to do next · board empty = look secondary, with ≥1 unit = primary + ring · same 'ลงสนาม' text kept (ui_smoke)
+  const benchHas = P.bench.some(Boolean), cue = entries.length ? '' : benchHas ? ' · ลากตัวขึ้นบอร์ด' : ' · ซื้อตัวจากร้านก่อน';
+  $('fightN').textContent = `ลงสนาม ${entries.length}/6 ตัว${cue}`;
+  $('fight').classList.toggle('wait', !entries.length && !P.over); $('fight').classList.toggle('ready', entries.length > 0 && !P.over);
   if (popKind) renderPop();
   renderSide();
 }
@@ -1260,7 +1274,7 @@ const STAT_HELP = {
   'เกราะสะสม (ถาวร)': 'ค่าถาวรจากสกิลร้านค้า · ได้เกราะเท่านี้ทุกครั้งที่เริ่มแมตช์',
 };
 function termEl(k, v, help) {
-  const d = el('span', 'term', `${k} `); d.append(el('b', '', String(v)));
+  const d = el('span', 'term' + (v === 0 ? ' zero' : ''), `${k} `); d.append(el('b', '', String(v))); // set 169: value 0 stays visible but quieter (set 26: all values shown)
   const tip = STAT_HELP[k]; if (!tip) return d;
   d.title = tip; d.tabIndex = 0; d.setAttribute('role', 'button');
   const show = () => { help.textContent = `${k}: ${tip}`; };
@@ -1629,6 +1643,19 @@ POPS.tribe = t => {
   return [phead(`เผ่า${t}`, `บนบอร์ด ${counts[t] | 0} ตัว · ${st ? `ทำงานขั้น ${st}` : 'ยังไม่ทำงาน'}`, tribeIco(t)), tbl, pacts(back(() => openPop('tribes')))];
 };
 $('tribeBtn').addEventListener('click', () => openPop('tribes'));
+// set 169: what the shapes mean · examples come from real characters (unitShape) so the legend can never drift from the cards
+POPS.legend = () => {
+  const grid = (cls, items) => { const g = el('div', 'lgrid ' + cls); for (const [pic, txt] of items) { const c = el('div', 'lgi'); c.append(pic, el('span', '', txt)); g.append(c); } return g; };
+  const sample = r => chars.find(c => c.rarity === r) || chars[0];
+  const tribes = Object.keys(TRIBE_STYLE).map(t => [tribeIco(t), t]);
+  const rars = Object.keys(RARITY_CLASS).map(r => { const w = el('span', 'lgpic'); w.append(unitShape(sample(r), 1)); return [w, r]; });
+  return [phead('สัญลักษณ์ในเกม'),
+    el('p', 'hint lgh', 'รูปทรง = เผ่า'), grid('t', tribes),
+    el('p', 'hint lgh', 'ขอบรอบรูป = ความหายาก'), grid('r', rars),
+    el('p', 'hint lgh', 'ดาวใต้รูป = เลเวล (★ เลเวล 1 · ★★ เลเวล 2 · ★★★ เลเวล 3)'),
+    el('p', 'hint lgh', `ซื้อตัวชนิดเดียวกัน ${S.mergeCount} ตัว = รวมร่างเป็นเลเวลถัดไปอัตโนมัติ`), pacts()];
+};
+$('legendBtn').addEventListener('click', () => openPop('legend'));
 // enemy + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 107: no modes, the HUD shows the enemy power %
 const RN_OFF_TH = k => { const st = RUN_STAGE.settings, RK = { common: 'C', rare: 'R', legend: 'L' }, boss = k === 'boss';
   return RUNE_RARITY.map(([r, th]) => [st[`${boss ? 'offBoss' : 'rar'}${RK[r]}`] | 0, th]).filter(([n]) => n > 0).map(([n, th]) => boss ? `${th} ${n}` : `${th} ${n}%`).join(' · '); };
