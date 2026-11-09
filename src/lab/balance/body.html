@@ -377,6 +377,15 @@
       <div class="card"><b>–</b><span>ได้ใช้โอกาสที่สอง (ของรัน)</span></div>
     </div>
     <p class="hint" id="runInfo"></p>
+    <div data-sec="verdict" data-label="สรุปแรง/อ่อน" style="display:grid;gap:8px">
+    <h3>ตัวไหนแรงไป ตัวไหนอ่อนไป</h3>
+    <div class="row cb-tools">
+      <span class="seg" id="vfLv" role="group" aria-label="เลเวล"><button type="button" data-lv="0" aria-pressed="true">ทุกเลเวล</button><button type="button" data-lv="1" aria-pressed="false">Lv1</button><button type="button" data-lv="2" aria-pressed="false">Lv2</button><button type="button" data-lv="3" aria-pressed="false">Lv3</button></span>
+      <span class="vf-count" id="vfCount"></span>
+    </div>
+    <ol class="vf-list" id="vfList"></ol>
+    <p class="hint" id="vfHint"></p>
+    </div>
     <div data-sec="measure" data-label="ตัวเลขวัด" style="display:grid;gap:8px">
     <h3>บอสครั้งที่ 1 / 2 / 3</h3>
     <div class="tbl"><table>
@@ -435,6 +444,7 @@
     <div data-sec="combat" data-label="ผลต่อสู้" style="display:grid;gap:8px">
     <h3>ผลต่อสู้รายตัว (ฝั่งผู้เล่น · เฉลี่ยต่อตัวที่ลงสนาม)</h3>
     <div class="row cb-tools">
+      <span class="seg" id="cbLv" role="group" aria-label="เลเวล"><button type="button" data-lv="0" aria-pressed="true">ทุกเลเวล</button><button type="button" data-lv="1" aria-pressed="false">Lv1</button><button type="button" data-lv="2" aria-pressed="false">Lv2</button><button type="button" data-lv="3" aria-pressed="false">Lv3</button></span>
       <span class="seg" id="cbUnit" role="group" aria-label="หน่วย"><button type="button" data-u="m" aria-pressed="true">ต่อแมตช์</button><button type="button" data-u="s" aria-pressed="false">ต่อวินาที</button></span>
       <span class="seg" id="cbSrc" role="group" aria-label="ดาเมจ"><button type="button" data-s="" aria-pressed="true">ดาเมจรวม</button><button type="button" data-s="1" aria-pressed="false">แยกที่มา</button></span>
       <span class="cb-f"><label class="status" for="cbRar">ความหายาก</label><select id="cbRar"><option value="">ทุกระดับ</option></select></span>
@@ -447,7 +457,7 @@
       <thead id="cbHead"></thead>
       <tbody id="runCombat"></tbody>
     </table></div>
-    <p class="hint">ตัวเลขคิดแบบเดียวกับหน้าวิเคราะห์แมตช์ · นับทุกแมตช์ของรัน (รวมบอสและช่วงเล่นต่อ) เฉพาะฝั่งผู้เล่น · ลงสนาม = จำนวนครั้งที่ตัวนี้อยู่ในทีมตอนสู้ (2 ตัวซ้ำในทีม = 2 ครั้ง) · ดาเมจที่ทำ = ใส่ศัตรูเท่านั้น ไฟแบ่งให้ผู้ที่ทำให้ติดตามสัดส่วน · ตัวที่ถูกเรียกออกมานับให้ตัวที่เรียก (ดาเมจ ฮิล เกราะ ทำล้ม) · ทำล้ม = เป็นคนตีครั้งสุดท้ายก่อนศัตรูล้ม · เกราะกันได้ = ดาเมจที่โดนแต่เกราะรับไว้ · HP หายจริง = ไม่นับส่วนที่เกิน HP ที่เหลือ · ฮิล/เกราะที่ให้ = รวมให้ตัวเองและเพื่อน · ต่อวินาที = รวม ÷ เวลาแมตช์ที่ตัวนี้ลงสนาม · ลงสนามน้อยกว่า 30 ครั้ง = ตัวเลขยังแกว่ง (สีจาง)</p>
+    <p class="hint">ตัวเลขคิดแบบเดียวกับหน้าวิเคราะห์แมตช์ · นับทุกแมตช์ของรัน (รวมบอสและช่วงเล่นต่อ) เฉพาะฝั่งผู้เล่น · ลงสนาม = จำนวนครั้งที่ตัวนี้อยู่ในทีมตอนสู้ (2 ตัวซ้ำในทีม = 2 ครั้ง) · ดาเมจที่ทำ = ใส่ศัตรูเท่านั้น ไฟแบ่งให้ผู้ที่ทำให้ติดตามสัดส่วน · ตัวที่ถูกเรียกออกมานับให้ตัวที่เรียก (ดาเมจ ฮิล เกราะ ทำล้ม) · ทำล้ม = เป็นคนตีครั้งสุดท้ายก่อนศัตรูล้ม · เกราะกันได้ = ดาเมจที่โดนแต่เกราะรับไว้ · HP หายจริง = ไม่นับส่วนที่เกิน HP ที่เหลือ · ฮิล/เกราะที่ให้ = รวมให้ตัวเองและเพื่อน · ต่อวินาที = รวม ÷ เวลาแมตช์ที่ตัวนี้ลงสนาม · ลงสนามน้อยกว่า 30 ครั้ง = ตัวเลขยังแกว่ง (สีจาง) · เลือกเลเวล = นับเฉพาะตอนที่ตัวนี้ลงสนามที่เลเวลนั้น</p>
     </div>
     <div data-sec="runes" data-label="รูน" style="display:grid;gap:8px">
     <h3>รูนในรันจริง: รูนไหนแรงเกินระดับ / ส่งผลกับเกมมากเกิน</h3>

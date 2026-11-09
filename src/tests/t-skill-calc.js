@@ -6,7 +6,7 @@ import { simulate } from '../core/battle.js';
 import { buildCharacterList } from '../core/characters.js';
 import { RULES, upGain } from '../core/rules.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { mxModel, mxLoss, mxAgg, mxAdd, mxWhy, mxCombatAdd } from '../lab/matchcalc.js';
+import { mxModel, mxLoss, mxAgg, mxAdd, mxWhy, mxCombatAdd, charFlags, CHAR_FLAG } from '../lab/matchcalc.js';
 import { NEVER, mk, L3, eq, ok, randomTeam } from './helpers.js';
 import { makeRng } from '../core/rng.js';
 
@@ -693,7 +693,11 @@ const SC_COMBAT = ['ตารางผลต่อสู้รันจริง
     const r = simulate(buildTeam(A, m), buildTeam(B, m), { detail: true }), q = simulate(buildTeam(A, m), buildTeam(B, m), { log: false });
     eq(q.winner, r.winner, tag + ' winner same with detail off'); eq(q.timeMs, r.timeMs, tag + ' time same');
     const units = [...r.events[0].units, ...r.events.filter(e => e.k === 'summon').map(e => e.unit)], M = mxModel(r, units);
-    const acc = mxCombatAdd({}, r, 0), L = Object.values(acc), sum = f => L.reduce((a, x) => a + f(x), 0);
+    const accLv = {}, acc = mxCombatAdd({}, r, 0, accLv), L = Object.values(acc), sum = f => L.reduce((a, x) => a + f(x), 0);
+    // set 165: the per-level split adds up to the all-level totals, and each unit lands on its own level
+    const LL = Object.values(accLv).flatMap(o => Object.values(o)), sumL = f => LL.reduce((a, x) => a + f(x), 0);
+    for (const k of ['n', 'out', 'taken', 'heal', 'armor', 'kills', 'alive']) ok(near(sumL(x => x[k]), sum(x => x[k])), `${tag} per-level ${k} adds up`);
+    for (const [lv, o] of Object.entries(accLv)) for (const [id, x] of Object.entries(o)) eq(x.n, r.events[0].units.filter(u => u.side === 0 && u.id === id && u.level === +lv).length, `${tag} ${id} Lv${lv} appearances`);
     const mine = units.filter(u => u.side === 0), start0 = r.events[0].units.filter(u => u.side === 0);
     ok(near(sum(x => x.out), M.tot[0]), `${tag} damage dealt ${sum(x => x.out)} = tab ${M.tot[0]}`);
     ok(near(sum(x => Object.values(x.src).reduce((a, v) => a + v, 0)), sum(x => x.out)), tag + ' sources add up');
@@ -705,4 +709,17 @@ const SC_COMBAT = ['ตารางผลต่อสู้รันจริง
     ok(sum(x => x.kills) <= r.events.filter(e => e.k === 'down' && units.find(u => u.uid === e.who && u.side === 1)).length, tag + ' kills ≤ enemy downs');
   }
 }];
-export const TESTS_SKILL_CALC = [...SC_BASE, ...SC_TESTS, ...SC_RETIRED_TESTS, SC_COVER, SC_FUZZ, SC_COMBAT];
+// set 165: Balance Room "สรุปแรง/อ่อน" verdict (charFlags) — same-rarity median, gap 5 or 2 × SE, 30-match floor, ≥ 3 peers
+const SC_FLAGS = ['ป้ายแรง/อ่อนรันจริง: ค่ากลางความหายากเดียวกัน + เกณฑ์', () => {
+  const R = (id, rarity, g, w) => ({ id, rarity, g, w });
+  const out = charFlags([R('A', 'x', 400, 200), R('B', 'x', 400, 220), R('C', 'x', 400, 240), R('D', 'x', 400, 300), R('E', 'x', 400, 140), R('F', 'x', 29, 29),
+    R('G', 'y', 100, 90), R('H', 'y', 100, 50), R('I', 'z', 1000, 520)]);
+  const f = Object.fromEntries(out.map(x => [x.id, x]));
+  ok(Math.abs(f.C.base - 55) < 1e-9, 'median of x (A50 B55 C60 D75 E35 → 55, F under floor excluded)');
+  eq(f.D.flag, 'strong', 'D +20'); eq(f.E.flag, 'weak', 'E −20'); eq(f.A.flag, 'ok', 'A −5 = not over the gap'); eq(f.C.flag, 'ok', 'C +5');
+  eq(f.F.flag, 'low', 'F 29 matches = low'); eq(f.G.flag, 'nobase', 'y has only 2 rows with data'); eq(f.I.flag, 'nobase', 'z has 1 row');
+  ok(Math.abs(f.D.lim - Math.max(CHAR_FLAG.gap, 2 * Math.sqrt(0.75 * 0.25 / 400) * 100)) < 1e-9, 'limit = max(gap, 2 × SE)');
+  const small = charFlags([R('A', 'x', 30, 15), R('B', 'x', 30, 15), R('C', 'x', 30, 15), R('D', 'x', 30, 20)]).find(x => x.id === 'D');
+  eq(small.flag, 'ok', '+16.7 on 30 matches stays inside 2 × SE = ' + small.lim.toFixed(1) + ' (small samples need a bigger gap)');
+}];
+export const TESTS_SKILL_CALC = [...SC_BASE, ...SC_TESTS, ...SC_RETIRED_TESTS, SC_COVER, SC_FUZZ, SC_COMBAT, SC_FLAGS];
