@@ -36,3 +36,6 @@ Step-by-step runbook: skill `.claude/skills/publish-pages/SKILL.md` (set 155). T
 - Unchanged: pass range ±6 points · same seed set · measure all 3 levels · validate saved data at load · keep the calculation core separate from the screens
 - bootstrap commands work when the files are local: setup uses 4 files (section 1) · final/measure also need tests/ui_smoke.py and lab/measure.mjs
 - Times that bootstrap reports are parallel-run times (each is slower than alone, e.g. tests 44 s alone → ~108 s in parallel) · the slowest (balance measure ~2.5 min) sets the total
+
+## 3b. Publish refused "identical content resent unchanged" (set 173)
+- The first publish of a page you have not read is refused and shows the live diff (that counts as viewing it). If the diff shows only YOUR lines, publish again — but if it is refused as identical, append a one-line HTML comment (e.g. `<!-- published from main <sha> -->`) to the built `src/*.html` (gitignored) and publish again; it then goes through. Never read the whole built page (1 MB).
