@@ -145,7 +145,12 @@ with sync_playwright() as p:
             pg.click('#board [data-ref="%s"]' % u); pg.keyboard.press('Escape'); chk(pg.is_hidden('#sidePane'),'Esc closes card')
         pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
-        pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup'); esc()
+        pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup')
+        # set 171 (E1): highlight this tribe on board + bench from the tribe popup · strip in the HUD turns it off · no sideways scroll
+        pg.get_by_role('button',name='ไฮไลต์บนบอร์ด').click(); hl=pg.evaluate("(()=>{const on=[...document.querySelectorAll('#board .cell.thi,#bench .cell.thi')];return [hiTribe,$('hiBar').hidden,on.length,on.every(c=>{const u=unitAt(parseRef(c.dataset.ref));return u&&[CM[u.id].tribe,...(CM[u.id].extraTribes||[])].includes(hiTribe)}),document.querySelectorAll('#board .cell.tdim,#bench .cell.tdim').length+on.length===document.querySelectorAll('#board .cell.filled,#bench .cell.filled').length]})()")
+        chk(pg.is_hidden('#dlg') and hl[0] and not hl[1] and hl[2]>=1 and hl[3] and hl[4],'tribe highlight: popup closes, only that tribe lit, others dimmed: '+str(hl))
+        noscroll('tribe highlight')
+        pg.click('#hiBar'); chk(pg.evaluate("hiTribe===null && $('hiBar').hidden && !document.querySelector('.cell.thi,.cell.tdim')"),'tribe highlight: strip tap turns it off')
         pg.evaluate("P.gold=%d;render()" % g0)
         res=[]; maxBoard=0; titles=[]; offers=0; first=True  # set 87: every round's title (the last match can be a boss round)
         BUY="""(()=>{for(let k=0;k<5;k++){const i=P.shop.findIndex(s=>s.id&&RULES.shop.prices[CM[s.id].rarity]<=P.gold); if(i<0)break; tap({at:'shop',i}); const btn=document.querySelector('#sidePane button.primary'); if(!btn||btn.disabled)break; btn.click();}})()"""
@@ -174,6 +179,9 @@ with sync_playwright() as p:
                     pg.evaluate("$('stop').click()"); chk(pg.evaluate('view.playing || view.ended'),'stop again resumes')
             pg.click('#skip'); pg.wait_for_selector('#next', state='visible', timeout=60000)  # ชุด 19: รอหน้าผลก่อน
             if not res: chk(pg.is_visible('#rChips') and pg.inner_text('#resultTitle') in ('ชนะ!','แพ้','เสมอ') and pg.inner_text('#resultNext').startswith('ต่อไป'),'result card: big word + chips + next step')
+            if not res:  # set 171 (C1): recap = top 3 damage dealers of your side (sorted, numbers = engine dealt) + top damage taken
+                rc=pg.evaluate("(()=>{const us=lastResult.units.filter(u=>u.side===0),d=us.filter(u=>u.dealt>0).sort((a,b)=>b.dealt-a.dealt).slice(0,3).map(u=>Math.round(u.dealt).toLocaleString('en-US'));return [d,[...document.querySelectorAll('#recap .rnum')].map(e=>e.textContent),$('recap').hidden,!!document.querySelector('#recap .rtank')===us.some(u=>u.taken>0)]})()")
+                chk(rc[0]==rc[1] and rc[2]==(len(rc[0])==0) and rc[3],'result recap: top 3 dealt match the engine + top taken line: '+str(rc))
             res.append(pg.inner_text('#resultTitle').split('\n')[0]); titles.append(pg.text_content('#battleTitle'))
             if first:
                 rnd0=pg.evaluate('P.round'); t0=pg.inner_text('#resultTitle'); c0=pg.inner_text('#clock')
