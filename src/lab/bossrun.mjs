@@ -33,12 +33,12 @@ const chars = buildCharacterList(), cm = makeCharMap(chars);
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
 if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first ·', bt.errors?.[0] || ''); process.exit(1); }
 const t0 = Date.now(), FIT = process.argv.includes('--fit'), REF = FIT || process.argv.includes('--ref');
-let teams;
+let teams, XTRA = {};
 if (REF) {
   const o = loadRef(fs);
   if (!o) { console.log('lab/bossref.json missing: run node lab/bossref.mjs first'); process.exit(1); }
   if (o.hash !== dataHash(chars, RULES)) { console.log(`lab/bossref.json was made for other game data (${o.at}): run node lab/bossref.mjs again`); process.exit(1); }
-  teams = o.teams; console.log(`reference teams ${o.at} (runs ${o.runs})`);
+  teams = o.teams; XTRA = o.xtra; console.log(`reference teams ${o.at} (runs ${o.runs}) · tribe top-up ${[1, 2, 3].map(k => XTRA[k].length).join('/')}`);
 } else teams = (await runPlayStats(chars, RULES, RUN_STAGE, { n: runs, keepTeams: true })).teams;
 const med = a => { const x = a.slice().sort((p, q) => p - q), m = x.length >> 1; return x.length % 2 ? x[m] : (x[m - 1] + x[m]) / 2; };
 // neutral boss (C-17.6 tribe baseline): no rules, no Heat, median stats (hp, atk, cd, multi, phase atk) of the enabled bosses · 3 phases at 0/2/4
@@ -56,10 +56,11 @@ console.log(`teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[
 //   + cause check (each rule off in every phase → k1/k2 win % all / weak tribe / resisted tribe) · --md <file> also writes the tables
 if (process.argv.includes('--tribes')) {
   const TR = ['เพลิงเผา', 'สายฟ้า', 'วายุ', 'ภูติ', 'เหล็กกล้า', 'อสูร', 'ผสม'], ALL = ['all', ...TR];
-  const fight = (b, k) => { const c = { all: [0, 0] }; for (const t of teams[k]) { const w = simulate(t.units, bossTeamOf(b, k, t), { ...t.opts, rules: RULES, log: false }).winner !== 1 ? 1 : 0;
-    for (const key of ['all', t.tr || 'ผสม']) { c[key] ??= [0, 0]; c[key][0]++; c[key][1] += w; } } return c; };
+  // set 168 cont. 3: reference xtra teams (tribe top-up) count only in their tribe column, never in 'all'
+  const fight = (b, k) => { const c = { all: [0, 0] }; for (const t of [...teams[k], ...(XTRA[k] || [])]) { const w = simulate(t.units, bossTeamOf(b, k, t), { ...t.opts, rules: RULES, log: false }).winner !== 1 ? 1 : 0;
+    for (const key of t.xtra ? [t.tr] : ['all', t.tr || 'ผสม']) { c[key] ??= [0, 0]; c[key][0]++; c[key][1] += w; } } return c; };
   const p = a => (a && a[0] ? (100 * a[1] / a[0]).toFixed(0) : '-');
-  let md = `teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · ${REF ? 'reference teams (lab/bossref.json)' : `runs ${runs}`} · cell = player win % (teams)\n`;
+  let md = `teams k1 ${teams[1].length} · k2 ${teams[2].length} · k3 ${teams[3].length} · ${REF ? `reference teams (lab/bossref.json · + tribe top-up ${[1, 2, 3].map(k => XTRA[k].length).join('/')} in tribe columns only)` : `runs ${runs}`} · cell = player win % (teams)\n`;
   // set 168: neutral boss first (tribe baseline) · boss cells then show the gap to it: "45 (−12)"
   const nb0 = neutralBoss(), base = {};
   md += `\n### บอสกลาง (baseline: no rules · median stats hp ${nb0.hp} atk ${nb0.phases.map((q, i) => i ? q.stats.atk : nb0.atk).join('/')} cd ${nb0.cdMs})\n| k | ${ALL.join(' | ')} |\n|${'---|'.repeat(ALL.length + 1)}\n`;
