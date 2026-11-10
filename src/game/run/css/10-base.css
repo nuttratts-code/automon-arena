@@ -266,6 +266,10 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .info .stats2 b { font: 500 .8rem var(--f-mono); font-variant-numeric: tabular-nums; }
 .info .skill { font-size: .82rem; }
 .info .perm { font-size: .78rem; color: var(--accent); }
+.info .add-perm, .info .add-rune { font: 600 .74rem var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; } /* set 184: (+permanent) (+rune) */
+.info .add-perm { color: var(--gold); } .info .add-rune { color: var(--r-epic); }
+.info .addkey { display: flex; gap: 8px; flex-wrap: wrap; }
+.info .stats2.two, .spane .info .stats2.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } .info .stats2 .tv { white-space: nowrap; }
 .lvtabs { display: flex; gap: 4px; flex-wrap: wrap; } .lvtabs button { padding: 4px 10px; font: 600 .78rem var(--f-mono); }
 .info .stats2.now { padding: 4px 6px; border-radius: 6px; background: var(--soft); color: var(--accent); }
 .info .stats2.now .nowlbl { grid-column: 1 / -1; font-weight: 600; font-size: .76rem; }

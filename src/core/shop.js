@@ -2,7 +2,7 @@ import { makeRng } from './rng.js';
 import { teamPower } from './power.js';
 import { buildTeam, makeCharMap } from './team.js';
 import { RUN_STAGE } from './runboss.js';
-import { newRunes, rnFx, rnInterest, rnPermMul, rnSync } from './runrunes.js';
+import { newRunes, rnFx, rnInterest, rnPermMul, rnRec, rnSpecNum, rnSync, rnTakeOffer } from './runrunes.js';
 import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } from './rules.js';
 // ร้านค้าและรวมร่าง (shop-merge-rules) · ใช้ร่วมกันระหว่างผู้เล่น บอท และห้องบาลานซ์
 // - สถานะเป็นข้อมูลล้วน (ไม่มีฟังก์ชัน) เซฟเป็น JSON ได้ · เลขสุ่มเก็บในสถานะ ใส่เมล็ดเดิมได้ผลเดิม
@@ -19,7 +19,7 @@ export const done = (msgs = []) => ({ ok: true, msgs });
 export function newRun(chars, seed, rules = RULES) {
   const S = rules.shop;
   const st = {
-    v: 10, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 128: v10 = + fp (team power at shop start → the locked enemy) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 5 · set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
+    v: 11, op: false, seed: seed >>> 0, n: 0, round: 0, gold: 0, wins: 0, hearts: S.hearts, lastWon: false, over: false, // set 184: v11 = + op (shop round open: startRound → true, endMatch → false · resume skips startRound when true · rune taken while open pays out now) · set 128: v10 = + fp (team power at shop start → the locked enemy) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 5 · set 107: v8 = + ws · set 100: v7 = + ls, rn.ro · set 99: v6 = + bw/bk/extra · set 95: v5 = no rune shop (st.rn.shop gone) · set 89: v3 = shop level comes from the round (no upgrade / streak fields)
     shop: Array.from({ length: S.slots }, () => ({ id: null, locked: false })),
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
@@ -234,7 +234,27 @@ export function startRound(st, chars, rules = RULES) {
   if (lv > lvBefore && st.round > 1) msgs.push(`ร้านขึ้นเป็นระดับ ${lv} (ขึ้นเองตามรอบ)`);
   refill(st, chars, rules);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'shopStart', chars, rules, msgs);
+  st.op = true; // set 184: shop round is open (a rune taken from now on pays out in this round · a save made now resumes without a new startRound)
   try { st.fp = Math.round(teamPower(buildTeam(teamEntries(st), makeCharMap(chars), rules), rules)); } catch (e) { st.fp = 0; } // set 128: the enemy is locked from here (not re-picked at the fight)
+  return done(msgs);
+}
+
+// set 184 (user): take a rune card · if the shop round is already open (game page: the card shows after the round's income),
+// the round-start runes pay out now instead of next round: T1 gold · T4 free rerolls · T3 extra shop slots (filled right away)
+// bots take their card before startRound (op false) → same as before
+export function takeRune(st, i, chars, rules = RULES, tribe = null, stage = RUN_STAGE) {
+  const o = st.rn && st.rn.offer, id = o && Number.isInteger(i) ? o.ids[i] : null;
+  const r = rnTakeOffer(st, i, stage, tribe);
+  if (!r.ok || !st.op) return r;
+  const rec = rnRec(id, stage); if (!rec) return r;
+  const msgs = r.msgs.slice();
+  if (rec.eff === 'gold') { const g = rnSpecNum(rec, 'gold'); if (g) { st.gold += g; msgs.push(`รูนทอง +${g} (ได้ทันทีรอบนี้)`); } }
+  else if (rec.eff === 'freeRoll') { const f = rnSpecNum(rec, 'free'); if (f) { st.rn.free += f; msgs.push(`สุ่มร้านฟรี +${f} (ใช้ได้ทันทีรอบนี้)`); } }
+  else if (rec.eff === 'shopSlots') {
+    const want = rules.shop.slots + rnFx(st, stage).slots, n0 = st.shop.length;
+    while (st.shop.length < want) st.shop.push({ id: rollChar(st, chars, rules), locked: false });
+    if (st.shop.length > n0) msgs.push(`ร้านเพิ่ม ${st.shop.length - n0} ช่อง (ทันทีรอบนี้)`);
+  }
   return done(msgs);
 }
 
@@ -369,6 +389,7 @@ export function teamEntries(st) {
 // over: hearts gone, or wins reach winsToFinish outside extra matches (the player may then continueExtra), or the last round (stage lastStage) was played
 export function endMatch(st, won, chars, rules = RULES, gains = [], boss = false, stage = RUN_STAGE) {
   const S = rules.shop, msgs = [];
+  st.op = false; // set 184: the shop round is over (the rune offer after this match comes before the next startRound)
   applyBattlePerm(st, gains, chars, rules, msgs);
   for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchEnd', chars, rules, msgs);
   if (won) for (const { u, ref } of boardUnits(st)) fireShopSkill(st, u, ref, 'matchWin', chars, rules, msgs);

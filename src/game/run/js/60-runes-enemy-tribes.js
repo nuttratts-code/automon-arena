@@ -38,7 +38,7 @@ function flagPicker(i, r) {
     const b = el('button', 'pitem'); b.type = 'button'; b.dataset.tribe = t; b.style.setProperty('--tc', TRIBE_STYLE[t].color);
     const nm = el('span', ''); nm.append(t, el('small', '', counts[t] ? `บนบอร์ด ${counts[t]} ตัว` : 'ยังไม่มีบนบอร์ด'));
     b.append(tribeIco(t), nm);
-    b.addEventListener('click', () => { flagPick = null; pushMsgs(J('tk', [i, t], () => rnTakeOffer(P, i, undefined, t))); saveRun(); render(); });
+    b.addEventListener('click', () => { flagPick = null; pushMsgs(J('tk', [i, t], () => takeRune(P, i, chars, RULES, t))); saveRun(); render(); });
     grid.append(b);
   }
   box.append(grid, rnBtn('← กลับไปเลือกรูน', () => { flagPick = null; render(); }));
@@ -53,7 +53,7 @@ function renderRunes() {
     if (fr && fr.eff === 'flag') $('offer').replaceChildren(flagPicker(flagPick, fr));
     else $('offer').replaceChildren(...o.ids.map((id, i) => { const r = rnRec(id); return r ? runeCard(r, rnBtn(r.eff === 'flag' ? 'เลือกรูนนี้ แล้วเลือกเผ่า' : 'เลือกรูนนี้', () => {
       if (r.eff === 'flag') { flagPick = i; render(); return; }
-      pushMsgs(J('tk', [i], () => rnTakeOffer(P, i))); saveRun(); render();
+      pushMsgs(J('tk', [i], () => takeRune(P, i, chars, RULES))); saveRun(); render();
       if (rnWear(P, id) !== 'ok') openPop('rune', id); // set 109: a rune that must be worn → open it right away to pick the unit
     })) : el('div', 'rcard empty', id); }));
     const cost = rnRerollCost(P), rr = $('offerReroll'); // set 100: reroll the cards (free first, then paid)

@@ -1,6 +1,6 @@
 import { RULES, TRIBES } from './rules.js';
-import { buy, buyMerge, continueExtra, endMatch, move, newRun, reroll, sell, startRound, toggleLock, PERM_KEYS } from './shop.js';
-import { rnHeartTrade, rnMakeOffer, rnPlace, rnRerollOffer, rnSkipOffer, rnTakeOffer } from './runrunes.js';
+import { buy, buyMerge, continueExtra, endMatch, move, newRun, reroll, sell, startRound, takeRune, toggleLock, PERM_KEYS } from './shop.js';
+import { rnHeartTrade, rnMakeOffer, rnPlace, rnRerollOffer, rnSkipOffer } from './runrunes.js';
 // Run journal (set 109, user 6 Nov): every action that changes the player's run state, in order, with gold before → after.
 // A run is deterministic from its seed (shop + rune draws use st.seed and the counter st.n), so replaying the journal on
 // newRun(seed) rebuilds every step: lab/runlog.mjs prints where each coin came from and went, and checks each step's gold.
@@ -95,7 +95,7 @@ export function rlApply(st, e, chars, rules = RULES) {
     case 'mv': return move(st, rlUnref(a[0]), rlUnref(a[1]), chars, rules);
     case 'en': return endMatch(st, a[0] === 1, chars, rules, a[2].map(g => ({ id: g[0], key: g[1], row: g[2], lane: g[3], amount: g[4], side: 0 })), a[1] === 1);
     case 'of': { const o = rnMakeOffer(st, a[0]); return { ok: true, msgs: [], offer: o }; }
-    case 'tk': return rnTakeOffer(st, a[0], undefined, typeof a[1] === 'string' ? a[1] : null); // set 128: a[1] = flag tribe
+    case 'tk': return takeRune(st, a[0], chars, rules, typeof a[1] === 'string' ? a[1] : null); // set 128: a[1] = flag tribe · set 184: round-start runes pay out now when the shop is open
     case 'or': return rnRerollOffer(st);
     case 'sk': return rnSkipOffer(st);
     case 'ht': return rnHeartTrade(st);

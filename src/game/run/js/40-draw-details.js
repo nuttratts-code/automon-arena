@@ -112,18 +112,36 @@ function render() {
   renderSide();
 }
 
-function statLine(id, level, perm, all) {
-  // ค่าที่ใช้สู้จริง (รวมค่าถาวรทุกชนิด · ชุด 6) คำนวณด้วยตัวจัดทีมเดียวกับการต่อสู้ · all = แสดงทุกค่าแม้เป็น 0 (ชุด 26)
-  const c = CM[id], p = perm || {}, u = unitOf(c, { id, level, row: 0, lane: 0, perm: p }, RULES, null);
-  return [
-    ['HP', u.maxHp], ['พลังโจมตี', u.atk],
-    ['คูลดาวน์', `${(Math.max(RULES.minCooldownMs, u.cdMs) / 1000).toFixed(2)} วิ`],
-    ['มัลติฮิต', u.multi], ['ไฟ/ฮิต', u.burnHit], ['ช็อต/ฮิต', u.shockHit],
-    ...(u.armorHit || all ? [['เกราะ/ฮิต', u.armorHit]] : []),
-    ...(u.healHit || all ? [['ฟื้น/ฮิต', u.healHit]] : []),
-    ...(u.startArmor ? [['เกราะสะสม (ถาวร)', u.startArmor]] : []),
-  ];
+// set 184 (user): one stat row · value at the viewed level + (+permanent) gold + (+rune) purple · numbers from the same team builder as the fight
+const CD_K = 'คูลดาวน์';
+function statNums(id, level, perm) {
+  const u = unitOf(CM[id], { id, level, row: 0, lane: 0, perm: perm || {} }, RULES, null);
+  return { HP: u.maxHp, 'พลังโจมตี': u.atk, [CD_K]: Math.max(RULES.minCooldownMs, u.cdMs), 'มัลติฮิต': u.multi, 'ไฟ/ฮิต': u.burnHit, 'ช็อต/ฮิต': u.shockHit, 'เกราะ/ฮิต': u.armorHit, 'ฟื้น/ฮิต': u.healHit || 0, 'เกราะสะสม (ถาวร)': u.startArmor };
 }
+// what the held runes add to each board unit at match start (set 184, user C1): the real battle engine stopped right after "match start",
+// with and without runes, tribe bonuses off · conditional runes (per hit, last one standing, win streak) are not numbers here
+let rnBonusMemo = { key: '', map: null };
+function runeBonusAt(ref) {
+  if (!ref || ref.at !== 'board' || !P) return null;
+  const team = teamEntries(P), runes = rnCompact(P), key = JSON.stringify([team, runes, stats.streak]);
+  if (rnBonusMemo.key !== key) {
+    let map = null;
+    try {
+      const o = { rules: RULES, log: false, startOnly: true, tribesOff: [true, true] }, at = r => new Map(r.units.filter(x => x.side === 0).map(x => [`${x.row},${x.lane}`, x.st]));
+      const a = at(simulate(buildTeam(team, CM, RULES), [], o)), b = at(simulate(playerSide(team, runes).units, [], o));
+      const cd = x => Math.max(RULES.minCooldownMs, Math.round(x.cdMs * x.cdMult));
+      map = {};
+      for (const [k, x] of a) {
+        const y = b.get(k); if (!y) continue;
+        map[k] = { HP: y.maxHp - x.maxHp, 'พลังโจมตี': y.atk - x.atk, [CD_K]: cd(y) - cd(x), 'มัลติฮิต': y.multi - x.multi, 'ไฟ/ฮิต': y.burnHit - x.burnHit, 'ช็อต/ฮิต': y.shockHit - x.shockHit, 'เกราะ/ฮิต': y.armorHit - x.armorHit, 'ฟื้น/ฮิต': y.healHit - x.healHit };
+      }
+    } catch (e) { map = null; }
+    rnBonusMemo = { key, map };
+  }
+  return rnBonusMemo.map ? rnBonusMemo.map[`${ref.row},${ref.lane}`] || null : null;
+}
+const cdSec = ms => (ms / 1000).toFixed(2);
+const signed = (k, d) => k === CD_K ? `${d < 0 ? '−' : '+'}${cdSec(Math.abs(d))}` : `${d < 0 ? '−' : '+'}${Math.abs(d)}`;
 // set 106 (playtest G3): tap a stat name = one-line meaning · keyword list from GLOSSARY (game/labels.js)
 const STAT_HELP = {
   HP: 'พลังชีวิต · ถึง 0 = ล้ม', 'พลังโจมตี': 'ดาเมจต่อ 1 ฮิต (ก่อนหักเกราะ)', 'คูลดาวน์': 'เวลารอระหว่างการโจมตีแต่ละชุด ยิ่งน้อยยิ่งตีถี่',
@@ -132,8 +150,10 @@ const STAT_HELP = {
   'เกราะ/ฮิต': 'ทุกฮิตที่ตีโดน ตัวเองได้เกราะเท่านี้ · เกราะกันดาเมจก่อน HP', 'ฟื้น/ฮิต': 'ทุกฮิตที่ตีโดน ตัวเองฟื้น HP เท่านี้',
   'เกราะสะสม (ถาวร)': 'ค่าถาวรจากสกิลร้านค้า · ได้เกราะเท่านี้ทุกครั้งที่เริ่มแมตช์',
 };
-function termEl(k, v, help) {
-  const d = el('span', 'term' + (v === 0 ? ' zero' : ''), `${k} `); d.append(el('b', '', String(v))); // set 169: value 0 stays visible but quieter (set 26: all values shown)
+function termEl(k, v, help, adds = []) {
+  const d = el('span', 'term' + (v === 0 && !adds.length ? ' zero' : ''), `${k} `), val = el('span', 'tv'); // set 169: value 0 stays visible but quieter (set 26: all values shown)
+  val.append(el('b', '', String(v))); for (const [t, c] of adds) val.append(' ', el('span', c, `(${t})`)); // set 184: (+permanent) (+rune) stay with the value
+  d.append(val);
   const tip = STAT_HELP[k]; if (!tip) return d;
   d.title = tip; d.tabIndex = 0; d.setAttribute('role', 'button');
   const show = () => { help.textContent = `${k}: ${tip}`; };
@@ -215,18 +235,28 @@ function unitInfo(ref) {
     lvBar.append(b);
   }
   right.append(lvBar);
+  // set 184 (user): one row · base value at the viewed level, then (+permanent) gold and (+rune) purple (rune: own unit on the board, its own level)
   const st = el('div', 'stats2'), help = el('span', 'hint termhelp', 'แตะชื่อค่าเพื่อดูความหมาย');
-  for (const [k, v] of statLine(id, vl, {}, true)) st.append(termEl(k, v, help));
+  const base = statNums(id, vl, {}), withP = statNums(id, vl, perm), rb = vl === level ? runeBonusAt(ref) : null;
+  let anyP = false, anyR = false;
+  for (const k of Object.keys(base)) {
+    if (k === 'เกราะสะสม (ถาวร)') continue; // shown as its own term below when held
+    const adds = [], dp = withP[k] - base[k], dr = rb ? rb[k] || 0 : 0;
+    if (dp) { adds.push([signed(k, dp), 'add-perm']); anyP = true; }
+    if (dr) { adds.push([signed(k, dr), 'add-rune']); anyR = true; }
+    st.append(termEl(k, k === CD_K ? `${cdSec(base[k])} วิ` : base[k], help, adds));
+  }
+  if (withP['เกราะสะสม (ถาวร)']) { st.append(termEl('เกราะสะสม (ถาวร)', withP['เกราะสะสม (ถาวร)'], help)); anyP = true; }
+  if (anyP || anyR) st.classList.add('two'); // brackets need room: 2 columns
   right.append(st);
-  // ค่าถาวร: แยกแถว "ตอนนี้ (รวมถาวร)" ของเลเวลปัจจุบัน (ผู้ใช้เลือก)
-  if (Object.values(perm).some(v => v)) {
-    const now = el('div', 'stats2 now'); now.append(el('span', 'nowlbl', `ตอนนี้ Lv${level} (รวมถาวร)`));
-    for (const [k, v] of statLine(id, level, perm, true)) now.append(termEl(k, v, help));
-    right.append(now);
+  if (anyP || anyR) { // colour key, only when a bracket is shown
+    const key = el('span', 'hint addkey'); key.append(...(anyP ? [el('span', 'add-perm', '(+ถาวร)')] : []), ...(anyP && anyR ? [' '] : []), ...(anyR ? [el('span', 'add-rune', '(+รูน ตอนเริ่มแมตช์)')] : []));
+    right.append(key);
   }
   const foot = el('div', 'cfoot'); foot.append(help, pbtn('คำศัพท์', () => openPop('gloss'))); right.append(foot);
-  const pk = Object.entries(perm).filter(([, v]) => v);
-  if (pk.length) right.append(el('span', 'perm', 'ค่าถาวร: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
+  // permanent values that are not one of the numbers above (e.g. burn that does not fade) stay as text
+  const pk = Object.entries(perm).filter(([k, v]) => v && k !== 'armor' && Object.keys(base).every(s2 => statNums(id, vl, { [k]: v })[s2] === base[s2]));
+  if (pk.length) right.append(el('span', 'perm', 'ค่าถาวรอื่น: ' + pk.map(([k, v]) => permText(k, v)).join(' · ')));
   wrap.append(right);
   let acts;
   if (ref.at === 'shop') {

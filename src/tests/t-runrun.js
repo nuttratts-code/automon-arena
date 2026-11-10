@@ -3,7 +3,7 @@ import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { simulate } from '../core/battle.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
-import { incomeOf, newRun, startRound, reroll, sell, move, merge, applyBattlePerm, endMatch } from '../core/shop.js';
+import { incomeOf, newRun, startRound, takeRune, reroll, sell, move, merge, applyBattlePerm, endMatch } from '../core/shop.js';
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
@@ -175,8 +175,22 @@ export const TESTS_RUNRUN = [
     eq(pickFoe(BOT_TEAMS, 1, R7, 9, false, undefined, undefined, 3).floor, Math.round(med7 * 0.6), 'ls 3 → floor median × 60%');
     const L = fresh(79); endMatch(L, false, chars, RULES, [], false); endMatch(L, false, chars, RULES, [], true); eq(L.ls, 2, 'boss loss counts');
     endMatch(L, true, chars, RULES, [], true); eq(L.ls, 0, 'boss win resets');
-    const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft;
+    const old = structuredClone(Q); old.v = 9; delete old.fp; delete old.rn.ft; delete old.op;
     const h = dataHash(chars, RULES), rs = readSave(makeSave(old, structuredClone(old), newStats(), 1, h), cm, RULES, h);
-    eq([rs.status, rs.save && rs.save.P.v, rs.save && rs.save.P.fp > 0], ['ok', 10, true], 'v9 save → v10');
+    eq([rs.status, rs.save && rs.save.P.v, rs.save && rs.save.P.fp > 0, rs.save && rs.save.P.op], ['ok', 11, true, false], 'v9 save → v11 (set 184: op false)');
+  }],
+  ['set 184 (user): T1 / T3 / T4 taken after the round started pay out in that round · taken before startRound (bots) = same totals · op flag + resume', () => {
+    for (const id of ['T1', 'T3', 'T4']) {
+      const P = fresh(5); eq(P.op, true, 'startRound opens the round'); endMatch(P, true, chars); eq(P.op, false, 'endMatch closes it');
+      P.rn.offer = { kind: 'win', ids: [id] }; startRound(P, chars);
+      const Q = fresh(5); endMatch(Q, true, chars); Q.rn.offer = { kind: 'win', ids: [id] }; ok(takeRune(Q, 0, chars).ok, 'bot order take'); startRound(Q, chars);
+      ok(takeRune(P, 0, chars).ok, 'take ' + id);
+      eq([P.gold, P.shop.length, P.rn.free], [Q.gold, Q.shop.length, Q.rn.free], id + ': same round = same as taking it before the round');
+      ok(P.shop.every(s => s.id), id + ': no empty shop slot');
+    }
+    const R = fresh(6); endMatch(R, true, chars); R.rn.offer = { kind: 'win', ids: ['T1'] }; startRound(R, chars); const g = R.gold; takeRune(R, 0, chars);
+    eq(R.gold, g + rnRec('T1').gold, 'T1 gold now');
+    const h = dataHash(chars, RULES), rs = readSave(makeSave(R, structuredClone(R), newStats(), 1, h), cm, RULES, h);
+    eq([rs.status, rs.save && rs.save.P.op, rs.save && rs.save.P.round], ['ok', true, R.round], 'mid-round save keeps op (the game resumes without a 2nd startRound)');
   }],
 ];
