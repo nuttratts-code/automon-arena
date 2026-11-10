@@ -373,7 +373,7 @@ export const BOSS_SPOT_PRESETS = [
 ];
 const SPOT_ROW = ['หน้า', 'กลาง', 'หลัง'], SPOT_LANE = ['บน', 'ล่าง'];
 // → { bits: '101010', move: bool } or null if not a valid spot
-export function spotInfo(spot) {
+export function spotInfo(spot) { // Godot port (set 194): also in godot/scripts/rules.gd spot_info — change both
   if (spot === 'move') return { bits: '111111', move: true };
   const p = BOSS_SPOT_PRESETS.find(q => q[0] === spot); if (p) return { bits: p[2], move: false };
   if (typeof spot !== 'string' || !/^[cm][01]{6}$/.test(spot)) return null;

@@ -247,6 +247,7 @@ export const BATTLE_WHEN = ['passive', 'matchStart', 'set', 'hit', 'hits3', 'hit
 // ค่าถาวรแบบความสามารถ (จากสกิลระหว่างสู้ที่ตั้งถาวร · ซ้อนกันได้ทุกแมตช์ ไม่มีเพดาน · ผู้ใช้เลือก 22 ต.ค.)
 // set 147 (user R3, combat-rules C-8 "+ %"): a "+%" that gains something still rounds down, but gives at least +1
 // when % > 0 and the base > 0 · reducers (m < 1 / pct ≤ 0) round down as before
+// Godot port (set 194): upGain/upMul/atMatch also live in godot/scripts/rules.gd — change both
 export const upGain = (base, pct) => { const g = Math.floor(base * pct / 100); return g < 1 && pct > 0 && base > 0 ? 1 : g; };
 export const upMul = (base, m) => { const r = Math.floor(base * m); return m > 1 && base > 0 && r <= base ? base + 1 : r; };
 export const PERM_ABIL = ['cdStart', 'shareArmor', 'healToAtk', 'armorAmp', 'cdAmp', 'shockAmp', 'burnNoDecay', 'healAmp', 'hitAmp', 'burnAmp'];

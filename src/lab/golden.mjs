@@ -3,6 +3,7 @@
 //   node lab/golden.mjs --small    small set (tests use it in memory: same input twice = byte-identical)
 // User pick B1 (set 191): NOT committed (godot/tests/golden/ is in .gitignore) — rebuilt from the current core before every Godot parity check,
 // so the fixtures always match the current game values (manifest.gameHash = godot/data/game.json hash).
+// gamefloats.json (set 194): [[path array, bits hex]] for every non-integer number in godot/data/game.json
 // (a) rng: first N next() values for 5 seeds · (b) battles: input units/opts exactly as the game passes them + full result
 //     (log + detail + live, like the game replay) · (c) runs: simRun with runes, bosses, pickFoe enemies, extra rounds → every match + final state.
 // Every input goes through a JSON round trip BEFORE it is simulated: the fixture holds everything the result depends on.
@@ -120,6 +121,9 @@ export async function buildGolden(cfg = FULL, write = () => {}) {
   for (const l of battleLines(cfg, chars)) emit('battles-' + String(Math.floor(n++ / cfg.perFile)).padStart(2, '0') + '.jsonl', l);
   for (const l of runLines(cfg, chars)) emit('runs.jsonl', l);
   const gd = await buildGameData();
+  // A1 guard (set 194): exact bits of every non-integer number in godot/data/game.json → Godot checks its JSON parse of game.json matches
+  const gf = []; (function fl(v, p) { if (typeof v === 'number' && !Number.isInteger(v)) gf.push([p, exactNums(v).$f]); else if (v && typeof v === 'object') for (const k of Object.keys(v)) fl(v[k], p.concat(k)); })({ modules: gd.modules, derived: gd.derived }, []);
+  emit('gamefloats.json', JSON.stringify(gf));
   return { v: GOLDEN_V, gameHash: gd.hash, cfg, rngSeeds: RNG_SEEDS, battleOpts: BATTLE_OPTS,
     files: Object.fromEntries(Object.keys(files).map(f => [f, { lines: counts[f], sha256: files[f].digest('hex') }])) };
 }
