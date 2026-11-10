@@ -21,7 +21,7 @@ V1.1 · 10 Nov 2026 (set 190: private blocked by quota, work continues public) �
 
 ## Repo private + CI (S-A1)
 - The user switches the repo to Private on github.com (Settings → General → Danger Zone → Change visibility). Claude cannot do it.
-- **Status (set 190, user):** blocked — the user's GitHub free quota is full. User decision: keep working while public (repo unknown, 0 views); retry Private when the quota resets. Until then the repo is public: everything pushed (Godot code too) is visible — never push secrets (part 1) either way.
+- **Status (set 190, user):** blocked — the user's GitHub Actions minutes quota is full (private repos use it; public CI is free). Main-only CI ≈ 5 min × a few merges/day stays under 2,000 min/month after the reset. User decision: keep working while public (repo unknown, 0 views); retry Private when the quota resets. Until then the repo is public: everything pushed (Godot code too) is visible — never push secrets (part 1) either way.
 - CI runs only on push to main (+ manual run): private repos get limited free Actions minutes. Branch work is checked by the local gate before merge (HARD RULE 3), so CI on main still guards what ships.
 
 ## Where each part is checked
