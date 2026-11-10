@@ -1,4 +1,5 @@
 // ตัวสุ่มแบบกำหนดเมล็ดได้ (ไม่ใช้ Math.random) · ใช้สุ่มทีมบอทและร้านค้า เพื่อให้จำลองซ้ำได้
+// Godot copy: godot/scripts/rng.gd (set 193) — change both; parity test godot/tests/test_rng.gd.
 export function makeRng(seed) {
   let a = (seed >>> 0) || 1;
   const next = () => {
