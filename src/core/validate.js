@@ -1,4 +1,5 @@
 import { AT_LANES, AT_ROWS, CTX_WHEN, DO_INFO, NAME_MAX, OF_STATS, OF_WHO, PERM_ABIL, PERM_STAT2, RARITIES, ROW_HINTS, RULES, SKILL_SPEC, TRIBES, cleanTags, sameTribeOk, skipSameIdOk } from './rules.js';
+// Godot port (set 195): also in godot/scripts/validate.gd (golden (d) teams.jsonl exact, tests/test_team.gd) — change both
 // ตัวตรวจค่า: ตรวจ config และทีมก่อนใช้ทุกครั้ง ผิดให้บอกทันที ไม่ปล่อยให้พังเงียบ
 // ทีมอาจมาจากไฟล์เซฟหรือเครือข่าย (MVP2) จึงถือว่าไม่น่าเชื่อถือ ตรวจทุกช่อง
 
