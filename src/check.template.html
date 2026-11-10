@@ -55,7 +55,7 @@ code { font-family: var(--f-mono); font-size: .85em; }
   <div class="head">
     <div>
       <h1>ตรวจระบบ Automon</h1>
-      <p class="sub">แกนกลางขั้น 1 · ตัวคำนวณการต่อสู้ตาม combat-rules V1.1</p>
+      <p class="sub">ตรวจตัวคำนวณการต่อสู้ ร้านค้า รูน และบอส ตามกฎล่าสุดใน combat-rules · tribe-rules · shop-merge-rules</p>
     </div>
     <button id="run" type="button">ตรวจอีกครั้ง</button>
   </div>
@@ -68,7 +68,7 @@ code { font-family: var(--f-mono); font-size: .85em; }
       <thead><tr><th>ทีมสุ่ม 6 ตัว · 1,000 แมตช์</th><th>ค่ากลาง</th><th>10–90%</th><th>ถึง 180 วิ</th><th>เสมอ</th></tr></thead>
       <tbody id="stats"></tbody>
     </table></div>
-    <p class="note">เป้าในเอกสาร: ค่ากลาง 20–40 วิ · แมตช์ที่ถึง 180 วิ ต่ำกว่า 5% · ทีมสุ่มไม่ได้คิดเรื่องตำแหน่ง ตัวเลขจริงตอนผู้เล่นจัดทีมจะต่างไป</p>
+    <p class="note">ไม่มีตัวเลขเป้าแล้ว (combat-rules ตารางเป้าหมาย: แมตช์ยาวไม่เป็นปัญหา) · ตารางนี้ไว้ดูแนวโน้มเท่านั้น · ทีมสุ่มไม่ได้คิดเรื่องตำแหน่ง ตัวเลขจริงตอนผู้เล่นจัดทีมจะต่างไป</p>
   </section>
  
   <section>
@@ -101,11 +101,10 @@ function render() {
       <span class="pill ${r.ok ? 'ok' : 'bad'}">${r.ok ? 'ผ่าน' : 'ไม่ผ่าน'}</span></li>`).join('');
     $('stats').innerHTML = [1, 2, 3].map(lv => {
       const s = matchStats(1000, 1, lv);
-      const okMid = s.median >= 20 && s.median <= 40, okStorm = s.stormPct < 5;
       return `<tr><td>เลเวล ${lv}</td>
-        <td class="n">${s.median.toFixed(1)} วิ <span class="pill ${okMid ? 'ok' : 'warn'}">${okMid ? 'ในเป้า' : 'นอกเป้า'}</span></td>
+        <td class="n">${s.median.toFixed(1)} วิ</td>
         <td class="n">${s.p10.toFixed(0)}–${s.p90.toFixed(0)} วิ</td>
-        <td class="n">${s.stormPct.toFixed(1)}% <span class="pill ${okStorm ? 'ok' : 'warn'}">${okStorm ? 'ในเป้า' : 'เกิน'}</span></td>
+        <td class="n">${s.stormPct.toFixed(1)}%</td>
         <td class="n">${s.drawPct.toFixed(1)}%</td></tr>`;
     }).join('');
     const R = RULES;
