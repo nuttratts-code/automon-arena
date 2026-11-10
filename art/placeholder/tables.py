@@ -34,6 +34,10 @@ RUNES = {
 'U2':'twisted_resurrection animate_dead borgnjors_revivification','X4':'phase_shift disjunction invisibility','U4':'deflect_missiles repel_missiles mass_abjuration',
 'X6':'passage_of_golubria shroud_of_golubria cigotuvis_embrace','X7':'spectral_weapon warp_weapon call_imp','U7':'metabolic_englaciation ru_sacrifice_purity skills/staves',
 'U8':'dithmenos_shadow_form simulacrum summon_shadow_creatures','X9':'display_map summon_eyeballs darkness',
+# set 181: user-made runes C1 C3–C8 (Balance Room) · option 1 = default until the user picks
+'C1':'stone_arrow skills/crossbows skills/slings','C3':'abilities/jump skills/polearms cure_poison','C4':'ru_sacrifice_stealth dithmenos_shadow_step controlled_blink',
+'C5':'iron_shot quicksilver_bolt metal_splinters','C6':'summon_mana_viper skills/spellcasting skills/evocations','C7':'summon_butterflies irradiate skills/charms',
+'C8':'mass_confusion confusing_touch freezing_cloud',
 }
 BOSSES = {'B1':'hell_sentinel iron_elemental vault_sentinel','B2':'shadow silent_spectre phantom','B3':'abomination_large3 chaos_spawn3 lurking_horror','B4':'orange_crystal_statue spatial_vortex2 glowing_shapeshifter'}
 SCENES = [

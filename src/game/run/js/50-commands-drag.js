@@ -27,7 +27,7 @@ function tap(ref) {
   const has = ref.at === 'shop' ? !!(P.shop[ref.i] && P.shop[ref.i].id) : !!unitAt(ref);
   if (!has) return;
   const u = ref.at === 'shop' ? null : unitAt(ref);
-  sel = u ? { uid: u.uid } : { at: 'shop', i: ref.i, id: P.shop[ref.i].id }; renderSide();
+  sel = u ? { uid: u.uid } : { at: 'shop', i: ref.i, id: P.shop[ref.i].id }; hideToast(); renderSide(); // set 181: a toast left over (e.g. round-start rune) covered the detail card text
 }
 let drag = null;
 const clearDrop = () => { document.querySelectorAll('.drop-ok, .mergeable, .dragging').forEach(n => n.classList.remove('drop-ok', 'mergeable', 'dragging')); $('dock').classList.remove('sell-over'); };
