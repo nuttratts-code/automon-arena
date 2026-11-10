@@ -48,3 +48,25 @@ jobs:
           path: /tmp/automon-shots
           retention-days: 7
           if-no-files-found: ignore
+
+  # Set 192 (Godot plan P1 step 3): headless Godot tests. Golden fixtures are rebuilt first
+  # (set 191 B1: never committed). Godot only from the official GitHub release, version +
+  # SHA-512 pinned in godot/tools/get_godot.sh (HARD RULE 9 ②). No export templates here.
+  godot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Golden fixtures (JS reference)
+        working-directory: src
+        run: node lab/golden.mjs
+      - name: Get Godot (pinned + checksum)
+        run: echo "GODOT=$(godot/tools/get_godot.sh "$RUNNER_TEMP/godot")" >> "$GITHUB_ENV"
+      - name: Godot tests (headless)
+        # grep + timeout too: never trust the exit code alone (set 192: a broken test file once hung the runner)
+        run: |
+          timeout 300 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
+          grep -q "^GODOT TESTS: PASS" godot-tests.log

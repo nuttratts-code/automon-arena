@@ -10,3 +10,8 @@ shots/
 __pycache__/
 # Godot golden fixtures (set 191 B1): rebuilt by node src/lab/golden.mjs before each parity check, never committed
 godot/tests/golden/
+# Godot (set 192): editor cache + export output + downloaded engine binaries/templates
+godot/.godot/
+build/
+Godot_v*
+*.tpz
