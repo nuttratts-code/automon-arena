@@ -8,6 +8,8 @@ description: Automon Arena close-out block (HARD RULE 1; ปิดงาน / �
    - Candidate → explain in Thai (what the skill would do, which steps/commands, why) and ask with buttons: A1 จดเป็นสกิล · A2 แก้ไฟล์หัวเรื่องเดิมแทน · A3 ไม่ต้อง. On A1/A2: write it now (`.claude/skills/<name>/SKILL.md`, English, frontmatter name + description with its trigger; test every command in it once), add a pointer where CLAUDE.md or the topic file covers that work, commit + push (docs-only → main), then continue with step 1.
    - No candidate → the output says `สกิลใหม่: ไม่มี`.
 
+**Before step 0 (user rule set 184 B1):** a merged code set that the user wants live is published FIRST (skill `publish-pages`), in this chat — publishing the set's own work is not new work; never hand it to the next chat. Ask about publishing in the set's first question round.
+
 Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
