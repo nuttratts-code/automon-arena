@@ -4,7 +4,9 @@ function boot() {
   const r = readSave(store.get(SAVE_KEY), CM, RULES, DATA_HASH);
   if (r.status === 'ok') {
     const o = r.save;
-    $('resumeInfo').textContent = `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่) · ร้าน Lv ${lvForRound(o.P.round + 1)}`;
+    const open = o.P.op; // set 184: saved while the shop round was open → resume that round as it was (no second startRound: it skipped a round)
+    $('resumeInfo').textContent = open ? `รอบ ${o.P.round} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} · ร้าน Lv ${lvForRound(o.P.round)}`
+      : `รอบ ${o.P.round + 1} · ชนะ ${o.P.wins}/${S.winsToFinish} · หัวใจ ${o.P.hearts} · เงิน ${o.P.gold} (ก่อนรับเงินรอบใหม่) · ร้าน Lv ${lvForRound(o.P.round + 1)}`;
     $('resumeGo').onclick = () => {
       P = o.P; B = o.B; stats = o.stats; startedAt = o.startedAt; msgs = []; showNotice('');
       const rp = readReplays(store.get(REPLAY_KEY), CM, RULES, DATA_HASH, P.seed); // ชุด 25: รีเพลย์ของ run นี้เท่านั้น
@@ -14,7 +16,7 @@ function boot() {
       if (rp.status !== 'ok') saveReplays();
       RL = resumeLog();
       if (RL && playerName && RL.nm !== playerName) { RL.nm = playerName; saveLog(true); } // set 110: renamed on the resume screen
-      showScreen('prep'); beginRound();
+      showScreen('prep'); if (open) render(); else beginRound();
     };
     $('resumeNew').onclick = () => { showNotice(''); startNewRun(); };
     showScreen('resume');

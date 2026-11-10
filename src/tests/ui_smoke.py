@@ -280,15 +280,18 @@ with sync_playwright() as p:
         print(w,'perm atk before/after',got,after); chk(isinstance(got,int) and after>got,'battle perm skill applied after match')
         chk('จากสกิลระหว่างสู้' in pg.inner_text('#endMsgs'),'battle perm message')
         pg.click('#next') if pg.is_visible('#next') else None
-        nowrow=pg.evaluate("(()=>{if(P.over) return 'over'; const x=allUnits(P).find(x=>Object.values(x.u.perm).some(v=>v)); if(!x) return 'noperm'; tap(x.ref); const r=!!document.querySelector('#info .stats2.now'); closePop(); return r;})()")
-        chk(nowrow in (True,'over'),'perm now row in info popup '+str(nowrow))
+        nowrow=pg.evaluate("(()=>{if(P.over) return 'over'; const x=allUnits(P).find(x=>Object.values(x.u.perm).some(v=>v)); if(!x) return 'noperm'; tap(x.ref); const r=!!document.querySelector('#info .stats2 .add-perm') && !document.querySelector('#info .stats2.now'); closePop(); return r;})()")
+        chk(nowrow in (True,'over'),'set 184: perm shown as (+n) in the one stat row '+str(nowrow))
         # 2c ชุด 22: เซฟกลางทาง · เล่นต่อ · เซฟเสียหาย · หน้าจบ run + ประวัติ
         over=pg.evaluate('P.over'); saved=pg.evaluate("localStorage.getItem('automon-run-save-v1')")
         chk(over or saved is not None,'save written after fight')
         if not over:
-            rnd=pg.evaluate('JSON.parse(localStorage.getItem("automon-run-save-v1")).P.round')
+            sv=pg.evaluate('JSON.parse(localStorage.getItem("automon-run-save-v1")).P'); rnd=sv['round']
             pg.reload(); chk(pg.is_visible('#resume') and pg.is_hidden('#app'),'resume prompt shown')
-            pg.click('#resumeGo'); chk(in_prep() and pg.evaluate('P.round')==rnd+1,'resume continues same run')
+            pg.click('#resumeGo'); chk(in_prep() and pg.evaluate('P.round')==rnd+(0 if sv['op'] else 1),'resume continues same run (set 184: saved mid-round = same round)')
+            # set 184 (bug D): a save made while the shop round is open (rune taken / heart trade / rune worn) must resume that round, not skip one
+            r2=pg.evaluate("(()=>{saveRun(true); return P.round;})()"); pg.reload(); pg.click('#resumeGo')
+            chk(in_prep() and pg.evaluate('P.round')==r2 and pg.evaluate('P.op')==True,'set 184: mid-round save resumes the same round '+str(r2)+' '+str(pg.evaluate('P.round')))
             chk(pg.evaluate('replays.length')>=1,'replays kept after resume')
             pg.evaluate("localStorage.setItem('automon-run-replays-v1','{bad')"); pg.reload(); pg.click('#resumeGo')
             chk('รีเพลย์' in pg.inner_text('#notice') and pg.evaluate('replays.length')==0 and pg.is_hidden('#replayBtn'),'bad replay data cleared + notice')

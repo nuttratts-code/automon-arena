@@ -47,9 +47,10 @@ export function checkUnit(u, cm, rules, at, errors) {
 export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const S = rules.shop, errors = [];
   if (!svObj(st)) return { ok: false, errors: ['สถานะผิดรูปแบบ'] };
-  const KEYS = ['v', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc', 'fp'];
+  const KEYS = ['v', 'op', 'seed', 'n', 'round', 'gold', 'wins', 'hearts', 'lastWon', 'over', 'shop', 'bench', 'board', 'uid', 'charges', 'rn', 'bw', 'bk', 'extra', 'ls', 'ws', 'sc', 'fp'];
   if (!svOnlyKeys(st, KEYS) || !KEYS.every(k => svOwn(st, k))) return { ok: false, errors: ['ช่องสถานะไม่ครบหรือมีช่องแปลกปลอม'] };
-  if (st.v !== 10) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 128: v10 = + fp (locked enemy power) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (st.v !== 11) errors.push('เวอร์ชันสถานะไม่รู้จัก'); // set 184: v11 = + op (shop round open) · set 128: v10 = + fp (locked enemy power) + rn.ft (flag tribes) · set 119: v9 = + sc (second chance used) · hearts 10 → 5 · set 107: v8 = + ws (wins in a row → enemy power) · set 100: v7 = + ls (normal losses in a row) + rn.ro · set 99: v6 = + bw/bk/extra // set 89: v3 = shop level from the round · set 94: v4 = + runes (st.rn) · set 95: v5 = no rune shop
+  if (typeof st.op !== 'boolean') errors.push('สถานะรอบร้านผิด');
   if (!svIntIn(st.seed, 0, 0xFFFFFFFF)) errors.push('เมล็ดสุ่มผิด');
   if (!svIntIn(st.n, 0, 1e9)) errors.push('ตัวนับสุ่มผิด');
   if (!svIntIn(st.round, 0, 1000)) errors.push('รอบผิด');
@@ -126,6 +127,11 @@ function svUpV9(st, cm, rules) {
   let fp = 0; try { fp = Math.round(teamPower(buildTeam(teamEntries(st), cm, rules), rules)); } catch (e) { fp = 0; }
   st.v = 10; st.fp = fp; st.rn.ft = {};
 }
+// set 184: a v10 run (before op) → v11 · op false = resume runs startRound like the old build did
+function svUpV10(st) {
+  if (!svObj(st) || st.v !== 10 || 'op' in st) return;
+  st.v = 11; st.op = false;
+}
 // เซฟ: { sv, data, P, B, stats, startedAt }
 export function makeSave(P, B, stats, startedAt, hash) {
   return JSON.stringify({ sv: SAVE_VERSION, data: hash, P, B, stats, startedAt });
@@ -139,7 +145,7 @@ export function readSave(text, cm, rules, hash) {
   if (o.sv !== SAVE_VERSION) return { status: 'data', errors: ['เวอร์ชันเซฟไม่ตรง'] };
   if (svObj(o.P) && (o.P.v === 3 || o.P.v === 4)) return { status: 'data', errors: ['เซฟเวอร์ชันเก่า (ก่อนรูน set 94 / มีร้านรูน set 94)'] };
   if (o.data !== hash) return { status: 'data', errors: ['ค่าตัวละคร/กฎเปลี่ยนแล้ว'] };
-  for (const st of [o.P, o.B]) svUpV9(st, cm, rules);
+  for (const st of [o.P, o.B]) { svUpV9(st, cm, rules); svUpV10(st); }
   const a = validateRunState(o.P, cm, rules), b = validateRunState(o.B, cm, rules, { bot: true });
   const errors = [...a.errors.map(e => 'ผู้เล่น: ' + e), ...b.errors.map(e => 'บอท: ' + e)];
   if (!validateStats(o.stats, cm)) errors.push('สถิติผิด');

@@ -854,6 +854,7 @@ export function simulate(teamA, teamB, opts = {}) {
   for (const f of F) f.cdLeft = Math.max(0, (f.tb.instant ? 0 : effCd(f)) + (f.cdLeft - f.cd0) - f.cdStart); // cdStart = ลดคูลดาวน์ตอนเริ่มแบบถาวร (22 ต.ค.)
   resolveDowns(); // ผลตอนเริ่มทำให้ล้มได้ (เช่นล้มทันที WN-8)
   if (BOSS) bossBars(); // ดาเมจตอนเริ่มแมตช์อาจทำแถบแรกหมดไปแล้ว
+  if (opts.startOnly) return { units: F.map(f => ({ side: f.side, row: f.row, lane: f.lane, st: snapStats(f) })) }; // set 184: stats right after "match start" only (game card: what runes add)
 
   const finish = winner => {
     log('end', aborted ? { winner, aborted } : { winner });

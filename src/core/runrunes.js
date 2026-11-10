@@ -37,7 +37,7 @@ export function rnAll(stage = RUN_STAGE) {
   return [...Object.keys(stage.runes || {}), ...(stage.custom || []).map(c => c.id)].map(id => rnRec(id, stage)).filter(Boolean);
 }
 export const rnHeld = (st, id) => (st.rn && st.rn.bag[id]) | 0;
-const rnSpecNum = (r, q) => (typeof r[q] === 'number' ? r[q] : ((RUNE_SPEC[r.eff] && RUNE_SPEC[r.eff].f.find(f => f[0] === q)) || [, , 0])[2]);
+export const rnSpecNum = (r, q) => (typeof r[q] === 'number' ? r[q] : ((RUNE_SPEC[r.eff] && RUNE_SPEC[r.eff].f.find(f => f[0] === q)) || [, , 0])[2]);
 export const rnNeedsSlot = r => !!r && r.scope === 'one';
 export const rnNeedsPartner = r => !!r && (r.eff === 'link' || r.eff === 'buddy');
 
