@@ -1,6 +1,7 @@
 import { makeRng } from './rng.js';
 import { DO_INFO, RULES, atMatch, upGain, upMul } from './rules.js';
 import { phaseIndexAt, ruleMap, fxMap, spotCells } from './boss.js';
+// Godot port (set 194): simulate() also lives in godot/scripts/battle.gd (golden (b) 3,000/3,000 exact, tests/test_battle.gd) — change both
 // ตัวคำนวณการต่อสู้ตาม combat-rules V1.4
 // - ใส่ทีมเดิม + เมล็ดสุ่มเดิม ได้ผลเดิมทุกครั้ง (เซิร์ฟเวอร์ MVP2 จำลองซ้ำเพื่อตรวจได้) · ไม่อ่านเวลาเครื่อง
 //   เลขสุ่มใช้เฉพาะสกิลที่มี "โอกาส %" หรือเป้าแบบสุ่ม · เมล็ดตั้งต้นคำนวณจากทีม

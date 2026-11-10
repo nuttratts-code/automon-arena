@@ -54,7 +54,7 @@ jobs:
   # SHA-512 pinned in godot/tools/get_godot.sh (HARD RULE 9 ②). No export templates here.
   godot:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,5 +68,5 @@ jobs:
       - name: Godot tests (headless)
         # grep + timeout too: never trust the exit code alone (set 192: a broken test file once hung the runner)
         run: |
-          timeout 300 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
+          timeout 1200 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
           grep -q "^GODOT TESTS: PASS" godot-tests.log
