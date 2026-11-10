@@ -6,35 +6,34 @@
 import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickFoe, simRun, tribeList, validateBotTeams } from '../core/botteams.js';
+import { validateBotTeams } from '../core/botteams.js';
+import { runPlayStats } from './analyze.js';
 import { dataHash } from '../core/save.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { buildTeam, makeCharMap } from '../core/team.js';
 import { teamEntries } from '../core/shop.js';
 
 const runs = +process.argv[2] || 600;
-const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
+const chars = buildCharacterList(), cm = makeCharMap(chars);
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
 if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first'); process.exit(1); }
 
 const rows = []; // { id, lv, side, round, won, ds, ts }
 const t0 = Date.now();
-for (let r = 0; r < runs; r++) {
-  const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, undefined, undefined, p.ls | 0, p.ws | 0), m => {
-    if (m.boss || m.extra) return;
-    const us = m.res.units || [];
-    for (const side of [0, 1]) {
-      const mine = us.filter(u => u.side === side); if (!mine.length) continue;
-      const D = mine.reduce((a, u) => a + u.dealt, 0) || 1, T = mine.reduce((a, u) => a + u.taken, 0) || 1;
-      const won = side === 0 ? m.winner !== 1 : m.winner === 1;
-      const lvOf = side === 0 ? Object.fromEntries(m.units.map(u => [u.uid, u.level])) : null;
-      const foeLv = side === 1 ? (m.foe || []).map(e => e.level) : null;
-      mine.forEach((u, i) => { const lv = side === 0 ? lvOf[u.uid] : foeLv[i]; if (!cm[u.id] || !lv) return; // summoned extra units: not counted as a character (their damage stays in the team total)
-        rows.push({ id: u.id, lv, side, round: m.round, won: won ? 1 : 0, ds: u.dealt / D * mine.length, ts: u.taken / T * mine.length }); });
-    }
-  }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true });
-}
+// set 178: matches come from lab/analyze.js runPlayStats (same flow as runerun) · boss + extra matches skipped below
+await runPlayStats(chars, RULES, RUN_STAGE, { n: runs, runeWhatIf: false, onMatch: m => {
+  if (m.boss || m.extra) return;
+  const us = m.res.units || [];
+  for (const side of [0, 1]) {
+    const mine = us.filter(u => u.side === side); if (!mine.length) continue;
+    const D = mine.reduce((a, u) => a + u.dealt, 0) || 1, T = mine.reduce((a, u) => a + u.taken, 0) || 1;
+    const won = side === 0 ? m.winner !== 1 : m.winner === 1;
+    const lvOf = side === 0 ? Object.fromEntries(m.units.map(u => [u.uid, u.level])) : null;
+    const foeLv = side === 1 ? (m.foe || []).map(e => e.level) : null;
+    mine.forEach((u, i) => { const lv = side === 0 ? lvOf[u.uid] : foeLv[i]; if (!cm[u.id] || !lv) return; // summoned extra units: not counted as a character (their damage stays in the team total)
+      rows.push({ id: u.id, lv, side, round: m.round, won: won ? 1 : 0, ds: u.dealt / D * mine.length, ts: u.taken / T * mine.length }); });
+  }
+} });
 // expected win per side × round
 const exp = {};
 for (const x of rows) { const k = x.side + ':' + x.round; (exp[k] = exp[k] || [0, 0])[0]++; exp[k][1] += x.won; }

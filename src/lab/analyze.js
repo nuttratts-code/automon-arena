@@ -331,7 +331,7 @@ function runeStatsOut(RS, n, normalGames) {
 // goes on with extra matches up to lastStage · seed formula of runerun (8800). The training dummy is not counted as a boss.
 // opp 'teams' = the game's prepared bot teams (only when they were built from these exact values, else falls back to live)
 // opp 'live'  = a second bot plays its own run alongside every match (new team every match, no fixed pool)
-// dyn = [step, cap, start] (runerun --dyn) · keepTeams = collect boss-fight teams per k (bossrun · bossref)
+// dyn = [step, cap, start] (runerun --dyn) · onMatch(m, run) = raw match hook (econ55 · charstat) · keepTeams = collect boss-fight teams per k (bossrun · bossref)
 export const RUN_SIM = { seed: 8800, top: 10 };
 export const botTeamsFit = (chars, rules) => !!BOT_TEAMS && BOT_TEAMS.hash === dataHash(chars, rules);
 const mainTribeOf = (team, map, rules) => {
@@ -342,7 +342,7 @@ const mainTribeOf = (team, map, rules) => {
 const isDummyId = id => id === 'DUMMY';
 // set 141 (user C): a team counts as tribe X only when ≥ 4 of its units carry X (4/2 split) · else null (mixed)
 export const tribe4 = units => { const c = {}; for (const u of units || []) for (const t of new Set([u.tribe, ...(u.extraTribes || [])].filter(Boolean))) c[t] = (c[t] || 0) + 1; const best = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return best && best[1] >= 4 ? best[0] : null; };
-export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, runeWhatIf = true, combat = false, onProgress } = {}) {
+export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SIM.seed, opp = 'teams', dyn = null, keepTeams = false, runeWhatIf = true, combat = false, onMatch = null, onProgress } = {}) {
   const map = makeCharMap(chars), W = rules.shop.winsToFinish;
   const useTeams = opp === 'teams' && botTeamsFit(chars, rules);
   const tribes = tribeList(chars), rarOf = Object.fromEntries(chars.map(c => [c.id, c.rarity]));
@@ -359,6 +359,7 @@ export async function runPlayStats(chars, rules, stage, { n = 300, seed = RUN_SI
       const f = pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, stg, rules, p.ls | 0, p.ws | 0); pcts.push(dyn ? fl : f.pct); return f;
     }) : null;
     const P = simRun(chars, rules, (seed + Math.imul(r + 1, 0x9E3779B1)) >>> 0, pick, m => {
+      if (onMatch) onMatch(m, r); // set 178: econ55 / charstat read every match from this same run flow (no private simRun loop)
       if (dyn) fl = Math.max(0, Math.min(dyn[1] ?? 100, fl + (m.winner !== 1 ? dyn[0] : -dyn[0])));
       if (combat) mxCombatAdd(CB, m.res, 0, CBL);
       matches++; if (m.aborted) aborted++; timeSum += m.timeMs; if (m.second) seconds++;
