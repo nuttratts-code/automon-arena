@@ -3,7 +3,7 @@
 V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
 
 ## Gameplay / pacing
-- Match length and run pacing: goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
+- Match length and run pacing (set 181: user decided to KEEP current values and the rule "long matches are not a problem" — overtime 180 s every round; reopen only if the user asks): goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
 - Values accumulating across runs / matches: measure with runlen/simRun · accumulating skills PL-2 PT-3 WY-3 HL-4 HL-5 WN-1 WN-2 SF-7 charge · permanent abilities have no cap · permanent % values stack additively
 
 ## Stage mode (demo) — user decisions 28 Oct, design in progress
@@ -43,4 +43,4 @@ V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked 
 ## Hard tasks to retry with a new model (set 150, habit 6)
 - When a new Claude model comes out, pick the hardest item here and retry it; add any task Claude tried and could not finish.
 - Boss resisted-tribe win % ≈ 40 target (set 149: B1 29 · B2 36 · B4 24) — find a fix that keeps k1 all-tribe ≤ 60.
-- Match/run pacing "longer you play, longer you survive" (see Gameplay / pacing) — no solution found yet.
+- Match/run pacing "longer you play, longer you survive" (see Gameplay / pacing) — set 181: kept as is by the user.
