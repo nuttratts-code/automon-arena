@@ -455,8 +455,8 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .board .shape { width: clamp(28px, 15vh, 64px); height: clamp(28px, 15vh, 64px); }
   .arena .shape { width: clamp(26px, 12vh, 58px); height: clamp(26px, 12vh, 58px); }
   .bench .shape { width: 32px; height: 32px; }
-  .dock { height: 96px; } .fighting .dock { height: 58px; }
-  .dock .left { gap: 4px; }
+  .dock { height: 84px; } .fighting .dock { height: 58px; }
+  .dock .left { gap: 2px; } #shopLv { min-height: 28px; } /* info button (≥ 24 ok, A1); 96 px dock pushed the shop card's details over เริ่มสู้ */
   .speed button { width: 40px; height: 44px; }
   #stop, #skip { height: 44px; }
 }

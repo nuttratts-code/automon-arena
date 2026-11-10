@@ -72,7 +72,7 @@ with sync_playwright() as p:
         pg.click('#runeBtn'); chk('ยังไม่ได้สวม' in pg.inner_text('#rBag'),'rune list says not worn')
         pg.click('#rBag .pitem'); pg.select_option('#pop select','0,0')
         chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and pg.is_hidden('#runeWarn') and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
-        chk('พุ่งชน' in pg.inner_text('#board'),'rune name shown on the wearer')
+        chk(pg.evaluate("[...document.querySelectorAll('#board .rune-dot')].some(d=>/^◆\\d+$/.test(d.textContent)&&d.title.includes('พุ่งชน'))"),'rune mark ◆n on the wearer, name in its title (set 183)')
         pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk(pg.is_visible('#runeWarn'),'wearer on the bench → warning')
         esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
         # set 128: T4 free reroll usable with 0 gold · T3 8 shop slots in one row · X3 merge hints at 2 · T8 pick tribe · X9 mini board + locked enemy
