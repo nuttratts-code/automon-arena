@@ -7,5 +7,6 @@ description: Automon Arena cause-finding before any fix (เทสต์ไม�
 1. **Reproduce:** run the smallest command that shows the failure (`cd src && node tools/bootstrap.mjs test <word in test name>`, or that one ui_smoke check). Read failures only. Cannot reproduce → do not fix, tell the user in Thai.
 2. **Narrow down:** what changed since it last passed (`git log`, `git diff <last green commit>`)? Read the FIRST failing line/assert, not the last one. Open only the files that line points to.
 3. **State the cause with evidence:** one sentence + the file:line or output that proves it. Only then edit. No cause yet → no edit (HARD RULE 5).
+3b. **Same bug elsewhere (set 186 A1):** grep the faulty pattern/term across src + docs + tests (claude/workflow/ripple.md) — fix every copy in the same commit, `ripple:` line in the message.
 4. **Check the fix:** the step-1 command now passes, then setup / gate as usual (merge-code). Two failed fixes in a row → stop, go back to step 3, tell the user what is known and unknown.
 5. Report in the 3-line header: ① the cause + fix · ③ anything still unproven.
