@@ -22,7 +22,7 @@ Every commit that changes behaviour, a value, a name, a text the player sees, a 
 | Tribe | src/core/rules.js / rules-user.js · claude/tribe-rules.md · labels.js (tribe shapes/names) · Balance Room tribes tab · tests |
 | Shop / gold / reroll / round order | src/core/shop.js · src/core/bot.js (bot uses the same rule) · claude/shop-merge-rules.md · run/js 40-draw-details.js (shown costs) · lab/econ*.mjs · src/tests/t-shop.js |
 | Combat rule | src/core/battle.js · claude/combat-rules.md (id C-…) · bossrun/boss.js if bosses use it · power.js · tests |
-| Save / run state / run code | src/core/save.js (version + migrate old saves) · runlog.js + lab/runlog* (old journals replay) · runcode.mjs · ARUN1 reader (lab/humanstats.js) |
+| Save / run state / run code | src/core/save.js (version + migrate old saves) · runlog.js + lab/runlog* (old journals replay) · runcode.mjs · ARUN1 reader (lab/humanstats.js) · game db runlogs head/parts/r (10-state-save.js writer ↔ lab/runlogread.js rvFromDb/rvDbCode ↔ 20-log-screen.js, set 188) |
 | Player-visible text / layout | every screen size in ui-work 4b · ui_smoke selectors/texts · labels.js |
 | Doc rule / version | doc header `Vx.y` · handoff "Doc versions" line · any page that cites the version (check page subtitle, set 175) |
 | A workflow rule | CLAUDE.md · the topic file · every skill that repeats it (grep a key phrase in .claude/skills) · relay.md / handoff wording |

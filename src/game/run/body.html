@@ -131,6 +131,8 @@
   <div class="row"><h2 class="grow">Log การเล่น</h2><button id="logClose" type="button">ปิด</button></div>
   <p class="hint">เห็นเฉพาะเจ้าของเกมและ Editor · รายการอัปเดตเองทุกครั้งที่เกมของคนที่มีสิทธิ์บันทึกเซฟ (เพื่อนที่เปิดจากลิงก์หรือเป็น Commenter บันทึกไม่ได้ ให้เขาส่งโค้ดผลการเล่นมาวางด้านล่าง)</p>
   <p class="hint" id="logInfo">กำลังโหลด…</p>
+  <div class="row"><button class="primary" id="logAllCopy" type="button">คัดลอกรหัส 60 รันล่าสุด</button><span class="hint grow" id="logAllMsg">ไปวางในห้องบาลานซ์ → ดูผล → ผู้เล่นจริง · เอาเฉพาะรันที่เล่นบนค่าเกมชุดนี้</span></div>
+  <textarea id="logAllOut" readonly spellcheck="false" hidden aria-label="รหัสรันทั้งหมด (เลือกแล้วคัดลอกเอง)"></textarea>
   <div class="tbl"><table><thead><tr><th>ผู้เล่น</th><th>เริ่ม</th><th>เซฟล่าสุด</th><th>รอบ</th><th>ชนะ</th><th>หัวใจ</th><th>เงิน</th><th>สถานะ</th><th></th></tr></thead><tbody id="logList"></tbody></table></div>
 </section>
 <section class="panel">

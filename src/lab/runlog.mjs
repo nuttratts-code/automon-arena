@@ -5,7 +5,7 @@
 // Input file = one of:
 //   - a run code (ARUN1 …, "คัดลอกโค้ดผลการเล่น" in the game) → its journals (latest first; --run 2 = the one before)
 //   - a journal JSON { v, seed, data, at, cut, ev }
-//   - a db export JSON { head: {...runlogs/<id>}, parts: [{ k, ev }, …] } (ArtifactData get runlogs/<id> + list runlogs/<id>/parts)
+//   - a db export JSON { head: {...runlogs/<id>}, parts: [{ k, ev }, …, { rp } (set 188: match replays, doc r)] } (ArtifactData get runlogs/<id> + list runlogs/<id>/parts)
 // Usage: node lab/runlog.mjs <file> [--run 2] [--brief]   (--brief = round summaries + money totals only) · changes nothing
 import fs from 'fs';
 import { buildCharacterList } from '../core/characters.js';
@@ -13,7 +13,7 @@ import { RULES } from '../core/rules.js';
 import { dataHash } from '../core/save.js';
 import { rlCheck } from '../core/runlog.js';
 import { makeCharMap } from '../core/team.js';
-import { rvAnalyze, rvFromDb, rvMmss, rvReadCode } from './runlogread.js';
+import { rvAnalyze, rvDbRun, rvFromDb, rvMmss, rvReadCode } from './runlogread.js';
 
 const args = process.argv.slice(2);
 if (!args[0]) { console.log('usage: node lab/runlog.mjs <file> [--run 2] [--brief]'); process.exit(1); }
@@ -31,16 +31,16 @@ if (txt.startsWith('ARUN1 ')) {
   if (!rep) { console.log(`no journal #${runNo} (code has ${rc.logs.length})`); process.exit(1); }
 } else {
   const o = JSON.parse(txt);
-  let log = o;
+  let log = o, dbRun = null;
   if (o && o.head && Array.isArray(o.parts)) {
     const d = rvFromDb(o.head, o.parts);
     if (!d.log) { console.log('journal rejected: bad db head/parts'); process.exit(1); }
-    log = d.log;
+    log = d.log; dbRun = rvDbRun(d.rp, log.seed, ctx); // set 188: parts doc r = match replays → matches checked too
     if (d.short) console.log(`⚠ head says ${o.head.n} entries, parts hold ${log.ev.length} (a part not saved yet?)`);
   }
   const c = rlCheck(log);
   if (c !== true) { console.log('journal rejected: ' + c); process.exit(1); }
-  rep = rvAnalyze(log, ctx, null);
+  rep = rvAnalyze(log, ctx, dbRun);
 }
 console.log(`run seed ${rep.seed} · player ${rep.nm || '(no name)'} · started ${new Date(rep.at).toISOString().replace('T', ' ').slice(0, 16)}Z · ${rep.n} actions${rep.cut ? ' · ⚠ journal full, cut' : ''}`);
 console.log(`made on data ${rep.data} · this repo ${HASH}${rep.hashOk ? '' : ' ⚠ other values — steps may not rebuild (✗)'}`);

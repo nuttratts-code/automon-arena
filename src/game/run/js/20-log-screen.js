@@ -49,7 +49,7 @@ async function lgShow(id) {
   const d = rvFromDb(h, parts);
   if (!d.log) { $('logOut').replaceChildren(lvMk('p', 'bad', 'log ของ run นี้อ่านไม่ได้ (ข้อมูลไม่ครบหรือผิดรูปแบบ)')); return; }
   let rep;
-  try { rep = rvAnalyze(d.log, LG_CTX, null); } catch (e) { rep = null; }
+  try { rep = rvAnalyze(d.log, LG_CTX, rvDbRun(d.rp, d.log.seed, LG_CTX)); } catch (e) { rep = null; } // set 188: stored replays → match checks too
   if (!rep) { $('logOut').replaceChildren(lvMk('p', 'bad', 'คำนวณ log ของ run นี้ใหม่ไม่ได้')); return; }
   const nodes = lvLogNodes(rep, CM);
   if (d.short) nodes.unshift(lvMk('p', 'hint', `ส่วนท้ายของ log ยังส่งมาไม่ครบ (มี ${d.log.ev.length} จาก ${h.n} ขั้น) · จะอัปเดตเองเมื่อมาครบ`));
@@ -63,6 +63,34 @@ function lgRead() {
   if (!r.ok) { $('logErr').textContent = 'อ่านโค้ดไม่ได้: ' + r.error + ' · โค้ดที่ถูกแก้หรือคัดลอกมาไม่ครบจะอ่านไม่ได้'; $('logErr').hidden = false; return; }
   lgOpenId = ''; lgBusy++; lgList(); lgCodeRep = r; lgCodePick = 0; lgCodeRender();
 }
+// ---------- set 188 (user A1 · A2 · B1): copy the newest LG_ALL_MAX runs on this page's game values as ARUN1 codes for the Balance Room ----------
+// Balance Room "ผู้เล่นจริง" takes at most 60 codes per paste (HS_MAX_CODES) and skips runs on other game values → only DATA_HASH runs.
+// Runs saved since set 188 carry their match replays (parts doc 'r') → full stats · older runs = journal only (buys / sells / runes).
+const LG_ALL_MAX = 60;
+async function lgCopyAll() {
+  const btn = $('logAllCopy'), msg = $('logAllMsg'), out = $('logAllOut');
+  if (!playDb) { msg.textContent = 'ฐานข้อมูลของหน้านี้ใช้ไม่ได้ตอนนี้'; return; }
+  const ids = [...lgHeads.entries()].filter(([, h]) => h && h.data === DATA_HASH && Number.isFinite(h.upd)).sort((a, b) => b[1].upd - a[1].upd).slice(0, LG_ALL_MAX).map(([id]) => id);
+  if (!ids.length) { msg.textContent = 'ยังไม่มีรันที่เล่นบนค่าเกมชุดนี้'; return; }
+  btn.disabled = true; out.hidden = true;
+  const codes = []; let full = 0;
+  try {
+    for (const id of ids) {
+      msg.textContent = `กำลังอ่านรันที่ ${codes.length + 1} / ${ids.length}…`;
+      let parts = null;
+      try { const snap = await playDb.collection('runlogs/' + id + '/parts').get(); parts = snap.docs.filter(d => d.exists).map(d => d.data()); } catch (e) { parts = null; }
+      if (!parts) continue;
+      const d = rvFromDb(lgHeads.get(id), parts), code = rvDbCode(d, LG_CTX, Date.now());
+      if (!code) continue;
+      codes.push(code); if (rvDbRun(d.rp, d.log.seed, LG_CTX)) full++;
+    }
+    if (!codes.length) { msg.textContent = 'อ่านรันจากฐานข้อมูลไม่ได้เลย'; return; }
+    const text = codes.join('\n\n'), note = `${codes.length} รัน` + (full < codes.length ? ` (มีแมตช์ครบ ${full} รัน · ที่เหลือเป็นรันเก่า มีแค่การซื้อขายกับรูน)` : '');
+    try { await navigator.clipboard.writeText(text); msg.textContent = `คัดลอกแล้ว ${note} · ไปวางในห้องบาลานซ์ → ดูผล → ผู้เล่นจริง`; }
+    catch (e) { out.value = text; out.hidden = false; out.focus(); out.select(); msg.textContent = `คัดลอกเองไม่ได้ · เลือกข้อความในกล่องด้านล่างแล้วคัดลอก (${note})`; }
+  } finally { btn.disabled = false; }
+}
+$('logAllCopy').addEventListener('click', lgCopyAll);
 function lgCodeRender() { $('logOut').replaceChildren(...lvCodeNodes(lgCodeRep, CM, lgCodePick, i => { lgCodePick = i; lgCodeRender(); })); }
 $('logBtn').addEventListener('click', lgOpen);
 $('logClose').addEventListener('click', () => { $('logScr').hidden = true; });

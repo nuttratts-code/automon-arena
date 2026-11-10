@@ -42,13 +42,14 @@ function saveLog(now = false) { if (!RL) return; store.set(RLOG_KEY, JSON.string
 // journal writes stopped while plays.add still landed (run 5c1dac96: 11 matches in plays, journal frozen after match 8).
 // Now: a snapshot is queued only at run start, match end, rename and when the page is hidden; one writer sends it (parts,
 // then head, each awaited); a failed send stays queued and is retried with backoff; sent counts move only after success.
-const rlDone = new Map(), rlKey = new Map(), rlPend = new Map(); // id → entries already stored in the db · id → newest unsent snapshot
+const rlDone = new Map(), rlKey = new Map(), rlPend = new Map(), rlRepDone = new Map(); // id → entries already stored in the db · id → newest unsent snapshot · id → replays stored (set 188)
 let rlBusy = false, rlWait = 0, rlFail = 0, rlErr = '';
 function sendLog() {
   if (!RL) return;
-  const id = `${RL.seed.toString(16)}-${RL.at}`, n = RL.ev.length, key = JSON.stringify([n, RL.cut, RL.nm || '', P.round, P.wins, P.hearts, P.gold, P.over ? 1 : 0]);
+  const id = `${RL.seed.toString(16)}-${RL.at}`, n = RL.ev.length, nr = P.seed === RL.seed ? replays.length : 0;
+  const key = JSON.stringify([n, RL.cut, RL.nm || '', P.round, P.wins, P.hearts, P.gold, P.over ? 1 : 0, nr]);
   if (rlKey.get(id) === key && !rlPend.has(id)) return; // nothing changed since the last stored copy
-  rlPend.set(id, { id, n, key, ev: RL.ev.slice(), head: { v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
+  rlPend.set(id, { id, n, key, nr, rp: nr ? makeReplays(P.seed, DATA_HASH, replays) : '', ev: RL.ev.slice(), head: { v: RL.v, seed: RL.seed, data: RL.data, at: RL.at, cut: RL.cut, n, parts: Math.ceil(n / RLOG_PART), upd: Date.now(),
     round: P.round, wins: P.wins, hearts: P.hearts, gold: P.gold, over: P.over ? 1 : 0, ...(RL.nm ? { nm: RL.nm } : {}) } });
   pumpLog();
 }
@@ -60,8 +61,9 @@ async function pumpLog() { // no db / no write right = the queue just waits (the
     try {
       const run = playDb.doc('runlogs/' + s.id), done = Math.min(rlDone.get(s.id) || 0, s.n);
       for (let k = Math.floor(done / RLOG_PART); k * RLOG_PART < s.n; k++) await run.collection('parts').doc('p' + k).set({ k, ev: s.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) });
+      if (s.nr && s.nr !== (rlRepDone.get(s.id) || 0)) await run.collection('parts').doc('r').set({ rp: s.rp }); // set 188: match replays for the Balance Room code
       await run.set(s.head);
-      rlDone.set(s.id, s.n); rlKey.set(s.id, s.key); rlFail = 0; rlErr = '';
+      rlDone.set(s.id, s.n); if (s.nr) rlRepDone.set(s.id, s.nr); rlKey.set(s.id, s.key); rlFail = 0; rlErr = '';
     } catch (e) {
       if (!rlPend.has(s.id)) rlPend.set(s.id, s); // a newer snapshot of the same run replaces this one
       rlFail++; rlErr = String((e && (e.code || e.message)) || e).slice(0, 80);

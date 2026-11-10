@@ -6,6 +6,8 @@ import { makeCharMap } from '../core/team.js';
 import { hsCharRows, hsRunSync } from '../lab/humanstats.js';
 import { eq, ok } from './helpers.js';
 import { fxPlayRun } from './runlog-fixture.js';
+import { RLOG_PART } from '../core/runlog.js';
+import { rvDbCode, rvDbRun, rvFromDb } from '../lab/runlogread.js';
 
 const hsMkRun = (chars, cm, H, seed, name) => {
   const { L, list } = fxPlayRun(chars, cm, H, seed, name);
@@ -34,5 +36,23 @@ export const TESTS_HUMANSTATS = [
     const dmg = rows.reduce((s, r) => s + (r.combat ? r.combat.out : 0), 0);
     ok(dmg > 0, 'combat damage collected');
     for (const L of [1, 2, 3]) ok(hsCharRows(R, chars, L).every(r => r.g >= 0), `level ${L} rows`);
+  }],
+  ['set 188: game db run (head + parts + replays doc r) → run code for the Balance Room · same numbers as the player\'s own code · old runs = journal only', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars), ctx = { chars, CM: cm, rules: RULES, hash: H };
+    const a = hsMkRun(chars, cm, H, 4, 'A');
+    // the db as the game page writes it (10-state-save.js pumpLog): head + parts p<k> + parts r = { rp }
+    const head = { v: a.L.v, seed: a.L.seed, data: H, at: a.L.at, cut: a.L.cut, n: a.L.ev.length, parts: Math.ceil(a.L.ev.length / RLOG_PART), upd: 9, nm: 'A' };
+    const parts = []; for (let k = 0; k * RLOG_PART < a.L.ev.length; k++) parts.push({ k, ev: a.L.ev.slice(k * RLOG_PART, (k + 1) * RLOG_PART) });
+    const rp = makeReplays(a.L.seed, H, a.list), d = rvFromDb(head, [{ rp }, ...parts]);
+    eq([!!d.log, d.short, d.rp === rp], [true, false, true], 'replays doc read next to the journal parts (ignored as a journal part)');
+    ok(rvDbRun(rp, a.L.seed, ctx) && rvDbRun(rp, a.L.seed + 1, ctx) === null, 'replays of another run refused');
+    const R = hsRunSync([rvDbCode(d, ctx, 5000)], ctx), Rown = hsRunSync([a.code], ctx);
+    eq(JSON.stringify(R), JSON.stringify(Rown), 'db code pools exactly like the code the player copies');
+    const old = hsRunSync([rvDbCode(rvFromDb(head, parts), ctx, 5000)], ctx);
+    eq([old.runs.length, old.matches], [1, 0], 'run saved before set 188 (no doc r) → counted, no matches');
+    ok(Object.values(old.chars).some(c => c.bought > 0), 'old run still gives purchases');
+    const bad = JSON.parse(rp); bad.list[0].w = 7;
+    eq(hsRunSync([rvDbCode(rvFromDb(head, [{ rp: JSON.stringify(bad) }, ...parts]), ctx, 5000)], ctx).matches, 0, 'broken replays dropped, journal kept');
+    eq(rvDbCode(rvFromDb({ v: 9 }, parts), ctx, 5000), null, 'no journal → no code');
   }],
 ];
