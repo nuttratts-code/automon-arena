@@ -224,6 +224,12 @@ dialog::backdrop { background: rgba(20,16,12,.45); }
 .offerdlg { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 12px 40px rgba(0,0,0,.35); }
 #toast { position: fixed; left: 50%; top: calc(46px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); max-width: min(92vw, 640px); background: var(--ink); color: var(--bg); padding: 6px 14px; border-radius: 12px; font-size: .82rem; z-index: 60; display: grid; gap: 2px; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
 #toast .err { font-weight: 700; }
+/* set 180: page error bar (a JS error used to freeze the screen silently) */
+#crash { position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(94vw, 560px); z-index: 90;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 12px; border-radius: 12px; background: var(--hi-bg); color: var(--ink); border: 2px solid var(--bad); font-size: .82rem; }
+#crash[hidden] { display: none; }
+#crash p { margin: 0; flex: 1 1 100%; line-height: 1.35; } #crash b { color: var(--bad); }
+#crash button { min-height: 36px; }
 #toast .err::before { content: "⚠ "; }
 #notice { position: fixed; left: 50%; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 55; max-width: min(92vw, 640px); background: var(--lo-bg); color: var(--ink); border: 1px solid var(--lo); border-radius: 10px; padding: 6px 8px 6px 12px; display: flex; gap: 8px; align-items: center; font-size: .8rem; }
 #notice button { padding: 2px 8px; }
@@ -876,7 +882,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 <section class="tcardbox">
   <form id="nameForm" class="nform"><label for="nameIn">ชื่อผู้เล่น</label><input id="nameIn" type="text" maxlength="40" autocomplete="nickname" placeholder="ชื่อของคุณ"><button class="primary big" id="nameGo" type="submit">เริ่มเล่น</button></form>
   <p class="hint" id="nameErr" hidden>พิมพ์ชื่อก่อน (ไม่เกิน 20 ตัวอักษร)</p>
-  <p class="hint">ชื่อนี้จะติดไปกับโค้ดผลการเล่น เพื่อให้คนทำเกมรู้ว่าใครเล่น (เครื่องนี้จะจำชื่อไว้)</p>
+  <p class="hint">เกมจะบันทึกการเล่นของคุณ (ซื้อ ขาย จัดทีม ผลแมตช์) พร้อมชื่อนี้ ส่งให้คนทำเกมใช้ปรับเกม · เครื่องนี้จะจำชื่อไว้</p>
 </section></div>
 
 <div class="screen title" id="resume" hidden><div class="hero"><div class="tshapes" aria-hidden="true"><i class="shape s-square" style="--tc:var(--t-steel)"></i><i class="shape s-triangle" style="--tc:var(--t-fire)"></i><i class="shape s-diamond" style="--tc:var(--t-bolt)"></i><i class="shape s-circle" style="--tc:var(--t-wind)"></i><i class="shape s-hexagon" style="--tc:var(--t-spirit)"></i><i class="shape s-pentagon" style="--tc:var(--t-fiend)"></i></div>
@@ -965,6 +971,28 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 </div></dialog>
 
 <script>
+// set 180: catch every uncaught error / rejected promise → show a bar (copy the error · reload · close). Runs before everything else so
+// load-time errors show too; uses only DOM calls + textContent. The save is untouched (it is written at each step, not here).
+(() => {
+  let seen = '';
+  const show = (msg, stack) => {
+    msg = String(msg || 'unknown error').slice(0, 300);
+    if (seen || /ResizeObserver loop/.test(msg)) return;
+    seen = `Automon Arena error\n${msg}\n${String(stack || '').slice(0, 1500)}\n${navigator.userAgent}`;
+    const mk = (tag, text, cls) => { const e = document.createElement(tag); e.textContent = text; if (cls) e.className = cls; return e; };
+    const box = mk('div', ''), p = mk('p', ''), copy = mk('button', 'คัดลอกข้อผิดพลาด', 'primary'), again = mk('button', 'โหลดหน้าใหม่'), shut = mk('button', 'ปิด');
+    box.id = 'crash'; box.setAttribute('role', 'alert');
+    p.append(mk('b', 'เกมขัดข้อง '), 'ถ้าจอค้าง กดโหลดหน้าใหม่ เกมจะเล่นต่อจากเซฟล่าสุด · กดคัดลอกแล้วส่งให้คนทำเกม');
+    copy.id = 'crashCopy'; again.id = 'crashReload'; shut.id = 'crashClose';
+    copy.onclick = async () => { try { await navigator.clipboard.writeText(seen); copy.textContent = 'คัดลอกแล้ว'; } catch (e) { p.textContent = seen; } };
+    again.onclick = () => location.reload();
+    shut.onclick = () => { box.remove(); seen = ''; };
+    box.append(p, copy, again, shut);
+    (document.querySelector('dialog[open]') || document.body || document.documentElement).append(box);
+  };
+  window.addEventListener('error', e => show(e.message, e.error && e.error.stack));
+  window.addEventListener('unhandledrejection', e => show(e.reason && e.reason.message || e.reason, e.reason && e.reason.stack));
+})();
 /*__CORE__*/const $ = id => document.getElementById(id);
 // ---- set 84: match detail = the Balance Room match tab (lab/balance/js/50 + 51, shared) · shims for the names it takes from other Balance Room fragments ----
 const TB_STYLE = Object.fromEntries(Object.entries(TRIBE_STYLE).map(([t, st]) => [t, [st.color, st.shape]]));

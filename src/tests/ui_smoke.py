@@ -327,6 +327,11 @@ with sync_playwright() as p:
             p2.click('#resume .nameEdit'); p2.fill('#nameIn','คนใหม่'); p2.click('#nameGo')
             chk(p2.is_visible('#resume') and 'คนใหม่' in p2.inner_text('#resume'),'rename from resume screen')
             p2.click('#resumeGo'); chk(p2.evaluate('RL && RL.nm')=='คนใหม่','renamed player goes on the resumed run journal')
+            # set 180: an uncaught page error shows the error bar (no pageerror listener on this page: the error is thrown on purpose)
+            p5=c2.new_page(); p5.goto(f'file://{D}/game.html'); p5.evaluate("setTimeout(()=>{throw new Error('ui_smoke boom')},0)"); p5.wait_for_timeout(200)
+            chk(p5.is_visible('#crash') and 'เกมขัดข้อง' in p5.inner_text('#crash') and p5.locator('#crash').count()==1,'page error shows the error bar once')
+            p5.evaluate("(()=>{Promise.reject(new Error('second'))})()"); p5.wait_for_timeout(100); chk(p5.locator('#crash').count()==1,'second error does not stack a second bar')
+            p5.click('#crashClose'); chk(p5.locator('#crash').count()==0,'error bar closes')
             c2.close()
             # set 117: app killed = localStorage wiped → name comes back from the viewer's private db doc (fake window.claude)
             FAKE="""(()=>{const S=window.__nmSaved=%s;window.__nmSets=[];const q={add:()=>Promise.resolve(),set:()=>Promise.resolve(),get:()=>Promise.resolve({exists:false,docs:[]}),onSnapshot:()=>()=>{}};
