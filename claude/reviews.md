@@ -1,9 +1,28 @@
 # Reviews index
 
-V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.1 · 10 Nov 2026 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
+| review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
+| review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; re-check B/C findings | open |
+| review-2026-11-10-brainstorm-gamelog.md | Set 177 game-log brainstorm — user picked A1 B1 C1 (stats tab built; feeling tap + build label parked) | decided (parked items) |
+| review-2026-11-10-brainstorm-art-workflow.md | Art workflow brainstorm — draft plan only, start after MVP1 | open (parked) |
+| review-2026-11-09-brainstorm-boss.md | Set 168 boss brainstorm — user picked A3 B2 C2 D1 E1 F1 G1 H1 (combat-rules C-17.6) | decided (kept: linked from combat-rules) |
+| review-2026-11-09-bosskits.md | Set 168 boss kit draft v1 — approved I1 (linked from core/stage.js) | decided (kept: linked from code) |
+| review-2026-11-09-bosstribe.md | Set 167 boss win % by team tribe — input of the boss brainstorm | decided (kept: linked) |
+| review-2026-11-09-brainstorm-skill.md | Set 164 brainstorm skill design sources (linked from CLAUDE.md + skill) | decided (kept: linked) |
+| review-2026-11-09-brainstorm-runstats.md | Set 165 run-end stats brainstorm | status not checked (set 180) |
+| review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm (9 Nov) | status not checked (set 180) |
+| review-2026-11-09-balance-ux.md | Set 161 Balance Room UX/UI review | status not checked (set 180) |
+| review-2026-11-09-superpowers.md | Set 163 ideas borrowed from Superpowers (plan file, find-cause) | status not checked (set 180) |
+| archive/reviews/review-2026-11-09-bossv2-fit.md | Set 168 boss v2 calibrator + tribe report | decided |
+| archive/reviews/review-2026-11-09-bossv2-tribes.md | Set 168 boss v2 first look — report only | decided |
+| archive/reviews/review-2026-11-09-cfgdiff-rev57.md | cfgdiff AMCFG1 rev57 (42 cells) — superseded (db cleared rev 58, set 172) | decided |
+| archive/reviews/review-2026-11-09-cfgdiff-rev56.md | cfgdiff AMCFG1 rev56 — MATCH | decided |
+| archive/reviews/review-2026-11-09-cfgdiff-rev53.md | cfgdiff AMCFG1 rev53 (8 cells) | decided |
+| archive/reviews/review-2026-11-09-cfgdiff-rev52.md | cfgdiff AMCFG1 rev52 (21 cells) | decided |
+| archive/reviews/review-2026-11-09-cfgdiff-rev50.md | cfgdiff AMCFG1 rev50 (20 cells) | decided |
 | review-2026-11-08-runenames.md | Rune names DRAFT v2 — waiting for the user | open |
 | review-2026-11-08-runetext.md | Rune text rewrite DRAFT — waiting for the user | open |
 | archive/reviews/review-2026-11-08-workflow-audit2.md | Set 153 workflow audit round 2 (F–K) — all recommended picks applied | decided |
@@ -21,7 +40,7 @@ V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; whe
 | archive/reviews/review-2026-10-28-batch31.md | Batch 31 options: measured results as colours on the step-1 grid + tribe overview (28 Oct  | decided |
 | archive/reviews/review-2026-10-28-runes.md | Rune proposal (28 Oct 2026, stage mode demo) — user 29 Oct: ALL runes in (T1–T12, U1–U8);  | decided |
 | archive/reviews/review-2026-10-28-tabs.md | Match tab pattern check (28 Oct 2026, set 44) — G1–G3 FIXED (user: แก้), G5 = C | decided |
-| archive/reviews/review-2026-10-28.md | Review 28 Oct 2026 — skill numbers vs. rules vs. match tab (set 42) | open (t-skill-calc F1–F4 WAIT) |
+| archive/reviews/review-2026-10-28.md | Review 28 Oct 2026 — skill numbers vs. rules vs. match tab (set 42) — F1–F4 decided 28 Oct, now real tests | decided |
 | archive/reviews/review-2026-10-29-runes-v2.md | Rune system v2 — user request 29 Oct 2026 (set 53) · ANSWERED 29 Oct, Balance Room part bu | decided |
 | archive/reviews/review-2026-10-29-stage-baseline.md | Stage mode baseline: player damage per stage (29 Oct 2026) | decided |
 | archive/reviews/review-2026-10-29-stage-phase2.md | Stage mode phase 2 — decisions needed before coding (29 Oct 2026) | decided |

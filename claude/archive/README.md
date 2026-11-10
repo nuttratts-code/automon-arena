@@ -12,7 +12,7 @@ V1.2 · 8 Nov 2026 (set 139: reviews → archive/reviews/, relays → archive/re
 | relay/ | old Relay blocks moved out of handoff.md |
 | workflow-V1.21-full.md | workflow ฉบับเต็มก่อนแยกไฟล์ + บันทึกเวอร์ชัน V1.1–V1.21 |
 | Creature_Auto_Battler_Game_Bible 4.xlsx | Game Bible เดิม · ใช้เฉพาะส่วนที่กฎหลักไม่ได้เขียน (ร้านค้า รวมร่าง แรงก์ เซฟ Ghost Battle) · ผู้ใช้เลือกเก็บเป็นเอกสารเก่า 24 ต.ค. |
-| batomon_analysis_template_test.xlsx | วิเคราะห์เกมต้นแบบ · อ้างอิงเท่านั้น ไม่ใช่กฎเกมเรา |
+| (ลบชุด 180) batomon_analysis_template_test.xlsx | วิเคราะห์เกมต้นแบบ · ลบออกจาก repo สาธารณะ 10 พ.ย. 2026 (ยังอยู่ในประวัติ git) |
 | next-set-61.md (+ reviews/review-2026-10-30-*) | แผนชุด 61 + รายงานตรวจชุด 54–60 ที่ทำเสร็จแล้ว (ย้ายมา 31 ต.ค.) |
 | GEMINI-jules-cancelled.md | คู่มือ Jules/Gemini เดิม · ผู้ใช้ยกเลิก Jules 28 ต.ค. |
 | handoff-2026-10-30-full.md | handoff ฉบับเต็มก่อนย่อ (sets 38–53: import, anomaly SF-6, review, set B/D, repo migration) |
