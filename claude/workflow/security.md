@@ -1,6 +1,6 @@
 # workflow · Security at every step (HARD RULE 9)
 
-V1.0 · 10 Nov 2026 (set 190: user picked S-A1 B1 C1 D1 — "many creators get their work stolen or attacked; make it an iron rule"). CLAUDE.md HARD RULE 9 is the one-line rule; this file holds the details and wins if they differ. HARD RULE 7 (validate external data) is part ③ of this rule.
+V1.1 · 10 Nov 2026 (set 190: private blocked by quota, work continues public) · V1.0 · 10 Nov 2026 (set 190: user picked S-A1 B1 C1 D1 — "many creators get their work stolen or attacked; make it an iron rule"). CLAUDE.md HARD RULE 9 is the one-line rule; this file holds the details and wins if they differ. HARD RULE 7 (validate external data) is part ③ of this rule.
 
 ## Why
 - The repo was public from 6 Nov (set 104, for free CI minutes) to set 190: code, design docs and history could be downloaded by anyone. What was public may already be copied; private stops new copies.
@@ -21,6 +21,7 @@ V1.0 · 10 Nov 2026 (set 190: user picked S-A1 B1 C1 D1 — "many creators get t
 
 ## Repo private + CI (S-A1)
 - The user switches the repo to Private on github.com (Settings → General → Danger Zone → Change visibility). Claude cannot do it.
+- **Status (set 190, user):** blocked — the user's GitHub free quota is full. User decision: keep working while public (repo unknown, 0 views); retry Private when the quota resets. Until then the repo is public: everything pushed (Godot code too) is visible — never push secrets (part 1) either way.
 - CI runs only on push to main (+ manual run): private repos get limited free Actions minutes. Branch work is checked by the local gate before merge (HARD RULE 3), so CI on main still guards what ships.
 
 ## Where each part is checked
