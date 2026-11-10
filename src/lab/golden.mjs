@@ -6,6 +6,9 @@
 // (a) rng: first N next() values for 5 seeds · (b) battles: input units/opts exactly as the game passes them + full result
 //     (log + detail + live, like the game replay) · (c) runs: simRun with runes, bosses, pickFoe enemies, extra rounds → every match + final state.
 // Every input goes through a JSON round trip BEFORE it is simulated: the fixture holds everything the result depends on.
+// v2 (set 194, user pick A1): in battles/runs every non-integer number is written as {"$f": "<16 hex digits>"} = its exact
+// IEEE-754 bits (big-endian), because Godot's text→float parse can be 1 ulp off (set 193). Godot decodes the bits and
+// compares every value exactly. Integers stay plain JSON numbers (exact up to 2^53 in both). rng.json is unchanged (test compares k).
 // Security (HARD RULE 9 ④): fixtures live in godot/tests/ = excluded from every Godot export (P1 export_presets.cfg).
 import { mkdirSync, rmSync, createWriteStream } from 'fs';
 import { dirname, resolve, join } from 'path';
@@ -22,7 +25,7 @@ import { simRun, pickFoe, botRounds, tribeList } from '../core/botteams.js';
 import { walk, buildGameData } from '../tools/exportdata.mjs';
 
 export const GOLDEN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../godot/tests/golden');
-export const GOLDEN_V = 1;
+export const GOLDEN_V = 2;
 export const RNG_SEEDS = [0, 1, 4242, 2654435761, 4294967295]; // 0 → the core uses 1 · max uint32
 export const FULL = { rngN: 10000, runBattles: 2000, randBattles: 1000, runs: 200, perFile: 500, seed: 191 };
 export const SMALL = { rngN: 200, runBattles: 20, randBattles: 10, runs: 3, perFile: 500, seed: 191 };
@@ -36,12 +39,33 @@ function plain(v, path) {
   if (bad.length) throw new Error('golden: not JSON-safe:\n  ' + bad.slice(0, 10).join('\n  '));
   return JSON.parse(JSON.stringify(v));
 }
+// A1 (set 194): non-integer numbers → {"$f": bits hex} · fromExact = the reverse (unit test: round trip is exact)
+const F64 = new DataView(new ArrayBuffer(8));
+export function exactNums(v) {
+  if (typeof v === 'number') {
+    if (Number.isInteger(v)) return v;
+    F64.setFloat64(0, v);
+    return { $f: F64.getBigUint64(0).toString(16).padStart(16, '0') };
+  }
+  if (Array.isArray(v)) return v.map(exactNums);
+  if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v)) o[k] = exactNums(v[k]); return o; }
+  return v;
+}
+export function fromExact(v) {
+  if (Array.isArray(v)) return v.map(fromExact);
+  if (v && typeof v === 'object') {
+    const ks = Object.keys(v);
+    if (ks.length === 1 && ks[0] === '$f' && typeof v.$f === 'string') { F64.setBigUint64(0, BigInt('0x' + v.$f)); return F64.getFloat64(0); }
+    const o = {}; for (const k of ks) o[k] = fromExact(v[k]); return o;
+  }
+  return v;
+}
 const optsOf = o => { const { rules, ...rest } = o; return rest; }; // rules come from godot/data/game.json
 
 function battleRec(i, src, a, b, o) {
   const inp = plain({ a, b, o: optsOf(o) }, 'battle' + i);
   const res = simulate(inp.a, inp.b, { ...inp.o, ...BATTLE_OPTS });
-  return { i, src, ...inp, res: plain(res, 'battle' + i + '.res') };
+  return exactNums({ i, src, ...inp, res: plain(res, 'battle' + i + '.res') });
 }
 
 function* rngLines(cfg) {
@@ -83,7 +107,7 @@ function* runLines(cfg, chars) {
       stage: m.stage, round: m.round, gold: m.gold, hearts: m.hearts, extra: m.extra, second: m.second, ws: m.ws, team: m.team, rn: m.rn,
       foe: m.foe, foeRn: m.foeRn, boss: m.boss, k: m.k, winner: m.winner, timeMs: m.timeMs, aborted: m.aborted, events: m.res.events.length,
     }), undefined, opts);
-    yield JSON.stringify(plain({ i: r, seed, foe: r % 4 === 3 ? 'liveBot' : 'pickFoe', opts, matches, final: P }, 'run' + r));
+    yield JSON.stringify(exactNums(plain({ i: r, seed, foe: r % 4 === 3 ? 'liveBot' : 'pickFoe', opts, matches, final: P }, 'run' + r)));
   }
 }
 
