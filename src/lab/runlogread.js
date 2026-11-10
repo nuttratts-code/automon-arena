@@ -14,7 +14,7 @@ import { RUN_STAGE, runBossById, runBossOpts, runBossTeam } from '../core/runbos
 import { equipRunes } from '../core/runes.js';
 import { rnFromCompact, rnRec } from '../core/runrunes.js';
 import { RL_TH, rlCheck, rlGains, rlReplay, rlUnref } from '../core/runlog.js';
-import { parseRunCode, replayPct } from '../core/save.js';
+import { REPLAY_VERSION, SAVE_MAX_CHARS, checkReplay, makeRunCode, parseRunCode, replayPct } from '../core/save.js';
 import { get, teamEntries } from '../core/shop.js';
 import { buildTeam } from '../core/team.js';
 
@@ -149,10 +149,26 @@ export function rvReadCode(text, ctx) {
 
 // set 114: one run as the game page's db keeps it (head = runlogs/<id>, parts = runlogs/<id>/parts docs) → { log, short }
 // log = journal for rvAnalyze (null if the head is not a journal head) · short = parts hold fewer entries than the head says
+// set 188: rp = the run's match replays text (save.js makeReplays) from parts doc 'r' = { rp } · '' when the run has none (runs before set 188)
 export function rvFromDb(head, parts) {
-  if (!head || typeof head !== 'object') return { log: null, short: false };
-  const ps = (Array.isArray(parts) ? parts : []).filter(p => p && Number.isInteger(p.k) && Array.isArray(p.ev)).sort((a, b) => a.k - b.k);
+  if (!head || typeof head !== 'object') return { log: null, short: false, rp: '' };
+  const all = Array.isArray(parts) ? parts : [];
+  const ps = all.filter(p => p && Number.isInteger(p.k) && Array.isArray(p.ev)).sort((a, b) => a.k - b.k);
   const ev = ps.flatMap(p => p.ev);
   const log = { v: head.v, seed: head.seed, data: head.data, at: head.at, cut: head.cut, ev, ...(head.nm ? { nm: head.nm } : {}) };
-  return rlCheck(log) === true ? { log, short: ev.length !== head.n } : { log: null, short: false };
+  const r = all.find(p => p && typeof p.rp === 'string' && p.rp.length <= SAVE_MAX_CHARS), rp = r ? r.rp : '';
+  return rlCheck(log) === true ? { log, short: ev.length !== head.n, rp } : { log: null, short: false, rp: '' };
+}
+// set 188: replays text → { run, list } for rvAnalyze, or null (unreadable, other run, or any match that fails checkReplay)
+export function rvDbRun(rp, seed, ctx) {
+  let o; try { o = typeof rp === 'string' && rp && rp.length <= SAVE_MAX_CHARS ? JSON.parse(rp) : null; } catch (e) { o = null; }
+  if (!o || typeof o !== 'object' || o.rv !== REPLAY_VERSION || o.run !== seed || !Array.isArray(o.list) || !o.list.length) return null;
+  return o.list.every(x => checkReplay(x, ctx.CM, ctx.rules)) ? { run: o.run, list: o.list } : null;
+}
+// set 188 (user A1/A2): one db run (rvFromDb result) → an ARUN1 run code for the Balance Room "ผู้เล่นจริง" tab · null if no journal
+// replays go in only when they belong to this run and pass checkReplay (else the code carries the journal alone)
+export function rvDbCode(d, ctx, at) {
+  if (!d || !d.log) return null;
+  const run = rvDbRun(d.rp, d.log.seed, ctx);
+  return makeRunCode(run ? [d.rp] : [], '', ctx.hash, at, ctx.rules, [JSON.stringify(d.log)], d.log.nm || '');
 }

@@ -375,8 +375,9 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
                 p4.click('#skip'); p4.wait_for_selector('#next', state='visible', timeout=60000); p4.click('#next')
             p4.evaluate("window.dispatchEvent(new Event('pagehide'))")  # shop steps after the last match go on page hide (or the next match end)
             p4.wait_for_function("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`,h=__st.docs['runlogs/'+id];return h&&h.n===RL.ev.length&&!rlPend.size;})()", timeout=20000)
-            r4=p4.evaluate("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`;return [__st.overlap, __st.docs['runlogs/'+id+'/parts/p0'].ev.length===RL.ev.length, __st.n];})()")
+            r4=p4.evaluate("(()=>{const id=`${RL.seed.toString(16)}-${RL.at}`,r=__st.docs['runlogs/'+id+'/parts/r'];return [__st.overlap, __st.docs['runlogs/'+id+'/parts/p0'].ev.length===RL.ev.length, __st.n, !!r&&JSON.parse(r.rp).list.length===replays.length&&replays.length>0];})()")
             chk(r4[0]==0 and r4[1],'set 136: journal reaches the db after a failed write, no overlapping writes '+str(r4))
+            chk(r4[3],'set 188: match replays reach the db (parts/r) '+str(r4))
             c4.close()
         # set 110: run-log viewer (runlog.html) · clean run (reload = no test hacks in CM/P) → code → no alert · edited code → red
         pg.reload()
@@ -396,11 +397,15 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.evaluate('''(()=>{ const head={...RL, ev:undefined, n:RL.ev.length, parts:1, upd:Date.now(), round:P.round, wins:P.wins, hearts:P.hearts, gold:P.gold, over:0};
           delete head.ev; window.__lgFire=null;
           playDb={ collection(p){ if(p==='runlogs') return { orderBy(){return this;}, limit(){return this;}, onSnapshot(fn){ window.__lgFire=fn; fn({docs:[{id:'t1',exists:true,data:()=>head}]}); return ()=>{}; } };
-            return { get: async()=>({docs:[{id:'p0',exists:true,data:()=>({k:0,ev:RL.ev.slice()})}]}) }; }, doc(){ return { set:async()=>{}, collection(){ return { doc(){ return { set:async()=>{} }; } }; } }; } };
+            return { get: async()=>({docs:[{id:'p0',exists:true,data:()=>({k:0,ev:RL.ev.slice()})},{id:'r',exists:true,data:()=>({rp:makeReplays(P.seed,DATA_HASH,replays)})}]}) }; }, doc(){ return { set:async()=>{}, collection(){ return { doc(){ return { set:async()=>{} }; } }; } }; } };
           document.getElementById('logBtn').hidden=false; })()''')
         pg.click('#logBtn'); chk(pg.is_visible('#logScr') and len(pg.query_selector_all('#logList tr'))==1 and 'ทดสอบ' in pg.inner_text('#logList'),'log screen: live run list from the db')
         pg.click('#logList button'); pg.wait_for_selector('#logScr #lvStatus', timeout=20000)
         chk('ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and len(pg.query_selector_all('#logOut details.round'))>=2,'log screen: db run detail rebuilt, no alert')
+        # set 188: copy-all button → ARUN1 codes with journal + replays (clipboard stubbed; real clipboard is blocked on file pages)
+        pg.evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async t=>{window.__clip=t;}}})")
+        pg.click('#logAllCopy'); pg.wait_for_function("document.getElementById('logAllMsg').textContent.includes('คัดลอกแล้ว')", timeout=20000)
+        chk(pg.evaluate("(()=>{const c=parseRunCode(window.__clip,CM,RULES);return c.logs.length===1&&c.runs.length===1&&c.runs[0].list.length===replays.length&&c.nm==='ทดสอบ';})()"),'set 188: copy-all = run code with journal + match replays')
         pg.fill('#logCode',code); pg.click('#logRead')
         chk('ไม่พบความผิดปกติ' in pg.inner_text('#lvStatus') and 'ผู้เล่น: ทดสอบ' in pg.inner_text('#logOut'),'log screen: pasted run code read')
         pg.fill('#logCode','ARUN1 {bad'); pg.click('#logRead'); chk(pg.is_visible('#logErr'),'log screen: broken code = error')

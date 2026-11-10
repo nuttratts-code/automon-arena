@@ -12,8 +12,8 @@
 | `css/20-mockup.css` | set 116 approved mockup layer (HUD chips, tribe cards row, shop cards, battle dock, result card, title screens) + later UI fixes — overrides 10 |
 | `body.html` | page markup: app (HUD, field, dock), name/resume/run-end/Log screens, notice/toast/rotate, dialogs |
 | `js/00-setup.js` | error bar (set 180), small globals used by the shared match fragments |
-| `js/10-state-save.js` | art, run state, save/stats/history, bot teams, run journal, db writes, replays list |
-| `js/20-log-screen.js` | owner-only Log screen (set 114) |
+| `js/10-state-save.js` | art, run state, save/stats/history, bot teams, run journal, db writes (runlogs head + parts p<k> + parts r = replays, set 188), replays list |
+| `js/20-log-screen.js` | owner-only Log screen (set 114) · copy newest 60 runs as ARUN1 codes for the Balance Room (set 188) |
 | `js/30-screens-popups.js` | screen switching, toast, run code, the shared detail popup |
 | `js/40-draw-details.js` | drawing HUD/board/bench/shop, shop level, stat glossary, unit details pane, floating card |
 | `js/50-commands-drag.js` | commands through the core, tap/drag, ⋯ menu |
