@@ -37,3 +37,12 @@ jobs:
       - name: Gate (build + tests + ui_smoke)
         working-directory: src
         run: node tools/bootstrap.mjs gate
+      # Set 178: on failure keep the full ui_smoke output + screenshots (the log tail cut off the failing step in sets 149/175b)
+      - name: Upload ui_smoke output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-shots
+          path: /tmp/automon-shots
+          retention-days: 7
+          if-no-files-found: ignore

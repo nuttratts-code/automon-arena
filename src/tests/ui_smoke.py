@@ -5,6 +5,13 @@ D=sys.argv[1]; O=sys.argv[2]; errs=[]; fails=[]
 KEEPNAME="""(()=>{const n=localStorage.getItem('automon-player-name-v1');localStorage.clear();if(n)localStorage.setItem('automon-player-name-v1',n);})()"""  # set 110: wipe game storage but keep the player name (else every reload stops at the name screen)
 def chk(c,msg):
     if not c: fails.append(msg)
+import traceback; _ME=os.path.basename(sys.argv[0])
+def _crash(t,e,tb):  # set 178: an uncaught Playwright error used to end the run before FAILS/ERRORS (gate "(ไม่พบ)", sets 149 + 175b) → always print them + the crashing step
+    traceback.print_exception(t,e,tb)
+    st=[f for f in traceback.extract_tb(tb) if os.path.basename(f.filename)==_ME]
+    errs.append((globals().get('w'),'crash','line %s: %s'%(st[-1].lineno,(st[-1].line or '')[:120]) if st else '?',str(e).split('\n')[0][:200]))
+    print('FAILS',fails); print('ERRORS',errs,flush=True)
+sys.excepthook=_crash
 with sync_playwright() as p:
     _x=os.environ.get('CHROMIUM_PATH') or ('/opt/pw-browsers/chromium' if os.path.exists('/opt/pw-browsers/chromium') else None)  # cloud container: pre-installed browser
     b=p.chromium.launch(executable_path=_x, args=['--no-sandbox']) if _x else p.chromium.launch()

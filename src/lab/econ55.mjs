@@ -1,5 +1,5 @@
 // Set 136 (step 5.5 measure, user 8 Nov "ลองวัดมาก่อน"): permanent stats + Lv1 legends over real-flow runs · measure only, changes nothing
-// node lab/econ55.mjs [runs=600]  · same run flow + seeds as lab/runerun.mjs (player bot with runes, real bot teams, bosses, extra to lastStage)
+// node lab/econ55.mjs [runs=600]  · run flow = lab/analyze.js runPlayStats (set 178), same as lab/runerun.mjs (player bot with runes, real bot teams, bosses, extra to lastStage)
 // Prints per round bucket: (1) team-total permanent values per key (share of matches that have it · p50/p90/max of those)
 // (2) per perm-source character on the board: matches, round-adjusted win delta, perm it carries itself
 // (3) Lv1 legends: round-adjusted win delta of teams holding a Lv1 legend (and no higher legend) vs all teams
@@ -7,13 +7,14 @@
 import { buildCharacterList } from '../core/characters.js';
 import { RULES } from '../core/rules.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickFoe, simRun, tribeList, validateBotTeams } from '../core/botteams.js';
+import { validateBotTeams } from '../core/botteams.js';
+import { runPlayStats } from './analyze.js';
 import { dataHash } from '../core/save.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { makeCharMap } from '../core/team.js';
 
 const A = process.argv.slice(2), runs = +A.find(a => !a.startsWith('--')) || 600;
-const chars = buildCharacterList(), cm = makeCharMap(chars), tribes = tribeList(chars);
+const chars = buildCharacterList(), cm = makeCharMap(chars);
 const bt = validateBotTeams(BOT_TEAMS, cm, RULES, dataHash(chars, RULES));
 if (!bt.ok) { console.log('bot teams not usable: run node lab/botgen.mjs first'); process.exit(1); }
 // --set=ID:v1,v2,v3 (repeatable) = scratch override of that character's 1st permanent skill values for this measure only
@@ -25,13 +26,11 @@ const LEG = chars.filter(c => c.rarity === 'ตำนาน').map(c => c.id);
 const BK = r => r <= 5 ? '1-5' : r <= 10 ? '6-10' : r <= 15 ? '11-15' : '16-20';
 const BKS = ['1-5', '6-10', '11-15', '16-20'];
 const M = []; const t0 = Date.now();
-for (let r = 0; r < runs; r++) {
-  const seed = (8800 + Math.imul(r + 1, 0x9E3779B1)) >>> 0;
-  simRun(chars, RULES, seed, p => pickFoe(BOT_TEAMS, p.fp | 0, p.round, p.seed, p.extra, RUN_STAGE, undefined, p.ls | 0, p.ws | 0), m => {
-    if (m.boss === 'DUMMY' || !m.team?.length) return;
-    M.push({ round: m.round, win: m.winner !== 1 ? 1 : 0, boss: !!m.boss, team: m.team.map(e => ({ id: e.id, level: e.level || 1, perm: e.perm || {} })) });
-  }, RUN_STAGE, { focus: tribes[r % tribes.length], runes: true, extra: RUN_STAGE.settings.lastStage });
-}
+// set 178: matches come from lab/analyze.js runPlayStats (same flow as runerun / Balance Room "รันจริง") — seed 8800, focus tribe per run, runes, extra to lastStage
+await runPlayStats(chars, RULES, RUN_STAGE, { n: runs, runeWhatIf: false, onMatch: m => {
+  if (m.boss === 'DUMMY' || !m.team?.length) return;
+  M.push({ round: m.round, win: m.winner !== 1 ? 1 : 0, boss: !!m.boss, team: m.team.map(e => ({ id: e.id, level: e.level || 1, perm: e.perm || {} })) });
+} });
 const base = {}; for (const m of M) { const b = (base[m.round] ||= [0, 0]); b[0]++; b[1] += m.win; }
 const adj = m => m.win - base[m.round][1] / base[m.round][0];
 const q = (a, p) => a.length ? a[Math.min(a.length - 1, Math.floor(a.length * p))] : 0;
