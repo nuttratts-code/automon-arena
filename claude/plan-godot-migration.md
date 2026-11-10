@@ -31,24 +31,24 @@ Status: **plan only, no code yet.** User answers set 189: G1 = "support PC and m
   - G5b: retire it now.
 - ~~G6 pacing~~ dropped: already decided set 181 (backlog "Gameplay / pacing": keep values, long matches are not a problem; reopen only if the user asks). Audit D1 was stale.
 
-## 2. Steps (G1a · G2b · G3a · G4a · G5a)
+## 2. Steps (G1a · G2b · G3a · G4a · G5a) — each step has a **Security** line (HARD RULE 9 ⑥, claude/workflow/security.md)
 P0 — prep in the JS repo (code, normal gate)
-1. `src/tools/exportdata.mjs`: dump every game value the core uses (characters, tribes, rules, stage, runes, botdata) → `godot/data/game.json` + hash. Check: re-import → identical hash; CI fails if json is stale.
-2. `src/lab/golden.mjs`: write golden fixtures → `godot/tests/golden/*.json`: (a) rng first 10,000 numbers for 5 seeds · (b) 3,000 battles (seeded teams, full event log) · (c) 200 full simRuns (shop, bots, runes, bosses, gold per round). Check: same file twice = byte-identical.
+1. `src/tools/exportdata.mjs`: dump every game value the core uses (characters, tribes, rules, stage, runes, botdata) → `godot/data/game.json` + hash. Check: re-import → identical hash; CI fails if json is stale. Security: ③ json only (no code), Godot validates every field on load · ① no keys/links in the file.
+2. `src/lab/golden.mjs`: write golden fixtures → `godot/tests/golden/*.json`: (a) rng first 10,000 numbers for 5 seeds · (b) 3,000 battles (seeded teams, full event log) · (c) 200 full simRuns (shop, bots, runes, bosses, gold per round). Check: same file twice = byte-identical. Security: ④ golden fixtures live in godot/tests/ = excluded from exports.
 P1 — Godot skeleton (`godot/` folder in this repo)
-3. Project + headless test runner (`godot --headless -s tests/run.gd`) + CI job · measure web export size (decides G2 details). Check: empty test passes in CI.
-4. Port rng.gd. Check: golden (a) exact.
+3. Project + headless test runner (`godot --headless -s tests/run.gd`) + CI job · measure web export size (decides G2 details). Check: empty test passes in CI. Security: ② Godot binary only from github.com/godotengine (official), version pinned, checksum checked · ④ export_presets.cfg excludes tests/, tools/, *.md · ① encryption key never committed (.gitignore + Actions secret).
+4. Port rng.gd. Check: golden (a) exact. Security: none new.
 P2 — battle
-5. Port battle.js → battle.gd (+ team, rules, characters, power, validate). Check: golden (b) 3,000/3,000 identical event logs.
+5. Port battle.js → battle.gd (+ team, rules, characters, power, validate). Check: golden (b) 3,000/3,000 identical event logs. Security: ③ team/config input validated like core/validate.js.
 P3 — run systems
-6. Port shop, bot, botteams, runes, runrunes, stage, boss, runboss, save, runlog. Check: golden (c) 200/200 identical; ARUN1 code from Godot opens in the Balance Room.
+6. Port shop, bot, botteams, runes, runrunes, stage, boss, runboss, save, runlog. Check: golden (c) 200/200 identical; ARUN1 code from Godot opens in the Balance Room. Security: ③ saves in user:// parsed as JSON + validated (never load() a player file as a Resource) · codes pasted in are validated.
 P4 — screens (placeholder art first)
-7. Screens in the order of a run: name · rune offer · prep/shop · unit card · battle · result · match details · end · resume · Log. Include every open item of the UI notes file. Check: Playwright screenshots of the web export at 1366×768 · 844×390 · 667×375 (ui.md phone audit rules carry over).
+7. Screens in the order of a run: name · rune offer · prep/shop · unit card · battle · result · match details · end · resume · Log. Include every open item of the UI notes file. Check: Playwright screenshots of the web export at 1366×768 · 844×390 · 667×375 (ui.md phone audit rules carry over). Security: ② fonts/icons only with licence + credit · owner line on the credits screen (S-B1) · no owner-only tools reachable by players.
 P5 — art + motion
-8. HD-2D scene from art/godot-test + anim specs from the notes file. User picks looks (mockup screenshots, A1/A2).
+8. HD-2D scene from art/godot-test + anim specs from the notes file. User picks looks (mockup screenshots, A1/A2). Security: ② every asset (Blender, textures, sounds, AI-made art) has source + licence noted; art must not resemble the reference game.
 P6 — ship
-9. itch.io (G2b): the user creates the account + game page (Claude guides step by step) · web build playable in the browser first, PC (Windows) + Android downloads on the same page later · uploads by the user, or by Claude with itch.io `butler` + an API key saved through request_credential (ask then) · Relay/Links/publish docs updated · web game page retired (G5a).
-10. Workflow docs: CLAUDE.md HARD RULE 2/3, merge-code, publish-pages, ripple map — gate covers JS + Godot parity. (Edit only when P1 exists; rule-change skill.)
+9. itch.io (G2b): the user creates the account + game page (Claude guides step by step) · web build playable in the browser first, PC (Windows) + Android downloads on the same page later · uploads by the user, or by Claude with itch.io `butler` + an API key saved through request_credential (ask then) · Relay/Links/publish docs updated · web game page retired (G5a). Security: ④ release export + **PCK encryption (S-D1)**: custom export templates built with the key from env/Actions secret · check the export file list · ⑤ itch.io account 2FA, butler key via request_credential only, revocable.
+10. Workflow docs: CLAUDE.md HARD RULE 2/3, merge-code, publish-pages, ripple map — gate covers JS + Godot parity. (Edit only when P1 exists; rule-change skill.) Security: ⑥ security.md table gets the Godot rows.
 
 ## 3. Risks to watch while porting (JS ≠ GDScript)
 - 32-bit math: `Math.imul`, `>>> 0`, `|0` → GDScript ints are 64-bit; mask with `& 0xFFFFFFFF` and emulate imul.

@@ -25,6 +25,7 @@ Every commit that changes behaviour, a value, a name, a text the player sees, a 
 | Save / run state / run code | src/core/save.js (version + migrate old saves) · runlog.js + lab/runlog* (old journals replay) · runcode.mjs · ARUN1 reader (lab/humanstats.js) · game db runlogs head/parts/r (10-state-save.js writer ↔ lab/runlogread.js rvFromDb/rvDbCode ↔ 20-log-screen.js, set 188) |
 | Player-visible text / layout | every screen size in ui-work 4b · ui_smoke selectors/texts · labels.js |
 | Doc rule / version | doc header `Vx.y` · handoff "Doc versions" line · any page that cites the version (check page subtitle, set 175) |
+| Secret, dependency, asset, shipped file, account (HARD RULE 9) | claude/workflow/security.md table · LICENSE / credits (art/placeholder, game credits line) · .github/workflows · Godot export filters + encryption · publish-pages / merge-code security steps |
 | A workflow rule | CLAUDE.md · the topic file · every skill that repeats it (grep a key phrase in .claude/skills) · relay.md / handoff wording |
 
 Add a row whenever a missed spot is found later (weekly review step "missed ripples").
