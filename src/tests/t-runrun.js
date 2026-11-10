@@ -7,7 +7,7 @@ import { incomeOf, newRun, startRound, takeRune, reroll, sell, move, merge, appl
 import { dataHash, makeSave, newStats, readSave, validateRunState, replayEntry, checkReplay } from '../core/save.js';
 import { equipRunes } from '../core/runes.js';
 import { BOT_TEAMS } from '../core/botdata.js';
-import { pickFoe, foeWantPct, foeFloorPct, foeWsPct } from '../core/botteams.js';
+import { pickFoe, foeWantPct, foeFloorPct, foeWsPct, BOT_TIERS, BOT_TOP } from '../core/botteams.js';
 import { teamPower } from '../core/power.js';
 import { RUN_STAGE } from '../core/runboss.js';
 import { rnMakeOffer, rnRerollOffer, rnRerollCost, rnTakeOffer, rnRec, rnFoeScale, rnFx, rnHeartTrade, rnPlace, rnEquips, rnCompact, rnFromCompact, rnInterest, rnUnworn, rnWear } from '../core/runrunes.js';
@@ -160,6 +160,12 @@ export const TESTS_RUNRUN = [
     const f1 = pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false); Q.board[1][1] = unit(Q, chars[chars.length - 1].id, 1);
     eq(pickFoe(BOT_TEAMS, Q.fp, Q.round, Q.seed, false).team, f1.team, 'board change → same enemy (locked power)');
     ok(pickFoe(BOT_TEAMS, 0, 1, 5, false).team.length > 0, 'power 0 → median of the round cell');
+    { // set 185 (user A2): round 1 = random of the cell's non-top-tier teams (not just the 4 nearest)
+      const seen = new Set(); for (let sd = 1; sd <= 400; sd++) { const f = pickFoe(BOT_TEAMS, 0, 1, sd, false); ok(f.tier !== BOT_TIERS[BOT_TOP], 'round 1 never แรงมาก'); seen.add(JSON.stringify(f.team)); }
+      const n1 = BOT_TEAMS.rounds[0].filter(t => t.tier !== BOT_TIERS[BOT_TOP]).length;
+      ok(seen.size > 4 && seen.size <= n1, `round 1 enemy variety ${seen.size} teams (> 4)`);
+      eq(pickFoe(BOT_TEAMS, 0, 1, 77, false).team, pickFoe(BOT_TEAMS, 999, 1, 77, false).team, 'round 1 same seed → same team');
+    }
     // set 127 (R1 C): floor = round median × foeFloor % · weak board meets ≥ median-ish teams · strong board unchanged · 0 = off
     const R7 = 7, med7 = (() => { const w = BOT_TEAMS.rounds[R7 - 1].filter(t => t.tier !== 'แรงมาก').map(t => t.pw).sort((a, b) => a - b); return w[w.length >> 1]; })();
     const st0 = s => ({ ...RUN_STAGE, settings: { ...RUN_STAGE.settings, foeFloor: s } });

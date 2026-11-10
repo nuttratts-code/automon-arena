@@ -219,6 +219,14 @@ export function pickFoe(data, myUnits, round, seed, extra = false, stage = RUN_S
   const floor = med * foeFloorPct(ls, stage) / 100;
   const base = extra ? (stage.settings.foeBaseExtra ?? 120) : (stage.settings.foeBase ?? 100), wsp = foeWsPct(ws, stage);
   const target = Math.max(pp * base / 100, floor) * wsp / 100;
+  // set 185 (user A2): the run's first match (round 1, normal) = any of round 1's teams except the แรงมาก tier, by seed (was always the same 4 nearest the median)
+  if ((round | 0) === 1 && !extra) {
+    const r1 = data.rounds[k].filter(t => t.tier !== BOT_TIERS[BOT_TOP]);
+    if (r1.length) {
+      const t = r1[makeRng(((seed >>> 0) ^ Math.imul(2, 0x27D4EB2F) ^ 0x7E57F0E5) >>> 0).int(r1.length)];
+      return { tier: t.tier, stage: k, span: 0, round: t.round, team: structuredClone(t.team), rn: structuredClone(t.rn), s: t.s, pct: want, want, wsp, power: Math.round(pp), floor: Math.round(floor) };
+    }
+  }
   const cand = [];
   for (let i = Math.max(0, k - FOE_PICK.win); i <= Math.min(n - 1, k + FOE_PICK.win); i++) data.rounds[i].forEach((t, j) => cand.push({ t, d: Math.abs(i - k), j }));
   const gap = x => (target > 0 ? Math.abs(Math.log(x.t.pw / target)) : x.t.pw);
