@@ -52,7 +52,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - **Conflict check (user rule 7 Nov, set 118 — the user may mistype):** before acting on ANY request, compare it with the current docs/code (rules, settings, earlier decisions). If it contradicts or changes something already decided, STOP and tell the user first in Thai: what exists now (doc + rule id + set), what the request would change, and every side effect/clash it creates — then wait for confirmation. Never silently follow the new wording, never silently keep the old one.
 
 ## Docs (all under claude/)
-- Source of truth: claude/ docs > imported Balance Room values > Game Bible (non-conflicting parts). Not-yet-imported values are not real.
+- Source of truth: claude/ docs > imported Balance Room values (Game Bible xlsx removed set 181). Not-yet-imported values are not real.
 - combat-rules.md (C) · tribe-rules.md (T) · shop-merge-rules.md (S) · build-plan.md · characters.csv (real source: src/core/characters.js). A request that conflicts with docs = point to the spot and ask. These Thai docs are large (~15k tokens each): grep the rule id / heading and read only that section.
 - Values not in docs get "(ค่าเสนอ)"; the label is removed when: character stat = confirmed · measurable rule = chosen + measured · unmeasurable = chosen.
 - After confirmation: update docs immediately + short summary + bump that file's version (small +0.1 · core rule +1.0).
