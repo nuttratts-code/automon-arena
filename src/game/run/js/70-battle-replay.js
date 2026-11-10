@@ -116,9 +116,15 @@ function placeRunes(a, b) {
   if (view.units) for (const v of view.units.values()) {
     const nms = sides[v.side] && sides[v.side].slot.get(`${v.row}:${v.lane}`); if (!nms || !v.cell) continue;
     bRunes.set(v.uid, nms);
-    const t = el('span', 'rune-dot', '◆ ' + nms.join(' · ')); t.title = 'รูน: ' + nms.join(', '); v.cell.append(t);
+    v.cell.append(runeMark(nms));
   }
-  sides.forEach((sd, i) => { const n = $(i ? 'rnR' : 'rnL'); n.textContent = sd.team.length ? `◆ รูน${i ? 'ศัตรู' : 'ทีม'}: ${sd.team.join(' · ')}` : ''; n.title = n.textContent; });
+  // set 183 (B1): short "◆ รูนศัตรู 5" · tap = full list in a toast (the long line was cut on phones)
+  sides.forEach((sd, i) => {
+    const n = $(i ? 'rnR' : 'rnL'), full = sd.team.length ? `รูน${i ? 'ศัตรู' : 'ทีม'}: ${sd.team.join(' · ')}` : '';
+    n.textContent = sd.team.length ? `◆ รูน${i ? 'ศัตรู' : 'ทีม'} ${sd.team.length}` : ''; n.title = full;
+    if (full) { n.setAttribute('role', 'button'); n.tabIndex = 0; n.setAttribute('aria-label', full); n.onclick = () => toast([{ t: full }]); n.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toast([{ t: full }]); } }; }
+    else { n.removeAttribute('role'); n.removeAttribute('tabindex'); n.removeAttribute('aria-label'); n.onclick = null; n.onkeydown = null; }
+  });
 }
 // ---------- บันทึกการต่อสู้ละเอียด (ชุด 25 · ตัวสร้างบรรทัดเดียวกับห้องบาลานซ์ game/labels.js) ----------
 function logNameEl(u) {

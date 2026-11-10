@@ -72,7 +72,7 @@ with sync_playwright() as p:
         pg.click('#runeBtn'); chk('ยังไม่ได้สวม' in pg.inner_text('#rBag'),'rune list says not worn')
         pg.click('#rBag .pitem'); pg.select_option('#pop select','0,0')
         chk(pg.evaluate('P.rn.at.C3===P.board[0][0].uid') and pg.inner_text('#runeCnt')=='1' and pg.is_hidden('#runeWarn') and 'warn' not in pg.get_attribute('#runeBtn','class'),'wear on a unit → stored as uid, warning gone')
-        chk('พุ่งชน' in pg.inner_text('#board'),'rune name shown on the wearer')
+        chk(pg.evaluate("[...document.querySelectorAll('#board .rune-dot')].some(d=>/^◆\\d+$/.test(d.textContent)&&d.title.includes('พุ่งชน'))"),'rune mark ◆n on the wearer, name in its title (set 183)')
         pg.evaluate("P.bench[0]=P.board[0][0];P.board[0][0]=null;render()"); chk(pg.is_visible('#runeWarn'),'wearer on the bench → warning')
         esc(); pg.evaluate("P.rn.bag={T4:1};P.rn.at={};P.bench[0]=null;render()")
         # set 128: T4 free reroll usable with 0 gold · T3 8 shop slots in one row · X3 merge hints at 2 · T8 pick tribe · X9 mini board + locked enemy
@@ -180,8 +180,8 @@ with sync_playwright() as p:
                 chk(fighting() and pg.is_visible('#arena') and len(pg.query_selector_all('#arena .side'))==2 and pg.is_hidden('.prepdock'),'battle on the same field: both teams shown, dock = battle controls')
                 noscroll('battle')
                 chk(pg.is_hidden('#benchbar') and pg.is_hidden('#runeBtn') and pg.is_visible('#battleTitle'),'battle: no bench row, HUD shows match title')
-                rk=pg.evaluate("(()=>{const u=[...view.units.values()].filter(v=>v.cell); const a=u.find(v=>v.side===0), b=u.find(v=>v.side===1); if(!a||!b) return 'none'; const L=[{id:'C3',n:1,s:[a.row,a.lane]},{id:'C7',n:1}], R=[{id:'C4',n:1,s:[b.row,b.lane]}]; placeRunes(L,R); const r=[a.cell.querySelector('.rune-dot')?.textContent||'', b.cell.querySelector('.rune-dot')?.textContent||'', $('rnL').textContent, $('rnR').textContent]; a.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); b.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); placeRunes([],[]); return r;})()")
-                chk(rk=='none' or (rk[0].startswith('◆') and rk[1].startswith('◆') and 'รูนทีม' in rk[2] and rk[3]==''),'set 120: runes shown on the battle field, both sides: '+str(rk))
+                rk=pg.evaluate("(()=>{const u=[...view.units.values()].filter(v=>v.cell); const a=u.find(v=>v.side===0), b=u.find(v=>v.side===1); if(!a||!b) return 'none'; const L=[{id:'C3',n:1,s:[a.row,a.lane]},{id:'C7',n:1}], R=[{id:'C4',n:1,s:[b.row,b.lane]}]; placeRunes(L,R); const r=[a.cell.querySelector('.rune-dot')?.textContent||'', b.cell.querySelector('.rune-dot')?.textContent||'', $('rnL').textContent, $('rnR').textContent, $('rnL').title, (()=>{$('rnL').click(); return $('toast').textContent;})(), getComputedStyle(a.card.querySelector('.uname')).display]; a.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); b.cell.querySelectorAll('.rune-dot').forEach(x=>x.remove()); placeRunes([],[]); return r;})()")
+                chk(rk=='none' or (rk[0]=='◆1' and rk[1]=='◆1' and rk[2]=='◆ รูนทีม 1' and rk[3]=='' and 'รูนทีม:' in rk[4] and 'รูนทีม:' in rk[5] and rk[6]=='none'),'set 120/183: rune marks ◆n on the battle field, short team-rune line, tap = full list toast, names hidden: '+str(rk))
                 cell=pg.query_selector('#arena .side-a .cell .unit')
                 if cell:
                     cell.click(); chk(pg.is_hidden('#dlg') and pg.is_visible('#bPane #bInfo') and pg.is_visible('#btext') and pg.evaluate("cardOver($('bPane'))")<=1,'tap unit in battle shows floating live card (ticker stays)')
