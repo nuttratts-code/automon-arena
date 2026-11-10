@@ -41,7 +41,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 - Docs the user reads stay Thai: combat-rules, tribe-rules, shop-merge-rules, build-plan. Never translate them. Files still in Thai that the user doesn't read: translate to English when opened.
 
 ## Scope
-- MVP1 = single-player/offline; don't propose systems beyond it. If behind build-plan.md → warn + suggest cuts. MVP2 = Ghost battle + online.
+- MVP1 = single-player/offline; don't propose systems beyond it — done = web game v132 (set 193 B1). MVP1.5 = Godot port, same scope, target 31 Dec 2026 (set 193 C1). If behind build-plan.md → warn + suggest cuts. MVP2 = Ghost battle + online.
 - Placeholder art (set 172): game page = free CC0 pixel tiles from Dungeon Crawl Stone Soup (art/placeholder/, credits there); Balance Room / check page = coloured shapes + names. Must not resemble the original game (the user makes real art later).
 
 ## Decisions

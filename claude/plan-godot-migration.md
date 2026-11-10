@@ -1,6 +1,6 @@
 # Godot migration plan (set 189, 10 Nov 2026) — decided: G1a · G2b · G3a · G4a · G5a (user, set 189)
 
-Why: build-plan V1.48 (move to Godot after MVP1 for HD-2D art) + set 189 C1 (web UI frozen; every UI item goes to the Godot list). Audit D7 (set 180): keep the JS core as the reference and port by replaying the same seeds, not by rewriting from the rule docs.
+Why: build-plan V1.48 (move to Godot after MVP1 for HD-2D art) · V1.59 set 193: this plan = MVP1.5, target 31 Dec 2026 = through P4 + itch.io (P5 art not counted) + set 189 C1 (web UI frozen; every UI item goes to the Godot list). Audit D7 (set 180): keep the JS core as the reference and port by replaying the same seeds, not by rewriting from the rule docs.
 Status: **P0 steps 1–2 + P1 steps 3–4 done (sets 190–193).** User answers set 189: G1 = "support PC and mobile in the future" → G1a (GDScript port; G1b is web-only) · G2 = itch.io (G2b) · G3–G5 = all recommended · G6 = not needed (set 181). Next = P2 step 5 (battle.gd vs golden (b)) — first decide how golden floats are compared (risk list: Godot float parse). Tick a step only when done + pushed.
 
 ## 0. What exists now (facts)
