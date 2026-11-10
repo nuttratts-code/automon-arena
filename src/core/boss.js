@@ -72,6 +72,7 @@ function phaseUnitStats(st, m) {
   return o;
 }
 // A spot id → the slots the boss stands on right now ({ cells, move }); a moving boss starts on its first slot.
+// Godot port (set 194): spotCells/phaseIndexAt/ruleMap/fxMap (+ stage.js spotInfo) also live in godot/scripts/rules.gd — change both
 export function spotCells(spot) {
   const si = spotInfo(spot); if (!si) return null;
   const slots = slotsOf(si.bits);
