@@ -200,8 +200,8 @@ export function pickBotTeam(data, round, seed, tier = null) {
 // raises the wanted power (foeWsPct), extra matches use foeBaseExtra · extra matches (after winsToFinish wins) = the same pick + foeExtraPct % hp/atk (flat)
 export const FOE_PICK = { win: 3, near: 4 }; // ค่าเสนอ (internal)
 export const foeWantPct = (extra, stage = RUN_STAGE) => 100 + (extra ? Math.max(0, stage.settings.foeExtraPct | 0) : 0);
-// set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (round 1,
-// empty board) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
+// set 128 (user X9 A, lock for everyone): myUnits may be a number = the power locked at shop start (st.fp) · power 0 (empty
+// board, round > 1; round 1 is a plain random pick since set 185) = the median power of the round's own cell (ค่าเสนอ internal), else the weakest teams would always be picked
 // set 129 → 132 (user 7 Nov): ls = losses in a row (normal + boss, st.ls) · ls ≥ foeFloorLs → foeFloor − foeFloorStep × (ls − foeFloorLs + 1), not below foeFloorMin (or foeFloor if lower)
 export const foeFloorPct = (ls, stage = RUN_STAGE) => {
   const s = stage.settings, fl = s.foeFloor ?? 100, k = (ls | 0) - (s.foeFloorLs ?? 2) + 1;
