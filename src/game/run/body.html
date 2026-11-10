@@ -1,0 +1,183 @@
+
+<div class="app" id="app">
+  <div class="hud">
+    <h1>Automon Arena</h1>
+    <span class="hudtxt"><span id="sRound">รอบ 1</span> · <span id="sWins">ชนะ 0/10</span></span>
+    <span class="bigchip heart" id="sHearts" role="img" aria-label="หัวใจ 5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg><b id="sHeartsN">10</b></span>
+    <span class="bigchip gold" id="sGold" role="img" aria-label="เงิน 10"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="sGoldN">10</b></span>
+    <span class="grow prep-only"></span>
+    <button class="hibar prep-only" id="hiBar" type="button" hidden></button>
+    <span class="htitle" id="battleTitle">แมตช์</span>
+    <button class="hudbtn prep-only" id="tribeBtn" type="button" aria-label="เผ่าในทีม: จำนวนเผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด" title="เผ่าที่ได้โบนัส / เผ่าทั้งหมดบนบอร์ด"><span class="mini" id="tribeMini"></span><span>เผ่า</span><span class="badge" id="tribeCnt">0/0</span></button>
+    <button class="hudbtn prep-only" id="runeBtn" type="button" aria-label="รูนของฉัน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M8 8V6a4 4 0 0 1 8 0v2"/><path d="M4.5 8h15l-1.2 12.2a1 1 0 0 1-1 .8H6.7a1 1 0 0 1-1-.8z"/><path d="M9 13h6"/></svg><span>รูน</span><span id="runeCnt">0</span><span class="badge warn" id="runeWarn" hidden></span></button>
+    <button class="hudbtn prep-only" id="replayBtn" type="button" aria-label="รีเพลย์แมตช์ใน run นี้" hidden>▶ <span class="badge" id="replayCnt">0</span></button>
+    <button class="hudbtn prep-only" id="logBtn" type="button" aria-label="Log การเล่น (เห็นเฉพาะเจ้าของเกม)" hidden><span>Log</span></button>
+    <button class="hudbtn" id="diffInfo" type="button" aria-label="ศัตรูรอบนี้และรางวัล"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" fill="none" stroke="var(--t-fiend)" stroke-width="1.8"/></svg><span id="foeLbl"><span class="wd">ศัตรูแรง </span><span class="nw">ศัตรู </span><b id="foePct">100%</b></span><span class="bosschip" id="bossChip" hidden></span></button>
+    <button class="hudbtn round prep-only" id="legendBtn" type="button" aria-label="อธิบายสัญลักษณ์" title="อธิบายสัญลักษณ์: รูปทรง ขอบ ดาว">?</button>
+    <span class="menuwrap prep-only"><button class="hudbtn round" id="menuBtn" type="button" aria-label="เมนู" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg></button>
+      <span class="menu" id="menu" hidden><button id="newRun" type="button">เริ่ม run ใหม่</button></span></span>
+  </div>
+
+  <div class="main">
+    <div class="field" id="field">
+      <div class="pfield">
+        <div class="cols"><span class="lbl">หลัง</span><span class="lbl">กลาง</span><span class="lbl">หน้า → <span class="wd">(ศัตรูอยู่ทางขวา เห็นตอนเริ่มสู้)</span></span></div>
+        <div class="board" id="board"></div>
+      </div>
+      <div class="bfield">
+        <div class="heads">
+          <div><span class="lbl">ทีมคุณ · หลัง</span><span class="lbl">กลาง</span><span class="lbl">หน้า →</span></div>
+          <div></div>
+          <div><span class="lbl">← หน้า</span><span class="lbl">กลาง</span><span class="lbl">หลัง · <span id="foeHead">คู่แข่ง (บอท)</span></span></div>
+        </div>
+        <div class="rnheads" id="rnHeads"><div id="rnL"></div><div></div><div id="rnR"></div></div>
+        <div class="arena" id="arena"></div>
+      </div>
+      <span class="replaytag" id="replayTag" hidden>กำลังดูรีเพลย์</span>
+    </div>
+  </div>
+
+  <div class="benchbar" id="benchbar">
+    <div class="benchrow"><span class="blbl"><b>ม้านั่ง</b><span id="benchCnt">0/5</span></span><div class="bench" id="bench"></div></div>
+  </div>
+
+  <div class="dock" id="dock">
+    <div class="prepdock">
+      <div class="left">
+        <button id="reroll" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>สุ่มใหม่</span> <span id="rerollCost">· 1</span></button>
+        <button id="shopLv" type="button" aria-label="ระดับร้านและโอกาสเจอ">ร้าน Lv 1</button>
+      </div>
+      <div class="shop" id="shop"></div>
+      <div class="right"><button class="primary" id="fight" type="button"><span class="fbig" id="fightT">เริ่มสู้</span><span class="fsm" id="fightN">ลงสนาม 0/6 ตัว</span></button></div>
+    </div>
+    <div class="bctl">
+      <span class="clock" id="clock">0.0 วิ</span>
+      <div class="speed" role="group" aria-label="ความเร็ว">
+        <button type="button" data-speed="1" aria-pressed="false">1×</button>
+        <button type="button" data-speed="2" aria-pressed="false">2×</button>
+        <button type="button" data-speed="4" aria-pressed="true">4×</button>
+        <button type="button" data-speed="8" aria-pressed="false">8×</button>
+        <button type="button" data-speed="16" aria-pressed="false">16×</button>
+      </div>
+      <div class="btext grow" id="btext"><span id="ticker">แตะตัวไหนก็ได้ในสนามเพื่อดูค่าแบบเรียลไทม์</span><span id="ticker2"></span></div>
+      <button id="stop" type="button" aria-pressed="false">⏸ หยุด</button>
+      <button id="skip" type="button">ข้ามไปผล</button>
+      <label class="chk" title="เปิดไว้ = ทุกแมตช์ข้ามไปดูผลทันที (ดูรีเพลย์ทีหลังได้)"><input type="checkbox" id="autoSkip"> ข้ามทุกครั้ง</label>
+    </div>
+  </div>
+
+  <div class="fcard spane" id="sidePane" role="dialog" aria-label="รายละเอียดตัวละคร" hidden></div>
+  <div class="fcard bpane" id="bPane" role="dialog" aria-label="รายละเอียดตัวละครในแมตช์" hidden></div>
+
+  <div class="result" id="result" hidden><div class="rbox" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <span class="hint" id="resultSub"></span>
+    <strong id="resultTitle"></strong>
+    <div class="rchips" id="rChips">
+      <span class="bigchip heart" id="rHearts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg><b id="rHeartsN"></b></span>
+      <span class="bigchip win" id="rWins"></span>
+      <span class="bigchip gold" id="rGold" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#d6a11a"/><circle cx="12" cy="12" r="5" fill="none" stroke="#9a6b00" stroke-width="2"/></svg><b id="rGoldN"></b></span>
+    </div>
+    <div class="recap" id="recap" hidden></div>
+    <ul class="msgs" id="endMsgs"></ul>
+    <p class="rnext" id="resultNext"></p>
+    <div class="racts">
+      <button id="replayThis" type="button">ดูรีเพลย์</button>
+      <button id="toMx" type="button">รายละเอียดแมตช์</button>
+      <button class="primary" id="next" type="button">ไปรอบถัดไป</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="screen title" id="nameScr" hidden><div class="hero"><div class="tshapes" aria-hidden="true"><i class="shape s-square" style="--tc:var(--t-steel)"></i><i class="shape s-triangle" style="--tc:var(--t-fire)"></i><i class="shape s-diamond" style="--tc:var(--t-bolt)"></i><i class="shape s-circle" style="--tc:var(--t-wind)"></i><i class="shape s-hexagon" style="--tc:var(--t-spirit)"></i><i class="shape s-pentagon" style="--tc:var(--t-fiend)"></i></div>
+  <h1 class="ttl">Automon Arena</h1><p class="tagline">จัดทีม · รวมเผ่า · ปล่อยให้สู้เอง</p></div>
+<section class="tcardbox">
+  <form id="nameForm" class="nform"><label for="nameIn">ชื่อผู้เล่น</label><input id="nameIn" type="text" maxlength="40" autocomplete="nickname" placeholder="ชื่อของคุณ"><button class="primary big" id="nameGo" type="submit">เริ่มเล่น</button></form>
+  <p class="hint" id="nameErr" hidden>พิมพ์ชื่อก่อน (ไม่เกิน 20 ตัวอักษร)</p>
+  <p class="hint">เกมจะบันทึกการเล่นของคุณ (ซื้อ ขาย จัดทีม ผลแมตช์) พร้อมชื่อนี้ ส่งให้คนทำเกมใช้ปรับเกม · เครื่องนี้จะจำชื่อไว้</p>
+</section></div>
+
+<div class="screen title" id="resume" hidden><div class="hero"><div class="tshapes" aria-hidden="true"><i class="shape s-square" style="--tc:var(--t-steel)"></i><i class="shape s-triangle" style="--tc:var(--t-fire)"></i><i class="shape s-diamond" style="--tc:var(--t-bolt)"></i><i class="shape s-circle" style="--tc:var(--t-wind)"></i><i class="shape s-hexagon" style="--tc:var(--t-spirit)"></i><i class="shape s-pentagon" style="--tc:var(--t-fiend)"></i></div>
+  <h1 class="ttl">Automon Arena</h1><p class="tagline">จัดทีม · รวมเผ่า · ปล่อยให้สู้เอง</p></div>
+<section class="tcardbox">
+  <h2>มี run ที่เล่นค้างไว้</h2>
+  <button class="primary big" id="resumeGo" type="button">เล่นต่อ</button>
+  <p class="hint" id="resumeInfo"></p>
+  <p class="hint">เล่นต่อจะกลับไปเริ่มรอบร้านค้าที่ค้างไว้ (ร้านเดิม เงินเดิม)</p>
+  <div class="row"><button id="resumeNew" type="button">เริ่ม run ใหม่</button><button id="resumeCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
+  <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
+</section></div>
+
+<div class="screen" id="runEnd" hidden><section class="panel">
+  <h2 id="endTitle"></h2>
+  <p class="hint" id="endSummary"></p>
+<!-- set 159: actions right under the result (phone: they were below a long scroll) -->
+  <p class="hint" id="endExtraHint" hidden>คำเตือน: แมตช์พิเศษศัตรูจะเก่งขึ้นมาก (ทีมศัตรูแรงขึ้น <span id="endExtraPct">20</span>% · บอสแรงขึ้นด้วย) เล่นต่อด้วยหัวใจที่เหลือถึงรอบ <span id="endExtraLast">20</span> (รอบสุดท้าย = หุ่นเป้า) · หัวใจหมด = จบเกม</p>
+  <div class="row"><button class="primary" id="endExtra" type="button" hidden>เล่นต่อ (แมตช์พิเศษ)</button><button class="primary" id="endNew" type="button">เริ่ม run ใหม่</button></div>
+  <div class="row"><button id="endCode" type="button">คัดลอกโค้ดผลการเล่น</button></div>
+  <p class="hint">กดคัดลอกแล้วส่งโค้ดนี้ให้เจ้าของเกม (เช่นทาง LINE) เพื่อให้ดูเงิน การซื้อ ทีม และผลทุกแมตช์ของ run นี้ได้</p>
+  <h3>ทีมสุดท้าย</h3>
+  <div class="endteam" id="endTeam"></div>
+  <h3>สถิติ run</h3>
+  <ul class="msgs" id="endStats"></ul>
+  <h3>ประวัติ run ในเครื่องนี้</h3>
+  <ol class="msgs" id="endHistory"></ol>
+  <h3>รีเพลย์แมตช์ใน run นี้</h3>
+  <ol class="msgs replays" id="endReplays"></ol>
+  <p class="hint">ผู้เล่น: <b class="pname"></b> <button class="nameEdit" type="button">เปลี่ยนชื่อ</button></p>
+</section></div>
+
+<div class="screen" id="logScr" hidden>
+<section class="panel">
+  <div class="row"><h2 class="grow">Log การเล่น</h2><button id="logClose" type="button">ปิด</button></div>
+  <p class="hint">เห็นเฉพาะเจ้าของเกมและ Editor · รายการอัปเดตเองทุกครั้งที่เกมของคนที่มีสิทธิ์บันทึกเซฟ (เพื่อนที่เปิดจากลิงก์หรือเป็น Commenter บันทึกไม่ได้ ให้เขาส่งโค้ดผลการเล่นมาวางด้านล่าง)</p>
+  <p class="hint" id="logInfo">กำลังโหลด…</p>
+  <div class="tbl"><table><thead><tr><th>ผู้เล่น</th><th>เริ่ม</th><th>เซฟล่าสุด</th><th>รอบ</th><th>ชนะ</th><th>หัวใจ</th><th>เงิน</th><th>สถานะ</th><th></th></tr></thead><tbody id="logList"></tbody></table></div>
+</section>
+<section class="panel">
+  <h3>วางโค้ดผลการเล่นเอง</h3>
+  <textarea id="logCode" spellcheck="false" placeholder="ARUN1 {...}"></textarea>
+  <div class="row"><button class="primary" id="logRead" type="button">อ่าน log</button><button id="logClear" type="button">ล้าง</button></div>
+  <div id="logErr" class="bad" hidden></div>
+</section>
+<div id="logOut"></div>
+</div>
+
+<div id="notice" hidden><span id="noticeText" class="grow"></span><button id="noticeX" type="button" aria-label="ปิด">✕</button></div>
+<div id="toast" hidden></div>
+<div id="rotate"><div><div class="phone"></div><strong>หมุนมือถือเป็นแนวนอน</strong><span class="hint">เกมนี้เล่นแนวนอนเท่านั้น</span></div></div>
+
+<dialog id="dlg" aria-label="รายละเอียด"><div class="pop" id="pop"></div></dialog>
+<dialog id="offerDlg" class="offerdlg" aria-label="เลือกรูนรางวัล"><div class="pop">
+  <h2 id="offerTitle">ชนะ! เลือกรูนฟรี 1 อัน</h2>
+  <div class="rcards" id="offer"></div>
+  <div class="acts"><button id="offerReroll" type="button">สุ่มใหม่</button><button id="offerSkip" type="button">ไม่รับรูน</button></div>
+</div></dialog>
+<dialog id="mxDlg" class="wide" aria-label="รายละเอียดแมตช์"><div class="pop">
+  <div class="phead"><h2 class="grow">รายละเอียดแมตช์</h2><button id="mxClose" type="button">ปิด</button></div>
+  <div id="mxEmpty" hidden></div>
+  <div id="mxBody" hidden style="display:grid;gap:12px">
+    <div class="mx-head" id="mxHead"></div>
+    <p class="status" id="mxStale" hidden></p>
+    <div class="mx-sec">
+      <div class="mx-sechead"><h3>รายตัว</h3><div class="mx-tabs" id="mxTabs" role="tablist" aria-label="เลือกว่าจะดูค่าอะไรของแต่ละตัว"></div></div>
+      <p class="hint">ตัวละ 1 แถว · แท็บข้าง "รายตัว" เปลี่ยนทั้งแผนภูมิและรายละเอียดของทุกตัว: ทำดาเมจ · โดนทำดาเมจ · อื่นๆ (ฟื้น เกราะ ล้างสถานะ ฯลฯ) · สเตตัส (ค่าตอนจบแมตช์) · แตะแถวเพื่อกาง · ปุ่มเวลา = ไปบรรทัดนั้นในบันทึกการต่อสู้</p>
+      <div class="mx-legend" id="mxLegend"></div>
+      <div id="mxUnits" style="display:grid;gap:12px"></div>
+      <div id="mxTableBox" hidden></div>
+    </div>
+    <div class="mx-sec">
+      <details id="mxMatFold"><summary>ใครตีใคร</summary><p class="hint">แถว = ผู้ทำดาเมจ · คอลัมน์ = ผู้โดน · แตะช่องเพื่อดูแยกตามที่มา</p><div class="mx-mat" id="mxMat"></div></details>
+      <details id="mxChartFold"><summary>กราฟตามเวลา</summary><p class="hint">เส้น = HP % ของแต่ละตัว · จุด = ดาเมจครั้งเดียวที่มากกว่า 20% ของ HP สูงสุด · แตะชื่อเพื่อเน้นเส้นตัวนั้น</p><div class="mx-chart" id="mxChart"></div></details>
+    </div>
+  </div>
+  <details class="logbox" id="logBox">
+    <summary>บันทึกการต่อสู้ละเอียด</summary>
+    <div class="row">
+      <label>ดูเฉพาะ <select id="logWho"></select></label>
+      <label><input type="checkbox" id="logProc"> เฉพาะสกิลที่ทำงาน</label>
+      <label><input type="checkbox" id="logNoSet"> ซ่อนบรรทัดโจมตี</label>
+    </div>
+    <ol class="simlog" id="logList"></ol>
+  </details>
+</div></dialog>
+

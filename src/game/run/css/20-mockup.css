@@ -1,0 +1,436 @@
+/* ===== set 116: approved mockup (Design canvas set 113 v8) · HUD chips · bench + tribe cards row · shop cards · battle dock · result card · title screens ===== */
+.app { grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 10px; padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+.app.fighting { grid-template-rows: auto minmax(0, 1fr) auto; }
+.fighting .prep-only, .fighting .benchbar { display: none !important; }
+.nw { display: none; }
+.hud { min-height: 44px; gap: 10px; flex-wrap: nowrap; }
+.hud h1 { font-size: 1.25rem; white-space: nowrap; }
+.hudtxt { font-size: .95rem; color: var(--mute); white-space: nowrap; }
+.hudtxt span { color: var(--ink); font-weight: 600; }
+.bigchip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 20px; font: 500 1.25rem var(--f-display); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bigchip svg { width: 20px; height: 20px; flex: none; }
+.bigchip b { font-weight: 500; }
+.bigchip.heart { background: var(--heart-bg); color: var(--heart-ink); } .bigchip.heart svg { color: var(--heart); }
+.bigchip.gold { background: var(--gold-bg); color: var(--gold-ink); }
+.bigchip.win { background: var(--ok-bg); color: var(--ok); }
+.htitle { display: none; }
+.fighting .htitle { display: block; flex: 1; min-width: 0; text-align: center; font: 500 1.1rem var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hudbtn { height: 40px; padding: 0 14px; border-radius: 20px; font: 400 .88rem var(--f-body); gap: 7px; white-space: nowrap; }
+.hudbtn svg { width: 18px; height: 18px; }
+.hudbtn.round { width: 40px; padding: 0; justify-content: center; }
+.hudbtn.warn { outline: 0; border-color: var(--bad); }
+#runeCnt { font-weight: 600; }
+.badge.warn { font: 600 .72rem var(--f-body); padding: 1px 7px; }
+#diffInfo { padding: 0 14px; } #diffInfo b { font-weight: 700; }
+.menuwrap { position: relative; display: inline-flex; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.2); display: grid; min-width: 180px; }
+.menu button { border: 0; background: transparent; text-align: left; padding: 10px 12px; font-weight: 600; }
+.menu button:hover { background: var(--soft); }
+/* field */
+.field { border-radius: 16px; padding: 10px 12px 12px; grid-template-rows: minmax(0, 1fr); }
+.cols .lbl, .heads .lbl { font-size: .8rem; color: color-mix(in srgb, var(--ink) 70%, var(--arena)); }
+.board .cell { border-radius: 12px; border: 2px dashed var(--arena-line); }
+.board .cell.filled { background: var(--panel); border: 1px solid var(--line); }
+.board .unit { gap: 4px; }
+.board .shape { width: clamp(30px, 12vh, 92px); height: clamp(30px, 12vh, 92px); }
+.board .uname, .arena .uname { font-size: .95rem; }
+.rune-dot { left: auto; right: 8px; top: 8px; bottom: auto; font-size: .74rem; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--panel)); border-radius: 8px; padding: 1px 8px; max-width: 60%; }
+.rune-dot.off { color: var(--mute); background: var(--soft); }
+.perm-dot { right: auto; left: 8px; top: 8px; background: color-mix(in srgb, var(--accent) 13%, var(--panel)); border-radius: 8px; padding: 1px 6px; } /* set 179: was blue text straight on the dark-green tile (unreadable) */
+/* bench + tribe cards */
+.benchbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; height: clamp(56px, 12vh, 92px); min-height: 0; }
+.benchrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; border: 0; padding: 0; min-height: 0; }
+.blbl { display: flex; flex-direction: column; justify-content: center; font-size: .8rem; color: var(--mute); }
+.blbl b { color: var(--ink); font-size: .88rem; }
+.bench { gap: 8px; min-height: 0; }
+.bench .cell { height: auto; min-height: 0; border-radius: 10px; border: 2px dashed var(--arena-line); background: transparent; }
+.bench .cell.filled { background: var(--panel); border: 1px solid var(--line); }
+.bench .shape { width: clamp(18px, 5.7vh, 44px); height: clamp(18px, 5.7vh, 44px); }
+.bench .uname { font-size: .8rem; }
+.bench .mon.has-lv { margin-bottom: 8px; } /* set 159: Lv stars touched the name */
+/* set 121 (user picked design 1): unit details = a floating card beside the tapped unit (prep #sidePane · battle #bPane) · never scrolls · tap elsewhere closes */
+.fcard { position: fixed; z-index: 30; left: 0; top: 0; width: clamp(300px, 40vw, 420px); max-height: calc(100dvh - 16px); overflow: visible; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: .8rem;
+  box-shadow: 0 10px 28px rgba(40,30,10,.28), 0 2px 6px rgba(40,30,10,.18); }
+.fcard[hidden], .fighting #sidePane, .app:not(.fighting) #bPane { display: none !important; }
+.fcard::before { content: ""; position: absolute; width: 14px; height: 14px; background: var(--panel); border: 1px solid var(--line); transform: rotate(45deg); top: var(--ay, 24px); }
+.fcard.toR::before { left: -8px; border-top: 0; border-right: 0; }
+.fcard.toL::before { right: -8px; border-bottom: 0; border-left: 0; }
+.fcard.toU::before { top: auto; bottom: -8px; left: var(--ax, 50%); border-top: 0; border-left: 0; }
+.fcard.noarrow::before { display: none; }
+.fcard.wide { width: min(620px, calc(100vw - 16px)); }
+.spane { display: grid; align-content: start; gap: 4px; }
+.spane .info { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+.spane .info > .mon { grid-row: 1; grid-column: 1; align-self: center; } .spane .info > .mon .shape { width: 48px; height: 48px; }
+.spane .info > div:not(.mon) { display: contents !important; }
+.spane .info > div:not(.mon) > * { grid-column: 1 / -1; min-width: 0; }
+.spane .info > div:not(.mon) > .ihead { grid-column: 2; grid-row: 1; }
+.spane .ihead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; min-height: 48px; }
+.spane .ihead > h2 { grid-column: 1; font: 600 .88rem var(--f-body); margin: 0; }
+.ihead h2 .rar { font-size: .82em; font-weight: 600; vertical-align: 1px; } /* set 159 */
+.spane .ihead > .hint { grid-column: 1; font-size: .68rem; }
+.spane .ihead > .acts { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.spane .acts button { height: 28px; padding: 0 10px; font-size: .74rem; border-radius: 8px; }
+.spane .acts .hint { font-size: .64rem; max-width: 10em; line-height: 1.2; }
+.spane .info .skill { display: block; background: transparent; border: 0; border-left: 3px solid var(--line); border-radius: 0; padding: 1px 0 1px 6px; font-size: .76rem; line-height: 1.32; }
+.spane .info .skill .tags { display: inline-flex; margin: 0 4px 0 0; vertical-align: baseline; }
+.spane .info .skill .tags .tag { font-size: .64rem; padding: 0 4px; }
+.spane .lvtabs { gap: 3px; } .spane .lvtabs button { height: 24px; padding: 0 8px; border-radius: 6px; font-size: .7rem; }
+.spane .info .stats2 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; font-size: .7rem; }
+.spane .info .stats2 .term { padding: 1px 0; border-bottom: 1px dotted var(--line); }
+.spane .info .stats2 b { font: 600 .74rem var(--f-mono); }
+.spane .cfoot { display: flex; align-items: center; gap: 8px; font-size: .66rem; }
+.spane .cfoot .termhelp { flex: 1; min-width: 0; }
+.spane .cfoot button { height: 26px; padding: 0 8px; font-size: .66rem; border-radius: 6px; flex: none; }
+.fighting .dock { height: clamp(70px, 16vh, 128px); grid-template-rows: minmax(0, 1fr); }
+.fighting .bctl { min-height: 0; }
+.bpane { display: grid; align-content: start; gap: 4px; }
+.bpane .uinfo { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 3px 10px; align-items: start; }
+.bpane .uinfo > .mon { grid-row: 1; grid-column: 1; align-self: center; } .bpane .uinfo > .mon .shape { width: 40px; height: 40px; }
+.bpane .uinfo > div:not(.mon) { display: contents !important; }
+.bpane .uinfo > div:not(.mon) > * { grid-column: 1 / -1; min-width: 0; }
+.bpane .uinfo > div:not(.mon) > .bhead { grid-column: 2; grid-row: 1; }
+.bpane .bhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; min-height: 40px; }
+.bpane .uinfo h2 { font: 600 .84rem var(--f-body); margin: 0; flex: 1; min-width: 0; }
+.bpane .uinfo .live, .bpane .uinfo .live b { font-size: .76rem; }
+.bpane .lstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+.bpane .lstat { padding: 0 6px; font-size: .7rem; gap: 0 4px; }
+.bpane .uinfo .skill { font-size: .74rem; }
+.bpane .bx { height: 26px; width: 26px; padding: 0; border-radius: 6px; font-size: .8rem; flex: none; order: 1; }
+.bpane .bhead > .hint { order: 2; flex-basis: 100%; font-size: .68rem; }
+.bpane > p.hint { font-size: .64rem; margin: 0; }
+#stop { height: 48px; padding: 0 16px; border-radius: 10px; flex: none; font: 600 .95rem var(--f-body); }
+#stop[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+/* set 120 (user): runes on the battle field · worn (one unit) = tag on its cell · team/row/tribe runes = strip above each side */
+.rnheads { display: grid; grid-template-columns: 1fr 12px 1fr; gap: 6px; font-size: .72rem; color: var(--accent); }
+.rnheads > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rnheads > div:last-child { text-align: right; }
+.arena .rune-dot { top: 4px; right: 4px; bottom: auto; left: auto; z-index: 2; pointer-events: none; }
+/* dock (shop) */
+.dock { border-radius: 16px; padding: 10px; min-height: clamp(70px, 16vh, 128px); }
+.prepdock { grid-template-columns: 150px minmax(0, 1fr) 190px; gap: 10px; }
+.dock .left { gap: 6px; }
+#reroll { flex: 1; max-height: none; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--card); color: var(--accent); border-color: var(--accent); border-radius: 10px; font: 500 1.05rem var(--f-display); }
+#reroll svg { width: 18px; height: 18px; flex: none; }
+#shopLv { border: 0; background: transparent; display: block; text-align: center; white-space: normal; line-height: 1.3; font: 400 .76rem var(--f-body); color: var(--mute); padding: 2px; }
+#shopLv b { font-weight: 400; color: var(--mute); }
+.dock .right { justify-content: stretch; }
+#fight { flex: 1; max-height: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: var(--f-display); padding: 6px; }
+#fight .fbig { font-size: 1.5rem; font-weight: 500; line-height: 1.2; } #fight .fsm { font-size: .8rem; opacity: .9; font-weight: 400; }
+.shop { gap: 10px; }
+.slot { grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; background: var(--card); border-radius: 12px; padding: 8px 10px; }
+.slot > .mon { grid-row: auto; }
+.slot .shape { width: clamp(30px, 7.3vh, 56px); height: clamp(30px, 7.3vh, 56px); }
+.stxt { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 14px; }
+.slot .uname { font-size: 1rem; text-align: left; white-space: normal; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* set 159: wrap, no … */
+.slot .sub.tr { font: 400 .8rem var(--f-body); color: var(--ink); opacity: .8; }
+.slot .stxt .rar { font-size: .76rem; align-self: flex-start; }
+.slot .price { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; background: var(--gold-bg); color: var(--gold-ink); border-radius: 10px; padding: 0 8px; font: 500 .95rem var(--f-display); }
+.slot .price::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #d6a11a; }
+.slot.cant .price { color: var(--bad); }
+.slot.empty { opacity: 1; background: transparent; border: 1px dashed var(--line); box-shadow: none; }
+.slot .own { top: -10px; left: 10px; font: 400 .74rem var(--f-body); padding: 1px 8px; border-radius: 8px; background: var(--accent); color: var(--on-accent); }
+.slot.owned { border: 1px solid var(--accent); }
+.slot.owned.ready { border: 2px solid var(--tg-shop); box-shadow: none; }
+.slot.ready .own { background: var(--tg-shop); color: var(--on-accent); }
+/* battle (same cells · HP bar · floating numbers · skill tag) + compact dock */
+.arena .cell { border-radius: 12px; border: 2px dashed var(--arena-line); opacity: 1; }
+.arena .cell:has(.unit) { background: var(--panel); border: 1px solid var(--line); }
+.arena .cell.skilling { background: color-mix(in srgb, var(--n-skill) 10%, var(--panel)); border: 2px solid var(--n-skill); }
+.sktag { position: absolute; top: 8px; left: 8px; z-index: 2; font: 600 .8rem var(--f-body); color: #fff; background: var(--n-skill); border-radius: 8px; padding: 2px 10px; white-space: nowrap; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.arena .shape { width: clamp(26px, 13.5vh, 104px); height: clamp(26px, 13.5vh, 104px); }
+.arena .unit { gap: 3px; }
+.hp { width: 78%; height: 10px; border-radius: 5px; }
+.nums { font: 400 .76rem var(--f-body); color: var(--ink); opacity: .8; }
+.float { top: 40px; font: 500 clamp(1rem, 3.1vh, 1.5rem) var(--f-display); background: color-mix(in srgb, var(--panel) 92%, transparent); border-radius: 8px; padding: 0 8px; text-shadow: none; z-index: 3; }
+.bctl { gap: 14px; }
+.clock { font: 500 1.6rem var(--f-display); min-width: 92px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.speed { gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex: none; }
+.speed button { width: 52px; height: 44px; border: 0; border-left: 1px solid var(--line); border-radius: 0; background: var(--card); font: 400 .95rem var(--f-body); padding: 0; }
+.speed button:first-child { border-left: 0; }
+.speed button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btext { gap: 4px; }
+#ticker { font-size: .88rem; color: var(--ink); font-weight: 600; } #ticker2 { font-size: .8rem; color: var(--mute); }
+#skip { height: 48px; padding: 0 18px; border-radius: 10px; border-color: var(--arena-line); background: var(--card); font: 400 .95rem var(--f-body); flex: none; }
+.chk { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; white-space: nowrap; cursor: pointer; }
+.chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+.replaytag { top: 8px; }
+/* result card (centered over a dimmed screen) */
+.result { position: fixed; inset: 0; z-index: 30; background: rgba(20,16,12,.55); border-radius: 0; display: grid; place-items: center; padding: 16px; }
+.result > .rbox { width: min(560px, 100%); max-height: 100%; overflow: auto; background: var(--panel); border: 0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; box-shadow: 0 16px 50px rgba(0,0,0,.35); }
+#resultTitle { font: 600 3.5rem/1 var(--f-display); }
+#resultTitle.win { color: var(--ok); } #resultTitle.lose { color: var(--bad); }
+#resultTitle.small { font-size: 1.8rem; }
+#resultSub { font-size: .95rem; }
+.rchips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.rchips .bigchip { font-size: 1.1rem; height: 38px; }
+#endMsgs { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; text-align: left; font-size: .92rem; color: var(--ink); gap: 4px; }
+#endMsgs:empty { display: none; }
+.rnext { margin: 0; font-size: .9rem; color: var(--mute); } .rnext:empty { display: none; }
+/* set 171: post-battle recap = facts only (top 3 damage dealers of your team + the one who took the most) */
+.recap { width: 100%; display: grid; gap: 6px; text-align: left; } .recap[hidden] { display: none; }
+.recap h3 { margin: 0; font: 600 .9rem var(--f-body); color: var(--mute); }
+.recap .rrow { display: grid; grid-template-columns: minmax(0, 7.5em) 1fr auto; align-items: center; gap: 10px; font-size: .92rem; }
+.recap .rname { display: flex; align-items: center; gap: 6px; min-width: 0; } .recap .rname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.6; }
+.recap .rbar { height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--line) 60%, transparent); overflow: hidden; }
+.recap .rbar i { display: block; height: 100%; border-radius: inherit; background: var(--tc, var(--accent)); }
+.recap .rnum { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3.5em; text-align: right; }
+.recap .rtank { margin: 2px 0 0; font-size: .88rem; color: var(--mute); } .recap .rtank b { color: var(--ink); font-variant-numeric: tabular-nums; }
+/* set 171: tribe highlight on the prep board (from the tribe popup) */
+.board .cell.thi, .bench .cell.thi { outline: 3px solid var(--accent); outline-offset: 1px; }
+.board .cell.tdim, .bench .cell.tdim { opacity: .35; }
+.hud .hudbtn { flex-shrink: 0; }
+.hibar { flex: none; min-height: 40px; padding: 0 12px; border-radius: 99px; border: 2px solid var(--tc); background: var(--panel); color: var(--ink); font: 500 .9rem var(--f-body); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+.hibar[hidden] { display: none; } .hibar .hit { overflow: hidden; text-overflow: ellipsis; max-width: 8em; }
+@media (min-width: 481px) and (max-width: 1279px) { .hibar .hit { display: none; } .hibar { padding: 0 8px; gap: 6px; } } /* set 171: HUD row is full there → tribe shape + ✕ only (name in the title + aria-label) */
+.app.fighting .hibar { display: none; }
+.racts { width: 100%; display: flex; gap: 10px; }
+.racts button { flex: 1; height: 48px; border-radius: 10px; font: 400 .95rem var(--f-body); background: var(--card); border-color: var(--arena-line); }
+.racts button.primary { flex: 1.4; font: 500 1.1rem var(--f-display); background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+@media (max-width: 480px) { .racts { flex-wrap: wrap; } .racts button { height: auto; min-height: 44px; padding: 6px 8px; line-height: 1.2; } .racts button.primary { flex-basis: 100%; order: -1; } } /* set 171: phone = main button on its own row (text was cut at 390 px) */
+/* unit popup: aligned 2-column stats + skill card */
+dialog { width: min(640px, calc(100vw - 24px)); border-radius: 18px; }
+.pop { padding: 20px; gap: 14px; }
+.info { gap: 10px 16px; }
+.info > .mon .shape { width: 76px; height: 76px; }
+.info h2 { font-size: 1.4rem; font-weight: 500; }
+.info .stats2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; font-size: .95rem; }
+.info .stats2 .term { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line); color: var(--mute); }
+.info .stats2 b { font: 500 1.05rem var(--f-display); color: var(--ink); }
+.info .stats2.now .term { color: inherit; }
+.lvtabs { gap: 6px; } .lvtabs button { height: 38px; padding: 0 18px; border-radius: 10px; font: 400 .9rem var(--f-body); }
+.info .skill { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: .95rem; line-height: 1.5; }
+.info .skill .tags { display: flex; margin: 0 0 4px; }
+.acts button { min-height: 44px; border-radius: 10px; padding: 0 18px; }
+.acts button.primary { font: 500 1rem var(--f-display); }
+/* title / name + resume screens */
+.screen.title { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding-top: max(16px, env(safe-area-inset-top, 0px)); }
+.screen.title > section { margin: 0; }
+.hero { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.tshapes { display: flex; gap: 14px; margin-bottom: 14px; } .tshapes .shape { width: 40px; height: 40px; }
+.ttl { margin: 0; font: 600 clamp(2.2rem, 9vh, 4.5rem)/1.1 var(--f-display); letter-spacing: .5px; }
+.tagline { margin: 0; font-size: 1.25rem; color: var(--mute); }
+.tcardbox { width: min(460px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: grid; gap: 12px; }
+.tcardbox h2 { font-size: 1.1rem; }
+.nform { display: grid; gap: 12px; }
+.nform label { font-weight: 600; font-size: 1rem; }
+#nameIn { height: 48px; border: 2px solid var(--ink); border-radius: 10px; padding: 0 14px; font-size: 1.05rem; background: var(--card); flex: none; }
+button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-display); }
+
+/* short landscape screens (phone held sideways · mockup 844×390) */
+@media (max-height: 520px) {
+  .app { gap: 6px; padding-block: max(6px, env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-bottom, 0px)); padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .hud h1, .wd { display: none; } .nw { display: inline; }
+  .hud { gap: 6px; min-height: 32px; }
+  .hudtxt { font-size: .8rem; }
+  .bigchip { height: 30px; padding: 0 10px; font-size: 1rem; gap: 4px; } .bigchip svg { width: 15px; height: 15px; }
+  .hudbtn { height: 32px; padding: 0 10px; font-size: .8rem; gap: 4px; } .hudbtn svg { width: 15px; height: 15px; } .hudbtn.round { width: 32px; }
+  #runeBtn > span:not([id]) { display: none; }
+  .fighting .htitle { font-size: .9rem; }
+  .field { padding: 6px; border-radius: 12px; }
+  .pfield .cols, .bfield .heads { display: none; }
+  .pfield, .bfield { grid-template-rows: minmax(0, 1fr); }
+  .board, .side { gap: 5px; }
+  .board .cell, .arena .cell { border-radius: 8px; }
+  .board .unit { gap: 1px; }
+  .board .shape { width: clamp(24px, 11vh, 42px); height: clamp(24px, 11vh, 42px); }
+  .board .uname, .arena .uname { font-size: .74rem; }
+  .rune-dot { top: 3px; right: 3px; font-size: .6rem; padding: 0 4px; }
+  .perm-dot { top: 3px; left: 4px; padding: 0 4px; }
+  .benchbar { height: 62px; }
+  .fcard { padding: 8px 10px; width: clamp(320px, 48vw, 400px); } /* set 159: 290 px squeezed the title into 3 lines */
+  .spane .acts button { white-space: nowrap; }
+  .spane .info { grid-template-columns: 36px minmax(0, 1fr); } .spane .info > .mon .shape { width: 36px; height: 36px; } .spane .ihead { min-height: 36px; }
+  .spane .ihead > h2 { font-size: .8rem; } .spane .ihead > .hint { font-size: .66rem; }
+  .spane .info .skill { font-size: .7rem; line-height: 1.28; }
+  .spane .info .stats2 { font-size: .64rem; } .spane .info .stats2 b { font-size: .68rem; }
+  .spane .lvtabs button { height: 26px; min-width: 40px; font-size: .66rem; } /* set 159: tap targets ≥ 24 px (WCAG 2.5.8) */
+  .bpane .uinfo { grid-template-columns: 32px minmax(0, 1fr); } .bpane .uinfo > .mon .shape { width: 32px; height: 32px; } .bpane .bhead { min-height: 32px; }
+  .bpane .uinfo h2 { font-size: .76rem; } .bpane .uinfo .skill, .bpane .uinfo .live, .bpane .uinfo .live b, .bpane .lstat { font-size: .64rem; }
+  #stop { height: 34px; padding: 0 10px; font-size: .8rem; }
+  .rnheads { font-size: .6rem; }
+  .bfield { grid-template-rows: auto minmax(0, 1fr); }
+  .benchrow { grid-template-columns: 42px minmax(0, 1fr); gap: 5px; }
+  .blbl { font-size: .68rem; } .blbl b { font-size: .74rem; }
+  .bench { gap: 5px; }
+  .bench .cell { border-radius: 8px; padding: 2px 4px; }
+  .bench .unit { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 4px; }
+  .bench .shape { width: 26px; height: 26px; } .bench .mon.has-lv { margin-bottom: 0; } .bench .mon > .lv { bottom: -4px; }
+  .bench .uname { font-size: .72rem; }
+  .dock, .fighting .dock { padding: 5px; min-height: 0; border-radius: 12px; height: 76px; }
+  .prepdock { grid-template-columns: 76px minmax(0, 1fr) 104px; gap: 5px; }
+  .dock .left { gap: 1px; }
+  #reroll { flex-direction: column; gap: 0; font-size: .85rem; border-radius: 8px; padding: 2px; line-height: 1.15; } #reroll svg { display: none; } #rerollCost { font-size: .72rem; }
+  #shopLv { font-size: .66rem; padding: 2px 0; min-height: 22px; line-height: 1.15; } /* set 159: was 11 px tall, 9.6 px text */
+  #fight { border-radius: 8px; padding: 2px; } #fight .fbig { font-size: 1.1rem; } #fight .fsm { font-size: .7rem; }
+  .shop { gap: 5px; }
+  .slot { padding: 4px 6px; column-gap: 6px; border-radius: 8px; align-content: center; }
+  .slot .shape { width: 32px; height: 32px; }
+  .stxt { padding-bottom: 0; gap: 0; }
+  .slot .uname { font-size: .74rem; white-space: normal; line-height: 1.3; padding-block: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .slot .sub.tr, .slot .stxt .rar { display: none; }
+  .slot .price { position: static; background: transparent; padding: 0; font-size: .74rem; justify-self: start; grid-column: 2; }
+  .slot .price::before { width: 8px; height: 8px; }
+  .slot .own { top: -7px; left: auto; right: 4px; font-size: .6rem; padding: 0 5px; border-radius: 6px; max-width: 92%; }
+  .bctl { gap: 8px; }
+  .clock { font-size: 1.05rem; min-width: 0; }
+  .speed button { width: 34px; height: 32px; font-size: .78rem; }
+  #ticker { font-size: .74rem; } #ticker2 { display: none; }
+  #skip { height: 34px; padding: 0 10px; font-size: .8rem; }
+  .chk { font-size: .74rem; gap: 4px; } .chk input { width: 16px; height: 16px; }
+  .arena .shape { width: clamp(22px, 9.5vh, 46px); height: clamp(22px, 9.5vh, 46px); }
+  .arena .chips { display: none; }
+  .hp { height: 7px; }
+  .nums { font-size: .64rem; gap: 0 4px; } .armor-text::before { content: "+"; } /* set 159: "เกราะ" hidden (.wd) */
+  .float { top: 4px; font-size: .95rem; padding: 0 5px; }
+  .sktag { top: 3px; left: 3px; font-size: .6rem; padding: 0 5px; }
+  .float { top: 30%; } /* set 159: was top 4px = on top of the skill tag */
+  .result > .rbox { padding: 14px 18px; gap: 8px; border-radius: 14px; }
+  #resultTitle { font-size: 2.1rem; } #resultTitle.small { font-size: 1.3rem; }
+  .recap { gap: 4px; } .recap .rrow, .recap .rtank { font-size: .8rem; } .recap h3 { font-size: .8rem; } .recap .rbar { height: 8px; }
+  .rchips .bigchip { height: 28px; font-size: .9rem; }
+  #endMsgs { padding: 6px 12px; font-size: .78rem; max-height: 76px; overflow: auto; }
+  .racts button { height: 38px; font-size: .82rem; } .racts button.primary { font-size: .95rem; }
+  .pop { padding: 12px; gap: 8px; }
+  .info > .mon .shape { width: 48px; height: 48px; } .info h2 { font-size: 1.1rem; } .info .stats2 .term { padding: 3px 0; } .lvtabs button { height: 32px; }
+  .screen.title { gap: 10px; justify-content: flex-start; padding-top: 10px; }
+  .tshapes { margin-bottom: 2px; gap: 8px; } .tshapes .shape { width: 20px; height: 20px; }
+  .ttl { font-size: 1.9rem; } .tagline { font-size: .9rem; }
+  .tcardbox { padding: 12px 16px; gap: 8px; }
+  .nform { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } .nform label { grid-column: 1 / -1; font-size: .85rem; }
+  #nameIn { height: 42px; } button.big { height: 42px; font-size: 1.05rem; padding: 0 18px; }
+}
+/* set 159: very short screens (phone sideways with browser bars, ≤ 360 px tall): units side by side (shape left, text right) — stacked, the name/HP were cut */
+@media (max-height: 360px) {
+  .board .unit { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; }
+  .board .shape { width: 30px; height: 30px; } .board .mon.has-lv { margin-bottom: 0; }
+  .arena .unit { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 5px; row-gap: 1px; align-content: center; justify-items: stretch; padding: 0 4px; }
+  .arena .unit > .mon { grid-row: 1 / span 3; grid-column: 1; align-self: center; } .arena .unit > :not(.mon) { grid-column: 2; }
+  .arena .shape { width: 26px; height: 26px; } .arena .mon.has-lv { margin-bottom: 0; }
+  .arena .uname { text-align: left; } .arena .hp { width: 100%; } .arena .nums { justify-content: flex-start; }
+  .arena .nums { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
+  .spane .lvtabs button { height: 24px; }
+  .float { top: 1px; font-size: .85rem; } .sktag { top: auto; bottom: 2px; } /* free strips above/below the centred text */
+}
+/* small phones sideways: shape + price on one row, name (2 lines) below · set 159: the old 1-column card was ~100 px tall in a 66 px dock → page scrolled, bottom cut */
+@media (max-width: 760px) and (orientation: landscape) {
+  .slot { grid-template-columns: auto auto; justify-content: center; align-content: center; column-gap: 6px; row-gap: 0; text-align: center; padding: 3px 4px; }
+  .slot > .mon { grid-row: 1; grid-column: 1; } .slot .shape { width: 26px; height: 26px; }
+  .slot .price { grid-row: 1; grid-column: 2; justify-self: start; }
+  .slot .stxt { grid-row: 2; grid-column: 1 / -1; align-items: center; }
+  .slot .uname { text-align: center; font-size: .68rem; } .slot .sub.tr { display: none; }
+}
+/* portrait phone: rotate screen, cannot be dismissed (set 176 K1: landscape only; portrait layout below parked) */
+@media (orientation: portrait) and (max-width: 700px) {
+  #rotate { display: grid; position: fixed; inset: 0; z-index: 80; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
+  #rotate > div { display: grid; gap: 12px; justify-items: center; max-width: 280px; }
+  #rotate .phone { width: 46px; height: 80px; border: 3px solid var(--ink); border-radius: 10px; animation: turn 2s ease-in-out infinite; }
+  @keyframes turn { 40%, 100% { transform: rotate(-90deg); } }
+  .prepdock { grid-template-columns: 1fr 1fr; grid-template-areas: "shop shop" "left right"; }
+  .prepdock .left { grid-area: left; } .prepdock .right { grid-area: right; } .shop { grid-area: shop; }
+  .slot { grid-template-columns: 1fr; justify-items: center; padding: 4px; } .slot > .mon { grid-row: auto; } .slot .sub { display: none; }
+  .bctl { flex-wrap: wrap; }
+  /* set 159: portrait kept running off-screen (page 886 px wide on a 390 px phone) */
+  .hud { flex-wrap: wrap; row-gap: 6px; } .hud h1, .wd { display: none; } .nw { display: inline; }
+  .hudbtn { height: 36px; padding: 0 10px; } #runeBtn > span:not([id]) { display: none; }
+  .slot .uname { font-size: .74rem; white-space: normal; text-align: center; line-height: 1.3; padding-block: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .slot .stxt { padding-bottom: 0; align-items: center; } .slot .price { position: static; justify-self: center; font-size: .8rem; padding: 0 6px; }
+  .slot .shape { width: 40px; height: 40px; }
+  .spane .ihead { grid-template-columns: minmax(0, 1fr); } .spane .ihead > .acts { grid-column: 1; grid-row: auto; flex-direction: row; flex-wrap: wrap; } .spane .acts button { flex: 1 1 auto; white-space: nowrap; }
+  .arena .cell { overflow: hidden; padding: 2px; } .arena .shape { width: 30px; height: 30px; } .arena .mon.has-lv { margin-bottom: 4px; }
+  .arena .uname { font-size: .62rem; } .arena .nums { font-size: .58rem; } .arena .chips { display: none; } .arena .hp { width: 94%; height: 6px; }
+  .sktag { top: 2px; left: 2px; right: 2px; max-width: none; font-size: .56rem; padding: 0 4px; } .float { top: 30%; font-size: .9rem; padding: 0 4px; }
+  .fighting .dock { height: auto; } .bctl { row-gap: 6px; } #btext { flex-basis: 100%; order: 9; } #ticker2 { display: none; }
+}
+/* set 128 (T3 A): 6–8 shop slots (rune แผงใหญ่) shrink to stacked cards so one row still fits — desktop + phone */
+.shop.many { gap: 6px; }
+.shop.many .slot { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 6px 4px 4px; column-gap: 0; }
+.shop.many .slot > .mon { grid-row: auto; }
+.shop.many .slot .shape { width: clamp(26px, 6vh, 46px); height: clamp(26px, 6vh, 46px); }
+.shop.many .stxt { align-items: center; }
+.shop.many .slot .uname { text-align: center; font-size: .82rem; line-height: 1.15; white-space: normal; overflow-wrap: anywhere; }
+.shop.many .slot .sub.tr, .shop.many .slot .stxt .rar { display: none; }
+.shop.many .slot .price { position: static; grid-column: auto; justify-self: center; padding: 0 6px; font-size: .8rem; }
+.shop.many .slot .own { left: 50%; right: auto; transform: translateX(-50%); max-width: 96%; font-size: .62rem; padding: 0 5px; }
+@media (max-height: 520px) {
+  .shop.many { gap: 3px; }
+  .shop.many .slot { padding: 3px 2px 2px; border-radius: 7px; }
+  .shop.many .slot .shape { width: 24px; height: 24px; }
+  .shop.many .slot .uname { font-size: .64rem; -webkit-line-clamp: 2; }
+  .shop.many .slot .price { font-size: .66rem; padding: 0; background: transparent; }
+  .shop.many .slot .price::before { width: 7px; height: 7px; }
+  .shop.many .slot .own { font-size: .54rem; top: -7px; }
+}
+.flagpick { display: grid; gap: 8px; }
+.flaggrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.flaggrid .pitem { border-left: 4px solid var(--tc); }
+.foemini { display: grid; gap: 4px; }
+.fmhead, .fmgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.fmhead span { text-align: center; font-size: .7rem; color: var(--mute); }
+.fmcell { position: relative; display: grid; justify-items: center; align-content: start; gap: 1px; padding: 4px 3px; min-height: 64px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); text-align: center; min-width: 0; }
+.fmcell.empty { background: transparent; border-style: dashed; }
+.fmcell .shape { width: 30px; height: 30px; }
+.fmcell .uname { font-size: .72rem; line-height: 1.15; overflow-wrap: anywhere; }
+.fmcell .fmlv { font-size: .64rem; color: var(--mute); }
+.fmcell .rune-dot { position: static; font-size: .6rem; max-width: 100%; white-space: normal; }
+.fmrunes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
+.fmrune { font-size: .72rem; padding: 1px 7px; border-radius: 8px; background: var(--soft); border: 1px solid var(--line); }
+@media (max-height: 520px) {
+  .fmcell { min-height: 0; padding: 2px 3px; grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; column-gap: 4px; row-gap: 0; }
+  .fmcell > .mon { grid-row: 1 / 4; } .fmcell .shape { width: 22px; height: 22px; }
+  .fmcell .uname { font-size: .66rem; } .fmcell .fmlv { font-size: .58rem; }
+  .fmhead span { font-size: .62rem; }
+  .foemini + .rcard .rtext { display: none; }
+}
+/* set 169: UI ease set 1 */
+#legendBtn { font: 600 1rem var(--f-display); color: var(--accent); border-color: var(--accent); }
+#fight.wait { background: var(--panel); color: var(--ink); border-color: var(--line); }
+#fight.ready { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.info .stats2 .term.zero { color: var(--mute); } .info .stats2 .term.zero b { color: var(--mute); font-weight: 400; opacity: .8; }
+.lgh { margin: 6px 0 3px; }
+@media (max-height: 460px) { #pop .lgi { min-height: 44px; } #pop .lgpic { min-height: 34px; } } .lgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lgi { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 4px 2px; border-radius: 8px; background: var(--soft); font-size: .74rem; text-align: center; min-height: 52px; }
+@media (min-width: 520px) { .lgrid.t { grid-template-columns: repeat(6, minmax(0, 1fr)); } .lgrid.r { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.lgi i.tico { display: inline-block; width: 24px; height: 24px; background: var(--tc); } .lgpic { display: grid; place-items: center; min-height: 40px; }
+#reroll.free { background: var(--tg-shop); color: var(--on-accent); border-color: var(--tg-shop); }
+@media (prefers-reduced-motion: reduce) { #rotate .phone { animation: none; } }
+/* set 172: placeholder pixel art (CC0 Dungeon Crawl Stone Soup tiles · game/art.js) — sprite + tribe badge, tiled floors */
+.mon.art > div { overflow: visible; }
+.has-art { background: none !important; position: relative; }
+.has-art .spr { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
+.has-art .tbadge { position: absolute; left: -3px; top: -3px; width: 30%; height: 30%; min-width: 9px; min-height: 9px; max-width: 16px; max-height: 16px; background: var(--tc); pointer-events: none; }
+.has-art .tbadge.s-square { border-radius: 2px; } .has-art .tbadge.s-circle { border-radius: 50%; }
+.arena .unit.is-boss .has-art .spr { transform: scale(1.25); transform-origin: 50% 85%; }
+.field.art-bg { background-color: #2a2418; border-color: #1b160f;
+  background-image: linear-gradient(rgba(10,8,5,.28), rgba(10,8,5,.28)), var(--art-shop-wall), var(--art-shop-floor);
+  background-repeat: no-repeat, repeat-x, repeat; background-size: auto, 48px 48px, 48px 48px; background-position: 0 0, 0 0, 0 0; image-rendering: pixelated; }
+.app.fighting .field.art-bg { background-image: linear-gradient(rgba(10,8,5,.3), rgba(10,8,5,.3)), var(--art-arena-wall), var(--art-arena-floor); }
+.field.art-bg .lbl, .field.art-bg .cols .lbl, .field.art-bg .heads .lbl { color: #f3ead8; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+.field.art-bg .cell { border-color: rgba(255,255,255,.35); }
+.field.art-bg .cell.filled { background: rgba(20,16,12,.45); }
+.app:not(.fighting) .field.art-bg .uname, .app:not(.fighting) .field.art-bg .nums { color: #f3ead8; text-shadow: 0 1px 2px #000; }
+.field.art-bg .rnheads, .field.art-bg .rnheads * { color: #f3ead8; text-shadow: 0 1px 2px #000; }
+#runEnd.art-bg { background-color: #1d1a26; background-image: linear-gradient(rgba(10,8,5,.35), rgba(10,8,5,.35)), var(--art-result-wall), var(--art-result-floor);
+  background-repeat: no-repeat, repeat-x, repeat; background-size: auto, 48px 48px, 48px 48px; image-rendering: pixelated; }
+.rico { width: 32px; height: 32px; flex: none; image-rendering: pixelated; border-radius: 6px; background: rgba(20,16,12,.55); border: 2px solid var(--tc, transparent); padding: 1px; box-sizing: content-box; }
+.artcredit { font-size: .75rem; }
+/* set 176 (landscape fixes from set 175 phone audit): tap targets >= 24 px · text >= 10 px · Thai tone marks not clipped · popup close row always on screen */
+.chk { min-height: 28px; } .chk input, .logbox .row input[type=checkbox] { width: 20px; height: 20px; margin: 0; }
+.logbox .row label { min-height: 28px; }
+#mxDlg .mx-sec > details > summary, .logbox > summary { min-height: 28px; display: flex; align-items: center; }
+.info .stats2 .term, .spane .info .stats2 .term { min-height: 24px; align-items: center; }
+#shopLv { min-height: 28px; }
+.chip, .rnheads, .sktag, .rune-dot, .perm-dot { font-size: max(10px, .64rem); }
+.uname, .slot .uname, .bench .uname, .fmcell .uname { line-height: 1.5; }
+.shop.many .slot .uname { line-height: 1.2; padding-top: 1px; }
+#ticker, #ticker2 { line-height: 1.5; }
+@media (max-height: 500px) {
+  #pop > .acts:last-child { position: sticky; bottom: 0; z-index: 3; background: var(--panel); box-shadow: 0 0 0 12px var(--panel); }
+  .result > .rbox > .racts { position: sticky; bottom: 0; z-index: 3; background: var(--panel); box-shadow: 0 0 0 10px var(--panel); flex-shrink: 0; }
+  .bench .uname { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
+@media (max-width: 760px) and (orientation: landscape) {
+  #ticker { white-space: normal; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
+@media (max-height: 360px) {
+  .board .uname, .arena .uname { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}

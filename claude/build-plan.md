@@ -1,6 +1,6 @@
 # แผนสร้างเกม Automon Arena
 
-V1.55 · อัปเดต: 10 พ.ย. 2026 · ใช้คู่กับ combat-rules V7.4 / tribe-rules V2.1 / shop-merge-rules V12.3 · ขั้นตอนทำงานกับโค้ด: claude/workflow.md · ส่วนที่เสร็จแล้ว (ลำดับงานข้อ 1–5 + ประวัติ V1.0–V1.42): claude/archive/build-plan-done.md
+V1.56 · อัปเดต: 10 พ.ย. 2026 (ชุด 181: แยกไฟล์หน้าเกมเป็นชิ้น) · ใช้คู่กับ combat-rules V7.5 / tribe-rules V2.1 / shop-merge-rules V12.3 · ขั้นตอนทำงานกับโค้ด: claude/workflow.md · ส่วนที่เสร็จแล้ว (ลำดับงานข้อ 1–5 + ประวัติ V1.0–V1.42): claude/archive/build-plan-done.md
 
 ## สารบัญหัวข้อ
 ขอบเขต · เทคโนโลยี · ความปลอดภัย · โครงสร้างโค้ด (แกนกลางใช้ร่วมกัน) · ห้องบาลานซ์: งานที่ส่งต่อให้ Claude · วิธีที่ตัวคำนวณตีความกฎ · หน้าจอ · ลำดับงาน (เหลือข้อ 5.5 และ 6) · ประวัติการแก้
@@ -45,7 +45,7 @@ V1.55 · อัปเดต: 10 พ.ย. 2026 · ใช้คู่กับ com
 8. บอท: core/bot.js (ซื้อของผ่านคำสั่งร้านค้าเดียวกับผู้เล่น จึงทำผิดกฎไม่ได้)
 8.6 ทีมบอทเตรียมไว้ (ชุด 23): core/botteams.js (simRun = run จำลอง 1 run · gatherBotPool · genBotTeams · validateBotTeams · pickBotTeam (ขั้นชนะ × ช่วงรอบ spanOf)) + core/botdata.js (ข้อมูล 90 ทีม + แฮชค่าเกม · สร้างด้วย lab/botgen.mjs ห้ามแก้มือ · แบ่งขั้นให้ 2 โปรเซสคำนวณพร้อมกัน) · วัดความยาวแมตช์ตามรอบ: lab/runlen.mjs
 8.5 เซฟ/สถิติ/ประวัติ run: core/save.js (ชุด 22 · ข้อมูลล้วน ไม่แตะหน้าจอ · dataHash · validateRunState · readSave · addMatchStats · readHistory) · รีเพลย์ replayEntry/makeReplays/readReplays · บันทึกการเล่น playRecord/checkPlayRecord (ชุด 25)
-9. หน้าเกม: game/run.template.html · คำไทยของสกิลและสีความหายากใช้ร่วมกันทุกหน้า: game/labels.js (skillDur · permText · บันทึกการต่อสู้ละเอียด simLine/battleLogLines ใช้ร่วมกับห้องบาลานซ์ ชุด 25)
+9. หน้าเกม: game/run.template.html (ชุด 181: เปลือก + ชิ้นใน game/run/ ดู game/run/README.md) · คำไทยของสกิลและสีความหายากใช้ร่วมกันทุกหน้า: game/labels.js (skillDur · permText · บันทึกการต่อสู้ละเอียด simLine/battleLogLines ใช้ร่วมกับห้องบาลานซ์ ชุด 25)
 10. เครื่องมือบาลานซ์ (รันใน node ไม่อยู่ในหน้าเว็บ): lab/formula.mjs (ปรับ HP/พลังโจมตีเข้าเป้า) · lab/measure.mjs (วัดยืนยันครบ 3 เลเวล + เผ่าในทีมที่ชนะ + ความยาวแมตช์) · lab/power.mjs + core/power.js (งบค่าพลัง) · lab/try-skill.mjs (ลองค่าสกิล) · tools/apply-tune.mjs (นำค่าที่ปรับเข้า characters.js)
 - ตัวสร้างหน้าเว็บตรวจชื่อซ้ำระดับบนสุดทุกครั้ง (ทุกไฟล์รวมเป็นสคริปต์เดียว ชื่อซ้ำ = หน้าพัง) · สร้าง 3 หน้า: system-check.html, balance.html, game.html
 - ทดสอบหน้าเว็บจริงด้วย Chromium แบบไม่มีหน้าจอได้ (ซื้อ ลาก สู้ รอบถัดไป สกิลถาวรระหว่างสู้ ห้องบาลานซ์ ตัวแก้สกิล · จอ PC และมือถือ 390px · ไม่กดวิเคราะห์ในห้องบาลานซ์ ใช้ lab/measure.mjs แทน)

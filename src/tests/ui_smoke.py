@@ -149,6 +149,7 @@ with sync_playwright() as p:
             pg.click('#board [data-ref="%s"]' % u); chk(pg.is_visible('#sidePane') and 'picked' in pg.get_attribute('#board [data-ref="%s"]' % u,'class'),'tap unit opens card')
             pg.mouse.click(5, 3); chk(pg.is_hidden('#sidePane') and pg.evaluate('sel')==None,'tap outside closes card')
             pg.click('#board [data-ref="%s"]' % u); pg.keyboard.press('Escape'); chk(pg.is_hidden('#sidePane'),'Esc closes card')
+            pg.evaluate("toast([{t:'x'}])"); pg.click('#board [data-ref="%s"]' % u); chk(pg.is_hidden('#toast') and pg.is_visible('#sidePane'),'opening a card hides a leftover toast (set 181)'); pg.keyboard.press('Escape')
         pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
         if w<700:  # set 176: short landscape (740x330) = popup close row stays on screen · tap targets >= 24 px
