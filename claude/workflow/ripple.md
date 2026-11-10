@@ -1,4 +1,4 @@
-# Ripple check — fix one spot, find every linked spot (set 185 A1)
+# Ripple check — fix one spot, find every linked spot (set 186 A1)
 
 Why: the same fact lives in several places (code · Thai rule doc · tests · ui_smoke · Balance Room · check page · runlog viewer · handoff). Sets 175 (stale doc header on check page), 183 (old rune name in a test) and 184 (doc said rune rerolls use leftover gold, the game never did) fixed one copy and left the others — found later, cost extra sets.
 

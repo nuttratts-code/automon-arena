@@ -21,7 +21,7 @@ Stop first if the handoff Relay says `บาลานซ์: กำลังป�
 6. Chars/tribes/rules: `cp core/characters.js core/characters.before.js` → `node tools/apply-config.mjs <out>/main.json` → `node tools/csv.mjs core/characters.before.js` → move `src/characters.csv` to `claude/characters.csv` → delete the .before copy.
 7. Stage (runes/bosses/mode settings): `node tools/apply-stage.mjs <out>/main.json --take <part | part:id,…>` (e.g. `bosses:B1,runes:T2,settings:foeFloor`).
 8. Re-run step 3: every taken cell must be gone from the diff.
-9. Renamed/changed runes or characters → `grep -n '<id or name>' tests/ui_smoke.py tests/*.js` and fix BEFORE any test run (W6). Changed kits → old kit as retired test `ID@n`. Also walk the claude/workflow/ripple.md map row (rule docs, labels, Balance Room, check page) and add the `ripple:` line to the commit (set 185 A1). Check only those: `node tools/bootstrap.mjs test <ID>`. Commit + push.
+9. Renamed/changed runes or characters → `grep -n '<id or name>' tests/ui_smoke.py tests/*.js` and fix BEFORE any test run (W6). Changed kits → old kit as retired test `ID@n`. Also walk the claude/workflow/ripple.md map row (rule docs, labels, Balance Room, check page) and add the `ripple:` line to the commit (set 186 A1). Check only those: `node tools/bootstrap.mjs test <ID>`. Commit + push.
 
 ## D. Rebuild data
 10. Chars/tribes changed → background `node lab/botgen.mjs 2400 4` (~6.5–13 min). Meanwhile: draft the Relay line, `Artifact read` the Links URLs (writer check).
