@@ -2,11 +2,13 @@ name: tests
 
 # Same merge gate CLAUDE.md requires: build the 3 pages + run all tests + ui_smoke on the BUILT pages.
 # (Set 62 lesson: source tests passed while the built balance page was broken.)
-# Runs on every push to every branch (+ manual): the repo is public, so Actions minutes are free (decision 6 Nov, set 104).
+# Runs on push to main only (+ manual): set 190 S-A1 made the repo private (HARD RULE 9) → limited free Actions minutes.
+# Branch work is checked by the in-chat gate before merge; this run guards what lands on main.
 # The in-chat gate before merge (CLAUDE.md rule 3) still applies.
 # Set 139 (8 Nov): docs-only pushes (claude/, art/, *.md) skip this run — nothing in them is built into the pages.
 on:
   push:
+    branches: [main]
     paths-ignore:
       - 'claude/**'
       - 'art/**'
