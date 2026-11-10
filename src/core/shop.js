@@ -149,6 +149,14 @@ export const SHOP_GIVE_TH = { hp: 'HP', atk: 'พลังโจมตี', armo
   healAmp: 'ฟื้น HP ที่ได้รับ +%', hitAmp: 'ดาเมจตี +%', burnAmp: 'ไฟที่ทำให้ติด +%' };
 export const SHARE_TH = { frontAlly: 'เพื่อนข้างหน้า', backAlly: 'เพื่อนข้างหลัง', frontBackAlly: 'เพื่อนหน้าและหลัง', frontLaneAlly: 'เพื่อนแถวหน้าเลนเดียวกัน', backLaneAlly: 'เพื่อนข้างหลังเลนเดียวกัน', frontRowAllies: 'เพื่อนแถวหน้า', backRowAllies: 'เพื่อนแถวหลัง', allyLowest: 'เพื่อน HP ต่ำสุด', allyRandom: 'เพื่อนสุ่ม 1 ตัว', allyRandom2: 'เพื่อนสุ่ม 2 ตัว', tribeAllies: 'เพื่อนเผ่าเดียวกัน' };
 for (const t of SHARE_TO) SHOP_GIVE_TH['share_' + t] = `แบ่งเกราะให้${SHARE_TH[t] || t} %`;
+// set 179: one perm gain as text — "HP +20%" (was "HP +% +20") · "คูลดาวน์ − 0.2 วิ" · plain "พลังโจมตี +5"
+export function giveAmt(k, v) {
+  const t = SHOP_GIVE_TH[k] || k;
+  if (k === 'burnNoDecay') return t;
+  if (k === 'cdMs' || k === 'cdStart') return `${t.replace(' (มิลลิวินาที)', '')} ${v / 1000} วิ`;
+  const m = /^(.*?) ?([+−]?)%$/.exec(t);
+  return m ? `${m[1]} ${m[2] || '+'}${v}%` : `${t} +${v}`;
+}
 export function fireShopSkill(st, u, ref, when, chars, rules, msgs) {
   const c = chars.find(x => x.id === u.id);
   if (!c) return;
@@ -169,7 +177,7 @@ export function fireShopSkill(st, u, ref, when, chars, rules, msgs) {
     let got = 0;
     for (const t of tgs) if (addPerm(t, give, Math.floor(v * rnPermMul(st, t)), rules) > 0) got++; // set 94: rune คงทน
     msgs.push(tgs.length
-      ? `${c.id} ${c.name}: ${got}/${tgs.length} ตัวได้ ${SHOP_GIVE_TH[give] || give} +${v} ถาวร${got < tgs.length ? ' (บางตัวเต็มเพดานแล้ว)' : ''}`
+      ? `${c.id} ${c.name}: ${got}/${tgs.length} ตัวได้ ${giveAmt(give, v)} ถาวร${got < tgs.length ? ' (บางตัวเต็มเพดานแล้ว)' : ''}`
       : `${c.id} ${c.name}: ไม่มีเพื่อนในตำแหน่งที่สกิลให้ผล`);
   }
 }
@@ -191,7 +199,7 @@ export function useCharges(st, u, chars, rules, msgs) {
     if (![sc.tribe, ...sc.extraTribes].some(t => mine.includes(t))) return true;
     const owner = chargeOwner(st, x), v = s.v[owner.level - 1];
     const got = addPerm(u, give, v, rules);
-    msgs.push(`${sc.id} ${sc.name}: ${c.id} ${c.name} ได้ ${SHOP_GIVE_TH[give] || give} +${got} ถาวร (ใช้ประจุ Lv${owner.level})`);
+    msgs.push(`${sc.id} ${sc.name}: ${c.id} ${c.name} ได้ ${giveAmt(give, got)} ถาวร (ใช้ประจุ Lv${owner.level})`);
     return false;
   });
 }
@@ -401,5 +409,5 @@ export function applyBattlePerm(st, gains, chars, rules, msgs) {
     const got = addPerm(u, g.key, Math.floor(g.amount * rnPermMul(st, u)), rules); // set 94: rune คงทน
     if (got > 0) { const k = `${u.id}|${g.key}`; sum.set(k, (sum.get(k) || 0) + got); }
   }
-  for (const [k, v] of sum) { const [id, key] = k.split('|'), c = chars.find(x => x.id === id); msgs.push(`${id}${c ? ' ' + c.name : ''}: ได้${SHOP_GIVE_TH[key] || key} +${v} ถาวร (จากสกิลระหว่างสู้)`); }
+  for (const [k, v] of sum) { const [id, key] = k.split('|'), c = chars.find(x => x.id === id); msgs.push(`${id}${c ? ' ' + c.name : ''}: ได้ ${giveAmt(key, v)} ถาวร (จากสกิลระหว่างสู้)`); }
 }

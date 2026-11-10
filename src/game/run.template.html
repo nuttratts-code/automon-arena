@@ -382,7 +382,7 @@ details > summary { cursor: pointer; font: 600 .9rem var(--f-display); }
 .board .uname, .arena .uname { font-size: .95rem; }
 .rune-dot { left: auto; right: 8px; top: 8px; bottom: auto; font-size: .74rem; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--panel)); border-radius: 8px; padding: 1px 8px; max-width: 60%; }
 .rune-dot.off { color: var(--mute); background: var(--soft); }
-.perm-dot { right: auto; left: 8px; top: 8px; }
+.perm-dot { right: auto; left: 8px; top: 8px; background: color-mix(in srgb, var(--accent) 13%, var(--panel)); border-radius: 8px; padding: 1px 6px; } /* set 179: was blue text straight on the dark-green tile (unreadable) */
 /* bench + tribe cards */
 .benchbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 26px; height: clamp(56px, 12vh, 92px); min-height: 0; }
 .benchrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 8px; border: 0; padding: 0; min-height: 0; }
@@ -581,7 +581,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .board .shape { width: clamp(24px, 11vh, 42px); height: clamp(24px, 11vh, 42px); }
   .board .uname, .arena .uname { font-size: .74rem; }
   .rune-dot { top: 3px; right: 3px; font-size: .6rem; padding: 0 4px; }
-  .perm-dot { top: 3px; left: 4px; }
+  .perm-dot { top: 3px; left: 4px; padding: 0 4px; }
   .benchbar { height: 62px; }
   .fcard { padding: 8px 10px; width: clamp(320px, 48vw, 400px); } /* set 159: 290 px squeezed the title into 3 lines */
   .spane .acts button { white-space: nowrap; }
@@ -765,7 +765,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 #mxDlg .mx-sec > details > summary, .logbox > summary { min-height: 28px; display: flex; align-items: center; }
 .info .stats2 .term, .spane .info .stats2 .term { min-height: 24px; align-items: center; }
 #shopLv { min-height: 28px; }
-.chip, .rnheads, .sktag, .rune-dot { font-size: max(10px, .64rem); }
+.chip, .rnheads, .sktag, .rune-dot, .perm-dot { font-size: max(10px, .64rem); }
 .uname, .slot .uname, .bench .uname, .fmcell .uname { line-height: 1.5; }
 .shop.many .slot .uname { line-height: 1.2; padding-top: 1px; }
 #ticker, #ticker2 { line-height: 1.5; }
@@ -2072,7 +2072,7 @@ function renderRunEnd() {
   for (let lane = 0; lane < 2; lane++) for (const row of [2, 1, 0]) {
     const u = P.board[row][lane], card = el('div', 'ecard');
     if (u) {
-      const perm = Object.entries(u.perm).filter(([, v]) => v > 0).map(([k, v]) => `${SHOP_GIVE_TH[k] || k} +${v}`).join(' · ');
+      const perm = Object.entries(u.perm).filter(([, v]) => v > 0).map(([k, v]) => permText(k, v)).join(' · ');
       card.append(shapeOf(u.id, u.level), el('b', '', CM[u.id] ? CM[u.id].name : u.id), el('span', 'hint', `${u.id} · เลเวล ${u.level}`));
       if (perm) card.append(el('span', 'perm', 'ถาวร: ' + perm));
     } else card.classList.add('empty');
