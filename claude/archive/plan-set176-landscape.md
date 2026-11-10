@@ -10,4 +10,4 @@ Branch from latest main. UI work → skill ui-work (design skill first).
 5. [x] C small/cut text (landscape): battle enemy-rune line 9.6 px · burn/shock chips 9.6 px → ≥ 10 px · battle log line clipped ("7.0 วิ ทีมคุ…") · late-game bench/shop names cut at 1366 (นักจุด… มังกรวายุคลั…).
 6. [x] Tribe popup at 740×330 / 667×375: close button reachable without scrolling (sticky header/footer).
 7. [x] Audit again 1366×768 · 844×390 · 740×330 · 667×375 (prep r1 + late, popups, card, battle, result, match details, run end) → screenshots → critique.
-8. [ ] build-plan step 6 note (Thai, +0.1) "แนวตั้งพักไว้ — เกมเล่นแนวนอนเท่านั้น" · setup → gate → merge → publish game (stop point: tell the user) → close-out.
+8. [x] build-plan step 6 note (Thai, +0.1) "แนวตั้งพักไว้ — เกมเล่นแนวนอนเท่านั้น" · setup → gate → merge → publish game (stop point: tell the user) → close-out.
