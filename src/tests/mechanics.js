@@ -13,6 +13,7 @@ import { TESTS_TRIBE } from './t-tribe.js';
 import { TESTS_SHOP } from './t-shop.js';
 import { TESTS_BOTS } from './t-bots.js';
 import { TESTS_SAVE } from './t-save.js';
+import { TESTS_HUMANSTATS } from './t-humanstats.js';
 import { TESTS_VALIDATE } from './t-validate.js';
 import { TESTS_SKILL_CALC } from './t-skill-calc.js';
 import { TESTS_BOSS } from './t-boss.js';
@@ -27,6 +28,7 @@ export const TESTS = [
   ...TESTS_SHOP,
   ...TESTS_BOTS,
   ...TESTS_SAVE,
+  ...TESTS_HUMANSTATS,
   ...TESTS_VALIDATE,
   ...TESTS_BOSS,
   ...TESTS_BOSS_V2,

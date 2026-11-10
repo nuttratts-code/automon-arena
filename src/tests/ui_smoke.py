@@ -402,6 +402,13 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.fill('#code','ARUN1 {bad'); pg.click('#read'); chk(pg.is_visible('#err') and pg.is_hidden('#out'),'viewer: broken code = error')
         chk(pg.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'viewer: no sideways scroll')
         pg.screenshot(path=f'{O}/runlog-{gw}.png')
+        # set 175: Balance Room ดูผล → ผู้เล่นจริง reads the same real run code (pooled stats, display only)
+        pg.goto(f'file://{D}/balance.html'); pg.wait_for_timeout(700)
+        pg.evaluate("showTab('human')"); pg.fill('#hsText',code); pg.click('#hsRun'); pg.wait_for_function("!document.getElementById('hsRun').disabled", timeout=60000)
+        chk(pg.is_visible('#hsOut') and pg.evaluate("hsRes.runs.length>=1 && hsRes.matches>=1 && hsRes.unsim===0 && Object.keys(hsRes.old).length===0"),'balance room: real-player stats read a game run code')
+        chk(pg.evaluate("document.querySelectorAll('#hsCharBody tr[data-id]').length>=1"),'balance room: real-player stats list characters')
+        chk(pg.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'balance room real-player stats: no sideways scroll')
+        pg.screenshot(path=f'{O}/human-{gw}.png')
         pg.goto(f'file://{D}/game.html'); pg.evaluate(KEEPNAME)
         print(w,'set 110 runlog viewer ok',flush=True)
         # set 97: phone held upright → "rotate your phone" screen · button continues in portrait

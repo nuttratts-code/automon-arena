@@ -287,7 +287,41 @@
   </section>
 
   <section id="view-result" class="view" hidden>
-    <h2>ดูผล</h2>
+    <div class="row"><h2 class="grow">ดูผล</h2>
+      <div class="seg" id="resMode" role="group" aria-label="ผลจาก"><button type="button" id="resBot" aria-pressed="true">วิเคราะห์ (บอท)</button><button type="button" id="resHuman" aria-pressed="false">ผู้เล่นจริง</button></div>
+    </div>
+    <div id="pane-human" hidden style="display:grid;gap:12px">
+      <p class="hint">วางรหัสรัน (ARUN1) ที่เพื่อนหรือคุณคัดลอกจากหน้าเกม ได้หลายรหัสพร้อมกัน แยกบรรทัดละรหัส · หน้านี้เล่นแต่ละแมตช์ซ้ำเอง จึงได้ตัวเลขเดิมทุกครั้ง · <b>แสดงอย่างเดียว ไม่แก้ค่าเกม</b></p>
+      <label class="status" for="hsText">รหัสรัน</label>
+      <textarea id="hsText" rows="4" spellcheck="false" placeholder="ARUN1 {…}" style="width:100%;font-family:monospace;font-size:12px"></textarea>
+      <div class="row"><button type="button" id="hsRun" class="primary">นับสถิติ</button><span class="status" id="hsMsg" role="status"></span></div>
+      <div id="hsOut" hidden style="display:grid;gap:12px">
+        <div class="cards" id="hsCards"></div>
+        <ul class="errs" id="hsWarn" hidden></ul>
+        <p class="hint" id="hsInfo" hidden></p>
+        <div class="seg" id="hsSec" role="group" aria-label="ส่วน"><button type="button" data-hs="chars" aria-pressed="true">ตัวละคร</button><button type="button" data-hs="runes" aria-pressed="false">รูน</button><button type="button" data-hs="lose" aria-pressed="false">รอบที่แพ้</button><button type="button" data-hs="runs" aria-pressed="false">แต่ละรัน</button></div>
+        <div id="hsChars" style="display:grid;gap:8px">
+          <div class="row cb-tools">
+            <span class="seg" id="hsLv" role="group" aria-label="เลเวล"><button type="button" data-lv="0" aria-pressed="true">ทุกเลเวล</button><button type="button" data-lv="1" aria-pressed="false">Lv1</button><button type="button" data-lv="2" aria-pressed="false">Lv2</button><button type="button" data-lv="3" aria-pressed="false">Lv3</button></span>
+            <input id="hsFind" type="search" placeholder="ค้นชื่อหรือรหัส" aria-label="ค้นชื่อหรือรหัสตัวละคร">
+            <span class="status" id="hsCount"></span>
+          </div>
+          <div class="tbl tbl-fix"><table class="cb-tbl"><thead id="hsCharHead"></thead><tbody id="hsCharBody"></tbody></table></div>
+          <p class="hint">ซื้อ/ขาย = จำนวนครั้งที่ผู้เล่นซื้อ/ขาย (นับทุกเลเวล ไม่แยกเลเวลที่ซื้อ) · ลงสนาม/ชนะ = แมตช์ที่ตัวนี้อยู่ในทีม (ถ้าเลือกเลเวล = เฉพาะตอนที่ตัวนั้นเลเวลนั้น) · ตัวเลขดาเมจเป็นค่าเฉลี่ยต่อแมตช์ที่ลงสนาม · แถวจางลง = ลงสนามน้อยกว่า 30 ครั้ง ตัวเลขยังแกว่ง</p>
+        </div>
+        <div id="hsRunes" hidden style="display:grid;gap:8px">
+          <div class="tbl tbl-fix"><table class="cb-tbl"><thead id="hsRuneHead"></thead><tbody id="hsRuneBody"></tbody></table></div>
+          <p class="hint">เสนอ = จำนวนครั้งที่รูนนี้อยู่ในการ์ดที่เสนอ · เลือก = จำนวนครั้งที่ผู้เล่นเลือก · ใส่ = จำนวนครั้งที่วางลงช่อง · ถือตอนสู้/ชนะ = แมตช์ที่ผู้เล่นถือรูนนี้อยู่</p>
+        </div>
+        <div id="hsLose" hidden style="display:grid;gap:8px">
+          <div class="tbl tbl-fix"><table class="cb-tbl"><thead id="hsLoseHead"></thead><tbody id="hsLoseBody"></tbody></table></div>
+          <p class="hint">นับทุกแมตช์ที่แพ้ (หนึ่งรันแพ้ได้หลายแมตช์เพราะมีหัวใจหลายดวง)</p>
+        </div>
+        <div id="hsRuns" hidden style="display:grid;gap:8px">
+          <div class="tbl tbl-fix"><table class="cb-tbl"><thead id="hsRunHead"></thead><tbody id="hsRunBody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
     <div id="pane-analysis" hidden style="display:grid;gap:12px">
     <div class="ana-setup" id="anaSetup">
     <div class="row" id="anaFoeRow">
