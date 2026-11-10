@@ -1,6 +1,6 @@
 # Reviews index
 
-V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 
 | review-2026-11-09-bosstribe.md | Set 167 boss win % by team tribe — input of the boss brainstorm | decided (kept: linked) |
 | review-2026-11-09-brainstorm-skill.md | Set 164 brainstorm skill design sources (linked from CLAUDE.md + skill) | decided (kept: linked) |
 | review-2026-11-09-brainstorm-runstats.md | Set 165 run-end stats brainstorm — phase 1 built set 165 (Balance Room สรุปแรง/อ่อน) · real-player tab set 177 · phase 2 waits for ~30 human runs | decided (phase 2 parked) |
-| review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm — user A1: UI set 1 shipped set 169, recap + tribe highlight set 171 · open: wording/44px sweep (shopLv 76×22, bench/shop names clipped), cold-start test | open (step 6) |
+| review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm — user A1: UI set 1 shipped set 169, recap + tribe highlight set 171 · 44px sweep + names hidden (B1) done set 183 · cold-start test skipped by user (C2) | done set 183 |
 | archive/reviews/review-2026-11-09-balance-ux.md | Set 161 Balance Room UX review — 18 fixes shipped set 161 | decided |
 | archive/reviews/review-2026-11-09-superpowers.md | Set 163 Superpowers ideas — B1 find-cause skill + C1 plan files adopted | decided |
 | archive/reviews/review-2026-11-09-bossv2-fit.md | Set 168 boss v2 calibrator + tribe report | decided |
