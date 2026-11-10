@@ -44,10 +44,6 @@ with sync_playwright() as p:
             pg.mouse.move(x,y); pg.mouse.down(); pg.mouse.move(x+15,y+5,steps=3)
             pg.mouse.move(bb['x']+bb['width']/2, bb['y']+bb['height']/2, steps=8); pg.mouse.up()
         noscroll('prep')
-        # set 159: portrait (after "ใช้แนวตั้งต่อ") must not run off-screen (HUD was 886 px wide on a 390 px phone)
-        pg.set_viewport_size({'width':390,'height':844})
-        if pg.is_visible('#rotateSkip'): pg.click('#rotateSkip')
-        noscroll('portrait prep'); pg.set_viewport_size({'width':gw,'height':gh})
         chk(len(pg.query_selector_all('#bench .cell'))==5 and pg.evaluate('P.bench.length')==5,'bench has 5 cells')
         chk(len(pg.query_selector_all('#board .cell'))==6 and pg.is_hidden('#arena'),'prep shows only my 3x2 (enemy hidden)')
         # set 89/96: shop level follows the round · next-round income on the dock · odds in the shop popup · reroll costs 1 (set 98)
@@ -148,6 +144,11 @@ with sync_playwright() as p:
             pg.click('#board [data-ref="%s"]' % u); pg.keyboard.press('Escape'); chk(pg.is_hidden('#sidePane'),'Esc closes card')
         pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
+        if w<700:  # set 176: short landscape (740x330) = popup close row stays on screen · tap targets >= 24 px
+            pg.set_viewport_size({'width':740,'height':330}); pg.wait_for_timeout(100)
+            cb=pg.evaluate("(()=>{const b=[...document.querySelectorAll('#pop > .acts:last-child button')].pop().getBoundingClientRect(),c={height:parseFloat(getComputedStyle(document.querySelector('.chk')).minHeight)},s=document.querySelector('#shopLv').getBoundingClientRect();return [b.bottom<=innerHeight+1,Math.round(c.height),Math.round(s.height)]})()")
+            chk(cb[0] and cb[1]>=24 and cb[2]>=24,'set 176: 740x330 popup close visible + autoSkip/shopLv >= 24 px: '+str(cb))
+            pg.set_viewport_size({'width':gw,'height':gh})
         pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup')
         # set 171 (E1): highlight this tribe on board + bench from the tribe popup · strip in the HUD turns it off · no sideways scroll
         pg.get_by_role('button',name='ไฮไลต์บนบอร์ด').click(); hl=pg.evaluate("(()=>{const on=[...document.querySelectorAll('#board .cell.thi,#bench .cell.thi')];return [hiTribe,$('hiBar').hidden,on.length,on.every(c=>{const u=unitAt(parseRef(c.dataset.ref));return u&&[CM[u.id].tribe,...(CM[u.id].extraTribes||[])].includes(hiTribe)}),document.querySelectorAll('#board .cell.tdim,#bench .cell.tdim').length+on.length===document.querySelectorAll('#board .cell.filled,#bench .cell.filled').length]})()")
@@ -411,11 +412,10 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.screenshot(path=f'{O}/human-{gw}.png')
         pg.goto(f'file://{D}/game.html'); pg.evaluate(KEEPNAME)
         print(w,'set 110 runlog viewer ok',flush=True)
-        # set 97: phone held upright → "rotate your phone" screen · button continues in portrait
+        # set 97/176: phone held upright → "rotate your phone" screen only (landscape only, no skip button)
         if w<700:
             pg.set_viewport_size({'width':390,'height':844}); pg.reload()
-            chk(pg.is_visible('#rotate') and pg.is_visible('#rotateSkip'),'portrait shows rotate screen')
-            pg.click('#rotateSkip'); chk(pg.is_hidden('#rotate') and in_prep(),'rotate screen button continues')
+            chk(pg.is_visible('#rotate') and pg.query_selector('#rotateSkip') is None and not pg.query_selector('#rotate button'),'portrait shows rotate screen only (no skip)')
             pg.evaluate("localStorage.clear()")
         pg.set_viewport_size({'width':w,'height':h})
         # 3 balance
