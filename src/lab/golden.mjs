@@ -1,0 +1,112 @@
+// Godot plan P0 step 2 (set 191): golden fixtures = the JS core's answers, so the GDScript port can be checked number for number.
+//   node lab/golden.mjs            write godot/tests/golden/ (rng.json · battles-NN.jsonl · runs.jsonl · manifest.json), ~180 MB, ~1–2 min
+//   node lab/golden.mjs --small    small set (tests use it in memory: same input twice = byte-identical)
+// User pick B1 (set 191): NOT committed (godot/tests/golden/ is in .gitignore) — rebuilt from the current core before every Godot parity check,
+// so the fixtures always match the current game values (manifest.gameHash = godot/data/game.json hash).
+// (a) rng: first N next() values for 5 seeds · (b) battles: input units/opts exactly as the game passes them + full result
+//     (log + detail + live, like the game replay) · (c) runs: simRun with runes, bosses, pickFoe enemies, extra rounds → every match + final state.
+// Every input goes through a JSON round trip BEFORE it is simulated: the fixture holds everything the result depends on.
+// Security (HARD RULE 9 ④): fixtures live in godot/tests/ = excluded from every Godot export (P1 export_presets.cfg).
+import { mkdirSync, rmSync, createWriteStream } from 'fs';
+import { dirname, resolve, join } from 'path';
+import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
+import { RULES } from '../core/rules.js';
+import { buildCharacterList } from '../core/characters.js';
+import { makeRng } from '../core/rng.js';
+import { simulate } from '../core/battle.js';
+import { makeCharMap, buildTeam } from '../core/team.js';
+import { SLOT_ORDER } from '../core/shop.js';
+import { BOT_TEAMS } from '../core/botdata.js';
+import { simRun, pickFoe, botRounds, tribeList } from '../core/botteams.js';
+import { walk, buildGameData } from '../tools/exportdata.mjs';
+
+export const GOLDEN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../godot/tests/golden');
+export const GOLDEN_V = 1;
+export const RNG_SEEDS = [0, 1, 4242, 2654435761, 4294967295]; // 0 → the core uses 1 · max uint32
+export const FULL = { rngN: 10000, runBattles: 2000, randBattles: 1000, runs: 200, perFile: 500, seed: 191 };
+export const SMALL = { rngN: 200, runBattles: 20, randBattles: 10, runs: 3, perFile: 500, seed: 191 };
+const BATTLE_OPTS = { log: true, detail: true, live: true }; // = the game replay (game/run/js/70-battle-replay.js)
+const runSeed = (base, i) => (base + Math.imul(i + 1, 0x9E3779B1)) >>> 0;
+
+// JSON-only copy: fails loudly on anything JSON would drop or change (function, undefined, NaN, Map…)
+function plain(v, path) {
+  const bad = [];
+  walk(v, path, bad);
+  if (bad.length) throw new Error('golden: not JSON-safe:\n  ' + bad.slice(0, 10).join('\n  '));
+  return JSON.parse(JSON.stringify(v));
+}
+const optsOf = o => { const { rules, ...rest } = o; return rest; }; // rules come from godot/data/game.json
+
+function battleRec(i, src, a, b, o) {
+  const inp = plain({ a, b, o: optsOf(o) }, 'battle' + i);
+  const res = simulate(inp.a, inp.b, { ...inp.o, ...BATTLE_OPTS });
+  return { i, src, ...inp, res: plain(res, 'battle' + i + '.res') };
+}
+
+function* rngLines(cfg) {
+  const out = { v: GOLDEN_V, n: cfg.rngN, seeds: RNG_SEEDS, values: {} };
+  for (const s of RNG_SEEDS) { const r = makeRng(s); out.values[s] = Array.from({ length: cfg.rngN }, () => r.next()); }
+  yield JSON.stringify(out);
+}
+
+// (b) battles: first from bot runs (real teams with runes, perm stats, bosses, scaled enemies), then random seeded teams (odd sizes, any level)
+function* battleLines(cfg, chars) {
+  const cm = makeCharMap(chars);
+  let i = 0;
+  for (let r = 0; i < cfg.runBattles; r++) {
+    const recs = [];
+    simRun(chars, RULES, runSeed(cfg.seed * 1000, r), foeOf, m => { recs.push([m.units, m.fs.units, { ...m.opts, ...m.fs.opts }, m.boss]); }, undefined, { runes: true, extra: botRounds(RULES), focus: tribeList(chars)[r % 6] });
+    for (const [a, b, o, boss] of recs) { if (i >= cfg.runBattles) break; yield JSON.stringify(battleRec(i, boss ? 'run-boss' : 'run', a, b, o)); i++; }
+  }
+  const rng = makeRng(cfg.seed);
+  const randTeam = () => {
+    const n = 1 + rng.int(SLOT_ORDER.length), slots = SLOT_ORDER.slice();
+    return Array.from({ length: n }, () => { const [row, lane] = slots.splice(rng.int(slots.length), 1)[0]; return { id: rng.pick(chars).id, level: 1 + rng.int(3), row, lane }; });
+  };
+  for (let k = 0; k < cfg.randBattles; k++, i++) {
+    const tribesOff = rng.int(10) === 0, seed = rng.int(3) === 0 ? 1 + rng.int(1e9) : 0;
+    const o = { ...(tribesOff ? { tribesOff: [true, false] } : {}), ...(seed ? { seed } : {}) };
+    yield JSON.stringify(battleRec(i, 'rand', buildTeam(randTeam(), cm, RULES), buildTeam(randTeam(), cm, RULES), o));
+  }
+}
+// enemy picker = the game's (game/run/js/60-runes-enemy-tribes.js nextFoe)
+const foeOf = P => pickFoe(BOT_TEAMS, P.fp | 0, P.round, P.seed, P.extra, undefined, undefined, P.ls | 0, P.ws | 0);
+
+// (c) runs: one line per run = seed, options, every match (what the player had, gold/hearts before, the enemy, the result) and the final state
+function* runLines(cfg, chars) {
+  const tribes = tribeList(chars);
+  for (let r = 0; r < cfg.runs; r++) {
+    const seed = runSeed(cfg.seed, r), opts = { runes: true, extra: botRounds(RULES), focus: tribes[r % tribes.length], foeFocus: tribes[(r + 3) % tribes.length] };
+    const matches = [];
+    const P = simRun(chars, RULES, seed, r % 4 === 3 ? null : foeOf, m => matches.push({
+      stage: m.stage, round: m.round, gold: m.gold, hearts: m.hearts, extra: m.extra, second: m.second, ws: m.ws, team: m.team, rn: m.rn,
+      foe: m.foe, foeRn: m.foeRn, boss: m.boss, k: m.k, winner: m.winner, timeMs: m.timeMs, aborted: m.aborted, events: m.res.events.length,
+    }), undefined, opts);
+    yield JSON.stringify(plain({ i: r, seed, foe: r % 4 === 3 ? 'liveBot' : 'pickFoe', opts, matches, final: P }, 'run' + r));
+  }
+}
+
+// files = [name, lineGenerator] · write(name, line) is called per line; returns the manifest
+export async function buildGolden(cfg = FULL, write = () => {}) {
+  const chars = buildCharacterList(), files = {}, counts = {};
+  const emit = (name, line) => { (files[name] ||= createHash('sha256')).update(line + '\n'); counts[name] = (counts[name] || 0) + 1; write(name, line); };
+  for (const l of rngLines(cfg)) emit('rng.json', l);
+  let n = 0;
+  for (const l of battleLines(cfg, chars)) emit('battles-' + String(Math.floor(n++ / cfg.perFile)).padStart(2, '0') + '.jsonl', l);
+  for (const l of runLines(cfg, chars)) emit('runs.jsonl', l);
+  const gd = await buildGameData();
+  return { v: GOLDEN_V, gameHash: gd.hash, cfg, rngSeeds: RNG_SEEDS, battleOpts: BATTLE_OPTS,
+    files: Object.fromEntries(Object.keys(files).map(f => [f, { lines: counts[f], sha256: files[f].digest('hex') }])) };
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const cfg = process.argv.includes('--small') ? SMALL : FULL, t0 = Date.now(), streams = {};
+  rmSync(GOLDEN_DIR, { recursive: true, force: true });
+  mkdirSync(GOLDEN_DIR, { recursive: true });
+  const man = await buildGolden(cfg, (name, line) => (streams[name] ||= createWriteStream(join(GOLDEN_DIR, name))).write(line + '\n'));
+  await Promise.all(Object.values(streams).map(s => new Promise(ok => s.end(ok))));
+  const txt = JSON.stringify(man, null, 1) + '\n';
+  createWriteStream(join(GOLDEN_DIR, 'manifest.json')).end(txt);
+  console.log('golden: wrote godot/tests/golden/ · ' + Object.entries(man.files).map(([f, x]) => f + ' ' + x.lines).join(' · ') + ' · gameHash ' + man.gameHash + ' · ' + Math.round((Date.now() - t0) / 1000) + ' s');
+}

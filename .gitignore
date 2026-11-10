@@ -8,3 +8,5 @@ src/runlog.html
 *.measure.json
 shots/
 __pycache__/
+# Godot golden fixtures (set 191 B1): rebuilt by node src/lab/golden.mjs before each parity check, never committed
+godot/tests/golden/

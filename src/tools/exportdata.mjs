@@ -13,7 +13,7 @@ const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const GAME_JSON = resolve(SRC, '../godot/data/game.json');
 export const EXPORT_VERSION = 1;
 
-function walk(v, path, bad) {
+export function walk(v, path, bad) {
   if (v === null || typeof v === 'string' || typeof v === 'boolean') return;
   if (typeof v === 'number') { if (!Number.isFinite(v)) bad.push(path + ' = ' + v); return; }
   if (Array.isArray(v)) { v.forEach((x, i) => walk(x, path + '[' + i + ']', bad)); return; }
