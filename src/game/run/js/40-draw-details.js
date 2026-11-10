@@ -3,6 +3,9 @@
 const shapeOf = (id, level) => unitShape(CM[id], level); // ชุด 25: รูปรายตัว (game/view.js)
 const refKey = r => r.at === 'board' ? `b:${r.row}:${r.lane}` : r.at === 'bench' ? `n:${r.i}` : `s:${r.i}`;
 const sameRef = (a, b) => a && b && refKey(a) === refKey(b);
+// set 183 (B1): marks instead of text that got cut — tribe shapes in the shop, "◆2" rune count on a unit (names in title + aria-label)
+function tribeLine(ts) { const s = el('span', 'sub tr'); s.title = ts.join(' + '); s.setAttribute('aria-label', 'เผ่า ' + ts.join(' + ')); s.append(...ts.map(t => tribeIco(t))); return s; }
+function runeMark(names, cls) { const m = el('span', 'rune-dot' + (cls || ''), '◆' + names.length); m.title = 'รูน: ' + names.join(', '); m.setAttribute('aria-label', 'รูน ' + names.join(', ')); return m; }
 function unitAt(ref) { return ref.at === 'board' ? P.board[ref.row][ref.lane] : ref.at === 'bench' ? P.bench[ref.i] : null; }
 // set 128 (X3 bug): copies needed to merge = rune รวมร่างเร็ว on a unit of this kind (core rnFx().fast, same as shop.js) else S.mergeCount
 const mergeNeed = id => rnFx(P).fast[id] || S.mergeCount;
@@ -57,7 +60,7 @@ function render() {
     card.setAttribute('aria-label', `${c.id} ${c.name} ${c.rarity} ราคา ${c.price}`);
     if (s.locked) card.classList.add('locked');
     if (c.price > P.gold) card.classList.add('cant');
-    const txt = el('span', 'stxt'); txt.append(el('span', 'uname', c.name), el('span', 'sub tr', [c.tribe, ...c.extraTribes].join(' + '))); // set 159: rarity = ring colour, text only in the floating card
+    const txt = el('span', 'stxt'); txt.append(el('span', 'uname', c.name), tribeLine([c.tribe, ...c.extraTribes])); // set 159: rarity = ring colour, text only in the floating card
     card.append(shapeOf(c.id), txt, el('span', 'price', String(c.price)));
     // ชุด 24: ไฮไลต์ตัวที่มีอยู่แล้วบนบอร์ด/ม้านั่ง · มี Lv1 ครบ (รวมร่าง − 1) ตัว = ซื้อแล้วรวมร่างได้
     const mine = allUnits(P).filter(x => x.u.id === c.id), lv1 = mine.filter(x => x.u.level === 1).length;
@@ -81,7 +84,7 @@ function render() {
       cell.setAttribute('aria-label', `${c.id} ${c.name} เลเวล ${u.level}`);
       if (hiTribe) { const on = [c.tribe, ...(c.extraTribes || [])].includes(hiTribe); cell.classList.add(on ? 'thi' : 'tdim'); if (on) cell.style.setProperty('--tc', TRIBE_STYLE[hiTribe].color); }
     } else cell.setAttribute('aria-label', 'ช่องว่าง');
-    if (u) { const rs = runesOn(u); if (rs.length) cell.append(el('span', 'rune-dot' + (ref.at === 'board' ? '' : ' off'), '◆ ' + rs.join(' · '))); } // set 109: runes worn by this unit (bench = not working)
+    if (u) { const rs = runesOn(u); if (rs.length) cell.append(runeMark(rs, ref.at === 'board' ? '' : ' off')); } // set 109: runes worn by this unit (bench = not working)
     return cell;
   };
   // grid fills row by row: top lane (หลัง กลาง หน้า) then bottom lane · front column faces the enemy (right)
