@@ -144,6 +144,11 @@ with sync_playwright() as p:
             pg.click('#board [data-ref="%s"]' % u); pg.keyboard.press('Escape'); chk(pg.is_hidden('#sidePane'),'Esc closes card')
         pg.click('#menuBtn'); chk(pg.is_visible('#newRun'),'menu shows new run'); pg.keyboard.press('Escape'); chk(pg.is_hidden('#menu'),'Esc closes menu')
         pg.click('#tribeBtn'); chk(len(pg.query_selector_all('#tribeList .pitem'))>=1,'tribe popup lists tribes')
+        if w<700:  # set 176: short landscape (740x330) = popup close row stays on screen · tap targets >= 24 px
+            pg.set_viewport_size({'width':740,'height':330}); pg.wait_for_timeout(100)
+            cb=pg.evaluate("(()=>{const b=[...document.querySelectorAll('#pop > .acts:last-child button')].pop().getBoundingClientRect(),c=document.querySelector('#autoSkip').closest('label').getBoundingClientRect(),s=document.querySelector('#shopLv').getBoundingClientRect();return [b.bottom<=innerHeight+1,Math.round(c.height),Math.round(s.height)]})()")
+            chk(cb[0] and cb[1]>=24 and cb[2]>=24,'set 176: 740x330 popup close visible + autoSkip/shopLv >= 24 px: '+str(cb))
+            pg.set_viewport_size({'width':gw,'height':gh})
         pg.click('#tribeList .pitem'); chk(pg.query_selector('#pop .btbl') is not None and '← กลับ' in pg.inner_text('#pop'),'tribe detail popup')
         # set 171 (E1): highlight this tribe on board + bench from the tribe popup · strip in the HUD turns it off · no sideways scroll
         pg.get_by_role('button',name='ไฮไลต์บนบอร์ด').click(); hl=pg.evaluate("(()=>{const on=[...document.querySelectorAll('#board .cell.thi,#bench .cell.thi')];return [hiTribe,$('hiBar').hidden,on.length,on.every(c=>{const u=unitAt(parseRef(c.dataset.ref));return u&&[CM[u.id].tribe,...(CM[u.id].extraTribes||[])].includes(hiTribe)}),document.querySelectorAll('#board .cell.tdim,#bench .cell.tdim').length+on.length===document.querySelectorAll('#board .cell.filled,#bench .cell.filled').length]})()")
