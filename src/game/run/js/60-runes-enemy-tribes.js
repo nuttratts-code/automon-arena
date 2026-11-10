@@ -188,7 +188,8 @@ POPS.legend = () => {
     el('p', 'hint lgh', 'ขอบรอบรูป = ความหายาก'), grid('r', rars),
     el('p', 'hint lgh', 'ดาวใต้รูป = เลเวล (★ เลเวล 1 · ★★ เลเวล 2 · ★★★ เลเวล 3)'),
     el('p', 'hint lgh', `ซื้อตัวชนิดเดียวกัน ${S.mergeCount} ตัว = รวมร่างเป็นเลเวลถัดไปอัตโนมัติ`), pacts(),
-    el('p', 'hint artcredit', 'ภาพชั่วคราว: Dungeon Crawl Stone Soup tiles (CC0)')];
+    el('p', 'hint artcredit', 'ภาพชั่วคราว: Dungeon Crawl Stone Soup tiles (CC0)'),
+    el('p', 'hint artcredit', '© 2026 Automon Arena · สงวนลิขสิทธิ์ (All rights reserved)')]; // set 190 S-B1 owner line (HARD RULE 9)
 };
 $('legendBtn').addEventListener('click', () => openPop('legend'));
 // enemy + reward line + scout preview (R5: no rune ทำนาย = enemy hidden) · set 107: no modes, the HUD shows the enemy power %
