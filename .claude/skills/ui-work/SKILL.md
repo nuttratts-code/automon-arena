@@ -4,6 +4,8 @@ description: Automon Arena UI work (หน้า / แท็บ / ปุ่ม /
 ---
 # UI work (set 158 — skill from claude/workflow/ui.md; sets 138/138b/144/146 skipped the rule)
 
+**Game page UI frozen (set 189 C1, claude/workflow/ui.md):** a game-page UI request → record it in claude/review-2026-11-10-ui-test-notes.md for Godot, no code; only unplayable/crash bugs are fixed (skill find-cause). Other pages are not frozen.
+
 Counts as UI: any change to src/game/** markup/CSS/view code, src/lab/balance/** (css, js that builds DOM, body.html), *.template.html, runlog viewer, or a new artifact page. A new tab/table/column/button of numbers IS UI.
 
 1. **Ask up front (rule A1), in the set's first question round:** where it goes (page · tab), what it shows, phone layout. Reset / delete / overwrite button → what it returns to (game values · last saved · defaults) and what it covers (one tab · whole page); it must open a confirm dialog naming what will be lost (ui.md W4).

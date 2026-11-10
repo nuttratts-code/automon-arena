@@ -1,6 +1,8 @@
 # workflow · UI work
 
-V1.5 · 10 Nov 2026 (set 176: portrait dropped from phone audit, landscape only) · V1.4 · 9 Nov 2026 (set 161: Balance Room audit) · V1.3 · 9 Nov 2026 (set 159: phone audit) · V1.2 · 8 Nov 2026 (set 158: points to skill ui-work; merge-code checks it) · V1.1 · 8 Nov 2026 (set 151 review W4 reset buttons) · V1.0 set 139: moved out of CLAUDE.md — user rule 7 Nov, set 125. Open whenever a task builds a new UI or reshapes an existing one.
+V1.6 · 10 Nov 2026 (set 189: game page UI frozen) · V1.5 · 10 Nov 2026 (set 176: portrait dropped from phone audit, landscape only) · V1.4 · 9 Nov 2026 (set 161: Balance Room audit) · V1.3 · 9 Nov 2026 (set 159: phone audit) · V1.2 · 8 Nov 2026 (set 158: points to skill ui-work; merge-code checks it) · V1.1 · 8 Nov 2026 (set 151 review W4 reset buttons) · V1.0 set 139: moved out of CLAUDE.md — user rule 7 Nov, set 125. Open whenever a task builds a new UI or reshapes an existing one.
+
+**Game page UI frozen (set 189 C1):** no new UI/polish/animation on the web game page — record the item in claude/review-2026-11-10-ui-test-notes.md for Godot. Only bugs that make the game unplayable or crash are fixed on the web page. Balance Room / check page / runlog viewer are not frozen.
 
 Step-by-step runbook: skill `.claude/skills/ui-work/SKILL.md` (set 158). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 

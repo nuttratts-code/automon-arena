@@ -21,7 +21,7 @@ V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked 
 - Open: rune design · boss HP/attack/rules/scaling (numbers = ask user) · how skills that target front/back row or trigger "enemy down" work vs a single boss · scoring/storm vs boss · effect on MVP1 target date (user: keep plan as is for now, 28 Oct)
 
 ## Economy
-- Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test
+- Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test (both closed; set 189: web UI frozen, UI work moves to Godot)
 
 ## Systems not designed yet
 - Items (MVP1 shop sells characters only) · Food removed by the user 29 Oct (runes replace it) · Partner removed by the user 28 Oct

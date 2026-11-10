@@ -1,11 +1,12 @@
 # Reviews index
 
-V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
 | review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
-| review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; re-check B/C findings | open |
+| review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; rest parked for Godot (set 189 C1, web UI frozen) | parked → Godot |
+| review-2026-11-10-ui-test-notes.md | Set 187 UI test notes = Godot UI list since set 189 C1 (web UI frozen) | open (Godot) |
 | review-2026-11-10-brainstorm-gamelog.md | Set 177 game-log brainstorm — user picked A1 B1 C1 (stats tab built; feeling tap + build label parked) | decided (parked items) |
 | review-2026-11-10-brainstorm-art-workflow.md | Art workflow brainstorm — draft plan only, start after MVP1 | open (parked) |
 | review-2026-11-09-brainstorm-boss.md | Set 168 boss brainstorm — user picked A3 B2 C2 D1 E1 F1 G1 H1 (combat-rules C-17.6) | decided (kept: linked from combat-rules) |
