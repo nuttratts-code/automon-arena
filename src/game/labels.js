@@ -121,7 +121,12 @@ export const GIVE_TH = { hp: 'HP', atk: 'พลังโจมตี', armor: '�
   healAmp: 'ฟื้น HP ที่ได้รับ +%', hitAmp: 'ดาเมจตี +%', burnAmp: 'ไฟที่ทำให้ติด +%',
   cdStart: 'เริ่มแมตช์ลดคูลดาวน์', shareArmor: 'แบ่งเกราะให้ทั้งทีม %', healToAtk: 'ฟื้นเป็นพลัง %', armorAmp: 'เกราะที่ได้รับ +%', cdAmp: 'ผลลดคูลดาวน์ที่ได้รับ +%', shockAmp: 'ดาเมจช็อต +%', burnNoDecay: 'ไฟที่ติดไม่ลด' };
 // ข้อความค่าถาวร 1 ชนิด เช่น "พลังโจมตี +4" · "เริ่มแมตช์ลดคูลดาวน์ 1.5 วิ" · "ไฟที่ติดไม่ลด"
-export const permText = (k, v) => (k === 'burnNoDecay' ? GIVE_TH[k] : k === 'cdStart' || k === 'cdMs' ? `${GIVE_TH[k]} ${v / 1000} วิ` : `${GIVE_TH[k] || k} +${v}`);
+export const permText = (k, v) => { // set 179: "HP +20%" (was "HP +% +20")
+  if (k === 'burnNoDecay') return GIVE_TH[k];
+  if (k === 'cdStart' || k === 'cdMs') return `${GIVE_TH[k]} ${v / 1000} วิ`;
+  const t = GIVE_TH[k] || k, m = /^(.*?) ?([+−]?)%$/.exec(t);
+  return m ? `${m[1]} ${m[2] || '+'}${v}%` : `${t} +${v}`;
+};
 for (const t of SHARE_TO) GIVE_TH['share_' + t] = `แบ่งเกราะให้${TO_TH[t]} %`; // ชุด 7
 export const permKeyOf = s => (s.do === 'shareArmor' && s.to !== 'allAllies' && s.to !== 'self' ? 'share_' + s.to : DO_INFO[s.do] && DO_INFO[s.do].perm);
 export const PERM_TH = GIVE_TH;

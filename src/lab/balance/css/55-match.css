@@ -6,9 +6,9 @@
 /* สรุปแมตช์ด้านบน */
 .mx-sum { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: .84rem; color: var(--mute); }
 .mx-sum .win { font-size: 1.04rem; color: var(--ink); }
-.mx-sum .mx-sumchip { display: inline-flex; gap: 5px; align-items: baseline; white-space: nowrap; }
-.mx-sum .mx-sumchip > small { font-size: .74rem; }
-.mx-sum .mx-sumchip > b { color: var(--ink); font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+.mx-sumchip { display: inline-flex; gap: 5px; align-items: baseline; white-space: nowrap; }
+.mx-sumchip > small { font-size: .74rem; }
+.mx-sumchip > b { color: var(--ink); font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
 /* ตารางแมตช์ต้องสงสัย: คอลัมน์ทีมตัดบรรทัดได้ จะได้ไม่ดันตารางจนปุ่มหลุดจอ */
 .mxt-team { white-space: normal !important; max-width: 190px; font-size: .76rem; line-height: 1.3; overflow-wrap: anywhere; }
 .mxt-act { white-space: nowrap; }

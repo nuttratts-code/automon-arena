@@ -214,7 +214,7 @@ function mxMetric(uid) {
       mxBarSegs(tot / sc.fx * 100, [[f.heal, 'var(--n-heal)', `ฮิล ${nf(f.heal)}`, tot], [f.armor, 'var(--n-armor)', `เกราะ ${nf(f.armor)}`, tot]]));
   }
   const max = Math.max(1, (x.fin && x.fin.maxHp) || x.hp || 1), hp = Math.max(0, x.hp || 0);
-  const out = put('HP ตอนจบ', `${nf(hp)}/${nf(max)}`, x.down ? 'down' : 'รอด',
+  const out = put('HP ตอนจบ', `${nf(hp)}/${nf(max)}`, x.down ? 'ล้ม' : 'รอด',
     mxBarSegs(hp / max * 100, [[hp, 'var(--hp)', `HP ${nf(hp)} / ${nf(max)}`, max]]));
   // แท็บสเตตัส: ค่าสุดท้ายทุกช่อง (รวมคูลดาวน์) โชว์ในแถวเลย ไม่ต้องกดกาง · HP อยู่ในบรรทัด/แท่งด้านบนแล้ว จึงไม่ซ้ำ
   if (x.fin) {
@@ -325,7 +325,7 @@ function renderMatch() {
       det.addEventListener('toggle', () => { if (det.open) { mxOpen.add(k); if (!det.querySelector('.mx-body')) det.append(body()); } else mxOpen.delete(k); });
       const s = document.createElement('summary'), nm = el('div', 'mx-name');
       if (c) nm.append(tribeBadge(c.tribe, c.extraTribes));
-      nm.append(el('span', 'nm', `${c ? c.name : u.id} Lv${u.level} · ${ROW_TH[u.row]}${u.lane + 1}`), pill(x && x.down ? 'down' : 'ยืน', x && x.down ? 'mx-down' : 'p-ok'));
+      nm.append(el('span', 'nm', `${c ? c.name : u.id} Lv${u.level} · ${ROW_TH[u.row]}${u.lane + 1}`), pill(x && x.down ? 'ล้ม' : 'ยืน', x && x.down ? 'mx-down' : 'p-ok'));
       nm.title = `${u.id} ${c ? c.name : ''} · ${mxShort(u)}`;
       const mn = mxMetric(u.uid), bar = mn.querySelector(".mx-bar"), chips = mn.querySelector(".mx-fin"); s.append(nm, mn); if (bar) s.append(bar); if (chips) s.append(chips); det.append(s);
       const body = () => mxUnitBody(u.uid, k);
@@ -434,7 +434,7 @@ function renderChart(all, r, m) {
     if (e.k !== 'down') continue;
     const u = all.find(x => x.uid === (e.who ?? e.to)); if (!u) continue;
     const c = sv('circle', { class: 'pt', cx: X(e.t).toFixed(1), cy: Y(u.side, 0).toFixed(1), r: 2.6, fill: 'var(--hi)', stroke: 'var(--panel)', 'stroke-width': 1 });
-    c.append(sv('title', {}, `${secT(e.t)} · ${(m[u.id] || {}).name || u.id} down`));
+    c.append(sv('title', {}, `${secT(e.t)} · ${(m[u.id] || {}).name || u.id} ล้ม`));
     svg.append(c);
   }
   for (const d of dots) {
