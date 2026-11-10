@@ -665,9 +665,9 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
   .slot .stxt { grid-row: 2; grid-column: 1 / -1; align-items: center; }
   .slot .uname { text-align: center; font-size: .68rem; } .slot .sub.tr { display: none; }
 }
-/* portrait phone: ask to rotate (button continues in portrait) */
+/* portrait phone: rotate screen, cannot be dismissed (set 176 K1: landscape only; portrait layout below parked) */
 @media (orientation: portrait) and (max-width: 700px) {
-  #rotate:not(.dismissed) { display: grid; position: fixed; inset: 0; z-index: 80; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
+  #rotate { display: grid; position: fixed; inset: 0; z-index: 80; background: var(--bg); place-items: center; text-align: center; padding: 24px; }
   #rotate > div { display: grid; gap: 12px; justify-items: center; max-width: 280px; }
   #rotate .phone { width: 46px; height: 80px; border: 3px solid var(--ink); border-radius: 10px; animation: turn 2s ease-in-out infinite; }
   @keyframes turn { 40%, 100% { transform: rotate(-90deg); } }
@@ -906,7 +906,7 @@ button.big { height: 52px; border-radius: 10px; font: 500 1.25rem var(--f-displa
 
 <div id="notice" hidden><span id="noticeText" class="grow"></span><button id="noticeX" type="button" aria-label="ปิด">✕</button></div>
 <div id="toast" hidden></div>
-<div id="rotate"><div><div class="phone"></div><strong>หมุนมือถือเป็นแนวนอน</strong><span class="hint">เกมนี้ออกแบบให้เล่นแนวนอนเป็นหลัก</span><button id="rotateSkip" type="button">ใช้แนวตั้งต่อ</button></div></div>
+<div id="rotate"><div><div class="phone"></div><strong>หมุนมือถือเป็นแนวนอน</strong><span class="hint">เกมนี้เล่นแนวนอนเท่านั้น</span></div></div>
 
 <dialog id="dlg" aria-label="รายละเอียด"><div class="pop" id="pop"></div></dialog>
 <dialog id="offerDlg" class="offerdlg" aria-label="เลือกรูนรางวัล"><div class="pop">
@@ -1748,7 +1748,6 @@ function playerSide(teamA, runes, streak = stats.streak) {
 }
 $('offerReroll').addEventListener('click', () => { pushMsgs(J('or', [], () => rnRerollOffer(P))); saveRun(); render(); });
 $('offerSkip').addEventListener('click', () => { pushMsgs(J('sk', [], () => rnSkipOffer(P))); saveRun(); render(); });
-$('rotateSkip').addEventListener('click', () => $('rotate').classList.add('dismissed'));
 
 // ---------- สู้ ----------
 let lastResult = null, dummyDmg = 0; // set 108: damage into the last-round dummy (shown on the result + run end)

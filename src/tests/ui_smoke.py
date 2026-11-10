@@ -44,10 +44,6 @@ with sync_playwright() as p:
             pg.mouse.move(x,y); pg.mouse.down(); pg.mouse.move(x+15,y+5,steps=3)
             pg.mouse.move(bb['x']+bb['width']/2, bb['y']+bb['height']/2, steps=8); pg.mouse.up()
         noscroll('prep')
-        # set 159: portrait (after "ใช้แนวตั้งต่อ") must not run off-screen (HUD was 886 px wide on a 390 px phone)
-        pg.set_viewport_size({'width':390,'height':844})
-        if pg.is_visible('#rotateSkip'): pg.click('#rotateSkip')
-        noscroll('portrait prep'); pg.set_viewport_size({'width':gw,'height':gh})
         chk(len(pg.query_selector_all('#bench .cell'))==5 and pg.evaluate('P.bench.length')==5,'bench has 5 cells')
         chk(len(pg.query_selector_all('#board .cell'))==6 and pg.is_hidden('#arena'),'prep shows only my 3x2 (enemy hidden)')
         # set 89/96: shop level follows the round · next-round income on the dock · odds in the shop popup · reroll costs 1 (set 98)
@@ -404,11 +400,10 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.screenshot(path=f'{O}/runlog-{gw}.png')
         pg.goto(f'file://{D}/game.html'); pg.evaluate(KEEPNAME)
         print(w,'set 110 runlog viewer ok',flush=True)
-        # set 97: phone held upright → "rotate your phone" screen · button continues in portrait
+        # set 97/176: phone held upright → "rotate your phone" screen only (landscape only, no skip button)
         if w<700:
             pg.set_viewport_size({'width':390,'height':844}); pg.reload()
-            chk(pg.is_visible('#rotate') and pg.is_visible('#rotateSkip'),'portrait shows rotate screen')
-            pg.click('#rotateSkip'); chk(pg.is_hidden('#rotate') and in_prep(),'rotate screen button continues')
+            chk(pg.is_visible('#rotate') and pg.query_selector('#rotateSkip') is None and not pg.query_selector('#rotate button'),'portrait shows rotate screen only (no skip)')
             pg.evaluate("localStorage.clear()")
         pg.set_viewport_size({'width':w,'height':h})
         # 3 balance
