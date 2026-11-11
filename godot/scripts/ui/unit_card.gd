@@ -1,6 +1,6 @@
 # Set 197 (plan-set196 7b): the floating unit card (web #sidePane · unitInfo()): name + rarity + tribes + row · skill lines · Lv tabs ·
 # stat row (permanent bonus in gold) · actions (shop: lock · buy · buy + merge · owned: sell). Numbers come from the ported core (team.gd unit_of),
-# skill texts from data/labels.json "skills" (generated from labels.js skillLine). Not shown yet (7e): the "+rune at match start" numbers and the glossary link.
+# skill texts from data/labels.json "skills" (generated from labels.js skillLine). Glossary link added set 200 (7e). Not shown yet: the "+rune at match start" numbers.
 extends PanelContainer
 
 const TH := preload("res://scripts/ui/theme.gd")
@@ -125,6 +125,16 @@ func fill(ctx: Dictionary, cm: Dictionary) -> void:
 	acts.name = "CardActs"
 	acts.add_theme_constant_override("separation", 6)
 	acts.alignment = BoxContainer.ALIGNMENT_END
+	var gl := Button.new() # web card footer: "คำศัพท์" → glossary popup (set 200, carried from 7b)
+	gl.name = "CardGloss"
+	gl.text = TH.ui_text("gl_t")
+	gl.flat = true
+	gl.add_theme_color_override("font_color", TH.c("accent"))
+	gl.pressed.connect(func() -> void: act.emit("gloss"))
+	acts.add_child(gl)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	acts.add_child(gap)
 	if bool(ctx["shop"]):
 		var lk := Button.new()
 		lk.name = "CardLock"

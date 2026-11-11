@@ -20,6 +20,8 @@ signal open_tribes
 signal clear_highlight
 signal open_diff
 signal open_replays
+signal open_legend # 7e: ? = symbols (web #legendBtn)
+signal menu_pick(k: String) # 7e: ⋯ menu (web #menu) · new | log | rename | credits
 
 var app: Control # app.gd: P · cm · chars · do_*() commands
 var hi_tribe: Variant = null
@@ -49,6 +51,11 @@ var btn_fight: Button
 var fight_t: Label
 var fight_n: Label
 var card: Card
+var btn_legend: Button
+var btn_menu: Button
+var menu: PanelContainer # ⋯ menu panel under the button (web .menu)
+var menu_new: Button
+var _new_confirm := 0 # web #newRun two-step: a second press within 3 s starts the new run (no confirm once the run is over)
 
 func setup(a: Control) -> void:
 	app = a
@@ -71,6 +78,7 @@ func setup(a: Control) -> void:
 	card.act.connect(_on_card_act)
 	card.lv_changed.connect(func(_l: int) -> void: _refresh_card())
 	add_child(card)
+	_build_menu()
 
 # ---------- build ----------
 func _chip(bg: String, ink: String, art: String) -> Array:
@@ -137,7 +145,73 @@ func _build_hud() -> Control:
 	btn_diff = _hudbtn("", "DiffBtn")
 	btn_diff.pressed.connect(func() -> void: open_diff.emit())
 	h.add_child(btn_diff)
+	btn_legend = _hudbtn("?", "LegendBtn")
+	btn_legend.custom_minimum_size.x = 36
+	btn_legend.tooltip_text = TH.ui_text("lg_t")
+	btn_legend.pressed.connect(func() -> void: open_legend.emit())
+	h.add_child(btn_legend)
+	btn_menu = _hudbtn("⋯", "MenuBtn")
+	btn_menu.custom_minimum_size.x = 36
+	btn_menu.pressed.connect(func() -> void: show_menu(not menu.visible))
+	h.add_child(btn_menu)
 	return h
+
+func _build_menu() -> void:
+	menu = PanelContainer.new()
+	menu.name = "Menu"
+	menu.visible = false
+	var st := TH.box(TH.c("panel"), TH.c("line"), 10, 1, 6, 6)
+	st.shadow_color = Color(0, 0, 0, 0.3)
+	st.shadow_size = 10
+	menu.add_theme_stylebox_override("panel", st)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	menu.add_child(v)
+	menu_new = _menu_btn(v, "MenuNew", TH.ui_text("menu_new"), _on_menu_new)
+	_menu_btn(v, "MenuLog", TH.ui_text("menu_log"), func() -> void: _pick("log"))
+	_menu_btn(v, "MenuRename", TH.ui_text("rename"), func() -> void: _pick("rename"))
+	if ResourceLoader.exists("res://scripts/ui/credits.gd"): # 7f1 (another chat) adds the credits screen
+		_menu_btn(v, "MenuCredits", TH.ui_text("g_menu_credits"), func() -> void: _pick("credits"))
+	add_child(menu)
+
+func _menu_btn(v: VBoxContainer, nm: String, t: String, fn: Callable) -> Button:
+	var b := Button.new()
+	b.name = nm
+	b.text = t
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size = Vector2(170, 36)
+	b.pressed.connect(fn)
+	v.add_child(b)
+	return b
+
+func show_menu(on: bool) -> void:
+	menu.visible = on
+	_new_confirm = 0
+	menu_new.text = TH.ui_text("menu_new")
+	if on:
+		menu.reset_size()
+		var r := btn_menu.get_global_rect()
+		var vw := get_viewport_rect().size.x if is_inside_tree() else 854.0
+		menu.global_position = Vector2(clampf(r.end.x - menu.size.x, 4.0, vw - menu.size.x - 4.0), r.end.y + 4.0)
+
+func _pick(k: String) -> void:
+	show_menu(false)
+	menu_pick.emit(k)
+
+func _on_menu_new() -> void:
+	var over := bool(P().get("over", false)) if app.P != null else true
+	if _new_confirm == 0 and not over:
+		_new_confirm = 1
+		menu_new.text = TH.ui_text("menu_confirm")
+		var tok := maxi(1, Time.get_ticks_msec())
+		_new_confirm = tok
+		if is_inside_tree():
+			get_tree().create_timer(3.0).timeout.connect(func() -> void:
+				if _new_confirm == tok:
+					_new_confirm = 0
+					menu_new.text = TH.ui_text("menu_new"))
+		return
+	_pick("new")
 
 func _build_msg() -> Control:
 	msg_bar = PanelContainer.new()
@@ -463,6 +537,9 @@ func _place_card(anchor: Control, up: bool) -> void:
 	card.size = Vector2(w, h)
 
 func _on_card_act(kind: String) -> void:
+	if kind == "gloss": # web card footer "คำศัพท์"
+		app.popups.open("gloss")
+		return
 	var ref: Variant = sel_ref()
 	if ref == null:
 		return
@@ -486,6 +563,11 @@ func _on_card_act(kind: String) -> void:
 
 # tap anywhere else (not the card, not another place) closes the card (web document pointerdown)
 func _input(e: InputEvent) -> void:
+	if menu != null and menu.visible: # click outside / Esc closes the menu (web)
+		if e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
+			show_menu(false)
+		elif e is InputEventMouseButton and e.pressed and not menu.get_global_rect().has_point(e.global_position) and not btn_menu.get_global_rect().has_point(e.global_position):
+			show_menu(false)
 	if card != null and card.visible and e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 		if not card.get_global_rect().has_point(e.global_position):
 			for k in cells:

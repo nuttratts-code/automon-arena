@@ -14,6 +14,7 @@ signal new_run
 signal extra
 signal copy_code
 signal watch(i: int)
+signal rename # 7e: web .nameEdit on the run end screen
 
 var app: Control
 var title: Label
@@ -27,6 +28,7 @@ var stats_box: VBoxContainer
 var hist_box: VBoxContainer
 var rep_box: VBoxContainer
 var code_msg: Label
+var player: Label
 
 static func _n(x: Variant) -> String:
 	var f := float(x)
@@ -109,6 +111,18 @@ func setup(a: Control) -> void:
 	team.add_theme_constant_override("h_separation", 6)
 	team.add_theme_constant_override("v_separation", 6)
 	left.add_child(team)
+	var prow := HBoxContainer.new()
+	prow.add_theme_constant_override("separation", 8)
+	player = TH.label("", 13, "mute")
+	player.name = "EndPlayer"
+	player.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	prow.add_child(player)
+	var rn := Button.new()
+	rn.name = "EndRename"
+	rn.text = TH.ui_text("rename")
+	rn.pressed.connect(func() -> void: rename.emit())
+	prow.add_child(rn)
+	left.add_child(prow)
 	# right: stats · history · replays
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -170,6 +184,7 @@ func render() -> void:
 	summary.text = TH.ui_text("end_sum", {"w": _n(P["wins"]), "n": _n(S["winsToFinish"]), "h": _n(P["hearts"]), "m": _n(S["hearts"]), "r": _n(P["round"])}) \
 		+ (TH.ui_text("r_dummy", {"n": _n(app.dummy_dmg)}) if app.dummy_dmg > 0.0 else "")
 	btn_extra.visible = can_extra
+	player.text = TH.ui_text("player", {"n": app.player_name if app.player_name != "" else TH.ui_text("no_name")})
 	extra_hint.visible = can_extra
 	extra_hint.text = TH.ui_text("end_extra_warn", {"p": _n(float(R.js_i32(RB.RUN_STAGE()["settings"].get("foeExtraPct")))), "l": _n(last)})
 	# one main button: extra matches first when offered

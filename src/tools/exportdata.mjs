@@ -129,7 +129,7 @@ export function checkUiText() {
   const web = files.map(f => readFileSync(f, 'utf8')).join('\n'), p = [];
   const ui = JSON.parse(readFileSync(resolve(SRC, '../godot/data/ui_th.json'), 'utf8'));
   for (const [k, v] of Object.entries(ui)) {
-    if (k.startsWith('_')) continue;
+    if (k.startsWith('_') || k.startsWith('g_')) continue; // set 200: g_ = Godot-only text (offline Log, credits entry)
     if (typeof v !== 'string') { p.push(k + ' is not text'); continue; }
     for (const part of v.split(/\{[a-z]+\}/)) if (part.trim() && !web.includes(part)) p.push(k + ': "' + part + '" not in src/game/run (or game/view.js)');
   }

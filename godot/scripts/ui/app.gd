@@ -26,7 +26,8 @@ const Popups := preload("res://scripts/ui/popups.gd")
 const NameScreen := preload("res://scripts/ui/name_screen.gd")
 const RuneOffer := preload("res://scripts/ui/rune_offer.gd")
 const RunEnd := preload("res://scripts/ui/run_end.gd")
-const PREFS := "user://prefs.json"
+const Resume := preload("res://scripts/ui/resume.gd")
+var prefs_file := "user://prefs.json" # tests point it at their own file
 
 var chars: Array = []
 var cm: Dictionary = {}
@@ -48,7 +49,7 @@ var pending_end: Variant = null # {r, w} of the match on screen: applied to the 
 var last_result: Variant = null
 var dummy_dmg := 0.0
 var clear_at := 0.0
-var screen := "prep" # prep | battle | runEnd
+var screen := "prep" # prep | battle | runEnd | resume
 var replays_file := "user://replays.json"
 var history_file := "user://history.json"
 var confirm_runes := false
@@ -64,6 +65,13 @@ var run_end: Control
 var clip_ok := true # tests switch the clipboard off to reach the "copy by hand" box
 var last_code := "" # the last run code handed to the clipboard (tests read it)
 var rotate_box: Control
+var resume_scr: Control
+var resume_save: Variant = null # the save read by boot(), waiting for เล่นต่อ / เริ่ม run ใหม่
+var name_then: Variant = null # Callable after the name screen (rename from the resume / run end screen or the menu)
+var runcodes_file := "user://runcodes.json" # set 200 (7e, user A1): this device's last 60 runs as ARUN1 codes (the offline Log)
+var log_msg := "" # Log popup: message after "copy 60 runs"
+var log_box := "" # Log popup: the codes in a box when there is no clipboard
+const RUNCODES_MAX := 60
 
 var built := false
 
@@ -94,6 +102,8 @@ func build() -> void:
 	prep.open_diff.connect(func() -> void: popups.open("diff"))
 	prep.open_replays.connect(func() -> void: popups.open("replays"))
 	prep.clear_highlight.connect(func() -> void: set_highlight(null))
+	prep.open_legend.connect(func() -> void: popups.open("legend"))
+	prep.menu_pick.connect(_on_menu)
 	pop = Pop.new()
 	popups = Popups.new(self, pop)
 	battle = BattleScr.new()
@@ -113,6 +123,19 @@ func build() -> void:
 	run_end.extra.connect(_on_extra)
 	run_end.copy_code.connect(copy_run_code)
 	run_end.watch.connect(watch_replay)
+	run_end.rename.connect(func() -> void: ask_name(func() -> void: render()))
+	resume_scr = Resume.new()
+	resume_scr.visible = false
+	resume_scr.go.connect(_on_resume_go)
+	resume_scr.new_run.connect(func() -> void:
+		resume_save = null
+		resume_scr.visible = false
+		start_new_run(randi()))
+	resume_scr.copy_code.connect(copy_run_code)
+	resume_scr.rename.connect(func() -> void: ask_name(func() -> void:
+		resume_scr.set_player(player_name)
+		resume_scr.visible = true))
+	add_child(resume_scr)
 	add_child(pop) # above every screen: match details open over the battle, the run code box over the run end
 	name_scr = NameScreen.new()
 	name_scr.visible = false
@@ -135,15 +158,215 @@ func build() -> void:
 	if not has_meta("no_boot"): # tests/shots.gd drives the screens itself
 		boot()
 
-# web boot(): no name → ask first · (7e adds resume from the save)
+# web boot(): no name → ask first · a saved run → the resume screen (7e) · a save on other game values / broken → removed, new run + notice
 func boot() -> void:
 	if player_name == "":
 		name_scr.open("")
 		return
 	name_scr.visible = false
+	var r := SV.read_save(SV.load_text(save_file, SV.SAVE_MAX_CHARS * 4), cm, R.RULES(), data_hash)
+	if r["status"] == "ok":
+		resume_save = r["save"]
+		var o: Dictionary = resume_save["P"]
+		var S: Dictionary = R.RULES()["shop"]
+		var open := SH._truthy(o.get("op")) # set 184: saved while the shop round was open → that round as it was (no second startRound)
+		var rnd := float(o["round"]) if open else float(o["round"]) + 1.0
+		var info := TH.ui_text("rs_info_open" if open else "rs_info_closed", {"r": R.js_num(rnd), "w": R.js_num(float(o["wins"])), "t": R.js_num(float(S["winsToFinish"])),
+			"h": R.js_num(float(o["hearts"])), "g": R.js_num(float(o["gold"])), "l": R.js_num(SH.lv_for_round(rnd))})
+		screen = "resume"
+		prep.visible = false
+		battle.visible = false
+		run_end.visible = false
+		offer.visible = false
+		resume_scr.open(info, player_name)
+		return
+	if r["status"] != "none":
+		_del(save_file)
 	start_new_run(randi())
+	if r["status"] == "data":
+		say_err(TH.ui_text("nt_save_data"))
+	elif r["status"] == "bad":
+		say_err(TH.ui_text("nt_save_bad"))
+
+static func _del(path: String) -> void:
+	if path.begins_with("user://") and FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+
+# web #resumeGo: the saved run · its replays (this run only) · its journal when it rebuilds the saved state exactly (else unlogged, never a wrong log)
+func _on_resume_go() -> void:
+	if resume_save == null:
+		return
+	var o: Dictionary = resume_save
+	resume_save = null
+	P = o["P"]
+	B = o["B"]
+	stats = o["stats"]
+	started_at = float(o["startedAt"])
+	msgs = []
+	confirm_empty = false
+	confirm_runes = false
+	pending_end = null
+	replay_mode = null
+	last_result = null
+	var rp := SV.read_replays(SV.load_text(replays_file), cm, R.RULES(), data_hash, P["seed"])
+	replays = rp["list"]
+	if rp["status"] != "ok":
+		_save_replays()
+	RLOG = resume_log()
+	if RLOG != null and player_name != "" and str(RLOG.get("nm", "")) != player_name: # set 110: renamed on the resume screen
+		RLOG["nm"] = player_name
+		save_run()
+	resume_scr.visible = false
+	screen = "prep"
+	prep.hi_tribe = null
+	prep.sel = null
+	prep.card.visible = false
+	if SH._truthy(P.get("op")):
+		render()
+	else:
+		begin_round()
+	if rp["status"] == "data":
+		say_err(TH.ui_text("nt_rep_data"))
+	elif rp["status"] == "bad":
+		say_err(TH.ui_text("nt_rep_bad"))
+
+# web resumeLog(): the saved journal must replay to exactly the saved state
+func resume_log() -> Variant:
+	var t: Variant = SV.load_text(log_file)
+	if not (t is String) or SV.js_len(t) > SV.RUN_CODE_MAX:
+		return null
+	var p := SV.js_parse(t)
+	if not p["ok"]:
+		return null
+	var o: Variant = p["v"]
+	if not R.js_seq(RL.rl_check(o), true) or not R.js_seq(o.get("seed"), P["seed"]) or not R.js_seq(o.get("data"), data_hash):
+		return null
+	var r := RL.rl_replay(o, chars, {}, false)
+	var k := func(x: Dictionary) -> String: return SV.js_json([x["gold"], x["round"], x["n"], x["uid"], x["hearts"], x["wins"], x["shop"], x["bench"], x["board"], x["rn"]])
+	return o if int(r["firstBad"]) < 0 and k.call(r["st"]) == k.call(P) else null
+
+# web askName(then) / setName(): the name goes on this run's journal too
+func ask_name(then: Variant) -> void:
+	name_then = then
+	popups.close()
+	name_scr.open(player_name)
+
+# ⋯ menu (web #menu: เริ่ม run ใหม่ · Godot adds Log · rename · credits)
+func _on_menu(k: String) -> void:
+	match k:
+		"new":
+			start_new_run(randi())
+		"log":
+			log_msg = ""
+			log_box = ""
+			popups.open("log")
+		"rename":
+			ask_name(func() -> void: render())
+		"credits":
+			_open_credits()
+
+# credits screen = plan-set196 7f1 (scripts/ui/credits.gd, another chat): opened only when that file exists
+func _open_credits() -> void:
+	const CREDITS := "res://scripts/ui/credits.gd"
+	if not ResourceLoader.exists(CREDITS):
+		return
+	var c: Control = load(CREDITS).new()
+	add_child(c)
+	if c.has_signal("closed"):
+		c.closed.connect(func() -> void: c.queue_free())
+
+# ---------- offline Log (set 200, user A1): one ARUN1 code per finished / left run on this device, newest first, max 60 ----------
+# runcodes.json = [{at, upd, data, nm, round, wins, hearts, gold, over, code}] · our own file but still read as untrusted (shape + size checked)
+func _read_runcodes() -> Array:
+	var t: Variant = SV.load_text(runcodes_file)
+	if not (t is String):
+		return []
+	var p := SV.js_parse(t)
+	if not p["ok"] or not (p["v"] is Array):
+		return []
+	var out := []
+	for x in p["v"]:
+		if x is Dictionary and SV.sv_int_in(x.get("at"), 0, 1e15) and SV.sv_int_in(x.get("upd"), 0, 1e15) and x.get("data") is String and x.get("code") is String \
+				and (x["code"] as String).begins_with(SV.RUN_CODE_TAG + " ") and SV.js_len(x["code"]) <= SV.RUN_CODE_MAX and x.get("nm", "") is String:
+			for k in ["round", "wins", "hearts", "gold"]:
+				if not SV.sv_int_in(x.get(k), -1e9, 1e9):
+					x[k] = 0.0
+			x["over"] = x.get("over") == true
+			out.append(x)
+	return out.slice(0, RUNCODES_MAX)
+
+# a run's journal (+ its replays) → one Log row with its own run code · null when the journal is empty / unreadable
+func _run_entry(log_text: Variant, rep_text: Variant) -> Variant:
+	if not (log_text is String):
+		return null
+	var p := SV.js_parse(log_text)
+	if not p["ok"] or not R.js_seq(RL.rl_check(p["v"]), true) or (p["v"]["ev"] as Array).is_empty():
+		return null
+	var L: Dictionary = p["v"]
+	var code: Variant = SV.make_run_code([rep_text, ""], null, str(L["data"]), floorf(Time.get_unix_time_from_system() * 1000.0), R.RULES(), [log_text, ""], str(L.get("nm", "")))
+	if not (code is String):
+		return null
+	var st: Dictionary = RL.rl_replay(L, chars, {}, false)["st"] if str(L["data"]) == data_hash else {}
+	var last: Array = L["ev"][L["ev"].size() - 1]
+	return {"at": float(L["at"]), "upd": float(L["at"]) + float(last[1]) * 1000.0, "data": str(L["data"]), "nm": str(L.get("nm", "")),
+		"round": float(st.get("round", 0.0)), "wins": float(st.get("wins", 0.0)), "hearts": float(st.get("hearts", 0.0)), "gold": float(st.get("gold", 0.0)),
+		"over": SH._truthy(st.get("over")), "code": code}
+
+# called when a new run starts: the run on log_file goes into runcodes.json (whole file kept under the store cap)
+func archive_run() -> void:
+	var e: Variant = _run_entry(SV.load_text(log_file), SV.load_text(replays_file))
+	if e == null:
+		return
+	var list := _read_runcodes().filter(func(x): return float(x["at"]) != float(e["at"]))
+	list.push_front(e)
+	list = list.slice(0, RUNCODES_MAX)
+	var text := SV.js_json(list)
+	while list.size() > 1 and text.to_utf8_buffer().size() > SV.STORE_MAX_BYTES - 100000:
+		list.pop_back()
+		text = SV.js_json(list)
+	SV.store_text(runcodes_file, text)
+
+# Log rows: the run being played (live) + the archived ones, newest save first
+func log_rows() -> Array:
+	var rows := _read_runcodes()
+	if RLOG != null and P != null:
+		var cur: Variant = _run_entry(SV.load_text(log_file), SV.load_text(replays_file))
+		if cur != null:
+			rows = rows.filter(func(x): return float(x["at"]) != float(cur["at"]))
+			rows.push_front(cur)
+	rows.sort_custom(func(a, b): return float(a["upd"]) > float(b["upd"]))
+	return rows.slice(0, RUNCODES_MAX)
+
+func when_th(ms: float) -> String:
+	var d := Time.get_datetime_dict_from_unix_time(int(ms / 1000.0) + int(Time.get_time_zone_from_system().get("bias", 0)) * 60)
+	return "%d/%d/%d %02d:%02d" % [d["day"], d["month"], d["year"] + 543, d["hour"], d["minute"]]
+
+# web lgCopyAll(): the newest 60 runs on THIS game's values, one ARUN1 code each, blank line between (Balance Room ดูผล → ผู้เล่นจริง)
+func copy_all_codes() -> void:
+	var codes := []
+	for h in log_rows():
+		if h["data"] == data_hash:
+			codes.append(h["code"])
+	log_box = ""
+	if codes.is_empty():
+		log_msg = TH.ui_text("log_none")
+		popups.refresh()
+		return
+	var text := "\n\n".join(PackedStringArray(codes))
+	var note := TH.ui_text("log_n", {"n": str(codes.size())})
+	last_code = text
+	if clip_ok and DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		DisplayServer.clipboard_set(text)
+		log_msg = TH.ui_text("log_done", {"x": note})
+	else:
+		log_box = text
+		log_msg = TH.ui_text("log_box", {"x": note})
+	popups.refresh()
 
 func start_new_run(seed: int) -> void:
+	archive_run() # the run on log_file (finished or left) → the offline Log (set 200)
+	resume_save = null
+	resume_scr.visible = false
 	var sd := seed & 0xFFFFFFFF
 	P = SH.new_run(chars, float(sd))
 	B = SH.new_run(chars, float((sd ^ 0xA5A5A5A5) & 0xFFFFFFFF))
@@ -181,7 +404,7 @@ func begin_round() -> void:
 func render() -> void:
 	if P == null:
 		return
-	if screen == "battle":
+	if screen == "battle" or screen == "resume":
 		return
 	if screen == "runEnd":
 		prep.visible = false
@@ -204,11 +427,20 @@ func render() -> void:
 func _on_name(nm: String) -> void:
 	player_name = nm
 	_save_prefs()
-	boot()
+	if RLOG != null: # a rename during a run goes on this run's journal too (web setName)
+		RLOG["nm"] = nm
+		save_run()
+	name_scr.visible = false
+	var f: Variant = name_then
+	name_then = null
+	if f is Callable:
+		f.call()
+	else:
+		boot()
 
 # prefs.json = {name, speed, autoSkip} · text only, parsed + checked (HARD RULE 9 ③) · a bad file = defaults
 func _load_prefs() -> void:
-	var s: Variant = SV.load_text(PREFS, 10000)
+	var s: Variant = SV.load_text(prefs_file, 10000)
 	var d: Variant = JSON.parse_string(s) if s is String else null
 	player_name = ""
 	if d is Dictionary:
@@ -220,7 +452,7 @@ func _load_prefs() -> void:
 		auto_skip = d.get("autoSkip") == true
 
 func _save_prefs() -> void:
-	SV.store_text(PREFS, JSON.stringify({"name": player_name, "speed": speed, "autoSkip": auto_skip}))
+	SV.store_text(prefs_file, JSON.stringify({"name": player_name, "speed": speed, "autoSkip": auto_skip}))
 
 func set_speed(v: int, save: bool = true) -> void:
 	if not [1, 2, 4, 8, 16].has(v):
