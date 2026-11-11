@@ -1,6 +1,6 @@
 # workflow · code setup: build, test, docs (git repo)
 
-V1.31 · 8 Nov 2026 (set 158: points to skill merge-code) · V1.30 · 8 Nov 2026 (set 153: gate text → CLAUDE.md) · V1.29 · 8 Nov 2026 (set 152: code reaches main by merge after GATE: PASS; CI before publish) · V1.28 · 31 Oct 2026 (CI runs the gate; commit rule matches CLAUDE.md; Jules removed) · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action. V1.27 (set D): tests split into topic files, see section 2. · older versions: git log
+V1.32 · 11 Nov 2026 (set 203: §6 local PC loop for Godot UI work) · V1.31 · 8 Nov 2026 (set 158: points to skill merge-code) · V1.30 · 8 Nov 2026 (set 153: gate text → CLAUDE.md) · V1.29 · 8 Nov 2026 (set 152: code reaches main by merge after GATE: PASS; CI before publish) · V1.28 · 31 Oct 2026 (CI runs the gate; commit rule matches CLAUDE.md; Jules removed) · rewritten for the GitHub repo (was: fetch code from the Project / published pages). Section numbers kept for references. V1.26: Balance Room template split into fragments + GitHub Action. V1.27 (set D): tests split into topic files, see section 2. · older versions: git log
 
 Step-by-step runbook: skill `.claude/skills/merge-code/SKILL.md` (set 158). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
@@ -28,3 +28,12 @@ Step-by-step runbook: skill `.claude/skills/merge-code/SKILL.md` (set 158). This
 - characters.csv: `node src/tools/csv.mjs` regenerates it from `src/core/characters.js` (output → `claude/characters.csv`).
 - Publishing artifacts (game / balance room / check) still uses the Artifact tool — see publish.md. Pushing code to git does not publish anything.
 - Delete temporary files (measure .json, trial scripts) when the task set ends.
+
+## 6. Local PC loop for Godot UI work (set 203 · user A = Claude desktop app, B1 batches per screen, C1 gate on the PC)
+Why: Godot UI fixes need many small look-and-feel rounds; on the user's PC Claude edits the files and the user presses F5 in the Godot editor to see them at once (cloud round = ~10–15 min).
+- **Setup once (user, Claude guides):** GitHub Desktop → clone `automon-arena` (never a ZIP: it cannot push) · Godot **4.7.2-stable Standard** (same pin as godot/tools/get_godot.sh) → Import `godot/project.godot` from that clone · Claude desktop app → Code tab → the clone folder · Node 22 (same major as CI) + Python 3.11 + git. First chat on the PC: `cd src && node tools/bootstrap.mjs setup` once to prove the tools work.
+- **Known risk:** bootstrap.mjs, ui_smoke.py and web_check.py default to the cloud browser path `/opt/pw-browsers`; on a PC the first gate run may need `PLAYWRIGHT_BROWSERS_PATH` / `CHROMIUM_PATH` set or a small fix — follow find-cause (HARD RULE 5), never skip the gate.
+- **Loop:** user plays → screenshots + numbered notes per screen (B1) → Claude logs them in claude/ui-todo-godot.md under that screen → design questions get 2–3 options first (ui-work skill) → Claude edits on the session branch → user presses F5 → screen done → setup → gate (HARD RULE 3) → merge → push (CI also runs the Godot suite + godot-web).
+- **Same rules as cloud:** chat-start (fetch, Relay, 🔒 lock), commit + push after every meaningful step (the PC can be off later), close-out (HARD RULE 1). The cloud chats and the PC share work only through GitHub.
+- **Security (HARD RULE 9):** no secrets in the folder or chat; the desktop app asks before running commands — the user allows only commands for this repo; Godot editor changes the user made by accident are discarded with `git restore` after asking.
+
