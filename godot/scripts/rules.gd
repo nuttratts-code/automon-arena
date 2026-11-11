@@ -218,3 +218,24 @@ static func skip_same_id_ok(s: Dictionary) -> bool:
 	var info: Variant = M["DO_INFO"].get(s.get("do")) if s.get("do") is String else null
 	return not ["self", "nextTribeBuy"].has(to) and s.get("do") != "shareArmor" and info != null and info.get("side") != "self" \
 		and (M["ALLY_T"].has(to) or M["SHOP_T"].has(to))
+
+# JS `x | 0` (ToInt32): not a finite number → 0 · truncate toward zero · wrap to signed 32 bits (set 195, step 6b)
+static func js_i32(x: Variant) -> int:
+	if not is_num(x):
+		return 0
+	var f := float(x)
+	var t := int(fmod(f, 4294967296.0)) if absf(f) >= 4294967296.0 else int(f)
+	t &= 0xFFFFFFFF
+	return t - 0x100000000 if t >= 0x80000000 else t
+
+# JS `x || 0` for a JSON value that should be a number: missing / null / 0 / NaN / non-number → 0
+static func js_or0(x: Variant) -> float:
+	return float(x) if is_num(x) else 0.0
+
+# JS +(x).toFixed(2) for |x| < 1e15: nearest hundredth, an exact half goes up (away from zero) like toFixed.
+# n / 100.0 = the correctly rounded value of the decimal text, same as JS parsing it back.
+static func js_fixed2(x: float) -> float:
+	var neg := x < 0.0
+	var a := absf(x)
+	var n := floorf(a * 100.0 + 0.5)
+	return (-n if neg else n) / 100.0

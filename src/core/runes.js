@@ -4,6 +4,7 @@
 // Only effects the skill system cannot express become unit fields that battle.js reads (taunt, avoidDeath, link, bossDmg, …).
 // Run-flow runes (gold/shop/drop/scout) are listed in RUNE_RUN_ONLY and are ignored here — they belong to phase 2b.
 // Every number is the user's (Balance Room); this file adds no numbers of its own.
+// Godot port (set 195): equipRunes/rnFlagTribes/runeRecord also in godot/scripts/runes.gd (golden stage.jsonl exact, tests/test_stage.gd) — change both
 import { TRIBES, upMul, upGain } from './rules.js';
 import { RUNE_EFF, RUNE_SPEC, runeKind } from './stage.js';
 

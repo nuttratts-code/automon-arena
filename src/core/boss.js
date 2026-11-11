@@ -1,6 +1,7 @@
 // Boss fights (phase 2a, set 66) — turns a boss record from the Balance Room into a unit the battle engine can fight,
 // plus the phase state machine (which rules are live right now). Pure data: no randomness, no battle logic here.
 // Rules R1–R30 + E1–E8 live in BOSS_RULES (core/stage.js); battle.js reads the live rule map this file produces.
+// Godot port (set 195): bossUnit/bossV2Phases/heatRules also in godot/scripts/boss.gd (golden stage.jsonl exact, tests/test_stage.gd) — change both
 import { spotInfo, bossAt, bossMults, boss2Default, BOSS_RULES } from './stage.js';
 
 // A boss is ONE fighter that stands on several slots (user Q1 A): row/lane below = its front-most slot, `slots` = all of them.
