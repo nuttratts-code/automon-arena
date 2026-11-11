@@ -12,11 +12,13 @@ const T := preload("res://scripts/team.gd")
 const R := preload("res://scripts/rules.gd")
 const BT := preload("res://scripts/botteams.gd")
 const RB := preload("res://scripts/runboss.gd")
+const MatchPop := preload("res://scripts/ui/match_pop.gd")
 
 var app: Control
 var pop: Control # pop.gd
 var kind := ""
 var arg: Variant = null
+var mx_state := {"tab": 0, "who": null, "log_open": false} # match details: tab · log filter (reset per match by app)
 
 func _init(a: Control, p: Control) -> void:
 	app = a
@@ -66,6 +68,23 @@ func refresh() -> void:
 			nodes = _diff(st)
 		"replays":
 			nodes = _replays()
+			extra.append(_btn(TH.ui_text("code_copy"), func() -> void: app.copy_run_code(), "CopyCode"))
+		"mx":
+			if app.battle.view.result == null:
+				pop.close()
+				return
+			var keep: float = pop._scroll.scroll_vertical
+			nodes = MatchPop.build(app.battle.view.result, app.battle.view.cm, app.battle.view.log, mx_state, func(k: String, v: Variant) -> void:
+				mx_state[k] = v
+				refresh())
+			pop.show_nodes(nodes, extra, true)
+			pop._scroll.set_deferred("scroll_vertical", keep)
+			return
+		"runcode":
+			nodes = _runcode()
+			if nodes.is_empty():
+				pop.close()
+				return
 	pop.show_nodes(nodes, extra)
 
 func _hint(t: String, col: String = "mute") -> Label:
@@ -450,3 +469,18 @@ func _replays() -> Array:
 		h.add_child(_btn(TH.ui_text("rep_watch"), func() -> void: app.watch_replay(i), "Watch%d" % i))
 		list.add_child(h)
 	return [Pop.head(TH.ui_text("rep_title", {"n": str(app.replays.size())}), TH.ui_text("rep_sub")), list]
+
+# ---------- run code in a box (web POPS.runcode): shown when the clipboard is not available, to copy by hand ----------
+func _runcode() -> Array:
+	var code: Variant = app.run_code()
+	if not (code is String):
+		return []
+	var ta := TextEdit.new()
+	ta.name = "RunCodeText"
+	ta.text = code
+	ta.editable = false
+	ta.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	ta.custom_minimum_size.y = 130
+	ta.add_theme_font_size_override("font_size", 13)
+	ta.select_all.call_deferred()
+	return [Pop.head(TH.ui_text("code_title"), TH.ui_text("code_sub")), ta]

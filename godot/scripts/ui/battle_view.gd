@@ -29,6 +29,7 @@ var units := {} # uid → unit record (see _add_unit)
 var cells := {} # "side:row:lane" → Control
 var ver := 0 # bumps on every applied event (the live info panel repaints on change)
 var picked: Variant = null
+var log: Array = [] # every ticker line so far: {t, text, ids: [uid]}
 
 var _sides: Array = []
 var _skill_tok := {}
@@ -50,6 +51,7 @@ func load_result(res: Dictionary, charmap: Dictionary) -> void:
 	playing = false
 	fast = false
 	ver = 0
+	log = []
 	picked = null
 	units = {}
 	cells = {}
@@ -289,6 +291,11 @@ func _nm(uid: Variant) -> String:
 	return (TH.ui_text("side_you") if v["side"] == 0 else TH.ui_text("side_foe")) + " " + str(c["name"])
 
 func _say(s: String, e: Dictionary) -> void:
+	var ids := []
+	for key in ["who", "to", "from", "target"]:
+		if e.get(key) != null and not ids.has(int(e[key])):
+			ids.append(int(e[key]))
+	log.append({"t": float(e["t"]), "text": s, "ids": ids}) # 7d: the battle log of the match details popup (filter by unit)
 	log_line.emit(TH.ui_text("t_sec", {"t": "%.1f" % (float(e["t"]) / 1000.0)}) + " " + s)
 
 func _set_stat(v: Variant, k: String, val: float) -> void:
@@ -505,6 +512,8 @@ func _on_cell_input(ev: InputEvent, key: String) -> void:
 		var v: Variant = unit_at_cell(key)
 		if v != null:
 			unit_tapped.emit(int(v["uid"]))
+		else:
+			unit_tapped.emit(-1) # an empty cell: the live pane closes (web "แตะที่อื่น = ปิด")
 
 func set_picked(uid: Variant) -> void:
 	picked = uid

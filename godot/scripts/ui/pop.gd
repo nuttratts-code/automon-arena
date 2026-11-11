@@ -9,6 +9,7 @@ signal closed
 var _panel: PanelContainer
 var _scroll: ScrollContainer
 var _body: VBoxContainer
+var wide := false # 7d: the match details popup (web dialog.wide)
 
 func _init() -> void:
 	name = "Pop"
@@ -50,14 +51,15 @@ func close() -> void:
 		closed.emit()
 
 func _fit() -> void:
-	var w := minf(560.0, size.x - 24.0)
+	var w := minf(780.0 if wide else 560.0, size.x - 24.0)
 	var h := minf(_body.get_combined_minimum_size().y + 24.0, size.y - 24.0)
 	_panel.custom_minimum_size = Vector2(w, h)
 	_scroll.custom_minimum_size = Vector2(w - 28.0, h - 24.0)
 	_body.custom_minimum_size.x = w - 28.0
 
 # nodes = the content (header, lists, buttons); a "ปิด" row is appended unless no_close
-func show_nodes(nodes: Array, extra_acts: Array = []) -> void:
+func show_nodes(nodes: Array, extra_acts: Array = [], is_wide: bool = false) -> void:
+	wide = is_wide
 	for ch in _body.get_children():
 		_body.remove_child(ch)
 		ch.queue_free()
