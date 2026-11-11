@@ -7,6 +7,7 @@ import { burnShares } from './battle.js';
 import { rnValidate, rnCompactOk } from './runrunes.js';
 import { rlCheck, rlName } from './runlog.js';
 // เซฟกลางทาง + สถิติ run + ประวัติ run (ชุด 22 · ผู้ใช้เลือก 24 ต.ค.) · ข้อมูลล้วน ไม่แตะหน้าจอ (ย้ายไปเซิร์ฟเวอร์ได้)
+// Godot port (set 195 step 6f): godot/scripts/save.gd — a change here must be made there too (golden save.jsonl, lab/golden-save.mjs).
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
 // - ตรวจทุกช่องตอนโหลด: ชนิด ช่วงค่า จำนวนเต็ม เวอร์ชัน · ตัวละครมีจริง · ค่าถาวรรู้จักและไม่เกินเพดาน · ประจุ SF-7 · ผิด = ไม่โหลด (ล้างแล้วแจ้ง)

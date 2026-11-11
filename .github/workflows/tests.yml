@@ -70,3 +70,6 @@ jobs:
         run: |
           timeout 1200 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
           grep -q "^GODOT TESTS: PASS" godot-tests.log
+      - name: Godot-made ARUN1 code reads in the JS Balance Room reader (set 195 step 6f)
+        working-directory: src
+        run: node lab/golden-save.mjs check ../godot/tests/golden/godot-arun1.txt

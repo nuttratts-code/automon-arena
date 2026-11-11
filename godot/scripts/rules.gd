@@ -169,19 +169,41 @@ static func js_str_of(d: Variant, k: String) -> String:
 		return "undefined"
 	return js_str(d[k])
 
-# JS number → text: whole numbers without ".0", others the shortest text that reads back the same
+# JS number → text (Number.prototype.toString): whole numbers without ".0", others the shortest digits that read back
+# the same (String.num_scientific gives them), laid out like JS: plain for 1e-7 < |x| < 1e21, else 1.5e+21 / 1e-7.
+# Set 195 (6f): was fixed decimals + a to_float round trip (to_float can be 1 ulp off; no exponent form).
+# Trap: num_scientific prints subnormals (|x| < 2.2e-308) as "0" — never in game data.
 static func js_num(x: float) -> String:
 	if is_nan(x):
 		return "NaN"
 	if is_inf(x):
 		return "Infinity" if x > 0 else "-Infinity"
-	if floorf(x) == x and absf(x) < 1e21:
-		return "%d" % int(x) if absf(x) < 9.2e18 else String.num(x, 0)
-	for p in range(1, 18):
-		var s := String.num(x, p)
-		if s.to_float() == x:
-			return s
-	return String.num(x, 17)
+	if floorf(x) == x and absf(x) < 9.2e18:
+		return "%d" % int(x)
+	var sci := String.num_scientific(absf(x))
+	var ep := sci.find("e")
+	var mant := sci if ep < 0 else sci.substr(0, ep)
+	var ex := 0 if ep < 0 else sci.substr(ep + 1).to_int()
+	var dot := mant.find(".")
+	var ip := mant if dot < 0 else mant.substr(0, dot)
+	var digits := ip + ("" if dot < 0 else mant.substr(dot + 1))
+	var n := ip.length() + ex  # value = 0.digits × 10^n
+	while digits.length() > 1 and digits[0] == "0":
+		digits = digits.substr(1)
+		n -= 1
+	while digits.length() > 1 and digits[digits.length() - 1] == "0":
+		digits = digits.substr(0, digits.length() - 1)
+	var k := digits.length()
+	var out: String
+	if k <= n and n <= 21:
+		out = digits + "0".repeat(n - k)
+	elif 0 < n and n <= 21:
+		out = digits.substr(0, n) + "." + digits.substr(n)
+	elif -6 < n and n <= 0:
+		out = "0." + "0".repeat(-n) + digits
+	else:
+		out = digits[0] + ("." + digits.substr(1) if k > 1 else "") + "e" + ("+" if n - 1 >= 0 else "-") + str(absi(n - 1))
+	return ("-" if x < 0 else "") + out
 
 # rules.js cleanTags: drop control chars < > , · trim · ≤ TAG_LEN chars · no repeats / skill-kind names · ≤ TAG_MAX
 static func clean_tags(list: Variant) -> Array:

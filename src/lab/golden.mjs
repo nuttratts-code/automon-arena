@@ -11,6 +11,7 @@
 //     runrunes.jsonl (set 195, step 6c): runes inside the run — see lab/golden-runrunes.mjs.
 //     shop.jsonl (set 195, step 6d): shop / merge / round flow — see lab/golden-shop.mjs.
 //     bot.jsonl (set 195, step 6e): Math.log + bot / pickFoe helpers — see lab/golden-bot.mjs (whole bot runs = runs.jsonl).
+//     save.jsonl (set 195, step 6f): save / history / replays / play record / run journal / ARUN1 code — see lab/golden-save.mjs.
 // Every input goes through a JSON round trip BEFORE it is simulated: the fixture holds everything the result depends on.
 // v2 (set 194, user pick A1): in battles/runs every non-integer number is written as {"$f": "<16 hex digits>"} = its exact
 // IEEE-754 bits (big-endian), because Godot's text→float parse can be 1 ulp off (set 193). Godot decodes the bits and
@@ -34,6 +35,7 @@ import { stageGolden } from './golden-stage.mjs';
 import { runrunesGolden } from './golden-runrunes.mjs';
 import { shopGolden } from './golden-shop.mjs';
 import { botGolden } from './golden-bot.mjs';
+import { saveGolden } from './golden-save.mjs';
 
 export const GOLDEN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../godot/tests/golden');
 export const GOLDEN_V = 2;
@@ -135,6 +137,7 @@ export async function buildGolden(cfg = FULL, write = () => {}) {
   for (const o of runrunesGolden(cfg, chars)) emit('runrunes.jsonl', JSON.stringify(exactNums(plain(o, 'runrunes'))));
   for (const o of shopGolden(cfg, chars)) emit('shop.jsonl', JSON.stringify(exactNums(plain(o, 'shop'))));
   for (const o of botGolden(cfg, chars)) emit('bot.jsonl', JSON.stringify(exactNums(plain(o, 'bot'))));
+  for (const o of saveGolden(cfg, chars)) emit('save.jsonl', JSON.stringify(exactNums(plain(o, 'save'))));
   const gd = await buildGameData();
   // A1 guard (set 194): exact bits of every non-integer number in godot/data/game.json → Godot checks its JSON parse of game.json matches
   const gf = []; (function fl(v, p) { if (typeof v === 'number' && !Number.isInteger(v)) gf.push([p, exactNums(v).$f]); else if (v && typeof v === 'object') for (const k of Object.keys(v)) fl(v[k], p.concat(k)); })({ modules: gd.modules, derived: gd.derived }, []);
