@@ -9,6 +9,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Publish + page tests | skill `publish-pages` (runbook) · claude/workflow/publish.md (rules) | publishing an artifact, running ui_smoke by hand |
 | Choices A1/B1 · buttons · guiding the user in tools | claude/workflow/replies.md | before asking the user to pick, or walking them through a tool |
 | UI work (design skill first) | skill `ui-work` (runbook) · claude/workflow/ui.md (rules) | building or reshaping any UI/page/mockup — a new tab, table or button of numbers counts |
+| UI sample loop (owner designs, Claude renders samples, code once at the end) | skill `ui-preview` (set 208) | the owner asks to see a sample/ตัวอย่าง before real code |
 | Balance import · cfgdiff · bossrun | skill `balance-import` (runbook) · claude/workflow/balance-import.md §00 (rules) | any task touching game values (HARD RULE 6) |
 | Chat start (fetch · Relay · 🔒 · branch) | skill `chat-start` (runbook; SessionStart hook prints the Relay) · claude/workflow/relay.md (rules) | first turn of every chat |
 | Battle-scene art look (pixel sprites in a lit 3D set · light · blur · skill VFX · plan P5) | skill `art-look` (runbook, set 201) · claude/art-style.md (rules) | building or changing how the battle scene looks in godot/, or preparing art for it |
