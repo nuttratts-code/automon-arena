@@ -191,7 +191,8 @@ func show_menu(on: bool) -> void:
 	if on:
 		menu.reset_size()
 		var r := btn_menu.get_global_rect()
-		menu.global_position = Vector2(clampf(r.end.x - menu.size.x, 4.0, get_viewport_rect().size.x - menu.size.x - 4.0), r.end.y + 4.0)
+		var vw := get_viewport_rect().size.x if is_inside_tree() else 854.0
+		menu.global_position = Vector2(clampf(r.end.x - menu.size.x, 4.0, vw - menu.size.x - 4.0), r.end.y + 4.0)
 
 func _pick(k: String) -> void:
 	show_menu(false)

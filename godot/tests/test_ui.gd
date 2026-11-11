@@ -148,10 +148,11 @@ func _app_tmp() -> Control:
 	app.log_file = "user://test-runlog.json"
 	app.replays_file = "user://test-replays.json"
 	app.history_file = "user://test-history.json"
+	app.runcodes_file = "user://test-runcodes.json"
 	return app
 
 func _cleanup() -> void:
-	for f in ["test-save.json", "test-runlog.json", "test-runlog_prev.json", "test-replays.json", "test-replays_prev.json", "test-history.json"]:
+	for f in ["test-save.json", "test-runlog.json", "test-runlog_prev.json", "test-replays.json", "test-replays_prev.json", "test-history.json", "test-runcodes.json", "test-prefs.json"]:
 		if FileAccess.file_exists("user://" + f):
 			DirAccess.remove_absolute("user://" + f)
 
@@ -673,3 +674,202 @@ func test_run_end() -> String:
 	app.queue_free()
 	_cleanup()
 	return "ok" if bad == "" else bad
+
+# ---------- set 200 (plan-set196 7e) ----------
+# a saved run opens the resume screen; เล่นต่อ = the same state (mid-round save → that round as it was, set 184) with its journal and replays;
+# after a match (op false) เล่นต่อ starts the next round · a broken save → new run + notice · rename on the resume screen goes on the journal
+func test_resume() -> String:
+	var a1 := _app_tmp()
+	a1.player_name = "ผู้ทดสอบ"
+	a1.start_new_run(91)
+	_board_one(a1)
+	var want := SV.js_json(a1.P)
+	var ev_n: int = (a1.RLOG["ev"] as Array).size()
+	a1.queue_free()
+	var app := _app_tmp()
+	app.prefs_file = "user://test-prefs.json"
+	app.player_name = "ผู้ทดสอบ"
+	app.boot()
+	var bad := ""
+	if app.screen != "resume" or not app.resume_scr.visible or app.prep.visible:
+		bad = "a saved run must open the resume screen (screen %s)" % app.screen
+	elif app.resume_scr.info.text != TH.ui_text("rs_info_open", {"r": "1", "w": "0", "t": R.js_num(float(R.RULES()["shop"]["winsToFinish"])),
+			"h": R.js_num(float(R.RULES()["shop"]["hearts"])), "g": R.js_num(float(app.resume_save["P"]["gold"])), "l": R.js_num(SH.lv_for_round(1.0))}):
+		bad = "resume line: " + app.resume_scr.info.text
+	if bad == "":
+		app.resume_scr.rename.emit()
+		if not app.name_scr.visible:
+			bad = "rename on the resume screen must open the name screen"
+		else:
+			app._on_name("ชื่อใหม่")
+			if not app.resume_scr.visible or app.name_scr.visible or app.resume_scr.player.text != TH.ui_text("player", {"n": "ชื่อใหม่"}):
+				bad = "after rename the resume screen must come back with the new name"
+	if bad == "":
+		app.resume_scr.go.emit()
+		if app.screen != "prep" or not app.prep.visible or app.resume_scr.visible:
+			bad = "เล่นต่อ must open the prep screen"
+		elif SV.js_json(app.P) != want:
+			bad = "เล่นต่อ (mid-round save) must give the same state, not a new round"
+		elif app.RLOG == null or (app.RLOG["ev"] as Array).size() != ev_n:
+			bad = "the journal must be picked up again (it replays to the saved state)"
+		elif str(app.RLOG.get("nm", "")) != "ชื่อใหม่":
+			bad = "the new name must go on the run's journal"
+	# after a match: the save has op false → เล่นต่อ starts the next round
+	if bad == "":
+		app._on_fight()
+		app.battle.skip_now()
+		var rnd := float(app.P["round"])
+		var app2 := _app_tmp()
+		app2.player_name = "x"
+		app2.boot()
+		if app2.screen != "resume" or not app2.resume_scr.info.text.begins_with(TH.ui_text("rs_info_closed", {"r": R.js_num(rnd + 1.0), "w": "", "t": "", "h": "", "g": "", "l": ""}).split(" · ")[0]):
+			bad = "after a match the resume line must name the next round: " + app2.resume_scr.info.text
+		else:
+			app2.resume_scr.go.emit()
+			if float(app2.P["round"]) != rnd + 1.0 or not SH._truthy(app2.P.get("op")):
+				bad = "เล่นต่อ after a match must start round %s (got %s)" % [rnd + 1.0, app2.P["round"]]
+		app2.queue_free()
+	# a broken save: removed, new run, red notice
+	if bad == "":
+		SV.store_text(app.save_file, "{broken")
+		var app3 := _app_tmp()
+		app3.player_name = "x"
+		app3.boot()
+		if app3.screen != "prep" or float(app3.P["round"]) != 1.0 or app3.prep.msg_label.text.find(TH.ui_text("nt_save_bad")) < 0:
+			bad = "a broken save must start a new run with the notice (msg %s)" % app3.prep.msg_label.text
+		app3.queue_free()
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# ⋯ menu: new run asks twice (once the run is over, once) · Log / rename open · ? = symbols with every tribe + rarity · card คำศัพท์ = glossary
+func test_menu_legend_gloss() -> String:
+	var app := _app_tmp()
+	app.prefs_file = "user://test-prefs.json"
+	app.player_name = "x"
+	app.start_new_run(93)
+	var seed0 := float(app.P["seed"])
+	var bad := ""
+	app.prep.btn_menu.pressed.emit()
+	if not app.prep.menu.visible:
+		bad = "⋯ must open the menu"
+	if bad == "":
+		app.prep.menu_new.pressed.emit()
+		if float(app.P["seed"]) != seed0 or app.prep.menu_new.text != TH.ui_text("menu_confirm"):
+			bad = "the first press must only ask to confirm"
+		else:
+			app.prep.menu_new.pressed.emit()
+			if float(app.P["seed"]) == seed0 or app.prep.menu.visible:
+				bad = "the second press must start a new run and close the menu"
+	if bad == "":
+		app.prep.show_menu(true)
+		app.prep._pick("rename")
+		if not app.name_scr.visible:
+			bad = "menu rename must open the name screen"
+		else:
+			app._on_name("ชื่อเมนู")
+			if app.name_scr.visible or app.screen != "prep" or str(app.RLOG.get("nm", "")) != "ชื่อเมนู":
+				bad = "rename from the menu must go back to the run and onto its journal"
+	if bad == "":
+		app.prep.btn_legend.pressed.emit()
+		var t := _find_all(app.pop, "LegendTribes", [])
+		var r := _find_all(app.pop, "LegendRarity", [])
+		if app.popups.kind != "legend" or t.size() != 1 or t[0].get_child_count() != TH.TRIBE_SHAPE.size() or r.size() != 1 or r[0].get_child_count() != 5:
+			bad = "symbols popup: every tribe and rarity"
+	if bad == "":
+		app.popups.close()
+		app.do_buy(0, null)
+		app.prep.tapped({"at": "bench", "i": 0.0}, app.prep.cells["bench:0"] if app.prep.cells.has("bench:0") else app.prep)
+		var gl := _find_all(app.prep.card, "CardGloss", [])
+		if gl.is_empty():
+			bad = "the unit card has no คำศัพท์ button"
+		else:
+			(gl[0] as Button).pressed.emit()
+			var lst := _find_all(app.pop, "GlossList", [])
+			if app.popups.kind != "gloss" or lst.size() != 1 or lst[0].get_child_count() != (TH.labels()["tables"]["GLOSSARY"] as Array).size():
+				bad = "คำศัพท์ must list the whole glossary"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# Log (offline): a left run goes into runcodes.json with its own code · copy = one code per run on this game's values, newest first,
+# each reads back with the Balance Room reader · a broken runcodes.json is ignored
+func test_log_codes() -> String:
+	var app := _app_tmp()
+	app.player_name = "ล็อก"
+	app.clip_ok = false
+	app.start_new_run(95)
+	_board_one(app)
+	var at1 := float(app.RLOG["at"])
+	app.start_new_run(96) # run 95 is left → archived
+	_board_one(app)
+	var bad := ""
+	var rows: Array = app.log_rows()
+	if rows.size() != 2:
+		bad = "Log must list the left run and the live one (got %d)" % rows.size()
+	elif float(rows[1]["at"]) != at1 or float(rows[1]["round"]) != 1.0 or bool(rows[1]["over"]):
+		bad = "archived row: at %s round %s" % [rows[1]["at"], rows[1]["round"]]
+	if bad == "":
+		app._on_menu("log")
+		var tbl := _find_all(app.pop, "LogList", [])
+		if app.popups.kind != "log" or tbl.size() != 1 or tbl[0].get_child_count() != 8 * 3:
+			bad = "Log popup table: header + 2 rows"
+	if bad == "":
+		app.copy_all_codes()
+		var box := _find_all(app.pop, "LogAllOut", [])
+		if box.size() != 1:
+			bad = "no clipboard: the codes must open in a box"
+		else:
+			var codes := (box[0] as TextEdit).text.split("\n\n")
+			if codes.size() != 2:
+				bad = "2 codes expected, got %d" % codes.size()
+			for c in codes:
+				var rd := SV.parse_run_code(c, app.cm, R.RULES())
+				if bad == "" and (rd.has("error") or (rd["logs"] as Array).size() != 1 or str(rd.get("nm", "")) != "ล็อก"):
+					bad = "a Log code does not read back as one run: " + str(rd.get("error", ""))
+	if bad == "":
+		SV.store_text(app.runcodes_file, "[{\"at\":\"x\"},5,{broken")
+		if app._read_runcodes().size() != 0:
+			bad = "a broken runcodes.json must read as empty"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# rune ทำนาย: the diff popup shows the next enemy as a mini board — every unit of next_foe() in its cell
+func test_diff_foe_mini() -> String:
+	var app := _app_tmp()
+	app.player_name = "x"
+	app.start_new_run(97)
+	_board_one(app)
+	app.P["rn"]["bag"]["X9"] = 1.0 # set 128: rune ทำนาย (scout)
+	var bad := ""
+	if not RR.rn_fx(app.P).get("scout", false):
+		bad = "test setup: X9 must give scout"
+	var foe: Variant = app.next_foe()
+	if bad == "" and foe != null:
+		app.popups.open("diff")
+		var mini := _find_all(app.pop, "FoeMini", [])
+		if mini.size() != 1:
+			bad = "no enemy mini board with scout"
+		else:
+			for e in foe["team"]:
+				var cell := _find_all(mini[0], "Fm%d%d" % [int(e["row"]), int(e["lane"])], [])
+				var c: Dictionary = app.cm[e["id"]]
+				if cell.size() != 1 or _find_text(cell[0], str(c["name"])) == false:
+					bad = "enemy %s missing in its cell" % e["id"]
+	app.popups.close()
+	app.P["rn"]["bag"].erase("X9")
+	app.popups.open("diff")
+	if bad == "" and not _find_all(app.pop, "FoeMini", []).is_empty():
+		bad = "no scout rune → text line, no mini board"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+func _find_text(n: Node, t: String) -> bool:
+	if n is Label and (n as Label).text == t:
+		return true
+	for c in n.get_children():
+		if _find_text(c, t):
+			return true
+	return false

@@ -27,7 +27,7 @@ const NameScreen := preload("res://scripts/ui/name_screen.gd")
 const RuneOffer := preload("res://scripts/ui/rune_offer.gd")
 const RunEnd := preload("res://scripts/ui/run_end.gd")
 const Resume := preload("res://scripts/ui/resume.gd")
-const PREFS := "user://prefs.json"
+var prefs_file := "user://prefs.json" # tests point it at their own file
 
 var chars: Array = []
 var cm: Dictionary = {}
@@ -440,7 +440,7 @@ func _on_name(nm: String) -> void:
 
 # prefs.json = {name, speed, autoSkip} · text only, parsed + checked (HARD RULE 9 ③) · a bad file = defaults
 func _load_prefs() -> void:
-	var s: Variant = SV.load_text(PREFS, 10000)
+	var s: Variant = SV.load_text(prefs_file, 10000)
 	var d: Variant = JSON.parse_string(s) if s is String else null
 	player_name = ""
 	if d is Dictionary:
@@ -452,7 +452,7 @@ func _load_prefs() -> void:
 		auto_skip = d.get("autoSkip") == true
 
 func _save_prefs() -> void:
-	SV.store_text(PREFS, JSON.stringify({"name": player_name, "speed": speed, "autoSkip": auto_skip}))
+	SV.store_text(prefs_file, JSON.stringify({"name": player_name, "speed": speed, "autoSkip": auto_skip}))
 
 func set_speed(v: int, save: bool = true) -> void:
 	if not [1, 2, 4, 8, 16].has(v):
