@@ -1,6 +1,7 @@
 # Set 197 (plan-set196 7b): the floating unit card (web #sidePane · unitInfo()): name + rarity + tribes + row · skill lines · Lv tabs ·
 # stat row (permanent bonus in gold) · actions (shop: lock · buy · buy + merge · owned: sell). Numbers come from the ported core (team.gd unit_of),
-# skill texts from data/labels.json "skills" (generated from labels.js skillLine). Glossary link added set 200 (7e). Not shown yet: the "+rune at match start" numbers.
+# skill texts from data/labels.json "skills" (generated from labels.js skillLine). Glossary link added set 200 (7e). Set 202 (7f2): (+rune at match start)
+# numbers in purple (web runeBonusAt, app.rune_bonus_at) + the colour key line.
 extends PanelContainer
 
 const TH := preload("res://scripts/ui/theme.gd")
@@ -27,7 +28,8 @@ static func _n(x: Variant) -> String:
 	var f := float(x)
 	return str(int(f)) if f == floorf(f) else str(snappedf(f, 0.01))
 
-# ctx: {c (char), level, perm, paid, shop (bool), locked, gold, price, merge_ok (owned: has the copies to merge), buy_merge_ok}
+# ctx: {c (char), level, perm, paid, shop (bool), locked, gold, price, merge_ok (owned: has the copies to merge), buy_merge_ok, rb (rune bonus at
+# match start for an own board unit: {maxHp, atk, cd, multi, burnHit, shockHit, armorHit, healHit} differences, or null)}
 func fill(ctx: Dictionary, cm: Dictionary) -> void:
 	for ch in get_children():
 		remove_child(ch)
@@ -93,6 +95,9 @@ func fill(ctx: Dictionary, cm: Dictionary) -> void:
 	var withp := T.unit_of(c, {"id": c["id"], "level": float(vl), "row": 0.0, "lane": 0.0, "perm": perm}, rules, cm)
 	var pt: Dictionary = TH.labels()["tables"]["PERM_TH"]
 	var rows := [["hp", "maxHp"], ["atk", "atk"], ["cd", "cdMs"], ["multi", "multi"], ["burn", "burnHit"], ["shock", "shockHit"], ["armorHit", "armorHit"], ["healHit", "healHit"]]
+	var rb: Variant = ctx.get("rb") if vl == level else null # web: rune numbers only at the unit's own level
+	var any_p := false
+	var any_r := false
 	var flow := HFlowContainer.new()
 	flow.name = "Stats"
 	flow.add_theme_constant_override("h_separation", 14)
@@ -101,7 +106,8 @@ func fill(ctx: Dictionary, cm: Dictionary) -> void:
 		var key: String = r[1]
 		var b0 := float(base[key])
 		var w0 := float(withp[key])
-		if r[0] in ["burn", "shock", "armorHit", "healHit"] and b0 == 0.0 and w0 == 0.0:
+		var dr := float(rb.get("cd" if r[0] == "cd" else key, 0.0)) if rb is Dictionary else 0.0
+		if r[0] in ["burn", "shock", "armorHit", "healHit"] and b0 == 0.0 and w0 == 0.0 and dr == 0.0:
 			continue
 		var cell := HBoxContainer.new()
 		cell.add_theme_constant_override("separation", 4)
@@ -112,6 +118,12 @@ func fill(ctx: Dictionary, cm: Dictionary) -> void:
 			var d := w0 - b0
 			var sign := "+" if d > 0 else ""
 			cell.add_child(TH.label("(%s%s)" % [sign, _n(d / 1000.0) if r[0] == "cd" else _n(d)], 13, "gold", "body_b"))
+			any_p = true
+		if dr != 0.0: # web signed(): − / + · cooldown in seconds with 2 decimals
+			var rl := TH.label("(%s%s)" % ["−" if dr < 0.0 else "+", ("%.2f" % (absf(dr) / 1000.0)) if r[0] == "cd" else _n(absf(dr))], 13, "r-epic", "body_b")
+			rl.name = "RuneAdd"
+			cell.add_child(rl)
+			any_r = true
 		flow.add_child(cell)
 	if float(withp["startArmor"]) > 0.0:
 		var ac := HBoxContainer.new()
@@ -119,7 +131,17 @@ func fill(ctx: Dictionary, cm: Dictionary) -> void:
 		ac.add_child(TH.label(str(pt.get("armor", "armor")), 13, "mute"))
 		ac.add_child(TH.label(_n(withp["startArmor"]), 13, "gold", "body_b"))
 		flow.add_child(ac)
+		any_p = true
 	v.add_child(flow)
+	if any_p or any_r: # colour key, only when a bracket is shown (web .addkey)
+		var key_row := HBoxContainer.new()
+		key_row.name = "AddKey"
+		key_row.add_theme_constant_override("separation", 8)
+		if any_p:
+			key_row.add_child(TH.label(TH.ui_text("add_perm"), 13, "gold", "body_b"))
+		if any_r:
+			key_row.add_child(TH.label(TH.ui_text("add_rune"), 13, "r-epic", "body_b"))
+		v.add_child(key_row)
 	# actions
 	var acts := HBoxContainer.new()
 	acts.name = "CardActs"

@@ -3,7 +3,7 @@
   python3 -I godot/tools/web_check.py [build_dir=build/web] [shots_dir=/tmp/automon-godot-web]
 
 1. The PCK ships every data/*.json, data/fonts/*.ttf + OFL *.txt, and nothing from tests/ tools/ or *.md (HARD RULE 9 ④).
-2. Serves build_dir on 127.0.0.1 (local only), opens it in Chromium at 1366x768 · 844x390 · 667x375 and checks:
+2. Serves build_dir on 127.0.0.1 (local only), opens it in Chromium at 1366x768 · 844x390 · 667x375 · 740x330 · 390x844 (portrait = rotate notice) and checks:
    no page errors / console errors · the engine started (loader hidden) · canvas fills the window · no horizontal
    scroll · the picture is not blank (the name screen drew something). Screenshots go to shots_dir.
 Last line: "WEB CHECK: PASS" or "WEB CHECK: FAIL n" (exit 1). Needs python playwright + chromium
@@ -18,7 +18,7 @@ import threading
 
 from playwright.sync_api import sync_playwright
 
-SIZES = [(1366, 768), (844, 390), (667, 375)]
+SIZES = [(1366, 768), (844, 390), (667, 375), (740, 330), (390, 844)]  # 7f2: + 740x330 (short phone sideways) + 390x844 portrait (rotate notice)
 DATA = ["art.json", "colours.json", "credits.json", "game.json", "labels.json", "ui_th.json"]
 FONTS = ["Mitr-Medium.ttf", "Mitr-SemiBold.ttf", "IBMPlexSansThai-Regular.ttf", "IBMPlexSansThai-SemiBold.ttf",
          "IBMPlexMono-Medium.ttf", "OFL-Mitr.txt", "OFL-IBMPlexSansThai.txt", "OFL-IBMPlexMono.txt"]

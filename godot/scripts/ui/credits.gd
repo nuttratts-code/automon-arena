@@ -115,7 +115,7 @@ func _section(s: Dictionary) -> Control:
 func _toggle(v: VBoxContainer, t: Button, s: Dictionary) -> void:
 	var box := v.get_node_or_null("Licence")
 	if box == null:
-		var l := _wrap(TH.label(licence_of(s), 12, "ink", "mono"))
+		var l := _wrap(TH.label(licence_of(s), 13, "ink", "mono"))
 		l.name = "Licence"
 		v.add_child(l)
 		t.text = data["hide"]

@@ -81,6 +81,11 @@ func _initialize() -> void:
 	app.prep.tapped({"at": "board", "row": 1.0, "lane": 0.0}, app.prep.cells["b_1_0"])
 	await _frames()
 	await _shot("card-board")
+	app.P["rn"]["bag"]["X5"] = 1.0 # 7f2: (+rune at match start) numbers on a front unit
+	app.prep.tapped({"at": "board", "row": 0.0, "lane": 0.0}, app.prep.cells["b_0_0"])
+	await _frames()
+	await _shot("card-board-rune")
+	app.P["rn"]["bag"].erase("X5")
 	app.prep.card.visible = false
 	app.prep.sel = null
 	app.prep.hi_tribe = "เหล็กกล้า"
@@ -92,6 +97,19 @@ func _initialize() -> void:
 	app.prep.show_menu(true)
 	await _shot("prep-menu")
 	app.prep.show_menu(false)
+	# 7f2: credits screen (7f1 credits.gd, opened from the ⋯ menu) · closed + with the first licence text open
+	app._on_menu("credits")
+	await _frames()
+	await _shot("credits")
+	var cr: Node = app.get_child(app.get_child_count() - 1)
+	for b in cr.find_children("*", "Button", true, false):
+		if b != cr.get("close_btn"):
+			(b as Button).pressed.emit()
+			break
+	await _frames()
+	await _shot("credits-licence")
+	cr.call("close")
+	await _frames()
 	for kind in ["legend", "gloss"]:
 		app.popups.open(kind)
 		await _frames()

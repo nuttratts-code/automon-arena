@@ -77,7 +77,7 @@ jobs:
         working-directory: src
         run: node lab/golden-save.mjs check ../godot/tests/golden/godot-ui-arun1.txt
 
-  # Set 201 (plan-set196 7f1): the Godot web export, opened in Chromium at 1366x768 · 844x390 · 667x375
+  # Set 202 (plan-set196 7f1, + 7f2 sizes): the Godot web export, opened in Chromium at 1366x768 · 844x390 · 667x375 · 740x330 · 390x844 portrait
   # (godot/tools/web_check.py: pck ships data + fonts + OFL texts and no tests/tools/docs · engine starts ·
   # no page errors · canvas fills · no horizontal scroll · picture not blank). Templates: official release,
   # SHA-512 pinned in get_godot.sh, cached (web templates only, ~85 MB).
@@ -106,7 +106,7 @@ jobs:
         run: |
           pip install -q playwright
           python -m playwright install --with-deps chromium
-      - name: Web check (3 sizes)
+      - name: Web check (5 sizes)
         run: timeout 600 python3 -I godot/tools/web_check.py build/web /tmp/automon-godot-web
       - name: Upload screenshots on failure
         if: failure()
