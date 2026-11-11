@@ -1,4 +1,16 @@
 {
+  "permissions": {
+    "deny": [
+      "mcp__godot-mcp-toolkit__execute_code",
+      "mcp__godot-mcp-toolkit__node_call_method",
+      "mcp__godot-mcp-toolkit__save_write",
+      "mcp__godot-mcp-toolkit__save_delete",
+      "mcp__godot-mcp-toolkit__save_read",
+      "mcp__godot-mcp-toolkit__save_list",
+      "mcp__godot-mcp__execute_code",
+      "mcp__godot-mcp__node_call_method"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
