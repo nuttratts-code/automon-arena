@@ -935,22 +935,11 @@ func test_card_rune_merge_drag() -> String:
 	_cleanup()
 	return "ok" if bad == "" else bad
 
-# set 205 (user E1/A1): the shared arena camera move — pure helpers + the screens still hold their named parts
+# set 205 (user E1/A1) · set 206 (3D, C1): the shared arena camera move — pure helpers + the screens still hold their named parts
 func test_arena_move() -> String:
 	var AR := load("res://scripts/ui/arena.gd")
-	var a := Rect2(0, 0, 100, 50)
-	var b := Rect2(200, 100, 50, 25)
-	if AR.lerp_rect(a, b, 0.0) != a or AR.lerp_rect(a, b, 1.0) != b or AR.lerp_rect(a, b, 0.5) != Rect2(100, 50, 75, 37.5):
-		return "lerp_rect wrong"
 	if AR.ease_k(0.0) != 0.0 or AR.ease_k(1.0) != 1.0 or absf(AR.ease_k(0.5) - 0.5) > 0.0001 or AR.ease_k(2.0) != 1.0:
 		return "ease_k must run 0 → 1, half at the middle, clamped"
-	var u1 := Rect2(10, 100, 300, 150) # your half in the battle framing
-	var u0 := Rect2(8, 60, 838, 250) # your half in the prep framing (zoomed in)
-	if AR.cam_map(u1, u1, u0) != u0:
-		return "the prep camera must frame your battle half exactly onto the prep board"
-	var foe: Rect2 = AR.cam_map(Rect2(330, 100, 300, 150), u1, u0)
-	if foe.position.x < u0.end.x:
-		return "the enemy half must start off to the right of the prep board"
 	var inner := VBoxContainer.new()
 	var h: Control = AR.hold(inner, "Top")
 	AR.slide(h, 30.0)
@@ -969,5 +958,67 @@ func test_arena_move() -> String:
 		bad = "prep lost a named part (Top/Tray/Board/Bench/Dock/Field)"
 	elif app.battle.field.name != "Field" or app.battle.top_hold.find_child("Clock", true, false) == null or app.battle.tray_hold.find_child("Skip", true, false) == null:
 		bad = "battle lost a named part (Field / Clock in Top / Skip in Tray)"
+	app.queue_free()
+	return "ok" if bad == "" else bad
+
+# set 206 (user A2/C1): the 3D arena — projection = Camera3D math, the fitted camera frames the board inside its target,
+# prep pose shows your half (enemy off to the right), battle pose shows both; units become sprites; cells sit on projected slots
+func test_stage3d() -> String:
+	var ST := load("res://scripts/ui/stage3d.gd")
+	var vp := Vector2(854, 480)
+	var xf := Transform3D(ST.cam_basis(), Vector3(0, 9, 14))
+	var fwd: Vector3 = -ST.cam_basis().z
+	var mid: Vector2 = ST.project(xf.origin + fwd * 10.0, xf, vp)
+	if mid.distance_to(vp / 2.0) > 0.01:
+		return "a point straight ahead must land in the screen centre (%s)" % str(mid)
+	var near: Vector2 = ST.project(ST.slot_pos(0, 0, 1), xf, vp)
+	var far: Vector2 = ST.project(ST.slot_pos(0, 0, 0), xf, vp)
+	if not (near.y > far.y):
+		return "lane 1 (near) must draw below lane 0 (far)"
+	if not (ST.project(ST.slot_pos(0, 2, 0), xf, vp).x < ST.project(ST.slot_pos(0, 0, 0), xf, vp).x):
+		return "your back column must sit left of your front column"
+	var tgt := Rect2(10, 60, 834, 300)
+	var pr: Transform3D = ST.fit_pose(ST.side_points([0]), tgt, vp)
+	var r: Rect2 = ST.rect_of(ST.side_points([0]), pr, vp)
+	if not tgt.grow(1.5).encloses(r) or (absf(r.size.x - tgt.size.x) > 2.0 and absf(r.size.y - tgt.size.y) > 2.0):
+		return "fit_pose must fill the target on one axis and stay inside it: %s in %s" % [str(r), str(tgt)]
+	if pr.basis != ST.cam_basis():
+		return "the camera never turns (angle A, user C1)"
+	var foe: Rect2 = ST.rect_of(ST.side_points([1]), pr, vp)
+	if foe.get_center().x < tgt.end.x:
+		return "in the prep pose the enemy half sits right of your half, mostly past the board target: foe %s mine %s" % [str(foe), str(r)]
+	var bt: Transform3D = ST.fit_pose(ST.side_points([0, 1]), tgt, vp)
+	if not tgt.grow(1.5).encloses(ST.rect_of(ST.side_points([0, 1]), bt, vp)):
+		return "the battle pose must hold both halves"
+	if (bt.origin - ST.side_points([0, 1])[0]).length() <= (pr.origin - ST.side_points([0])[0]).length() * 0.9 and bt.origin.z <= pr.origin.z:
+		return "the battle pose must stand farther back than the prep pose (dolly out)"
+	var app := _app_tmp()
+	var bad := ""
+	app.start_new_run(4242)
+	_board_one(app)
+	app.prep.render()
+	if app.stage == null or app.stage.get_parent() != app or app.stage.cam == null:
+		bad = "the app must hold the Stage with its camera"
+	elif app.stage.count("prep") != 1:
+		bad = "one board unit = one sprite in the prep group (got %d)" % app.stage.count("prep")
+	elif app.prep.cells["b_0_0"].find_child("Mon", true, false) == null or app.prep.cells["b_0_0"].find_child("TextureRect", true, false) != null:
+		bad = "a board cell keeps badges only (the picture is the 3D sprite)"
+	elif app.prep.cells["n_0"].stage_slot.size() != 0:
+		bad = "bench cells stay 2D (no stage slot)"
+	if bad == "":
+		app.refit_stage()
+		app.stage.set_k(0.0)
+		var c0: Control = app.prep.cells["b_0_0"]
+		var want: Rect2 = app.stage.slot_rect(0, 0, 0)
+		if app.size.x > 4.0 and c0.get_global_rect().position.distance_to(want.position) > 1.0:
+			bad = "the board cell must sit on its projected slot rect"
+	if bad == "":
+		app._on_fight()
+		var n_battle: int = app.stage.count("battle")
+		var n_units: int = app.battle.view.units.size()
+		if n_battle != n_units or n_battle < 2:
+			bad = "every battle unit (both sides) needs a sprite (%d sprites, %d units)" % [n_battle, n_units]
+		elif app.stage.shown != "battle":
+			bad = "the battle screen shows the battle group"
 	app.queue_free()
 	return "ok" if bad == "" else bad
