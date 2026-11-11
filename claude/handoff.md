@@ -1,4 +1,4 @@
-# Automon Arena handoff (English · updated 11 Nov 2026 set 195 · instructions V5.9)
+# Automon Arena handoff (English · updated 11 Nov 2026 set 196 · instructions V5.9)
 Read by Claude every new chat. Keep ≤ 1 screen: Relay = newest 2 sets only, trim at every close-out; move finished items to claude/archive/ (full pre-trim copy: archive/handoff-2026-10-30-full.md). User gets a Thai summary in chat at the end of each task set.
 
 ## Relay (two accounts take turns — rules in claude/workflow/relay.md · full pre-trim block: archive/relay/relay-2026-10-31.md)
