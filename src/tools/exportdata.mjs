@@ -80,8 +80,15 @@ export async function buildLabels() {
     runeDesc[r.id] = S.runeText(r) || `${S.runeWho(r)}: ได้สกิล "${L.skillLine({ when: r.when, do: r.do, to: r.to, v: [r.v, r.v, r.v] }, 1)}"`;
   }
   walk(runeDesc, 'labels.runeDesc', bad);
+  // set 197 (7b): the unit card's skill lines, per character id · one entry per skillGroups() group = { lv: levels it applies to | null, text: [Lv1, Lv2, Lv3] } (labels.js skillLine / skillGroupLine)
+  const CH = await import(pathToFileURL(resolve(SRC, 'core/characters.js')).href);
+  const skills = {};
+  for (const c of CH.buildCharacterList()) {
+    skills[c.id] = L.skillGroups(c.skills).map(g => ({ lv: g[0].lv || null, text: [1, 2, 3].map(lv => g.length === 1 ? L.skillLine(g[0], lv) : L.skillGroupLine(g)) }));
+  }
+  walk(skills, 'labels.skills', bad);
   if (bad.length) throw new Error('exportdata labels: ' + bad.slice(0, 20).join(' · '));
-  return { v: EXPORT_VERSION, tables, runeDesc };
+  return { v: EXPORT_VERSION, tables, runeDesc, skills };
 }
 export async function buildArt() {
   const { GAME_ART } = await import(pathToFileURL(resolve(SRC, 'game/art.js')).href);
