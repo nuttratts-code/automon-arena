@@ -986,9 +986,14 @@ func test_prep_layout_scene() -> String:
 	var app := _app_tmp()
 	app.start_new_run(4242)
 	var bad := ""
-	for nm in ["Top", "Field", "Tray", "Hud", "TribeCol", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight"]:
+	for nm in ["Top", "Field", "Tray", "HudButtons", "TribeCol", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight"]:
 		if bad == "" and app.prep.find_child(nm, true, false) == null:
 			bad = "the loaded layout lost %s" % nm
+	# set 208 (user B1): the owner drags every part — none may sit inside an auto row (a Container locks position + size)
+	for nm in ["HudTitle", "ChipHearts", "ChipGold", "HudButtons", "MsgBar", "Bench", "ShopOdds", "Reroll", "Dock", "Fight", "TribeCol"]:
+		var n: Node = app.prep.find_child(nm, true, false)
+		if bad == "" and n != null and n.get_parent() is Container:
+			bad = "%s sits in an auto row (%s) — the owner cannot drag it" % [nm, n.get_parent().name]
 	if bad == "" and app.prep.chip_gold.get_theme_color("font_color") != TH.c("gold-ink"):
 		bad = "metas must colour the labels (gold chip)"
 	# a copy with parts deleted

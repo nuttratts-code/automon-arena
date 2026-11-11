@@ -89,9 +89,25 @@ func setup(a: Control) -> void:
 	_build_menu()
 
 # set 205 arena move: p = 0 in place … 1 gone (top up, tray down, past the screen edge) · set 207: Top / Tray are free nodes
+# set 208: the distance counts the block's parts too (the owner may drag a part outside its block's box), from the block's resting spot
 func slide(p: float) -> void:
-	_slide_node(top_hold, -p * (top_hold.size.y + 16.0 + maxf(0.0, top_hold.position.y)))
-	_slide_node(tray_hold, p * (tray_hold.size.y + 16.0 + maxf(0.0, size.y - tray_hold.position.y - tray_hold.size.y)))
+	if top_hold != null and top_hold.get_parent() != null:
+		var r := _reach(top_hold)
+		_slide_node(top_hold, -p * (r.end.y + 16.0))
+	if tray_hold != null and tray_hold.get_parent() != null:
+		var r := _reach(tray_hold)
+		_slide_node(tray_hold, p * (size.y - r.position.y + 16.0))
+
+# the block + its visible direct parts, at the block's resting spot (parent coordinates)
+static func _reach(n: Control) -> Rect2:
+	var at := n.position
+	if n.has_meta("base"):
+		at.y -= n.offset_top - (n.get_meta("base") as Vector2).x
+	var r := Rect2(at, n.size)
+	for ch in n.get_children():
+		if ch is Control and (ch as Control).visible:
+			r = r.merge(Rect2(at + (ch as Control).position, (ch as Control).size))
+	return r
 
 static func _slide_node(n: Control, dy: float) -> void:
 	if n == null or n.get_parent() == null:
@@ -156,22 +172,26 @@ func _apply_sty(c: Control, sty: String) -> void:
 
 # ---------- the default layout (also what tools/make_prep_layout.gd saves as the scene) ----------
 # Root = free canvas: Top (top bar + message line) · Field (the window onto the 3D board + tribe column) · Tray (bench + shop).
-# Inside them the rows are containers (auto-arranged); the three blocks themselves sit anywhere.
+# set 208 (user B1): the blocks AND their parts are free boxes (plain Control, no auto rows) — the owner drags any part in the
+# Godot editor. Anchors keep each part glued to its edge (left parts left, right parts right, wide parts stretch with the window).
+# Only lists the code fills stay auto rows: HudButtons (buttons that hide/show), Bench / Shop cells, TribeList, the insides of a chip / reroll.
 func build_layout() -> Control:
 	var root := Control.new()
 	root.name = "Layout"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var top := VBoxContainer.new()
+	var top := Control.new()
 	top.name = "Top"
-	top.add_theme_constant_override("separation", 5)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	top.offset_left = 8
 	top.offset_right = -8
 	top.offset_top = 8
 	top.offset_bottom = 8 + 40 + 5 + 24
-	top.add_child(_build_hud())
-	top.add_child(_build_msg())
+	_build_hud(top)
+	var msg := _build_msg()
+	_place(msg, 0, 1, 0, 0, 45, 69)
+	top.add_child(msg)
 	root.add_child(top)
 	var f := _build_field()
 	f.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -221,21 +241,40 @@ func _hudbtn(text: String, nm: String) -> Button:
 	b.set_meta("sty", "glass_btn")
 	return b
 
-func _build_hud() -> Control:
-	var h := HBoxContainer.new()
-	h.name = "Hud"
-	h.custom_minimum_size.y = 40
-	h.add_theme_constant_override("separation", 8)
+# set 208: a free box at fixed edges · anchors al/ar (0 = left edge, 1 = right edge) + offsets, top/bottom from the block's top
+static func _place(c: Control, al: float, ar: float, ol: float, orr: float, ot: float, ob: float) -> void:
+	c.layout_mode = 1
+	c.anchor_left = al
+	c.anchor_right = ar
+	c.anchor_top = 0.0
+	c.anchor_bottom = 0.0
+	c.offset_left = ol
+	c.offset_right = orr
+	c.offset_top = ot
+	c.offset_bottom = ob
+
+# set 208: top bar parts sit free in Top: title · hearts · gold on the left, the button group glued to the right
+func _build_hud(top: Control) -> void:
 	var t := _lbl("", 14, "ink", "display")
 	t.name = "HudTitle"
-	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(t)
-	h.add_child(_chip("ChipHearts", "heart-bg", "heart-ink", "heart"))
-	h.add_child(_chip("ChipGold", "gold-bg", "gold-ink", "gold"))
-	var sp := Control.new()
-	sp.name = "Space"
-	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(sp)
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	t.clip_text = true
+	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place(t, 0, 0, 0, 170, 0, 40)
+	top.add_child(t)
+	var hp := _chip("ChipHearts", "heart-bg", "heart-ink", "heart")
+	_place(hp, 0, 0, 178, 248, 2, 38)
+	top.add_child(hp)
+	var gd := _chip("ChipGold", "gold-bg", "gold-ink", "gold")
+	_place(gd, 0, 0, 256, 336, 2, 38)
+	top.add_child(gd)
+	var h := HBoxContainer.new() # buttons hide / show by state, so this one group keeps its auto row (drag the group)
+	h.name = "HudButtons"
+	h.alignment = BoxContainer.ALIGNMENT_END
+	h.add_theme_constant_override("separation", 8)
+	_place(h, 1, 1, -360, 0, 2, 38)
+	h.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	top.add_child(h)
 	var hb := _hudbtn("", "HiBar")
 	hb.visible = false
 	h.add_child(hb)
@@ -250,7 +289,6 @@ func _build_hud() -> Control:
 	var mb := _hudbtn("⋯", "MenuBtn")
 	mb.custom_minimum_size.x = 36
 	h.add_child(mb)
-	return h
 
 func _build_msg() -> Control:
 	var bar := PanelContainer.new()
@@ -301,19 +339,19 @@ func _build_field() -> Control:
 
 # set 207 (user: bench and shop stay on two rows) · row 1 = bench ×5 + shop odds line · row 2 = reroll · shop ×5 · fight
 # P7/E1: no bench label or count · P3/B1: reroll = icon + price / "ฟรี n" · P4/C1: odds line, tap = shop popup · P5/D2: fight = title only
+# set 208 (user B1): every part is a free box in the Tray block (the bench / shop cells inside stay auto rows)
 func _build_tray() -> Control:
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 4)
-	var r1 := HBoxContainer.new()
-	r1.name = "BenchBar"
-	r1.custom_minimum_size.y = BENCH_H
-	r1.add_theme_constant_override("separation", 8)
+	var rows := Control.new()
+	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var split := 0.655 # bench : odds width ≈ 1.9 : 1, as before
+	var y2 := BENCH_H + 4.0 # top of row 2
 	var bench := HBoxContainer.new()
 	bench.name = "Bench"
 	bench.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bench.size_flags_stretch_ratio = 1.9
 	bench.add_theme_constant_override("separation", 4)
-	r1.add_child(bench)
+	_place(bench, 0, split, 0, -4, 0, BENCH_H)
+	rows.add_child(bench)
 	var ob := Button.new()
 	ob.name = "ShopOdds"
 	ob.flat = true
@@ -328,15 +366,10 @@ func _build_tray() -> Control:
 	orow.add_theme_constant_override("separation", 10)
 	orow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ob.add_child(orow)
-	r1.add_child(ob)
-	rows.add_child(r1)
-	var row := HBoxContainer.new()
-	row.name = "TrayRow"
-	row.custom_minimum_size.y = SHOP_H
-	row.add_theme_constant_override("separation", 8)
+	_place(ob, split, 1, 4, 0, BENCH_H - ODDS_H, BENCH_H)
+	rows.add_child(ob)
 	var rr := Button.new()
 	rr.name = "Reroll"
-	rr.custom_minimum_size = Vector2(54, 0)
 	rr.tooltip_text = TH.ui_text("reroll")
 	rr.set_meta("sty", "glass_btn")
 	var rv := VBoxContainer.new()
@@ -355,7 +388,8 @@ func _build_tray() -> Control:
 	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rv.add_child(rt)
 	rr.add_child(rv)
-	row.add_child(rr)
+	_place(rr, 0, 0, 0, 54, y2, y2 + SHOP_H)
+	rows.add_child(rr)
 	var dk := PanelContainer.new()
 	dk.name = "Dock"
 	dk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -363,10 +397,10 @@ func _build_tray() -> Control:
 	shop.name = "Shop"
 	shop.add_theme_constant_override("separation", 6)
 	dk.add_child(shop)
-	row.add_child(dk)
+	_place(dk, 0, 1, 62, -104, y2, y2 + SHOP_H)
+	rows.add_child(dk)
 	var fb := Button.new()
 	fb.name = "Fight"
-	fb.custom_minimum_size = Vector2(96, 0)
 	fb.set_meta("sty", "primary")
 	var ft := _lbl("", 18, "on-accent", "display")
 	ft.name = "FightTitle"
@@ -376,8 +410,9 @@ func _build_tray() -> Control:
 	ft.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ft.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fb.add_child(ft)
-	row.add_child(fb)
-	rows.add_child(row)
+	_place(fb, 1, 1, -96, 0, y2, y2 + SHOP_H)
+	fb.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	rows.add_child(fb)
 	return rows
 
 const BENCH_H := 58.0
