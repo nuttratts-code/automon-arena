@@ -1,5 +1,5 @@
 # Godot UI to-do (set 203 · loop: claude/workflow/setup.md §6)
-The user plays in the Godot editor and sends screenshots + numbered notes, one screen at a time (B1). Claude logs each note here under its screen, asks design options before changing a design, fixes one screen per set, and ticks `[x]` with the set number when merged. Web game v132 stays frozen (set 189 C1).
+The user plays in the Godot editor and sends screenshots + numbered notes, one screen at a time (B1). **Set 205 user pick:** open notes are fixed together with the 3D scene work (plan-godot-migration step 8), not in separate 2D sets. Claude logs each note here under its screen, asks design options before changing a design, fixes one screen per set, and ticks `[x]` with the set number when merged. Web game v132 stays frozen (set 189 C1).
 
 ## Name screen
 ## Rune offer
