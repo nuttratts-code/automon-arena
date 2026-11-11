@@ -9,8 +9,8 @@ const POLY := {
 	"pentagon": [[0.5, 0.0], [1.0, 0.38], [0.81, 1.0], [0.19, 1.0], [0.0, 0.38]],
 }
 
-var kind := "square"
-var token := "t-steel"
+@export var kind := "square" # set 207: exported so the prep layout scene keeps it
+@export var token := "t-steel"
 
 static func make(k: String, tok: String, px: float) -> Control:
 	var s: Control = load("res://scripts/ui/shape.gd").new()

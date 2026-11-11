@@ -974,6 +974,48 @@ func test_drag_one_hover() -> String:
 	_cleanup()
 	return "ok" if bad == "" else bad
 
+# set 207 (user B2): the prep layout lives in scenes/prep_layout.tscn (owner edits it in the Godot editor);
+# the app loads it, and a part the owner deleted only disappears (stand-in), the screen still renders and plays
+func test_prep_layout_scene() -> String:
+	var ps: Variant = load("res://scenes/prep_layout.tscn")
+	if not ps is PackedScene:
+		return "scenes/prep_layout.tscn must exist (tools/make_prep_layout.gd)"
+	var src := FileAccess.get_file_as_string("res://scenes/prep_layout.tscn")
+	if src.contains("FontFile") or src.contains("ImageTexture") or src.contains("font_color"):
+		return "the layout scene must not store fonts, icons or colours (light/dark come from metas)"
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	var bad := ""
+	for nm in ["Top", "Field", "Tray", "Hud", "TribeCol", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight"]:
+		if bad == "" and app.prep.find_child(nm, true, false) == null:
+			bad = "the loaded layout lost %s" % nm
+	if bad == "" and app.prep.chip_gold.get_theme_color("font_color") != TH.c("gold-ink"):
+		bad = "metas must colour the labels (gold chip)"
+	# a copy with parts deleted
+	var Prep := load("res://scripts/ui/prep.gd")
+	var p2: Control = Prep.new()
+	var lay: Control = p2.build_layout()
+	for nm in ["Reroll", "TribeCol", "ShopOdds", "DiffBtn"]:
+		var n: Node = lay.find_child(nm, true, false)
+		n.get_parent().remove_child(n)
+		n.free()
+	p2.app = app
+	p2.add_child(lay)
+	p2._style_tree(lay)
+	p2._bind(lay)
+	p2.card = load("res://scripts/ui/unit_card.gd").new()
+	p2.add_child(p2.card)
+	p2._build_menu()
+	p2.render()
+	if bad == "" and (p2.btn_reroll.get_parent() != null or p2.tribe_col.get_parent() != null):
+		bad = "deleted parts get stand-ins outside the tree"
+	if bad == "" and p2.cells.size() != 6 + 5 + 5:
+		bad = "cells are still made without those parts (%d)" % p2.cells.size()
+	p2.free()
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
 # set 205 (user E1/A1) · set 206 (3D, C1): the shared arena camera move — pure helpers + the screens still hold their named parts
 func test_arena_move() -> String:
 	var AR := load("res://scripts/ui/arena.gd")

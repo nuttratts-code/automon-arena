@@ -62,47 +62,53 @@ var btn_menu: Button
 var menu: PanelContainer # ⋯ menu panel under the button (web .menu)
 var menu_new: Button
 var field: Control # set 205: the arena move fades it while the world draws the board
-var top_hold: Control
-var tray_hold: Control
+var top_hold: Control # set 207: the "Top" block of the layout scene (slides out during the arena move)
+var tray_hold: Control # the "Tray" block
 var _new_confirm := 0 # web #newRun two-step: a second press within 3 s starts the new run (no confirm once the run is over)
+
+const LAYOUT := "res://scenes/prep_layout.tscn" # set 207 (user B2): the owner moves / resizes / deletes parts here in the Godot editor
 
 func setup(a: Control) -> void:
 	app = a
 	name = "Prep"
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var m := MarginContainer.new()
-	m.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for k in ["left", "right", "top", "bottom"]:
-		m.add_theme_constant_override("margin_" + k, 8)
-	add_child(m)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 5)
-	m.add_child(v)
-	# set 205: top (hud + message) and tray (bench + dock) sit in slide holders: they leave / come back during the arena move
-	var tv := VBoxContainer.new()
-	tv.add_theme_constant_override("separation", 5)
-	tv.add_child(_build_hud())
-	tv.add_child(_build_msg())
-	top_hold = ARENA.hold(tv, "Top")
-	v.add_child(top_hold)
-	field = _build_field()
-	v.add_child(field)
-	tray_hold = ARENA.hold(_build_tray(), "Tray")
-	v.add_child(tray_hold)
+	var lay: Control = null
+	if ResourceLoader.exists(LAYOUT):
+		var ps: Variant = load(LAYOUT)
+		if ps is PackedScene:
+			lay = (ps as PackedScene).instantiate() as Control
+	if lay == null:
+		lay = build_layout()
+	add_child(lay)
+	_style_tree(lay)
+	_bind(lay)
 	card = Card.new()
 	card.act.connect(_on_card_act)
 	card.lv_changed.connect(func(_l: int) -> void: _refresh_card())
 	add_child(card)
 	_build_menu()
 
-# set 205 arena move: p = 0 in place … 1 gone (top up, tray down, past the screen edge)
+# set 205 arena move: p = 0 in place … 1 gone (top up, tray down, past the screen edge) · set 207: Top / Tray are free nodes
 func slide(p: float) -> void:
-	ARENA.slide(top_hold, -p * (top_hold.size.y + 16.0))
-	ARENA.slide(tray_hold, p * (tray_hold.size.y + 16.0))
+	_slide_node(top_hold, -p * (top_hold.size.y + 16.0 + maxf(0.0, top_hold.position.y)))
+	_slide_node(tray_hold, p * (tray_hold.size.y + 16.0 + maxf(0.0, size.y - tray_hold.position.y - tray_hold.size.y)))
 
-# ---------- build ----------
-# set 207 P2: panels over the arena are see-through (the 3D floor shows behind them)
-const GLASS := 0.72
+static func _slide_node(n: Control, dy: float) -> void:
+	if n == null or n.get_parent() == null:
+		return
+	if not n.has_meta("base"):
+		n.set_meta("base", Vector2(n.offset_top, n.offset_bottom))
+	var b: Vector2 = n.get_meta("base")
+	n.offset_top = b.x + dy
+	n.offset_bottom = b.y + dy
+	if dy == 0.0:
+		n.remove_meta("base")
+
+# ---------- look (set 207) ----------
+# The layout scene stores no colours, fonts or icons (light / dark themes and the embedded art differ): parts carry metas
+#   ink = colour token of a label · font = font key · sty = how its box is drawn · art = "group/key" icon
+# and get them here — unless the owner set an override on that part in the editor (then the editor value wins).
+const GLASS := 0.72 # P2: panels over the arena are see-through (the 3D floor shows behind them)
 
 static func glass(col: Color) -> Color:
 	return Color(col, col.a * GLASS)
@@ -112,32 +118,107 @@ static func glass_btn(b: Button) -> void:
 		var s := TH.box(glass(TH.c("soft") if st == "hover" or st == "pressed" else TH.c("panel")), TH.c("line"))
 		b.add_theme_stylebox_override(st, s)
 
-func _chip(bg: String, ink: String, art: String) -> Array:
+static func _lbl(text: String, px: int, ink: String, fkey: String = "body") -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", px)
+	l.set_meta("ink", ink)
+	if fkey != "body":
+		l.set_meta("font", fkey)
+	return l
+
+func _style_tree(n: Node) -> void:
+	if n is Control:
+		var c := n as Control
+		if c.has_meta("ink") and not c.has_theme_color_override("font_color"):
+			c.add_theme_color_override("font_color", TH.c(str(c.get_meta("ink"))))
+		if c.has_meta("font") and not c.has_theme_font_override("font"):
+			c.add_theme_font_override("font", TH.font(str(c.get_meta("font"))))
+		if c is TextureRect and c.has_meta("art") and (c as TextureRect).texture == null:
+			var parts := str(c.get_meta("art")).split("/")
+			if parts.size() == 2:
+				(c as TextureRect).texture = TH.art(parts[0], parts[1])
+		if c.has_meta("sty"):
+			_apply_sty(c, str(c.get_meta("sty")))
+	for ch in n.get_children():
+		_style_tree(ch)
+
+func _apply_sty(c: Control, sty: String) -> void:
+	if sty == "glass_btn" and c is Button and not c.has_theme_stylebox_override("normal"):
+		glass_btn(c as Button)
+	elif sty == "primary" and c is Button and not c.has_theme_stylebox_override("normal"):
+		TH.primary(c as Button, false)
+	elif sty.begins_with("chip:") and not c.has_theme_stylebox_override("panel"):
+		var bg := sty.substr(5)
+		c.add_theme_stylebox_override("panel", TH.box(glass(TH.c(bg)), TH.c(bg), 20, 0, 12, 3))
+	elif sty == "floor_label" and not c.has_theme_stylebox_override("normal"):
+		c.add_theme_stylebox_override("normal", TH.box(glass(TH.c("panel")), Color(0, 0, 0, 0), 6, 0, 6, 0))
+
+# ---------- the default layout (also what tools/make_prep_layout.gd saves as the scene) ----------
+# Root = free canvas: Top (top bar + message line) · Field (the window onto the 3D board + tribe column) · Tray (bench + shop).
+# Inside them the rows are containers (auto-arranged); the three blocks themselves sit anywhere.
+func build_layout() -> Control:
+	var root := Control.new()
+	root.name = "Layout"
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var top := VBoxContainer.new()
+	top.name = "Top"
+	top.add_theme_constant_override("separation", 5)
+	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	top.offset_left = 8
+	top.offset_right = -8
+	top.offset_top = 8
+	top.offset_bottom = 8 + 40 + 5 + 24
+	top.add_child(_build_hud())
+	top.add_child(_build_msg())
+	root.add_child(top)
+	var f := _build_field()
+	f.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	f.offset_left = 8
+	f.offset_right = -8
+	f.offset_top = 8 + 40 + 5 + 24 + 5
+	f.offset_bottom = -(8 + BENCH_H + 4 + SHOP_H + 5)
+	root.add_child(f)
+	var tray := _build_tray()
+	tray.name = "Tray"
+	tray.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	tray.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	tray.offset_left = 8
+	tray.offset_right = -8
+	tray.offset_bottom = -8
+	tray.offset_top = -(8 + BENCH_H + 4 + SHOP_H)
+	root.add_child(tray)
+	return root
+
+func _chip(nm: String, bg: String, ink: String, art: String) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", TH.box(glass(TH.c(bg)), TH.c(bg), 20, 0, 12, 3))
+	p.name = nm
+	p.set_meta("sty", "chip:" + bg)
 	var h := HBoxContainer.new()
+	h.name = "Row"
 	h.add_theme_constant_override("separation", 6)
-	var tex := TH.art("ui", art)
-	if tex != null:
-		var ic := TextureRect.new()
-		ic.texture = tex
-		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		ic.custom_minimum_size = Vector2(20, 20)
-		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		h.add_child(ic)
-	var l := TH.label("0", 20, ink, "display")
+	var ic := TextureRect.new()
+	ic.name = "Icon"
+	ic.set_meta("art", "ui/" + art)
+	ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ic.custom_minimum_size = Vector2(20, 20)
+	ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(ic)
+	var l := _lbl("0", 20, ink, "display")
+	l.name = "Value"
 	h.add_child(l)
 	p.add_child(h)
-	return [p, l]
+	return p
 
 func _hudbtn(text: String, nm: String) -> Button:
 	var b := Button.new()
 	b.name = nm
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 36)
-	glass_btn(b)
+	b.set_meta("sty", "glass_btn")
 	return b
 
 func _build_hud() -> Control:
@@ -145,45 +226,327 @@ func _build_hud() -> Control:
 	h.name = "Hud"
 	h.custom_minimum_size.y = 40
 	h.add_theme_constant_override("separation", 8)
-	hud_title = TH.label("", 14, "ink", "display")
-	hud_title.name = "HudTitle"
-	hud_title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(hud_title)
-	var c1 := _chip("heart-bg", "heart-ink", "heart")
-	c1[0].name = "ChipHearts"
-	chip_hearts = c1[1]
-	h.add_child(c1[0])
-	var c2 := _chip("gold-bg", "gold-ink", "gold")
-	c2[0].name = "ChipGold"
-	chip_gold = c2[1]
-	h.add_child(c2[0])
+	var t := _lbl("", 14, "ink", "display")
+	t.name = "HudTitle"
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(t)
+	h.add_child(_chip("ChipHearts", "heart-bg", "heart-ink", "heart"))
+	h.add_child(_chip("ChipGold", "gold-bg", "gold-ink", "gold"))
 	var sp := Control.new()
+	sp.name = "Space"
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(sp)
-	btn_hi = _hudbtn("", "HiBar")
-	btn_hi.visible = false
+	var hb := _hudbtn("", "HiBar")
+	hb.visible = false
+	h.add_child(hb)
+	h.add_child(_hudbtn("", "RuneBtn"))
+	var rp := _hudbtn("", "ReplayBtn")
+	rp.visible = false
+	h.add_child(rp)
+	h.add_child(_hudbtn("", "DiffBtn"))
+	var lg := _hudbtn("?", "LegendBtn")
+	lg.custom_minimum_size.x = 36
+	h.add_child(lg)
+	var mb := _hudbtn("⋯", "MenuBtn")
+	mb.custom_minimum_size.x = 36
+	h.add_child(mb)
+	return h
+
+func _build_msg() -> Control:
+	var bar := PanelContainer.new()
+	bar.name = "MsgBar"
+	bar.custom_minimum_size.y = 24
+	var l := _lbl("", 13, "ink")
+	l.name = "Msg"
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.add_child(l)
+	return bar
+
+# set 206: the field is a window onto the 3D arena (app.stage): no box, the board cells sit on the camera's projected slot rects
+func _build_field() -> Control:
+	var f := Control.new()
+	f.name = "Field"
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var b := Control.new()
+	b.name = "Board"
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	f.add_child(b)
+	# set 207 P6: column labels lie on the near tiles' front edge, shown only while a unit is dragged (text editable in the scene)
+	for t in [["ColBack", "col_back"], ["ColMid", "col_mid"], ["ColFront", "col_front"]]:
+		var l := _lbl(TH.ui_text(t[1]), 13, "ink", "body_b")
+		l.name = t[0]
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.set_meta("sty", "floor_label")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.visible = false
+		b.add_child(l)
+	# set 207 P8 (user F1): tribe column on the left = shape + how many units of that tribe you have; tap = tribe popup
+	var tc := Button.new()
+	tc.name = "TribeCol"
+	tc.set_meta("sty", "glass_btn")
+	tc.tooltip_text = TH.ui_text("tribe")
+	tc.position = Vector2(0, 4)
+	tc.size = Vector2(TRIBE_COL_W - 8.0, 40)
+	var tl := VBoxContainer.new()
+	tl.name = "TribeList"
+	tl.add_theme_constant_override("separation", 2)
+	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tl.position = Vector2(8, 6)
+	tc.add_child(tl)
+	f.add_child(tc)
+	return f
+
+# set 207 (user: bench and shop stay on two rows) · row 1 = bench ×5 + shop odds line · row 2 = reroll · shop ×5 · fight
+# P7/E1: no bench label or count · P3/B1: reroll = icon + price / "ฟรี n" · P4/C1: odds line, tap = shop popup · P5/D2: fight = title only
+func _build_tray() -> Control:
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 4)
+	var r1 := HBoxContainer.new()
+	r1.name = "BenchBar"
+	r1.custom_minimum_size.y = BENCH_H
+	r1.add_theme_constant_override("separation", 8)
+	var bench := HBoxContainer.new()
+	bench.name = "Bench"
+	bench.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bench.size_flags_stretch_ratio = 1.9
+	bench.add_theme_constant_override("separation", 4)
+	r1.add_child(bench)
+	var ob := Button.new()
+	ob.name = "ShopOdds"
+	ob.flat = true
+	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ob.size_flags_vertical = Control.SIZE_SHRINK_END
+	ob.custom_minimum_size.y = ODDS_H
+	ob.tooltip_text = TH.ui_text("odds")
+	var orow := HBoxContainer.new()
+	orow.name = "OddsRow"
+	orow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	orow.alignment = BoxContainer.ALIGNMENT_END
+	orow.add_theme_constant_override("separation", 10)
+	orow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ob.add_child(orow)
+	r1.add_child(ob)
+	rows.add_child(r1)
+	var row := HBoxContainer.new()
+	row.name = "TrayRow"
+	row.custom_minimum_size.y = SHOP_H
+	row.add_theme_constant_override("separation", 8)
+	var rr := Button.new()
+	rr.name = "Reroll"
+	rr.custom_minimum_size = Vector2(54, 0)
+	rr.tooltip_text = TH.ui_text("reroll")
+	rr.set_meta("sty", "glass_btn")
+	var rv := VBoxContainer.new()
+	rv.name = "Col"
+	rv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rv.alignment = BoxContainer.ALIGNMENT_CENTER
+	rv.add_theme_constant_override("separation", 2)
+	rv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ic := SHAPE.make("reroll", "ink", 26)
+	ic.name = "RerollIcon"
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rv.add_child(ic)
+	var rt := _lbl("", 14, "gold-ink", "display")
+	rt.name = "RerollCost"
+	rt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rv.add_child(rt)
+	rr.add_child(rv)
+	row.add_child(rr)
+	var dk := PanelContainer.new()
+	dk.name = "Dock"
+	dk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var shop := HBoxContainer.new()
+	shop.name = "Shop"
+	shop.add_theme_constant_override("separation", 6)
+	dk.add_child(shop)
+	row.add_child(dk)
+	var fb := Button.new()
+	fb.name = "Fight"
+	fb.custom_minimum_size = Vector2(96, 0)
+	fb.set_meta("sty", "primary")
+	var ft := _lbl("", 18, "on-accent", "display")
+	ft.name = "FightTitle"
+	ft.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ft.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ft.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	ft.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ft.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fb.add_child(ft)
+	row.add_child(fb)
+	rows.add_child(row)
+	return rows
+
+const BENCH_H := 58.0
+const SHOP_H := 76.0
+const ODDS_H := 32.0 # ≥ 24 px on the smallest phone (667×375 shows it at 0.78×)
+const TRIBE_COL_W := 58.0 # default width of the tribe column
+
+# ---------- bind: find each part by name; a part the owner deleted gets a stand-in that is never shown ----------
+var _spare: Array = [] # stand-ins (not in the tree; freed with the screen)
+
+func _part(root: Node, nm: String, cls: String) -> Node:
+	var n := root.find_child(nm, true, false)
+	if n != null and n.is_class(cls):
+		return n
+	var s: Node = ClassDB.instantiate(cls)
+	s.name = nm
+	_spare.append(s)
+	return s
+
+func _bind(lay: Control) -> void:
+	top_hold = _part(lay, "Top", "Control")
+	tray_hold = _part(lay, "Tray", "Control")
+	field = _part(lay, "Field", "Control")
+	board_grid = _part(lay, "Board", "Control")
+	hud_title = _part(lay, "HudTitle", "Label")
+	chip_hearts = _part(_part(lay, "ChipHearts", "Control"), "Value", "Label")
+	chip_gold = _part(_part(lay, "ChipGold", "Control"), "Value", "Label")
+	btn_hi = _part(lay, "HiBar", "Button")
+	btn_runes = _part(lay, "RuneBtn", "Button")
+	btn_replay = _part(lay, "ReplayBtn", "Button")
+	btn_diff = _part(lay, "DiffBtn", "Button")
+	btn_legend = _part(lay, "LegendBtn", "Button")
+	btn_menu = _part(lay, "MenuBtn", "Button")
+	msg_bar = _part(lay, "MsgBar", "PanelContainer")
+	msg_label = _part(lay, "Msg", "Label")
+	tribe_col = _part(lay, "TribeCol", "Button")
+	tribe_list = _part(lay, "TribeList", "VBoxContainer")
+	bench_row = _part(lay, "Bench", "HBoxContainer")
+	odds_btn = _part(lay, "ShopOdds", "Button")
+	odds_row = _part(lay, "OddsRow", "HBoxContainer")
+	btn_reroll = _part(lay, "Reroll", "Button")
+	reroll_t = _part(lay, "RerollCost", "Label")
+	dock = _part(lay, "Dock", "PanelContainer")
+	shop_row = _part(lay, "Shop", "HBoxContainer")
+	btn_fight = _part(lay, "Fight", "Button")
+	fight_t = _part(lay, "FightTitle", "Label")
+	col_labels = [_part(lay, "ColBack", "Label"), _part(lay, "ColMid", "Label"), _part(lay, "ColFront", "Label")]
 	btn_hi.pressed.connect(func() -> void: clear_highlight.emit())
-	h.add_child(btn_hi)
-	btn_runes = _hudbtn("", "RuneBtn")
 	btn_runes.pressed.connect(func() -> void: open_runes.emit())
-	h.add_child(btn_runes)
-	btn_replay = _hudbtn("", "ReplayBtn")
-	btn_replay.visible = false
 	btn_replay.pressed.connect(func() -> void: open_replays.emit())
-	h.add_child(btn_replay)
-	btn_diff = _hudbtn("", "DiffBtn")
 	btn_diff.pressed.connect(func() -> void: open_diff.emit())
-	h.add_child(btn_diff)
-	btn_legend = _hudbtn("?", "LegendBtn")
-	btn_legend.custom_minimum_size.x = 36
 	btn_legend.tooltip_text = TH.ui_text("lg_t")
 	btn_legend.pressed.connect(func() -> void: open_legend.emit())
-	h.add_child(btn_legend)
-	btn_menu = _hudbtn("⋯", "MenuBtn")
-	btn_menu.custom_minimum_size.x = 36
 	btn_menu.pressed.connect(func() -> void: show_menu(not menu.visible))
-	h.add_child(btn_menu)
-	return h
+	tribe_col.pressed.connect(func() -> void: open_tribes.emit())
+	odds_btn.pressed.connect(func() -> void: app.open_shop_pop())
+	btn_reroll.pressed.connect(func() -> void: app.do_reroll())
+	btn_fight.pressed.connect(func() -> void: fight.emit())
+	_msg_style(false)
+	msg_label.visible = false
+	_dock_style(false)
+	# dropping an own unit anywhere on the dock sells it (web dropAt → {sell})
+	dock.set_drag_forwarding(Callable(), _dock_can_drop, _dock_drop)
+	# the cells are made here (they hold the run's units, not layout): board on projected slots · bench · shop
+	for lane in 2: # the far line first: the near line draws (and takes taps) on top where they overlap
+		for row in [2, 1, 0]:
+			var c := _new_cell({"at": "board", "row": float(row), "lane": float(lane)})
+			c.stage_slot = [0, row, lane]
+			c.custom_minimum_size = Vector2.ZERO
+			board_grid.add_child(c)
+	for l in col_labels: # labels draw above the cells
+		if l.get_parent() == board_grid:
+			board_grid.move_child(l, -1)
+	for i in int(R.RULES()["shop"]["bench"]):
+		var c := _new_cell({"at": "bench", "i": float(i)})
+		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		bench_row.add_child(c)
+	for i in int(R.RULES()["shop"]["slots"]):
+		var c := _new_cell({"at": "shop", "i": float(i)})
+		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		shop_row.add_child(c)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		for s in _spare:
+			if is_instance_valid(s) and s.get_parent() == null:
+				s.free()
+
+# room the board leaves on the left: right of the tribe column when it sits at the field's left edge (app.board_targets)
+func board_left_room() -> float:
+	if tribe_col == null or not tribe_col.is_inside_tree() or field == null: # by position, not visibility: the board must not jump when the first unit is bought
+		return 6.0
+	var f := field.get_global_rect()
+	var r := tribe_col.get_global_rect()
+	if r.position.x - f.position.x < f.size.x * 0.25 and r.end.x > f.position.x:
+		return maxf(6.0, r.end.x - f.position.x + 6.0)
+	return 6.0
+
+func _fill_tribe_col(counts: Dictionary, steps: Dictionary, have: Array) -> void:
+	for ch in tribe_list.get_children():
+		tribe_list.remove_child(ch)
+		ch.queue_free()
+	tribe_col.visible = not have.is_empty()
+	for t in have:
+		var row := HBoxContainer.new()
+		row.name = "T_" + str(t)
+		row.add_theme_constant_override("separation", 5)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var on := float(steps.get(t, 0)) > 0.0
+		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
+		var sh := SHAPE.make(sp[0], sp[1], 16)
+		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(sh)
+		var l := TH.label(_n(counts[t]), 14, "ink" if on else "mute", "body_b" if on else "body")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(l)
+		row.modulate = Color.WHITE if on else Color(1, 1, 1, 0.6)
+		tribe_list.add_child(row)
+	tribe_list.reset_size()
+	var want := tribe_list.get_combined_minimum_size() + Vector2(16.0, 12.0)
+	tribe_col.size = Vector2(maxf(tribe_col.size.x, want.x), want.y)
+
+# set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
+func place_cells() -> void:
+	var st: Node3D = app.stage
+	if st == null or board_grid == null:
+		return
+	var o: Vector2 = board_grid.get_global_rect().position
+	for row in 3:
+		for lane in 2:
+			var cell: Control = cells["b_%d_%d" % [row, lane]]
+			cell.stage = st
+			var r: Rect2 = st.slot_rect(0, row, lane)
+			cell.position = r.position - o
+			cell.size = r.size
+	for i in 3: # set 207 P6: labels back · mid · front on the floor, near the centre of their column's near tile (the front edge hides under the tray on phones)
+		var row := 2 - i
+		var p: Vector2 = st.on_screen(ST3D.slot_pos(0, row, 1) + Vector3(0, 0, ST3D.TILE * 0.12))
+		var l: Label = col_labels[i]
+		var w := maxf(l.get_combined_minimum_size().x, 10.0)
+		l.size = Vector2(w, l.get_combined_minimum_size().y)
+		l.position = Vector2(p.x - w / 2.0, p.y - l.size.y / 2.0) - o
+
+func _show_col_labels(on: bool) -> void:
+	for l in col_labels:
+		l.visible = on
+
+const RAR_TOK := {"ธรรมดา": "mute", "ไม่ธรรมดา": "r-unc", "หายาก": "r-rare", "หายากมาก": "r-epic", "ตำนาน": "r-legend"}
+
+func _fill_odds(lv: float) -> void:
+	for ch in odds_row.get_children():
+		odds_row.remove_child(ch)
+		ch.queue_free()
+	var odds := SH.odds_at(lv)
+	for r in odds:
+		if float(odds[r]) <= 0.0:
+			continue
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 3)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var dot := SHAPE.make("circle", RAR_TOK.get(r, "mute"), 10)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(dot)
+		var l := TH.label(_n(odds[r]) + "%", 13, RAR_TOK.get(r, "mute"), "body_b")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(l)
+		odds_row.add_child(h)
 
 func _build_menu() -> void:
 	menu = PanelContainer.new()
@@ -242,20 +605,6 @@ func _on_menu_new() -> void:
 		return
 	_pick("new")
 
-func _build_msg() -> Control:
-	msg_bar = PanelContainer.new()
-	msg_bar.name = "MsgBar"
-	msg_bar.custom_minimum_size.y = 24
-	msg_label = TH.label("", 13, "ink")
-	msg_label.name = "Msg"
-	msg_label.clip_text = true
-	msg_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	msg_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	msg_bar.add_child(msg_label)
-	_msg_style(false)
-	msg_label.visible = false
-	return msg_bar
-
 func _msg_style(on: bool, err: bool = false) -> void:
 	if on:
 		msg_bar.add_theme_stylebox_override("panel", TH.box(glass(TH.c("hi-bg") if err else TH.c("soft")), TH.c("bad") if err else TH.c("line"), 8, 1, 10, 2))
@@ -263,218 +612,6 @@ func _msg_style(on: bool, err: bool = false) -> void:
 		msg_bar.add_theme_stylebox_override("panel", TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 8, 0, 10, 2))
 
 # set 206: the field is a window onto the 3D arena (app.stage): no box, the board cells sit on the camera's projected slot rects
-func _build_field() -> Control:
-	var f := Control.new()
-	f.name = "Field"
-	f.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	f.custom_minimum_size = Vector2(0, 120)
-	var b := Control.new()
-	b.name = "Board"
-	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	f.add_child(b)
-	board_grid = b
-	for lane in 2: # the far line first: the near line draws (and takes taps) on top where they overlap
-		for row in [2, 1, 0]:
-			var c := _new_cell({"at": "board", "row": float(row), "lane": float(lane)})
-			c.stage_slot = [0, row, lane]
-			c.custom_minimum_size = Vector2.ZERO
-			b.add_child(c)
-	# set 207 P6: column labels lie on the near tiles' front edge, shown only while a unit is dragged
-	col_labels = []
-	for t in ["col_back", "col_mid", "col_front"]:
-		var l := TH.label(TH.ui_text(t), 13, "ink", "body_b")
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.add_theme_stylebox_override("normal", TH.box(glass(TH.c("panel")), Color(0, 0, 0, 0), 6, 0, 6, 0))
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		l.visible = false
-		b.add_child(l)
-		col_labels.append(l)
-	# set 207 P8 (user F1): tribe column on the left = shape + how many units of that tribe you have; tap = tribe popup
-	tribe_col = Button.new()
-	tribe_col.name = "TribeCol"
-	tribe_col.flat = false
-	glass_btn(tribe_col)
-	tribe_col.tooltip_text = TH.ui_text("tribe")
-	tribe_col.pressed.connect(func() -> void: open_tribes.emit())
-	tribe_col.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	tribe_col.position = Vector2(0, 4)
-	tribe_list = VBoxContainer.new()
-	tribe_list.add_theme_constant_override("separation", 2)
-	tribe_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tribe_list.position = Vector2(8, 6)
-	tribe_col.add_child(tribe_list)
-	f.add_child(tribe_col)
-	return f
-
-const TRIBE_COL_W := 58.0 # the board target leaves this much room on the left (app.board_targets)
-
-func _fill_tribe_col(counts: Dictionary, steps: Dictionary, have: Array) -> void:
-	for ch in tribe_list.get_children():
-		tribe_list.remove_child(ch)
-		ch.queue_free()
-	tribe_col.visible = not have.is_empty()
-	for t in have:
-		var row := HBoxContainer.new()
-		row.name = "T_" + str(t)
-		row.add_theme_constant_override("separation", 5)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var on := float(steps.get(t, 0)) > 0.0
-		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
-		var sh := SHAPE.make(sp[0], sp[1], 16)
-		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(sh)
-		var l := TH.label(_n(counts[t]), 14, "ink" if on else "mute", "body_b" if on else "body")
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(l)
-		row.modulate = Color.WHITE if on else Color(1, 1, 1, 0.6)
-		tribe_list.add_child(row)
-	tribe_list.reset_size()
-	tribe_col.size = Vector2(TRIBE_COL_W - 8.0, tribe_list.get_combined_minimum_size().y + 12.0)
-
-# set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
-func place_cells() -> void:
-	var st: Node3D = app.stage
-	if st == null or board_grid == null:
-		return
-	var o: Vector2 = board_grid.get_global_rect().position
-	for row in 3:
-		for lane in 2:
-			var cell: Control = cells["b_%d_%d" % [row, lane]]
-			cell.stage = st
-			var r: Rect2 = st.slot_rect(0, row, lane)
-			cell.position = r.position - o
-			cell.size = r.size
-	for i in 3: # set 207 P6: labels back · mid · front on the floor, at the front edge of their column's near tile
-		var row := 2 - i
-		var p: Vector2 = st.on_screen(ST3D.slot_pos(0, row, 1) + Vector3(0, 0, ST3D.TILE * 0.32))
-		var l: Label = col_labels[i]
-		var w := maxf(l.get_combined_minimum_size().x, 10.0)
-		l.size = Vector2(w, l.get_combined_minimum_size().y)
-		l.position = Vector2(p.x - w / 2.0, p.y - l.size.y / 2.0) - o
-
-func _show_col_labels(on: bool) -> void:
-	for l in col_labels:
-		l.visible = on
-
-# set 207 (user: bench and shop stay on two rows, not one) · row 1 = bench ×5 + shop odds line · row 2 = reroll · shop ×5 · fight
-# P7/E1: no bench label or count · P3/B1: reroll = icon + price / "ฟรี n" · P4/C1: odds line, tap = shop popup · P5/D2: fight = title only
-func _build_tray() -> Control:
-	var rows := VBoxContainer.new()
-	rows.name = "TrayRows"
-	rows.add_theme_constant_override("separation", 4)
-	var r1 := HBoxContainer.new()
-	r1.name = "BenchBar"
-	r1.custom_minimum_size.y = BENCH_H
-	r1.add_theme_constant_override("separation", 8)
-	bench_row = HBoxContainer.new()
-	bench_row.name = "Bench"
-	bench_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bench_row.size_flags_stretch_ratio = 1.3
-	bench_row.add_theme_constant_override("separation", 4)
-	r1.add_child(bench_row)
-	for i in int(R.RULES()["shop"]["bench"]):
-		var c := _new_cell({"at": "bench", "i": float(i)})
-		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		bench_row.add_child(c)
-	odds_btn = Button.new()
-	odds_btn.name = "ShopOdds"
-	odds_btn.flat = true
-	odds_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	odds_btn.size_flags_vertical = Control.SIZE_SHRINK_END
-	odds_btn.custom_minimum_size.y = ODDS_H
-	odds_btn.tooltip_text = TH.ui_text("odds")
-	odds_btn.pressed.connect(func() -> void: app.open_shop_pop())
-	odds_row = HBoxContainer.new()
-	odds_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	odds_row.alignment = BoxContainer.ALIGNMENT_END
-	odds_row.add_theme_constant_override("separation", 10)
-	odds_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	odds_btn.add_child(odds_row)
-	r1.add_child(odds_btn)
-	rows.add_child(r1)
-	var row := HBoxContainer.new()
-	row.name = "TrayRow"
-	row.custom_minimum_size.y = SHOP_H
-	row.add_theme_constant_override("separation", 8)
-	btn_reroll = Button.new()
-	btn_reroll.name = "Reroll"
-	btn_reroll.custom_minimum_size = Vector2(54, 0)
-	btn_reroll.tooltip_text = TH.ui_text("reroll")
-	glass_btn(btn_reroll)
-	var rv := VBoxContainer.new()
-	rv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	rv.alignment = BoxContainer.ALIGNMENT_CENTER
-	rv.add_theme_constant_override("separation", 2)
-	rv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ic := SHAPE.make("reroll", "ink", 26)
-	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	rv.add_child(ic)
-	reroll_t = TH.label("", 14, "gold-ink", "display")
-	reroll_t.name = "RerollCost"
-	reroll_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	reroll_t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rv.add_child(reroll_t)
-	btn_reroll.add_child(rv)
-	btn_reroll.pressed.connect(func() -> void: app.do_reroll())
-	row.add_child(btn_reroll)
-	dock = PanelContainer.new()
-	dock.name = "Dock"
-	dock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_dock_style(false)
-	# dropping an own unit anywhere on the dock sells it (web dropAt → {sell})
-	dock.set_drag_forwarding(Callable(), _dock_can_drop, _dock_drop)
-	shop_row = HBoxContainer.new()
-	shop_row.name = "Shop"
-	shop_row.add_theme_constant_override("separation", 6)
-	dock.add_child(shop_row)
-	for i in int(R.RULES()["shop"]["slots"]):
-		var c := _new_cell({"at": "shop", "i": float(i)})
-		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		shop_row.add_child(c)
-	row.add_child(dock)
-	btn_fight = Button.new()
-	btn_fight.name = "Fight"
-	btn_fight.custom_minimum_size = Vector2(96, 0)
-	TH.primary(btn_fight, false)
-	fight_t = TH.label("", 18, "on-accent", "display")
-	fight_t.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	fight_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	fight_t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	fight_t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	fight_t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn_fight.add_child(fight_t)
-	btn_fight.pressed.connect(func() -> void: fight.emit())
-	row.add_child(btn_fight)
-	rows.add_child(row)
-	return rows
-
-const BENCH_H := 58.0
-const SHOP_H := 76.0
-const ODDS_H := 30.0 # ≥ 24 px on a phone (tap target)
-const RAR_TOK := {"ธรรมดา": "mute", "ไม่ธรรมดา": "r-unc", "หายาก": "r-rare", "หายากมาก": "r-epic", "ตำนาน": "r-legend"}
-
-func _fill_odds(lv: float) -> void:
-	for ch in odds_row.get_children():
-		odds_row.remove_child(ch)
-		ch.queue_free()
-	var odds := SH.odds_at(lv)
-	for r in odds:
-		if float(odds[r]) <= 0.0:
-			continue
-		var h := HBoxContainer.new()
-		h.add_theme_constant_override("separation", 3)
-		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var dot := SHAPE.make("circle", RAR_TOK.get(r, "mute"), 10)
-		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		h.add_child(dot)
-		var l := TH.label(_n(odds[r]) + "%", 13, RAR_TOK.get(r, "mute"), "body_b")
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		h.add_child(l)
-		odds_row.add_child(h)
 
 func _new_cell(ref: Dictionary) -> Control:
 	var c: Control = Cell.new()
