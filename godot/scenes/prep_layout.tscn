@@ -1,12 +1,14 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://7e66re0tc0k"]
 
-[ext_resource type="Script" path="res://scripts/ui/shape.gd" id="1_npxyy"]
+[ext_resource type="Script" uid="uid://cd42a177odfy0" path="res://scripts/ui/shape.gd" id="1_npxyy"]
 
 [node name="Layout" type="Control" unique_id=1301828589]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
 [node name="Top" type="Control" parent="." unique_id=1315039354]
@@ -138,6 +140,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_top = 45.0
 offset_bottom = 69.0
+grow_horizontal = 2
 
 [node name="Msg" type="Label" parent="Top/MsgBar" unique_id=1980100550]
 layout_mode = 2
@@ -210,7 +213,8 @@ mouse_filter = 2
 theme_override_constants/separation = 2
 
 [node name="Tray" type="Control" parent="." unique_id=648007336]
-anchors_preset = 0
+layout_mode = 1
+anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -218,15 +222,19 @@ offset_left = 8.0
 offset_top = -146.0
 offset_right = -8.0
 offset_bottom = -8.0
+grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 
 [node name="Bench" type="HBoxContainer" parent="Tray" unique_id=34728014]
 layout_mode = 1
 anchors_preset = -1
-anchor_right = 0.655
-offset_right = -4.0
-offset_bottom = 58.0
+anchor_top = -1.4640001
+anchor_right = 0.074
+anchor_bottom = 0.30400002
+offset_top = 0.03201294
+offset_right = -0.012001038
+offset_bottom = 0.04799652
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.9
 theme_override_constants/separation = 4
@@ -293,6 +301,7 @@ offset_left = 62.0
 offset_top = 62.0
 offset_right = -104.0
 offset_bottom = 138.0
+grow_horizontal = 2
 size_flags_horizontal = 3
 
 [node name="Shop" type="HBoxContainer" parent="Tray/Dock" unique_id=1018602210]
