@@ -935,6 +935,87 @@ func test_card_rune_merge_drag() -> String:
 	_cleanup()
 	return "ok" if bad == "" else bad
 
+# set 207 P0 (owner bug after set 206): while dragging, only the cell under the pointer shows "drop ok";
+# arena cells draw no 2D frame (the tile rim shows it); the picked-up unit's sprite is dimmed until drop / cancel
+func test_drag_one_hover() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app.prep.render()
+	var prep: Control = app.prep
+	var bad := ""
+	var from := {"at": "board", "row": 0.0, "lane": 0.0}
+	var data := {"ref": from}
+	prep.drag_started(from)
+	var spr: Variant = app.stage.unit("prep", "b_0_0")
+	if spr == null or spr["spr"].modulate == Color.WHITE:
+		bad = "the picked-up unit's sprite must dim while dragging"
+	var a: Control = prep.cells["b_1_0"]
+	var b: Control = prep.cells["b_2_1"]
+	a._can_drop_data(Vector2.ZERO, data)
+	b._can_drop_data(Vector2.ZERO, data)
+	if bad == "" and (a.drop_ok or not b.drop_ok):
+		bad = "only the last hovered cell may show drop ok (a %s · b %s)" % [a.drop_ok, b.drop_ok]
+	if bad == "":
+		var st: StyleBoxFlat = b.get_theme_stylebox("panel")
+		if st != null and (st.border_width_top > 0 or st.draw_center and st.bg_color.a > 0.0):
+			bad = "arena cells draw no 2D frame (the tile rim shows the state)"
+	if bad == "":
+		prep._unhover_if_left(Vector2(-500, -500))
+		if b.drop_ok:
+			bad = "leaving the cell (pointer elsewhere) must clear its drop ok"
+	prep.drag_ended()
+	if bad == "" and spr != null and spr["spr"].modulate != Color.WHITE:
+		bad = "a cancelled drag must undim the sprite"
+	for k in prep.cells:
+		if bad == "" and prep.cells[k].drop_ok:
+			bad = "no cell keeps drop ok after the drag (%s)" % k
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# set 207 (user B2): the prep layout lives in scenes/prep_layout.tscn (owner edits it in the Godot editor);
+# the app loads it, and a part the owner deleted only disappears (stand-in), the screen still renders and plays
+func test_prep_layout_scene() -> String:
+	var ps: Variant = load("res://scenes/prep_layout.tscn")
+	if not ps is PackedScene:
+		return "scenes/prep_layout.tscn must exist (tools/make_prep_layout.gd)"
+	var src := FileAccess.get_file_as_string("res://scenes/prep_layout.tscn")
+	if src.contains("FontFile") or src.contains("ImageTexture") or src.contains("font_color"):
+		return "the layout scene must not store fonts, icons or colours (light/dark come from metas)"
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	var bad := ""
+	for nm in ["Top", "Field", "Tray", "Hud", "TribeCol", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight"]:
+		if bad == "" and app.prep.find_child(nm, true, false) == null:
+			bad = "the loaded layout lost %s" % nm
+	if bad == "" and app.prep.chip_gold.get_theme_color("font_color") != TH.c("gold-ink"):
+		bad = "metas must colour the labels (gold chip)"
+	# a copy with parts deleted
+	var Prep := load("res://scripts/ui/prep.gd")
+	var p2: Control = Prep.new()
+	var lay: Control = p2.build_layout()
+	for nm in ["Reroll", "TribeCol", "ShopOdds", "DiffBtn"]:
+		var n: Node = lay.find_child(nm, true, false)
+		n.get_parent().remove_child(n)
+		n.free()
+	p2.app = app
+	p2.add_child(lay)
+	p2._style_tree(lay)
+	p2._bind(lay)
+	p2.card = load("res://scripts/ui/unit_card.gd").new()
+	p2.add_child(p2.card)
+	p2._build_menu()
+	p2.render()
+	if bad == "" and (p2.btn_reroll.get_parent() != null or p2.tribe_col.get_parent() != null):
+		bad = "deleted parts get stand-ins outside the tree"
+	if bad == "" and p2.cells.size() != 6 + 5 + 5:
+		bad = "cells are still made without those parts (%d)" % p2.cells.size()
+	p2.free()
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
 # set 205 (user E1/A1) · set 206 (3D, C1): the shared arena camera move — pure helpers + the screens still hold their named parts
 func test_arena_move() -> String:
 	var AR := load("res://scripts/ui/arena.gd")
@@ -1012,6 +1093,13 @@ func test_stage3d() -> String:
 		var want: Rect2 = app.stage.slot_rect(0, 0, 0)
 		if app.size.x > 4.0 and c0.get_global_rect().position.distance_to(want.position) > 1.0:
 			bad = "the board cell must sit on its projected slot rect"
+	if bad == "": # set 207 P1: prep pose = only your half; the enemy tiles rise in with the dolly
+		if app.stage.foe_tiles.size() != 12 or app.stage.foe_tiles.any(func(it): return it[0].visible):
+			bad = "at the prep pose the 6 enemy rims + 6 tiles must be hidden (%d)" % app.stage.foe_tiles.size()
+		app.stage.set_k(1.0)
+		if bad == "" and app.stage.foe_tiles.any(func(it): return not it[0].visible or absf(it[0].position.y - float(it[1])) > 0.0001):
+			bad = "at the battle pose the enemy tiles stand in place"
+		app.stage.set_k(0.0)
 	if bad == "":
 		app._on_fight()
 		var n_battle: int = app.stage.count("battle")

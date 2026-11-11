@@ -13,6 +13,8 @@ var mergeable := false
 var picked := false
 var hi := 0 # 1 = tribe highlight on · -1 = dimmed
 var drop_ok := false
+var owned := false # set 207 P9: shop card of a kind you already own
+const GLASS := 0.72
 var stage_slot: Array = [] # set 206: [side, row, lane] = a board cell on the 3D arena (no box; states light the tile's rune rim)
 var stage: Node3D = null
 
@@ -22,12 +24,14 @@ func _init() -> void:
 
 func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = false) -> void:
 	var line := TH.c("line") if filled else TH.c("arena-line")
-	var bg := TH.c("panel") if filled else Color(0, 0, 0, 0)
+	var bg := Color(TH.c("panel"), GLASS) if filled else Color(0, 0, 0, 0) # set 207 P2: see-through over the arena
 	var bw := 1 if filled else 2
 	if shop:
-		bg = TH.c("panel")
+		bg = Color(TH.c("panel"), GLASS)
 		line = TH.c("line")
 		bw = 1
+		if owned and filled: # set 207 P9 (user G2): you already own this kind → yellowish card
+			bg = Color(TH.c("gold-bg"), 0.88)
 	if locked:
 		line = TH.c("gold")
 		bw = 2
@@ -44,13 +48,9 @@ func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = f
 		line = TH.c("ok")
 		bw = 3
 	var st := TH.box(bg, line, 10, bw, 3, 2)
-	if not stage_slot.is_empty():
+	if not stage_slot.is_empty(): # set 207 P0: arena cells draw no 2D frame — every state lights the tile's rune rim only
 		var lit := locked or mergeable or hi > 0 or picked or drop_ok
 		st = TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 10, 0, 3, 2)
-		if lit:
-			st.border_color = Color(line, 0.9)
-			st.set_border_width_all(2)
-			st.draw_center = false
 		if stage != null:
 			stage.tint(int(stage_slot[0]), int(stage_slot[1]), int(stage_slot[2]), line if lit else null)
 	add_theme_stylebox_override("panel", st)
@@ -80,6 +80,8 @@ func _can_drop_data(_at: Vector2, data: Variant) -> bool:
 	if ok != drop_ok:
 		drop_ok = ok
 		prep.restyle(self)
+	if ok: # set 207 P0: one hover cell at a time — the prep screen clears the cell the pointer left
+		prep.hover(self)
 	return ok
 
 func _drop_data(_at: Vector2, data: Variant) -> void:

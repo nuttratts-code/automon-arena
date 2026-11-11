@@ -94,6 +94,25 @@ func _initialize() -> void:
 	await _shot("prep-highlight")
 	app.prep.hi_tribe = null
 	app.render()
+	# set 207: owned shop card (yellowish) + star-up ribbon (2 Lv1 copies on the bench) + free reroll · then a drag (floor labels, one hover)
+	var keep: Array = [app.P["bench"][1].duplicate(), app.P["shop"][4].duplicate(), app.P["shop"][2].duplicate()]
+	app.P["bench"][1]["id"] = app.P["bench"][0]["id"]
+	app.P["shop"][4] = {"id": app.P["bench"][0]["id"], "locked": false}
+	app.P["shop"][2] = {"id": app.P["board"][0][0]["id"], "locked": false}
+	app.P["rn"]["free"] = 2.0
+	app.render()
+	await _shot("prep-upstar")
+	var dref := {"at": "board", "row": 0.0, "lane": 1.0}
+	app.prep.drag_started(dref)
+	app.prep.cells["b_1_1"]._can_drop_data(Vector2.ZERO, {"ref": dref})
+	app.prep.cells["b_2_0"]._can_drop_data(Vector2.ZERO, {"ref": dref})
+	await _shot("prep-drag")
+	app.prep.drag_ended()
+	app.P["bench"][1] = keep[0]
+	app.P["shop"][4] = keep[1]
+	app.P["shop"][2] = keep[2]
+	app.P["rn"]["free"] = 0.0
+	app.render()
 	# 7e: ⋯ menu · symbols · glossary
 	app.prep.show_menu(true)
 	await _shot("prep-menu")

@@ -1,0 +1,288 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/shape.gd" id="1_npxyy"]
+
+[node name="Layout" type="Control" unique_id=1209686469]
+layout_mode = 3
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Top" type="VBoxContainer" parent="." unique_id=967358543]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 77.0
+theme_override_constants/separation = 5
+
+[node name="Hud" type="HBoxContainer" parent="Top" unique_id=141540370]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HudTitle" type="Label" parent="Top/Hud" unique_id=1952022735]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+metadata/ink = "ink"
+metadata/font = "display"
+
+[node name="ChipHearts" type="PanelContainer" parent="Top/Hud" unique_id=1917934131]
+layout_mode = 2
+metadata/sty = "chip:heart-bg"
+
+[node name="Row" type="HBoxContainer" parent="Top/Hud/ChipHearts" unique_id=1603896381]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="Top/Hud/ChipHearts/Row" unique_id=1773087291]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+metadata/art = "ui/heart"
+
+[node name="Value" type="Label" parent="Top/Hud/ChipHearts/Row" unique_id=1486789014]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+metadata/ink = "heart-ink"
+metadata/font = "display"
+
+[node name="ChipGold" type="PanelContainer" parent="Top/Hud" unique_id=1034923633]
+layout_mode = 2
+metadata/sty = "chip:gold-bg"
+
+[node name="Row" type="HBoxContainer" parent="Top/Hud/ChipGold" unique_id=1098174544]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="Top/Hud/ChipGold/Row" unique_id=375080672]
+texture_filter = 1
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+metadata/art = "ui/gold"
+
+[node name="Value" type="Label" parent="Top/Hud/ChipGold/Row" unique_id=1326963878]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "0"
+metadata/ink = "gold-ink"
+metadata/font = "display"
+
+[node name="Space" type="Control" parent="Top/Hud" unique_id=152373200]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HiBar" type="Button" parent="Top/Hud" unique_id=1606637658]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+metadata/sty = "glass_btn"
+
+[node name="RuneBtn" type="Button" parent="Top/Hud" unique_id=1994163353]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+metadata/sty = "glass_btn"
+
+[node name="ReplayBtn" type="Button" parent="Top/Hud" unique_id=384154649]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+metadata/sty = "glass_btn"
+
+[node name="DiffBtn" type="Button" parent="Top/Hud" unique_id=145821754]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+metadata/sty = "glass_btn"
+
+[node name="LegendBtn" type="Button" parent="Top/Hud" unique_id=360804268]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+text = "?"
+metadata/sty = "glass_btn"
+
+[node name="MenuBtn" type="Button" parent="Top/Hud" unique_id=1085186052]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+text = "⋯"
+metadata/sty = "glass_btn"
+
+[node name="MsgBar" type="PanelContainer" parent="Top" unique_id=1752387745]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="Msg" type="Label" parent="Top/MsgBar" unique_id=2056721767]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+clip_text = true
+text_overrun_behavior = 3
+metadata/ink = "ink"
+
+[node name="Field" type="Control" parent="." unique_id=642744149]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 82.0
+offset_right = -8.0
+offset_bottom = -151.0
+mouse_filter = 2
+
+[node name="Board" type="Control" parent="Field" unique_id=682869518]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ColBack" type="Label" parent="Field/Board" unique_id=1352926375]
+visible = false
+layout_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "หลัง"
+horizontal_alignment = 1
+metadata/ink = "ink"
+metadata/font = "body_b"
+metadata/sty = "floor_label"
+
+[node name="ColMid" type="Label" parent="Field/Board" unique_id=1515064420]
+visible = false
+layout_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "กลาง"
+horizontal_alignment = 1
+metadata/ink = "ink"
+metadata/font = "body_b"
+metadata/sty = "floor_label"
+
+[node name="ColFront" type="Label" parent="Field/Board" unique_id=1248056639]
+visible = false
+layout_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "หน้า →"
+horizontal_alignment = 1
+metadata/ink = "ink"
+metadata/font = "body_b"
+metadata/sty = "floor_label"
+
+[node name="TribeCol" type="Button" parent="Field" unique_id=1083292608]
+layout_mode = 0
+offset_top = 4.0
+offset_right = 50.0
+offset_bottom = 44.0
+tooltip_text = "เผ่า"
+metadata/sty = "glass_btn"
+
+[node name="TribeList" type="VBoxContainer" parent="Field/TribeCol" unique_id=1857269037]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = 8.0
+offset_bottom = 6.0
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Tray" type="VBoxContainer" parent="." unique_id=654285414]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -146.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="BenchBar" type="HBoxContainer" parent="Tray" unique_id=154355854]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Bench" type="HBoxContainer" parent="Tray/BenchBar" unique_id=928441442]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.9
+theme_override_constants/separation = 4
+
+[node name="ShopOdds" type="Button" parent="Tray/BenchBar" unique_id=169831480]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+tooltip_text = "โอกาสเจอ:"
+flat = true
+
+[node name="OddsRow" type="HBoxContainer" parent="Tray/BenchBar/ShopOdds" unique_id=1105763647]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="TrayRow" type="HBoxContainer" parent="Tray" unique_id=223166840]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Reroll" type="Button" parent="Tray/TrayRow" unique_id=1944711911]
+custom_minimum_size = Vector2(54, 0)
+layout_mode = 2
+tooltip_text = "สุ่มใหม่"
+metadata/sty = "glass_btn"
+
+[node name="Col" type="VBoxContainer" parent="Tray/TrayRow/Reroll" unique_id=434235705]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="RerollIcon" type="Control" parent="Tray/TrayRow/Reroll/Col" unique_id=425382982]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("1_npxyy")
+kind = "reroll"
+token = "ink"
+
+[node name="RerollCost" type="Label" parent="Tray/TrayRow/Reroll/Col" unique_id=382118589]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+metadata/ink = "gold-ink"
+metadata/font = "display"
+
+[node name="Dock" type="PanelContainer" parent="Tray/TrayRow" unique_id=361458308]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Shop" type="HBoxContainer" parent="Tray/TrayRow/Dock" unique_id=488172967]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Fight" type="Button" parent="Tray/TrayRow" unique_id=199175498]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+metadata/sty = "primary"
+
+[node name="FightTitle" type="Label" parent="Tray/TrayRow/Fight" unique_id=270200192]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+metadata/ink = "on-accent"
+metadata/font = "display"

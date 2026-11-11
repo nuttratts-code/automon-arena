@@ -31,6 +31,8 @@ var pose_prep := Transform3D()
 var pose_battle := Transform3D()
 var k := 0.0 # 0 = prep pose … 1 = battle pose
 var built := false
+var foe_tiles: Array = [] # set 207 P1: [mesh, rest y] of the enemy half's rims + tiles
+const FOE_SINK := 0.3
 var rim_idle := Color(0.36, 0.78, 0.84)
 var _blob: Texture2D = blob_tex()
 
@@ -195,9 +197,12 @@ func _floor(dark: bool) -> void:
 			for lane in 2:
 				var c := slot_pos(s, row, lane)
 				var rm := _mat(rim_idle, 0.25)
-				_box(Vector3(TILE + 0.14, 0.03, TILE + 0.14), c + Vector3(0, 0.015, 0), rm, "Rim" + key(s, row, lane).replace(":", "_"))
-				_box(Vector3(TILE - 0.08, 0.05, TILE - 0.08), c + Vector3(0, 0.03, 0), stone, "Tile" + key(s, row, lane).replace(":", "_"))
+				var r1 := _box(Vector3(TILE + 0.14, 0.03, TILE + 0.14), c + Vector3(0, 0.015, 0), rm, "Rim" + key(s, row, lane).replace(":", "_"))
+				var t1 := _box(Vector3(TILE - 0.08, 0.05, TILE - 0.08), c + Vector3(0, 0.03, 0), stone, "Tile" + key(s, row, lane).replace(":", "_"))
 				tiles[key(s, row, lane)] = rm
+				if s == 1:
+					foe_tiles.append([r1, r1.position.y])
+					foe_tiles.append([t1, t1.position.y])
 	_box(Vector3(0.08, 0.04, 5.2), Vector3(0, 0.02, 0), _mat(Color("#cfc3a8") if dark else Color("#efe6d0"), 0.1), "Mid")
 
 func _ready() -> void:
@@ -220,7 +225,19 @@ func set_k(v: float) -> void:
 	k = clampf(v, 0.0, 1.0)
 	if cam != null:
 		cam.transform = lerp_pose(pose_prep, pose_battle, k)
+	_foe_rise()
 	moved.emit()
+
+# set 207 P1: the prep pose shows only your half — the enemy tiles sit sunk under the plaza and rise in with the dolly
+static func foe_rise_of(v: float) -> float: # 0 = hidden under the plaza … 1 = in place (reached halfway through the move)
+	return clampf(v / 0.5, 0.0, 1.0)
+
+func _foe_rise() -> void:
+	var r := foe_rise_of(k)
+	for it in foe_tiles:
+		var m: MeshInstance3D = it[0]
+		m.visible = r > 0.0
+		m.position.y = float(it[1]) - FOE_SINK * (1.0 - r)
 
 func pose() -> Transform3D:
 	return lerp_pose(pose_prep, pose_battle, k)
