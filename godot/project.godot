@@ -29,12 +29,12 @@ window/stretch/aspect="expand"
 
 enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
 
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-
 [mcp_toolkit]
 
 updates/check_for_updates=false
 updates/install_mode="manual"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
