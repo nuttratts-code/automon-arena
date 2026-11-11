@@ -4,7 +4,8 @@
 # HERE (not a downloaded sums file). HARD RULE 9 ②. Set 192.
 #   godot/tools/get_godot.sh <dest-dir> [templates]
 # Prints the binary path. 'templates' also fetches + checks the export templates (~1 GB download,
-# keeps only the web ones; local only, not in CI).
+# keeps only the web ones; CI job godot-web caches them, set 201). Export templates = the official Godot release
+# builds, same MIT licence as the engine (its text + third-party notices are on the in-game credits screen, set 201).
 set -euo pipefail
 VER=4.7.2-stable
 BASE=https://github.com/godotengine/godot/releases/download/$VER

@@ -5,7 +5,7 @@ The user tests the game UI (published game v131) and reports issues one by one. 
 
 **Animation rule (user A3, set 187):** UI animations/transitions are NOT built on the web page. Record them as specs only (Type = `anim-spec · Godot`); the next chat skips them. They are used when the game moves to Godot after MVP1 (build-plan V1.48).
 
-Carried over to Godot (from set 183/185, skipped on the web set 189): shop card details over เริ่มสู้ on 667×375 / 740×330 · battle log line 2-line clamp check.
+Carried over to Godot (from set 183/185, skipped on the web set 189): shop card details over เริ่มสู้ on 667×375 / 740×330 · battle log line 2-line clamp check. → both checked in Godot set 202 (7f2): card stays clear of เริ่มสู้, ticker lines are single-line with ellipsis.
 
 | # | Page / screen | User's words (Thai, verbatim) | What it means (Claude) | Type | Status |
 |---|---|---|---|---|---|

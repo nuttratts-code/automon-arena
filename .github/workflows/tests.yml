@@ -76,3 +76,43 @@ jobs:
       - name: Run code copied from the Godot run end screen reads in the JS Balance Room reader (set 199 step 7d)
         working-directory: src
         run: node lab/golden-save.mjs check ../godot/tests/golden/godot-ui-arun1.txt
+
+  # Set 202 (plan-set196 7f1, + 7f2 sizes): the Godot web export, opened in Chromium at 1366x768 · 844x390 · 667x375 · 740x330 · 390x844 portrait
+  # (godot/tools/web_check.py: pck ships data + fonts + OFL texts and no tests/tools/docs · engine starts ·
+  # no page errors · canvas fills · no horizontal scroll · picture not blank). Templates: official release,
+  # SHA-512 pinned in get_godot.sh, cached (web templates only, ~85 MB).
+  godot-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-web-templates-${{ hashFiles('godot/tools/get_godot.sh') }}
+      - name: Get Godot + web templates (pinned + checksum)
+        run: echo "GODOT=$(godot/tools/get_godot.sh "$RUNNER_TEMP/godot" templates)" >> "$GITHUB_ENV"
+      - name: Export (web, release)
+        run: |
+          timeout 300 "$GODOT" --headless --path godot --import > /dev/null 2>&1 || true
+          mkdir -p build/web
+          timeout 600 "$GODOT" --headless --path godot --export-release Web ../build/web/index.html 2>&1 | tail -5
+          test -s build/web/index.pck && test -s build/web/index.wasm
+      - name: Install playwright + chromium
+        run: |
+          pip install -q playwright
+          python -m playwright install --with-deps chromium
+      - name: Web check (5 sizes)
+        run: timeout 600 python3 -I godot/tools/web_check.py build/web /tmp/automon-godot-web
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-web-shots
+          path: /tmp/automon-godot-web
+          retention-days: 7
+          if-no-files-found: ignore

@@ -873,3 +873,64 @@ func _find_text(n: Node, t: String) -> bool:
 		if _find_text(c, t):
 			return true
 	return false
+
+# 7f2 (set 202): the card shows what the held runes add at match start (web runeBonusAt) · merge targets of the open card get the gold frame ·
+# a drag leaves the picked-up cell faint and a cancelled drag brings it back
+func test_card_rune_merge_drag() -> String:
+	var app := _app_tmp()
+	app.start_new_run(7)
+	var prep: Control = app.prep
+	var ids := []
+	for c in app.chars:
+		if float(c["price"]) <= 3.0:
+			ids.append(c["id"])
+	var id: Variant = ids[0]
+	var uid := 900.0
+	for row in 3:
+		for lane in 2:
+			app.P["board"][row][lane] = {"uid": uid, "id": id, "level": 1.0, "perm": {}, "paid": 3.0}
+			uid += 1.0
+	app.P["uid"] = uid
+	app.P["rn"]["bag"] = {"X5": 1.0} # ป้อมปราการ: front row HP +% · attack −%
+	app.render()
+	var bad := ""
+	var hit: Variant = null
+	for row in 3:
+		for lane in 2:
+			var rb: Variant = app.rune_bonus_at({"at": "board", "row": float(row), "lane": float(lane)})
+			if rb is Dictionary and float(rb["maxHp"]) > 0.0 and float(rb["atk"]) < 0.0:
+				hit = {"at": "board", "row": float(row), "lane": float(lane)}
+	if hit == null:
+		bad = "rune X5 must show HP + and attack − on a front unit (rune_bonus_at)"
+	if bad == "" and app.rune_bonus_at({"at": "bench", "i": 0.0}) != null:
+		bad = "bench units get no rune numbers (runes work on the board only)"
+	if bad == "":
+		prep.tapped(hit, prep.cells[prep._key(hit)])
+		if prep.card.find_children("RuneAdd", "", true, false).size() < 2 or prep.card.find_child("AddKey", true, false) == null:
+			bad = "the card of that unit must show the purple (+rune) numbers and the colour key"
+	if bad == "":
+		# every board unit is the same Lv1 kind → the open card's unit has merge targets → gold frames on the others
+		var framed := 0
+		for k in prep.cells:
+			if prep.cells[k].mergeable:
+				framed += 1
+		if framed == 0 or prep.cells[prep._key(hit)].mergeable:
+			bad = "open card of a mergeable unit must frame its merge targets in gold (not itself) · framed %d" % framed
+	if bad == "":
+		prep.tapped({"at": "bench", "i": 4.0}, prep.cells["n_4"]) # empty cell closes the card
+		for k in prep.cells:
+			if prep.cells[k].mergeable:
+				bad = "closing the card must clear the gold frames"
+				break
+	if bad == "":
+		var src: Control = prep.cells[prep._key(hit)]
+		var m0: Color = src.modulate
+		prep.drag_started(hit)
+		if src.modulate.a > 0.5:
+			bad = "the dragged cell must turn faint"
+		prep.drag_ended()
+		if bad == "" and src.modulate != m0:
+			bad = "a cancelled drag must restore the cell"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad

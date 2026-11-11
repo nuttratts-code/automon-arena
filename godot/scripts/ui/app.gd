@@ -499,6 +499,48 @@ func foe_units(b: Variant, d: Variant, round: Variant, fn: Array, fs: Variant) -
 		return {"error": "ไม่พบบอส " + str(b["boss"])}
 	return {"units": RB.run_boss_team(rec, float(b["k"]), null, b.get("x") == 1.0 or b.get("x") == 1), "opts": RB.run_boss_opts(rec)}
 
+# what the held runes add to each board unit at match start (web runeBonusAt, set 184 C1; ported 7f2): the battle engine stopped right
+# after "match start", with and without runes, tribe bonuses off · conditional runes (per hit, last one standing, win streak) are not numbers
+# here · {"row,lane": {maxHp, atk, cd, multi, burnHit, shockHit, armorHit, healHit}} (differences) · memo on team + runes + streak
+var _rb_memo := {"key": "", "map": null}
+
+func rune_bonus_at(ref: Variant) -> Variant:
+	if not (ref is Dictionary) or ref.get("at") != "board" or not (P is Dictionary):
+		return null
+	var team := SH.team_entries(P)
+	var runes := RR.rn_compact(P)
+	var key := JSON.stringify([team, runes, stats.get("streak", 0.0)])
+	if _rb_memo["key"] != key:
+		var map: Variant = null
+		var rules: Dictionary = R.RULES()
+		var o := {"rules": rules, "log": false, "startOnly": true, "tribesOff": [true, true]}
+		var bt: Variant = T.build_team(team, cm, rules)
+		var ps := player_side(team, runes, stats.get("streak", 0.0))
+		if bt is Array and not ps.has("error"):
+			var at := func(r: Dictionary) -> Dictionary:
+				var m := {}
+				for x in r.get("units", []):
+					if float(x["side"]) == 0.0:
+						m["%d,%d" % [int(x["row"]), int(x["lane"])]] = x["st"]
+				return m
+			var a: Dictionary = at.call(Battle.simulate(bt, [], o.duplicate(true)))
+			var b: Dictionary = at.call(Battle.simulate(ps["units"], [], o.duplicate(true)))
+			var mcd := float(R.js_or0(rules.get("minCooldownMs")))
+			var cd := func(x: Dictionary) -> float: return maxf(mcd, roundf(float(x["cdMs"]) * float(x["cdMult"])))
+			map = {}
+			for k in a:
+				if not b.has(k):
+					continue
+				var x: Dictionary = a[k]
+				var y: Dictionary = b[k]
+				var d := {"cd": cd.call(y) - cd.call(x)}
+				for s in ["maxHp", "atk", "multi", "burnHit", "shockHit", "armorHit", "healHit"]:
+					d[s] = float(y[s]) - float(x[s])
+				map[k] = d
+		_rb_memo = {"key": key, "map": map}
+	var mp: Variant = _rb_memo["map"]
+	return mp.get("%d,%d" % [int(ref["row"]), int(ref["lane"])]) if mp is Dictionary else null
+
 func _sim(ps: Dictionary, fo: Dictionary, extra: Dictionary) -> Dictionary:
 	var o := {"rules": R.RULES()}
 	o.merge(ps["opts"], true)

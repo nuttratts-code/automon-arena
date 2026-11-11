@@ -29,6 +29,7 @@ var sel: Variant = null # {uid} (owned) | {at:'shop', i, id} while the card is o
 var cells := {} # ref key → cell
 var _msg_token := 0
 var _drag_from: Variant = null
+var _sel_mt := {} # 7f2: merge targets of the unit / shop card whose card is open → gold frame (the card hint "กรอบสีทอง")
 
 var hud_title: Label
 var chip_hearts: Label
@@ -396,7 +397,7 @@ func drag_preview(ref: Dictionary) -> Control:
 	var c: Dictionary = app.cm[id]
 	var w := Control.new()
 	var mon := UV.make(c, int(u["level"]) if u != null else 0, 48)
-	mon.position = Vector2(-24, -24)
+	mon.position = Vector2(-24, -29) # web .ghost translate(-50%, -60%): a little above the finger
 	mon.modulate = Color(1, 1, 1, 0.85)
 	w.add_child(mon)
 	return w
@@ -405,6 +406,10 @@ func drag_started(ref: Dictionary) -> void:
 	_drag_from = ref
 	card.visible = false
 	sel = null
+	var src: Control = cells.get(_key(ref))
+	if src != null: # web .dragging: the picked-up thing stays faint in its place
+		src.set_meta("pre_drag", src.modulate)
+		src.modulate = Color(1, 1, 1, 0.35)
 	var u: Variant = unit_at(ref)
 	var targets: Array = merge_targets(u) if u != null else shop_merge_targets(shop_id(ref))
 	for t in targets:
@@ -417,6 +422,10 @@ func drag_ended() -> void:
 	_drag_from = null
 	for k in cells:
 		var cell: Control = cells[k]
+		if cell.has_meta("pre_drag"): # a drop re-renders the cells first (look() sets modulate) → restore only a cancelled drag
+			if cell.modulate == Color(1, 1, 1, 0.35):
+				cell.modulate = cell.get_meta("pre_drag")
+			cell.remove_meta("pre_drag")
 		if cell.mergeable or cell.drop_ok:
 			cell.mergeable = false
 			cell.drop_ok = false
@@ -509,7 +518,7 @@ func _refresh_card() -> void:
 		ctx = {"c": c, "level": 1, "perm": {}, "paid": 0, "shop": true, "locked": bool(s.get("locked", false)), "gold": st["gold"], "buy_merge_ok": shop_merge_targets(s["id"]).size() > 0}
 	else:
 		var u: Dictionary = unit_at(ref)
-		ctx = {"c": app.cm[u["id"]], "level": int(u["level"]), "perm": u["perm"], "paid": u["paid"], "shop": false, "merge_ok": merge_targets(u).size() > 0}
+		ctx = {"c": app.cm[u["id"]], "level": int(u["level"]), "perm": u["perm"], "paid": u["paid"], "shop": false, "merge_ok": merge_targets(u).size() > 0, "rb": app.rune_bonus_at(ref)}
 	card.fill(ctx, app.cm)
 	card.visible = true
 
@@ -605,6 +614,13 @@ static func _n(x: Variant) -> String:
 
 func render() -> void:
 	var st := P()
+	_sel_mt = {}
+	var sr: Variant = sel_ref() if _drag_from == null else null
+	if sr != null:
+		var su: Variant = unit_at(sr)
+		for t in (merge_targets(su) if su != null else shop_merge_targets(shop_id(sr))):
+			if _key(t) != _key(sr):
+				_sel_mt[_key(t)] = true
 	var S: Dictionary = R.RULES()["shop"]
 	var rb: Variant = app.run_boss_at()
 	hud_title.text = TH.ui_text("round_boss" if rb != null else "round", {"n": _n(st["round"])}) + " · " + (TH.ui_text("wins_extra", {"w": _n(st["wins"])}) if bool(st["extra"]) else TH.ui_text("wins", {"w": _n(st["wins"]), "t": _n(S["winsToFinish"])}))
@@ -673,6 +689,7 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 	_clear(cell)
 	var u: Variant = unit_at(ref)
 	cell.picked = sel != null and u != null and sel.has("uid") and float(sel["uid"]) == float(u["uid"])
+	cell.mergeable = _sel_mt.has(_key(ref))
 	cell.hi = 0
 	if u != null and hi_tribe != null:
 		var c0: Dictionary = app.cm[u["id"]]
