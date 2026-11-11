@@ -1,4 +1,5 @@
 # Set 197 (plan-set196 7b): the prep-screen popups = web POPS.shop · POPS.runes · POPS.rune · POPS.tribes · POPS.tribe.
+# Set 200 (7e): + POPS.legend · POPS.gloss · the enemy mini board in POPS.diff (web foeMini) · the local Log (web #logScr, offline: this device's runs).
 # Each builds plain controls from P (text only). Actions go to app.gd (journal + core call + save), then app re-renders the open popup.
 extends RefCounted
 
@@ -13,6 +14,7 @@ const R := preload("res://scripts/rules.gd")
 const BT := preload("res://scripts/botteams.gd")
 const RB := preload("res://scripts/runboss.gd")
 const MatchPop := preload("res://scripts/ui/match_pop.gd")
+const UV := preload("res://scripts/ui/unit_view.gd")
 
 var app: Control
 var pop: Control # pop.gd
@@ -80,6 +82,12 @@ func refresh() -> void:
 			pop.show_nodes(nodes, extra, true)
 			pop._scroll.set_deferred("scroll_vertical", keep)
 			return
+		"legend":
+			nodes = _legend()
+		"gloss":
+			nodes = _gloss()
+		"log":
+			nodes = _log()
 		"runcode":
 			nodes = _runcode()
 			if nodes.is_empty():
@@ -448,7 +456,193 @@ func _diff(st: Dictionary) -> Array:
 	if rb == null:
 		var line := (TH.ui_text("diff_extra_pre", {"p": _n(S["foeExtraPct"])}) if bool(st["extra"]) else "") + TH.ui_text("diff_line")
 		nodes.append(_hint(line))
-	nodes.append(_hint(scout_text(st, rb)))
+	if rb == null and RR.rn_fx(st).get("scout", false):
+		nodes.append(foe_mini(st)) # set 128: rune ทำนาย → the enemy mini board (web foeMini)
+	else:
+		nodes.append(_hint(scout_text(st, rb)))
+	return nodes
+
+# web foeMini(): the next enemy team laid out like the board (หน้า กลาง หลัง × 2 lanes) + the runes that work in that fight
+func foe_mini(st: Dictionary) -> Control:
+	var wrap := VBoxContainer.new()
+	wrap.name = "FoeMini"
+	wrap.add_theme_constant_override("separation", 4)
+	var rb: Variant = app.run_boss_at()
+	if rb != null:
+		wrap.add_child(_hint(TH.ui_text("fm_boss", {"b": str(rb["boss"]["name"])})))
+		return wrap
+	var foe: Variant = app.next_foe()
+	if foe == null:
+		wrap.add_child(_hint(TH.ui_text("scout_live")))
+		return wrap
+	var rn := []
+	for x in (foe["rn"] if foe.get("rn") is Array else []):
+		var r: Variant = RR.rn_rec(x.get("id"))
+		if r != null and not RN.RUNE_RUN_ONLY().has(r.get("eff")) and (not RR.rn_needs_slot(r) or x.get("s") is Array):
+			rn.append({"x": x, "r": r})
+	var on := func(a: Variant, row: int, lane: int) -> bool: return a is Array and int(a[0]) == row and int(a[1]) == lane
+	var grid := GridContainer.new()
+	grid.name = "FoeGrid"
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 4)
+	grid.add_theme_constant_override("v_separation", 4)
+	for row in [0, 1, 2]:
+		grid.add_child(_hint(TH.ui_text(["fm_front", "col_mid", "col_back"][row])))
+	for lane in [0, 1]:
+		for row in [0, 1, 2]:
+			var e: Variant = null
+			for t in foe["team"]:
+				if int(t["row"]) == row and int(t["lane"]) == lane:
+					e = t
+			var cell := PanelContainer.new()
+			cell.name = "Fm%d%d" % [row, lane]
+			cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			cell.add_theme_stylebox_override("panel", TH.box(TH.c("card") if e != null else Color(0, 0, 0, 0), TH.c("line"), 8, 1, 6, 4))
+			var cv := VBoxContainer.new()
+			cv.add_theme_constant_override("separation", 1)
+			cell.add_child(cv)
+			var c: Variant = app.cm.get(e["id"]) if e != null else null
+			if c is Dictionary:
+				var h := HBoxContainer.new()
+				h.add_theme_constant_override("separation", 4)
+				h.add_child(UV.make(c, int(e["level"]), 30))
+				var nv := VBoxContainer.new()
+				nv.add_theme_constant_override("separation", 0)
+				nv.add_child(TH.label(str(c["name"]), 12, "ink", "body_b"))
+				var perm: bool = e.get("perm") is Dictionary and not (e["perm"] as Dictionary).is_empty()
+				nv.add_child(TH.label("Lv" + _n(e["level"]) + (TH.ui_text("fm_perm") if perm else ""), 11, "mute"))
+				h.add_child(nv)
+				cv.add_child(h)
+				for o in rn:
+					var mine: bool = on.call(o["x"].get("s"), row, lane)
+					if mine or on.call(o["x"].get("p"), row, lane):
+						cv.add_child(TH.label("◆ " + str(o["r"]["name"]) + ("" if mine else TH.ui_text("fm_pair")), 11, "gold"))
+			else:
+				cell.custom_minimum_size.y = 34
+			grid.add_child(cell)
+	wrap.add_child(grid)
+	var list := HFlowContainer.new()
+	list.name = "FoeRunes"
+	list.add_theme_constant_override("h_separation", 8)
+	list.add_child(TH.label(TH.ui_text("fm_rn", {"n": str(rn.size())}) if rn.size() > 0 else TH.ui_text("fm_rn_none"), 12, "mute"))
+	for o in rn:
+		var x: Dictionary = o["x"]
+		var r: Dictionary = o["r"]
+		if x.get("s") is Array:
+			var u: Variant = null
+			for t in foe["team"]:
+				if on.call(x["s"], int(t["row"]), int(t["lane"])):
+					u = app.cm.get(t["id"])
+			list.add_child(TH.label("◆ %s → %s" % [r["name"], str(u["name"]) if u is Dictionary else _slot_th(int(x["s"][0]), int(x["s"][1]))], 12, "ink"))
+		else:
+			var n := float(x.get("n", 1.0))
+			var t := str(r["name"]) + (" ×" + _n(n) if n > 1.0 else "")
+			if r.get("eff") == "flag":
+				t += " (%s)" % ", ".join(PackedStringArray(RN.rn_flag_tribes(r, n, x.get("t"))))
+			list.add_child(TH.label(t, 12, "ink"))
+	wrap.add_child(list)
+	return wrap
+
+# ---------- symbols (web POPS.legend): tribe shapes · rarity rings (a real character per rarity) · stars · merge · art credit + owner line ----------
+func _legend() -> Array:
+	var grid := func(nm: String, items: Array) -> Control:
+		var g := HFlowContainer.new()
+		g.name = nm
+		g.add_theme_constant_override("h_separation", 14)
+		g.add_theme_constant_override("v_separation", 6)
+		for it in items:
+			var h := HBoxContainer.new()
+			h.add_theme_constant_override("separation", 6)
+			h.add_child(it[0])
+			var l := TH.label(it[1], 13, "ink")
+			l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			h.add_child(l)
+			g.add_child(h)
+		return g
+	var tribes := []
+	for t in TH.TRIBE_SHAPE:
+		tribes.append([_tribe_ico(t, 22), t])
+	var rars := []
+	for r in UV.RING:
+		var c: Variant = null
+		for x in app.chars:
+			if x.get("rarity") == r:
+				c = x
+				break
+		if c == null:
+			c = app.chars[0]
+		rars.append([UV.make(c, 1, 40), r])
+	return [Pop.head(TH.ui_text("lg_t")),
+		_hint(TH.ui_text("lg_tribe")), grid.call("LegendTribes", tribes),
+		_hint(TH.ui_text("lg_rar")), grid.call("LegendRarity", rars),
+		_hint(TH.ui_text("lg_star")),
+		_hint(TH.ui_text("lg_merge", {"n": _n(R.RULES()["shop"]["mergeCount"])})),
+		_hint(TH.ui_text("lg_art")), _hint(TH.ui_text("lg_owner"))]
+
+# ---------- glossary (web POPS.gloss) = labels.js GLOSSARY ----------
+func _gloss() -> Array:
+	var box := VBoxContainer.new()
+	box.name = "GlossList"
+	box.add_theme_constant_override("separation", 4)
+	for kt in TH.labels()["tables"]["GLOSSARY"]:
+		var l := RichTextLabel.new() # bold term + plain meaning, built from parts (no BBCode parsing of game text)
+		l.fit_content = true
+		l.bbcode_enabled = false
+		l.scroll_active = false
+		l.add_theme_font_size_override("normal_font_size", 13)
+		l.add_theme_font_size_override("bold_font_size", 13)
+		l.add_theme_font_override("bold_font", TH.font("body_b"))
+		l.add_theme_color_override("default_color", TH.c("ink"))
+		l.push_bold()
+		l.add_text(str(kt[0]) + ": ")
+		l.pop()
+		l.add_text(str(kt[1]))
+		box.add_child(l)
+	return [Pop.head(TH.ui_text("gl_t"), TH.ui_text("gl_sub")), box]
+
+# ---------- Log (web #logScr, set 200 user A1: offline = the runs played on this device) · copy the newest 60 run codes for the Balance Room ----------
+func _log() -> Array:
+	var rows: Array = app.log_rows()
+	var tbl := GridContainer.new()
+	tbl.name = "LogList"
+	tbl.columns = 8
+	tbl.add_theme_constant_override("h_separation", 10)
+	tbl.add_theme_constant_override("v_separation", 3)
+	for t in [TH.ui_text("log_h_name"), TH.ui_text("log_h_at"), TH.ui_text("log_h_upd"), TH.ui_text("log_h_round"), TH.ui_text("log_h_wins"), TH.ui_text("log_h_hearts"),
+			TH.ui_text("log_h_gold"), TH.ui_text("log_h_st")]:
+		tbl.add_child(TH.label(t, 12, "mute", "body_b"))
+	for h in rows:
+		var nm := str(h.get("nm", ""))
+		for t in [nm if nm != "" else TH.ui_text("log_noname"), app.when_th(float(h["at"])), app.when_th(float(h["upd"])), _n(h["round"]), _n(h["wins"]), _n(h["hearts"]), _n(h["gold"]),
+				TH.ui_text("log_over" if bool(h["over"]) else "log_live")]:
+			tbl.add_child(TH.label(t, 12, "ink"))
+	var msg := _hint(app.log_msg if app.log_msg != "" else TH.ui_text("log_all_hint"))
+	msg.name = "LogAllMsg"
+	var nodes := [Pop.head(TH.ui_text("log_t"), TH.ui_text("g_log_hint")), _hint(TH.ui_text("log_n", {"n": str(rows.size())}) if rows.size() > 0 else TH.ui_text("log_none"))]
+	var b := _btn(TH.ui_text("log_all"), func() -> void: app.copy_all_codes(), "LogAllCopy", rows.is_empty())
+	TH.primary(b)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.add_child(b)
+	msg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(msg)
+	nodes.append(row)
+	if app.log_box != "":
+		var ta := TextEdit.new()
+		ta.name = "LogAllOut"
+		ta.text = app.log_box
+		ta.editable = false
+		ta.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+		ta.custom_minimum_size.y = 110
+		ta.add_theme_font_size_override("font_size", 12)
+		ta.select_all.call_deferred()
+		nodes.append(ta)
+	if rows.size() > 0:
+		var sc := ScrollContainer.new() # wide table: sideways scroll inside the popup on a phone
+		sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		sc.custom_minimum_size.y = tbl.get_combined_minimum_size().y + 14
+		sc.add_child(tbl)
+		nodes.append(sc)
 	return nodes
 
 # ---------- replays of this run (web POPS.replays) ----------
