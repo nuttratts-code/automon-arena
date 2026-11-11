@@ -124,12 +124,13 @@ export function checkUiText() {
   const dir = resolve(SRC, 'game/run'), files = [];
   const walkDir = d => { for (const f of readdirSync(d, { withFileTypes: true })) { const p = resolve(d, f.name); if (f.isDirectory()) walkDir(p); else if (/\.(html|js)$/.test(f.name)) files.push(p); } };
   walkDir(dir);
+  files.push(resolve(SRC, 'game/view.js')); // set 198: the battle view lines (ticker, floats) live there
   const web = files.map(f => readFileSync(f, 'utf8')).join('\n'), p = [];
   const ui = JSON.parse(readFileSync(resolve(SRC, '../godot/data/ui_th.json'), 'utf8'));
   for (const [k, v] of Object.entries(ui)) {
     if (k.startsWith('_')) continue;
     if (typeof v !== 'string') { p.push(k + ' is not text'); continue; }
-    for (const part of v.split(/\{[a-z]+\}/)) if (part.trim() && !web.includes(part)) p.push(k + ': "' + part + '" not in src/game/run');
+    for (const part of v.split(/\{[a-z]+\}/)) if (part.trim() && !web.includes(part)) p.push(k + ': "' + part + '" not in src/game/run (or game/view.js)');
   }
   return p;
 }

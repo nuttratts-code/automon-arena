@@ -40,6 +40,8 @@ func _initialize() -> void:
 	app.player_name = "ทดสอบ"
 	app.save_file = "user://shots-save.json"
 	app.log_file = "user://shots-runlog.json"
+	app.replays_file = "user://shots-replays.json"
+	app.history_file = "user://shots-history.json"
 	app.start_new_run(4242)
 	await _shot("prep")
 	app.do_buy(0, null)
@@ -120,7 +122,32 @@ func _initialize() -> void:
 	app.offer.flag_pick = 0
 	app.render()
 	await _shot("offer-flagpick")
-	for f in ["shots-save.json", "shots-runlog.json"]:
+	# 7c: the fight on a fresh run · mid-match · finished (outcome card) · enemy + replays popups
+	app.P["rn"]["offer"] = null
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_buy(1, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.do_move({"at": "bench", "i": 1.0}, {"at": "board", "row": 1.0, "lane": 1.0})
+	app.popups.open("diff")
+	await _frames()
+	await _shot("pop-diff")
+	app.popups.close()
+	app.set_speed(1, false)
+	app._on_fight()
+	await _frames()
+	app.battle.view.advance(4000.0)
+	await _frames()
+	await _shot("battle-mid")
+	app.battle.skip_now()
+	await _frames()
+	await _shot("battle-end")
+	app._on_next()
+	app.popups.open("replays")
+	await _frames()
+	await _shot("pop-replays")
+	app.popups.close()
+	for f in ["shots-save.json", "shots-runlog.json", "shots-replays.json", "shots-history.json"]:
 		if FileAccess.file_exists("user://" + f):
 			DirAccess.remove_absolute("user://" + f)
 	print("SHOTS: done ", tag, " viewport ", ws)

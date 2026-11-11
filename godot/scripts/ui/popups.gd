@@ -10,6 +10,8 @@ const RR := preload("res://scripts/runrunes.gd")
 const RN := preload("res://scripts/runes.gd")
 const T := preload("res://scripts/team.gd")
 const R := preload("res://scripts/rules.gd")
+const BT := preload("res://scripts/botteams.gd")
+const RB := preload("res://scripts/runboss.gd")
 
 var app: Control
 var pop: Control # pop.gd
@@ -60,6 +62,10 @@ func refresh() -> void:
 			nodes = _tribes(st)
 		"tribe":
 			nodes = _tribe(st, str(arg), extra)
+		"diff":
+			nodes = _diff(st)
+		"replays":
+			nodes = _replays()
 	pop.show_nodes(nodes, extra)
 
 func _hint(t: String, col: String = "mute") -> Label:
@@ -371,3 +377,76 @@ func _tribe(st: Dictionary, t: String, extra: Array) -> Array:
 		close()
 		app.set_highlight(t), "PopHighlight"))
 	return [Pop.head(TH.ui_text("tribe_name", {"t": t}), TH.ui_text("tribe_sub", {"n": _n(counts.get(t, 0))}) + (TH.ui_text("tribe_on", {"s": _n(step)}) if step > 0.0 else TH.ui_text("tribe_off")), _tribe_ico(t, 28)), grid]
+
+# ---------- enemy of this round (web POPS.diff · renderDiff · RN_OFF_TH) ----------
+# the rune-offer odds of a win (% per rarity of this round) or of a boss (cards per rarity)
+func _off_th(kind: String) -> String:
+	var st: Dictionary = RB.RUN_STAGE()["settings"]
+	var rk := {"common": "C", "rare": "R", "legend": "L"}
+	var boss := kind == "boss"
+	var rl: Dictionary = R.RULES()
+	var idx := clampi(R.js_i32(app.P["round"]), 1, int(rl["runeOddsRounds"])) - 1
+	var ro: Dictionary = rl["runeOdds"][idx] if idx < (rl["runeOdds"] as Array).size() else {}
+	var tot := 0.0
+	for p in R.mod("stage")["RUNE_RARITY"]:
+		tot += R.js_or0(ro.get(p[0]))
+	if tot == 0.0:
+		tot = 1.0
+	var out := []
+	for p in R.mod("stage")["RUNE_RARITY"]:
+		var n: float = float(R.js_i32(st.get("offBoss" + rk.get(p[0], "C")))) if boss else R.js_round(R.js_or0(ro.get(p[0])) * 100.0 / tot)
+		if n > 0.0:
+			out.append("%s %s" % [p[1], _n(n)] if boss else "%s %s%%" % [p[1], _n(n)])
+	return " · ".join(PackedStringArray(out))
+
+func scout_text(st: Dictionary, rb: Variant) -> String:
+	if rb != null:
+		return TH.ui_text("scout_boss", {"b": str(rb["boss"]["name"])})
+	if not RR.rn_fx(st).get("scout", false):
+		return TH.ui_text("scout_none")
+	var foe: Variant = app.next_foe()
+	if foe == null:
+		return TH.ui_text("scout_live")
+	var rn: Array = foe["rn"] if foe.get("rn") is Array else []
+	var parts := []
+	for e in foe["team"]:
+		var c: Variant = app.cm.get(e["id"])
+		parts.append("%s %s %s Lv%s" % [_slot_th(int(e["row"]), int(e["lane"])), e["id"], str(c["name"]) if c is Dictionary else "", _n(e["level"])])
+	return TH.ui_text("scout_team", {"rn": TH.ui_text("scout_rn", {"n": str(rn.size())}) if rn.size() > 0 else "", "team": " · ".join(PackedStringArray(parts))})
+
+func _diff(st: Dictionary) -> Array:
+	var rb: Variant = app.run_boss_at()
+	var S: Dictionary = RB.RUN_STAGE()["settings"]
+	var want := BT.foe_want_pct(bool(st["extra"]))
+	var hint := ""
+	if rb != null and RB.is_dummy(rb["boss"]):
+		hint = TH.ui_text("diff_dummy", {"s": _n(S["dummySec"])})
+	elif rb != null:
+		hint = TH.ui_text("diff_boss", {"o": _off_th("boss")})
+	else:
+		hint = TH.ui_text("diff_foe", {"w": _n(want), "x": TH.ui_text("diff_x_extra" if bool(st["extra"]) else "diff_x_plain"), "c": _n(S["offCards"]), "o": _off_th("win")})
+	var nodes := [Pop.head(TH.ui_text("diff_t_boss" if rb != null else "diff_t_foe")), _hint(hint, "ink")]
+	if rb == null:
+		var line := (TH.ui_text("diff_extra_pre", {"p": _n(S["foeExtraPct"])}) if bool(st["extra"]) else "") + TH.ui_text("diff_line")
+		nodes.append(_hint(line))
+	nodes.append(_hint(scout_text(st, rb)))
+	return nodes
+
+# ---------- replays of this run (web POPS.replays) ----------
+func _replays() -> Array:
+	var list := VBoxContainer.new()
+	list.name = "ReplayList"
+	list.add_theme_constant_override("separation", 4)
+	if app.replays.is_empty():
+		list.add_child(_hint(TH.ui_text("rep_none")))
+	for i in app.replays.size():
+		var x: Dictionary = app.replays[i]
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 8)
+		var res := TH.ui_text("res_w" if R.js_seq(x["w"], 0.0) else "res_l" if R.js_seq(x["w"], 1.0) else "res_d")
+		var l := TH.label(TH.ui_text("rep_row", {"r": _n(x["r"]), "res": res, "t": "%.1f" % (float(x["t"]) / 1000.0)}), 14, "ink")
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
+		h.add_child(_btn(TH.ui_text("rep_watch"), func() -> void: app.watch_replay(i), "Watch%d" % i))
+		list.add_child(h)
+	return [Pop.head(TH.ui_text("rep_title", {"n": str(app.replays.size())}), TH.ui_text("rep_sub")), list]
