@@ -27,6 +27,7 @@ const NameScreen := preload("res://scripts/ui/name_screen.gd")
 const RuneOffer := preload("res://scripts/ui/rune_offer.gd")
 const RunEnd := preload("res://scripts/ui/run_end.gd")
 const Resume := preload("res://scripts/ui/resume.gd")
+const Arena := preload("res://scripts/ui/arena.gd")
 var prefs_file := "user://prefs.json" # tests point it at their own file
 
 var chars: Array = []
@@ -73,6 +74,8 @@ var log_msg := "" # Log popup: message after "copy 60 runs"
 var log_box := "" # Log popup: the codes in a box when there is no clipboard
 const RUNCODES_MAX := 60
 
+var world: Control # set 205: the shared arena (camera move between prep and battle)
+var zoom_s := 0.0 if DisplayServer.get_name() == "headless" else 0.6 # seconds of the move · 0 = instant (headless tests, shots.gd)
 var built := false
 
 func _ready() -> void:
@@ -91,6 +94,9 @@ func build() -> void:
 	bg.color = TH.c("bg")
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	world = Arena.new()
+	world.app = self
+	add_child(world) # under every screen: it draws only while the camera moves
 	data_hash = SV.data_hash(chars)
 	prep = Prep.new()
 	add_child(prep)
@@ -147,6 +153,7 @@ func build() -> void:
 	offer.reroll.connect(_on_offer_reroll)
 	offer.skip.connect(_on_offer_skip)
 	add_child(offer)
+	add_child(world.blocker) # over every screen while the camera moves
 	rotate_box = _rotate_notice()
 	add_child(rotate_box)
 	if is_inside_tree():
@@ -685,8 +692,9 @@ func _rn_battle(list: Array) -> Dictionary:
 	return {"team": team, "slot": slot}
 
 func _show_battle(res: Dictionary, charmap: Dictionary, title: String, runes: Array, as_replay: bool) -> void:
+	var move := screen == "prep" and _can_move() # set 205: from the shop the camera zooms out to the whole arena
 	screen = "battle"
-	prep.visible = false
+	prep.visible = move # stays on screen until the move takes it away
 	run_end.visible = false
 	offer.visible = false
 	popups.mx_state = {"tab": 0, "who": null, "log_open": false}
@@ -701,8 +709,19 @@ func _show_battle(res: Dictionary, charmap: Dictionary, title: String, runes: Ar
 			sl["%d:%s" % [i, k]] = d["slot"][k]
 		full.append({"team": d["team"], "slot": sl})
 	battle.start(res, charmap, title, full, as_replay)
-	if auto_skip and not as_replay:
-		battle.skip_now()
+	var go := func() -> void:
+		if auto_skip and not as_replay:
+			battle.skip_now()
+	if move:
+		battle.view.pause() # the fight plays once the camera has arrived
+		world.to_battle(func() -> void:
+			battle.view.play()
+			go.call())
+	else:
+		go.call()
+
+func _can_move() -> bool:
+	return zoom_s > 0.0 and is_inside_tree() and not world.moving
 
 func _on_replay_this() -> void:
 	if battle.view.result == null:
@@ -746,8 +765,11 @@ func _on_next() -> void:
 		var back: String = replay_mode["back"]
 		replay_mode = null
 		screen = back
-		battle.visible = false
+		var mv := back == "prep" and _can_move()
+		battle.visible = mv
 		render()
+		if mv:
+			world.to_prep(Callable())
 		return
 	if pending_end == null:
 		return
@@ -758,8 +780,12 @@ func _on_next() -> void:
 		screen = "runEnd"
 		render()
 		return
+	var mv := _can_move() # set 205: back to the shop = the camera zooms into your half again
+	battle.visible = mv
 	screen = "prep"
 	begin_round()
+	if mv:
+		world.to_prep(Callable())
 
 # web #endExtra: a cleared run goes on with the hearts left (set 99) · the run's history entry is written when it really ends
 func _on_extra() -> void:

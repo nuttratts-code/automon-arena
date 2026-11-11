@@ -28,6 +28,7 @@ func _initialize() -> void:
 	if dark:
 		app.set_meta("force_dark", true)
 	root.add_child(app)
+	app.zoom_s = 0.0 # set 205: states are shot still; the camera move gets its own frozen shots below
 	await _frames()
 	# name screen
 	app.name_scr.open("")
@@ -172,6 +173,13 @@ func _initialize() -> void:
 	app.battle.view.advance(4000.0)
 	await _frames()
 	await _shot("battle-mid")
+	# set 205: the arena camera move frozen near its start (overlays leaving) and halfway (enemy half coming in)
+	for zk in [[0.2, "zoom-start"], [0.5, "zoom-mid"]]:
+		if app.world.freeze(zk[0]):
+			await _frames()
+			await _shot(zk[1])
+			app.world.thaw()
+			await _frames()
 	# 7d: live details of a tapped unit (yours → pane on the right · enemy → pane on the left)
 	for v in app.battle.view.units.values():
 		if v["side"] == 0:
@@ -262,6 +270,7 @@ func _initialize() -> void:
 	await _frames()
 	await _shot("pop-log-box")
 	app.popups.close()
+	await _move_check()
 	app.boot()
 	await _shot("resume")
 	app.P["over"] = false
@@ -270,6 +279,31 @@ func _initialize() -> void:
 			DirAccess.remove_absolute("user://" + f)
 	print("SHOTS: done ", tag, " viewport ", ws)
 	quit()
+
+# set 205: the real timed camera move both ways (prep → battle → prep) · prints MOVE CHECK: PASS / FAIL <why>
+func _move_check() -> void:
+	app.zoom_s = 0.6
+	var bad := ""
+	app._on_fight()
+	if app.screen == "prep":
+		app._on_fight() # an empty board asks once
+	await create_timer(0.2).timeout
+	if not (app.world.moving and app.world.blocker.visible and app.prep.visible and not app.battle.view.playing):
+		bad = "mid-move (out): world must move, block taps, keep prep on screen and hold the fight"
+	await create_timer(0.8).timeout
+	if bad == "" and (app.world.moving or app.prep.visible or not app.battle.visible or app.battle.field.modulate.a != 1.0 or not app.battle.view.playing and not app.battle.view.is_ended):
+		bad = "after the move out: battle on screen and playing, prep gone"
+	app.battle.skip_now()
+	await _frames()
+	app._on_next()
+	await create_timer(0.2).timeout
+	if bad == "" and not (app.world.moving and app.battle.visible and app.prep.visible):
+		bad = "mid-move (back): both screens on, world moving"
+	await create_timer(0.8).timeout
+	if bad == "" and (app.world.moving or app.world.visible or app.battle.visible or not app.prep.visible or app.prep.field.modulate.a != 1.0 or app.screen != "prep"):
+		bad = "after the move back: prep on screen, battle gone, world idle"
+	print("MOVE CHECK: ", "PASS" if bad == "" else "FAIL " + bad)
+	app.zoom_s = 0.0
 
 func R_wins() -> float:
 	return float(load("res://scripts/rules.gd").RULES()["shop"]["winsToFinish"])

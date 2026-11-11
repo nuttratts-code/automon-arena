@@ -934,3 +934,40 @@ func test_card_rune_merge_drag() -> String:
 	app.queue_free()
 	_cleanup()
 	return "ok" if bad == "" else bad
+
+# set 205 (user E1/A1): the shared arena camera move — pure helpers + the screens still hold their named parts
+func test_arena_move() -> String:
+	var AR := load("res://scripts/ui/arena.gd")
+	var a := Rect2(0, 0, 100, 50)
+	var b := Rect2(200, 100, 50, 25)
+	if AR.lerp_rect(a, b, 0.0) != a or AR.lerp_rect(a, b, 1.0) != b or AR.lerp_rect(a, b, 0.5) != Rect2(100, 50, 75, 37.5):
+		return "lerp_rect wrong"
+	if AR.ease_k(0.0) != 0.0 or AR.ease_k(1.0) != 1.0 or absf(AR.ease_k(0.5) - 0.5) > 0.0001 or AR.ease_k(2.0) != 1.0:
+		return "ease_k must run 0 → 1, half at the middle, clamped"
+	var u1 := Rect2(10, 100, 300, 150) # your half in the battle framing
+	var u0 := Rect2(8, 60, 838, 250) # your half in the prep framing (zoomed in)
+	if AR.cam_map(u1, u1, u0) != u0:
+		return "the prep camera must frame your battle half exactly onto the prep board"
+	var foe: Rect2 = AR.cam_map(Rect2(330, 100, 300, 150), u1, u0)
+	if foe.position.x < u0.end.x:
+		return "the enemy half must start off to the right of the prep board"
+	var inner := VBoxContainer.new()
+	var h: Control = AR.hold(inner, "Top")
+	AR.slide(h, 30.0)
+	if inner.position.y != 30.0 or float(h.get_meta("dy")) != 30.0:
+		h.free()
+		return "slide must move the held part"
+	h.free()
+	var app := _app()
+	var bad := ""
+	if app.world == null or app.world.blocker.get_parent() != app or app.world.visible or app.world.blocker.visible:
+		bad = "World + its blocker must be in the app and hidden while idle"
+	elif app.zoom_s != 0.0:
+		bad = "headless runs must move instantly (zoom_s 0)"
+	elif app.prep.top_hold.name != "Top" or app.prep.tray_hold.name != "Tray" or app.prep.find_child("Board", true, false) == null \
+			or app.prep.find_child("Bench", true, false) == null or app.prep.find_child("Dock", true, false) == null or app.prep.field.name != "Field":
+		bad = "prep lost a named part (Top/Tray/Board/Bench/Dock/Field)"
+	elif app.battle.field.name != "Field" or app.battle.top_hold.find_child("Clock", true, false) == null or app.battle.tray_hold.find_child("Skip", true, false) == null:
+		bad = "battle lost a named part (Field / Clock in Top / Skip in Tray)"
+	app.queue_free()
+	return "ok" if bad == "" else bad

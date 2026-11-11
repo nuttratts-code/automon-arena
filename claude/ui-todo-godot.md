@@ -4,7 +4,7 @@ The user plays in the Godot editor and sends screenshots + numbered notes, one s
 ## Name screen
 ## Rune offer
 ## Prep / shop
-- [ ] (set 204, user E1) **One shared arena for prep + battle:** battle = wide camera showing both halves (player left, enemy right, art-style §8) · prep = camera zooms into the player's half and the shop/bench panel appears, layout like now · press fight = panel leaves, camera zooms out to reveal the enemy. 2D now (Camera2D, ~0.6 s tween, placeholder background); the step-8 3D diorama later keeps the same camera idea. Rules unchanged (display only). Check 740×330 text size when the panel sits over the zoomed arena.
+- [x] (set 204, user E1 · done set 205: godot/scripts/ui/arena.gd) **One shared arena for prep + battle:** battle = wide camera showing both halves (player left, enemy right, art-style §8) · prep = camera zooms into the player's half and the shop/bench panel appears, layout like now · press fight = panel leaves, camera zooms out to reveal the enemy. 2D now (Camera2D, ~0.6 s tween, placeholder background); the step-8 3D diorama later keeps the same camera idea. Rules unchanged (display only). Check 740×330 text size when the panel sits over the zoomed arena.
 ## Battle
 ## Result card · match details
 ## Run end
