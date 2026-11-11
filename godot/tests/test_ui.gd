@@ -146,10 +146,12 @@ func _app_tmp() -> Control:
 	var app := _app()
 	app.save_file = "user://test-save.json"
 	app.log_file = "user://test-runlog.json"
+	app.replays_file = "user://test-replays.json"
+	app.history_file = "user://test-history.json"
 	return app
 
 func _cleanup() -> void:
-	for f in ["test-save.json", "test-runlog.json"]:
+	for f in ["test-save.json", "test-runlog.json", "test-runlog_prev.json", "test-replays.json", "test-replays_prev.json", "test-history.json"]:
 		if FileAccess.file_exists("user://" + f):
 			DirAccess.remove_absolute("user://" + f)
 
@@ -285,6 +287,131 @@ func test_prep_rune_popup() -> String:
 			app.popups.open(k)
 			if not app.pop.visible or app.pop.find_child("Acts", true, false) == null:
 				bad = "popup %s did not open" % k
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+
+# ---------- 7c: the fight ----------
+func _board_one(app: Control) -> void:
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+
+# plays the picture to its end through advance() (what _process does each frame) · false = it never ended
+func _play_out(app: Control) -> bool:
+	for i in 4000:
+		if app.battle.view.is_ended:
+			return true
+		app.battle.view.advance(100.0)
+	return app.battle.view.is_ended
+
+# every unit's HP on the picture after the last event = the simulate() result (the view applies events, never rules)
+func _hp_match(app: Control, res: Dictionary) -> String:
+	for ru in res["units"]:
+		var v: Variant = app.battle.view.units.get(int(ru["uid"]))
+		if v == null:
+			return "unit %s missing on the picture" % ru["uid"]
+		if absf(maxf(0.0, float(v["hp"])) - float(ru["hp"])) > 0.001 or bool(v["down"]) != bool(ru["down"]):
+			return "unit %s: picture hp %s down %s, result hp %s down %s" % [ru["uid"], v["hp"], v["down"], ru["hp"], ru["down"]]
+	return ""
+
+func test_fight_flow() -> String:
+	var app := _app_tmp()
+	var chars: Array = R.game()["derived"]["characters"]
+	app.start_new_run(4242)
+	var bad := ""
+	# an empty board needs a second press (web confirmEmpty)
+	app._on_fight()
+	if app.screen != "prep" or not app.confirm_empty:
+		bad = "empty board: the first press must only ask to confirm"
+	if bad == "":
+		_board_one(app)
+		var w0: float = app.P["wins"]
+		var h0: float = app.P["hearts"]
+		app._on_fight()
+		if app.screen != "battle" or not app.battle.visible or app.prep.visible:
+			bad = "fight did not open the battle screen"
+		elif app.replays.size() != 1 or app.pending_end == null:
+			bad = "the match was not counted at once (replays %d)" % app.replays.size()
+		elif float(app.P["wins"]) + (h0 - float(app.P["hearts"])) != w0 + 1.0:
+			bad = "exactly one of wins +1 / hearts −1 must happen"
+		elif RL.rl_check(app.RLOG) != true:
+			bad = "the journal after a fight is not valid"
+	if bad == "":
+		var rep: Dictionary = RL.rl_replay(app.RLOG, chars)
+		var k := func(x: Dictionary) -> String: return JSON.stringify([x["gold"], x["round"], x["wins"], x["hearts"], x["board"], x["bench"], x["rn"]])
+		if float(rep["firstBad"]) >= 0.0 or k.call(rep["st"]) != k.call(app.P):
+			bad = "the journal (with the fight) does not replay to the shown state (firstBad %s)" % rep["firstBad"]
+	if bad == "":
+		var rd := SV.read_save(SV.load_text(app.save_file), app.cm, R.RULES(), app.data_hash)
+		if rd["status"] != "ok":
+			bad = "save after a fight must read back: %s" % [rd["status"]]
+	if bad == "":
+		var res: Dictionary = app.battle.view.result
+		if not _play_out(app):
+			bad = "the picture never reached its end event"
+		elif not app.battle.result_box.visible:
+			bad = "no outcome card at the end of the match"
+		else:
+			bad = _hp_match(app, res)
+	if bad == "":
+		var snap := JSON.stringify(app.P)
+		app.watch_replay(0)
+		if app.replay_mode == null or app.screen != "battle" or not app.battle.replay_tag.visible:
+			bad = "replay did not open"
+		else:
+			app.battle.skip_now()
+			bad = _hp_match(app, app.battle.view.result)
+			if bad == "" and JSON.stringify(app.P) != snap:
+				bad = "watching a replay changed the run"
+	if bad == "":
+		app._on_next() # leaves the replay
+		if app.screen != "prep" or app.battle.visible:
+			bad = "next after a replay must go back to the prep screen"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# skip jumps to the result · auto-skip = every match opens already finished · speed + auto-skip are remembered
+func test_fight_skip_prefs() -> String:
+	var old: Variant = SV.load_text("user://prefs.json") # the test writes the real prefs file: put it back afterwards
+	var app := _app_tmp()
+	app.start_new_run(777)
+	_board_one(app)
+	app.set_auto_skip(true)
+	app.set_speed(16)
+	app._on_fight()
+	var bad := ""
+	if not app.battle.view.is_ended or not app.battle.result_box.visible:
+		bad = "auto-skip must open the match already finished"
+	else:
+		bad = _hp_match(app, app.battle.view.result)
+	if bad == "":
+		app._load_prefs()
+		if app.speed != 16 or not app.auto_skip:
+			bad = "speed / auto-skip were not remembered (%s %s)" % [app.speed, app.auto_skip]
+	if bad == "":
+		app._on_next()
+		if app.screen != "prep" and not bool(app.P.get("over", false)):
+			bad = "next must open the next round"
+	if old is String:
+		SV.store_text("user://prefs.json", old)
+	elif FileAccess.file_exists("user://prefs.json"):
+		DirAccess.remove_absolute("user://prefs.json")
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# an unfinished offer blocks the fight · a rune that does nothing is warned once
+func test_fight_guards() -> String:
+	var app := _app_tmp()
+	app.start_new_run(5)
+	_board_one(app)
+	app.P["rn"]["offer"] = {"kind": "win", "ids": ["x"], "rr": 0.0}
+	app._on_fight()
+	var bad := ""
+	if app.screen != "prep" or app.pending_end != null:
+		bad = "an open rune offer must block the fight"
 	app.queue_free()
 	_cleanup()
 	return "ok" if bad == "" else bad

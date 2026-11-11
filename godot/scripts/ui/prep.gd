@@ -5,6 +5,7 @@ extends Control
 
 const TH := preload("res://scripts/ui/theme.gd")
 const SH := preload("res://scripts/shop.gd")
+const BT := preload("res://scripts/botteams.gd")
 const RR := preload("res://scripts/runrunes.gd")
 const T := preload("res://scripts/team.gd")
 const R := preload("res://scripts/rules.gd")
@@ -17,6 +18,8 @@ signal fight
 signal open_runes
 signal open_tribes
 signal clear_highlight
+signal open_diff
+signal open_replays
 
 var app: Control # app.gd: P · cm · chars · do_*() commands
 var hi_tribe: Variant = null
@@ -31,6 +34,8 @@ var chip_gold: Label
 var btn_tribes: Button
 var btn_runes: Button
 var btn_hi: Button
+var btn_diff: Button
+var btn_replay: Button
 var msg_bar: PanelContainer
 var msg_label: Label
 var board_grid: GridContainer
@@ -125,6 +130,13 @@ func _build_hud() -> Control:
 	btn_runes = _hudbtn("", "RuneBtn")
 	btn_runes.pressed.connect(func() -> void: open_runes.emit())
 	h.add_child(btn_runes)
+	btn_replay = _hudbtn("", "ReplayBtn")
+	btn_replay.visible = false
+	btn_replay.pressed.connect(func() -> void: open_replays.emit())
+	h.add_child(btn_replay)
+	btn_diff = _hudbtn("", "DiffBtn")
+	btn_diff.pressed.connect(func() -> void: open_diff.emit())
+	h.add_child(btn_diff)
 	return h
 
 func _build_msg() -> Control:
@@ -530,6 +542,10 @@ func render() -> void:
 			held += 1
 	var unworn := RR.rn_unworn(st).size()
 	btn_runes.text = "%s %d" % [TH.ui_text("rune"), held] + (" · " + TH.ui_text("not_worn_n", {"n": unworn}) if unworn > 0 else "")
+	# enemy strength / boss chip (web diffInfo) · replay count (web replayBtn, shown once a match was played)
+	btn_diff.text = TH.ui_text("foe_boss", {"b": str(rb["boss"]["name"])}) if rb != null else TH.ui_text("foe_lbl") + _n(BT.foe_want_pct(bool(st["extra"]))) + "%"
+	btn_replay.visible = app.replays.size() > 0
+	btn_replay.text = "▶ %d" % app.replays.size()
 	btn_hi.visible = hi_tribe != null
 	if hi_tribe != null:
 		btn_hi.text = TH.ui_text("hi_on", {"t": str(hi_tribe)}) + " ✕"
