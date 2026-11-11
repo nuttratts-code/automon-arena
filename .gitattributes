@@ -1,0 +1,14 @@
+# set 204 (user A1): every checkout uses LF line endings, same as CI and the cloud chats.
+# Why: on Windows (core.autocrlf=true) files came out as CRLF and the exportdata byte check failed (godot/data/*.json).
+* text=auto eol=lf
+# binary — never touched
+*.png binary
+*.ttf binary
+*.blend binary
+*.glb binary
+*.wav binary
+*.ogg binary
+*.zip binary
+*.pck binary
+# upstream font licence texts are kept byte-identical to the download (stored with CRLF)
+godot/data/fonts/OFL-*.txt -text

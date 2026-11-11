@@ -15,3 +15,5 @@ godot/.godot/
 build/
 Godot_v*
 *.tpz
+# set 204 (user C1): local Blender scene files (~660 MB) — kept on the PC only, never pushed
+art/scene/
