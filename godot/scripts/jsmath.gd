@@ -208,3 +208,57 @@ static func js_pow(x: float, y: float) -> float:
 	if (j >> 20) <= 0:
 		return s * (z * pow(2.0, float(n)))  # subnormal output (exact power-of-two scaling; never reached by game values)
 	return s * _mk(j, _lo(z))
+
+# JS Math.log exactly as V8 computes it (set 195, step 6e, user OK A1): line-by-line port of V8 src/base/ieee754.cc log()
+# = fdlibm e_log.c (same source + licence + credit as js_pow above). Godot's log() (C library) differs by 1 ulp in ~3 % of cases.
+# Check: tests/test_bot.gd (golden bot.jsonl misc.log, 250,000+ cases) — exact bits.
+static var _LC := {}
+static func js_log(x: float) -> float:
+	if _LC.is_empty():
+		_LC = {"ln2_hi": _F(0x3FE62E42, 0xFEE00000), "ln2_lo": _F(0x3DEA39EF, 0x35793C76), "two54": _F(0x43500000, 0),
+			"Lg1": _F(0x3FE55555, 0x55555593), "Lg2": _F(0x3FD99999, 0x9997FA04), "Lg3": _F(0x3FD24924, 0x94229359),
+			"Lg4": _F(0x3FCC71C5, 0x1D8E78AF), "Lg5": _F(0x3FC74664, 0x96CB03DE), "Lg6": _F(0x3FC39A09, 0xD078C69F),
+			"Lg7": _F(0x3FC2F112, 0xDF3E5244)}
+	var C := _LC
+	var hx := _hi(x)
+	var lx := _lo(x)
+	var k := 0
+	if hx < 0x00100000:  # x < 2**-1022
+		if ((hx & 0x7fffffff) | lx) == 0:
+			return -INF  # log(+-0) = -inf
+		if hx < 0:
+			return NAN  # log(-#) = NaN
+		k -= 54
+		x *= C["two54"]  # subnormal number, scale up x
+		hx = _hi(x)
+	if hx >= 0x7ff00000:
+		return x + x
+	k += (hx >> 20) - 1023
+	hx &= 0x000fffff
+	var i := (hx + 0x95f64) & 0x100000
+	x = _mk(hx | (i ^ 0x3ff00000), _lo(x))  # normalize x or x/2
+	k += (i >> 20)
+	var f := x - 1.0
+	var dk := float(k)
+	if (0x000fffff & (2 + hx)) < 3:  # -2**-20 <= f < 2**-20
+		if f == 0.0:
+			return 0.0 if k == 0 else dk * C["ln2_hi"] + dk * C["ln2_lo"]
+		var R0 := f * f * (0.5 - 0.33333333333333333 * f)
+		return f - R0 if k == 0 else dk * C["ln2_hi"] - ((R0 - dk * C["ln2_lo"]) - f)
+	var s := f / (2.0 + f)
+	var z := s * s
+	i = hx - 0x6147a
+	var w := z * z
+	var j := 0x6b851 - hx
+	var t1: float = w * (C["Lg2"] + w * (C["Lg4"] + w * C["Lg6"]))
+	var t2: float = z * (C["Lg1"] + w * (C["Lg3"] + w * (C["Lg5"] + w * C["Lg7"])))
+	i |= j
+	var R := t2 + t1
+	if i > 0:
+		var hfsq := 0.5 * f * f
+		if k == 0:
+			return f - (hfsq - s * (hfsq + R))
+		return dk * C["ln2_hi"] - ((hfsq - (s * (hfsq + R) + dk * C["ln2_lo"])) - f)
+	if k == 0:
+		return f - s * (f - R)
+	return dk * C["ln2_hi"] - ((s * (f - R) - dk * C["ln2_lo"]) - f)

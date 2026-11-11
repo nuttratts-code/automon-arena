@@ -1,5 +1,5 @@
 // Godot plan P0 step 2 (set 191): golden fixtures = the JS core's answers, so the GDScript port can be checked number for number.
-//   node lab/golden.mjs            write godot/tests/golden/ (rng.json · battles-NN.jsonl · runs.jsonl · teams.jsonl · stage.jsonl · runrunes.jsonl · shop.jsonl · manifest.json), ~180 MB, ~1–2 min
+//   node lab/golden.mjs            write godot/tests/golden/ (rng.json · battles-NN.jsonl · runs.jsonl · teams.jsonl · stage.jsonl · runrunes.jsonl · shop.jsonl · bot.jsonl · manifest.json), ~180 MB, ~1–2 min
 //   node lab/golden.mjs --small    small set (tests use it in memory: same input twice = byte-identical)
 // User pick B1 (set 191): NOT committed (godot/tests/golden/ is in .gitignore) — rebuilt from the current core before every Godot parity check,
 // so the fixtures always match the current game values (manifest.gameHash = godot/data/game.json hash).
@@ -10,6 +10,7 @@
 //     stage.jsonl (set 195, step 6b): stage/boss/runboss/runes answers — see lab/golden-stage.mjs.
 //     runrunes.jsonl (set 195, step 6c): runes inside the run — see lab/golden-runrunes.mjs.
 //     shop.jsonl (set 195, step 6d): shop / merge / round flow — see lab/golden-shop.mjs.
+//     bot.jsonl (set 195, step 6e): Math.log + bot / pickFoe helpers — see lab/golden-bot.mjs (whole bot runs = runs.jsonl).
 // Every input goes through a JSON round trip BEFORE it is simulated: the fixture holds everything the result depends on.
 // v2 (set 194, user pick A1): in battles/runs every non-integer number is written as {"$f": "<16 hex digits>"} = its exact
 // IEEE-754 bits (big-endian), because Godot's text→float parse can be 1 ulp off (set 193). Godot decodes the bits and
@@ -32,6 +33,7 @@ import { teamGolden } from './golden-teams.mjs';
 import { stageGolden } from './golden-stage.mjs';
 import { runrunesGolden } from './golden-runrunes.mjs';
 import { shopGolden } from './golden-shop.mjs';
+import { botGolden } from './golden-bot.mjs';
 
 export const GOLDEN_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../godot/tests/golden');
 export const GOLDEN_V = 2;
@@ -132,6 +134,7 @@ export async function buildGolden(cfg = FULL, write = () => {}) {
   for (const o of stageGolden(cfg, chars)) emit('stage.jsonl', JSON.stringify(exactNums(plain(o, 'stage'))));
   for (const o of runrunesGolden(cfg, chars)) emit('runrunes.jsonl', JSON.stringify(exactNums(plain(o, 'runrunes'))));
   for (const o of shopGolden(cfg, chars)) emit('shop.jsonl', JSON.stringify(exactNums(plain(o, 'shop'))));
+  for (const o of botGolden(cfg, chars)) emit('bot.jsonl', JSON.stringify(exactNums(plain(o, 'bot'))));
   const gd = await buildGameData();
   // A1 guard (set 194): exact bits of every non-integer number in godot/data/game.json → Godot checks its JSON parse of game.json matches
   const gf = []; (function fl(v, p) { if (typeof v === 'number' && !Number.isInteger(v)) gf.push([p, exactNums(v).$f]); else if (v && typeof v === 'object') for (const k of Object.keys(v)) fl(v[k], p.concat(k)); })({ modules: gd.modules, derived: gd.derived }, []);
