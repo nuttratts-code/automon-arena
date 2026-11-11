@@ -64,7 +64,7 @@ def main():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     url = "http://127.0.0.1:%d/index.html" % srv.server_address[1]
     with sync_playwright() as p:
-        exe = "/opt/pw-browsers/chromium"  # cloud chats: the pre-installed browser (python playwright may expect another build)
+        exe = os.environ.get("CHROMIUM_PATH") or "/opt/pw-browsers/chromium"  # cloud chats: the pre-installed browser · set 204: a Windows PC sets CHROMIUM_PATH to Chrome/Edge (Smart App Control blocks playwright's unsigned build)
         kw = {"executable_path": exe} if os.path.exists(exe) else {}
         br = p.chromium.launch(**kw, args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
         for w, h in SIZES:

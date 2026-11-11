@@ -16,7 +16,13 @@ import { execFileSync, spawn } from 'child_process';
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '..'), SHOTS = resolve(tmpdir(), 'automon-shots');
 process.chdir(SRC);
 const [mode = 'setup', a1, a2] = process.argv.slice(2);
-const PW = { PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers' };
+// set 204: the cloud has its browser in /opt/pw-browsers; a PC (Windows) uses playwright's own download and `python` (python3 there is a Store stub)
+const CLOUD_PW = existsSync('/opt/pw-browsers');
+const PW = process.env.PLAYWRIGHT_BROWSERS_PATH || CLOUD_PW ? { PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers' } : {};
+const PY = process.platform === 'win32' ? 'python' : 'python3';
+// set 204: Windows Smart App Control blocks playwright's own (unsigned) chromium → use the signed Chrome/Edge already installed (ui_smoke.py reads CHROMIUM_PATH)
+const WIN_BROWSER = process.platform === 'win32' && !process.env.CHROMIUM_PATH ? [process.env.ProgramFiles + '/Google/Chrome/Application/chrome.exe', process.env['ProgramFiles(x86)'] + '/Microsoft/Edge/Application/msedge.exe'].find(p => existsSync(p)) : null;
+if (WIN_BROWSER) PW.CHROMIUM_PATH = WIN_BROWSER;
 
 const sh = (cmd, args, env = {}) => execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 1 << 28, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
 const run = (cmd, args, env = {}) => new Promise(res => {
@@ -88,7 +94,7 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   say(`รันพร้อมกัน: เทสต์ · ui_smoke · วัดบาลานซ์ ${N} แมตช์ เมล็ด ${SEED} ...`);
   const [t, u, m] = await Promise.all([
     run('node', ['tests/run.js']),
-    run('python3', ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW),
+    run(PY, ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW),
     run('node', ['lab/measure.mjs', N, SEED]),
   ]);
   const ts = summarizeTests(t.out), us = summarizeUi(u.out), ms = summarizeMeasure(m.out);
@@ -103,13 +109,14 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
   process.exit(bad ? 1 : 0);
 } else if (mode === 'gate') { // V1.x (31 Oct): merge/publish gate = build + tests + ui_smoke on the BUILT pages (no balance measure) · ~4 min · sets up python playwright if missing
   try { sh('node', ['build.mjs']); } catch (e) { say('❌ build ไม่สำเร็จ:', String(e.stderr || e.message).split('\n').slice(0, 6).join('\n')); process.exit(1); }
-  const have = await run('python3', ['-c', 'import playwright']);
-  if (/Error/.test(have.out)) { say('ติดตั้ง playwright (python) ...'); await run('pip', ['install', '-q', 'playwright']); }
+  const have = await run(PY, ['-c', 'import playwright']);
+  if (have.code !== 0) { say('ติดตั้ง playwright (python) ...'); await run(PY, ['-m', 'pip', 'install', '-q', 'playwright']); }
+  if (!CLOUD_PW && !process.env.CHROMIUM_PATH && !WIN_BROWSER && !process.env.CI) await run(PY, ['-m', 'playwright', 'install', 'chromium']); // PC: fetch playwright's chromium once (no-op when present)
   mkdirSync(SHOTS, { recursive: true });
   let skipT = false;
   if (!process.env.CI && a1 !== '--full') { try { const [h, ms] = readFileSync(STAMP, 'utf8').trim().split(' '); skipT = !!h && h === treeHash() && Date.now() - +ms < 6 * 3600e3; } catch (e) {} }
   const t = skipT ? { out: '', sec: 0, skipped: true } : await run('node', ['tests/run.js']); // sequential on purpose: in parallel the CPU-heavy tests starve ui_smoke (its 240 s wait timed out, 31 Oct)
-  const u = await run('python3', ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW);
+  const u = await run(PY, ['-I', 'tests/ui_smoke.py', SRC, SHOTS], PW);
   const us = summarizeUi(u.out);
   if (t.skipped) say('✅ เทสต์: ข้าม — setup ผ่านแล้วบนไฟล์ชุดเดียวกัน (tree unchanged; ใช้ gate --full เพื่อรันซ้ำ)');
   else { const ts = summarizeTests(t.out); flag(ts.ok, `เทสต์ ${ts.total} (${t.sec} วิ)${ts.fails.length ? '\n   ' + ts.fails.join('\n   ') : ''}`); }
