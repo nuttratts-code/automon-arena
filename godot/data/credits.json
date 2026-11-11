@@ -1,0 +1,81 @@
+{
+ "_note": "Set 201 (plan-set196 7f1). Credits screen data, read by scripts/ui/credits.gd (plain text only). HARD RULE 9 ② + S-B1. Godot's own licence + third-party notices come from the engine at run time (Engine.get_license_text / get_copyright_info / get_license_info), so they always match the shipped engine.",
+ "v": 1,
+ "title": "เครดิต",
+ "close": "ปิด",
+ "show": "ดูข้อความสัญญาอนุญาต",
+ "hide": "ซ่อนข้อความสัญญาอนุญาต",
+ "owner": "© 2026 Automon Arena · สงวนลิขสิทธิ์ (All rights reserved)",
+ "owner_sub": "เกม กฎ ข้อมูล ข้อความ และภาพต้นฉบับเป็นของผู้สร้าง ห้ามคัดลอกหรือเผยแพร่ต่อโดยไม่ได้รับอนุญาต",
+ "sections": [
+  {
+   "id": "godot",
+   "title": "Godot Engine",
+   "lines": [
+    "สร้างด้วย Godot Engine 4.7 (godotengine.org) — MIT License",
+    "Copyright (c) 2014-present Godot Engine contributors · (c) 2007-2014 Juan Linietsky, Ariel Manzur"
+   ],
+   "engine": "licence"
+  },
+  {
+   "id": "godot_thirdparty",
+   "title": "ส่วนประกอบภายใน Godot Engine",
+   "lines": [
+    "ไลบรารีของบุคคลที่สามที่ Godot ใช้ (ลิขสิทธิ์ + สัญญาอนุญาตของแต่ละตัว)"
+   ],
+   "engine": "thirdparty"
+  },
+  {
+   "id": "v8",
+   "title": "V8 (ตัวคำนวณ pow / log)",
+   "lines": [
+    "ส่วนคำนวณเลขยกกำลังและลอการิทึมดัดแปลงจาก V8 src/base/ieee754.cc — BSD-3-Clause",
+    "Copyright the V8 project authors"
+   ],
+   "licence_text": "Copyright 2006-2011, the V8 project authors. All rights reserved.\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n    * Redistributions of source code must retain the above copyright\n      notice, this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above\n      copyright notice, this list of conditions and the following\n      disclaimer in the documentation and/or other materials provided\n      with the distribution.\n    * Neither the name of Google Inc. nor the names of its\n      contributors may be used to endorse or promote products derived\n      from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+  },
+  {
+   "id": "fdlibm",
+   "title": "fdlibm (e_pow.c · e_log.c)",
+   "lines": [
+    "ต้นแบบของโค้ด pow / log ใน V8",
+    "Copyright (C) 1993-2004 Sun Microsystems, Inc."
+   ],
+   "licence_text": "Copyright (C) 1993-2004 by Sun Microsystems, Inc. All rights reserved.\n\nPermission to use, copy, modify, and distribute this\nsoftware is freely granted, provided that this notice\nis preserved."
+  },
+  {
+   "id": "font_mitr",
+   "title": "ฟอนต์ Mitr",
+   "lines": [
+    "Copyright 2015 The Mitr Project Authors (github.com/cadsondemak/mitr)",
+    "SIL Open Font License 1.1"
+   ],
+   "licence_file": "res://data/fonts/OFL-Mitr.txt"
+  },
+  {
+   "id": "font_plex_thai",
+   "title": "ฟอนต์ IBM Plex Sans Thai",
+   "lines": [
+    "Copyright 2017 IBM Corp. · Reserved Font Name \"Plex\"",
+    "SIL Open Font License 1.1"
+   ],
+   "licence_file": "res://data/fonts/OFL-IBMPlexSansThai.txt"
+  },
+  {
+   "id": "font_plex_mono",
+   "title": "ฟอนต์ IBM Plex Mono",
+   "lines": [
+    "Copyright 2017 IBM Corp. · Reserved Font Name \"Plex\"",
+    "SIL Open Font License 1.1"
+   ],
+   "licence_file": "res://data/fonts/OFL-IBMPlexMono.txt"
+  },
+  {
+   "id": "dcss",
+   "title": "ภาพชั่วคราว",
+   "lines": [
+    "Dungeon Crawl Stone Soup tiles (github.com/crawl/tiles) — CC0 1.0 (สาธารณสมบัติ)"
+   ]
+  }
+ ]
+}
