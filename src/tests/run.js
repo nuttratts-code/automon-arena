@@ -3,7 +3,7 @@
 import { TESTS, runTests, matchStats } from './mechanics.js';
 import { FINDINGS_SKILL_CALC } from './t-skill-calc.js'; // set 42: rule-vs-battle findings waiting for the user (not failures)
 import { checkBuildList } from './t-build.js';
-import { checkGameData } from '../tools/exportdata.mjs'; // set 190: Godot plan P0 step 1
+import { checkGameData, checkExtra, checkUiText } from '../tools/exportdata.mjs'; // set 190: Godot plan P0 step 1
 import { buildGolden, SMALL, exactNums, fromExact } from '../lab/golden.mjs'; // set 191: Godot plan P0 step 2 · set 194: exact floats (A1)
 const words = process.argv.slice(2);
 const pick = words.length ? TESTS.filter(([name]) => words.some(w => name.includes(w))) : null;
@@ -12,7 +12,8 @@ const res = pick
   ? pick.map(([name, fn]) => { try { fn(); return { name, ok: true }; } catch (e) { return { name, ok: false, msg: e.message }; } })
   : runTests();
 if (!pick) { const bp = checkBuildList(); res.push({ name: 'build: ทุกไฟล์ใน core/ อยู่ใน CORE ของ build.mjs (ชุด 62)', ok: !bp.length, msg: bp.join(' · ') });
-  const gd = await checkGameData(); res.push({ name: 'godot: godot/data/game.json ตรงค่าเกมปัจจุบัน (ชุด 190 · node tools/exportdata.mjs)', ok: !gd.length, msg: gd.join(' · ') }); }
+  const gd = [...await checkGameData(), ...await checkExtra()]; res.push({ name: 'godot: godot/data/game.json + labels.json + art.json + colours.json ตรงต้นทาง (ชุด 190/196 · node tools/exportdata.mjs)', ok: !gd.length, msg: gd.join(' · ') }); }
+  { const ut = checkUiText(); res.push({ name: 'godot: ทุกข้อความใน godot/data/ui_th.json ยังมีอยู่ในหน้าเกมเว็บ (ชุด 196 D1 · แก้ทั้งสองที่)', ok: !ut.length, msg: ut.join(' · ') }); }
   const g1 = JSON.stringify(await buildGolden(SMALL)), g2 = JSON.stringify(await buildGolden(SMALL)); res.push({ name: 'godot: golden fixtures สร้าง 2 รอบได้ผลตรงกันทุกไบต์ (ชุด 191 · node lab/golden.mjs)', ok: g1 === g2, msg: 'golden ไม่คงที่ (ผลต่างกันระหว่าง 2 รอบ)' });
   { const bad = []; let nf = 0; const rawF = (v, p) => { if (typeof v === 'number' && !Number.isInteger(v)) bad.push(p); else if (v && typeof v === 'object') { if (typeof v.$f === 'string') nf++; for (const k in v) rawF(v[k], p + '.' + k); } };
     await buildGolden(SMALL, (name, line) => { if (name === 'rng.json' || bad.length > 5) return; const j = JSON.parse(line); rawF(j, name); if (JSON.stringify(exactNums(fromExact(j))) !== line) bad.push(name + ' round trip'); });

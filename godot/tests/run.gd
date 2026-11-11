@@ -1,5 +1,6 @@
 # Headless test runner (set 192). Usage, from the repo root:
 #   godot --headless --path godot -s res://tests/run.gd [-- --require-golden]
+#   TESTS_ONLY=ui,project … = only test_ui.gd + test_project.gd (while developing · set 196; CI runs all)
 # Runs every func test_*() -> String in res://tests/test_*.gd. Pass = returns "ok" exactly;
 # a reason String, a crash (a typed func returns "" / null after a runtime error) or a file
 # that does not load = fail.
@@ -8,10 +9,10 @@
 extends SceneTree
 
 func _init() -> void:
-	var opts := {"require_golden": OS.get_cmdline_user_args().has("--require-golden")}
+	var opts := {"require_golden": OS.get_cmdline_user_args().has("--require-golden"), "root": root} # root: UI tests add scenes (set 196)
 	var files: Array[String] = []
 	for f in DirAccess.get_files_at("res://tests"):
-		if f.begins_with("test_") and f.ends_with(".gd"):
+		if f.begins_with("test_") and f.ends_with(".gd") and _picked(f):
 			files.append(f)
 	files.sort()
 	var total := 0
@@ -43,3 +44,12 @@ func _init() -> void:
 	else:
 		print("GODOT TESTS: FAIL %d/%d" % [fails.size(), total])
 	quit(1 if not fails.is_empty() or total == 0 else 0)
+
+static func _picked(f: String) -> bool:
+	var only := OS.get_environment("TESTS_ONLY")
+	if only == "":
+		return true
+	for w in only.split(",", false):
+		if f == "test_%s.gd" % w.strip_edges():
+			return true
+	return false

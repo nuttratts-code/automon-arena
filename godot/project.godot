@@ -10,10 +10,11 @@ config/features=PackedStringArray("4.7")
 
 [display]
 
-window/size/viewport_width=1366
-window/size/viewport_height=768
+window/size/viewport_width=854
+window/size/viewport_height=480
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+; set 196: base 854×480 logical px (1 px ≈ 1 CSS px of the web page on a phone held sideways); bigger screens scale up
 window/handheld/orientation=0
 
 [rendering]
