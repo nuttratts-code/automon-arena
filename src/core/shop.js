@@ -12,6 +12,7 @@ import { DO_INFO, PERM_ABIL, PERM_STAT2, RARITIES, RULES, SHARE_TO, atMatch } fr
 
 export const SLOT_ORDER = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]];
 export const PERM_KEYS = ['hp', 'atk', 'armor', 'burn', 'shock', 'multi', 'cdPct', ...PERM_STAT2, ...PERM_ABIL]; // ความสามารถถาวร (22 ต.ค.) มาจากสกิลระหว่างสู้ที่ตั้งถาวรเท่านั้น
+// Godot port (set 195): fail/done/loseGuard also in godot/scripts/shop.gd (rest of shop.js = plan step 6d) — change both
 export const fail = msg => ({ ok: false, msg });
 export const done = (msgs = []) => ({ ok: true, msgs });
 
