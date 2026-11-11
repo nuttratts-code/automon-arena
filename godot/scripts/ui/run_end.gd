@@ -193,10 +193,13 @@ func render() -> void:
 				var u: Variant = P["board"][row][lane]
 				var card := PanelContainer.new()
 				card.name = "ECard"
-				card.custom_minimum_size = Vector2(118, 64)
+				card.custom_minimum_size = Vector2(118, 58)
+				card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				card.add_theme_stylebox_override("panel", TH.box(TH.c("card") if u != null else Color(0, 0, 0, 0), TH.c("line"), 10, 1, 6, 4))
 				if u != null:
 					var c: Variant = app.cm.get(u["id"])
+					var cv := VBoxContainer.new()
+					cv.add_theme_constant_override("separation", 1)
 					var h := HBoxContainer.new()
 					h.add_theme_constant_override("separation", 6)
 					if c is Dictionary:
@@ -211,16 +214,17 @@ func render() -> void:
 					nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 					v.add_child(nm)
 					v.add_child(TH.label(TH.ui_text("end_unit", {"id": str(u["id"]), "l": _n(u["level"])}), 13, "mute"))
+					h.add_child(v)
+					cv.add_child(h)
 					var perm := []
 					for k in (u["perm"] as Dictionary):
 						if float(u["perm"][k]) > 0.0:
 							perm.append(_perm_text(k, float(u["perm"][k])))
-					if not perm.is_empty():
+					if not perm.is_empty(): # under the picture, the card's full width
 						var pl := TH.label(TH.ui_text("end_perm", {"l": " · ".join(PackedStringArray(perm))}), 13, "gold")
 						pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-						v.add_child(pl)
-					h.add_child(v)
-					card.add_child(h)
+						cv.add_child(pl)
+					card.add_child(cv)
 				team.add_child(card)
 	# run stats
 	_clear(stats_box)

@@ -73,3 +73,6 @@ jobs:
       - name: Godot-made ARUN1 code reads in the JS Balance Room reader (set 195 step 6f)
         working-directory: src
         run: node lab/golden-save.mjs check ../godot/tests/golden/godot-arun1.txt
+      - name: Run code copied from the Godot run end screen reads in the JS Balance Room reader (set 199 step 7d)
+        working-directory: src
+        run: node lab/golden-save.mjs check ../godot/tests/golden/godot-ui-arun1.txt

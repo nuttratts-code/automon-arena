@@ -182,3 +182,9 @@ func fill(view: Control, id: Variant, rune_names: Array) -> void:
 		_body.add_child(TH.label(TH.ui_text("li_nolive"), 13, "mute"))
 	_body.add_child(_wrap(TH.ui_text("li_hint"), 13, "mute"))
 	visible = true
+
+# height = the content, up to max_h (the body's wrapped height is known one frame after the width is set)
+func fit(max_h: float) -> void:
+	var h := minf(max_h, _body.get_combined_minimum_size().y + 18.0)
+	size.y = maxf(60.0, h)
+

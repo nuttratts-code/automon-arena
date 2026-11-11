@@ -1,7 +1,7 @@
 # Set 198 (plan-set196 7c): the battle screen = web #battle: title + clock · the field (battle_view.gd) · rune counts · dock
-# (speed 1–16 · ticker · stop · skip · auto-skip) · a small result card with the next button.
-# 7d adds the full result screen (chips, messages, recap, match details, run end). Display only: the match was decided and
-# applied to the run state before this screen opens (set 22 rule), so closing the app mid-fight still counts it.
+# (speed 1–16 · ticker · stop · skip · auto-skip). Set 199 (7d): the full result card (chips, messages, recap, replay / match
+# details / next) and the live details of a tapped unit (live.gd). Display only: the match was decided and applied to the run
+# state before this screen opens (set 22 rule), so closing the app mid-fight still counts it.
 extends Control
 
 const TH := preload("res://scripts/ui/theme.gd")
@@ -375,7 +375,19 @@ func _show_live() -> void:
 	var side := int(v["side"]) if v != null else 0
 	var w := minf(400.0, size.x * 0.48)
 	live.position = Vector2(size.x - w - 10.0 if side == 0 else 10.0, 44.0)
-	live.size = Vector2(w, maxf(120.0, size.y - 44.0 - 66.0))
+	var max_h := maxf(120.0, size.y - 44.0 - 66.0)
+	live.size = Vector2(w, minf(max_h, live.size.y) if live.size.y > 60.0 else max_h)
+	live.fit(max_h)
+	_fit_live_later(max_h)
+
+# the wrapped text height is only known after the containers were laid out at the new width (two frames)
+func _fit_live_later(max_h: float) -> void:
+	if not is_inside_tree():
+		return
+	for k in 2:
+		await get_tree().process_frame
+		if live.visible:
+			live.fit(max_h)
 
 func _on_log(line: String) -> void:
 	# web: the newest event shown on the first line, the one before it dimmed below

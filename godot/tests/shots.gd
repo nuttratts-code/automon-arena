@@ -139,19 +139,92 @@ func _initialize() -> void:
 	app.battle.view.advance(4000.0)
 	await _frames()
 	await _shot("battle-mid")
+	# 7d: live details of a tapped unit (yours → pane on the right · enemy → pane on the left)
+	for v in app.battle.view.units.values():
+		if v["side"] == 0:
+			app.battle._on_unit_tapped(v["uid"])
+			break
+	await _shot("battle-live-you")
+	for v in app.battle.view.units.values():
+		if v["side"] == 1:
+			app.battle._on_unit_tapped(v["uid"])
+			break
+	await _shot("battle-live-foe")
+	app.battle.unpick()
 	app.battle.skip_now()
 	await _frames()
 	await _shot("battle-end")
+	# 7d: match details, every tab + the battle log
+	for tab in 4:
+		app.popups.mx_state["tab"] = tab
+		app.popups.open("mx")
+		await _frames()
+		await _shot("pop-mx-%d" % tab)
+	app.popups.mx_state["log_open"] = true
+	app.popups.refresh()
+	await _frames()
+	app.pop._scroll.scroll_vertical = 100000
+	await _shot("pop-mx-log")
+	app.popups.close()
 	app._on_next()
 	app.popups.open("replays")
 	await _frames()
 	await _shot("pop-replays")
 	app.popups.close()
-	for f in ["shots-save.json", "shots-runlog.json", "shots-replays.json", "shots-history.json"]:
+	# 7d: run end — a cleared run (extra matches offered) with a full late-game team · the run code box · a lost run
+	if app.P["rn"].get("offer") is Dictionary:
+		app._on_offer_skip()
+	var u2 := 300.0
+	var k2 := 5
+	for row in 3:
+		for lane in 2:
+			if row == 2 and lane == 1:
+				continue
+			app.P["board"][row][lane] = {"uid": u2, "id": ids[k2 * 7 % ids.size()], "level": float(1 + (k2 % 3)), "perm": {"atk": 4.0, "hpPct": 20.0} if k2 % 2 == 0 else {}, "paid": 3.0}
+			u2 += 1.0
+			k2 += 1
+	app.P["uid"] = u2
+	app.P["wins"] = R_wins()
+	app.P["round"] = 14.0
+	app.P["hearts"] = 2.0
+	app.P["over"] = true
+	app.stats["matches"] = 14.0
+	app.stats["w"] = 10.0
+	app.stats["l"] = 3.0
+	app.stats["d"] = 1.0
+	app.stats["best"] = 5.0
+	app.stats["timeMs"] = 14.0 * 21500.0
+	app.stats["dmg"] = {ids[3]: 18234.0, ids[9]: 9120.0, ids[14]: 4410.0}
+	var SVs = load("res://scripts/save.gd")
+	var hl := []
+	for hi in 3:
+		hl = SVs.push_history(hl, SVs.history_entry(app.P, app.stats, 1.7626e12 + hi * 8.64e7))
+	SVs.store_text(app.history_file, SVs.js_json(hl))
+	app.screen = "runEnd"
+	app.render()
+	await _shot("runend-won")
+	app.run_end.get_node("Scroll").scroll_vertical = 100000
+	await _shot("runend-won-bottom")
+	app.run_end.get_node("Scroll").scroll_vertical = 0
+	app.clip_ok = false
+	app.copy_run_code()
+	await _frames()
+	await _shot("pop-runcode")
+	app.popups.close()
+	app.P["wins"] = 4.0
+	app.P["hearts"] = 0.0
+	app.P["board"] = [[null, null], [null, null], [null, null]]
+	app.render()
+	await _shot("runend-lost")
+	app.P["over"] = false
+	for f in ["shots-save.json", "shots-runlog.json", "shots-replays.json", "shots-history.json", "shots-runlog_prev.json", "shots-replays_prev.json"]:
 		if FileAccess.file_exists("user://" + f):
 			DirAccess.remove_absolute("user://" + f)
 	print("SHOTS: done ", tag, " viewport ", ws)
 	quit()
+
+func R_wins() -> float:
+	return float(load("res://scripts/rules.gd").RULES()["shop"]["winsToFinish"])
 
 func _frames() -> void:
 	for k in 4:
