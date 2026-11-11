@@ -11,8 +11,8 @@ Design in one line: one shared `Stage` (Node3D under the app) = floor + light + 
 5. [x] `arena.gd`: the move = Camera3D tween prep pose ↔ battle pose; cells follow the projection each step (no more 2D lerp drawing); overlays slide as now; blocker; freeze/thaw for shots. Check: test_arena_move updated · shots `MOVE CHECK: PASS`. Security: —
 6. [x] D1 short screens: at wide/short windows (aspect ≥ ~2.1) the base height drops (content scale) so text grows; every screen re-audited at 740×330. Check: AUDIT lines 740×330 no `tiny` on prep. Security: —
 7. [x] Tests + shots: test_ui (stage pure math, cells inside field, one sprite per board unit, enemy sprites in battle), shots.gd at 1366×768 · 844×390 · 740×330 · 667×375 (+dark 1366/844), zoom-start/mid frames. Read PNGs, fix AUDIT hits. Security: shots go to scratch only.
-8. [ ] Docs + ripple: ui-todo-godot.md (740 note ticked), plan-godot-migration step 8 progress line, art-style untouched, handoff Relay. `ripple:` line. Security: ① secret grep before commit.
-9. [ ] merge-code: setup → gate (GATE: PASS) → merge → CI → close-out. Godot tests 51+/all pass.
+8. [x] Docs + ripple: ui-todo-godot.md (740 note ticked), plan-godot-migration step 8 progress line, art-style untouched, handoff Relay. `ripple:` line. Security: ① secret grep before commit.
+9. [x] merge-code: setup → gate (GATE: PASS) → merge → CI → close-out. Godot tests 51+/all pass.
 
 Notes from the build: pitch 32° → 40° and lane gap 2.5 → 2.8 (far-row labels covered near-row heads less) · cells trimmed to 84 % width · prep pose is height-limited by the tray, so prep units draw SMALLER than battle units (fight = camera moves in, not out) — told the owner, options next set · 740×330 board is small.
 
