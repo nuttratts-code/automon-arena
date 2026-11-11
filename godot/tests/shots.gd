@@ -42,6 +42,8 @@ func _initialize() -> void:
 	app.log_file = "user://shots-runlog.json"
 	app.replays_file = "user://shots-replays.json"
 	app.history_file = "user://shots-history.json"
+	app.runcodes_file = "user://shots-runcodes.json"
+	app.prefs_file = "user://shots-prefs.json"
 	app.start_new_run(4242)
 	await _shot("prep")
 	app.do_buy(0, null)
@@ -86,6 +88,14 @@ func _initialize() -> void:
 	await _shot("prep-highlight")
 	app.prep.hi_tribe = null
 	app.render()
+	# 7e: ⋯ menu · symbols · glossary
+	app.prep.show_menu(true)
+	await _shot("prep-menu")
+	app.prep.show_menu(false)
+	for kind in ["legend", "gloss"]:
+		app.popups.open(kind)
+		await _frames()
+		await _shot("pop-" + kind)
 	for kind in ["runes", "tribes", "shop"]:
 		app.popups.open(kind)
 		await _frames()
@@ -132,6 +142,11 @@ func _initialize() -> void:
 	app.popups.open("diff")
 	await _frames()
 	await _shot("pop-diff")
+	app.P["rn"]["bag"]["X9"] = 1.0 # 7e: rune ทำนาย → enemy mini board
+	app.popups.open("diff")
+	await _frames()
+	await _shot("pop-diff-mini")
+	app.P["rn"]["bag"].erase("X9")
 	app.popups.close()
 	app.set_speed(1, false)
 	app._on_fight()
@@ -216,8 +231,23 @@ func _initialize() -> void:
 	app.P["board"] = [[null, null], [null, null], [null, null]]
 	app.render()
 	await _shot("runend-lost")
+	# 7e: offline Log (the runs left above are archived) · resume screen from a saved mid-round run
+	app.start_new_run(4243)
+	app.do_buy(0, null)
+	app.screen = "prep"
+	app.render()
+	app.clip_ok = false
+	app._on_menu("log")
+	await _frames()
+	await _shot("pop-log")
+	app.copy_all_codes()
+	await _frames()
+	await _shot("pop-log-box")
+	app.popups.close()
+	app.boot()
+	await _shot("resume")
 	app.P["over"] = false
-	for f in ["shots-save.json", "shots-runlog.json", "shots-replays.json", "shots-history.json", "shots-runlog_prev.json", "shots-replays_prev.json"]:
+	for f in ["shots-save.json", "shots-runlog.json", "shots-replays.json", "shots-history.json", "shots-runlog_prev.json", "shots-replays_prev.json", "shots-runcodes.json", "shots-prefs.json"]:
 		if FileAccess.file_exists("user://" + f):
 			DirAccess.remove_absolute("user://" + f)
 	print("SHOTS: done ", tag, " viewport ", ws)

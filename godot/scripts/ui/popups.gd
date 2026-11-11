@@ -508,15 +508,15 @@ func foe_mini(st: Dictionary) -> Control:
 				h.add_child(UV.make(c, int(e["level"]), 30))
 				var nv := VBoxContainer.new()
 				nv.add_theme_constant_override("separation", 0)
-				nv.add_child(TH.label(str(c["name"]), 12, "ink", "body_b"))
+				nv.add_child(TH.label(str(c["name"]), 13, "ink", "body_b"))
 				var perm: bool = e.get("perm") is Dictionary and not (e["perm"] as Dictionary).is_empty()
-				nv.add_child(TH.label("Lv" + _n(e["level"]) + (TH.ui_text("fm_perm") if perm else ""), 11, "mute"))
+				nv.add_child(TH.label("Lv" + _n(e["level"]) + (TH.ui_text("fm_perm") if perm else ""), 13, "mute"))
 				h.add_child(nv)
 				cv.add_child(h)
 				for o in rn:
 					var mine: bool = on.call(o["x"].get("s"), row, lane)
 					if mine or on.call(o["x"].get("p"), row, lane):
-						cv.add_child(TH.label("◆ " + str(o["r"]["name"]) + ("" if mine else TH.ui_text("fm_pair")), 11, "gold"))
+						cv.add_child(TH.label("◆ " + str(o["r"]["name"]) + ("" if mine else TH.ui_text("fm_pair")), 13, "gold"))
 			else:
 				cell.custom_minimum_size.y = 34
 			grid.add_child(cell)
@@ -524,7 +524,7 @@ func foe_mini(st: Dictionary) -> Control:
 	var list := HFlowContainer.new()
 	list.name = "FoeRunes"
 	list.add_theme_constant_override("h_separation", 8)
-	list.add_child(TH.label(TH.ui_text("fm_rn", {"n": str(rn.size())}) if rn.size() > 0 else TH.ui_text("fm_rn_none"), 12, "mute"))
+	list.add_child(TH.label(TH.ui_text("fm_rn", {"n": str(rn.size())}) if rn.size() > 0 else TH.ui_text("fm_rn_none"), 13, "mute"))
 	for o in rn:
 		var x: Dictionary = o["x"]
 		var r: Dictionary = o["r"]
@@ -533,13 +533,13 @@ func foe_mini(st: Dictionary) -> Control:
 			for t in foe["team"]:
 				if on.call(x["s"], int(t["row"]), int(t["lane"])):
 					u = app.cm.get(t["id"])
-			list.add_child(TH.label("◆ %s → %s" % [r["name"], str(u["name"]) if u is Dictionary else _slot_th(int(x["s"][0]), int(x["s"][1]))], 12, "ink"))
+			list.add_child(TH.label("◆ %s → %s" % [r["name"], str(u["name"]) if u is Dictionary else _slot_th(int(x["s"][0]), int(x["s"][1]))], 13, "ink"))
 		else:
 			var n := float(x.get("n", 1.0))
 			var t := str(r["name"]) + (" ×" + _n(n) if n > 1.0 else "")
 			if r.get("eff") == "flag":
 				t += " (%s)" % ", ".join(PackedStringArray(RN.rn_flag_tribes(r, n, x.get("t"))))
-			list.add_child(TH.label(t, 12, "ink"))
+			list.add_child(TH.label(t, 13, "ink"))
 	wrap.add_child(list)
 	return wrap
 
@@ -610,12 +610,12 @@ func _log() -> Array:
 	tbl.add_theme_constant_override("v_separation", 3)
 	for t in [TH.ui_text("log_h_name"), TH.ui_text("log_h_at"), TH.ui_text("log_h_upd"), TH.ui_text("log_h_round"), TH.ui_text("log_h_wins"), TH.ui_text("log_h_hearts"),
 			TH.ui_text("log_h_gold"), TH.ui_text("log_h_st")]:
-		tbl.add_child(TH.label(t, 12, "mute", "body_b"))
+		tbl.add_child(TH.label(t, 13, "mute", "body_b"))
 	for h in rows:
 		var nm := str(h.get("nm", ""))
 		for t in [nm if nm != "" else TH.ui_text("log_noname"), app.when_th(float(h["at"])), app.when_th(float(h["upd"])), _n(h["round"]), _n(h["wins"]), _n(h["hearts"]), _n(h["gold"]),
 				TH.ui_text("log_over" if bool(h["over"]) else "log_live")]:
-			tbl.add_child(TH.label(t, 12, "ink"))
+			tbl.add_child(TH.label(t, 13, "ink"))
 	var msg := _hint(app.log_msg if app.log_msg != "" else TH.ui_text("log_all_hint"))
 	msg.name = "LogAllMsg"
 	var nodes := [Pop.head(TH.ui_text("log_t"), TH.ui_text("g_log_hint")), _hint(TH.ui_text("log_n", {"n": str(rows.size())}) if rows.size() > 0 else TH.ui_text("log_none"))]
