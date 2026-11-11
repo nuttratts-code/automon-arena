@@ -7,6 +7,7 @@ extends Control
 const TH := preload("res://scripts/ui/theme.gd")
 const BV := preload("res://scripts/ui/battle_view.gd")
 const Live := preload("res://scripts/ui/live.gd")
+const ARENA := preload("res://scripts/ui/arena.gd")
 
 signal next_pressed
 signal replay_pressed
@@ -49,6 +50,9 @@ var rune_text := ["", ""]
 var _msg_token := 0
 var _live_at := 0
 var last_runes: Array = []
+var field: Control # set 205: the arena move fades it while the world draws the field
+var top_hold: Control
+var tray_hold: Control
 var slot_runes := {} # "side:row:lane" → rune names worn there (for the live pane)
 
 func setup(a: Control) -> void:
@@ -83,7 +87,9 @@ func setup(a: Control) -> void:
 	clock.name = "Clock"
 	clock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hud.add_child(clock)
-	v.add_child(hud)
+	var tv := VBoxContainer.new() # set 205: hud + rune row slide in from the top after the arena move
+	tv.add_theme_constant_override("separation", 5)
+	tv.add_child(hud)
 	# rune counts of both sides (tap = the full list in the message line)
 	var rr := HBoxContainer.new()
 	rr.name = "RuneRow"
@@ -96,7 +102,9 @@ func setup(a: Control) -> void:
 	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rr.add_child(sp2)
 	rr.add_child(rn_r)
-	v.add_child(rr)
+	tv.add_child(rr)
+	top_hold = ARENA.hold(tv, "Top")
+	v.add_child(top_hold)
 	# the field
 	var f := PanelContainer.new()
 	f.name = "Field"
@@ -110,8 +118,12 @@ func setup(a: Control) -> void:
 	view.log_line.connect(_on_log)
 	view.ended.connect(func(_w: Variant, _t: float) -> void: _finished())
 	f.add_child(view)
+	field = f
 	v.add_child(f)
-	v.add_child(_build_dock())
+	var dv := VBoxContainer.new() # set 205: the dock slides up from the bottom after the arena move
+	dv.add_child(_build_dock())
+	tray_hold = ARENA.hold(dv, "Tray")
+	v.add_child(tray_hold)
 	# 7d: live details of a tapped unit, floating over the half of the field the unit is NOT on
 	view.unit_tapped.connect(_on_unit_tapped)
 	live = Live.new()
@@ -120,6 +132,11 @@ func setup(a: Control) -> void:
 	result_box = _build_result()
 	add_child(result_box)
 	result_box.visible = false
+
+# set 205 arena move: p = 0 in place … 1 gone (top up, dock down, past the screen edge)
+func slide(p: float) -> void:
+	ARENA.slide(top_hold, -p * (top_hold.size.y + 16.0))
+	ARENA.slide(tray_hold, p * (tray_hold.size.y + 16.0))
 
 func _rune_btn(nm: String) -> Button:
 	var b := Button.new()

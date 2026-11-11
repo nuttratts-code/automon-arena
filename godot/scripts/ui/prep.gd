@@ -13,6 +13,7 @@ const UV := preload("res://scripts/ui/unit_view.gd")
 const SHAPE := preload("res://scripts/ui/shape.gd")
 const Cell := preload("res://scripts/ui/slot_cell.gd")
 const Card := preload("res://scripts/ui/unit_card.gd")
+const ARENA := preload("res://scripts/ui/arena.gd")
 
 signal fight
 signal open_runes
@@ -56,6 +57,9 @@ var btn_legend: Button
 var btn_menu: Button
 var menu: PanelContainer # ⋯ menu panel under the button (web .menu)
 var menu_new: Button
+var field: Control # set 205: the arena move fades it while the world draws the board
+var top_hold: Control
+var tray_hold: Control
 var _new_confirm := 0 # web #newRun two-step: a second press within 3 s starts the new run (no confirm once the run is over)
 
 func setup(a: Control) -> void:
@@ -70,16 +74,31 @@ func setup(a: Control) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 5)
 	m.add_child(v)
-	v.add_child(_build_hud())
-	v.add_child(_build_msg())
-	v.add_child(_build_field())
-	v.add_child(_build_bench())
-	v.add_child(_build_dock())
+	# set 205: top (hud + message) and tray (bench + dock) sit in slide holders: they leave / come back during the arena move
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", 5)
+	tv.add_child(_build_hud())
+	tv.add_child(_build_msg())
+	top_hold = ARENA.hold(tv, "Top")
+	v.add_child(top_hold)
+	field = _build_field()
+	v.add_child(field)
+	var bv := VBoxContainer.new()
+	bv.add_theme_constant_override("separation", 5)
+	bv.add_child(_build_bench())
+	bv.add_child(_build_dock())
+	tray_hold = ARENA.hold(bv, "Tray")
+	v.add_child(tray_hold)
 	card = Card.new()
 	card.act.connect(_on_card_act)
 	card.lv_changed.connect(func(_l: int) -> void: _refresh_card())
 	add_child(card)
 	_build_menu()
+
+# set 205 arena move: p = 0 in place … 1 gone (top up, tray down, past the screen edge)
+func slide(p: float) -> void:
+	ARENA.slide(top_hold, -p * (top_hold.size.y + 16.0))
+	ARENA.slide(tray_hold, p * (tray_hold.size.y + 16.0))
 
 # ---------- build ----------
 func _chip(bg: String, ink: String, art: String) -> Array:
