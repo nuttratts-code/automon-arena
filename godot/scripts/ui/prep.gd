@@ -14,6 +14,7 @@ const SHAPE := preload("res://scripts/ui/shape.gd")
 const Cell := preload("res://scripts/ui/slot_cell.gd")
 const Card := preload("res://scripts/ui/unit_card.gd")
 const ARENA := preload("res://scripts/ui/arena.gd")
+const ST3D := preload("res://scripts/ui/stage3d.gd")
 
 signal fight
 signal open_runes
@@ -36,7 +37,6 @@ var _sel_mt := {} # 7f2: merge targets of the unit / shop card whose card is ope
 var hud_title: Label
 var chip_hearts: Label
 var chip_gold: Label
-var btn_tribes: Button
 var btn_runes: Button
 var btn_hi: Button
 var btn_diff: Button
@@ -45,15 +45,17 @@ var msg_bar: PanelContainer
 var msg_label: Label
 var board_grid: Control # set 206: plain holder, cells placed by place_cells()
 var col_labels: Array = []
+var tribe_col: Button # set 207 P8: left column of tribe shapes + counts (replaces the top "เผ่า" button, user F1)
+var tribe_list: VBoxContainer
 var bench_row: HBoxContainer
-var bench_lbl: Label
 var dock: PanelContainer
 var shop_row: HBoxContainer
 var btn_reroll: Button
-var btn_shoplv: Button
+var reroll_t: Label
+var odds_btn: Button # set 207 P4: shop odds line (rarity dot + %), tap = shop popup (user C1)
+var odds_row: HBoxContainer
 var btn_fight: Button
 var fight_t: Label
-var fight_n: Label
 var card: Card
 var btn_legend: Button
 var btn_menu: Button
@@ -85,11 +87,7 @@ func setup(a: Control) -> void:
 	v.add_child(top_hold)
 	field = _build_field()
 	v.add_child(field)
-	var bv := VBoxContainer.new()
-	bv.add_theme_constant_override("separation", 5)
-	bv.add_child(_build_bench())
-	bv.add_child(_build_dock())
-	tray_hold = ARENA.hold(bv, "Tray")
+	tray_hold = ARENA.hold(_build_tray(), "Tray")
 	v.add_child(tray_hold)
 	card = Card.new()
 	card.act.connect(_on_card_act)
@@ -103,9 +101,20 @@ func slide(p: float) -> void:
 	ARENA.slide(tray_hold, p * (tray_hold.size.y + 16.0))
 
 # ---------- build ----------
+# set 207 P2: panels over the arena are see-through (the 3D floor shows behind them)
+const GLASS := 0.72
+
+static func glass(col: Color) -> Color:
+	return Color(col, col.a * GLASS)
+
+static func glass_btn(b: Button) -> void:
+	for st in ["normal", "hover", "pressed", "disabled"]:
+		var s := TH.box(glass(TH.c("soft") if st == "hover" or st == "pressed" else TH.c("panel")), TH.c("line"))
+		b.add_theme_stylebox_override(st, s)
+
 func _chip(bg: String, ink: String, art: String) -> Array:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", TH.box(TH.c(bg), TH.c(bg), 20, 0, 12, 3))
+	p.add_theme_stylebox_override("panel", TH.box(glass(TH.c(bg)), TH.c(bg), 20, 0, 12, 3))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 6)
 	var tex := TH.art("ui", art)
@@ -128,6 +137,7 @@ func _hudbtn(text: String, nm: String) -> Button:
 	b.name = nm
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 36)
+	glass_btn(b)
 	return b
 
 func _build_hud() -> Control:
@@ -154,9 +164,6 @@ func _build_hud() -> Control:
 	btn_hi.visible = false
 	btn_hi.pressed.connect(func() -> void: clear_highlight.emit())
 	h.add_child(btn_hi)
-	btn_tribes = _hudbtn("", "TribeBtn")
-	btn_tribes.pressed.connect(func() -> void: open_tribes.emit())
-	h.add_child(btn_tribes)
 	btn_runes = _hudbtn("", "RuneBtn")
 	btn_runes.pressed.connect(func() -> void: open_runes.emit())
 	h.add_child(btn_runes)
@@ -251,7 +258,7 @@ func _build_msg() -> Control:
 
 func _msg_style(on: bool, err: bool = false) -> void:
 	if on:
-		msg_bar.add_theme_stylebox_override("panel", TH.box(TH.c("hi-bg") if err else TH.c("soft"), TH.c("bad") if err else TH.c("line"), 8, 1, 10, 2))
+		msg_bar.add_theme_stylebox_override("panel", TH.box(glass(TH.c("hi-bg") if err else TH.c("soft")), TH.c("bad") if err else TH.c("line"), 8, 1, 10, 2))
 	else:
 		msg_bar.add_theme_stylebox_override("panel", TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 8, 0, 10, 2))
 
@@ -268,21 +275,63 @@ func _build_field() -> Control:
 	b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	f.add_child(b)
 	board_grid = b
-	col_labels = []
-	for t in ["col_back", "col_mid", "col_front"]:
-		var l := TH.label(TH.ui_text(t), 13, "ink", "body_b")
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 6, 0, 6, 0))
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(l)
-		col_labels.append(l)
 	for lane in 2: # the far line first: the near line draws (and takes taps) on top where they overlap
 		for row in [2, 1, 0]:
 			var c := _new_cell({"at": "board", "row": float(row), "lane": float(lane)})
 			c.stage_slot = [0, row, lane]
 			c.custom_minimum_size = Vector2.ZERO
 			b.add_child(c)
+	# set 207 P6: column labels lie on the near tiles' front edge, shown only while a unit is dragged
+	col_labels = []
+	for t in ["col_back", "col_mid", "col_front"]:
+		var l := TH.label(TH.ui_text(t), 13, "ink", "body_b")
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.add_theme_stylebox_override("normal", TH.box(glass(TH.c("panel")), Color(0, 0, 0, 0), 6, 0, 6, 0))
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.visible = false
+		b.add_child(l)
+		col_labels.append(l)
+	# set 207 P8 (user F1): tribe column on the left = shape + how many units of that tribe you have; tap = tribe popup
+	tribe_col = Button.new()
+	tribe_col.name = "TribeCol"
+	tribe_col.flat = false
+	glass_btn(tribe_col)
+	tribe_col.tooltip_text = TH.ui_text("tribe")
+	tribe_col.pressed.connect(func() -> void: open_tribes.emit())
+	tribe_col.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	tribe_col.position = Vector2(0, 4)
+	tribe_list = VBoxContainer.new()
+	tribe_list.add_theme_constant_override("separation", 2)
+	tribe_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tribe_list.position = Vector2(8, 6)
+	tribe_col.add_child(tribe_list)
+	f.add_child(tribe_col)
 	return f
+
+const TRIBE_COL_W := 58.0 # the board target leaves this much room on the left (app.board_targets)
+
+func _fill_tribe_col(counts: Dictionary, steps: Dictionary, have: Array) -> void:
+	for ch in tribe_list.get_children():
+		tribe_list.remove_child(ch)
+		ch.queue_free()
+	tribe_col.visible = not have.is_empty()
+	for t in have:
+		var row := HBoxContainer.new()
+		row.name = "T_" + str(t)
+		row.add_theme_constant_override("separation", 5)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var on := float(steps.get(t, 0)) > 0.0
+		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
+		var sh := SHAPE.make(sp[0], sp[1], 16)
+		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(sh)
+		var l := TH.label(_n(counts[t]), 14, "ink" if on else "mute", "body_b" if on else "body")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(l)
+		row.modulate = Color.WHITE if on else Color(1, 1, 1, 0.6)
+		tribe_list.add_child(row)
+	tribe_list.reset_size()
+	tribe_col.size = Vector2(TRIBE_COL_W - 8.0, tribe_list.get_combined_minimum_size().y + 12.0)
 
 # set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
 func place_cells() -> void:
@@ -290,7 +339,6 @@ func place_cells() -> void:
 	if st == null or board_grid == null:
 		return
 	var o: Vector2 = board_grid.get_global_rect().position
-	var tops := [INF, INF, INF]
 	for row in 3:
 		for lane in 2:
 			var cell: Control = cells["b_%d_%d" % [row, lane]]
@@ -298,96 +346,135 @@ func place_cells() -> void:
 			var r: Rect2 = st.slot_rect(0, row, lane)
 			cell.position = r.position - o
 			cell.size = r.size
-			tops[row] = minf(tops[row], r.position.y)
-	for i in 3: # labels back · mid · front, above their column's far tile
+	for i in 3: # set 207 P6: labels back · mid · front on the floor, at the front edge of their column's near tile
 		var row := 2 - i
-		var r: Rect2 = st.slot_rect(0, row, 0)
+		var p: Vector2 = st.on_screen(ST3D.slot_pos(0, row, 1) + Vector3(0, 0, ST3D.TILE * 0.32))
 		var l: Label = col_labels[i]
 		var w := maxf(l.get_combined_minimum_size().x, 10.0)
 		l.size = Vector2(w, l.get_combined_minimum_size().y)
-		l.position = Vector2(r.get_center().x - w / 2.0, tops[row] - l.size.y - 2.0) - o
+		l.position = Vector2(p.x - w / 2.0, p.y - l.size.y / 2.0) - o
 
-func _build_bench() -> Control:
-	var b := HBoxContainer.new()
-	b.name = "BenchBar"
-	b.custom_minimum_size.y = 66
-	b.add_theme_constant_override("separation", 6)
-	var lab := VBoxContainer.new()
-	lab.custom_minimum_size.x = 64
-	lab.alignment = BoxContainer.ALIGNMENT_CENTER
-	lab.add_child(TH.label(TH.ui_text("bench"), 13, "ink", "body_b"))
-	bench_lbl = TH.label("0/5", 13, "mute")
-	bench_lbl.name = "BenchCnt"
-	lab.add_child(bench_lbl)
-	b.add_child(lab)
+func _show_col_labels(on: bool) -> void:
+	for l in col_labels:
+		l.visible = on
+
+# set 207 (user: bench and shop stay on two rows, not one) · row 1 = bench ×5 + shop odds line · row 2 = reroll · shop ×5 · fight
+# P7/E1: no bench label or count · P3/B1: reroll = icon + price / "ฟรี n" · P4/C1: odds line, tap = shop popup · P5/D2: fight = title only
+func _build_tray() -> Control:
+	var rows := VBoxContainer.new()
+	rows.name = "TrayRows"
+	rows.add_theme_constant_override("separation", 4)
+	var r1 := HBoxContainer.new()
+	r1.name = "BenchBar"
+	r1.custom_minimum_size.y = BENCH_H
+	r1.add_theme_constant_override("separation", 8)
 	bench_row = HBoxContainer.new()
 	bench_row.name = "Bench"
 	bench_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bench_row.add_theme_constant_override("separation", 6)
-	b.add_child(bench_row)
+	bench_row.size_flags_stretch_ratio = 1.3
+	bench_row.add_theme_constant_override("separation", 4)
+	r1.add_child(bench_row)
 	for i in int(R.RULES()["shop"]["bench"]):
 		var c := _new_cell({"at": "bench", "i": float(i)})
 		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		bench_row.add_child(c)
-	return b
-
-func _build_dock() -> Control:
-	dock = PanelContainer.new()
-	dock.name = "Dock"
-	dock.custom_minimum_size.y = 96
-	dock.add_theme_stylebox_override("panel", TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 10, 2, 2, 2))
-	# dropping an own unit anywhere on the dock sells it (web dropAt → {sell})
-	dock.set_drag_forwarding(Callable(), _dock_can_drop, _dock_drop)
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 10)
-	dock.add_child(h)
-	var left := VBoxContainer.new()
-	left.custom_minimum_size.x = 150
-	left.add_theme_constant_override("separation", 6)
+	odds_btn = Button.new()
+	odds_btn.name = "ShopOdds"
+	odds_btn.flat = true
+	odds_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	odds_btn.size_flags_vertical = Control.SIZE_SHRINK_END
+	odds_btn.custom_minimum_size.y = ODDS_H
+	odds_btn.tooltip_text = TH.ui_text("odds")
+	odds_btn.pressed.connect(func() -> void: app.open_shop_pop())
+	odds_row = HBoxContainer.new()
+	odds_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	odds_row.alignment = BoxContainer.ALIGNMENT_END
+	odds_row.add_theme_constant_override("separation", 10)
+	odds_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	odds_btn.add_child(odds_row)
+	r1.add_child(odds_btn)
+	rows.add_child(r1)
+	var row := HBoxContainer.new()
+	row.name = "TrayRow"
+	row.custom_minimum_size.y = SHOP_H
+	row.add_theme_constant_override("separation", 8)
 	btn_reroll = Button.new()
 	btn_reroll.name = "Reroll"
-	btn_reroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	btn_reroll.custom_minimum_size = Vector2(54, 0)
+	btn_reroll.tooltip_text = TH.ui_text("reroll")
+	glass_btn(btn_reroll)
+	var rv := VBoxContainer.new()
+	rv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rv.alignment = BoxContainer.ALIGNMENT_CENTER
+	rv.add_theme_constant_override("separation", 2)
+	rv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ic := SHAPE.make("reroll", "ink", 26)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rv.add_child(ic)
+	reroll_t = TH.label("", 14, "gold-ink", "display")
+	reroll_t.name = "RerollCost"
+	reroll_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reroll_t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rv.add_child(reroll_t)
+	btn_reroll.add_child(rv)
 	btn_reroll.pressed.connect(func() -> void: app.do_reroll())
-	left.add_child(btn_reroll)
-	btn_shoplv = Button.new()
-	btn_shoplv.name = "ShopLv"
-	btn_shoplv.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	btn_shoplv.add_theme_font_size_override("font_size", 13)
-	btn_shoplv.pressed.connect(func() -> void: app.open_shop_pop())
-	left.add_child(btn_shoplv)
-	h.add_child(left)
+	row.add_child(btn_reroll)
+	dock = PanelContainer.new()
+	dock.name = "Dock"
+	dock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_dock_style(false)
+	# dropping an own unit anywhere on the dock sells it (web dropAt → {sell})
+	dock.set_drag_forwarding(Callable(), _dock_can_drop, _dock_drop)
 	shop_row = HBoxContainer.new()
 	shop_row.name = "Shop"
-	shop_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_row.add_theme_constant_override("separation", 6)
-	h.add_child(shop_row)
+	dock.add_child(shop_row)
 	for i in int(R.RULES()["shop"]["slots"]):
 		var c := _new_cell({"at": "shop", "i": float(i)})
 		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		shop_row.add_child(c)
+	row.add_child(dock)
 	btn_fight = Button.new()
 	btn_fight.name = "Fight"
-	btn_fight.custom_minimum_size.x = 190
-	btn_fight.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	btn_fight.custom_minimum_size = Vector2(96, 0)
 	TH.primary(btn_fight, false)
-	var fv := VBoxContainer.new()
-	fv.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fv.alignment = BoxContainer.ALIGNMENT_CENTER
-	fv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fight_t = TH.label("", 20, "on-accent", "display")
+	fight_t = TH.label("", 18, "on-accent", "display")
+	fight_t.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fight_t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	fight_t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	fight_t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	fight_t.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fight_n = TH.label("", 13, "on-accent")
-	fight_n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	fight_n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fv.add_child(fight_t)
-	fv.add_child(fight_n)
-	btn_fight.add_child(fv)
+	btn_fight.add_child(fight_t)
 	btn_fight.pressed.connect(func() -> void: fight.emit())
-	h.add_child(btn_fight)
-	return dock
+	row.add_child(btn_fight)
+	rows.add_child(row)
+	return rows
+
+const BENCH_H := 58.0
+const SHOP_H := 76.0
+const ODDS_H := 30.0 # ≥ 24 px on a phone (tap target)
+const RAR_TOK := {"ธรรมดา": "mute", "ไม่ธรรมดา": "r-unc", "หายาก": "r-rare", "หายากมาก": "r-epic", "ตำนาน": "r-legend"}
+
+func _fill_odds(lv: float) -> void:
+	for ch in odds_row.get_children():
+		odds_row.remove_child(ch)
+		ch.queue_free()
+	var odds := SH.odds_at(lv)
+	for r in odds:
+		if float(odds[r]) <= 0.0:
+			continue
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 3)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var dot := SHAPE.make("circle", RAR_TOK.get(r, "mute"), 10)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(dot)
+		var l := TH.label(_n(odds[r]) + "%", 13, RAR_TOK.get(r, "mute"), "body_b")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(l)
+		odds_row.add_child(h)
 
 func _new_cell(ref: Dictionary) -> Control:
 	var c: Control = Cell.new()
@@ -457,6 +544,7 @@ func drag_started(ref: Dictionary) -> void:
 		src.set_meta("pre_drag", src.modulate)
 		src.modulate = Color(1, 1, 1, 0.35)
 	_stage_dim_drag(ref, true)
+	_show_col_labels(true)
 	var u: Variant = unit_at(ref)
 	var targets: Array = merge_targets(u) if u != null else shop_merge_targets(shop_id(ref))
 	for t in targets:
@@ -487,6 +575,7 @@ func _stage_dim_drag(from: Variant, dim: bool) -> void: # the picked-up board un
 
 func drag_ended() -> void:
 	_stage_dim_drag(_drag_from, false)
+	_show_col_labels(false)
 	_drag_from = null
 	_hover = null
 	for k in cells:
@@ -697,14 +786,13 @@ func render() -> void:
 	hud_title.text = TH.ui_text("round_boss" if rb != null else "round", {"n": _n(st["round"])}) + " · " + (TH.ui_text("wins_extra", {"w": _n(st["wins"])}) if bool(st["extra"]) else TH.ui_text("wins", {"w": _n(st["wins"]), "t": _n(S["winsToFinish"])}))
 	chip_hearts.text = _n(st["hearts"])
 	chip_gold.text = _n(st["gold"])
-	# tribes button: mini shapes of the 3 biggest + active/total · rune button: count + warning when a held rune does nothing
+	# set 207 P8: tribe column (shape + count, active bright) · rune button: count + warning when a held rune does nothing
 	var entries := SH.team_entries(st)
 	var counts := T.count_tribes(entries, app.cm)
 	var steps := T.tribe_steps(counts)
 	var have := counts.keys().filter(func(t): return float(counts[t]) > 0.0)
 	have.sort_custom(func(a, b): return float(counts[a]) > float(counts[b]))
-	var active := have.filter(func(t): return float(steps.get(t, 0)) > 0.0).size()
-	btn_tribes.text = "%s %d/%d" % [TH.ui_text("tribe"), active, have.size()]
+	_fill_tribe_col(counts, steps, have)
 	var held := 0
 	for id in st["rn"]["bag"]:
 		if float(st["rn"]["bag"][id]) > 0.0:
@@ -718,35 +806,21 @@ func render() -> void:
 	btn_hi.visible = hi_tribe != null
 	if hi_tribe != null:
 		btn_hi.text = TH.ui_text("hi_on", {"t": str(hi_tribe)}) + " ✕"
-	# shop dock
+	# shop tray (set 207 P3/B1 · P4/C1)
 	var free: float = float(st["rn"]["free"])
-	btn_reroll.text = TH.ui_text("reroll") + " " + (TH.ui_text("reroll_free", {"n": _n(free)}) if free > 0.0 else TH.ui_text("reroll_cost", {"c": _n(S["rerollCost"])}))
+	reroll_t.text = TH.ui_text("g_reroll_free", {"n": _n(free)}) if free > 0.0 else _n(S["rerollCost"])
 	btn_reroll.disabled = (free <= 0.0 and float(st["gold"]) < float(S["rerollCost"])) or bool(st["over"])
-	var lv := SH.shop_lv_of(st)
-	var nx := SH.lv_for_round(float(st["round"]) + 1.0)
-	btn_shoplv.text = "%s %s/%s%s\n%s+%s" % [TH.ui_text("shop_lv"), _n(lv), _n(SH.shop_levels()), (" → " + _n(nx)) if nx > lv else "", TH.ui_text("shop_next"), _n(SH.base_income_at(float(st["round"]) + 1.0))]
+	_fill_odds(SH.shop_lv_of(st))
 	for i in st["shop"].size():
 		_fill_shop(cells["s_%d" % i], i)
 	for row in 3:
 		for lane in 2:
 			_fill_unit(cells["b_%d_%d" % [row, lane]], {"at": "board", "row": float(row), "lane": float(lane)}, 50.0)
 	_stage_units()
-	var bn := 0
 	for i in st["bench"].size():
 		_fill_unit(cells["n_%d" % i], {"at": "bench", "i": float(i)}, 34.0)
-		if st["bench"][i] != null:
-			bn += 1
-	bench_lbl.text = "%d/%d" % [bn, st["bench"].size()]
-	# fight button
+	# fight button: title only (set 207 P5/D2: no unit count, no new-player cue)
 	fight_t.text = TH.ui_text("fight_confirm") if app.confirm_empty or app.confirm_runes else TH.ui_text("fight_boss") if rb != null else TH.ui_text("fight")
-	var cue := ""
-	if entries.is_empty():
-		var bench_has := false
-		for u in st["bench"]:
-			if u != null:
-				bench_has = true
-		cue = TH.ui_text("cue_drag") if bench_has else TH.ui_text("cue_buy")
-	fight_n.text = TH.ui_text("fight_n", {"n": str(entries.size())}) + cue
 	btn_fight.disabled = bool(st["over"])
 	btn_fight.modulate = Color(1, 1, 1, 0.7) if entries.is_empty() else Color.WHITE
 	if card.visible:
@@ -789,6 +863,8 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 	if not on_stage: # set 206: on the arena the sprite is the unit; its name shows on the card when tapped
 		var nm := TH.label(str(c["name"]), 13, "ink")
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nm.clip_text = true # set 207: the one-row tray keeps every bench cell the same width (full name on the card)
+		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(nm)
 	if on_stage:
@@ -829,12 +905,15 @@ func _stage_units() -> void:
 		var cell: Control = cells[it["id"]]
 		st.shade("prep", it["id"], cell.hi < 0)
 
+# set 207 P9 (user G2): fixed card layout — picture top · every tribe (main + extra) · name bottom-left · price bottom-right;
+# nothing moves with state. Own a copy → yellowish card · buying it completes a star-up → "อัปดาว" ribbon top-right.
 func _fill_shop(cell: Control, i: int) -> void:
 	_clear(cell)
 	var s: Dictionary = P()["shop"][i]
 	var id: Variant = s.get("id")
 	cell.picked = sel != null and sel.has("at") and int(sel["i"]) == i and sel.get("id") == id and id != null
 	cell.hi = 0
+	cell.owned = false
 	if id == null:
 		cell.look(false, true)
 		var l := TH.label(TH.ui_text("sold"), 13, "mute")
@@ -845,47 +924,67 @@ func _fill_shop(cell: Control, i: int) -> void:
 		return
 	var c: Dictionary = app.cm[id]
 	var cant := float(c["price"]) > float(P()["gold"])
+	var mine := SH.all_units(P()).filter(func(x): return x["u"]["id"] == id)
+	var lv1 := mine.filter(func(x): return float(x["u"]["level"]) == 1.0).size()
+	var ready := lv1 > 0 and float(lv1) >= merge_need(id) - 1.0
+	cell.owned = mine.size() > 0
 	cell.look(true, true, bool(s.get("locked", false)), cant)
 	var v := VBoxContainer.new()
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.name = "ShopCard"
 	v.add_theme_constant_override("separation", 1)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mon := UV.make(c, 0, 34)
 	mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(mon)
-	var nm := TH.label(str(c["name"]), 13, "ink")
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(nm)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 3)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tr := HBoxContainer.new()
+	tr.name = "Tribes"
+	tr.alignment = BoxContainer.ALIGNMENT_CENTER
+	tr.add_theme_constant_override("separation", 3)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var ts := [c["tribe"]]
 	ts.append_array(c["extraTribes"])
 	for t in ts:
 		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
 		var sh := SHAPE.make(sp[0], sp[1], 11)
 		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(sh)
+		tr.add_child(sh)
+	v.add_child(tr)
+	var gap := Control.new()
+	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(gap)
+	var bot := HBoxContainer.new()
+	bot.add_theme_constant_override("separation", 3)
+	bot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var nm := TH.label(str(c["name"]), 13, "ink")
+	nm.name = "Name"
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.clip_text = true
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bot.add_child(nm)
 	var pr := TH.label(_n(c["price"]), 14, "gold-ink", "display")
+	pr.name = "Price"
 	pr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(pr)
-	v.add_child(row)
-	var mine := SH.all_units(P()).filter(func(x): return x["u"]["id"] == id)
-	if mine.size() > 0:
-		var lv1 := mine.filter(func(x): return float(x["u"]["level"]) == 1.0).size()
-		var ready := float(lv1) >= merge_need(id) - 1.0
-		var ol := TH.label(TH.ui_text("own_ready", {"n": str(lv1)}) if ready else TH.ui_text("own_have", {"n": str(mine.size())}), 13, "gold-ink" if ready else "mute")
-		ol.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		ol.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(ol)
+	bot.add_child(pr)
+	v.add_child(bot)
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cell.add_child(v)
+	var ov := Control.new()
+	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cell.add_child(ov)
 	if bool(s.get("locked", false)):
-		var ov := Control.new()
-		ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var lk := TH.label(TH.ui_text("lock"), 13, "gold-ink", "body_b")
-		lk.position = Vector2(4, 0)
+		lk.position = Vector2(2, -2)
 		lk.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ov.add_child(lk)
-		cell.add_child(ov)
+	if ready:
+		var rib := TH.label(TH.ui_text("g_upstar"), 13, "on-accent", "body_b")
+		rib.name = "UpStar"
+		rib.add_theme_stylebox_override("normal", TH.box(TH.c("gold"), TH.c("gold"), 6, 0, 5, 0))
+		rib.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rib.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		rib.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		rib.position = Vector2(-rib.get_combined_minimum_size().x + 3, -4)
+		ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		ov.add_child(rib)

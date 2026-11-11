@@ -24,7 +24,18 @@ func _draw() -> void:
 	var col := TH.c(token)
 	var w := size.x
 	var h := size.y
-	if kind == "circle":
+	if kind == "reroll": # set 207 P3: the reroll icon = a circular arrow, drawn in code (no outside asset)
+		var c := Vector2(w, h) / 2.0
+		var r := minf(w, h) * 0.34
+		var lw := maxf(1.5, minf(w, h) * 0.11)
+		draw_arc(c, r, deg_to_rad(-50.0), deg_to_rad(240.0), 28, col, lw, true)
+		var a := deg_to_rad(-50.0)
+		var p := c + Vector2(cos(a), sin(a)) * r
+		var d := Vector2(sin(a), -cos(a)) # travel direction at the arrow's head (angle decreasing)
+		var n := Vector2(cos(a), sin(a))
+		var s := minf(w, h) * 0.2
+		draw_colored_polygon(PackedVector2Array([p + d * s, p + n * s * 0.9 - d * s * 0.2, p - n * s * 0.9 - d * s * 0.2]), col)
+	elif kind == "circle":
 		draw_circle(Vector2(w, h) / 2.0, minf(w, h) / 2.0, col, true, -1.0, true)
 	elif POLY.has(kind):
 		var pts := PackedVector2Array()

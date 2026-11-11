@@ -1047,7 +1047,7 @@ func board_targets() -> Array:
 	var br: Variant = null
 	var pf: Rect2 = prep.field.get_global_rect()
 	if pf.size.x > 40.0 and pf.size.y > 40.0:
-		pr = pf.grow_individual(-6.0, -20.0, -6.0, -4.0)
+		pr = pf.grow_individual(-prep.TRIBE_COL_W, -4.0, -6.0, -4.0) # set 207: labels lie on the floor (P6) · tribe column on the left (P8)
 	var bf: Rect2 = battle.field.get_global_rect()
 	if bf.size.x > 40.0 and bf.size.y > 40.0:
 		br = bf.grow_individual(-6.0, -4.0, -6.0, -4.0)

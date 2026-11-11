@@ -13,6 +13,8 @@ var mergeable := false
 var picked := false
 var hi := 0 # 1 = tribe highlight on · -1 = dimmed
 var drop_ok := false
+var owned := false # set 207 P9: shop card of a kind you already own
+const GLASS := 0.72
 var stage_slot: Array = [] # set 206: [side, row, lane] = a board cell on the 3D arena (no box; states light the tile's rune rim)
 var stage: Node3D = null
 
@@ -22,12 +24,14 @@ func _init() -> void:
 
 func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = false) -> void:
 	var line := TH.c("line") if filled else TH.c("arena-line")
-	var bg := TH.c("panel") if filled else Color(0, 0, 0, 0)
+	var bg := Color(TH.c("panel"), GLASS) if filled else Color(0, 0, 0, 0) # set 207 P2: see-through over the arena
 	var bw := 1 if filled else 2
 	if shop:
-		bg = TH.c("panel")
+		bg = Color(TH.c("panel"), GLASS)
 		line = TH.c("line")
 		bw = 1
+		if owned and filled: # set 207 P9 (user G2): you already own this kind → yellowish card
+			bg = Color(TH.c("gold-bg"), 0.88)
 	if locked:
 		line = TH.c("gold")
 		bw = 2

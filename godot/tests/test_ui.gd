@@ -1051,6 +1051,13 @@ func test_stage3d() -> String:
 		var want: Rect2 = app.stage.slot_rect(0, 0, 0)
 		if app.size.x > 4.0 and c0.get_global_rect().position.distance_to(want.position) > 1.0:
 			bad = "the board cell must sit on its projected slot rect"
+	if bad == "": # set 207 P1: prep pose = only your half; the enemy tiles rise in with the dolly
+		if app.stage.foe_tiles.size() != 12 or app.stage.foe_tiles.any(func(it): return it[0].visible):
+			bad = "at the prep pose the 6 enemy rims + 6 tiles must be hidden (%d)" % app.stage.foe_tiles.size()
+		app.stage.set_k(1.0)
+		if bad == "" and app.stage.foe_tiles.any(func(it): return not it[0].visible or absf(it[0].position.y - float(it[1])) > 0.0001):
+			bad = "at the battle pose the enemy tiles stand in place"
+		app.stage.set_k(0.0)
 	if bad == "":
 		app._on_fight()
 		var n_battle: int = app.stage.count("battle")
