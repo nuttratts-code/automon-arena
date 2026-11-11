@@ -7,6 +7,7 @@
 // - battle effects work only while the unit is on the board · old saves (slot arrays) read as the unit standing on that slot
 // - run-only runes (gold, interest, shop slots, free reroll, heart trade, lure, fast merge, shadow, perm up, scout) are read by core/shop.js + the game page
 // - copies per run (rune.max) cap the offers
+// Godot port (set 195): also in godot/scripts/runrunes.gd (+ shop.gd fail/done/loseGuard · golden runrunes.jsonl exact, tests/test_runrunes.gd) — change both
 // State lives in st.rn (pure data, saved with the run) · randomness = the run seed (draw) · every number comes from the stage config.
 import { RUN_STAGE } from './runboss.js';
 import { RUNE_RARITY, RUNE_SPEC, runeActive, enemyMultAt } from './stage.js';

@@ -130,3 +130,112 @@ static func stable_sort(arr: Array, less: Callable) -> Array:
 # JS comparator (returns number, < 0 = a first) → stable sort
 static func sort_cmp(arr: Array, cmp: Callable) -> Array:
 	return stable_sort(arr, func(x, y): return cmp.call(x, y) < 0)
+
+# ---- JS value helpers (set 195, step 6a) ----
+# Number checks like validate.js: JSON numbers arrive as float; bool/String/null are not numbers
+static func is_num(x: Variant) -> bool:
+	return (x is float or x is int) and is_finite(float(x))
+
+# Number.isInteger
+static func is_int(x: Variant) -> bool:
+	return is_num(x) and floorf(float(x)) == float(x)
+
+# JS === for JSON values: numbers by value, everything else same type + equal
+static func js_seq(a: Variant, b: Variant) -> bool:
+	if is_num(a) and is_num(b):
+		return float(a) == float(b)
+	return typeof(a) == typeof(b) and a == b
+
+# JS String(x) for JSON values (a missing key = "undefined" is the caller's job: see js_str_of)
+static func js_str(x: Variant) -> String:
+	if x == null:
+		return "null"
+	if x is bool:
+		return "true" if x else "false"
+	if x is int or x is float:
+		return js_num(float(x))
+	if x is String:
+		return x
+	if x is Array:
+		var parts := []
+		for v in x:
+			parts.append("" if v == null else js_str(v))
+		return ",".join(parts)
+	return "[object Object]"
+
+# String(d[k]) where a missing key is JS undefined
+static func js_str_of(d: Variant, k: String) -> String:
+	if not (d is Dictionary) or not d.has(k):
+		return "undefined"
+	return js_str(d[k])
+
+# JS number → text: whole numbers without ".0", others the shortest text that reads back the same
+static func js_num(x: float) -> String:
+	if is_nan(x):
+		return "NaN"
+	if is_inf(x):
+		return "Infinity" if x > 0 else "-Infinity"
+	if floorf(x) == x and absf(x) < 1e21:
+		return "%d" % int(x) if absf(x) < 9.2e18 else String.num(x, 0)
+	for p in range(1, 18):
+		var s := String.num(x, p)
+		if s.to_float() == x:
+			return s
+	return String.num(x, 17)
+
+# rules.js cleanTags: drop control chars < > , · trim · ≤ TAG_LEN chars · no repeats / skill-kind names · ≤ TAG_MAX
+static func clean_tags(list: Variant) -> Array:
+	if not (list is Array):
+		return []
+	var M := mod("rules")
+	var out := []
+	for t in list:
+		if not (t is String):
+			continue
+		var x := ""
+		for ch in t:
+			var c: int = ch.unicode_at(0)
+			if c < 0x20 or c == 0x7f or ch == "<" or ch == ">" or ch == ",":
+				continue
+			x += ch
+		x = x.strip_edges().left(int(M["TAG_LEN"]))
+		if x != "" and not out.has(x) and not M["SKILL_KINDS"].has(x) and x != "ตอน down":
+			out.append(x)
+		if out.size() >= int(M["TAG_MAX"]):
+			break
+	return out
+
+# rules.js sameTribeOk / skipSameIdOk
+static func same_tribe_ok(s: Dictionary) -> bool:
+	var M := mod("rules")
+	var to: Variant = s.get("to")
+	return s.get("do") == "reviveDowned" or (not ["self", "tribeAllies", "nextTribeBuy"].has(to) and s.get("do") != "shareArmor" \
+		and (M["ALLY_T"].has(to) or M["SHOP_T"].has(to)))
+
+static func skip_same_id_ok(s: Dictionary) -> bool:
+	var M := mod("rules")
+	var to: Variant = s.get("to")
+	var info: Variant = M["DO_INFO"].get(s.get("do")) if s.get("do") is String else null
+	return not ["self", "nextTribeBuy"].has(to) and s.get("do") != "shareArmor" and info != null and info.get("side") != "self" \
+		and (M["ALLY_T"].has(to) or M["SHOP_T"].has(to))
+
+# JS `x | 0` (ToInt32): not a finite number → 0 · truncate toward zero · wrap to signed 32 bits (set 195, step 6b)
+static func js_i32(x: Variant) -> int:
+	if not is_num(x):
+		return 0
+	var f := float(x)
+	var t := int(fmod(f, 4294967296.0)) if absf(f) >= 4294967296.0 else int(f)
+	t &= 0xFFFFFFFF
+	return t - 0x100000000 if t >= 0x80000000 else t
+
+# JS `x || 0` for a JSON value that should be a number: missing / null / 0 / NaN / non-number → 0
+static func js_or0(x: Variant) -> float:
+	return float(x) if is_num(x) else 0.0
+
+# JS +(x).toFixed(2) for |x| < 1e15: nearest hundredth, an exact half goes up (away from zero) like toFixed.
+# n / 100.0 = the correctly rounded value of the decimal text, same as JS parsing it back.
+static func js_fixed2(x: float) -> float:
+	var neg := x < 0.0
+	var a := absf(x)
+	var n := floorf(a * 100.0 + 0.5)
+	return (-n if neg else n) / 100.0
