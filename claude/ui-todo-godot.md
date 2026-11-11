@@ -4,10 +4,11 @@ The user plays in the Godot editor and sends screenshots + numbered notes, one s
 ## Name screen
 ## Rune offer
 ## Prep / shop
+- [x] (set 206, user B2 · A2 B1 C1) **3D arena:** godot/scripts/ui/stage3d.gd = placeholder floor (code only) + key light + Camera3D angle A (pitch 40°) + Sprite3D units; prep/battle cells sit on projected slots (no box; states light the tile rim); fight/next = camera dolly. Board names dropped (name on the tap card); rarity = ring on the tile.
 - [x] (set 204, user E1 · done set 205: godot/scripts/ui/arena.gd) **One shared arena for prep + battle:** battle = wide camera showing both halves (player left, enemy right, art-style §8) · prep = camera zooms into the player's half and the shop/bench panel appears, layout like now · press fight = panel leaves, camera zooms out to reveal the enemy. 2D now (Camera2D, ~0.6 s tween, placeholder background); the step-8 3D diorama later keeps the same camera idea. Rules unchanged (display only). Check 740×330 text size when the panel sits over the zoomed arena.
 ## Battle
 ## Result card · match details
 ## Run end
 ## Menu · Log · credits · resume
 ## Known before set 203
-- [ ] 740×330: text draws at 8.9 px (prep needs the full 480 base height; a compact prep layout would fix it) — set 202, owner may decide.
+- [x] (set 206, user D1) 740×330: text drew at 8.9 px → windows under 360 px high get a 400-high base (app.gd `_on_resize`), text ~10.7 px; the 3D board shrinks to fit (small at that size — owner to judge).

@@ -11,12 +11,12 @@ extends Node3D
 const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
 
-const PITCH := 32.0 # degrees the camera looks down (angle A)
+const PITCH := 40.0 # degrees the camera looks down (angle A)
 const FOV := 34.0 # vertical field of view, degrees
 const SPR_H := 1.7 # every unit stands this tall (world units)
 const TILE := 1.8
 const COL_X := [1.35, 3.35, 5.35] # row 0 front … 2 back: distance from the midline
-const LANE_Z := [-1.25, 1.25] # lane 0 = far line (top of the screen), lane 1 = near line
+const LANE_Z := [-1.4, 1.4] # lane 0 = far line (top of the screen), lane 1 = near line
 
 signal moved # the camera changed: the screens put their cells on the new projected rects
 
@@ -225,9 +225,11 @@ func set_k(v: float) -> void:
 func pose() -> Transform3D:
 	return lerp_pose(pose_prep, pose_battle, k)
 
-# the screen rect (app canvas space) of a slot at the current camera
+# the screen rect (app canvas space) of a slot at the current camera — trimmed to 84 % of its width so the labels
+# of neighbouring tiles keep a gap (the fit still uses the full points)
 func slot_rect(side: int, row: int, lane: int) -> Rect2:
-	return rect_of(slot_points(side, row, lane), pose(), vp)
+	var r := rect_of(slot_points(side, row, lane), pose(), vp)
+	return r.grow_individual(-r.size.x * 0.08, 0.0, -r.size.x * 0.08, 0.0)
 
 func on_screen(p: Vector3) -> Vector2:
 	return project(p, pose(), vp)

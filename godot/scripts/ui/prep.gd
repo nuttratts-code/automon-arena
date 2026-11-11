@@ -760,13 +760,11 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 		var mon := UV.make(c, int(u["level"]), px)
 		mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		v.add_child(mon)
-	var nm := TH.label(str(c["name"]), 13, "ink")
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nm.clip_text = on_stage
-	if on_stage:
-		nm.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 6, 0, 4, 0))
-	v.add_child(nm)
+	if not on_stage: # set 206: on the arena the sprite is the unit; its name shows on the card when tapped
+		var nm := TH.label(str(c["name"]), 13, "ink")
+		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(nm)
 	if on_stage:
 		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cell.add_child(v)

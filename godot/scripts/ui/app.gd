@@ -1020,6 +1020,13 @@ func _rotate_notice() -> Control:
 func _on_resize() -> void:
 	var s := get_viewport().get_visible_rect().size
 	rotate_box.visible = s.y > s.x
+	# set 206 D1 (user): a very short window (browser bars on a phone, e.g. 740×330) gets a 400-high base instead of 480,
+	# so the text grows from ~8.9 px to ~10.7 px; the 3D board shrinks to fit the smaller field
+	var w := get_window()
+	if w != null:
+		var want := Vector2i(854, 400) if w.size.y > 0 and w.size.y < 360 and w.size.x > w.size.y else Vector2i(854, 480)
+		if w.content_scale_size != want:
+			w.content_scale_size = want
 	refit_stage.call_deferred()
 	if offer.visible:
 		render()

@@ -109,7 +109,13 @@ func setup(a: Control) -> void:
 	var f := PanelContainer.new()
 	f.name = "Field"
 	f.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	f.add_theme_stylebox_override("panel", TH.box(TH.c("arena"), TH.c("arena-line"), 12, 1, 10, 6))
+	var fe := StyleBoxEmpty.new() # set 206: a window onto the 3D arena (app.stage), no box
+	fe.content_margin_left = 10
+	fe.content_margin_right = 10
+	fe.content_margin_top = 6
+	fe.content_margin_bottom = 6
+	f.add_theme_stylebox_override("panel", fe)
+	f.mouse_filter = Control.MOUSE_FILTER_PASS
 	view = BV.new()
 	view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
