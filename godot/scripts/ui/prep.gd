@@ -30,6 +30,7 @@ var sel: Variant = null # {uid} (owned) | {at:'shop', i, id} while the card is o
 var cells := {} # ref key → cell
 var _msg_token := 0
 var _drag_from: Variant = null
+var _hover: Control = null # set 207 P0: the one cell showing "drop ok"
 var _sel_mt := {} # 7f2: merge targets of the unit / shop card whose card is open → gold frame (the card hint "กรอบสีทอง")
 
 var hud_title: Label
@@ -455,6 +456,7 @@ func drag_started(ref: Dictionary) -> void:
 	if src != null: # web .dragging: the picked-up thing stays faint in its place
 		src.set_meta("pre_drag", src.modulate)
 		src.modulate = Color(1, 1, 1, 0.35)
+	_stage_dim_drag(ref, true)
 	var u: Variant = unit_at(ref)
 	var targets: Array = merge_targets(u) if u != null else shop_merge_targets(shop_id(ref))
 	for t in targets:
@@ -463,8 +465,30 @@ func drag_started(ref: Dictionary) -> void:
 			cell.mergeable = true
 			restyle(cell)
 
+# set 207 P0: only the cell under the pointer shows "drop ok" (Godot asks _can_drop_data only of the cell under the
+# pointer, so the cell it left never cleared itself → every passed cell stayed green until release)
+func hover(cell: Control) -> void:
+	if _hover != null and _hover != cell and is_instance_valid(_hover) and _hover.drop_ok:
+		_hover.drop_ok = false
+		restyle(_hover)
+	_hover = cell
+
+func _unhover_if_left(at: Vector2) -> void:
+	if _hover != null and is_instance_valid(_hover) and not _hover.get_global_rect().has_point(at):
+		if _hover.drop_ok:
+			_hover.drop_ok = false
+			restyle(_hover)
+		_hover = null
+
+func _stage_dim_drag(from: Variant, dim: bool) -> void: # the picked-up board unit's sprite stays faint until drop / cancel
+	if from is Dictionary and from["at"] == "board" and app.stage != null:
+		var cell: Control = cells.get(_key(from))
+		app.stage.shade("prep", _key(from), dim or (cell != null and cell.hi < 0))
+
 func drag_ended() -> void:
+	_stage_dim_drag(_drag_from, false)
 	_drag_from = null
+	_hover = null
 	for k in cells:
 		var cell: Control = cells[k]
 		if cell.has_meta("pre_drag"): # a drop re-renders the cells first (look() sets modulate) → restore only a cancelled drag
@@ -617,6 +641,8 @@ func _on_card_act(kind: String) -> void:
 
 # tap anywhere else (not the card, not another place) closes the card (web document pointerdown)
 func _input(e: InputEvent) -> void:
+	if _drag_from != null and e is InputEventMouseMotion:
+		_unhover_if_left(e.global_position)
 	if menu != null and menu.visible: # click outside / Esc closes the menu (web)
 		if e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
 			show_menu(false)

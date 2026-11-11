@@ -44,13 +44,9 @@ func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = f
 		line = TH.c("ok")
 		bw = 3
 	var st := TH.box(bg, line, 10, bw, 3, 2)
-	if not stage_slot.is_empty():
+	if not stage_slot.is_empty(): # set 207 P0: arena cells draw no 2D frame — every state lights the tile's rune rim only
 		var lit := locked or mergeable or hi > 0 or picked or drop_ok
 		st = TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 10, 0, 3, 2)
-		if lit:
-			st.border_color = Color(line, 0.9)
-			st.set_border_width_all(2)
-			st.draw_center = false
 		if stage != null:
 			stage.tint(int(stage_slot[0]), int(stage_slot[1]), int(stage_slot[2]), line if lit else null)
 	add_theme_stylebox_override("panel", st)
@@ -80,6 +76,8 @@ func _can_drop_data(_at: Vector2, data: Variant) -> bool:
 	if ok != drop_ok:
 		drop_ok = ok
 		prep.restyle(self)
+	if ok: # set 207 P0: one hover cell at a time — the prep screen clears the cell the pointer left
+		prep.hover(self)
 	return ok
 
 func _drop_data(_at: Vector2, data: Variant) -> void:

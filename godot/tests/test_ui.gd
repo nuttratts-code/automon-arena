@@ -935,6 +935,45 @@ func test_card_rune_merge_drag() -> String:
 	_cleanup()
 	return "ok" if bad == "" else bad
 
+# set 207 P0 (owner bug after set 206): while dragging, only the cell under the pointer shows "drop ok";
+# arena cells draw no 2D frame (the tile rim shows it); the picked-up unit's sprite is dimmed until drop / cancel
+func test_drag_one_hover() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app.prep.render()
+	var prep: Control = app.prep
+	var bad := ""
+	var from := {"at": "board", "row": 0.0, "lane": 0.0}
+	var data := {"ref": from}
+	prep.drag_started(from)
+	var spr: Variant = app.stage.unit("prep", "b_0_0")
+	if spr == null or spr["spr"].modulate == Color.WHITE:
+		bad = "the picked-up unit's sprite must dim while dragging"
+	var a: Control = prep.cells["b_1_0"]
+	var b: Control = prep.cells["b_2_1"]
+	a._can_drop_data(Vector2.ZERO, data)
+	b._can_drop_data(Vector2.ZERO, data)
+	if bad == "" and (a.drop_ok or not b.drop_ok):
+		bad = "only the last hovered cell may show drop ok (a %s · b %s)" % [a.drop_ok, b.drop_ok]
+	if bad == "":
+		var st: StyleBoxFlat = b.get_theme_stylebox("panel")
+		if st != null and (st.border_width_top > 0 or st.draw_center and st.bg_color.a > 0.0):
+			bad = "arena cells draw no 2D frame (the tile rim shows the state)"
+	if bad == "":
+		prep._unhover_if_left(Vector2(-500, -500))
+		if b.drop_ok:
+			bad = "leaving the cell (pointer elsewhere) must clear its drop ok"
+	prep.drag_ended()
+	if bad == "" and spr != null and spr["spr"].modulate != Color.WHITE:
+		bad = "a cancelled drag must undim the sprite"
+	for k in prep.cells:
+		if bad == "" and prep.cells[k].drop_ok:
+			bad = "no cell keeps drop ok after the drag (%s)" % k
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
 # set 205 (user E1/A1) · set 206 (3D, C1): the shared arena camera move — pure helpers + the screens still hold their named parts
 func test_arena_move() -> String:
 	var AR := load("res://scripts/ui/arena.gd")
