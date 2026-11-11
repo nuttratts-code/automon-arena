@@ -415,3 +415,261 @@ func test_fight_guards() -> String:
 	app.queue_free()
 	_cleanup()
 	return "ok" if bad == "" else bad
+
+# ---------- set 199 (plan-set196 7d): result card · live pane · match details · run end ----------
+const MX := preload("res://scripts/matchcalc.gd")
+const RB := preload("res://scripts/runboss.gd")
+const UI_CODE := "res://tests/golden/godot-ui-arun1.txt"
+
+func _find_all(n: Node, nm: String, out: Array) -> Array:
+	if String(n.name).begins_with(nm) or str(n.get_meta("tag", "")) == nm: # repeated rows carry a "tag" meta (a repeated sibling name becomes "@Class@12")
+		out.append(n)
+	for c in n.get_children():
+		_find_all(c, nm, out)
+	return out
+
+# the result card shows the run state after the match (chips), the match's own facts (recap = result.units) and the match
+# details numbers add up to what simulate() counted (dealt / taken per unit)
+func test_result_card_details() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app._on_fight()
+	var bad := ""
+	var res: Dictionary = app.battle.view.result
+	if not (res["units"][0].get("ini") is Dictionary):
+		bad = "the shown match must be the detailed one (ini / fin stats)"
+	app.battle.skip_now()
+	var S: Dictionary = R.RULES()["shop"]
+	if bad == "" and not app.battle.result_box.visible:
+		bad = "no result card"
+	if bad == "":
+		var w: Variant = app.last_result["winner"]
+		var lost := R.js_seq(w, 1.0)
+		var want_title := TH.ui_text("r_lose" if lost else "r_win" if R.js_seq(w, 0.0) else "r_draw")
+		if app.battle.res_title.text != want_title:
+			bad = "title %s, want %s" % [app.battle.res_title.text, want_title]
+		elif app.battle.chip_wins.text != TH.ui_text("r_wins", {"w": R.js_num(float(app.P["wins"])), "n": R.js_num(float(S["winsToFinish"]))}):
+			bad = "wins chip: " + app.battle.chip_wins.text
+		elif not app.battle.chip_hearts.text.begins_with(R.js_num(float(app.P["hearts"]))) or app.battle.chip_hearts.text.contains("(") != lost:
+			bad = "hearts chip: " + app.battle.chip_hearts.text
+		elif app.battle.chip_gold_box.visible != (not lost and float(S["winBonus"]) > 0.0):
+			bad = "win-bonus chip shown wrongly"
+		elif app.battle.res_msgs.get_child_count() != mini(6, (app.pending_end["r"]["msgs"] as Array).size()):
+			bad = "messages on the card do not match the match's messages"
+	if bad == "":
+		var us: Array = (res["units"] as Array).filter(func(u): return int(u["side"]) == 0 and float(u["dealt"]) > 0.0)
+		var rows := _find_all(app.battle.recap, "RecapRow", [])
+		if rows.size() != mini(3, us.size()):
+			bad = "recap rows %d, want %d" % [rows.size(), mini(3, us.size())]
+		elif not us.is_empty():
+			us.sort_custom(func(a, b): return float(a["dealt"]) > float(b["dealt"]))
+			var num: Label = rows[0].get_child(2)
+			if num.text != app.battle.fmt_n(float(us[0]["dealt"])):
+				bad = "recap top damage %s, want %s" % [num.text, app.battle.fmt_n(float(us[0]["dealt"]))]
+	if bad == "" and app.battle.fmt_n(1234567.4) != "1,234,567":
+		bad = "fmt_n: " + app.battle.fmt_n(1234567.4)
+	# match details: per-unit totals = what the battle itself counted
+	if bad == "":
+		var m := MX.model(res)
+		var owner := {}
+		for u in m["units"]:
+			owner[int(u["uid"])] = int(u["uid"])
+		var sum := [0.0, 0.0]
+		for u in m["units"]:
+			sum[int(u["side"])] += m["per"][int(u["uid"])]["out_t"]
+		if absf(sum[0] - m["tot"][0]) > 0.01 or absf(sum[1] - m["tot"][1]) > 0.01:
+			bad = "match details: side totals do not add up"
+		for ru in res["units"]:
+			var p: Variant = m["per"].get(int(ru["uid"]))
+			if bad != "" or p == null:
+				continue
+			if absf(float(p["in_t"]) - float(ru["taken"])) > 0.5:
+				bad = "match details: unit %s took %s, the battle says %s" % [ru["uid"], p["in_t"], ru["taken"]]
+			elif absf(float(p["out_t"]) - float(ru["dealt"])) > 0.5:
+				bad = "match details: unit %s dealt %s, the battle says %s" % [ru["uid"], p["out_t"], ru["dealt"]]
+	if bad == "":
+		app.battle.details_pressed.emit()
+		if app.popups.kind != "mx" or not app.pop.visible:
+			bad = "the match details popup did not open"
+		for tab in 4:
+			if bad != "":
+				break
+			app.popups.mx_state["tab"] = tab
+			app.popups.refresh()
+			var rows := _find_all(app.pop, "MxRow", [])
+			if rows.size() != MX.units_of(res).size():
+				bad = "details tab %d: %d rows for %d units" % [tab, rows.size(), MX.units_of(res).size()]
+		if bad == "":
+			app.popups.mx_state["log_open"] = true
+			app.popups.refresh()
+			var lg := _find_all(app.pop, "MxLog", [])
+			var all_lines: int = (lg[0] as Label).text.split("\n").size() if lg.size() == 1 else -1
+			if all_lines != app.battle.view.log.size() or all_lines < 2:
+				bad = "battle log: %d lines shown, the match has %d" % [all_lines, app.battle.view.log.size()]
+			else:
+				# a unit that is in some lines but not all of them (4 units fight here, so one exists)
+				var uid := -1
+				var own := 0
+				for ru in res["units"]:
+					var c: int = app.battle.view.log.filter(func(l): return (l["ids"] as Array).has(int(ru["uid"]))).size()
+					if c > 0 and c < all_lines:
+						uid = int(ru["uid"])
+						own = c
+				if uid < 0:
+					bad = "battle log: no unit with only a part of the lines (cannot check the filter)"
+				else:
+					app.popups.mx_state["who"] = uid
+					app.popups.refresh()
+					var shown: int = (_find_all(app.pop, "MxLog", [])[0] as Label).text.split("\n").size()
+					if shown != own:
+						bad = "battle log filter: %d lines for one unit (want %d of %d)" % [shown, own, all_lines]
+	if bad == "":
+		app._on_next()
+		if app.pop.visible or app.screen != "prep":
+			bad = "next must close the details and go back to the shop"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# tapping a unit in the fight opens its live details (state on the picture + start stats) · the same unit again / an empty cell closes it
+func test_live_pane() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app.set_speed(1, false)
+	app._on_fight()
+	app.battle.view.advance(2500.0)
+	var bad := ""
+	var mine: Variant = null
+	for v in app.battle.view.units.values():
+		if v["side"] == 0:
+			mine = v
+	if mine == null:
+		bad = "no unit of yours on the picture"
+	if bad == "":
+		app.battle._on_unit_tapped(mine["uid"])
+		var ttl := _find_all(app.battle.live, "LiveTitle", [])
+		if not app.battle.live.visible or app.battle.view.picked == null:
+			bad = "tap did not open the live pane"
+		elif ttl.size() != 1 or not (ttl[0] as Label).text.contains(str(app.cm[mine["id"]]["name"])):
+			bad = "live pane title does not name the unit"
+		elif _find_all(app.battle.live, "LiveStats", []).size() != 1:
+			bad = "live pane has no stats (the shown match must carry live stats)"
+		elif not _find_all(app.battle.live, "LiveNow", [])[0].get_child(0).get_child(1).text.begins_with(str(int(maxf(0.0, mine["hp"])))):
+			bad = "live HP is not the picture's HP"
+	if bad == "":
+		app.battle.skip_now() # the end of the match repaints the pane
+		if app.battle.live.shown_ver != app.battle.view.ver:
+			bad = "the live pane was not repainted at the end of the match"
+	if bad == "":
+		app.battle._on_unit_tapped(mine["uid"])
+		if app.battle.live.visible or app.battle.view.picked != null:
+			bad = "tapping the same unit again must close the pane"
+		app.battle._on_unit_tapped(mine["uid"])
+		app.battle._on_unit_tapped(-1)
+		if bad == "" and app.battle.live.visible:
+			bad = "tapping an empty cell must close the pane"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# the last heart lost → run end screen (title, history entry, save gone) · run code by hand when there is no clipboard, and it
+# reads back · replay from the run end comes back to it · a cleared run can go on with extra matches (journal still replays)
+func test_run_end() -> String:
+	var app := _app_tmp()
+	var chars: Array = R.game()["derived"]["characters"]
+	app.player_name = "ทดสอบ"
+	app.clip_ok = false
+	app.start_new_run(77)
+	_board_one(app)
+	app._on_fight() # match 1 (kept as a replay)
+	app.battle.skip_now()
+	app._on_next()
+	if app.P["rn"].get("offer") is Dictionary:
+		app._on_offer_skip()
+	var bad := ""
+	# force the end: one heart left, the second chance already used, an empty board loses at once
+	app.P["hearts"] = 1.0
+	app.P["sc"] = 1.0
+	app.P["board"] = [[null, null], [null, null], [null, null]]
+	app._on_fight()
+	app._on_fight()
+	if app.screen != "battle" or not bool(app.P["over"]):
+		bad = "losing the last heart must end the run (over %s)" % [app.P["over"]]
+	if bad == "":
+		app.battle.skip_now()
+		if app.battle.btn_next.text != TH.ui_text("n_end"):
+			bad = "next button on the last match: " + app.battle.btn_next.text
+		app._on_next()
+		if bad == "" and (app.screen != "runEnd" or not app.run_end.visible or app.battle.visible or app.prep.visible):
+			bad = "the run end screen did not open"
+		elif bad == "" and app.run_end.title.text != TH.ui_text("end_lost"):
+			bad = "run end title: " + app.run_end.title.text
+		elif bad == "" and app.run_end.btn_extra.visible:
+			bad = "extra matches offered on a lost run"
+		elif bad == "" and FileAccess.file_exists(app.save_file):
+			bad = "the save must be removed when the run is over"
+		elif bad == "" and SV.read_history(SV.load_text(app.history_file)).size() != 1:
+			bad = "the run must be in the history once"
+		elif bad == "" and _find_all(app.run_end, "EndWatch", []).size() != app.replays.size():
+			bad = "replay rows on the run end screen"
+	if bad == "":
+		app.run_end.copy_code.emit()
+		var box := _find_all(app.pop, "RunCodeText", [])
+		if app.popups.kind != "runcode" or box.size() != 1:
+			bad = "no clipboard: the run code must open in a box"
+		else:
+			var code: String = (box[0] as TextEdit).text
+			var rd := SV.parse_run_code(code, app.cm, R.RULES())
+			if rd.has("error"):
+				bad = "the run code does not read back: " + str(rd["error"])
+			elif (rd["runs"] as Array).size() != 1 or (rd["runs"][0]["list"] as Array).size() != app.replays.size() or str(rd.get("nm", "")) != "ทดสอบ" or (rd["logs"] as Array).size() != 1:
+				bad = "run code content: runs %d · logs %d · name %s" % [(rd["runs"] as Array).size(), (rd["logs"] as Array).size(), rd.get("nm")]
+			elif DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(UI_CODE.get_base_dir())):
+				var f := FileAccess.open(UI_CODE, FileAccess.WRITE) # CI reads it with the JS Balance Room reader
+				if f != null:
+					f.store_string(code)
+					f.close()
+		app.popups.close()
+	if bad == "":
+		app.run_end.watch.emit(0)
+		if app.screen != "battle" or app.replay_mode == null:
+			bad = "replay from the run end did not open"
+		else:
+			app.battle.skip_now()
+			app._on_next()
+			if app.screen != "runEnd" or not app.run_end.visible:
+				bad = "leaving a replay must come back to the run end screen"
+	if bad == "":
+		app.run_end.new_run.emit()
+		if app.screen != "prep" or app.run_end.visible or bool(app.P["over"]) or float(app.P["round"]) != 1.0:
+			bad = "new run from the run end screen"
+	# a cleared run: extra matches
+	if bad == "":
+		var S: Dictionary = R.RULES()["shop"]
+		app.start_new_run(78)
+		_board_one(app)
+		# the state right after the clearing win (set directly: which seed wins is not this test's business)
+		app.P["wins"] = float(S["winsToFinish"])
+		app.P["round"] = 9.0
+		app.P["over"] = true
+		app.clear_at = 123456.0
+		SV.store_text(app.history_file, SV.js_json(SV.push_history([], SV.history_entry(app.P, app.stats, app.clear_at))))
+		app.screen = "runEnd"
+		app.render()
+		if app.run_end.title.text != TH.ui_text("end_won", {"n": R.js_num(float(S["winsToFinish"]))}) or not app.run_end.btn_extra.visible or not app.run_end.extra_hint.visible:
+			bad = "a cleared run must offer extra matches (title %s)" % app.run_end.title.text
+		else:
+			app.run_end.extra.emit()
+			if app.screen != "prep" or not app.prep.visible or app.run_end.visible or bool(app.P["over"]) or not SH._truthy(app.P.get("extra")):
+				bad = "extra matches did not continue the run"
+			elif not FileAccess.file_exists(app.save_file) or SV.read_save(SV.load_text(app.save_file), app.cm, R.RULES(), app.data_hash)["status"] != "ok":
+				bad = "the continued run must be saved again"
+			elif not SV.read_history(SV.load_text(app.history_file)).is_empty():
+				bad = "the cleared run's history entry must wait until the run really ends"
+			elif app.RLOG["ev"][-2][0] != "ex" and app.RLOG["ev"][-1][0] != "ex" and app.RLOG["ev"][-3][0] != "ex":
+				bad = "the journal has no 'ex' entry for the extra matches"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad

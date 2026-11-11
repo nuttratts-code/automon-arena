@@ -25,6 +25,7 @@ const Pop := preload("res://scripts/ui/pop.gd")
 const Popups := preload("res://scripts/ui/popups.gd")
 const NameScreen := preload("res://scripts/ui/name_screen.gd")
 const RuneOffer := preload("res://scripts/ui/rune_offer.gd")
+const RunEnd := preload("res://scripts/ui/run_end.gd")
 const PREFS := "user://prefs.json"
 
 var chars: Array = []
@@ -47,7 +48,7 @@ var pending_end: Variant = null # {r, w} of the match on screen: applied to the 
 var last_result: Variant = null
 var dummy_dmg := 0.0
 var clear_at := 0.0
-var screen := "prep" # prep | battle (7d adds result / run end)
+var screen := "prep" # prep | battle | runEnd
 var replays_file := "user://replays.json"
 var history_file := "user://history.json"
 var confirm_runes := false
@@ -59,6 +60,9 @@ var name_scr: Control
 var prep: Control
 var offer: Control
 var battle: Control
+var run_end: Control
+var clip_ok := true # tests switch the clipboard off to reach the "copy by hand" box
+var last_code := "" # the last run code handed to the clipboard (tests read it)
 var rotate_box: Control
 
 var built := false
@@ -91,7 +95,6 @@ func build() -> void:
 	prep.open_replays.connect(func() -> void: popups.open("replays"))
 	prep.clear_highlight.connect(func() -> void: set_highlight(null))
 	pop = Pop.new()
-	add_child(pop)
 	popups = Popups.new(self, pop)
 	battle = BattleScr.new()
 	add_child(battle)
@@ -101,6 +104,16 @@ func build() -> void:
 	battle.replay_pressed.connect(_on_replay_this)
 	battle.speed_changed.connect(set_speed)
 	battle.auto_skip_changed.connect(set_auto_skip)
+	battle.details_pressed.connect(func() -> void: popups.open("mx"))
+	run_end = RunEnd.new()
+	add_child(run_end)
+	run_end.setup(self)
+	run_end.visible = false
+	run_end.new_run.connect(func() -> void: start_new_run(randi()))
+	run_end.extra.connect(_on_extra)
+	run_end.copy_code.connect(copy_run_code)
+	run_end.watch.connect(watch_replay)
+	add_child(pop) # above every screen: match details open over the battle, the run code box over the run end
 	name_scr = NameScreen.new()
 	name_scr.visible = false
 	name_scr.submitted.connect(_on_name)
@@ -151,6 +164,8 @@ func start_new_run(seed: int) -> void:
 	_save_replays()
 	screen = "prep"
 	battle.visible = false
+	run_end.visible = false
+	popups.close()
 	prep.hi_tribe = null
 	prep.sel = null
 	prep.card.visible = false
@@ -168,6 +183,15 @@ func render() -> void:
 		return
 	if screen == "battle":
 		return
+	if screen == "runEnd":
+		prep.visible = false
+		offer.visible = false
+		run_end.visible = true
+		run_end.render()
+		if popups.is_open():
+			popups.refresh()
+		return
+	run_end.visible = false
 	prep.visible = true
 	prep.render()
 	if popups.is_open():
@@ -389,7 +413,9 @@ func _rn_battle(list: Array) -> Dictionary:
 func _show_battle(res: Dictionary, charmap: Dictionary, title: String, runes: Array, as_replay: bool) -> void:
 	screen = "battle"
 	prep.visible = false
+	run_end.visible = false
 	offer.visible = false
+	popups.mx_state = {"tab": 0, "who": null, "log_open": false}
 	prep.card.visible = false
 	battle.visible = true
 	# the slot keys carry no side yet: side 0 = your list, side 1 = the enemy's
@@ -407,37 +433,45 @@ func _show_battle(res: Dictionary, charmap: Dictionary, title: String, runes: Ar
 func _on_replay_this() -> void:
 	if battle.view.result == null:
 		return
-	battle.result_box.visible = false
-	battle.replay_tag.visible = true
-	battle.view.speed = float(speed)
-	var res: Dictionary = battle.view.result
-	battle.view.load_result(res, battle.view.cm)
-	battle.view.play()
+	battle.replay_again()
 
-# the picture of a match ended: show the outcome card (7d: the full result screen)
+# the picture of a match ended: the full result card (web finishMatch) — the outcome was applied when fight was pressed
 func on_battle_finished() -> void:
 	if replay_mode != null:
 		var x: Dictionary = replay_mode["x"]
-		battle.show_result(0 if R.js_seq(x["w"], 0.0) else 1 if R.js_seq(x["w"], 1.0) else 2,
-			TH.ui_text("t_sec", {"t": "%.1f" % (float(x["t"]) / 1000.0)}), [], "", TH.ui_text("n_back"), true)
+		var rw := 0 if R.js_seq(x["w"], 0.0) else 1 if R.js_seq(x["w"], 1.0) else 2
+		battle.show_result({"title": TH.ui_text("r_replay_title", {"r": R.js_num(float(x["r"])), "res": TH.ui_text(["res_w", "res_l", "res_d"][rw])}), "win": rw,
+			"sub": TH.ui_text("t_sec", {"t": "%.1f" % (float(x["t"]) / 1000.0)}), "chips": null, "msgs": [], "next_line": "", "next_text": TH.ui_text("n_back")})
 		return
 	if pending_end == null:
 		return
 	var r: Dictionary = pending_end["r"]
 	var w: Variant = pending_end["w"]
+	var S: Dictionary = R.RULES()["shop"]
 	var win := 0 if R.js_seq(w, 0.0) else 1 if R.js_seq(w, 1.0) else 2
-	var sub := TH.ui_text("r_sub", {"r": R.js_num(float(P["round"])), "t": "%.1f" % (float(last_result["timeMs"]) / 1000.0)}) + (TH.ui_text("r_draw_win") if win == 2 else "")
+	var sub := TH.ui_text("r_sub", {"r": R.js_num(float(P["round"])), "t": "%.1f" % (float(last_result["timeMs"]) / 1000.0)}) + (TH.ui_text("r_draw_win") if win == 2 else "") \
+		+ (TH.ui_text("r_dummy", {"n": R.js_num(dummy_dmg)}) if dummy_dmg > 0.0 else "")
 	var offer_d: Variant = P["rn"].get("offer")
 	var over := bool(P.get("over", false))
+	var hearts := R.js_num(float(P["hearts"]))
+	var chips := {
+		"hearts": (TH.ui_text("r_hearts_sc", {"n": hearts}) if bool(r.get("second", false)) else TH.ui_text("r_hearts_lost", {"n": hearts})) if win == 1 else hearts,
+		"wins": TH.ui_text("r_wins_extra", {"w": R.js_num(float(P["wins"]))}) if SH._truthy(P.get("extra")) else TH.ui_text("r_wins", {"w": R.js_num(float(P["wins"])), "n": R.js_num(float(S["winsToFinish"]))}),
+		"gold": TH.ui_text("r_gold", {"n": R.js_num(float(S["winBonus"]))}) if win != 1 and float(R.js_or0(S.get("winBonus"))) > 0.0 and not over else ""}
 	var next_line := TH.ui_text("r_next_end") if over else TH.ui_text("r_next_offer", {"n": str((offer_d["ids"] as Array).size())}) if offer_d is Dictionary else TH.ui_text("r_next_prep")
 	var next_text := TH.ui_text("n_end") if over else TH.ui_text("n_offer") if offer_d is Dictionary else TH.ui_text("n_prep")
-	battle.show_result(win, sub, r.get("msgs", []), next_line, next_text, false)
+	var ml: Array = r.get("msgs", [])
+	battle.show_result({"title": TH.ui_text("r_win" if win == 0 else "r_lose" if win == 1 else "r_draw"), "win": win, "sub": sub, "chips": chips,
+		"msgs": ml, "next_line": next_line, "next_text": next_text})
+	msgs = ml.slice(0, 5) # web: the prep message list starts from this match's messages
 
-# "next" on the outcome card (web #next): only once per finished match
+# "next" on the result card (web #next): only once per finished match
 func _on_next() -> void:
+	popups.close()
 	if replay_mode != null:
+		var back: String = replay_mode["back"]
 		replay_mode = null
-		screen = "prep"
+		screen = back
 		battle.visible = false
 		render()
 		return
@@ -445,12 +479,59 @@ func _on_next() -> void:
 		return
 	pending_end = null
 	battle.result_box.visible = false
+	battle.visible = false
 	if bool(P.get("over", false)):
-		say_err("สรุป run ยังไม่มีในเวอร์ชัน Godot นี้ (ขั้น 7d)") # run end summary = 7d
+		screen = "runEnd"
+		render()
 		return
 	screen = "prep"
-	battle.visible = false
 	begin_round()
+
+# web #endExtra: a cleared run goes on with the hearts left (set 99) · the run's history entry is written when it really ends
+func _on_extra() -> void:
+	var r: Variant = J("ex", [], func() -> Variant: return SH.continue_extra(P))
+	if not (r is Dictionary) or not bool(r.get("ok", false)):
+		return
+	if clear_at > 0.0:
+		var hist := SV.read_history(SV.load_text(history_file)).filter(func(h): return float(h["at"]) != clear_at)
+		SV.store_text(history_file, SV.js_json(hist))
+	clear_at = 0.0
+	save_run()
+	screen = "prep"
+	run_end.visible = false
+	push_msgs(J("st", [], func() -> Variant: return SH.start_round(P, chars)))
+	SH.start_round(B, chars)
+	push_msgs(r)
+	render()
+
+# ---------- run code (web runCode / copyRunCode): this run + the one before · journals · history · name ----------
+func run_code() -> Variant:
+	var prev := func(f: String) -> String: return f.get_basename() + "_prev.json"
+	return SV.make_run_code([SV.load_text(replays_file), SV.load_text(prev.call(replays_file))], SV.load_text(history_file), data_hash,
+		floorf(Time.get_unix_time_from_system() * 1000.0), R.RULES(), [SV.load_text(log_file), SV.load_text(prev.call(log_file))], player_name)
+
+func _say_code(t: String, err: bool) -> void:
+	if screen == "runEnd":
+		run_end.say_code(t, err)
+	elif err:
+		say_err(t)
+	else:
+		say_info(t)
+
+# to the clipboard; when the device has none, the code opens in a box to copy by hand
+func copy_run_code() -> void:
+	var code: Variant = run_code()
+	if not (code is String):
+		_say_code(TH.ui_text("code_none"), true)
+		return
+	last_code = code
+	if clip_ok and DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		DisplayServer.clipboard_set(code)
+		if popups.kind == "replays":
+			popups.close()
+		_say_code(TH.ui_text("code_done"), false)
+	else:
+		popups.open("runcode")
 
 # web watchReplay(): plays a stored match again (display only) — it must replay to the same winner and time, else a notice
 func watch_replay(i: int) -> void:
@@ -469,7 +550,7 @@ func watch_replay(i: int) -> void:
 		return
 	popups.close()
 	pending_end = null
-	replay_mode = {"back": "prep", "x": x}
+	replay_mode = {"back": "runEnd" if screen == "runEnd" else "prep", "x": x}
 	var shown := show_result_of(x["a"], x["b"], res, n, x.get("g", 0.0), x.get("d"), x["r"], fn, x.get("fs", 0.0))
 	_show_battle(shown, view_map(x["b"]), TH.ui_text("b_replay", {"r": R.js_num(float(x["r"]))}), [_rn_battle(n), _rn_battle(fn) if x["b"] is Array else []], true)
 
@@ -513,6 +594,9 @@ func push_msgs(r: Variant) -> void:
 	prep.show_msg(add.slice(maxi(0, add.size() - 3)), not ok)
 
 func say_err(t: String) -> void:
+	if screen == "runEnd":
+		run_end.say_code(t, true)
+		return
 	push_msgs({"ok": false, "msg": t})
 
 # one finished action: message + save + redraw
