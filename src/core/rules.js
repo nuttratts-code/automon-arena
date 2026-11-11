@@ -6,6 +6,7 @@ export const RARITIES = ['ธรรมดา', 'ไม่ธรรมดา', '�
 export const ROW_HINTS = ['หน้า', 'กลาง', 'หลัง', 'หน้า+กลาง', 'หน้า+หลัง', 'กลาง+หลัง', 'ที่ไหนก็ได้']; // แถวแนะนำ (บอทและห้องบาลานซ์ใช้วางตัว) · ชุด 11: เลือกได้หลายแถว
 export const ROW_IDX = { 'หน้า': 0, 'กลาง': 1, 'หลัง': 2 };
 // แถวที่แนะนำเป็นเลขแถว (0 หน้า 1 กลาง 2 หลัง) · ที่ไหนก็ได้ = ทุกแถว · ค่าผิด = []
+// Godot port (set 195): rowsOfHint/pickHintRow also in godot/scripts/bot.gd (rows_of_hint/pick_hint_row) — change both
 export const rowsOfHint = h => (h === 'ที่ไหนก็ได้' ? [0, 1, 2] : ROW_HINTS.includes(h) ? h.split('+').map(x => ROW_IDX[x]) : []);
 // แถวแนะนำหลายแถว (ผู้ใช้เลือก A): สุ่มวางในแถวที่เลือกทุกแมตช์ · r = เลขสุ่ม 0–1 · แถวเดียว/ที่ไหนก็ได้ คืน null (ใช้ลำดับเดิม)
 export const pickHintRow = (h, r) => { const rs = rowsOfHint(h); return rs.length === 2 ? rs[Math.min(1, Math.floor(r * 2))] : null; };

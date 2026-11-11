@@ -1,6 +1,7 @@
 // Stage mode (demo) data — phase 1 (29 Oct 2026; set 52 added rune name/max, boss spot/bars/moveSec, endless settings; set 53 runes v2): runes, bosses, stage settings that the Balance Room edits.
 // The battle engine does NOT use these yet (phase 2). Every number = proposal (ค่าเสนอ) until the user confirms.
 // Design notes: claude/backlog.md "Stage mode" · claude/review-2026-10-28-runes.md · claude/review-2026-10-29-stage-baseline.md
+// Godot port (set 195): runeKind/runeActive/bossRoundK/enemyMultAt/bossMults/bossAt also in godot/scripts/stage.gd (`**` → jsmath.gd js_pow = V8's pow; golden stage.jsonl, tests/test_stage.gd) — change both
 import { TRIBES, DO_INFO, BATTLE_WHEN, skillTargets, RULES } from './rules.js';
 const BT = k => +(RULES.bossTimers[k] / 1000).toFixed(1); // set 76: boss rule timers live in RULES.bossTimers (กฎเกม tab)
 import { STAGE_USER } from './stage-user.js';

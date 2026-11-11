@@ -54,7 +54,7 @@ jobs:
   # SHA-512 pinned in godot/tools/get_godot.sh (HARD RULE 9 ②). No export templates here.
   godot:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -66,7 +66,10 @@ jobs:
       - name: Get Godot (pinned + checksum)
         run: echo "GODOT=$(godot/tools/get_godot.sh "$RUNNER_TEMP/godot")" >> "$GITHUB_ENV"
       - name: Godot tests (headless)
-        # grep + timeout too: never trust the exit code alone (set 192: a broken test file once hung the runner)
+        # grep + timeout too: never trust the exit code alone (set 192: a broken test file once hung the runner) · set 195: full run ~11 min locally → 1,800 s
         run: |
-          timeout 1200 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
+          timeout 1800 "$GODOT" --headless --path godot -s res://tests/run.gd -- --require-golden 2>&1 | tee godot-tests.log
           grep -q "^GODOT TESTS: PASS" godot-tests.log
+      - name: Godot-made ARUN1 code reads in the JS Balance Room reader (set 195 step 6f)
+        working-directory: src
+        run: node lab/golden-save.mjs check ../godot/tests/golden/godot-arun1.txt

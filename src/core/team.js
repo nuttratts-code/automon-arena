@@ -1,4 +1,5 @@
 import { RULES, SHARE_TO, SHOP_WHEN, TRIBES, upMul } from './rules.js';
+// Godot port (set 195): also in godot/scripts/team.gd (golden (d) teams.jsonl exact, tests/test_team.gd) — change both
 import { validateTeam } from './validate.js';
 // ตัวจัดทีมกลาง: ตัวละคร + เลเวล + ค่าถาวร → ทีมพร้อมสู้ · ทุกหน้า (เกม, Lab) ใช้ตัวนี้ตัวเดียว
 

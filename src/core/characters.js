@@ -1,4 +1,5 @@
 import { RULES } from './rules.js';
+// Godot port (set 195): buildCharacterList also in godot/scripts/characters.gd (tests/test_team.gd) — change both
 // ข้อมูลตัวละคร Automon Arena ร่าง 2: 48 ตัว 5 ความหายาก (claude/characters.csv เป็นสำเนาให้คนอ่าน)
 // 24 ต.ค. ชุด 19: นำค่าห้องบาลานซ์ (config v71 · ภูติ/อสูร + 4 เผ่า) + ค่า 4 ตัวจากรอบก่อน · ปรับค่าพื้นฐาน 14 ตัวด้วย lab/formula.mjs/มือ · WN-3 สกิลฟื้น 30→15% (ผู้ใช้เลือก 1A) · วัด 24,000 ผ่านครบ
 // นำเข้าค่าที่ผู้ใช้แก้ใน Automon Lab (18 ต.ค.): ชื่อ 7 ตัว · HL-3 HP 100/200/400 · HL-4 ร้านค้า 10/20/40 · HL-2/HL-3 ไม่มีเพดาน · HL-4/PL-2 เหลือสกิลร้านค้า · HL-6 สะท้อนดาเมจ · WY-2 ฮิตเพิ่ม 1/1/1

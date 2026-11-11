@@ -1,6 +1,7 @@
 import { RULES, TRIBES } from './rules.js';
 import { buy, buyMerge, continueExtra, endMatch, move, newRun, reroll, sell, startRound, takeRune, toggleLock, PERM_KEYS } from './shop.js';
 import { rnHeartTrade, rnMakeOffer, rnPlace, rnRerollOffer, rnSkipOffer } from './runrunes.js';
+// Godot port (set 195 step 6f): godot/scripts/runlog.gd — a change here must be made there too (golden save.jsonl, lab/golden-save.mjs).
 // Run journal (set 109, user 6 Nov): every action that changes the player's run state, in order, with gold before → after.
 // A run is deterministic from its seed (shop + rune draws use st.seed and the counter st.n), so replaying the journal on
 // newRun(seed) rebuilds every step: lab/runlog.mjs prints where each coin came from and went, and checks each step's gold.

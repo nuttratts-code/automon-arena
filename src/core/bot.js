@@ -15,6 +15,7 @@ import { RN_RARS, rnMakeOffer, rnNeedsPartner, rnNeedsSlot, rnPlace, rnRec, rnRe
 // sells the unit that matters least when bench + board are full (set 127: merged units refund 1 copy less per merge), then plays the best 6.
 // Value = base stat power (core/power.js, skills not counted) — what a player can read off the character cards.
 
+// Godot port (set 195): the whole file is also in godot/scripts/bot.gd (tests/test_bot.gd vs golden runs.jsonl + bot.jsonl) — change both
 export const BOT_HINT = { 'หน้า': 0, 'กลาง': 1, 'ที่ไหนก็ได้': 1, 'หลัง': 2 };
 export const BOT_AI = { tribeW: [0.1, 0.2, 0.3], potW: 0.3, maxRerolls: 40, minGain: 0.5, carryW: 0.5, focusW: 0.6, carryFrom: 4, mergeFirst: true };
 // set 107 (user D2 "merge like a person"): mergeFirst = a shop copy that completes a merge is always bought (buy + merge works on a full bench)

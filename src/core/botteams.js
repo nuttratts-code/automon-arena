@@ -23,6 +23,8 @@ import { RUN_STAGE, runBossAt, runBossTeam, runBossOpts } from './runboss.js';
 // - in play: 1 team of the picked tier from the round's cell by run seed + round (same team after loading a save)
 // - checked on load with the same team validator as the player · hash mismatch / bad data = unused (live bot instead)
 // set 141 (user L3): 4th tier แรงมาก = per tribe the strongest real board by teamPower (raises the ceiling the win-streak pick can reach)
+// Godot port (set 195): simRun / foeSide / pickFoe / pickBotTeam / foe % helpers / botRounds / roundCell / tribeList / teamTribe also in
+// godot/scripts/botteams.gd (tests/test_bot.gd vs golden runs.jsonl + bot.jsonl) — change both (team generation stays JS only)
 export const BOT_TIERS = ['ง่าย', 'กลาง', 'ยาก', 'แรงมาก'];
 export const BOT_TOP = 3; // index of the แรงมาก tier (picked by pw, not by win rate)
 export const BOT_GEN = { runs: 2400, seed: 2310, perTribe: 40, refOpp: 30, pct: [25, 50, 75], near: 5 }; // set 96: runs 1200 → 2400 · ค่าเสนอ

@@ -2,6 +2,7 @@
 // · lose to it = lose a heart like a normal match · boss k = its number by round (strength grows with bossAt)
 // · which boss = random draw per boss match (set 100: same one may repeat)
 // Pure data, no randomness outside the run seed.
+// Godot port (set 195): also in godot/scripts/runboss.gd (golden stage.jsonl exact, tests/test_stage.gd) — change both
 import { makeRng } from './rng.js';
 import { stageDefaults, bossAt, bossRoundK } from './stage.js';
 import { bossUnit } from './boss.js';
