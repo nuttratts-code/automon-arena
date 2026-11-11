@@ -66,6 +66,16 @@ static func ui_text(key: String, args: Dictionary = {}) -> String:
 		return key
 	return (s as String).format(args)
 
+# key built at run time (wear_<state>, tl_<bonus>) — '' when missing
+static func ui_dyn(key: String) -> String:
+	ui_text("title")
+	var v: Variant = _ui.get(key)
+	return v if v is String else ""
+
+static func has_ui(key: String) -> bool:
+	ui_text("title") # loads the table
+	return _ui.get(key) is String
+
 static func labels() -> Dictionary:
 	if _labels.is_empty():
 		var d: Variant = _json("res://data/labels.json")

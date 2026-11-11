@@ -35,11 +35,79 @@ func _initialize() -> void:
 	app.name_scr.input.text = "   "
 	app.name_scr._submit()
 	await _shot("name-err")
-	# new run → prep placeholder + rune offers
+	# new run → prep (7b) in its states
 	app.name_scr.visible = false
 	app.player_name = "ทดสอบ"
+	app.save_file = "user://shots-save.json"
+	app.log_file = "user://shots-runlog.json"
 	app.start_new_run(4242)
 	await _shot("prep")
+	app.do_buy(0, null)
+	app.do_buy(1, null)
+	await _shot("prep-bought")
+	app.say_err("เงินไม่พอ (ต้องใช้ 5)")
+	await _shot("prep-msg-err")
+	app.prep.hide_msg()
+	# late-game: full board + bench, perm bonus, a rune worn, locked card
+	var ids: Array = []
+	for c in app.chars:
+		ids.append(c["id"])
+	var uid := 100.0
+	var k := 3
+	for row in 3:
+		for lane in 2:
+			app.P["board"][row][lane] = {"uid": uid, "id": ids[k * 7 % ids.size()], "level": float(1 + (k % 3)), "perm": {"hp": 12.0} if k % 2 == 0 else {}, "paid": 3.0}
+			uid += 1.0
+			k += 1
+	for bi in 5:
+		app.P["bench"][bi] = {"uid": uid, "id": ids[k * 5 % ids.size()], "level": 1.0, "perm": {}, "paid": 3.0}
+		uid += 1.0
+		k += 1
+	app.P["uid"] = uid
+	app.P["round"] = 12.0
+	app.P["gold"] = 31.0
+	app.P["wins"] = 7.0
+	app.P["shop"][3]["locked"] = true
+	app.P["rn"]["bag"]["T1"] = 1.0
+	app.render()
+	await _shot("prep-late")
+	app.prep.tapped({"at": "shop", "i": 2.0}, app.prep.cells["s_2"])
+	await _frames()
+	await _shot("card-shop")
+	app.prep.tapped({"at": "board", "row": 1.0, "lane": 0.0}, app.prep.cells["b_1_0"])
+	await _frames()
+	await _shot("card-board")
+	app.prep.card.visible = false
+	app.prep.sel = null
+	app.prep.hi_tribe = "เหล็กกล้า"
+	app.render()
+	await _shot("prep-highlight")
+	app.prep.hi_tribe = null
+	app.render()
+	for kind in ["runes", "tribes", "shop"]:
+		app.popups.open(kind)
+		await _frames()
+		await _shot("pop-" + kind)
+	app.popups.open("tribe", "เหล็กกล้า")
+	await _frames()
+	await _shot("pop-tribe")
+	app.popups.open("rune", "T1")
+	await _frames()
+	await _shot("pop-rune")
+	app.popups.close()
+	app.P["bench"] = [null, null, null, null, null]
+	app.P["board"] = [[null, null], [null, null], [null, null]]
+	app.render()
+	app.popups.open("tribes")
+	await _frames()
+	await _shot("pop-tribes-empty")
+	app.popups.close()
+	app.P["rn"]["bag"] = {}
+	app.render()
+	app.popups.open("runes")
+	await _frames()
+	await _shot("pop-runes-empty")
+	app.popups.close()
 	for kind in ["win", "boss", "sc"]:
 		app.P["rn"]["offer"] = null
 		RR.rn_make_offer(app.P, kind)
@@ -52,6 +120,9 @@ func _initialize() -> void:
 	app.offer.flag_pick = 0
 	app.render()
 	await _shot("offer-flagpick")
+	for f in ["shots-save.json", "shots-runlog.json"]:
+		if FileAccess.file_exists("user://" + f):
+			DirAccess.remove_absolute("user://" + f)
 	print("SHOTS: done ", tag, " viewport ", ws)
 	quit()
 
