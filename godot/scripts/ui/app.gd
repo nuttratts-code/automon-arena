@@ -28,6 +28,7 @@ const RuneOffer := preload("res://scripts/ui/rune_offer.gd")
 const RunEnd := preload("res://scripts/ui/run_end.gd")
 const Resume := preload("res://scripts/ui/resume.gd")
 const Arena := preload("res://scripts/ui/arena.gd")
+const Stage3D := preload("res://scripts/ui/stage3d.gd")
 var prefs_file := "user://prefs.json" # tests point it at their own file
 
 var chars: Array = []
@@ -74,6 +75,7 @@ var log_msg := "" # Log popup: message after "copy 60 runs"
 var log_box := "" # Log popup: the codes in a box when there is no clipboard
 const RUNCODES_MAX := 60
 
+var stage: Node3D # set 206: the 3D arena (floor, light, camera, unit sprites) under prep + battle
 var world: Control # set 205: the shared arena (camera move between prep and battle)
 var zoom_s := 0.0 if DisplayServer.get_name() == "headless" else 0.6 # seconds of the move · 0 = instant (headless tests, shots.gd)
 var built := false
@@ -94,6 +96,10 @@ func build() -> void:
 	bg.color = TH.c("bg")
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	stage = Stage3D.new()
+	stage.build()
+	add_child(stage)
+	stage.moved.connect(_place_cells)
 	world = Arena.new()
 	world.app = self
 	add_child(world) # under every screen: it draws only while the camera moves
@@ -115,6 +121,7 @@ func build() -> void:
 	battle = BattleScr.new()
 	add_child(battle)
 	battle.setup(self)
+	battle.view.stage = stage # set 206: the battle units stand on the 3D arena
 	battle.visible = false
 	battle.next_pressed.connect(_on_next)
 	battle.replay_pressed.connect(_on_replay_this)
@@ -154,6 +161,11 @@ func build() -> void:
 	offer.skip.connect(_on_offer_skip)
 	add_child(offer)
 	add_child(world.blocker) # over every screen while the camera moves
+	prep.visibility_changed.connect(_sync_stage)
+	battle.visibility_changed.connect(_sync_stage)
+	prep.field.resized.connect(func() -> void: refit_stage.call_deferred())
+	battle.field.resized.connect(func() -> void: refit_stage.call_deferred())
+	_sync_stage()
 	rotate_box = _rotate_notice()
 	add_child(rotate_box)
 	if is_inside_tree():
@@ -1008,5 +1020,38 @@ func _rotate_notice() -> Control:
 func _on_resize() -> void:
 	var s := get_viewport().get_visible_rect().size
 	rotate_box.visible = s.y > s.x
+	refit_stage.call_deferred()
 	if offer.visible:
 		render()
+
+# ---------- set 206: the 3D arena ----------
+# the flat background hides while the arena shows (prep or battle on screen); other screens keep it
+func _sync_stage() -> void:
+	var on := prep.visible or battle.visible
+	bg.visible = not on
+	stage.visible = on
+	if not world.moving:
+		stage.show_group("battle" if battle.visible and not prep.visible else "prep")
+		stage.set_k(1.0 if battle.visible and not prep.visible else 0.0)
+
+# where the board must sit on screen: prep = your half inside the prep field (below the column labels) · battle = both halves in the battle field
+func board_targets() -> Array:
+	var pr: Variant = null
+	var br: Variant = null
+	var pf: Rect2 = prep.field.get_global_rect()
+	if pf.size.x > 40.0 and pf.size.y > 40.0:
+		pr = pf.grow_individual(-6.0, -20.0, -6.0, -4.0)
+	var bf: Rect2 = battle.field.get_global_rect()
+	if bf.size.x > 40.0 and bf.size.y > 40.0:
+		br = bf.grow_individual(-6.0, -4.0, -6.0, -4.0)
+	return [pr, br]
+
+func refit_stage() -> void:
+	if stage == null:
+		return
+	var t := board_targets()
+	stage.refit(size, t[0], t[1])
+
+func _place_cells() -> void:
+	prep.place_cells()
+	battle.view.place_cells()

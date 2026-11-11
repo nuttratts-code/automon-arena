@@ -13,6 +13,8 @@ var mergeable := false
 var picked := false
 var hi := 0 # 1 = tribe highlight on · -1 = dimmed
 var drop_ok := false
+var stage_slot: Array = [] # set 206: [side, row, lane] = a board cell on the 3D arena (no box; states light the tile's rune rim)
+var stage: Node3D = null
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -42,6 +44,15 @@ func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = f
 		line = TH.c("ok")
 		bw = 3
 	var st := TH.box(bg, line, 10, bw, 3, 2)
+	if not stage_slot.is_empty():
+		var lit := locked or mergeable or hi > 0 or picked or drop_ok
+		st = TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 10, 0, 3, 2)
+		if lit:
+			st.border_color = Color(line, 0.9)
+			st.set_border_width_all(2)
+			st.draw_center = false
+		if stage != null:
+			stage.tint(int(stage_slot[0]), int(stage_slot[1]), int(stage_slot[2]), line if lit else null)
 	add_theme_stylebox_override("panel", st)
 	modulate = Color(1, 1, 1, 0.35) if hi < 0 else Color(1, 1, 1, 0.55) if cant else Color.WHITE
 

@@ -42,7 +42,8 @@ var btn_diff: Button
 var btn_replay: Button
 var msg_bar: PanelContainer
 var msg_label: Label
-var board_grid: GridContainer
+var board_grid: Control # set 206: plain holder, cells placed by place_cells()
+var col_labels: Array = []
 var bench_row: HBoxContainer
 var bench_lbl: Label
 var dock: PanelContainer
@@ -253,32 +254,57 @@ func _msg_style(on: bool, err: bool = false) -> void:
 	else:
 		msg_bar.add_theme_stylebox_override("panel", TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 8, 0, 10, 2))
 
+# set 206: the field is a window onto the 3D arena (app.stage): no box, the board cells sit on the camera's projected slot rects
 func _build_field() -> Control:
-	var f := PanelContainer.new()
+	var f := Control.new()
 	f.name = "Field"
 	f.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	f.add_theme_stylebox_override("panel", TH.box(TH.c("arena"), TH.c("arena-line"), 12, 1, 10, 6))
-	board_grid = GridContainer.new()
-	board_grid.name = "Board"
-	board_grid.columns = 3
-	board_grid.add_theme_constant_override("h_separation", 8)
-	board_grid.add_theme_constant_override("v_separation", 6)
-	board_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	board_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	f.add_child(board_grid)
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	f.custom_minimum_size = Vector2(0, 120)
+	var b := Control.new()
+	b.name = "Board"
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	f.add_child(b)
+	board_grid = b
+	col_labels = []
 	for t in ["col_back", "col_mid", "col_front"]:
-		var l := TH.label(TH.ui_text(t), 13, "mute", "body_b")
+		var l := TH.label(TH.ui_text(t), 13, "ink", "body_b")
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		board_grid.add_child(l)
-	for lane in 2:
+		l.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 6, 0, 6, 0))
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(l)
+		col_labels.append(l)
+	for lane in 2: # the far line first: the near line draws (and takes taps) on top where they overlap
 		for row in [2, 1, 0]:
 			var c := _new_cell({"at": "board", "row": float(row), "lane": float(lane)})
-			c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			c.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			c.custom_minimum_size = Vector2(80, 60)
-			board_grid.add_child(c)
+			c.stage_slot = [0, row, lane]
+			c.custom_minimum_size = Vector2.ZERO
+			b.add_child(c)
 	return f
+
+# set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
+func place_cells() -> void:
+	var st: Node3D = app.stage
+	if st == null or board_grid == null:
+		return
+	var o: Vector2 = board_grid.get_global_rect().position
+	var tops := [INF, INF, INF]
+	for row in 3:
+		for lane in 2:
+			var cell: Control = cells["b_%d_%d" % [row, lane]]
+			cell.stage = st
+			var r: Rect2 = st.slot_rect(0, row, lane)
+			cell.position = r.position - o
+			cell.size = r.size
+			tops[row] = minf(tops[row], r.position.y)
+	for i in 3: # labels back · mid · front, above their column's far tile
+		var row := 2 - i
+		var r: Rect2 = st.slot_rect(0, row, 0)
+		var l: Label = col_labels[i]
+		var w := maxf(l.get_combined_minimum_size().x, 10.0)
+		l.size = Vector2(w, l.get_combined_minimum_size().y)
+		l.position = Vector2(r.get_center().x - w / 2.0, tops[row] - l.size.y - 2.0) - o
 
 func _build_bench() -> Control:
 	var b := HBoxContainer.new()
@@ -678,6 +704,7 @@ func render() -> void:
 	for row in 3:
 		for lane in 2:
 			_fill_unit(cells["b_%d_%d" % [row, lane]], {"at": "board", "row": float(row), "lane": float(lane)}, 50.0)
+	_stage_units()
 	var bn := 0
 	for i in st["bench"].size():
 		_fill_unit(cells["n_%d" % i], {"at": "bench", "i": float(i)}, 34.0)
@@ -723,13 +750,25 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override("separation", 1)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mon := UV.make(c, int(u["level"]), px)
-	mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(mon)
+	var on_stage: bool = ref["at"] == "board"
+	if on_stage: # set 206: the unit itself is a sprite on the 3D tile; the cell keeps tribe badge + stars + name at the feet
+		v.alignment = BoxContainer.ALIGNMENT_END
+		var mon0 := UV.badges(c, int(u["level"]), 14.0)
+		mon0.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		v.add_child(mon0)
+	else:
+		var mon := UV.make(c, int(u["level"]), px)
+		mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		v.add_child(mon)
 	var nm := TH.label(str(c["name"]), 13, "ink")
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	nm.clip_text = on_stage
+	if on_stage:
+		nm.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 6, 0, 4, 0))
 	v.add_child(nm)
+	if on_stage:
+		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cell.add_child(v)
 	var ov := Control.new()
 	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -749,6 +788,22 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 		rm.offset_right = -3
 		rm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ov.add_child(rm)
+
+# set 206: the board units as sprites on the stage (group "prep"), dimmed like their cells when a tribe is highlighted
+func _stage_units() -> void:
+	var st: Node3D = app.stage
+	if st == null:
+		return
+	var list := []
+	for row in 3:
+		for lane in 2:
+			var u: Variant = unit_at({"at": "board", "row": float(row), "lane": float(lane)})
+			if u != null:
+				list.append({"id": "b_%d_%d" % [row, lane], "side": 0, "row": row, "lane": lane, "c": app.cm[u["id"]]})
+	st.set_units("prep", list)
+	for it in list:
+		var cell: Control = cells[it["id"]]
+		st.shade("prep", it["id"], cell.hi < 0)
 
 func _fill_shop(cell: Control, i: int) -> void:
 	_clear(cell)

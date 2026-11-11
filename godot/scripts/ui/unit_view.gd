@@ -64,3 +64,26 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
 		pill.offset_bottom = 4
 		box.add_child(pill)
 	return box
+
+# set 206: a unit standing on the 3D arena is a sprite there; its cell keeps only the tribe badge + the stars (one row)
+static func badges(c: Dictionary, level: int, px: float) -> Control:
+	var row := HBoxContainer.new()
+	row.name = "Mon"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 3)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	var sp: Array = TH.TRIBE_SHAPE.get(c.get("tribe"), ["square", "mute"])
+	var b := SHAPE.make(sp[0], sp[1], px)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(b)
+	if level > 0:
+		var pill := PanelContainer.new()
+		pill.name = "Stars"
+		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pill.add_theme_stylebox_override("panel", TH.box(Color(20 / 255.0, 16 / 255.0, 12 / 255.0, 0.78), Color(0, 0, 0, 0), 4, 0, 3, 0))
+		var l := TH.label("★".repeat(level), 13, "ink")
+		l.add_theme_color_override("font_color", Color.WHITE)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pill.add_child(l)
+		row.add_child(pill)
+	return row

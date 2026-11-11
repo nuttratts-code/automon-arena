@@ -31,7 +31,7 @@ var ver := 0 # bumps on every applied event (the live info panel repaints on cha
 var picked: Variant = null
 var log: Array = [] # every ticker line so far: {t, text, ids: [uid]}
 
-var _sides: Array = []
+var stage: Node3D = null # set 206: app.stage (the 3D arena) — null in bare tests
 var _skill_tok := {}
 
 func _init() -> void:
@@ -56,43 +56,33 @@ func load_result(res: Dictionary, charmap: Dictionary) -> void:
 	units = {}
 	cells = {}
 	_skill_tok = {}
-	var row := HBoxContainer.new()
+	# set 206: the cells sit on the 3D arena's projected slot rects (place_cells); the units are sprites there (group "battle")
+	var row := Control.new()
 	row.name = "Arena"
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 6)
 	add_child(row)
-	_sides = []
+	if stage != null:
+		stage.set_units("battle", [])
+		for s0 in 2:
+			for r0 in 3:
+				for l0 in 2:
+					stage.tint(s0, r0, l0, null)
 	for s in 2:
-		var g := GridContainer.new()
-		g.name = "SideA" if s == 0 else "SideB"
-		g.columns = 3
-		g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		g.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		g.add_theme_constant_override("h_separation", 5)
-		g.add_theme_constant_override("v_separation", 5)
-		# left: back · middle · front (the front touches the centre) · right: front · middle · back
-		for lane in 2:
+		for lane in 2: # far line first: the near line draws (and takes taps) on top where they overlap
 			for c in 3:
 				var rw := 2 - c if s == 0 else c
 				var cell := PanelContainer.new()
 				cell.name = "C%d_%d_%d" % [s, rw, lane]
-				cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				cell.size_flags_vertical = Control.SIZE_EXPAND_FILL
-				cell.custom_minimum_size = Vector2(60, 50)
+				cell.custom_minimum_size = Vector2.ZERO
 				cell.clip_contents = true
 				cell.mouse_filter = Control.MOUSE_FILTER_STOP
 				_cell_style(cell, false, false)
 				var key := "%d:%d:%d" % [s, rw, lane]
 				cell.gui_input.connect(_on_cell_input.bind(key))
-				g.add_child(cell)
+				row.add_child(cell)
 				cells[key] = cell
-		_sides.append(g)
-	row.add_child(_sides[0])
-	var mid := ColorRect.new()
-	mid.color = TH.c("mid")
-	mid.custom_minimum_size.x = 2
-	row.add_child(mid)
-	row.add_child(_sides[1])
+	place_cells()
 	var start: Variant = null
 	for e in events:
 		if e["k"] == "start":
@@ -114,7 +104,15 @@ func _cell_style(cell: PanelContainer, filled: bool, skilling: bool, is_picked: 
 	if is_picked:
 		line = TH.c("sel")
 		bw = 3
-	cell.add_theme_stylebox_override("panel", TH.box(bg, line, 10, bw, 3, 3))
+	# set 206: no box on the arena; a skill / picked unit lights its tile's rune rim and gets a thin frame
+	var lit := skilling or is_picked
+	var st := TH.box(Color(0, 0, 0, 0), Color(line, 0.9) if lit else Color(0, 0, 0, 0), 10, bw if lit else 0, 3, 3)
+	st.draw_center = false
+	cell.add_theme_stylebox_override("panel", st)
+	if stage != null:
+		var kp := str(cell.name).substr(1).split("_")
+		if kp.size() == 3:
+			stage.tint(int(kp[0]), int(kp[1]), int(kp[2]), line if lit else null)
 
 # ---------- units ----------
 func _char_of(u: Dictionary) -> Dictionary:
@@ -137,10 +135,12 @@ func _add_unit(u: Dictionary) -> Dictionary:
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.alignment = BoxContainer.ALIGNMENT_CENTER
 	card.add_theme_constant_override("separation", 1)
-	var shape: Control = UV.make(c, v["level"], 40.0)
-	shape.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var shape := Control.new() # set 206: the picture is the unit's sprite on the 3D tile above this spot
+	shape.name = "Mon"
+	shape.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shape.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card.add_child(shape)
+	card.alignment = BoxContainer.ALIGNMENT_END
 	var hp_bar := HpBar.new()
 	hp_bar.custom_minimum_size = Vector2(0, 9)
 	hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -149,11 +149,13 @@ func _add_unit(u: Dictionary) -> Dictionary:
 	nums.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nums.clip_text = true
 	nums.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	nums.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 5, 0, 3, 0))
 	card.add_child(nums)
 	var chips := TH.label("", 13, "n-burn")
 	chips.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	chips.clip_text = true
 	chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chips.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 5, 0, 3, 0))
 	card.add_child(chips)
 	cell.add_child(card)
 	_cell_style(cell, true, false, picked != null and int(picked) == v["uid"])
@@ -165,8 +167,38 @@ func _add_unit(u: Dictionary) -> Dictionary:
 	units[v["uid"]] = v
 	if u.get("cells") is Array:
 		_place_cells(v, u["cells"])
+	_stage_add(v)
 	_paint(v)
 	return v
+
+# set 206: the unit's sprite on the arena · a boss on several cells stands in the middle of them, bigger
+func _stage_add(v: Dictionary) -> void:
+	if stage == null:
+		return
+	var u := {"id": v["uid"], "side": v["side"], "row": v["row"], "lane": v["lane"], "c": _char_of(v)}
+	var cl: Variant = v.get("cells")
+	if cl is Array and (cl as Array).size() > 1:
+		var at := Vector3.ZERO
+		for i in cl:
+			at += stage.slot_pos(int(v["side"]), int(i) >> 1, int(i) & 1)
+		u["at"] = at / float((cl as Array).size())
+		u["big"] = true
+	elif v.get("boss", false):
+		u["big"] = true
+	stage.add_unit("battle", u)
+	stage.set_down("battle", v["uid"], v["down"])
+
+# set 206: every cell on its projected slot rect (the camera moved or the field resized)
+func place_cells() -> void:
+	if stage == null or not has_node("Arena"):
+		return
+	var o: Vector2 = get_node("Arena").get_global_rect().position
+	for key in cells:
+		var kp: PackedStringArray = str(key).split(":")
+		var r: Rect2 = stage.slot_rect(int(kp[0]), int(kp[1]), int(kp[2]))
+		var cell: Control = cells[key]
+		cell.position = r.position - o
+		cell.size = r.size
 
 # a boss standing on several cells: the card on the first, a name tag on each of the others
 func _place_cells(v: Dictionary, cl: Array) -> void:
@@ -239,7 +271,10 @@ func _paint(v: Dictionary) -> void:
 	if v["shock"] > 0.0:
 		ch.append(TH.ui_text("shock_n", {"n": fmt(v["shock"])}))
 	v["chips"].text = " ".join(PackedStringArray(ch))
+	v["chips"].visible = v["chips"].text != ""
 	v["card"].modulate = Color(1, 1, 1, 0.35) if v["down"] else Color.WHITE
+	if stage != null:
+		stage.set_down("battle", v["uid"], v["down"])
 	for tg in v["tags"]:
 		if is_instance_valid(tg):
 			tg.modulate = Color(1, 1, 1, 0.35) if v["down"] else Color.WHITE
@@ -278,6 +313,8 @@ func _tag_proc(v: Dictionary) -> void: # a skill fired: the cell glows for a mom
 	var tok := int(_skill_tok.get(v["uid"], 0)) + 1
 	_skill_tok[v["uid"]] = tok
 	_cell_style(cell, true, true, picked != null and int(picked) == v["uid"])
+	if stage != null:
+		stage.flash("battle", v["uid"])
 	await get_tree().create_timer(1.4 / minf(speed, 4.0)).timeout
 	if is_instance_valid(cell) and int(_skill_tok.get(v["uid"], 0)) == tok:
 		_cell_style(cell, true, false, picked != null and int(picked) == v["uid"])
@@ -436,6 +473,8 @@ func apply(e: Dictionary) -> void:
 			var o: Variant = units.get(int(e["from"]))
 			if o != null and o.has("card") and is_instance_valid(o["card"]):
 				(o["card"] as Node).queue_free()
+			if o != null and stage != null:
+				stage.remove_unit("battle", o["uid"])
 			var nv := _add_unit(e["unit"])
 			_float(nv, TH.ui_text("f_summon"), "n-heal")
 			_say(TH.ui_text("t_summon", {"from": _nm(e["from"]), "who": _nm(e["who"])}), e)
@@ -459,6 +498,8 @@ func _lunge(a: Dictionary, t: Variant) -> void:
 			dir = d.normalized() * 14.0
 	var tw := card.create_tween()
 	var ms := 0.26 / maxf(speed, 0.5)
+	if stage != null:
+		stage.lunge("battle", a["uid"], t["uid"] if t != null else null, ms)
 	tw.tween_property(card, "position", dir, ms * 0.4)
 	tw.tween_property(card, "position", Vector2.ZERO, ms * 0.6)
 
