@@ -4,7 +4,7 @@ description: Automon Arena design check against the pattern library (ดูเ�
 ---
 # UI patterns check (set 210 — user order: research similar games so designs stop looking AI-made)
 
-Library: `claude/ui-patterns.md` (§0 where to look up other games' screens + how · §1 per-game notes · §1b–§1c screens actually seen · §2 DO · §3 DON'T · §4 AI tells + fixes · §5 this check · §6 open points · §7 hub/home + result screens · §8 idea mode). Read only the sections the screen needs; never re-research a game that is already in §1/§7.
+Library: `claude/ui-patterns.md` (§0 where to look up other games' screens + how · §1 per-game notes · §1b–§1d screens actually seen · §2 DO · §3 DON'T · §4 AI tells + fixes · §5 this check · §6 open points · §7 hub/home + result screens · §8 idea mode). Read only the sections the screen needs; never re-research a game that is already in §1/§7.
 
 ## Idea mode (V1.4 — owner order: the library is the UI knowledge hub)
 When the owner says what they want changed on a screen (even loosely: "จืด", "อ่านยาก", "อยากให้น่าเล่น"), run library §8: name the problem → look in the library first → only if nothing fits, one look-up round in the §0 hubs → offer 2–3 ideas, each from a named real game, fitted to our look, with cost + a recommended one as A1/A2/A3 → then ui-preview or ui-work. Never copy art/frames/fonts; never store reference pictures in the repo.
