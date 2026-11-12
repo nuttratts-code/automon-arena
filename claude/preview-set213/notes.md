@@ -24,3 +24,9 @@ Tells left: same cut corner on everything (owner pick) · cool palette (owner pi
 Open notes: battle clock "4.3 วิ" still close to the right edge at 844 (sits outside the margin box?) — check at ทำจริง. Texts must go to godot/data/ui_th.json at ทำจริง.
 
 Rebuild: copy godot → <scratch>/g, drop MCPRuntimeServer line, `python r1-patch1.py <g>` → r1-patch2 → r1-patch3 → r1-patch4, then r2: `python -I r2-icons.py "<kenney>/PNG/Double (128px)" <g>/art/ui_icons 20` → `python -I r2-hud-icons.py … 24` (or copy r2-icons/*.png) → `python r2-patch.py <g>`, then `--headless --import`.
+
+## R3 — owner picked J1: still backdrop (12 Nov)
+11. (R3, pending) art/scene/runeplaza-v5.png (our own Blender render, set 132) as a still backdrop: Environment BG_CANVAS + CanvasLayer -1 TextureRect (cover); 3D ground/plaza/stone tiles/midline hidden; rims, sprites, foot marks stay 3D.
+Known sample limits: the picture does not follow the camera (prep zoom → units stand on the grass above the plaza; battle → rings don't line up with the slots) · black cast-shadow blocks beside some sprites now show (were hidden under fog) · odds row harder to read over the picture. Light theme only (dark would need a night render).
+**Finding (real game, not a sample):** stage3d.gd fog (density 0.012, gl_compatibility) paints the whole 3D floor in the horizon colour — light = pure white (255,255,255 sampled), dark = flat grey-blue. With fog off the plaza is still near-white (sun 1.15 + sky ambient 0.8 too bright in the Compatibility renderer). This is the main reason the arena looks flat/white today. Fix at ทำจริง or in an art-look set (find-cause first, HARD RULE 5): R3-test-fog-off-1366.png.
+Rebuild R3: copy art/scene/runeplaza-v5.png → <g>/art/bg/runeplaza.png → `python r3-patch.py <g>`.
