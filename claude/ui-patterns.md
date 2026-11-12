@@ -1,10 +1,36 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
-**Evidence marks:** [S] = read in a source this session (list at the bottom) · [K] = Claude's memory of the game, not re-checked this session — confirm on a screenshot/video before relying on it · [R] = review opinion (one writer). Final Fantasy Resonance came out 22 Oct 2026, after Claude's training data: everything about it is [S]/[R] from reviews only; Claude has never seen its screens. The owner's own screenshots beat every line here.
+**Evidence marks:** [S] = read in a source this session (list at the bottom) · [K] = Claude's memory of the game, not re-checked this session — confirm on a screenshot/video before relying on it · [R] = review opinion (one writer). Final Fantasy Resonance came out 22 Oct 2026, after Claude's training data: §1 lines are [S]/[R] from reviews; real screens seen on Game UI Database are in §1c (V1.5) and win. The owner's own screenshots beat every line here.
+
+---
+
+## 0. Where to look up other games' screens (reference hubs, checked 12 Nov 2026)
+
+Look here first: Game UI Database for "many games, one screen type", interfaceingame for mobile games it lacks. View only: never store a picture in the repo, never trace, never copy a frame/icon/font (legal line above).
+
+| Hub | What it holds | How Claude reads it | Weight |
+|---|---|---|---|
+| **interfaceingame.com** | 406 games, every screenshot titled + tagged (Menu 6347 · In game 5366 · Overlay 3021 · Stats 2021 · Progress 1400 · Inventory 1284 · Store 729 · Lobby 217). `/games/` filters: Platform → Mobile (34 games), Genre, Theme. Clips too. | Built-in browser. URL patterns `/games/<slug>/` (title list) and `/screenshots/<slug>-<screen-title>/` (one shot, e.g. `brawl-stars-main-menu`, `teamfight-tactics-mobile-main-menu`, `dota-underlords-mobile-game-summary`). **Trap:** the first capture after a page load is black — wait 3 s, then `zoom` the region 0,40–800,500 twice; the second one shows the image. WebFetch sees only titles/tags, no images. Some slugs 404 (marvel-snap, afk-arena, hearthstone shot pages) → open the game page and use the link. | Best for real shipped mobile screens |
+| **gameuidatabase.com** (Game UI Database 2.0, Edd Coates) — **main hub** (owner pick 12 Nov 2026) | Largest, updated daily: 1,995 games · 79,532 screens · 2,566 videos (homepage, 12 Nov 2026). Screen categories: Title & System menus (title, mode & screen select, load/save, loading, settings), Modals & overlays (popups, tutorial, character intro, feature unlocked), Game states (rewards & experience, pause, change party, world map), Stats & resources (inventory, equipping, buying & trading home/browse/confirm), HUD (vitals, rank & position, enemy health, notifications, timer, objectives, minimap). Search box takes games, filters, #hex colours and text inside images. Game tags: platform, genre, look (e.g. "3D Stylized", "Retro", "Flat 2.0"). Free, no login for browsing. | WebFetch gets 403 → **built-in browser works**: `get_page_text` on a game page (`gameData.php?id=N`) lists every screen title by category (cheap); `zoom` to view a screen (first capture after load can be blank → capture again). **Final Fantasy Resonance = id 2598, ~70 screens** (title, party/class change, 4 rewards, inventory, equip, shop home/browse/confirm, world map, battle HUD, targeting, tutorials) — the screens §1 never had. | Best for "how do 20 games solve screen X"; first stop |
+| YouTube gameplay / GDC Vault talks | Flow, motion, timing, what happens after a tap | Search by game + screen; read transcripts only when the owner sends a link (youtube-transcriber skill) | Motion/flow questions |
+| Mobbin | Real app screens (not games) | Only for plain patterns: settings, lists, forms, onboarding | Low for game look |
+| Dribbble · Behance · ArtStation · Pinterest | Concept shots, mostly never shipped | Ideas for material/ornament only; a concept is not proof a layout works (Behance blocked WebFetch before) | Low |
+| The Spriters Resource and other ripped-asset sites | Ripped game art | **Never** — no licence (HARD RULE 9 part 2) | — |
+
+**Which games to look up for which screen** (start here, add more only if the owner asks):
+- Prep / shop / bench / board: TFT mobile · Dota Underlords mobile · Super Auto Pets · Auto Chess (§1, §1b). Not on Game UI Database (checked 12 Nov 2026): Auto Chess, Chess Rush, TFT, Hearthstone Battlegrounds, Octopath Traveler II → interfaceingame or owner screenshots.
+- Hub / home / lobby, mode picker, result: Brawl Stars · TFT mobile · Clash Royale · Underlords (§7).
+- Look / material / HD-2D feel: FF Resonance (§1c) · Octopath Traveler + Champions of the Continent (§1d).
+- Card / tooltip / item text: Hearthstone · Backpack Battles · The Bazaar · Slay the Spire [K].
+- Collection / roster grid: Brawl Stars "Brawlers" · TFT "Little Legends" · Genshin "Character Archive" (titles seen on interfaceingame, pictures not yet seen).
+
+**Game UI Database how-to (V1.5):** the URL search page (`index.php?search=`) hits a bot check — never try to pass it; instead, on any game page, set the value of the header search input by `javascript_tool` and read the `a[href*="gameData.php"]` results (game ids). On a game page every screen is an `a.galleryimage` (title in `data-title`, full image in `href`, size in `data-size`); listing those is cheap. To view, overlay the chosen full images in a 1-column grid (4 columns for portrait phone shots) and `zoom` 0,0–800,600 twice (first capture blank) — 2 landscape or 4 portrait screens per image. Ids found: Underlords mobile 550 · FF Resonance 2598 · Triangle Strategy 1539 · Balatro 1935 · Marvel Snap 1785 · Brawl Stars 465 · Clash Royale 1299 · Hearthstone 628 · Octopath Traveler 741 · Sea of Stars 2196 · Into the Breach 483 · Fire Emblem Three Houses 419 · Octopath COTC (mobile) 1533.
+
+**Evidence for new lines:** a screen Claude actually saw = [C: hub, date]; titles/tags only = [S-text]; memory = [K]. A new game block goes in §1 (prep) or §7 (hub/result) with its source URL in §6 "Image sources".
 
 ---
 
@@ -98,6 +124,67 @@ Owner screenshots [O] · found by Claude [C] (interfaceingame.com 4K captures; M
 6. Odds strip touching the shop.
 7. One shape motif per game (FF diamond · TFT hexagon · Auto Chess round/chess piece · SAP thick-outline rounded block). **Ours is not chosen yet (§6) and must not be the diamond or the hexagon.**
 
+## 1c. Five games like ours, screens seen on Game UI Database [C: gameuidatabase, 12 Nov 2026]
+
+Why these five: Underlords = same genre on a landscape phone · FF Resonance = our look reference (HD-2D) · Triangle Strategy = HD-2D units on a tilted board, closest to our 3D rune plaza · Balatro = pixel art + run loop with shop / reroll between rounds · Marvel Snap = modern premium mobile hub, collection and result. (Not in the database: TFT, Super Auto Pets, Backpack Battles, The Bazaar, Auto Chess — use interfaceingame / §1b for those.)
+
+**Dota Underlords (mobile, id 550)**
+- Title/hub: character art centre-right over a painted town; 3 plain word links top-left (rulebook, loadout, pass); FIGHT! = slanted banner bottom-right. Mode select: 2×2 art tiles, right detail panel (mode name, 3 option rows, a red warning box), BEGIN MATCH bottom-right — same corner as FIGHT!.
+- Prep: unit info docked on the left as a tall narrow panel (portrait, tier, stat list, SELL with gold value at its foot); round name + timer top-centre; unit cap "3/3" written on the board edge; bench along the bottom; action buttons small, right edge.
+- Combat: player list with HP on the left edge (portrait + bar per player); the rest is the board.
+- Item pick: 3 cards over a dimmed board, REROLL under them, "SHOW BOARD" toggle, countdown top, both players' level/gold/HP in the bottom corners.
+- Result: newspaper sheet ("EIGHTH PLACE" headline) — the result told as a world object; PLAY AGAIN top-right largest.
+
+**Final Fantasy Resonance (id 2598)** — first real screens (until now only reviews)
+- Battle: turn timeline = thin line across the top with diamond nodes and small character heads, current actor in a big diamond at the left end. Command menu top-right: translucent dark-teal panel, portrait cut-in strip on its top edge, 6 rows with small icons. Party status bottom-right: 3 slim cards (name, HP/MP numbers + thin bars). Enemy HP = short bar under each enemy + a letter tag. Tips bottom-left in small text. Sprites lit inside the 3D set; UI is thin and translucent so the set reads.
+- Party / equipment: full-screen translucent teal over a blurred scene; serif all-caps title with a thin rule ending in a diamond; left list of rows = cropped face strip + class diamond; centre portrait card with level/HP/MP; attribute list with an icon per stat; equipment/abilities lists right; button hints bottom-right. Reviews' "many identical rows" holds: every row the same weight.
+- Shop: buy list left (name, coin price, "held" count) over the dimmed shop interior; right side = each party member's face strip with the stat change in red/green numbers (compare while browsing).
+- Battle result: rows of label / value / icon on the left (EXP, gold, rank points), bonus callout in orange italic, the field scene visible behind.
+- Takeaway for us: FF uses ONE motif (diamond + thin rule) on every small thing — the DO 19 idea; ours stays the cut corner (set 212), never the diamond (line "One shape motif per game"); panels are cool teal over a warm scene — matches DO 20 and our set 212 cool-slate pick.
+
+**Triangle Strategy (id 1539)**
+- Battle: tilted diorama board; turn order = row of portrait cards across the bottom centre on a thin timeline, next actor raised; selected unit card bottom-left (portrait, name, class, HP bar, level); terrain info top-right as bare text on a rule; facing/target marks = glowing bracket corners on tiles, no big arrows.
+- Battle preparation: left menu column of plain words with diamond cursor, "Begin Battle" at the foot of that column; mission card centre (title, victory condition on a blue header, defeat condition on a red header, weather / wind); 2 resources top-right as icon + number on a rule; the battlefield stays visible behind.
+- Roster: unit cards in a 3-wide grid (sprite + level + EXP bar) with a large portrait of the selected unit on the left.
+
+**Balatro (id 1935)** — pixel art, run loop
+- One left status column on every screen: round goal + reward, round score, chips × mult as a big blue box × red box, hands / discards, money, ante / round, Run Info and Options buttons. Never moves.
+- Shop: one framed panel in the centre; "Next Round" (red) and "Reroll $5" (green) stacked as chunky buttons on its left; dark price tabs ($5) sitting on top of each item; slot counters "0/5", "0/2" at the row corners; deck pile bottom-right with "52/52".
+- Scoring: "+8" pops above the card that scored; numbers in a thick pixel font, very large.
+- Game over: red tint over the whole table, a stat table panel (best hand, most played), table visible under it.
+- Every button = flat pigment colour, dark outline, hard drop shadow, chunky pixel font: one hand everywhere.
+
+**Marvel Snap (id 1785, portrait phone)**
+- Hub: centre = big featured art (season content); top bar: settings, 2 currencies, pass chip, missions chip; PLAY = huge, bottom-centre, deck chip on its left, rank number on its right; bottom tab bar of 5, home tab centre and raised, red count badge on the collection tab.
+- Collection: 4-wide card grid under a title and a filter chip; tab bar stays.
+- Battle: 3 lanes side by side, each with its rule card; enemy cards above, mine below; energy as a big number in a circle bottom-centre; Retreat bottom-left, End Turn bottom-right with "2/6" turn count.
+- Result: one word ("VICTORY!") on a slanted banner, nothing else at first.
+
+## 1d. Octopath Traveler — console original + mobile [C: gameuidatabase, 12 Nov 2026]
+
+The HD-2D line our look comes from. Champions of the Continent (COTC, id 1533) is the **HD-2D game built for a landscape phone** — the gap §6 listed.
+
+**Octopath Traveler (2018, id 741, console/PC)**
+- Battle: turn order = small heads on a thin line top-left (this turn · next turn); party status = right column of dark translucent strips (name, HP/SP numbers + thin bars, boost pips); one-line message banner top-centre; enemy weakness icons in a row under the enemy. The scene takes ~75 % of the screen.
+- Main menu: the world map (parchment) IS the background; dark tab list left (category words, the active one with a small diamond); party column right (sprite, level, HP/SP); play time + money top-right; button hints on a bottom strip.
+- Shop: one small dark panel (vendor name, item, price, a one-line description) over the full-colour town — the town is not dimmed; money top-right.
+- Victory: large serif "Victory!" top-left; reward rows (money, EXP, JP) each with a "+bonus"; bonus names in gold italic on the right ("Untouched", "Break"…); party cards along the bottom with level-up marks; battlefield visible behind.
+
+**Octopath Traveler: Champions of the Continent (2022, id 1533, mobile landscape)**
+- Hub = the town itself: the 4-member party stands in the HD-2D street at night; 2 currencies as plain chips top-centre; minimap top-right; a diamond marker over the door you can enter; along the bottom **9 icon + word buttons** in one row over the scene, 6 of them with a red "!" badge — badge overload (H6 broken in practice).
+- Party: parchment map background in a dark leather frame; top bar = back arrow, title, currencies, close ×; left = vertical arrow-shaped dark tabs (party, equipment, skills, status); rows = sprite + stars + level + HP/SP bars; front / back columns ("Not set" slots); page dots at the bottom.
+- Battle (phone): turn heads on a line top-left and top-centre; party status = right edge stacked cards (HP/SP numbers, boost pips, the chosen action under each); enemy shield number + weakness "?" icons under the enemy; bottom bar = Target Focus, Settings, **2× speed toggle**, 4 diamond buttons (flee, allies, switch, boost all) and one huge teal **Attack** button bottom-right.
+- Exchange shop: parchment panels; left tabs with red "N days remaining" badges; item rows = name, Details button, held count, price, − / + stepper; "Total required" + Trade button bottom-right.
+- Reward modal: 3 round emblems with rank + a progress bar each ("Left 90"), one OK button, a thin ornate frame with corner ornaments on black.
+
+**What the HD-2D line teaches us (idea level, not copied)**
+- O1. Battle UI lives on the **edges** (turn line top, party column right, actions bottom-right); the middle is the diorama. Same as FF Resonance → this is the HD-2D convention.
+- O2. **The world is the menu background** (map parchment, the town at night) instead of a flat panel; panels are dark translucent strips with thin rules. Ours: menus over the rune plaza scene, not over a flat colour.
+- O3. On a phone the main battle action becomes **one huge button bottom-right** and the rest shrink to small buttons — matches H1 / DO 5.
+- O4. Ornate type only on big words ("Victory!", titles); numbers and lists in plain type (confirms the §1 [S] line, now seen).
+- O5. A speed toggle (2×) sits in the battle bar on mobile — worth a thought for our auto-battle (owner decides; it touches battle pacing, ask first).
+- O6. Warning: COTC's 9 bottom buttons + 6 red badges is what our offline hub must NOT become (H4, H6).
+
 ---
 
 ## 2. DO — patterns worth using (idea level)
@@ -135,6 +222,16 @@ Seen on screens (§1b)
 22. State as material or as a price colour: frozen in ice, unaffordable price in red, disabled row greyed in place.
 23. Counts that belong to the board are written on the board (unit cap on the floor); the bench is furniture of the arena where the layout allows.
 24. A link between a list and the scene is one repeated tiny mark (letter/number tag), not a line.
+
+Seen on screens (§1c)
+25. **One status column that never moves** across every phase of a run (Balatro): goal, score, money, round, run info, options always in the same strip; only the centre changes between shop / pick / fight. Ours: the prep HUD strip should stay put in battle and result.
+26. **Price on the button that spends it** ("Reroll $5") and a price tab on top of every item (Balatro, Underlords) — never a separate cost legend.
+27. **Compare at the moment of buying:** while browsing the shop, each owned unit shows the +/− change the item would make, in green/red (FF Resonance shop). Ours: hovering/holding a shop unit lights the tribe count it would change ("3/4 → 4/4") on the board.
+28. **Pick-one overlays keep the board one tap away:** 3 choice cards over a dimmed board + a "show board" toggle + the countdown on top (Underlords item pick).
+29. **Turn order / timeline as a thin line with small heads** across the top or bottom (FF Resonance top, Triangle Strategy bottom), next actor raised. Information on a line, not in a box.
+30. **Terrain / state info as bare text on a thin rule** in a corner (Triangle Strategy "Pavement · Height 6"), no panel behind it — the scene stays the hero.
+31. **Mission card before the fight:** title, win condition on one coloured header, lose condition on another, 2 small facts (Triangle Strategy battle preparation). Ours: the stage/boss intro could show "win = … · watch out = …" in this two-header form.
+32. **Colour = one meaning, kept for the whole game** (Balatro: blue chips, red mult, gold money on every screen). Pick ours once (gold, HP, tribe) and never reuse those colours for decoration.
 
 ## 3. DON'T — genre failures
 
@@ -196,8 +293,51 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 - UI material: which world material the frames are made of (links to art-look target sheet, Gate 1).
 - ~~Shape motif (DO 19)~~ → **closed set 212 (owner B1):** cut corners (chamfer, radius ≤ 7, theme.gd box) = the arena floor slabs. Same cut on every box stays a known tell (owner pick).
 - ~~UI temperature (DO 20)~~ → **closed set 212 (owner R5-A2):** cool slate panels + steel-blue line + pale blue Fight plate (godot/data/tone.json). Revisit only if art-look Gate 1 changes the arena light.
-- Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board, an HD-2D shop/menu on a phone. §1 lines for those stay [K]/[S-text].
+- FF Resonance screens seen (§1c, V1.5). Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board. (HD-2D on a phone: seen, §1d COTC.) §1 lines for those stay [K]/[S-text].
 - Image sources (12 Nov 2026): https://interfaceingame.com/games/teamfight-tactics-mobile/ · https://interfaceingame.com/games/dota-underlords-mobile/ · MobyGames Super Auto Pets screenshot · a fan wiki capture of the FF Resonance equipment screen (via image search). No image is stored in the repo.
+- Image sources (12 Nov 2026, V1.4): https://interfaceingame.com/screenshots/brawl-stars-main-menu/ · https://interfaceingame.com/screenshots/teamfight-tactics-mobile-main-menu/ · https://interfaceingame.com/screenshots/dota-underlords-mobile-game-summary/ · title/tag lists of clash-royale, brawl-stars, hearthstone, genshin-impact game pages. Not seen yet (page failed to show): Clash Royale main menu, TFT lobby.
+
+## 7. Hub / home screen and result screen (the "game hub")
+
+The hub is the first screen and the one seen most often. Its one job: **start the next run in one tap**, while showing what the player owns and what is next. MVP1 is offline single-player (CLAUDE.md scope), so the genre's shop / season pass / chat / clan slots are NOT ours — never fill those slots with fake buttons to make the screen look full (that is an AI tell, §4 "filler").
+
+### Screens seen [C: interfaceingame, 12 Nov 2026]
+- **Brawl Stars main menu (phone, landscape):** centre = the chosen character, big, standing on plain bright ground, with rank + power badges floating over it. Top-left: profile chip + trophy progress. Top-right: 2 currencies + menu button. Left edge: 3 stacked icon buttons (shop, characters, news), each with a red **count** badge. Right edge: 3 (friends, club, chat). Bottom-left: season-pass card with a progress bar "33/100" + badge. Bottom-centre: current mode card (mode, map, time to the next event, info button). Bottom-right: PLAY — the widest, warmest, thickest-outlined object on screen.
+- **TFT mobile main menu:** centre-right = the player's mascot, big, over a painted landscape. Thin top bar: avatar + name left; one currency + 4 small icons (profile, collection, bell, settings) right. Left: only 3 large rows, each = round icon + word (Rewards with its level bar under the word, Store, Team planner) — words, not an icon grid. Bottom-left: pass banner card. Bottom-right: round mode button (shows the mode name under it) touching a wide chevron PLAY button. About 6 choices on the whole screen.
+- **Underlords game summary (result):** a large paper sheet on the left 2/3: placement title + mode, the commander portrait, the final team as a grid with star ranks, the alliance icons row, then 3 big numbers with labels (rounds won · unit damage · gold earned), then a story strip "scroll to read more". Right side: PLAY AGAIN largest, LEAVE MATCH smaller under it. The 3D board stays visible behind the sheet.
+- Titles seen only [S-text]: Clash Royale "Main menu" / "Battle Deck" / "Chest reward" / "Match over"; Brawl Stars "Choose event" (mode picker) / "Victory" / "Collect the rewards"; TFT "Select mode" (27 shots = the mode picker is a big screen of its own); Hearthstone "Dalaran" (hub drawn as a map).
+
+### Hub DO (H-rules, idea level)
+- H1. **Play = bottom-right, biggest, warmest colour, a game object** (Brawl, TFT; Clash Royale puts it bottom-centre in portrait [K]). The mode in use sits on or touching Play, so the player sees what they start.
+- H2. **Centre = what the player owns, not a menu.** A hero, mascot or team on a stand. Ours: the player's last or favourite team standing on the 3D rune plaza — the hub becomes a display case for the game's own art.
+- H3. **Status is thin and on top:** identity top-left, resources top-right, small. Nothing to tap there except settings/profile.
+- H4. **Few choices in view (≤ 6), split by hand:** often-used near the thumbs, rare things behind a menu. TFT shows 3 big word rows instead of 9 icons.
+- H5. **Progress lives on the button:** a bar + "n/m" on the card that leads there (pass card, rewards row). The hub answers "what is next for me" without a tap.
+- H6. **Badges only for something new, as a count,** and they clear when seen. A hub full of red dots = noise.
+- H7. **Mode/event card next to Play** with what changes (name, map, a timer when one exists).
+- H8. **Word + icon on hub buttons** (TFT rows, Brawl's labelled icons). Icon-only is for the small top bar.
+- H9. **Play carries its context on both sides** (Marvel Snap: deck chip left of PLAY, rank number right; Underlords mode select: 2×2 art tiles + detail panel + BEGIN MATCH bottom-right). Ours: team/mode chip beside Start.
+- H10. **Bottom tab bar only when there are 4+ real places**; the home tab is centre and raised (Marvel Snap, portrait). Landscape games (Brawl, TFT, Underlords) use left/right word columns instead — that fits our landscape phone.
+
+### Result screen DO
+- R1. Placement or win/lose as the biggest line; the final team shown as it ended (stars); 3 numbers max, each with a label; story/details below a fold.
+- R2. **Play again = biggest button, where Play was** (top-right on Underlords; keep ours on the same hand as the hub's Play). Leave = smaller, under it.
+- R3. The scene stays visible behind the result sheet (the sheet is paper/stone of the world, not a dark overlay).
+
+### Hub DON'T
+- No empty shop/pass/social slots in an offline game. No "coming soon" buttons.
+- No icon grid of 9+ equal tiles (§4 identical grid tell).
+- No full-screen modal popups on launch stacking before the hub (daily reward, news…) — one at most, skippable.
+- No moving Play between versions (§3.5).
+
+## 8. Idea mode — when the owner says what they want changed
+
+The owner describes a change ("ปุ่มนี้ดูจืด", "อยากให้หน้าแรกน่าเล่นขึ้น", "ช่องร้านค้าอ่านยาก"). Claude:
+1. Names the screen and the problem in one line (what job is failing: reading, finding, tapping, feeling).
+2. Looks in this file first (§1, §1b, §2, §7). Only if nothing fits: one look-up round in §0 hubs (2–4 games from the "which games" list), noted with [C]/[S-text].
+3. Offers **2–3 ideas, each from a named real game**: what that game does · how it would look in ours (our cut-corner slate panels, pixel sprites, Thai labels) · what we deliberately do differently · cost (small / medium / big). Recommend one. Label A1/A2/A3 (replies.md), then the buttons.
+4. Checks each idea against §3 DON'T, §4 tells and MVP1 scope before offering it; an idea that needs a system outside MVP1 is named as such, not offered as a pick.
+5. After the owner picks: the normal path (ui-preview sample, or ui-work build). New facts learned go into §1/§7 the same commit.
 
 ## Sources (read 12 Nov 2026)
 - Riot, TFT Interface Update (level bar, button swap): https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/tft-interface-update/
