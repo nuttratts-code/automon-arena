@@ -27,5 +27,6 @@ Every commit that changes behaviour, a value, a name, a text the player sees, a 
 | Doc rule / version | doc header `Vx.y` · handoff "Doc versions" line · any page that cites the version (check page subtitle, set 175) |
 | Secret, dependency, asset, shipped file, account (HARD RULE 9) | claude/workflow/security.md table · LICENSE / credits (art/placeholder, game credits line) · .github/workflows · Godot export filters + encryption · publish-pages / merge-code security steps |
 | A workflow rule | CLAUDE.md · the topic file · every skill that repeats it (grep a key phrase in .claude/skills) · relay.md / handoff wording |
+| Game-screen look (shape motif · UI palette/temperature · material · font · a tell fix) | claude/ui-patterns.md (§4 tells · §6 open points) · skill ui-patterns · claude/art-style.md · claude/preview-setN/notes.md · scenes/prep_layout.tscn metas |
 
 Add a row whenever a missed spot is found later (weekly review step "missed ripples").
