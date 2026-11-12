@@ -83,4 +83,5 @@ Don't: change renderer · use DOF/volumetric nodes (silently ignored in Compatib
 - Trademark and criticism: https://en.wikipedia.org/wiki/HD-2D
 - Godot 4.7 renderer feature table, SpriteBase3D, CameraAttributesPractical: https://docs.godotengine.org/en/4.7/tutorials/rendering/renderers.html · https://docs.godotengine.org/en/latest/classes/class_spritebase3d.html · https://docs.godotengine.org/en/latest/classes/class_cameraattributespractical.html
 - Earlier project research: claude/review-2026-11-10-brainstorm-art-workflow.md
+- Verified set 214: a shadowed sun is 3–5× too bright in Compatibility (sRGB-space shadow pass) → stage sun has shadows off; any real cast shadow needs a re-test first (claude/preview-set214/notes.md).
 - Not verified: Alpha-cut Discard casting shadows in Compatibility; screen-texture mipmaps in the web export; SSAO cost on phones. Test each in step 2 before building on it.

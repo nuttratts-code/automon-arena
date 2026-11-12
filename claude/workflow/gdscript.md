@@ -36,3 +36,5 @@ V1.0 · 12 Nov 2026 (set 209, user C2a: our own short file instead of an outside
 - GDScript uses tabs. Heredocs holding GDScript break in Git Bash → write a patch file with the Write tool.
 - A new dev-only folder or addon → add it to `exclude_filter` in godot/export_presets.cfg in the same commit (security.md part 4).
 - Engine: pinned 4.7.2 via godot/tools/get_godot.sh (cloud) or the console exe on the owner's PC; run from the repo root with `--path godot`.
+- **Compatibility light trap (set 214):** a DirectionalLight3D with `shadow_enabled` is added in sRGB space in gl_compatibility → 3–5× too bright (white floor). Keep shadows off on the stage sun (blob shadows instead); exp fog counts from the camera — use `FOG_MODE_DEPTH`; `ambient_light_energy` does nothing with `AMBIENT_SOURCE_SKY`. Evidence: claude/preview-set214/notes.md.
+- **tools/make_prep_layout.gd trap (set 213):** it regenerates every node unique_id and drops the scene uid → re-map the old ids by script after running it.
