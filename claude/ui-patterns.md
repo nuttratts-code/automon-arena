@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -186,7 +186,7 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 2. **Pick 2 references by name** from §1 for this screen (one for layout, one for feel) and say what idea is taken and what is deliberately different.
 3. **Write the three decisions that are not defaults** for this sample (e.g. material = carved stone tabs; corners = 2-px cut; reroll = a physical dice object). No three decisions → not ready to draw.
 4. Draw / build.
-5. **Tell count** against §4 on the screenshot; list each tell found; ≥ 3 → fix before showing the owner.
+5. **Tell count** against §4 on the screenshot; list each tell found; ≥ 3 → fix before showing the owner, except anything the owner picked (agreed list / notes.md / docs / Relay) — that one is never changed on Claude's own, ask A1/A2 (set 211 A1).
 6. **Genre check** against §3 (board visible, tap sizes, tooltip place, fixed buttons).
 7. Show the owner with one line: references used · three decisions · tells left and why.
 

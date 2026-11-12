@@ -22,14 +22,14 @@ Stop first if the handoff Relay says `บาลานซ์: กำลังป�
 7. Stage (runes/bosses/mode settings): `node tools/apply-stage.mjs <out>/main.json --take <part | part:id,…>` (e.g. `bosses:B1,runes:T2,settings:foeFloor`).
 8. Re-run step 3: every taken cell must be gone from the diff.
 9. Renamed/changed runes or characters → `grep -n '<id or name>' tests/ui_smoke.py tests/*.js` and fix BEFORE any test run (W6). Changed kits → old kit as retired test `ID@n`. Also walk the claude/workflow/ripple.md map row (rule docs, labels, Balance Room, check page) and add the `ripple:` line to the commit (set 186 A1). Check only those: `node tools/bootstrap.mjs test <ID>`. Commit + push.
+9b. **Godot data (set 211 A — values changed = godot/data/game.json is stale, CI fails):** `node tools/exportdata.mjs` → commit game.json + hash with the values, then skill `port-parity` (golden rebuild + Godot tests).
 
 ## D. Rebuild data
 10. Chars/tribes changed → background `node lab/botgen.mjs 2400 4` (~6.5–13 min). Meanwhile: draft the Relay line, `Artifact read` the Links URLs (writer check).
 11. Bosses affected → background `node lab/bossrun.mjs 600 75 62 50 --fit --md <file>` (report only; set 170: no --write, no mult10/endlessPct) → show the user the before → after table (power, hp, atk, phase atk, weak %, resist %, g, a, win %) → write only the cells they pick (tools/apply-stage.mjs). Commit + push.
 
 ## E. Gate → merge → publish
-12. `node tools/bootstrap.mjs setup` until it passes (fix every failure here).
-13. Background `node tools/bootstrap.mjs gate` ONCE → GATE: PASS (FAILS [] ERRORS []) → merge to main (no user OK needed). FAIL → stop, tell the user (HARD RULE 5; false FAIL → publish.md §9.3).
+12–13. **Merge through skill `merge-code`** (set 211 A — this step used to merge on its own and skipped the security grep, code review and the CI check): its setup → gate ONCE → merge (no user OK needed) → CI green. Heavy jobs still one at a time in the background. FAIL → stop, tell the user (HARD RULE 5; false FAIL → publish.md §9.3). merge-code ends with close-out — run step 14–16 below first.
 14. Publish: run the `publish-pages` skill (game + Balance Room so page defaults = game values; check page if tests changed). Publishing = a stop point: tell the user first.
 15. Owner account: clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote).
 

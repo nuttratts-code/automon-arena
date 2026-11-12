@@ -15,7 +15,7 @@ Library: `claude/ui-patterns.md` (§1 per-game notes · §2 DO · §3 DON'T · �
 4. Evidence marks: a [K] or FF Resonance line that the design leans on → ask the owner for a screenshot of that game screen first (one question, in the set's first round).
 
 ## After the screenshot, before the owner sees it
-5. **Tell count:** walk library §4 on the screenshot; list every tell found. 3 or more → fix first. A tell that stays needs a reason in one line.
+5. **Tell count:** walk library §4 on the screenshot; list every tell found. 3 or more → fix first, except anything the owner picked (agreed list / notes.md / docs / Relay) — that one is never changed on Claude's own, ask A1/A2 (set 211 A1). A tell that stays needs a reason in one line.
 6. **Genre check:** library §3 — board visible during shop/bench/info · main tap targets ≥ 44 px · tooltip not under the finger, not clipped, not over the next target · habit buttons in their fixed places · no finger work without a decision.
 7. **One hand:** every icon/frame/sprite on the screen at the same pixel size and outline weight; anything from a different hand is named.
 8. Report to the owner in Thai, one short block: references used · the three decisions · tells left + why · anything from §6 this screen touches (as A1/A2 if a choice is needed).
