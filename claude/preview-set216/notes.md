@@ -45,3 +45,7 @@ What the reference does: camera ~20–25° · each side a wide diagonal formatio
 10. (R5, pending) PITCH 12 → 22 (FOV 26, prep zoom-out kept) · LANE_Z ±1.4 → ±2.3 (lanes further apart in depth) · far lane (lane 0) shifted 1.0 away from the midline (stagger) → stage3d.gd slot_pos: x = sign × (COL_X[row] + (1.0 if lane == 0 else 0.0)). Display only; rows/lanes in the game rules unchanged.
 Seen: no unit hides another in prep or battle; HP bars no longer stack; stones + horizon show at the top. Prep units smaller than today.
 Rebuild R5: as R3 + PITCH 22.0, LANE_Z [-2.3, 2.3], the slot_pos line above.
+
+## R6 — owner: "ด้านบนเค้าเหลือเยอะจัง" (read as: the FF shot leaves a lot of scenery on top → push our board down)
+11. (R6, pending — reading unconfirmed) board fitted into the lower part: app.gd board_targets prep top cut = 38 % of the field (side cut back to -side), battle top cut = 32 %. Scenery fills the top ~40 %; units smaller again (prep ~25 % smaller than today).
+Rebuild R6: as R5 + those two grow_individual lines.
