@@ -39,3 +39,9 @@ Rebuild R3: after R1, sed PITCH 20.0 + FOV 26.0 in scripts/ui/stage3d.gd + the b
 ## R4 — owner: "lower still"
 9. (R4, pending) PITCH 20 → 12 (FOV 26, prep zoom-out kept). Stones + sky fill the top third in both screens. Cost: rune rings become thin ellipses, units overlap more (prep: back-row unit half hidden; battle foe side: 3 units in a pile, HP bars stacked) → at ทำจริง lanes need more depth spacing or HP bars lifted.
 Rebuild R4: as R3 with PITCH 12.0.
+
+## R5 — owner: "our units stand on top of each other — can we do it like this?" (owner screenshot of FF Resonance battle, 12 Nov, NOT stored in repo)
+What the reference does: camera ~20–25° · each side a wide diagonal formation · every unit offset sideways AND in depth, so nobody stands straight behind anyone.
+10. (R5, pending) PITCH 12 → 22 (FOV 26, prep zoom-out kept) · LANE_Z ±1.4 → ±2.3 (lanes further apart in depth) · far lane (lane 0) shifted 1.0 away from the midline (stagger) → stage3d.gd slot_pos: x = sign × (COL_X[row] + (1.0 if lane == 0 else 0.0)). Display only; rows/lanes in the game rules unchanged.
+Seen: no unit hides another in prep or battle; HP bars no longer stack; stones + horizon show at the top. Prep units smaller than today.
+Rebuild R5: as R3 + PITCH 22.0, LANE_Z [-2.3, 2.3], the slot_pos line above.
