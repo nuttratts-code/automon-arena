@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -53,6 +53,53 @@ V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to o
 
 ---
 
+## 1b. Screens actually seen (12 Nov 2026) — these lines beat the [K] lines in §1
+
+Owner screenshots [O] · found by Claude [C] (interfaceingame.com 4K captures; MobyGames; a fan wiki).
+
+**FF Resonance — battle [O]**
+- Turn order = one thin line across the top with small diamond nodes; ally portraits sit above the line, enemy markers (red, lettered A/B) hang below it; the current actor gets a large diamond emblem at the far left. The same letter A/B is repeated as a small tag beside each enemy's bars → the line and the scene are linked by one tiny mark, no lead lines.
+- Command list top-right: 6 rows, icon + label, selected row brighter + a diamond cursor outside the box; disabled row greyed, not hidden; the acting character's portrait peeks out behind the list header.
+- Party cards bottom-right: name top-left, HP/MP label left + number right-aligned + a thin bar under each; the active card is lifted a few px and gets the diamond mark. Nothing else changes.
+- Enemy bars: thin HP bar, second thin bar directly under; state as one small capital word under the bars.
+- Active unit = bright outline around the sprite, not a UI arrow.
+- Style: cool teal-slate translucent panels, 1-px light border, square corners, plain white sans text. Scene is dark and warm (lantern points, vignette) → **UI is cool, scene is warm: temperature separates them.** One shape motif (diamond) used for emblem, nodes, cursor and active mark.
+- Flaws visible: the tooltip covers the next menu row; bars are too thin for a phone.
+
+**FF Resonance — equipment menu [C]**
+- Title in thin serif capitals with a hairline rule; everything else plain sans. Portrait in an arched frame with the pixel sprite under it. Rows = icon · label · right-aligned number.
+- Why reviewers called it plain: ~35 near-identical row strips at the same weight in 4 columns — a clean system with a flat hierarchy. Lesson: consistency without emphasis reads as "admin".
+
+**TFT mobile — shop open / prep [C]**
+- The shop drawer opens at the TOP and covers the enemy half; the player's own board and bench stay visible. Cards: art, 2 trait rows on the left of the art, coloured footer with name + cost, frame colour = cost tier.
+- Round thumb buttons in the bottom corners: Buy XP bottom-left (level ring around it, XP count above), gold bottom-right with Refresh just above it. Odds strip sits under the shop on the right. Items = 2-wide column on the left edge.
+- Shop closed: traits down the left edge (hexagon icon, name, "2/4"; active = coloured, inactive = grey), stage plate top-centre with timer bar, scoreboard down the right edge (round portrait + HP). **Unit cap ("4/5") is written on the board floor, not in a UI box.** Bench is a stone ledge of the arena.
+
+**TFT PC [O]**
+- Same map of the screen, shop at the bottom because a mouse reaches it: Refresh / Buy XP stacked at the shop's left, gold on a tab above the shop centre, everything hugging the edges, board clear. Dark navy panels, thin gold trim, hexagon motif.
+
+**Auto Chess mobile — shop [O]**
+- Shop = dark band across the middle with no cards: 3D units stand in a row, 2 round race/class icons, name (text colour = rarity), coin + price (**price turns red when unaffordable**). Lock on the left edge, reroll + price on the right edge, odds strip (coloured chess pieces + %) under the band with the level. Round buttons in the bottom corners (XP left, close right).
+- Flaws visible: the big "BATTLE / Round 2" title shows through the shop band (two layers fighting); the band hides the middle of the board; icons and names are tiny.
+
+**Dota Underlords mobile — shop / combat [C]**
+- Shop = light veil over the enemy half, units as 3D figures, cost in a coin badge, alliance icons as coloured square tiles under each unit, and **under those, pips showing how many of that alliance the player already has** (the consequence of buying, shown before buying); stars under units already owned. Odds list on the left edge. Unit cap "8/8" on the floor. Combat: small round title top-centre, duel list left, own/enemy leader portraits in the bottom corners.
+- Caution: its glowing blue-violet round buttons and purple haze were its 2019 identity; today that palette is on the AI-tell list (§4).
+
+**Super Auto Pets — shop [C]**
+- 4 resource chips top-left; team row above shop row on the same ground; 2 stat badges under every pet in the same order; 3 very large bottom buttons, each with its icon inside (die, snowflake, arrow). **Frozen = the item is drawn inside a block of ice** (state shown as material, not a badge). Tooltip = a speech card beside the pet with a pointer, never over it: name, tier coin, bold trigger → effect. One thick dark outline on every object and button = one hand.
+
+**What all of them share (safe genre conventions)**
+1. UI lives on the edges; the centre is the board.
+2. Shop covers the enemy half (or sits below the board on PC), never the player's own units.
+3. Traits/tribes on the left edge as icon + "have/next".
+4. Money actions under the thumbs (bottom corners on phones).
+5. Cost tier = frame or text colour; trait icons on the shop item itself.
+6. Odds strip touching the shop.
+7. One shape motif per game (FF diamond · TFT hexagon · Auto Chess round/chess piece · SAP thick-outline rounded block). **Ours is not chosen yet (§6) and must not be the diamond or the hexagon.**
+
+---
+
 ## 2. DO — patterns worth using (idea level)
 
 Layout
@@ -81,6 +128,14 @@ Craft
 17. Check every screen with the game running behind it, at phone size, late-game state (ui.md phone audit).
 18. One set of art = one hand. A new asset that looks different from its neighbours is redone or removed.
 
+Seen on screens (§1b)
+19. One shape motif, used for cursor, active mark, nodes and emblem. Pick ours once; use it everywhere small.
+20. UI colour temperature opposite to the scene's (warm scene → cool UI, or the reverse), so panels never need heavy shadows to stand out.
+21. Active/selected = a small lift, an outline on the sprite, the motif mark. Not a new colour block.
+22. State as material or as a price colour: frozen in ice, unaffordable price in red, disabled row greyed in place.
+23. Counts that belong to the board are written on the board (unit cap on the floor); the bench is furniture of the arena where the layout allows.
+24. A link between a list and the scene is one repeated tiny mark (letter/number tag), not a line.
+
 ## 3. DON'T — genre failures
 
 1. Shop/popup that hides the board (Auto Chess mobile).
@@ -93,6 +148,9 @@ Craft
 8. Assets from different hands side by side (FF Resonance portraits).
 9. Effects heavy enough to drop frames on a phone.
 10. Everything the same size and weight — when all is emphasised, nothing is.
+11. Many identical rows at one weight (FF Resonance menu) — pick what the eye lands on first in every panel.
+12. A big title or banner left visible under an open panel (Auto Chess "BATTLE" under the shop).
+13. Bars thinner than ~6 px on a phone.
 
 ## 4. "Looks AI-made" tells — and the fix
 
@@ -136,7 +194,10 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 - Glass panels (set 207 P2) and any emoji in game screens are on the tell list — keep, restyle or replace? Decide inside set 208's sample rounds.
 - Display font: none chosen yet; needs a Thai-capable face with a licence (HARD RULE 9 part 2).
 - UI material: which world material the frames are made of (links to art-look target sheet, Gate 1).
-- [K] lines for TFT / Auto Chess / Underlords and all of FF Resonance want the owner's own screenshots to confirm.
+- Our shape motif (DO 19) — not diamond, not hexagon; should come from the game's own world.
+- UI temperature (DO 20) — depends on the arena's light (art-look Gate 1).
+- Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board, an HD-2D shop/menu on a phone. §1 lines for those stay [K]/[S-text].
+- Image sources (12 Nov 2026): https://interfaceingame.com/games/teamfight-tactics-mobile/ · https://interfaceingame.com/games/dota-underlords-mobile/ · MobyGames Super Auto Pets screenshot · a fan wiki capture of the FF Resonance equipment screen (via image search). No image is stored in the repo.
 
 ## Sources (read 12 Nov 2026)
 - Riot, TFT Interface Update (level bar, button swap): https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/tft-interface-update/
