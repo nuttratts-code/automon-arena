@@ -10,6 +10,17 @@ Source review: claude/review-2026-11-12-prep-ui.md. Owner picks (12 Nov): A1 out
 5. (R1, pending) Sell hint: while an own unit is dragged, the shop dock shows a panel "ลากมาวางที่ร้านเพื่อขาย +N เงิน" (N = paid, = shop.sell refund), red frame.
 6. Not visible in a shot: phone safe area (notch) — code only at ทำจริง (DisplayServer safe area → margins).
 
+## R2 — owner picked H1 (code depth) + free icon pack (12 Nov)
+Outside asset: Kenney "Board Game Icons" 1.1 · source kenney.nl/assets/board-game-icons · licence CC0 (License.txt in r2-icons/) · credit "Kenney (www.kenney.nl)" (not required, add on the credits screen at ทำจริง) · owner OK 12 Nov (download asked + approved in chat). Zip kept only in scratch.
+References: Hearthstone (feel: physical plates — buttons/cards as objects; different: no wood/gold ornament, owner's cool tone + cut corners kept) · TFT (top-right HUD = icon + number; different: our own pixel icons, no tier metals).
+Three decisions: (1) depth = hard dark ledge bottom 4 / right 2 on every button, chip and filled card (= the Fight plate language), never a soft shadow (§4 tell) · pressed = ledge 2 + content down 2 · (2) light from the top-left: tribe shapes get a darker edge + a small white highlight top-left · (3) icons resampled to sprite pixel density (20/24 px, hard alpha), stat icons with a 1-px dark outline, HUD icons plain silhouettes tinted ink (DO 16: no smooth vector next to pixel art).
+7. (R2, pending) Ledge on HUD buttons, reroll, heart/gold chips, bench rows, shop cards (empty sold slots too).
+8. (R2, pending) HUD: rune = book icon + count, enemy = skull icon + %, legend "?" = notepad icon (guess: words "รูน"/"ศัตรู" dropped, tooltip keeps them). Menu "⋯" unchanged.
+9. (R2, pending) Shop card stats: sword / heart / hourglass pixel icons (same colours as before).
+10. (R2, pending) Tribe shapes: dark edge + highlight.
+Not changed (owner picks): pixel heart/gold chip icons, padlock, reroll arrow, palette, cut corners.
+Tells left: same cut corner on everything (owner pick) · cool palette (owner pick) · display font (open §6). Icons are a 2nd hand (Kenney) next to DCSS sprites — same pixel density, named here.
+
 Open notes: battle clock "4.3 วิ" still close to the right edge at 844 (sits outside the margin box?) — check at ทำจริง. Texts must go to godot/data/ui_th.json at ทำจริง.
 
-Rebuild: copy godot → <scratch>/g, drop MCPRuntimeServer line, `python r1-patch1.py <g>` → r1-patch2 → r1-patch3 → r1-patch4, then `--headless --import`.
+Rebuild: copy godot → <scratch>/g, drop MCPRuntimeServer line, `python r1-patch1.py <g>` → r1-patch2 → r1-patch3 → r1-patch4, then r2: `python -I r2-icons.py "<kenney>/PNG/Double (128px)" <g>/art/ui_icons 20` → `python -I r2-hud-icons.py … 24` (or copy r2-icons/*.png) → `python r2-patch.py <g>`, then `--headless --import`.
