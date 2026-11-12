@@ -1,6 +1,6 @@
 # Automon Arena backlog (parked work)
 
-V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
+V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
 
 ## Gameplay / pacing
 - Match length and run pacing (set 181: user decided to KEEP current values and the rule "long matches are not a problem" — overtime 180 s every round; reopen only if the user asks): goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
@@ -35,6 +35,9 @@ V2.0 · 31 Oct 2026 · set 64 boss phases · not opened until an item is picked 
 - Interpretation of "cooldown +20%"
 - Confirm the head-image of the 6 tribes (earlier proposal: เหล็กกล้า armoured guardian · เพลิงเผา igniter who burns enemies · สายฟ้า lightning caller · วายุ hunter fast as the wind · ภูติ spellcaster who speeds up time · อสูร one who refuses to fall) · skill ideas kept: charge, growth
 - Level 4 (merge three level-3 units, or an item) · look after merging
+
+## Art tools to try (after MVP1, with skill art-look)
+- sprite-gen (github.com/aldegad/sprite-gen, Apache-2.0, user A1 12 Nov): 1 drawing → transparent sprite atlas + manifest / motion loops; frames are drawn by outside AI (Codex/Grok/OpenAI/Claude), cut + packed locally; exports Aseprite. Before use: security.md part ② (pin version, user OK) · base image is uploaded to the provider → test on placeholder art first, read provider terms before real art · needs the user's own login/key (never in chat) · no Godot export (atlas PNG + manifest.json → small importer) · facing + walk loops not reliable per its README → clean up in Aseprite (art-style.md).
 
 ## Platform (decided 27 Oct)
 - Move code/docs to GitHub: done 27 Oct · Jules part cancelled by user 28 Oct
