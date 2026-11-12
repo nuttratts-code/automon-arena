@@ -1,10 +1,34 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
 **Evidence marks:** [S] = read in a source this session (list at the bottom) · [K] = Claude's memory of the game, not re-checked this session — confirm on a screenshot/video before relying on it · [R] = review opinion (one writer). Final Fantasy Resonance came out 22 Oct 2026, after Claude's training data: everything about it is [S]/[R] from reviews only; Claude has never seen its screens. The owner's own screenshots beat every line here.
+
+---
+
+## 0. Where to look up other games' screens (reference hubs, checked 12 Nov 2026)
+
+Look here first, in this order. View only: never store a picture in the repo, never trace, never copy a frame/icon/font (legal line above).
+
+| Hub | What it holds | How Claude reads it | Weight |
+|---|---|---|---|
+| **interfaceingame.com** | 406 games, every screenshot titled + tagged (Menu 6347 · In game 5366 · Overlay 3021 · Stats 2021 · Progress 1400 · Inventory 1284 · Store 729 · Lobby 217). `/games/` filters: Platform → Mobile (34 games), Genre, Theme. Clips too. | Built-in browser. URL patterns `/games/<slug>/` (title list) and `/screenshots/<slug>-<screen-title>/` (one shot, e.g. `brawl-stars-main-menu`, `teamfight-tactics-mobile-main-menu`, `dota-underlords-mobile-game-summary`). **Trap:** the first capture after a page load is black — wait 3 s, then `zoom` the region 0,40–800,500 twice; the second one shows the image. WebFetch sees only titles/tags, no images. Some slugs 404 (marvel-snap, afk-arena, hearthstone shot pages) → open the game page and use the link. | Best for real shipped mobile screens |
+| **gameuidatabase.com** (Game UI Database 2.0, Edd Coates) | Largest: ~55,000 screens + ~1,700 videos from ~1,341 games; filters by screen type (main menu, HUD, shop, inventory, results…), layout, colour, material, texture, shape, genre; free. | WebFetch gets 403. Try the built-in browser; if blocked, ask the owner to open the filter and send 1–3 screenshots. | Best for "how do 20 games solve screen X" |
+| YouTube gameplay / GDC Vault talks | Flow, motion, timing, what happens after a tap | Search by game + screen; read transcripts only when the owner sends a link (youtube-transcriber skill) | Motion/flow questions |
+| Mobbin | Real app screens (not games) | Only for plain patterns: settings, lists, forms, onboarding | Low for game look |
+| Dribbble · Behance · ArtStation · Pinterest | Concept shots, mostly never shipped | Ideas for material/ornament only; a concept is not proof a layout works (Behance blocked WebFetch before) | Low |
+| The Spriters Resource and other ripped-asset sites | Ripped game art | **Never** — no licence (HARD RULE 9 part 2) | — |
+
+**Which games to look up for which screen** (start here, add more only if the owner asks):
+- Prep / shop / bench / board: TFT mobile · Dota Underlords mobile · Super Auto Pets · Auto Chess (§1, §1b).
+- Hub / home / lobby, mode picker, result: Brawl Stars · TFT mobile · Clash Royale · Underlords (§7).
+- Look / material / HD-2D feel: FF Resonance (reviews only) · Octopath line [K].
+- Card / tooltip / item text: Hearthstone · Backpack Battles · The Bazaar · Slay the Spire [K].
+- Collection / roster grid: Brawl Stars "Brawlers" · TFT "Little Legends" · Genshin "Character Archive" (titles seen on interfaceingame, pictures not yet seen).
+
+**Evidence for new lines:** a screen Claude actually saw = [C: hub, date]; titles/tags only = [S-text]; memory = [K]. A new game block goes in §1 (prep) or §7 (hub/result) with its source URL in §6 "Image sources".
 
 ---
 
@@ -198,6 +222,47 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 - ~~UI temperature (DO 20)~~ → **closed set 212 (owner R5-A2):** cool slate panels + steel-blue line + pale blue Fight plate (godot/data/tone.json). Revisit only if art-look Gate 1 changes the arena light.
 - Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board, an HD-2D shop/menu on a phone. §1 lines for those stay [K]/[S-text].
 - Image sources (12 Nov 2026): https://interfaceingame.com/games/teamfight-tactics-mobile/ · https://interfaceingame.com/games/dota-underlords-mobile/ · MobyGames Super Auto Pets screenshot · a fan wiki capture of the FF Resonance equipment screen (via image search). No image is stored in the repo.
+- Image sources (12 Nov 2026, V1.4): https://interfaceingame.com/screenshots/brawl-stars-main-menu/ · https://interfaceingame.com/screenshots/teamfight-tactics-mobile-main-menu/ · https://interfaceingame.com/screenshots/dota-underlords-mobile-game-summary/ · title/tag lists of clash-royale, brawl-stars, hearthstone, genshin-impact game pages. Not seen yet (page failed to show): Clash Royale main menu, TFT lobby.
+
+## 7. Hub / home screen and result screen (the "game hub")
+
+The hub is the first screen and the one seen most often. Its one job: **start the next run in one tap**, while showing what the player owns and what is next. MVP1 is offline single-player (CLAUDE.md scope), so the genre's shop / season pass / chat / clan slots are NOT ours — never fill those slots with fake buttons to make the screen look full (that is an AI tell, §4 "filler").
+
+### Screens seen [C: interfaceingame, 12 Nov 2026]
+- **Brawl Stars main menu (phone, landscape):** centre = the chosen character, big, standing on plain bright ground, with rank + power badges floating over it. Top-left: profile chip + trophy progress. Top-right: 2 currencies + menu button. Left edge: 3 stacked icon buttons (shop, characters, news), each with a red **count** badge. Right edge: 3 (friends, club, chat). Bottom-left: season-pass card with a progress bar "33/100" + badge. Bottom-centre: current mode card (mode, map, time to the next event, info button). Bottom-right: PLAY — the widest, warmest, thickest-outlined object on screen.
+- **TFT mobile main menu:** centre-right = the player's mascot, big, over a painted landscape. Thin top bar: avatar + name left; one currency + 4 small icons (profile, collection, bell, settings) right. Left: only 3 large rows, each = round icon + word (Rewards with its level bar under the word, Store, Team planner) — words, not an icon grid. Bottom-left: pass banner card. Bottom-right: round mode button (shows the mode name under it) touching a wide chevron PLAY button. About 6 choices on the whole screen.
+- **Underlords game summary (result):** a large paper sheet on the left 2/3: placement title + mode, the commander portrait, the final team as a grid with star ranks, the alliance icons row, then 3 big numbers with labels (rounds won · unit damage · gold earned), then a story strip "scroll to read more". Right side: PLAY AGAIN largest, LEAVE MATCH smaller under it. The 3D board stays visible behind the sheet.
+- Titles seen only [S-text]: Clash Royale "Main menu" / "Battle Deck" / "Chest reward" / "Match over"; Brawl Stars "Choose event" (mode picker) / "Victory" / "Collect the rewards"; TFT "Select mode" (27 shots = the mode picker is a big screen of its own); Hearthstone "Dalaran" (hub drawn as a map).
+
+### Hub DO (H-rules, idea level)
+- H1. **Play = bottom-right, biggest, warmest colour, a game object** (Brawl, TFT; Clash Royale puts it bottom-centre in portrait [K]). The mode in use sits on or touching Play, so the player sees what they start.
+- H2. **Centre = what the player owns, not a menu.** A hero, mascot or team on a stand. Ours: the player's last or favourite team standing on the 3D rune plaza — the hub becomes a display case for the game's own art.
+- H3. **Status is thin and on top:** identity top-left, resources top-right, small. Nothing to tap there except settings/profile.
+- H4. **Few choices in view (≤ 6), split by hand:** often-used near the thumbs, rare things behind a menu. TFT shows 3 big word rows instead of 9 icons.
+- H5. **Progress lives on the button:** a bar + "n/m" on the card that leads there (pass card, rewards row). The hub answers "what is next for me" without a tap.
+- H6. **Badges only for something new, as a count,** and they clear when seen. A hub full of red dots = noise.
+- H7. **Mode/event card next to Play** with what changes (name, map, a timer when one exists).
+- H8. **Word + icon on hub buttons** (TFT rows, Brawl's labelled icons). Icon-only is for the small top bar.
+
+### Result screen DO
+- R1. Placement or win/lose as the biggest line; the final team shown as it ended (stars); 3 numbers max, each with a label; story/details below a fold.
+- R2. **Play again = biggest button, where Play was** (top-right on Underlords; keep ours on the same hand as the hub's Play). Leave = smaller, under it.
+- R3. The scene stays visible behind the result sheet (the sheet is paper/stone of the world, not a dark overlay).
+
+### Hub DON'T
+- No empty shop/pass/social slots in an offline game. No "coming soon" buttons.
+- No icon grid of 9+ equal tiles (§4 identical grid tell).
+- No full-screen modal popups on launch stacking before the hub (daily reward, news…) — one at most, skippable.
+- No moving Play between versions (§3.5).
+
+## 8. Idea mode — when the owner says what they want changed
+
+The owner describes a change ("ปุ่มนี้ดูจืด", "อยากให้หน้าแรกน่าเล่นขึ้น", "ช่องร้านค้าอ่านยาก"). Claude:
+1. Names the screen and the problem in one line (what job is failing: reading, finding, tapping, feeling).
+2. Looks in this file first (§1, §1b, §2, §7). Only if nothing fits: one look-up round in §0 hubs (2–4 games from the "which games" list), noted with [C]/[S-text].
+3. Offers **2–3 ideas, each from a named real game**: what that game does · how it would look in ours (our cut-corner slate panels, pixel sprites, Thai labels) · what we deliberately do differently · cost (small / medium / big). Recommend one. Label A1/A2/A3 (replies.md), then the buttons.
+4. Checks each idea against §3 DON'T, §4 tells and MVP1 scope before offering it; an idea that needs a system outside MVP1 is named as such, not offered as a pick.
+5. After the owner picks: the normal path (ui-preview sample, or ui-work build). New facts learned go into §1/§7 the same commit.
 
 ## Sources (read 12 Nov 2026)
 - Riot, TFT Interface Update (level bar, button swap): https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/tft-interface-update/
