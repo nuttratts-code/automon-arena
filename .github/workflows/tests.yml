@@ -65,6 +65,10 @@ jobs:
         run: node lab/golden.mjs
       - name: Get Godot (pinned + checksum)
         run: echo "GODOT=$(godot/tools/get_godot.sh "$RUNNER_TEMP/godot")" >> "$GITHUB_ENV"
+      - name: Import Godot assets (set 215)
+        # set 215 find-cause (CI #915 red): a fresh checkout has no .godot/imported cache, so load() of any image/model
+        # added since (set 213 data/ui_icons/*.png → "pixel icon … must load") fails. Same import line as the godot-web job.
+        run: timeout 300 "$GODOT" --headless --path godot --import > /dev/null 2>&1 || true
       - name: Godot tests (headless)
         # grep + timeout too: never trust the exit code alone (set 192: a broken test file once hung the runner) · set 195: full run ~11 min locally → 1,800 s
         run: |

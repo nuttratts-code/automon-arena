@@ -48,6 +48,14 @@ def tris(o):
 for nm in ("grass", "Camera", "Sun"):  # drop what Godot does not use first (the PC has ~8 GB RAM)
     if nm in bpy.data.objects:
         bpy.data.objects.remove(bpy.data.objects[nm])
+# the runes are children of their standing stones: unparent everything (keep the world place) so the moves, joins and
+# the scale below act once per object (first export put the runes in the middle of the board)
+for o in bpy.data.objects:
+    if o.parent is not None:
+        mw = o.matrix_world.copy()
+        o.parent = None
+        o.matrix_world = mw
+bpy.context.view_layer.update()
 plaza = bpy.data.objects["plaza"]
 # the plaza mesh is not centred on its origin: move the whole scene so the plaza centre = the board centre (0, 0)
 from mathutils import Vector

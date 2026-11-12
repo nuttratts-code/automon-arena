@@ -265,6 +265,7 @@ func _scene(dark: bool) -> bool:
 	var tex: Variant = ResourceLoader.load(PLAZA_TEX) if ResourceLoader.exists(PLAZA_TEX) else null
 	if tex is Texture2D:
 		plaza.albedo_texture = tex
+	plaza.albedo_color = Color(0.8, 0.8, 0.78) if not dark else Color(0.62, 0.6, 0.66) # the picture is drawn unlit: tone it down under the sun + sky light
 	plaza.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	plaza.alpha_scissor_threshold = 0.5
 	plaza.roughness = 1.0
