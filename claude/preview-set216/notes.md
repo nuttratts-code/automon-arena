@@ -54,3 +54,9 @@ Rebuild R6: as R5 + those two grow_individual lines.
 12. (R7, pending) Dock + odds row + reroll moved under the top bar (tscn parent Top; dock x shifted +40 to clear the tribe chips, reroll 74 wide at the right) · message line under the odds (y 164) · prep board rect = y 168 → bottom (app.gd board_targets) · shop cards bg alpha 0.55 (slot_cell.gd shop branch; set 212 GLASS 0.94 stays for the rest).
 Seen: board + units much bigger (the empty bottom tray is gone) · the shop covers the top band, so the far scenery is mostly hidden; through the cards you see the plaza floor · back-row heads touch the odds row · Fight stays bottom-right, bench left.
 Rebuild R7: after R5 (or R6), `python r7-patch-shoptop.py <g>`.
+
+## R8 — owner: "move the old top-bar things to the bottom"
+13. (R8, pending) HUD icon buttons (rune, enemy, legend, menu) → bottom-left under the bench · round title + hearts + gold chips → bottom row between them and Fight · shop row moved up to the very top (dock y 12, reroll top-right, odds under the shop, message line under the odds) · prep board rect y 150 → H-50.
+Seen: top band = shop only, bottom band = status + Fight; units big; stones show at the left behind the bench.
+Known: the ⋯ menu popup opens downward from its button → off screen (prep-menu AUDIT off) → at ทำจริง it must open upward. Patch also moves the reparented node blocks after the Tray node (a .tscn node must come after its parent).
+Rebuild R8: after R7, `python r8-patch-hudbottom.py <g>`.
