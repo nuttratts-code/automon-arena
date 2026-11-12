@@ -27,7 +27,18 @@ Samples made with skill `ui-preview` on a scratch copy of godot/. `sample.diff` 
 - R5-A2 cool: slate panels #1c2a33 + steel-blue line #7fa3b5 + pale blue Fight button.
 - Tells left: one default sans font (display font = open point) · same corner cut on every box.
 
+## Round 6 (12 Nov, set 212) — owner picked the COOL tone (R5-A2); corner style not answered → cut corners kept
+- Rebuild: sample.diff → r5-patch1.py → r5-patch2.py → r6-patch.py (cool is now fixed in code, no env needed).
+8. **UI tone = cool** (slate panels #1c2a33, steel-blue line #7fa3b5, pale blue Fight) · near-solid panels · cut corners on every box (motif candidate) · Fight = plate lit from top-left.
+9. **Arena stars under the unit:** the cell's stars row sits at the bottom of the cell (tile front edge).
+10. **Bench stars right-aligned** in each row (tribe shapes stay left under the name).
+11. **Tribe chip row 12 px lower** (it crowded the top bar).
+12. **Tile rims (blue squares) hidden** — shown only while a unit is dragged (all own-side rims) or when a rim is lit by a state (merge / drop / pick).
+13. **No "+ถาวร" mark** on units — the card shows permanent bonuses on tap.
+
 ## Open / to watch
+- Back-row stars sit at their tile's front edge, close to the heads of front-row units (snake) — watch on other team shapes.
+- Rims hidden in battle too (sample) — decide if battle needs them.
 - Gold stars blend into gold sprites (e.g. the snake) — owner may want white stars.
 - Odds text without outline sits on the floor (grey/blue digits a bit faint) — offered a faint backing strip.
 - Lock tap target must be ≥ 24 px (shots AUDIT "small").
