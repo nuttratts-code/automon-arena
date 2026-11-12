@@ -22,7 +22,7 @@ Look here first: Game UI Database for "many games, one screen type", interfacein
 | The Spriters Resource and other ripped-asset sites | Ripped game art | **Never** — no licence (HARD RULE 9 part 2) | — |
 
 **Which games to look up for which screen** (start here, add more only if the owner asks):
-- Prep / shop / bench / board: TFT mobile · Dota Underlords mobile · Super Auto Pets · Auto Chess (§1, §1b).
+- Prep / shop / bench / board: TFT mobile · Dota Underlords mobile · Super Auto Pets · Auto Chess (§1, §1b). Not on Game UI Database (checked 12 Nov 2026): Auto Chess, Chess Rush, TFT, Hearthstone Battlegrounds, Octopath Traveler II → interfaceingame or owner screenshots.
 - Hub / home / lobby, mode picker, result: Brawl Stars · TFT mobile · Clash Royale · Underlords (§7).
 - Look / material / HD-2D feel: FF Resonance (reviews only) · Octopath line [K].
 - Card / tooltip / item text: Hearthstone · Backpack Battles · The Bazaar · Slay the Spire [K].
@@ -140,7 +140,7 @@ Why these five: Underlords = same genre on a landscape phone · FF Resonance = o
 - Party / equipment: full-screen translucent teal over a blurred scene; serif all-caps title with a thin rule ending in a diamond; left list of rows = cropped face strip + class diamond; centre portrait card with level/HP/MP; attribute list with an icon per stat; equipment/abilities lists right; button hints bottom-right. Reviews' "many identical rows" holds: every row the same weight.
 - Shop: buy list left (name, coin price, "held" count) over the dimmed shop interior; right side = each party member's face strip with the stat change in red/green numbers (compare while browsing).
 - Battle result: rows of label / value / icon on the left (EXP, gold, rank points), bonus callout in orange italic, the field scene visible behind.
-- Takeaway for us: motif = diamond + thin rule everywhere small (cursor, node, title end) — matches DO 19; panels are cool teal over a warm scene — matches DO 20 and our set 212 cool-slate pick.
+- Takeaway for us: FF uses ONE motif (diamond + thin rule) on every small thing — the DO 19 idea; ours stays the cut corner (set 212), never the diamond (line "One shape motif per game"); panels are cool teal over a warm scene — matches DO 20 and our set 212 cool-slate pick.
 
 **Triangle Strategy (id 1539)**
 - Battle: tilted diorama board; turn order = row of portrait cards across the bottom centre on a thin timeline, next actor raised; selected unit card bottom-left (portrait, name, class, HP bar, level); terrain info top-right as bare text on a rule; facing/target marks = glowing bracket corners on tiles, no big arrows.
