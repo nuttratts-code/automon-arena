@@ -13,12 +13,12 @@ const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
 const SHAPE := preload("res://scripts/ui/shape.gd")
 
-const PITCH := 40.0 # degrees the camera looks down (angle A)
-const FOV := 34.0 # vertical field of view, degrees
+const PITCH := 22.0 # degrees the camera looks down (angle A)
+const FOV := 26.0 # vertical field of view, degrees
 const SPR_H := 1.7 # every unit stands this tall (world units)
 const TILE := 1.8
 const COL_X := [1.35, 3.35, 5.35] # row 0 front … 2 back: distance from the midline
-const LANE_Z := [-1.4, 1.4] # lane 0 = far line (top of the screen), lane 1 = near line
+const LANE_Z := [-2.3, 2.3] # lane 0 = far line (top of the screen), lane 1 = near line
 
 signal moved # the camera changed: the screens put their cells on the new projected rects
 
@@ -46,7 +46,7 @@ static func key(side: int, row: int, lane: int) -> String:
 	return "%d:%d:%d" % [side, row, lane]
 
 static func slot_pos(side: int, row: int, lane: int) -> Vector3:
-	return Vector3((-1.0 if side == 0 else 1.0) * float(COL_X[row]), 0.0, float(LANE_Z[lane]))
+	return Vector3((-1.0 if side == 0 else 1.0) * (float(COL_X[row]) + (1.0 if lane == 0 else 0.0)), 0.0, float(LANE_Z[lane]))
 
 static func cam_basis() -> Basis:
 	return Basis.from_euler(Vector3(deg_to_rad(-PITCH), 0.0, 0.0))
@@ -251,9 +251,10 @@ func _scene(dark: bool) -> bool:
 		m.roughness = rough
 		return m
 	var mats := {
-		"Near": vc.call(1.0), "Far": vc.call(1.0), "Flowers": vc.call(1.0), "Rocks": vc.call(0.95),
+		"Near": vc.call(1.0).duplicate(), "Far": vc.call(1.0), "Flowers": vc.call(1.0), "Rocks": vc.call(0.95),
 		"Arch": vc.call(0.95), "Woods": vc.call(1.0),
 	}
+	mats["Near"].albedo_color = Color(1.35, 1.45, 1.0) if not dark else Color(0.9, 0.9, 1.0)
 	var rune := StandardMaterial3D.new() # the carved runes on the standing stones glow (art-look §1 item 3: bright accents)
 	rune.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	rune.albedo_color = Color("#8fe8ff")
@@ -277,7 +278,45 @@ func _scene(dark: bool) -> bool:
 		if m != null:
 			mi.material_override = m
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # set 214: no shadowed sun in Compatibility
+		var nm := String(mi.name) + "|" + String(mi.get_parent().name)
+		for hide in ["Far", "Rocks", "Arch", "Woods", "Runes", "Flowers"]:
+			if nm.begins_with(hide) or nm.contains("|" + hide):
+				mi.visible = false
+	_cards(dark)
 	return true
+
+func _card(file: String, at: Vector3, h: float, flip: bool = false, tint: Color = Color.WHITE, upright: bool = true) -> Sprite3D:
+	var t: Variant = load("res://art/s217/" + file + ".png")
+	var sp := Sprite3D.new()
+	sp.texture = t
+	sp.pixel_size = h / float((t as Texture2D).get_height())
+	sp.centered = true
+	sp.offset = Vector2(0, (t as Texture2D).get_height() / 2.0)
+	sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y if upright else BaseMaterial3D.BILLBOARD_DISABLED
+	sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+	sp.shaded = false
+	sp.flip_h = flip
+	sp.modulate = tint
+	sp.position = at
+	sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	add_child(sp)
+	return sp
+
+func _cards(dark: bool) -> void:
+	# set 217 sample: the owner places the cards in scenes/arena_dressing.tscn (Godot editor); Guides + GameCam are editor-only
+	var ps: Variant = load("res://scenes/arena_dressing.tscn") if ResourceLoader.exists("res://scenes/arena_dressing.tscn") else null
+	if not (ps is PackedScene):
+		return
+	var d: Node3D = (ps as PackedScene).instantiate()
+	for nm in ["Guides", "GameCam"]:
+		var n := d.get_node_or_null(nm)
+		if n != null:
+			d.remove_child(n)
+			n.free()
+	if dark:
+		for sp in d.find_children("*", "Sprite3D", true, false):
+			sp.modulate = sp.modulate * Color(0.62, 0.58, 0.72)
+	add_child(d)
 
 func _code_floor(dark: bool) -> void:
 	var ground := MeshInstance3D.new()
