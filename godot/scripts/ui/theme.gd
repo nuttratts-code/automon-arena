@@ -143,6 +143,41 @@ static func box(bg: Color, line: Color, radius: int = 8, border: int = 1, pad_x:
 	s.anti_aliasing = not cut
 	return s
 
+# set 213 (H1): a plate on the table — hard dark ledge bottom 4 / right 2 in the box's border colour (light from the
+# top-left, same language as the Fight plate in primary()) · pressed = ledge 2 and the content 2 lower (pushed in)
+static func ledge(s: StyleBoxFlat, pressed: bool) -> void:
+	var top := s.border_width_top
+	s.border_width_bottom = top + (1 if pressed else 3)
+	s.border_width_right = top + 1
+	if pressed:
+		s.content_margin_top += 2
+
+# set 213 (R2): small pixel icons from data/ui_icons (Kenney Board Game Icons 1.1, CC0 — credits.json "kenney"),
+# resampled to the sprites' pixel size: rune / enemy / legend = plain 24 px silhouettes, atk / hp / cd = 20 px with outline
+static var _uicons := {}
+static func uicon(key: String) -> Texture2D:
+	if not _uicons.has(key):
+		var path := "res://data/ui_icons/%s.png" % key
+		var r: Variant = ResourceLoader.load(path) if ResourceLoader.exists(path) else null
+		_uicons[key] = r if r is Texture2D else null
+	return _uicons[key]
+
+# set 213 (A1): phone notch / rounded corners → extra inset per edge [left, top, right, bottom] in viewport units.
+# Phones only (desktop "safe area" = the desktop minus the taskbar, not a notch); capped so a bad value cannot eat the screen.
+static func safe_insets(vp: Viewport) -> Array:
+	var none := [0.0, 0.0, 0.0, 0.0]
+	if vp == null or not (OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")):
+		return none
+	var win := DisplayServer.window_get_size()
+	var safe := DisplayServer.get_display_safe_area()
+	if win.x <= 0 or win.y <= 0 or safe.size.x <= 0 or safe.size.y <= 0:
+		return none
+	var pos := DisplayServer.window_get_position()
+	var k := vp.get_visible_rect().size / Vector2(win)
+	var cap := 64.0
+	return [clampf((safe.position.x - pos.x) * k.x, 0.0, cap), clampf((safe.position.y - pos.y) * k.y, 0.0, cap),
+		clampf((pos.x + win.x - safe.end.x) * k.x, 0.0, cap), clampf((pos.y + win.y - safe.end.y) * k.y, 0.0, cap)]
+
 # The app theme: body font 14 px, ink on bg, web buttons (panel + 1 px line, radius 8) and inputs.
 static func build() -> Theme:
 	var t := Theme.new()

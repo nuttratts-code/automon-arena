@@ -1145,6 +1145,43 @@ func test_rims_drag_only() -> String:
 	_cleanup()
 	return "ok" if bad == "" else bad
 
+# set 213 (R1+R2): next-round gold on the gold chip · "drop here to sell +N" over the shop only while an own unit is dragged ·
+# reroll as wide as Fight · HUD buttons = Kenney pixel icon + number · plate ledge on glass buttons
+func test_prep_set213_parts() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app.prep.render()
+	var p: Control = app.prep
+	var bad := ""
+	if not p.next_gold.text.contains(TH.ui_text("g_next_gold", {"g": ""}).strip_edges()):
+		bad = "gold chip must show the next-round income: '%s'" % p.next_gold.text
+	elif p.sell_hint.visible:
+		bad = "sell hint must be hidden at rest"
+	if bad == "":
+		p.drag_started({"at": "board", "row": 0.0, "lane": 0.0})
+		if not p.sell_hint.visible or not p.sell_text.text.contains("+"):
+			bad = "sell hint must show with the refund while an own unit is dragged"
+		p.drag_ended()
+		if bad == "" and p.sell_hint.visible:
+			bad = "sell hint hides after the drag"
+	if bad == "" and p.btn_reroll.size.x != p.btn_fight.size.x and p.btn_reroll.get_combined_minimum_size().x <= p.btn_fight.size.x:
+		bad = "reroll width %s must equal fight width %s" % [p.btn_reroll.size.x, p.btn_fight.size.x]
+	if bad == "":
+		for k in ["rune", "enemy", "legend", "atk", "hp", "cd"]:
+			if TH.uicon(k) == null:
+				bad = "pixel icon data/ui_icons/%s.png must load" % k
+				break
+	if bad == "" and (p.btn_runes.icon == null or p.btn_runes.text.contains(TH.ui_text("rune"))):
+		bad = "rune button = icon + number (the word moves to the tooltip)"
+	if bad == "":
+		var sb: Variant = p.btn_reroll.get_theme_stylebox("normal")
+		if not (sb is StyleBoxFlat) or (sb as StyleBoxFlat).border_width_bottom <= (sb as StyleBoxFlat).border_width_top:
+			bad = "glass buttons need the plate ledge (bottom border thicker than top)"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
 # set 212 (note 4): tapping the padlock on a shop card locks / unlocks that slot (no card) · a tap elsewhere opens the card
 func test_shop_padlock_tap() -> String:
 	var app := _app_tmp()

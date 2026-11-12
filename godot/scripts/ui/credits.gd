@@ -186,7 +186,7 @@ static func clean(raw: Variant) -> Dictionary:
 			continue
 		var eng := _str(s.get("engine"), "")
 		var lf := _str(s.get("licence_file"), "")
-		if not (lf.begins_with("res://data/fonts/") and lf.ends_with(".txt") and not lf.contains("..")):
+		if not ((lf.begins_with("res://data/fonts/") or lf.begins_with("res://data/ui_icons/")) and lf.ends_with(".txt") and not lf.contains("..")): # set 213: + Kenney icon licence
 			lf = ""
 		var lines: Array = []
 		var ls: Variant = s.get("lines")
