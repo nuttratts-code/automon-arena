@@ -41,6 +41,11 @@ Samples made with skill `ui-preview` on a scratch copy of godot/. `sample.diff` 
 14. **Tribe shape + stars at each unit's feet, inside the 3D scene** (children of the sprite, depth-tested): a unit standing in front hides them, same as it hides the unit ("ของใครของมัน"). The 2D badge row on board cells is gone. Prep only (battle units unchanged in the sample).
 15. **Shop card stats row** under the picture: attack (sword) · HP (heart) · cooldown in seconds (clock), level-1 values, icons drawn in code, numbers 14 px bold. Cards taller: dock top 62 → 40, odds line 34/62 → 12/40, arena bottom 22 px higher.
 
+## Round 8 (12 Nov, set 212)
+- Rebuild: … → r7-patch2.py → r8-patch.py.
+16. **Foot marks bigger, tribe shape = star size:** star font 64 × pixel 0.0058, shape side 0.34 world (outline included), row ~0.14 above the sprite's bottom.
+17. **Shop card picture 34 → 47 px** (largest that still fits the card at 844×390; 52 pushed the dock off screen).
+
 ## Open / to watch
 - Cooldown shows a bare number (no "วิ") — unit on tap only.
 - Foot marks are small at 844 (shape ~11 px, stars ~14 px); back-row marks can be fully hidden by a tall front unit (owner's wish, but the player then cannot read that unit's stars without tapping).
