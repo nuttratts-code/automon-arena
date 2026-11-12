@@ -35,3 +35,7 @@ Conflict (told the owner): changes art-style §8 angle A (7 Nov, high look-down)
 8. (R3, pending) stage3d.gd PITCH 40 → 20 · FOV 34 → 26 (longer lens = flatter, diorama feel) · prep board rect shrunk (app.gd board_targets grow_individual(-side-50, -70, -side-50, -4)) so the plaza edge + standing stones show above the team.
 Seen: battle shows stones + horizon; prep shows stones at the top; units ~20 % smaller in prep; at 20° back-row units sit behind front-row HP bars (battle foe side) — needs a fix at ทำจริง (lift HP bars / stagger lanes). Beyond the stones the scene is dark (hills/arch not in the 215 export). Tilt-shift blur not tried (Compatibility renderer has no DOF; would need a screen shader).
 Rebuild R3: after R1, sed PITCH 20.0 + FOV 26.0 in scripts/ui/stage3d.gd + the board_targets line.
+
+## R4 — owner: "lower still"
+9. (R4, pending) PITCH 20 → 12 (FOV 26, prep zoom-out kept). Stones + sky fill the top third in both screens. Cost: rune rings become thin ellipses, units overlap more (prep: back-row unit half hidden; battle foe side: 3 units in a pile, HP bars stacked) → at ทำจริง lanes need more depth spacing or HP bars lifted.
+Rebuild R4: as R3 with PITCH 12.0.
