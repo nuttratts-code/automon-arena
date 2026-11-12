@@ -1,5 +1,4 @@
 {
-"_note": "Set 196 (plan-set196 7a): screen captions for the Godot UI, copied from the web game v132 (src/game/run). src/tests/run.js checks every text still appears in the web source ({x} = a value filled in at run time). Change both. Set 200: keys starting with g_ are Godot-only texts (no web counterpart: offline Log, credits menu entry) and are not checked against the web source.",
 "title": "Automon Arena",
 "tagline": "จัดทีม · รวมเผ่า · ปล่อยให้สู้เอง",
 "name_label": "ชื่อผู้เล่น",
@@ -44,7 +43,6 @@
 "fight_boss": "สู้บอส",
 "fight_confirm": "ยืนยันสู้",
 "sold": "ขายแล้ว",
-"perm_dot": "+ถาวร",
 "lock": "ล็อก",
 "unlock": "ปลดล็อก",
 "buy_occupied": "ซื้อลงช่องที่มีตัวอยู่ไม่ได้ เลือกช่องว่าง หรือลากไปทับตัวชนิดเดียวกันเพื่อรวมร่าง",

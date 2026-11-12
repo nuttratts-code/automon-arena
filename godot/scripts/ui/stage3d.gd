@@ -10,6 +10,7 @@ extends Node3D
 
 const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
+const SHAPE := preload("res://scripts/ui/shape.gd")
 
 const PITCH := 40.0 # degrees the camera looks down (angle A)
 const FOV := 34.0 # vertical field of view, degrees
@@ -23,6 +24,9 @@ signal moved # the camera changed: the screens put their cells on the new projec
 var cam: Camera3D
 var sun: DirectionalLight3D
 var env_node: WorldEnvironment
+var rims := {} # set 212 (note 12 + C1): "side:row:lane" → rim mesh · hidden unless a state lights it or a drag is on
+var lit := {} # keys whose rim a state lights now
+var rims_drag := false
 var tiles := {} # "side:row:lane" → rim material (the rune rim shows idle / state colours)
 var groups := {} # name → {id → {spr, shadow, ring, home}}
 var shown := ""
@@ -200,6 +204,9 @@ func _floor(dark: bool) -> void:
 				var r1 := _box(Vector3(TILE + 0.14, 0.03, TILE + 0.14), c + Vector3(0, 0.015, 0), rm, "Rim" + key(s, row, lane).replace(":", "_"))
 				var t1 := _box(Vector3(TILE - 0.08, 0.05, TILE - 0.08), c + Vector3(0, 0.03, 0), stone, "Tile" + key(s, row, lane).replace(":", "_"))
 				tiles[key(s, row, lane)] = rm
+				rims[key(s, row, lane)] = r1
+				r1.set_meta("key", key(s, row, lane))
+				r1.visible = false
 				if s == 1:
 					foe_tiles.append([r1, r1.position.y])
 					foe_tiles.append([t1, t1.position.y])
@@ -236,7 +243,7 @@ func _foe_rise() -> void:
 	var r := foe_rise_of(k)
 	for it in foe_tiles:
 		var m: MeshInstance3D = it[0]
-		m.visible = r > 0.0
+		m.visible = r > 0.0 and (not m.name.begins_with("Rim") or _rim_on(m))
 		m.position.y = float(it[1]) - FOE_SINK * (1.0 - r)
 
 func pose() -> Transform3D:
@@ -256,10 +263,36 @@ func tint(side: int, row: int, lane: int, col: Variant) -> void:
 	var m: StandardMaterial3D = tiles.get(key(side, row, lane))
 	if m == null:
 		return
+	var rk := key(side, row, lane)
+	if col is Color:
+		lit[rk] = true
+	else:
+		lit.erase(rk)
+	_rim_show(rk)
 	var c: Color = col if col is Color else rim_idle
 	m.albedo_color = c
 	m.emission = c
 	m.emission_energy_multiplier = 0.9 if col is Color else 0.25
+
+# own-side rims show while a unit is dragged (prep.drag_started / drag_ended); a lit rim always shows
+func show_rims(on: bool) -> void:
+	rims_drag = on
+	for rk in rims:
+		_rim_show(rk)
+
+func _rim_on(m: MeshInstance3D) -> bool:
+	var rk := str(m.get_meta("key", ""))
+	return lit.has(rk) or (rims_drag and rk.begins_with("0:"))
+
+func _rim_show(rk: String) -> void:
+	var m: MeshInstance3D = rims.get(rk)
+	if m == null:
+		return
+	m.set_meta("key", rk)
+	var on := _rim_on(m)
+	if rk.begins_with("1:"):
+		on = on and foe_rise_of(k) > 0.0
+	m.visible = on
 
 # ---------- units ----------
 static func blob_tex() -> Texture2D:
@@ -353,12 +386,93 @@ func add_unit(group: String, u: Dictionary) -> void:
 		ring.position = feet + Vector3(0, 0.07, 0)
 		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(ring)
+	if u.has("level") and not big: # set 212 (notes 14/16/18): tribe shape + stars at the feet, children of the sprite (depth-tested)
+		foot_marks(s, c, int(u["level"]), tall)
 	var vis := shown == group
 	s.visible = vis
 	sh.visible = vis
 	if ring != null:
 		ring.visible = vis
 	groups[group][u["id"]] = {"spr": s, "shadow": sh, "ring": ring, "home": home, "side": side}
+
+# set 212 foot marks (prep units pass "level"; battle units do not — they show HP bars): tribe shape (main tribe, dark outline)
+# then gold stars, centred under the sprite at its feet. They are children of the sprite and depth-tested, so a unit standing
+# in front hides them like it hides the unit (owner: "ของใครของมัน"). Shape side = the star glyph's height.
+const FOOT_PX := 0.0058 # world size of one font pixel of the stars
+const MARK := 0.34 # tribe shape side (world)
+const FOOT_DY := 0.05 # shape 5 % lower to sit level with the star centres
+const FOOT_Y := 0.14 # mark row above the sprite's bottom edge
+const FOOT_FS := 64
+const FOOT_GAP := 0.06
+
+static func in_shape(kind: String, x: float, y: float) -> bool: # x, y in 0..1 (same shapes as shape.gd)
+	if kind == "circle":
+		return Vector2(x - 0.5, y - 0.5).length() <= 0.5
+	if not SHAPE.POLY.has(kind):
+		return x >= 0.06 and x <= 0.94 and y >= 0.06 and y <= 0.94
+	var poly: Array = SHAPE.POLY[kind]
+	var inside := false
+	var j := poly.size() - 1
+	for i in poly.size():
+		var a: Array = poly[i]
+		var b: Array = poly[j]
+		if (a[1] > y) != (b[1] > y) and x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]:
+			inside = not inside
+		j = i
+	return inside
+
+static var _marks := {} # "kind:colour" → texture (made once)
+static func shape_mark(kind: String, col: Color, n: int = 16) -> Texture2D: # tribe shape with a 2 px dark outline
+	var id := kind + ":" + col.to_html()
+	if _marks.has(id):
+		return _marks[id]
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var dark := Color(0.05, 0.05, 0.08, 0.95)
+	var ins := 2.0 / float(n)
+	for py in n:
+		for px in n:
+			var x := (float(px) + 0.5) / float(n)
+			var y := (float(py) + 0.5) / float(n)
+			if in_shape(kind, x, y):
+				var inner := in_shape(kind, 0.5 + (x - 0.5) / (1.0 - 2.0 * ins), 0.5 + (y - 0.5) / (1.0 - 2.0 * ins))
+				img.set_pixel(px, py, col if inner else dark)
+	var t := ImageTexture.create_from_image(img)
+	_marks[id] = t
+	return t
+
+func foot_marks(s: Sprite3D, c: Dictionary, level: int, tall: float) -> void:
+	var sp: Array = TH.TRIBE_SHAPE.get(c.get("tribe"), ["square", "mute"])
+	var n := maxi(1, level)
+	var star := Label3D.new()
+	star.name = "FootStars"
+	star.text = "★".repeat(n)
+	star.font = TH.font("body")
+	star.font_size = FOOT_FS
+	star.outline_size = 14
+	star.modulate = UV.STAR
+	star.outline_modulate = Color(0.05, 0.04, 0.02, 0.95)
+	star.pixel_size = FOOT_PX
+	star.shaded = false
+	star.double_sided = true
+	star.alpha_cut = Label3D.ALPHA_CUT_DISCARD
+	star.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	star.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var shp := Sprite3D.new()
+	shp.name = "FootTribe"
+	shp.texture = shape_mark(sp[0], TH.c(sp[1]))
+	shp.pixel_size = MARK / 16.0
+	shp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	shp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	shp.shaded = false
+	shp.double_sided = true
+	var star_w := float(FOOT_FS) * 0.82 * float(n) * FOOT_PX
+	var total := MARK + FOOT_GAP + star_w
+	var y := -tall / 2.0 + FOOT_Y
+	shp.position = Vector3(-total / 2.0 + MARK / 2.0, y - MARK * FOOT_DY, 0.04)
+	star.position = Vector3(-total / 2.0 + MARK + FOOT_GAP, y, 0.04)
+	s.add_child(shp)
+	s.add_child(star)
 
 func show_group(group: String) -> void:
 	shown = group

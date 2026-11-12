@@ -1,7 +1,11 @@
 # Set 196 (plan-set196 7a, user picks B1 + C1): the web game v132 look in Godot.
-# Colours = data/colours.json (generated from src/game/run/css/10-base.css by src/tools/exportdata.mjs).
+# Colours = data/colours.json (generated from src/game/run/css/10-base.css by src/tools/exportdata.mjs)
+#   + data/tone.json on top (set 212: Godot-only cool UI tone, owner pick R5-A2; hand-written).
 # Fonts = data/fonts/ (Mitr · IBM Plex Sans Thai · IBM Plex Mono, SIL OFL 1.1 — licence files beside them, credits in godot/README).
 # Texts = data/ui_th.json (screen captions) + data/labels.json (generated from src/game/labels.js).
+#   ui_th.json is copied from the web game v132 (src/game/run): src/tests/run.js checks every text still appears in the web source
+#   ({x} = a value filled in at run time) — change both. Keys starting with g_ are Godot-only texts (set 200), not checked.
+#   No "_note" keys in shipped data files (set 212, security part 4): dev notes live in these comments.
 # Everything is read at run time with FileAccess + JSON (data only; a bad file falls back to defaults, never runs code).
 extends RefCounted
 
@@ -17,6 +21,7 @@ const SIZE := {"body": 14, "hint": 13, "btn": 14, "h2": 15, "big": 20, "title": 
 
 static var dark := false
 static var _col := {}
+static var _tone := {}
 static var _fonts := {}
 static var _ui := {}
 static var _labels := {}
@@ -36,9 +41,18 @@ static func colours() -> Dictionary:
 		_col = d if d is Dictionary and d.get("light") is Dictionary and d.get("dark") is Dictionary else {"light": {}, "dark": {}}
 	return _col
 
+static func tone() -> Dictionary:
+	if _tone.is_empty():
+		var d: Variant = _json("res://data/tone.json")
+		_tone = d if d is Dictionary and d.get("light") is Dictionary and d.get("dark") is Dictionary else {"light": {}, "dark": {}}
+	return _tone
+
 # c("bg") → the token's colour in the current mode (magenta = missing token, easy to spot in screenshots)
 static func c(name: String) -> Color:
-	var v: Variant = colours()["dark" if dark else "light"].get(name)
+	var mode := "dark" if dark else "light"
+	var v: Variant = tone()[mode].get(name)
+	if not (v is String and Color.html_is_valid(v)):
+		v = colours()[mode].get(name)
 	return Color.html(v) if v is String and Color.html_is_valid(v) else Color.MAGENTA
 
 static func font(key: String) -> Font:
@@ -95,21 +109,38 @@ static func art(group: String, key: String) -> Texture2D:
 		if b64 is String:
 			var img := Image.new()
 			if img.load_png_from_buffer(Marshalls.base64_to_raw(b64)) == OK:
+				if group == "ui": # set 212 (note 7): the 32 px ui tiles hold a small picture → crop to the used part, squared
+					img = crop_square(img)
 				tex = ImageTexture.create_from_image(img)
 		_tex[id] = tex
 	return _tex[id]
 
-static func box(bg: Color, line: Color, radius: int = 8, border: int = 1, pad_x: int = 12, pad_y: int = 7) -> StyleBoxFlat:
+static func crop_square(img: Image) -> Image:
+	img.convert(Image.FORMAT_RGBA8)
+	var ur := img.get_used_rect()
+	if ur.size.x <= 0 or ur.size.y <= 0:
+		return img
+	var side := maxi(ur.size.x, ur.size.y)
+	var sq := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	sq.blit_rect(img, ur, Vector2i((side - ur.size.x) / 2, (side - ur.size.y) / 2))
+	return sq
+
+# set 212 (owner B1): every box has cut corners (chamfer, radius ≤ 7, no anti-alias) = the UI shape motif (echoes the
+# arena floor slabs). cut = false keeps a smooth rounded box (tribe shapes are game symbols, not boxes).
+const CUT_MAX := 7
+static func box(bg: Color, line: Color, radius: int = 8, border: int = 1, pad_x: int = 12, pad_y: int = 7, cut: bool = true) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
 	s.border_color = line
 	s.set_border_width_all(border)
-	s.set_corner_radius_all(radius)
+	s.set_corner_radius_all(mini(radius, CUT_MAX) if cut else radius)
+	if cut:
+		s.corner_detail = 1
 	s.content_margin_left = pad_x
 	s.content_margin_right = pad_x
 	s.content_margin_top = pad_y
 	s.content_margin_bottom = pad_y
-	s.anti_aliasing = true
+	s.anti_aliasing = not cut
 	return s
 
 # The app theme: body font 14 px, ink on bg, web buttons (panel + 1 px line, radius 8) and inputs.
@@ -138,10 +169,12 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", box(c("panel"), c("line"), 16, 1, 24, 24))
 	return t
 
-# Button variants used by the web page (class primary / big)
+# Button variants used by the web page (class primary / big) · set 212: a plate lit from the top-left (dark bottom 4 px / right 2 px edge)
 static func primary(b: Button, big: bool = false) -> void:
 	for st in ["normal", "hover", "pressed", "disabled"]:
-		var s := box(c("accent"), c("accent"), 10 if big else 8)
+		var s := box(c("accent"), c("accent").darkened(0.45), 10 if big else 8, 0)
+		s.border_width_bottom = 4
+		s.border_width_right = 2
 		if st == "hover" or st == "pressed":
 			s.bg_color = c("accent").darkened(0.12) if not dark else c("accent").lightened(0.12)
 		b.add_theme_stylebox_override(st, s)

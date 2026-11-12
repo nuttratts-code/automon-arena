@@ -14,7 +14,7 @@ var picked := false
 var hi := 0 # 1 = tribe highlight on · -1 = dimmed
 var drop_ok := false
 var owned := false # set 207 P9: shop card of a kind you already own
-const GLASS := 0.72
+const GLASS := 0.94 # = prep.gd GLASS (set 212 near-solid)
 var stage_slot: Array = [] # set 206: [side, row, lane] = a board cell on the 3D arena (no box; states light the tile's rune rim)
 var stage: Node3D = null
 
@@ -61,7 +61,11 @@ func _gui_input(e: InputEvent) -> void:
 		if e.pressed:
 			_dragged = false
 		elif not _dragged and prep != null and get_global_rect().has_point(e.global_position):
-			prep.tapped(ref, self)
+			var lk := find_child("LockTap", true, false) as Control # set 212: shop padlock = lock / unlock straight from the shop
+			if lk != null and lk.get_global_rect().has_point(e.global_position):
+				prep.lock_tapped(ref)
+			else:
+				prep.tapped(ref, self)
 			accept_event()
 	elif e is InputEventKey and e.pressed and (e.keycode == KEY_ENTER or e.keycode == KEY_SPACE) and prep != null:
 		prep.tapped(ref, self)
