@@ -5,10 +5,12 @@ description: Automon Arena design-sample loop for the Godot screens (ภาพ�
 # ui-preview (set 208)
 
 1. **Scratch copy, never the repo:** `cp -r godot <scratchpad>/g` (≈5 MB) and delete the `MCPRuntimeServer=` autoload line in the copy's project.godot (no MCP server in sample runs). The real branch and the open Godot editor stay untouched.
-2. **Godot binary:** reuse an existing `Godot_v4.7.2-stable_win64_console.exe` (find under `%TEMP%/claude/*/*/scratchpad/godot/`), else `godot/tools/get_godot.sh`.
+2. **Godot binary:** reuse an existing `Godot_v4.7.2-stable_win64_console.exe` (find under `%TEMP%/claude/*/*/scratchpad/godot/`), else `godot/tools/get_godot.sh`. Run it from where it is (set 216: a `cp` of the exe into this chat's scratchpad left an empty folder — exit 127).
 2b. **Pattern check (set 210):** before the first hack of a round that changes the LOOK (shape, colour, material, font, card/frame style — not a pure move/resize), run skill `ui-patterns` "Before drawing": 2 named references + 3 non-default decisions.
 3. **Hack the copy** with small Python patch files (write them with the Write tool; heredocs with GDScript break in Git Bash). Tabs: write 4 spaces and convert. Assert every old string exists.
    - Slot cells are PanelContainers → anchors on their children are ignored; use alignment / spacers.
+   - Moving a node to another parent in prep_layout.tscn (set 216 R7/R8): fix the children's `parent="Old/…"` paths too, and the moved blocks must come AFTER the new parent's block in the file, else Godot drops them silently (`_part` then returns a spare → null errors). Ref: claude/preview-set216/r8-patch-hudbottom.py.
+   - Camera / formation tests: `PITCH`, `FOV`, `LANE_Z`, `COL_X` + `slot_pos()` in scripts/ui/stage3d.gd and the prep/battle rects in app.gd `board_targets()` — one `sed` per try (set 216 R2–R6).
    - Changing a node type in the scene (e.g. HBox→VBox) also needs the `_part(lay, name, type)` call changed.
 4. **Shoot:** `"$G" --rendering-driver opengl3 --audio-driver Dummy --path g --resolution 844x390 -s res://tests/shots.gd -- --out <dir>` (~1 min, no xvfb on Windows). Look at `prep-late` / `prep-upstar` / `prep`; AUDIT line must stay clean.
 5. **Show:** copy the chosen shots to `<scratchpad>/preview/Rn-*.png`, SendUserFile, reply with the 3-line Thai header + what changed + any guess you made. Before showing, run `design:design-critique` on the round's shot and add its top 1–2 findings as notes for the owner (set 209 A2) — critique findings never change the sample on their own; only the 5b tell fix may (set 211 A1). Round after round, keep patching the same copy.
