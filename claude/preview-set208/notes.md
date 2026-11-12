@@ -36,7 +36,14 @@ Samples made with skill `ui-preview` on a scratch copy of godot/. `sample.diff` 
 12. **Tile rims (blue squares) hidden** — shown only while a unit is dragged (all own-side rims) or when a rim is lit by a state (merge / drop / pick).
 13. **No "+ถาวร" mark** on units — the card shows permanent bonuses on tap.
 
+## Round 7 (12 Nov, set 212)
+- Rebuild: … → r6-patch.py → copy `r7-stat_icon.gd.txt` to scripts/ui/stat_icon.gd → r7-patch1.py → r7-patch2.py.
+14. **Tribe shape + stars at each unit's feet, inside the 3D scene** (children of the sprite, depth-tested): a unit standing in front hides them, same as it hides the unit ("ของใครของมัน"). The 2D badge row on board cells is gone. Prep only (battle units unchanged in the sample).
+15. **Shop card stats row** under the picture: attack (sword) · HP (heart) · cooldown in seconds (clock), level-1 values, icons drawn in code, numbers 14 px bold. Cards taller: dock top 62 → 40, odds line 34/62 → 12/40, arena bottom 22 px higher.
+
 ## Open / to watch
+- Cooldown shows a bare number (no "วิ") — unit on tap only.
+- Foot marks are small at 844 (shape ~11 px, stars ~14 px); back-row marks can be fully hidden by a tall front unit (owner's wish, but the player then cannot read that unit's stars without tapping).
 - Back-row stars sit at their tile's front edge, close to the heads of front-row units (snake) — watch on other team shapes.
 - Rims hidden in battle too (sample) — decide if battle needs them.
 - Gold stars blend into gold sprites (e.g. the snake) — owner may want white stars.
