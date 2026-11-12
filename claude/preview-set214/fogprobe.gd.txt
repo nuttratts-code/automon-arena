@@ -1,0 +1,71 @@
+# Set 214 find-cause probe: render the bare stage under variants and sample floor colours. Not shipped.
+extends SceneTree
+
+const ST := preload("res://scripts/ui/stage3d.gd")
+const TH := preload("res://scripts/ui/theme.gd")
+
+var out := "."
+
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	out = args[0]
+	TH.dark = args.has("dark")
+	var st = ST.new()
+	root.add_child(st)
+	st.build()
+	st.cam.make_current()
+	var size := Vector2(root.get_visible_rect().size)
+	st.refit(size, Rect2(size.x * 0.1, size.y * 0.3, size.x * 0.4, size.y * 0.55), Rect2(size.x * 0.08, size.y * 0.3, size.x * 0.84, size.y * 0.55))
+	st.set_k(1.0)
+	var env: Environment = st.env_node.environment
+	print("PROBE cam=", st.cam.global_position, " dist_to_origin=", st.cam.global_position.length(), " renderer=", RenderingServer.get_current_rendering_method())
+	var variants := [
+		["w", {"noshadow": true}],
+		["P1_ns_depthfog", {"noshadow": true, "depth": true}],
+		["P2_ns_depthfog_sky06", {"noshadow": true, "depth": true, "skyc": 0.6}],
+		["P3_ns_depthfog_sun09_sky06", {"noshadow": true, "depth": true, "skyc": 0.6, "sun": 0.9}],
+	]
+	var base_sun: float = st.sun.light_energy
+	var base_amb: float = env.ambient_light_energy
+	for v in variants:
+		var o: Dictionary = v[1]
+		env.fog_enabled = o.get("fog", true)
+		env.fog_sky_affect = o.get("sky_affect", 1.0)
+		env.fog_aerial_perspective = o.get("aerial", 0.0)
+		st.sun.light_energy = o.get("sun", base_sun)
+		env.ambient_light_energy = o.get("amb", base_amb)
+		env.tonemap_mode = o.get("tm", Environment.TONE_MAPPER_FILMIC)
+		st.sun.shadow_enabled = not o.get("noshadow", false)
+		env.fog_mode = Environment.FOG_MODE_DEPTH if o.get("depth", false) else Environment.FOG_MODE_EXPONENTIAL
+		env.fog_depth_begin = 34.0
+		env.fog_depth_end = 110.0
+		env.ambient_light_sky_contribution = o.get("skyc", 1.0)
+		var gpm: PlaneMesh = st.get_node("Ground").mesh
+		gpm.subdivide_width = 120 if o.get("sub", false) else 0
+		gpm.subdivide_depth = gpm.subdivide_width
+		var gm: StandardMaterial3D = st.get_node("Ground").material_override
+		gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED if o.get("unsh", false) else BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		env.glow_enabled = o.get("glow", false)
+		env.glow_intensity = 0.0001
+		env.glow_bloom = 0.0
+		root.use_hdr_2d = o.get("hdr", false)
+		if o.get("down", false):
+			st.sun.basis = Basis.looking_at(Vector3(0.01, -1, -0.01).normalized(), Vector3.UP)
+		print("PROBE sunfwd=", -st.sun.global_transform.basis.z, " lights=", root.find_children("*", "Light3D", true, false).size())
+		for i in 6:
+			await process_frame
+		await RenderingServer.frame_post_draw
+		var img := root.get_texture().get_image()
+		img.save_png("%s/%s.png" % [out, v[0]])
+		var pts := {"plaza_c": Vector3(0, 0, 0), "stone_tile": ST.slot_pos(0, 1, 1), "grass_near": Vector3(0, 0, 9.8), "grass_far": Vector3(0, 0, -12)}
+		var line := "PROBE %s fog_density=%.3f" % [v[0], env.fog_density]
+		for kname in pts:
+			var p: Vector3 = pts[kname]
+			var sp: Vector2 = st.cam.unproject_position(p)
+			sp *= Vector2(img.get_size()) / size
+			var sx := clampi(int(sp.x), 0, img.get_width() - 1)
+			var sy := clampi(int(sp.y), 0, img.get_height() - 1)
+			var c := img.get_pixel(sx, sy)
+			line += " %s@(%d,%d)=%d,%d,%d d=%.1f" % [kname, sx, sy, c.r8, c.g8, c.b8, st.cam.global_position.distance_to(p)]
+		print(line)
+	quit()

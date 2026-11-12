@@ -126,12 +126,19 @@ func build() -> void:
 	sky.sky_material = sky_mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
+	# set 214 (find-cause): with AMBIENT_SOURCE_SKY, ambient_light_energy changed nothing (measured) — the sky alone sets
+	# the ambient, so the old 0.55 / 0.8 knob is gone; ambient_light_sky_contribution is the real one (1.0 = default).
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.55 if dark else 0.8
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.fog_enabled = true # a little depth haze toward the back (art-look §1 item 4)
+	# a little depth haze toward the back only (art-look §1 item 4). Set 214: the old exponential fog (density 0.012) is
+	# counted from the camera, which sits 20–36 units away, so the board itself got ~30 % near-white haze. Depth mode
+	# starts the haze behind the board (the farthest slot is < 30 units away in both poses).
+	env.fog_enabled = true
+	env.fog_mode = Environment.FOG_MODE_DEPTH
 	env.fog_light_color = sky_mat.sky_horizon_color
-	env.fog_density = 0.012
+	env.fog_depth_begin = 34.0
+	env.fog_depth_end = 110.0
+	env.fog_density = 0.6 # depth mode: the most haze reached at fog_depth_end
 	env_node = WorldEnvironment.new()
 	env_node.environment = env
 	add_child(env_node)
@@ -139,7 +146,10 @@ func build() -> void:
 	sun.name = "Sun"
 	sun.light_energy = 0.7 if dark else 1.15
 	sun.light_color = Color("#c9d4ff") if dark else Color("#fff1d6")
-	sun.shadow_enabled = true
+	# set 214 (find-cause): in the gl_compatibility renderer a shadowed sun is drawn in an extra pass that is added in
+	# sRGB space, not linear (measured: the added light matches sRGB addition to the unit) → 3–5× too bright, the plaza
+	# went pure white. Glow / HDR 2D did not change it. Units keep their blob shadow, so the sun casts no shadow.
+	sun.shadow_enabled = false
 	add_child(sun)
 	sun.basis = Basis.looking_at(Vector3(0.55, -0.72, -0.42).normalized(), Vector3.UP)
 	cam = Camera3D.new()
