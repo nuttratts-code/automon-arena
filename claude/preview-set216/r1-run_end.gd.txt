@@ -1,0 +1,311 @@
+# SAMPLE (set 216 ui-preview R1) — run end as a sheet over the 3D plaza (R1–R3, Underlords result + Octopath victory)
+extends Control
+
+const TH := preload("res://scripts/ui/theme.gd")
+const UV := preload("res://scripts/ui/unit_view.gd")
+const SH := preload("res://scripts/shop.gd")
+const SV := preload("res://scripts/save.gd")
+const R := preload("res://scripts/rules.gd")
+const RB := preload("res://scripts/runboss.gd")
+
+signal new_run
+signal extra
+signal copy_code
+signal watch(i: int)
+signal rename
+
+var app: Control
+var title: Label
+var summary: Label
+var extra_hint: Label
+var btn_extra: Button
+var btn_new: Button
+var btn_code: Button
+var btn_more: Button
+var stat_row: HBoxContainer
+var mvp_row: HBoxContainer
+var stats_box: VBoxContainer
+var hist_box: VBoxContainer
+var rep_box: VBoxContainer
+var code_msg: Label
+var player: Label
+var details: ScrollContainer
+var sheet: PanelContainer
+
+static func _n(x: Variant) -> String:
+	var f := float(x)
+	return str(int(f)) if f == floorf(f) else str(f)
+
+static func _k(x: Variant) -> String:
+	var s := str(int(float(x)))
+	var o := ""
+	while s.length() > 3:
+		o = "," + s.right(3) + o
+		s = s.left(s.length() - 3)
+	return s + o
+
+func _h3(t: String) -> Label:
+	return TH.label(t, 15, "ink", "display_b")
+
+func _wrap(t: String, col: String = "ink", sz: int = 13) -> Label:
+	var l := TH.label(t, sz, col)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return l
+
+func _sheet_box(alpha: float) -> StyleBoxFlat:
+	var s := TH.box(Color(TH.c("panel"), alpha), TH.c("line"), 7, 1, 16, 12)
+	TH.ledge(s, false)
+	return s
+
+func setup(a: Control) -> void:
+	app = a
+	name = "RunEnd"
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# left sheet: the outcome (R1)
+	sheet = PanelContainer.new()
+	sheet.name = "EndSheet"
+	sheet.anchor_right = 0.46
+	sheet.anchor_bottom = 1.0
+	sheet.offset_left = 16
+	sheet.offset_top = 14
+	sheet.offset_bottom = -14
+	sheet.add_theme_stylebox_override("panel", _sheet_box(0.9))
+	add_child(sheet)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 6)
+	sheet.add_child(left)
+	title = TH.label("", 30, "ok", "display_b")
+	title.name = "EndTitle"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	left.add_child(title)
+	summary = _wrap("", "mute")
+	summary.name = "EndSummary"
+	left.add_child(summary)
+	# 3 numbers max, each with a label (R1)
+	stat_row = HBoxContainer.new()
+	stat_row.add_theme_constant_override("separation", 6)
+	left.add_child(stat_row)
+	# B2 new: the run's top unit (sprite + damage) — Octopath bonus-row idea, our words
+	mvp_row = HBoxContainer.new()
+	mvp_row.name = "EndMvp"
+	mvp_row.add_theme_constant_override("separation", 8)
+	left.add_child(mvp_row)
+	extra_hint = _wrap("", "bad", 13)
+	extra_hint.name = "EndExtraHint"
+	left.add_child(extra_hint)
+	var sp := Control.new()
+	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(sp)
+	var small := HBoxContainer.new()
+	small.add_theme_constant_override("separation", 6)
+	btn_code = Button.new()
+	btn_code.name = "EndCode"
+	btn_code.text = TH.ui_text("code_copy")
+	btn_code.custom_minimum_size = Vector2(0, 40)
+	btn_code.pressed.connect(func() -> void: copy_code.emit())
+	small.add_child(btn_code)
+	btn_more = Button.new()
+	btn_more.name = "EndMore"
+	btn_more.text = "สถิติ · รีเพลย์"
+	btn_more.custom_minimum_size = Vector2(0, 40)
+	btn_more.pressed.connect(func() -> void: show_details(not details.visible))
+	small.add_child(btn_more)
+	left.add_child(small)
+	code_msg = _wrap(TH.ui_text("end_code_hint"), "mute", 13)
+	code_msg.name = "EndCodeMsg"
+	code_msg.visible = false
+	left.add_child(code_msg)
+	var prow := HBoxContainer.new()
+	prow.add_theme_constant_override("separation", 8)
+	player = TH.label("", 13, "mute")
+	player.name = "EndPlayer"
+	player.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	prow.add_child(player)
+	var rn := Button.new()
+	rn.name = "EndRename"
+	rn.text = TH.ui_text("rename")
+	rn.flat = true
+	rn.add_theme_font_size_override("font_size", 13)
+	rn.add_theme_color_override("font_color", TH.c("accent"))
+	rn.pressed.connect(func() -> void: rename.emit())
+	prow.add_child(rn)
+	left.add_child(prow)
+	# right bottom: play again where Fight lives (R2) — main plate under, the other choice above it
+	var acts := VBoxContainer.new()
+	acts.name = "EndActs"
+	acts.anchor_left = 1.0
+	acts.anchor_right = 1.0
+	acts.anchor_top = 1.0
+	acts.anchor_bottom = 1.0
+	acts.offset_left = -236
+	acts.offset_right = -16
+	acts.offset_top = -120
+	acts.offset_bottom = -14
+	acts.alignment = BoxContainer.ALIGNMENT_END
+	acts.add_theme_constant_override("separation", 8)
+	add_child(acts)
+	btn_new = Button.new()
+	btn_new.name = "EndNew"
+	btn_new.text = TH.ui_text("end_new")
+	btn_new.custom_minimum_size = Vector2(0, 44)
+	btn_new.pressed.connect(func() -> void: new_run.emit())
+	acts.add_child(btn_new)
+	btn_extra = Button.new()
+	btn_extra.name = "EndExtra"
+	btn_extra.text = TH.ui_text("end_extra")
+	TH.primary(btn_extra, true)
+	btn_extra.pressed.connect(func() -> void: extra.emit())
+	acts.add_child(btn_extra)
+	# details sheet (stats · replays · history) — below the fold (R1), opened by EndMore, over the right half
+	details = ScrollContainer.new()
+	details.name = "Scroll"
+	details.anchor_left = 0.48
+	details.anchor_right = 1.0
+	details.anchor_bottom = 1.0
+	details.offset_right = -16
+	details.offset_top = 14
+	details.offset_bottom = -140
+	details.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	details.add_theme_stylebox_override("panel", _sheet_box(0.94))
+	details.visible = false
+	add_child(details)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 5)
+	details.add_child(right)
+	right.add_child(_h3(TH.ui_text("end_stats")))
+	stats_box = VBoxContainer.new()
+	stats_box.name = "EndStats"
+	right.add_child(stats_box)
+	var rt := _h3(TH.ui_text("rep_title", {"n": "0"}))
+	rt.name = "EndRepTitle"
+	right.add_child(rt)
+	rep_box = VBoxContainer.new()
+	rep_box.name = "EndReplays"
+	rep_box.add_theme_constant_override("separation", 3)
+	right.add_child(rep_box)
+	right.add_child(_h3(TH.ui_text("end_hist")))
+	hist_box = VBoxContainer.new()
+	hist_box.name = "EndHistory"
+	hist_box.add_theme_constant_override("separation", 2)
+	right.add_child(hist_box)
+
+func show_details(on: bool) -> void:
+	details.visible = on
+	btn_more.text = "ปิดสถิติ" if on else "สถิติ · รีเพลย์"
+
+func _clear(b: Node) -> void:
+	for c in b.get_children():
+		b.remove_child(c)
+		c.queue_free()
+
+func _name_of(id: Variant) -> String:
+	var c: Variant = app.cm.get(id)
+	return "%s %s" % [id, c["name"]] if c is Dictionary else str(id)
+
+func _tile(num: String, lab: String, col: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	p.add_theme_stylebox_override("panel", TH.box(Color(TH.c("bg"), 0.55), Color(0, 0, 0, 0), 6, 0, 8, 4))
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", -4)
+	var n := TH.label(num, 26, col, "display_b")
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(n)
+	var l := TH.label(lab, 13, "mute")
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(l)
+	p.add_child(v)
+	return p
+
+func render() -> void:
+	var P: Dictionary = app.P
+	var S: Dictionary = R.RULES()["shop"]
+	var last := float(R.js_i32(RB.RUN_STAGE()["settings"].get("lastStage")))
+	var won := float(P["wins"]) >= float(S["winsToFinish"])
+	var is_extra := SH._truthy(P.get("extra"))
+	var can_extra := won and not is_extra and float(P["hearts"]) > 0.0 and float(P["round"]) < last
+	var all_rounds := float(P["hearts"]) > 0.0 and float(P["round"]) >= last
+	title.text = ("ชนะครบ %s แมตช์" % _n(S["winsToFinish"])) if won and not is_extra and not all_rounds else TH.ui_text("end_all", {"n": _n(P["round"])}) if all_rounds \
+		else TH.ui_text("end_extra_done", {"n": _n(P["wins"])}) if is_extra else "จบ run · แพ้"
+	title.add_theme_color_override("font_color", TH.c("ok" if won or all_rounds else "bad"))
+	summary.text = "หัวใจเหลือ %s/%s · เล่น %s รอบ" % [_n(P["hearts"]), _n(S["hearts"]), _n(P["round"])] \
+		+ (TH.ui_text("r_dummy", {"n": _n(app.dummy_dmg)}) if app.dummy_dmg > 0.0 else "")
+	player.text = TH.ui_text("player", {"n": app.player_name if app.player_name != "" else TH.ui_text("no_name")})
+	extra_hint.visible = can_extra
+	extra_hint.text = "โหมดพิเศษ: ศัตรูแรงขึ้น %s%% ต่อรอบ · เล่นได้ถึงรอบ %s · หัวใจหมด = จบ" % [_n(float(R.js_i32(RB.RUN_STAGE()["settings"].get("foeExtraPct")))), _n(last)]
+	btn_extra.visible = can_extra
+	for k in ["normal", "hover", "pressed", "disabled"]:
+		btn_new.remove_theme_stylebox_override(k)
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		btn_new.remove_theme_color_override(k)
+	btn_new.remove_theme_font_override("font")
+	btn_new.remove_theme_font_size_override("font_size")
+	btn_new.custom_minimum_size.y = 44
+	if not can_extra:
+		TH.primary(btn_new, true)
+	var st: Dictionary = app.stats
+	_clear(stat_row)
+	stat_row.add_child(_tile(_n(st["w"]), "ชนะ", "ok"))
+	stat_row.add_child(_tile(_n(st["l"]), "แพ้", "bad"))
+	stat_row.add_child(_tile(_n(st["best"]), "ชนะติดกัน", "ink"))
+	var ranked: Array = (st["dmg"] as Dictionary).keys()
+	ranked.sort_custom(func(a, b): return float(st["dmg"][a]) > float(st["dmg"][b]))
+	_clear(mvp_row)
+	mvp_row.visible = not ranked.is_empty()
+	if not ranked.is_empty():
+		var c: Variant = app.cm.get(ranked[0])
+		if c is Dictionary:
+			var mon := UV.make(c, 1, 56)
+			mon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			mvp_row.add_child(mon)
+		var v := VBoxContainer.new()
+		v.add_theme_constant_override("separation", -2)
+		v.add_child(TH.label("ตัวเด่นของ run", 13, "mute"))
+		v.add_child(TH.label("%s · ดาเมจ %s" % [str(c["name"]) if c is Dictionary else str(ranked[0]), _k(st["dmg"][ranked[0]])], 15, "ink", "body_b"))
+		mvp_row.add_child(v)
+	code_msg.text = TH.ui_text("end_code_hint")
+	# details (unchanged content, below the fold)
+	_clear(stats_box)
+	var avg := float(st["timeMs"]) / float(st["matches"]) / 1000.0 if float(st["matches"]) > 0.0 else 0.0
+	var lines := [TH.ui_text("end_st1", {"m": _n(st["matches"]), "w": _n(st["w"]), "d": _n(st["d"]), "l": _n(st["l"])}),
+		TH.ui_text("end_st2", {"b": _n(st["best"]), "a": "%.1f" % avg})]
+	for i in range(0, mini(3, ranked.size())):
+		lines.append(TH.ui_text("end_rank", {"i": str(i + 1), "n": _name_of(ranked[i]), "v": _n(st["dmg"][ranked[i]])}))
+	for t in lines:
+		stats_box.add_child(_wrap("• " + t))
+	(details.find_child("EndRepTitle", true, false) as Label).text = TH.ui_text("rep_title", {"n": str(app.replays.size())})
+	_clear(rep_box)
+	if app.replays.is_empty():
+		rep_box.add_child(TH.label(TH.ui_text("rep_none"), 13, "mute"))
+	for i in app.replays.size():
+		var x: Dictionary = app.replays[i]
+		var h := HBoxContainer.new()
+		var res := TH.ui_text("res_w" if R.js_seq(x["w"], 0.0) else "res_l" if R.js_seq(x["w"], 1.0) else "res_d")
+		var l := TH.label(TH.ui_text("rep_row", {"r": _n(x["r"]), "res": res, "t": "%.1f" % (float(x["t"]) / 1000.0)}), 13, "ink")
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
+		var b := Button.new()
+		b.name = "EndWatch%d" % i
+		b.text = TH.ui_text("rep_watch")
+		b.custom_minimum_size.y = 32
+		b.pressed.connect(func() -> void: watch.emit(i))
+		h.add_child(b)
+		rep_box.add_child(h)
+	_clear(hist_box)
+	var hist: Array = SV.read_history(SV.load_text(app.history_file))
+	if hist.is_empty():
+		hist_box.add_child(TH.label(TH.ui_text("end_hist_none"), 13, "mute"))
+	for hh in hist:
+		var d := Time.get_datetime_dict_from_unix_time(int(float(hh["at"]) / 1000.0))
+		var tm := []
+		for u in hh["team"]:
+			tm.append("%s★%s" % [u["id"], _n(u["level"])])
+		hist_box.add_child(_wrap(TH.ui_text("end_hrow", {"d": "%d/%d/%d" % [d["day"], d["month"], d["year"] + 543], "res": TH.ui_text("end_h_won" if bool(hh["won"]) else "end_h_lost"),
+			"w": _n(hh["wins"]), "r": _n(hh["rounds"]), "t": " ".join(PackedStringArray(tm)) if not tm.is_empty() else "-"})))
+
+func say_code(t: String, err: bool = false) -> void:
+	code_msg.visible = true
+	code_msg.text = t
+	code_msg.add_theme_color_override("font_color", TH.c("bad" if err else "ok"))
