@@ -75,6 +75,14 @@
    "lines": [
     "Dungeon Crawl Stone Soup tiles (github.com/crawl/tiles) — CC0 1.0 (สาธารณสมบัติ)"
    ]
+  },
+  {
+   "id": "kenney",
+   "title": "ไอคอน",
+   "lines": [
+    "Board Game Icons 1.1 โดย Kenney (www.kenney.nl) — CC0 1.0 (สาธารณสมบัติ)"
+   ],
+   "licence_file": "res://data/ui_icons/License-Kenney.txt"
   }
  ]
 }

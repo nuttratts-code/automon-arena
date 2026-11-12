@@ -47,7 +47,9 @@ func look(filled: bool, shop: bool = false, locked: bool = false, cant: bool = f
 	if drop_ok:
 		line = TH.c("ok")
 		bw = 3
-	var st := TH.box(bg, line, 10, bw, 3, 2)
+	var st := TH.box(bg, line.darkened(0.22) if bw == 1 else line, 10, bw, 3, 2)
+	if filled or shop: # set 213 (H1): bench rows + shop cards (sold slots too) sit on the table as plates
+		TH.ledge(st, false)
 	if not stage_slot.is_empty(): # set 207 P0: arena cells draw no 2D frame — every state lights the tile's rune rim only
 		var lit := locked or mergeable or hi > 0 or picked or drop_ok
 		st = TH.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 10, 0, 3, 2)

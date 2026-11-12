@@ -19,13 +19,16 @@ static func make(k: String, tok: String, px: float) -> Control:
 	s.token = tok
 	s.custom_minimum_size = Vector2(px, px)
 	s.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST # pixel icons stay crisp
 	return s
 
 func _draw() -> void:
 	var col := TH.c(token)
 	var w := size.x
 	var h := size.y
-	if kind in ["lock", "unlock", "atk", "hp", "cd"]:
+	if kind in ["atk", "hp", "cd"] and TH.uicon(kind) != null: # set 213 (R2): Kenney pixel icon (white fill, dark outline) tinted
+		draw_texture_rect(TH.uicon(kind), Rect2(Vector2.ZERO, size), false, col)
+	elif kind in ["lock", "unlock", "atk", "hp", "cd"]:
 		_icon(col, w, h)
 	elif kind == "reroll": # set 207 P3: the reroll icon = a circular arrow, drawn in code (no outside asset)
 		var c := Vector2(w, h) / 2.0
@@ -38,13 +41,19 @@ func _draw() -> void:
 		var n := Vector2(cos(a), sin(a))
 		var s := minf(w, h) * 0.2
 		draw_colored_polygon(PackedVector2Array([p + d * s, p + n * s * 0.9 - d * s * 0.2, p - n * s * 0.9 - d * s * 0.2]), col)
-	elif kind == "circle":
+	elif kind == "circle": # set 213 (H1): tribe shapes lit from the top-left = darker edge + small highlight
 		draw_circle(Vector2(w, h) / 2.0, minf(w, h) / 2.0, col, true, -1.0, true)
+		draw_circle(Vector2(w, h) / 2.0, minf(w, h) / 2.0 - 0.75, col.darkened(0.45), false, 1.5, true)
+		draw_circle(Vector2(w * 0.36, h * 0.32), minf(w, h) * 0.12, Color(1, 1, 1, 0.55), true, -1.0, true)
 	elif POLY.has(kind):
 		var pts := PackedVector2Array()
 		for p in POLY[kind]:
 			pts.append(Vector2(p[0] * w, p[1] * h))
 		draw_colored_polygon(pts, col)
+		var cl := pts.duplicate()
+		cl.append(pts[0])
+		draw_polyline(cl, col.darkened(0.45), 1.5, true)
+		draw_circle(Vector2(w * 0.38, h * 0.38), minf(w, h) * 0.11, Color(1, 1, 1, 0.5), true, -1.0, true)
 	else:
 		draw_style_box(TH.box(col, col, int(round(w * 7.0 / 40.0)), 0, 12, 7, false), Rect2(Vector2.ZERO, size))
 

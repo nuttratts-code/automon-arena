@@ -33,6 +33,8 @@ def check_pck(build):
     for f in FONTS:
         if ("data/fonts/" + f).encode() not in pck:
             fails.append("pck lacks data/fonts/" + f)
+    if b"data/ui_icons/License-Kenney.txt" not in pck: # set 213: Kenney CC0 icons → licence text ships with them
+        fails.append("pck lacks data/ui_icons/License-Kenney.txt")
     for bad in re.findall(rb"(?<![\w/.])(?:res://)?(?:tests|tools)/[\w.-]+\.(?:gd|gdc|py|sh|json|txt|cfg)\b|(?<![\w/.])[\w-]+\.md\b", pck):
         fails.append("pck ships a non-game file: " + bad.decode(errors="replace"))
     return fails[:20]

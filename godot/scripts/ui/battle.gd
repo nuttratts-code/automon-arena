@@ -53,6 +53,21 @@ var last_runes: Array = []
 var field: Control # set 205: the arena move fades it while the world draws the field
 var top_hold: Control
 var tray_hold: Control
+var _margin: MarginContainer
+
+# set 213 (A1): outer margin 8 → 16 sides / 12 top+bottom (= the prep screen) + the phone safe-area inset (theme.gd)
+func _apply_safe() -> void:
+	if _margin == null:
+		return
+	var e: Array = TH.safe_insets(get_viewport() if is_inside_tree() else null)
+	_margin.add_theme_constant_override("margin_left", 16 + int(e[0]))
+	_margin.add_theme_constant_override("margin_top", 12 + int(e[1]))
+	_margin.add_theme_constant_override("margin_right", 16 + int(e[2]))
+	_margin.add_theme_constant_override("margin_bottom", 12 + int(e[3]))
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_apply_safe()
 var slot_runes := {} # "side:row:lane" → rune names worn there (for the live pane)
 
 func setup(a: Control) -> void:
@@ -61,8 +76,8 @@ func setup(a: Control) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var m := MarginContainer.new()
 	m.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for k in ["left", "right", "top", "bottom"]:
-		m.add_theme_constant_override("margin_" + k, 8)
+	_margin = m
+	_apply_safe()
 	add_child(m)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 5)

@@ -37,6 +37,7 @@ var _sel_mt := {} # 7f2: merge targets of the unit / shop card whose card is ope
 var hud_title: Label
 var chip_hearts: Label
 var chip_gold: Label
+var next_gold: Label # set 213 (C)
 var btn_runes: Button
 var btn_hi: Button
 var btn_diff: Button
@@ -50,6 +51,9 @@ var tribe_chips: GridContainer # one row; 3 columns at the field's top-right on 
 var bench_row: BoxContainer # set 212 (notes 1/10/19): a vertical list of 5 rows
 var dock: PanelContainer
 var shop_row: HBoxContainer
+var sell_hint: PanelContainer # set 213 (C)
+var sell_text: Label
+var _lay: Control # the layout root (safe-area insets go on it)
 var btn_reroll: Button
 var reroll_t: Label
 var odds_btn: Button # set 207 P4: shop odds line (rarity dot + %), tap = shop popup (user C1)
@@ -80,8 +84,10 @@ func setup(a: Control) -> void:
 	if lay == null:
 		lay = build_layout()
 	add_child(lay)
+	_lay = lay
 	_style_tree(lay)
 	_bind(lay)
+	_apply_safe()
 	card = Card.new()
 	card.act.connect(_on_card_act)
 	card.lv_changed.connect(func(_l: int) -> void: _refresh_card())
@@ -131,7 +137,8 @@ static func glass(col: Color) -> Color:
 
 static func glass_btn(b: Button) -> void:
 	for st in ["normal", "hover", "pressed", "disabled"]:
-		var s := TH.box(glass(TH.c("soft") if st == "hover" or st == "pressed" else TH.c("panel")), TH.c("line"))
+		var s := TH.box(glass(TH.c("soft") if st == "hover" or st == "pressed" else TH.c("panel")), TH.c("line").darkened(0.22))
+		TH.ledge(s, st == "pressed") # set 213 (H1): a plate on the table like the Fight button (hard ledge, never a soft shadow)
 		b.add_theme_stylebox_override(st, s)
 
 static func _lbl(text: String, px: int, ink: String, fkey: String = "body") -> Label:
@@ -166,7 +173,11 @@ func _apply_sty(c: Control, sty: String) -> void:
 		TH.primary(c as Button, false)
 	elif sty.begins_with("chip:") and not c.has_theme_stylebox_override("panel"):
 		var bg := sty.substr(5)
-		c.add_theme_stylebox_override("panel", TH.box(glass(TH.c(bg)), TH.c(bg), 20, 0, 12, 3))
+		var cs := TH.box(glass(TH.c(bg)), TH.c(bg).darkened(0.28), 20, 0, 12, 3)
+		TH.ledge(cs, false) # set 213 (H1)
+		c.add_theme_stylebox_override("panel", cs)
+	elif sty == "sell_hint" and not c.has_theme_stylebox_override("panel"):
+		c.add_theme_stylebox_override("panel", TH.box(Color(TH.c("panel"), 0.86), TH.c("bad"), 10, 2, 2, 2))
 	elif sty == "floor_label" and not c.has_theme_stylebox_override("normal"):
 		c.add_theme_stylebox_override("normal", TH.box(glass(TH.c("panel")), Color(0, 0, 0, 0), 6, 0, 6, 0))
 
@@ -184,10 +195,10 @@ func build_layout() -> Control:
 	top.name = "Top"
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top.offset_left = 8
-	top.offset_right = -8
-	top.offset_top = 8
-	top.offset_bottom = 8 + 40 + 5 + 24
+	top.offset_left = EDGE_X # set 213 (A1): outer margin 8 → 16 sides / 12 top+bottom (+ phone safe area on the root, _apply_safe)
+	top.offset_right = -EDGE_X
+	top.offset_top = EDGE_Y
+	top.offset_bottom = EDGE_Y + 40 + 5 + 24
 	_build_hud(top)
 	var msg := _build_msg()
 	_place(msg, 0, 1, 0, 0, 45, 69)
@@ -195,19 +206,19 @@ func build_layout() -> Control:
 	root.add_child(top)
 	var f := _build_field()
 	f.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	f.offset_left = 8
-	f.offset_right = -8
+	f.offset_left = EDGE_X
+	f.offset_right = -EDGE_X
 	f.offset_top = FIELD_TOP # set 212 (note 6): bigger arena — the field starts under the top bar (the message line floats over it)
-	f.offset_bottom = -(8 + TRAY_H - FIELD_INTO_TRAY)
+	f.offset_bottom = -(EDGE_Y + TRAY_H - FIELD_INTO_TRAY)
 	root.add_child(f)
 	var tray := _build_tray()
 	tray.name = "Tray"
 	tray.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	tray.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	tray.offset_left = 8
-	tray.offset_right = -8
-	tray.offset_bottom = -8
-	tray.offset_top = -(8 + TRAY_H)
+	tray.offset_left = EDGE_X
+	tray.offset_right = -EDGE_X
+	tray.offset_bottom = -EDGE_Y
+	tray.offset_top = -(EDGE_Y + TRAY_H)
 	root.add_child(tray)
 	return root
 
@@ -266,7 +277,11 @@ func _build_hud(top: Control) -> void:
 	_place(hp, 0, 0, 178, 248, 2, 38)
 	top.add_child(hp)
 	var gd := _chip("ChipGold", "gold-bg", "gold-ink", "gold")
-	_place(gd, 0, 0, 256, 336, 2, 38)
+	var ng := _lbl("", 14, "gold-ink") # set 213 (C): base income of the next round; the chip's tooltip says the rest
+	ng.name = "NextGold"
+	ng.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	gd.get_node("Row").add_child(ng)
+	_place(gd, 0, 0, 256, 384, 2, 38)
 	top.add_child(gd)
 	var h := HBoxContainer.new() # buttons hide / show by state, so this one group keeps its auto row (drag the group)
 	h.name = "HudButtons"
@@ -386,7 +401,7 @@ func _build_tray() -> Control:
 	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rv.add_child(rt)
 	rr.add_child(rv)
-	_place(rr, 0, 0, 0, 54, y2, y2 + SHOP_H)
+	_place(rr, 0, 0, 0, FIGHT_W, y2, y2 + SHOP_H) # set 213: reroll as wide as Fight → the centred shop row has equal gaps
 	rows.add_child(rr)
 	var dk := PanelContainer.new()
 	dk.name = "Dock"
@@ -395,6 +410,17 @@ func _build_tray() -> Control:
 	shop.alignment = BoxContainer.ALIGNMENT_CENTER
 	shop.add_theme_constant_override("separation", 6)
 	dk.add_child(shop)
+	var sh := PanelContainer.new() # set 213 (C): "drop here to sell +N", shown only while an own unit is dragged
+	sh.name = "SellHint"
+	sh.visible = false
+	sh.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sh.set_meta("sty", "sell_hint")
+	var sl := _lbl("", 16, "bad", "display")
+	sl.name = "SellText"
+	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sh.add_child(sl)
+	dk.add_child(sh)
 	_place(dk, 0.5, 0.5, -DOCK_HALF, DOCK_HALF, DOCK_TOP, TRAY_H)
 	rows.add_child(dk)
 	var fb := Button.new()
@@ -408,19 +434,22 @@ func _build_tray() -> Control:
 	ft.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ft.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fb.add_child(ft)
-	_place(fb, 1, 1, -96, 0, y2, y2 + SHOP_H)
+	_place(fb, 1, 1, -FIGHT_W, 0, y2, y2 + SHOP_H)
 	fb.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	rows.add_child(fb)
 	return rows
 
 const TRAY_H := 138.0 # Tray block height (reroll / fight row = its bottom SHOP_H)
 const SHOP_H := 76.0
+const FIGHT_W := 96.0 # reroll + fight width (set 213)
 const ODDS_H := 32.0 # ≥ 24 px on the smallest phone (667×375 shows it at 0.78×)
-const FIELD_TOP := 44.0
-const FIELD_INTO_TRAY := 6.0 # the field ends just above the odds line
+const EDGE_X := 16.0 # set 213 (A1): outer margin, sides
+const EDGE_Y := 12.0 # set 213 (A1): outer margin, top + bottom
+const FIELD_TOP := 48.0
+const FIELD_INTO_TRAY := -2.0 # set 213: the field ends 2 above the Tray (was 6 into it)
 const BENCH_W := 150.0
-const BENCH_TOP := -202.0 # bench box (Tray coordinates) = the owner's set 208 box: 5 rows of ~45 beside the arena
-const BENCH_BOTTOM := 42.0
+const BENCH_TOP := -212.0 # bench box (Tray coordinates) = the owner's set 208 box: 5 rows of ~45 beside the arena
+const BENCH_BOTTOM := 32.0 # set 213: 5 rows need ~241 → the old box (236) spilled row 5 onto the first shop card
 const BENCH_PX := 42.0 # bench picture = shop picture (note 19)
 const SHOP_W := 104.0 # fixed shop card width (note 4)
 const SHOP_PX := 42.0
@@ -449,6 +478,7 @@ func _bind(lay: Control) -> void:
 	hud_title = _part(lay, "HudTitle", "Label")
 	chip_hearts = _part(_part(lay, "ChipHearts", "Control"), "Value", "Label")
 	chip_gold = _part(_part(lay, "ChipGold", "Control"), "Value", "Label")
+	next_gold = _part(_part(lay, "ChipGold", "Control"), "NextGold", "Label")
 	btn_hi = _part(lay, "HiBar", "Button")
 	btn_runes = _part(lay, "RuneBtn", "Button")
 	btn_replay = _part(lay, "ReplayBtn", "Button")
@@ -466,6 +496,8 @@ func _bind(lay: Control) -> void:
 	reroll_t = _part(lay, "RerollCost", "Label")
 	dock = _part(lay, "Dock", "PanelContainer")
 	shop_row = _part(lay, "Shop", "HBoxContainer")
+	sell_hint = _part(lay, "SellHint", "PanelContainer")
+	sell_text = _part(lay, "SellText", "Label")
 	btn_fight = _part(lay, "Fight", "Button")
 	fight_t = _part(lay, "FightTitle", "Label")
 	col_labels = [_part(lay, "ColBack", "Label"), _part(lay, "ColMid", "Label"), _part(lay, "ColFront", "Label")]
@@ -474,6 +506,18 @@ func _bind(lay: Control) -> void:
 	btn_replay.pressed.connect(func() -> void: open_replays.emit())
 	btn_diff.pressed.connect(func() -> void: open_diff.emit())
 	btn_legend.tooltip_text = TH.ui_text("lg_t")
+	btn_runes.tooltip_text = TH.ui_text("rune") # set 213 (R2 note 8): the words left the buttons → tooltips keep them
+	btn_diff.tooltip_text = TH.ui_text("foe_lbl").strip_edges()
+	for pr in [[btn_runes, "rune"], [btn_diff, "enemy"], [btn_legend, "legend"]]: # Kenney Board Game Icons (CC0) as pixel icons
+		var bb: Button = pr[0]
+		if bb.icon == null:
+			bb.icon = TH.uicon(str(pr[1]))
+		bb.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		for k in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_focus_color", "icon_disabled_color"]:
+			bb.add_theme_color_override(k, TH.c("ink"))
+		bb.add_theme_constant_override("h_separation", 4)
+	if btn_legend.text == "?" and btn_legend.icon != null:
+		btn_legend.text = ""
 	btn_legend.pressed.connect(func() -> void: open_legend.emit())
 	btn_menu.pressed.connect(func() -> void: show_menu(not menu.visible))
 	tribe_btn.pressed.connect(func() -> void: open_tribes.emit())
@@ -506,9 +550,20 @@ func _bind(lay: Control) -> void:
 		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		shop_row.add_child(c)
 
+# set 213 (A1): phone notch / rounded corners → the whole layout moves in by the safe-area inset (0 on desktop / plain web)
+func _apply_safe() -> void:
+	if _lay == null or not is_inside_tree():
+		return
+	var e: Array = TH.safe_insets(get_viewport())
+	_lay.offset_left = e[0]
+	_lay.offset_top = e[1]
+	_lay.offset_right = -e[2]
+	_lay.offset_bottom = -e[3]
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and bench_row != null:
 		_fit_bench.call_deferred()
+		_apply_safe()
 	if what == NOTIFICATION_PREDELETE:
 		for s in _spare:
 			if is_instance_valid(s) and s.get_parent() == null:
@@ -785,6 +840,7 @@ func drag_started(ref: Dictionary) -> void:
 	if app.stage != null: # set 212 (note 12 + C1): the tile rims show only while a unit is dragged
 		app.stage.show_rims(true)
 	var u: Variant = unit_at(ref)
+	_sell_hint(u if ref["at"] != "shop" else null)
 	var targets: Array = merge_targets(u) if u != null else shop_merge_targets(shop_id(ref))
 	for t in targets:
 		var cell: Control = cells.get(_key(t))
@@ -812,7 +868,13 @@ func _stage_dim_drag(from: Variant, dim: bool) -> void: # the picked-up board un
 		var cell: Control = cells.get(_key(from))
 		app.stage.shade("prep", _key(from), dim or (cell != null and cell.hi < 0))
 
+func _sell_hint(u: Variant) -> void:
+	sell_hint.visible = u != null
+	if u != null:
+		sell_text.text = TH.ui_text("g_sell_hint", {"p": _n(u["paid"])})
+
 func drag_ended() -> void:
+	_sell_hint(null)
 	_stage_dim_drag(_drag_from, false)
 	_show_col_labels(false)
 	if app.stage != null:
@@ -1027,6 +1089,11 @@ func render() -> void:
 	hud_title.text = TH.ui_text("round_boss" if rb != null else "round", {"n": _n(st["round"])}) + " · " + (TH.ui_text("wins_extra", {"w": _n(st["wins"])}) if bool(st["extra"]) else TH.ui_text("wins", {"w": _n(st["wins"]), "t": _n(S["winsToFinish"])}))
 	chip_hearts.text = _n(st["hearts"])
 	chip_gold.text = _n(st["gold"])
+	var inc := _n(SH.base_income_at(float(st["round"]) + 1.0))
+	next_gold.text = TH.ui_text("g_next_gold", {"g": inc})
+	var gchip := chip_gold.get_parent().get_parent() as Control
+	if gchip != null:
+		gchip.tooltip_text = TH.ui_text("g_next_gold_tip", {"g": inc, "b": _n(S["winBonus"])})
 	# set 212: tribe chip row (shape + count/next step, reached = yellow) · rune button: count + warning when a held rune does nothing
 	var entries := SH.team_entries(st)
 	var counts := T.count_tribes(entries, app.cm)
@@ -1039,9 +1106,9 @@ func render() -> void:
 		if float(st["rn"]["bag"][id]) > 0.0:
 			held += 1
 	var unworn := RR.rn_unworn(st).size()
-	btn_runes.text = "%s %d" % [TH.ui_text("rune"), held] + (" · " + TH.ui_text("not_worn_n", {"n": unworn}) if unworn > 0 else "")
+	btn_runes.text = "%d" % held + (" · " + TH.ui_text("not_worn_n", {"n": unworn}) if unworn > 0 else "")
 	# enemy strength / boss chip (web diffInfo) · replay count (web replayBtn, shown once a match was played)
-	btn_diff.text = TH.ui_text("foe_boss", {"b": str(rb["boss"]["name"])}) if rb != null else TH.ui_text("foe_lbl") + _n(BT.foe_want_pct(bool(st["extra"]))) + "%"
+	btn_diff.text = TH.ui_text("foe_boss", {"b": str(rb["boss"]["name"])}) if rb != null else _n(BT.foe_want_pct(bool(st["extra"]))) + "%"
 	btn_replay.visible = app.replays.size() > 0
 	btn_replay.text = "▶ %d" % app.replays.size()
 	btn_hi.visible = hi_tribe != null

@@ -21,11 +21,11 @@ func test_data_has_every_credit() -> String:
 	var ids := []
 	for s in d["sections"]:
 		ids.append(s["id"])
-	for need in ["godot", "godot_thirdparty", "v8", "fdlibm", "font_mitr", "font_plex_thai", "font_plex_mono", "dcss"]:
+	for need in ["godot", "godot_thirdparty", "v8", "fdlibm", "font_mitr", "font_plex_thai", "font_plex_mono", "dcss", "kenney"]:
 		if not need in ids:
 			return "credits.json has no section '%s' (got %s)" % [need, ids]
 	var want := {"godot": "Permission is hereby granted", "godot_thirdparty": "FreeType", "v8": "Redistributions in binary form",
-		"fdlibm": "this notice\nis preserved", "font_mitr": "Mitr Project Authors", "font_plex_thai": "Plex", "font_plex_mono": "Plex"}
+		"fdlibm": "this notice\nis preserved", "font_mitr": "Mitr Project Authors", "font_plex_thai": "Plex", "font_plex_mono": "Plex", "kenney": "Creative Commons Zero"}
 	for s in d["sections"]:
 		if want.has(s["id"]):
 			var t := CREDITS.licence_of(s)
