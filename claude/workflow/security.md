@@ -1,6 +1,6 @@
 # workflow · Security at every step (HARD RULE 9)
 
-V1.3 · 11 Nov 2026 (set 203 B1: no PCK encryption on the web build, encryption on PC/Android exports) · V1.2 · 10 Nov 2026 (set 192: Godot pin + MIT credit) · V1.1 · 10 Nov 2026 (set 190: private blocked by quota, work continues public) · V1.0 · 10 Nov 2026 (set 190: user picked S-A1 B1 C1 D1 — "many creators get their work stolen or attacked; make it an iron rule"). CLAUDE.md HARD RULE 9 is the one-line rule; this file holds the details and wins if they differ. HARD RULE 7 (validate external data) is part ③ of this rule.
+V1.4 · 12 Nov 2026 (set 209 A2: code-review at merge, security-review before publish/release) · V1.3 · 11 Nov 2026 (set 203 B1: no PCK encryption on the web build, encryption on PC/Android exports) · V1.2 · 10 Nov 2026 (set 192: Godot pin + MIT credit) · V1.1 · 10 Nov 2026 (set 190: private blocked by quota, work continues public) · V1.0 · 10 Nov 2026 (set 190: user picked S-A1 B1 C1 D1 — "many creators get their work stolen or attacked; make it an iron rule"). CLAUDE.md HARD RULE 9 is the one-line rule; this file holds the details and wins if they differ. HARD RULE 7 (validate external data) is part ③ of this rule.
 
 ## Why
 - The repo was public from 6 Nov (set 104, for free CI minutes) to set 190: code, design docs and history could be downloaded by anyone. What was public may already be copied; private stops new copies.
@@ -30,7 +30,7 @@ V1.3 · 11 Nov 2026 (set 203 B1: no PCK encryption on the web build, encryption 
 |---|---|---|
 | Any commit | 1 · 3 | secret grep above · HARD RULE 7 review of the diff |
 | New dependency / asset / addon | 2 | source + licence + credit + user OK, written in the commit message |
-| Merge to main (merge-code) | 1 · 2 · 3 | secret grep on the whole branch diff |
-| Publish / release (publish-pages, itch.io) | 4 · 5 | shipped file list clean · owner line present · encryption on (Godot PC/Android; web = none, set 203 B1) |
+| Merge to main (merge-code) | 1 · 2 · 3 | secret grep on the whole branch diff · skill `code-review` low (set 209) |
+| Publish / release (publish-pages, godot-release / itch.io) | 4 · 5 | skill `security-review` on the code since the last publish (set 209) · shipped file list clean (no MCP addon in the pck) · owner line present · encryption on (Godot PC/Android; web = none, set 203 B1) |
 | New account or service | 5 | 2FA reminder · least rights |
 | New plan file | 6 | security line per step |

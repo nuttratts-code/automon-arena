@@ -13,6 +13,7 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 - Sources: `git log --since='7 days ago' --format='%h %ad %s' --date=short origin/main` · claude/handoff.md · this week's entries in claude/archive/relay/ (Claude cannot read old chats).
 - List each time the user corrected or redid Claude's work, a gate failed first time, a bug was found by the user, or a rule caused wasted work.
 - Per item: where the fix belongs (CLAUDE.md · a topic file · a skill · nothing = one-off) + the exact text to add/remove.
+- Token use (set 209 A2): invoke `anthropic-skills:explain-usage` once and put the biggest sink + a cheaper way in the report (it sees this chat only — a hint, not the week's total).
 
 ## 2. Workflow audit — scope
 - Always: CLAUDE.md, claude/workflow.md, claude/workflow/*.md, claude/ops-rules.md, .claude/skills/*/SKILL.md, claude/handoff.md, claude/instructions.md, claude/reviews.md.
@@ -46,6 +47,7 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 8. **Doc versions:** a Thai rule doc / CLAUDE.md changed → its version line bumped, claude/instructions.md regenerated (user picked: caught here, set 158 B2), and handoff "Doc versions" matches the file headers:
    `for f in combat-rules tribe-rules shop-merge-rules build-plan instructions; do h=$(sed -n 3p claude/$f.md | grep -oE '^V[0-9.]+'); grep -q "$f $h" claude/handoff.md || echo "DIFF $f file=$h"; done`
 9. **Measure:** measured only with permission (or a mechanic change), with a measure-log entry.
+10. **Review skills (set 209 A2):** UI sets' Relay lines carry `critique ✓`, code merges `review ✓`, each publish names its security-review result; a set that touched src/core or godot/scripts names `Godot tests n/n (golden)` (skill port-parity).
 Each miss → a report item: rule · set · evidence · why it was missed (rule not seen at that moment / trigger unclear / step forgotten) · where the fix belongs (skill description or step · merge-code check · hook · CLAUDE.md), with A1/A2 options. A rule missed twice → recommend moving it into a skill step or a merge-code check rather than adding more text.
 
 ## 4. Report

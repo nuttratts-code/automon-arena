@@ -14,6 +14,9 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Battle-scene art look (pixel sprites in a lit 3D set · light · blur · skill VFX · plan P5) | skill `art-look` (runbook, set 201) · claude/art-style.md (rules) | building or changing how the battle scene looks in godot/, or preparing art for it |
 | Code branch → main (setup · gate · merge · CI) | skill `merge-code` (runbook) · HARD RULE 3 (rules) | a set changed code and is ready |
 | Play-test the game UI (Claude plays) | skill `sim-play` (runbook + scripts, set 179) | the user asks Claude to simulate play / bug-hunt the game page |
+| Play-test the Godot game (Claude plays, PC + open editor) | skill `godot-play` (runbook, set 209 — draft until first live run; needs the set 208 MCP addon) | the user asks Claude to play / bug-hunt the Godot build |
+| JS ↔ Godot parity (golden replay) | skill `port-parity` (runbook, set 209) · claude/plan-godot-migration.md §2–§3 (rules) | a set edits a src/core file with a "change both" comment, game.json, or godot/scripts logic |
+| Godot release · itch.io zip | skill `godot-release` (runbook, set 209) · claude/workflow/publish.md §10 (rules) | the user orders a Godot build / itch.io upload |
 | Bug · failing test/gate/CI/page | skill `find-cause` (runbook) · HARD RULE 5 (rules) | anything fails or the user reports a bug |
 | Rule / design change | skill `rule-change` (runbook) · Decisions + Docs below (rules) | the user proposes or asks to change how the game works |
 | Measure (Claude measures) · bot teams | skill `measure-balance` (runbook) · claude/workflow/{measure,botteams}.md (rules) | only when the user orders a measurement |
