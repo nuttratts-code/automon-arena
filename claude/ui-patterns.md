@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -191,11 +191,11 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 7. Show the owner with one line: references used · three decisions · tells left and why.
 
 ## 6. Open points for the owner (not decided)
-- Glass panels (set 207 P2) and any emoji in game screens are on the tell list — keep, restyle or replace? Decide inside set 208's sample rounds.
+- ~~Glass panels~~ → **closed set 212:** near-solid panels (alpha 0.94, prep.gd GLASS). Emoji in game screens: still to audit.
 - Display font: none chosen yet; needs a Thai-capable face with a licence (HARD RULE 9 part 2).
 - UI material: which world material the frames are made of (links to art-look target sheet, Gate 1).
-- Our shape motif (DO 19) — not diamond, not hexagon; should come from the game's own world.
-- UI temperature (DO 20) — depends on the arena's light (art-look Gate 1).
+- ~~Shape motif (DO 19)~~ → **closed set 212 (owner B1):** cut corners (chamfer, radius ≤ 7, theme.gd box) = the arena floor slabs. Same cut on every box stays a known tell (owner pick).
+- ~~UI temperature (DO 20)~~ → **closed set 212 (owner R5-A2):** cool slate panels + steel-blue line + pale blue Fight plate (godot/data/tone.json). Revisit only if art-look Gate 1 changes the arena light.
 - Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board, an HD-2D shop/menu on a phone. §1 lines for those stay [K]/[S-text].
 - Image sources (12 Nov 2026): https://interfaceingame.com/games/teamfight-tactics-mobile/ · https://interfaceingame.com/games/dota-underlords-mobile/ · MobyGames Super Auto Pets screenshot · a fan wiki capture of the FF Resonance equipment screen (via image search). No image is stored in the repo.
 

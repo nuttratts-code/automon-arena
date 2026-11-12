@@ -88,7 +88,7 @@ func build() -> void:
 	if built:
 		return
 	built = true
-	TH.dark = bool(get_meta("force_dark", false)) or DisplayServer.is_dark_mode() # meta = tests/shots.gd only
+	TH.dark = bool(get_meta("force_dark", false)) or (DisplayServer.is_dark_mode() and not bool(get_meta("force_light", false))) # metas = tests/shots.gd only
 	theme = TH.build()
 	chars = R.game()["derived"]["characters"]
 	cm = T.make_char_map(chars)

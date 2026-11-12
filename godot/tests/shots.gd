@@ -1,9 +1,10 @@
 # Screenshots + layout audit of the Godot screens (set 196, plan-set196 7a). Never exported (tests/ is excluded) and not a test_*.gd file.
 # Needs a display (Xvfb). From the repo root:
 #   xvfb-run -a -s "-screen 0 1400x900x24" <godot> --rendering-driver opengl3 --audio-driver Dummy --path godot \
-#     --resolution 844x390 -s res://tests/shots.gd -- --out <dir> [--dark]
+#     --resolution 844x390 -s res://tests/shots.gd -- --out <dir> [--dark | --light]
 # Writes <dir>/<WxH>[-dark]-<screen>.png and prints one AUDIT line per screen (JSON):
 #   small = buttons / inputs under 24 px on screen · tiny = text under 10 px · clip = a label's text wider than its box
+#   (set 212: a label with meta trim_ok ends in "…" on purpose — bench names, full name on the card — and is not counted)
 #   (no wrap) · off = a visible control outside the window (inside a scroll box it is fine).
 extends SceneTree
 
@@ -22,11 +23,14 @@ func _initialize() -> void:
 	var dark := args.has("--dark")
 	await process_frame
 	var ws := root.get_visible_rect().size
-	tag = "%dx%d%s" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y, "-dark" if dark else ""]
+	var light := args.has("--light") # set 212: a dark-mode PC still shoots the light theme
+	tag = "%dx%d%s" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y, "-dark" if dark else "-light" if light else ""]
 	app = load("res://scenes/main.tscn").instantiate()
 	app.set_meta("no_boot", true)
 	if dark:
 		app.set_meta("force_dark", true)
+	elif light:
+		app.set_meta("force_light", true)
 	root.add_child(app)
 	app.zoom_s = 0.0 # set 205: states are shot still; the camera move gets its own frozen shots below
 	await _frames()
@@ -360,7 +364,7 @@ func _walk(n: Node, o: Dictionary, win: Rect2, scale: float, in_scroll: bool) ->
 			var fs: int = l.get_theme_font_size("font_size")
 			if fs * scale < 10.0:
 				o["tiny"].append("%s %.1fpx" % [l.text.left(12), fs * scale])
-			if l.autowrap_mode == TextServer.AUTOWRAP_OFF and l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r.size.x + 1.0:
+			if l.autowrap_mode == TextServer.AUTOWRAP_OFF and not l.has_meta("trim_ok") and l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r.size.x + 1.0:
 				o["clip"].append(l.text.left(12))
 		if not in_scroll and r.size.x >= 1.0 and (r.end.x > win.end.x + 1.0 or r.end.y > win.end.y + 1.0 or r.position.x < -1.0 or r.position.y < -1.0):
 			o["off"].append(nm)

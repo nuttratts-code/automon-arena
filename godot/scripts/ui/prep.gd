@@ -46,7 +46,7 @@ var msg_label: Label
 var board_grid: Control # set 206: plain holder, cells placed by place_cells()
 var col_labels: Array = []
 var tribe_btn: Button # set 212 (notes 2/11): row of round tribe chips (shape + count/next step) at the field's top-left; tap = tribe popup
-var tribe_chips: HBoxContainer
+var tribe_chips: GridContainer # one row; 3 columns at the field's top-right on a short window (_fit_bench)
 var bench_row: BoxContainer # set 212 (notes 1/10/19): a vertical list of 5 rows
 var dock: PanelContainer
 var shop_row: HBoxContainer
@@ -329,9 +329,11 @@ func _build_field() -> Control:
 	tb.focus_mode = Control.FOCUS_NONE
 	tb.tooltip_text = TH.ui_text("tribe")
 	_place(tb, 0, 0, 0, 40, 12, 12 + TRIBE_ROW_H)
-	var tl := HBoxContainer.new()
+	var tl := GridContainer.new()
 	tl.name = "TribeChips"
-	tl.add_theme_constant_override("separation", 6)
+	tl.columns = 99
+	tl.add_theme_constant_override("h_separation", 6)
+	tl.add_theme_constant_override("v_separation", 4)
 	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tb.add_child(tl)
 	f.add_child(tb)
@@ -456,7 +458,7 @@ func _bind(lay: Control) -> void:
 	msg_bar = _part(lay, "MsgBar", "PanelContainer")
 	msg_label = _part(lay, "Msg", "Label")
 	tribe_btn = _part(lay, "TribeRow", "Button")
-	tribe_chips = _part(lay, "TribeChips", "HBoxContainer")
+	tribe_chips = _part(lay, "TribeChips", "GridContainer")
 	bench_row = _part(lay, "Bench", "BoxContainer")
 	odds_btn = _part(lay, "ShopOdds", "Button")
 	odds_row = _part(lay, "OddsRow", "HBoxContainer")
@@ -505,10 +507,40 @@ func _bind(lay: Control) -> void:
 		shop_row.add_child(c)
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and bench_row != null:
+		_fit_bench.call_deferred()
 	if what == NOTIFICATION_PREDELETE:
 		for s in _spare:
 			if is_instance_valid(s) and s.get_parent() == null:
 				s.free()
+
+# set 212: a short window (400-high base, app._on_resize) leaves less height than the owner's tall bench box needs, so the bench
+# would run into the tribe chip row → the chip row moves to the field's top-right (the strip beside the centred board mirrors
+# the bench) as a 3-column grid; a taller window puts it back where the scene has it. The row's box counts even while hidden.
+const SHORT_COLS := 3
+func _fit_bench() -> void:
+	if bench_row == null or tribe_btn == null or not bench_row.is_inside_tree() or not tribe_btn.is_inside_tree():
+		return
+	if not tribe_btn.has_meta("own"):
+		tribe_btn.set_meta("own", [tribe_btn.anchor_left, tribe_btn.anchor_right, tribe_btn.offset_left, tribe_btn.offset_right, tribe_btn.offset_top, tribe_btn.offset_bottom])
+	var own: Array = tribe_btn.get_meta("own")
+	tribe_btn.anchor_left = own[0]
+	tribe_btn.anchor_right = own[1]
+	tribe_btn.offset_left = own[2]
+	tribe_btn.offset_right = own[3]
+	tribe_btn.offset_top = own[4]
+	tribe_btn.offset_bottom = own[5] # the scene's box decides (content may be shorter / longer)
+	tribe_chips.columns = 99
+	var t := tribe_btn.get_global_rect()
+	var b := bench_row.get_global_rect()
+	if t.position.x < b.end.x and t.end.x > b.position.x and b.position.y < t.end.y + 2.0 and b.end.y > t.position.y:
+		tribe_chips.columns = SHORT_COLS
+		var w := maxf(tribe_chips.get_combined_minimum_size().x, 30.0)
+		tribe_btn.anchor_left = 1.0
+		tribe_btn.anchor_right = 1.0
+		tribe_btn.offset_left = -w
+		tribe_btn.offset_right = 0.0
+		tribe_btn.offset_bottom = tribe_btn.offset_top + maxf(30.0, tribe_chips.get_combined_minimum_size().y)
 
 # room the board leaves on BOTH sides (app.board_targets; set 212 note 6: the board stays centred) = clear of the bench when the
 # bench reaches up beside the field at its left edge · by position, not content: the board must not jump when a unit is bought
@@ -565,7 +597,10 @@ func _fill_tribe_row(counts: Dictionary, steps: Dictionary, have: Array) -> void
 		tribe_chips.add_child(col)
 	tribe_chips.reset_size()
 	var want := tribe_chips.get_combined_minimum_size()
-	tribe_btn.size = Vector2(maxf(want.x, 30.0), maxf(tribe_btn.size.y, want.y))
+	tribe_btn.size = Vector2(maxf(want.x, 30.0), maxf(30.0, want.y))
+	if tribe_btn.anchor_left == 1.0: # short window: keep the grid glued to the right edge
+		tribe_btn.offset_left = -tribe_btn.size.x
+		tribe_btn.offset_right = 0.0
 
 # set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
 func place_cells() -> void:
@@ -1073,6 +1108,7 @@ func _fill_unit(cell: Control, ref: Dictionary) -> void:
 		var nm := TH.label(str(c["name"]), 13, "ink")
 		nm.name = "Name"
 		nm.clip_text = true # long names end in "…" (full name on the card)
+		nm.set_meta("trim_ok", true) # tests/shots.gd audit: agreed trim (set 208 notes "Open")
 		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.add_child(nm)

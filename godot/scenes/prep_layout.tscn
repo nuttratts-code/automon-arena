@@ -2,14 +2,14 @@
 
 [ext_resource type="Script" uid="uid://cd42a177odfy0" path="res://scripts/ui/shape.gd" id="1_npxyy"]
 
-[node name="Layout" type="Control" unique_id=703104711]
+[node name="Layout" type="Control" unique_id=1664046534]
 layout_mode = 3
 anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="Top" type="Control" parent="." unique_id=1477273952]
+[node name="Top" type="Control" parent="." unique_id=1793538338]
 anchors_preset = 0
 anchor_right = 1.0
 offset_left = 8.0
@@ -18,7 +18,7 @@ offset_right = -8.0
 offset_bottom = 77.0
 mouse_filter = 2
 
-[node name="HudTitle" type="Label" parent="Top" unique_id=940832634]
+[node name="HudTitle" type="Label" parent="Top" unique_id=698467804]
 layout_mode = 1
 offset_right = 170.0
 offset_bottom = 40.0
@@ -29,7 +29,7 @@ text_overrun_behavior = 3
 metadata/ink = "ink"
 metadata/font = "display"
 
-[node name="ChipHearts" type="PanelContainer" parent="Top" unique_id=999868195]
+[node name="ChipHearts" type="PanelContainer" parent="Top" unique_id=666061231]
 layout_mode = 1
 offset_left = 178.0
 offset_top = 2.0
@@ -37,11 +37,11 @@ offset_right = 248.0
 offset_bottom = 38.0
 metadata/sty = "chip:heart-bg"
 
-[node name="Row" type="HBoxContainer" parent="Top/ChipHearts" unique_id=361725467]
+[node name="Row" type="HBoxContainer" parent="Top/ChipHearts" unique_id=1383018169]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Icon" type="TextureRect" parent="Top/ChipHearts/Row" unique_id=78573080]
+[node name="Icon" type="TextureRect" parent="Top/ChipHearts/Row" unique_id=689102719]
 texture_filter = 1
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
@@ -50,14 +50,14 @@ expand_mode = 1
 stretch_mode = 5
 metadata/art = "ui/heart"
 
-[node name="Value" type="Label" parent="Top/ChipHearts/Row" unique_id=1963131276]
+[node name="Value" type="Label" parent="Top/ChipHearts/Row" unique_id=2027279629]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "0"
 metadata/ink = "heart-ink"
 metadata/font = "display"
 
-[node name="ChipGold" type="PanelContainer" parent="Top" unique_id=1935839635]
+[node name="ChipGold" type="PanelContainer" parent="Top" unique_id=272530056]
 layout_mode = 1
 offset_left = 256.0
 offset_top = 2.0
@@ -65,11 +65,11 @@ offset_right = 336.0
 offset_bottom = 38.0
 metadata/sty = "chip:gold-bg"
 
-[node name="Row" type="HBoxContainer" parent="Top/ChipGold" unique_id=687862275]
+[node name="Row" type="HBoxContainer" parent="Top/ChipGold" unique_id=1915739120]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Icon" type="TextureRect" parent="Top/ChipGold/Row" unique_id=1891156046]
+[node name="Icon" type="TextureRect" parent="Top/ChipGold/Row" unique_id=1165402481]
 texture_filter = 1
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
@@ -78,14 +78,14 @@ expand_mode = 1
 stretch_mode = 5
 metadata/art = "ui/gold"
 
-[node name="Value" type="Label" parent="Top/ChipGold/Row" unique_id=694726161]
+[node name="Value" type="Label" parent="Top/ChipGold/Row" unique_id=146357456]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "0"
 metadata/ink = "gold-ink"
 metadata/font = "display"
 
-[node name="HudButtons" type="HBoxContainer" parent="Top" unique_id=748631991]
+[node name="HudButtons" type="HBoxContainer" parent="Top" unique_id=1303493436]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -97,41 +97,41 @@ grow_horizontal = 0
 theme_override_constants/separation = 8
 alignment = 2
 
-[node name="HiBar" type="Button" parent="Top/HudButtons" unique_id=1741633041]
+[node name="HiBar" type="Button" parent="Top/HudButtons" unique_id=667684846]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 metadata/sty = "glass_btn"
 
-[node name="RuneBtn" type="Button" parent="Top/HudButtons" unique_id=1247391855]
+[node name="RuneBtn" type="Button" parent="Top/HudButtons" unique_id=442294253]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 metadata/sty = "glass_btn"
 
-[node name="ReplayBtn" type="Button" parent="Top/HudButtons" unique_id=73840582]
+[node name="ReplayBtn" type="Button" parent="Top/HudButtons" unique_id=970964790]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 metadata/sty = "glass_btn"
 
-[node name="DiffBtn" type="Button" parent="Top/HudButtons" unique_id=1864596146]
+[node name="DiffBtn" type="Button" parent="Top/HudButtons" unique_id=2113624084]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 metadata/sty = "glass_btn"
 
-[node name="LegendBtn" type="Button" parent="Top/HudButtons" unique_id=1575130758]
+[node name="LegendBtn" type="Button" parent="Top/HudButtons" unique_id=1945845834]
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 text = "?"
 metadata/sty = "glass_btn"
 
-[node name="MenuBtn" type="Button" parent="Top/HudButtons" unique_id=523213116]
+[node name="MenuBtn" type="Button" parent="Top/HudButtons" unique_id=477605560]
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 text = "⋯"
 metadata/sty = "glass_btn"
 
-[node name="MsgBar" type="PanelContainer" parent="Top" unique_id=1983196219]
+[node name="MsgBar" type="PanelContainer" parent="Top" unique_id=1485444233]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 1
 anchors_preset = 10
@@ -139,14 +139,14 @@ anchor_right = 1.0
 offset_top = 45.0
 offset_bottom = 69.0
 
-[node name="Msg" type="Label" parent="Top/MsgBar" unique_id=83120108]
+[node name="Msg" type="Label" parent="Top/MsgBar" unique_id=1519009729]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 clip_text = true
 text_overrun_behavior = 3
 metadata/ink = "ink"
 
-[node name="Field" type="Control" parent="." unique_id=1090660395]
+[node name="Field" type="Control" parent="." unique_id=37819984]
 anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -156,13 +156,13 @@ offset_right = -8.0
 offset_bottom = -140.0
 mouse_filter = 2
 
-[node name="Board" type="Control" parent="Field" unique_id=1281963098]
+[node name="Board" type="Control" parent="Field" unique_id=1892763011]
 anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="ColBack" type="Label" parent="Field/Board" unique_id=412984817]
+[node name="ColBack" type="Label" parent="Field/Board" unique_id=2005968089]
 visible = false
 layout_mode = 0
 theme_override_font_sizes/font_size = 13
@@ -172,7 +172,7 @@ metadata/ink = "ink"
 metadata/font = "body_b"
 metadata/sty = "floor_label"
 
-[node name="ColMid" type="Label" parent="Field/Board" unique_id=1537170124]
+[node name="ColMid" type="Label" parent="Field/Board" unique_id=111674171]
 visible = false
 layout_mode = 0
 theme_override_font_sizes/font_size = 13
@@ -182,7 +182,7 @@ metadata/ink = "ink"
 metadata/font = "body_b"
 metadata/sty = "floor_label"
 
-[node name="ColFront" type="Label" parent="Field/Board" unique_id=137411792]
+[node name="ColFront" type="Label" parent="Field/Board" unique_id=1814029668]
 visible = false
 layout_mode = 0
 theme_override_font_sizes/font_size = 13
@@ -192,7 +192,7 @@ metadata/ink = "ink"
 metadata/font = "body_b"
 metadata/sty = "floor_label"
 
-[node name="TribeRow" type="Button" parent="Field" unique_id=1622182223]
+[node name="TribeRow" type="Button" parent="Field" unique_id=407499943]
 layout_mode = 1
 offset_top = 12.0
 offset_right = 40.0
@@ -201,12 +201,14 @@ tooltip_text = "เผ่า"
 focus_mode = 0
 flat = true
 
-[node name="TribeChips" type="HBoxContainer" parent="Field/TribeRow" unique_id=1215615104]
+[node name="TribeChips" type="GridContainer" parent="Field/TribeRow" unique_id=2146166681]
 layout_mode = 0
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 4
+columns = 99
 
-[node name="Tray" type="Control" parent="." unique_id=643992963]
+[node name="Tray" type="Control" parent="." unique_id=1340247455]
 anchors_preset = 0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -218,14 +220,14 @@ offset_bottom = -8.0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="Bench" type="VBoxContainer" parent="Tray" unique_id=12154370]
+[node name="Bench" type="VBoxContainer" parent="Tray" unique_id=238655539]
 layout_mode = 1
 offset_top = -202.0
 offset_right = 150.0
 offset_bottom = 42.0
 theme_override_constants/separation = 4
 
-[node name="ShopOdds" type="Button" parent="Tray" unique_id=1453467168]
+[node name="ShopOdds" type="Button" parent="Tray" unique_id=2027766608]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 1
 anchors_preset = 5
@@ -238,7 +240,7 @@ offset_bottom = 40.0
 tooltip_text = "โอกาสเจอ:"
 flat = true
 
-[node name="OddsRow" type="HBoxContainer" parent="Tray/ShopOdds" unique_id=420556723]
+[node name="OddsRow" type="HBoxContainer" parent="Tray/ShopOdds" unique_id=2029681361]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -246,7 +248,7 @@ mouse_filter = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Reroll" type="Button" parent="Tray" unique_id=19491296]
+[node name="Reroll" type="Button" parent="Tray" unique_id=846133212]
 layout_mode = 1
 offset_top = 62.0
 offset_right = 54.0
@@ -254,7 +256,7 @@ offset_bottom = 138.0
 tooltip_text = "สุ่มใหม่"
 metadata/sty = "glass_btn"
 
-[node name="Col" type="VBoxContainer" parent="Tray/Reroll" unique_id=408798655]
+[node name="Col" type="VBoxContainer" parent="Tray/Reroll" unique_id=726824660]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -262,7 +264,7 @@ mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="RerollIcon" type="Control" parent="Tray/Reroll/Col" unique_id=1367377710]
+[node name="RerollIcon" type="Control" parent="Tray/Reroll/Col" unique_id=1194527923]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -271,14 +273,14 @@ script = ExtResource("1_npxyy")
 kind = "reroll"
 token = "ink"
 
-[node name="RerollCost" type="Label" parent="Tray/Reroll/Col" unique_id=1438313248]
+[node name="RerollCost" type="Label" parent="Tray/Reroll/Col" unique_id=1272569734]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
 metadata/ink = "gold-ink"
 metadata/font = "display"
 
-[node name="Dock" type="PanelContainer" parent="Tray" unique_id=562205145]
+[node name="Dock" type="PanelContainer" parent="Tray" unique_id=220526053]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -288,12 +290,12 @@ offset_top = 40.0
 offset_right = 282.0
 offset_bottom = 138.0
 
-[node name="Shop" type="HBoxContainer" parent="Tray/Dock" unique_id=802835398]
+[node name="Shop" type="HBoxContainer" parent="Tray/Dock" unique_id=144144641]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="Fight" type="Button" parent="Tray" unique_id=174254659]
+[node name="Fight" type="Button" parent="Tray" unique_id=742316331]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -304,7 +306,7 @@ offset_bottom = 138.0
 grow_horizontal = 0
 metadata/sty = "primary"
 
-[node name="FightTitle" type="Label" parent="Tray/Fight" unique_id=1374249914]
+[node name="FightTitle" type="Label" parent="Tray/Fight" unique_id=955502479]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
