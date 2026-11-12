@@ -49,3 +49,8 @@ Rebuild R5: as R3 + PITCH 22.0, LANE_Z [-2.3, 2.3], the slot_pos line above.
 ## R6 — owner: "ด้านบนเค้าเหลือเยอะจัง" (read as: the FF shot leaves a lot of scenery on top → push our board down)
 11. (R6, pending — reading unconfirmed) board fitted into the lower part: app.gd board_targets prep top cut = 38 % of the field (side cut back to -side), battle top cut = 32 %. Scenery fills the top ~40 %; units smaller again (prep ~25 % smaller than today).
 Rebuild R6: as R5 + those two grow_individual lines.
+
+## R7 — owner: "shop on top, faint background" (A3 + see-through; conflict told: set 212 shop at the bottom, thumbs reach, set 212 near-solid panels)
+12. (R7, pending) Dock + odds row + reroll moved under the top bar (tscn parent Top; dock x shifted +40 to clear the tribe chips, reroll 74 wide at the right) · message line under the odds (y 164) · prep board rect = y 168 → bottom (app.gd board_targets) · shop cards bg alpha 0.55 (slot_cell.gd shop branch; set 212 GLASS 0.94 stays for the rest).
+Seen: board + units much bigger (the empty bottom tray is gone) · the shop covers the top band, so the far scenery is mostly hidden; through the cards you see the plaza floor · back-row heads touch the odds row · Fight stays bottom-right, bench left.
+Rebuild R7: after R5 (or R6), `python r7-patch-shoptop.py <g>`.
