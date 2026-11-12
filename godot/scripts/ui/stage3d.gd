@@ -1,4 +1,5 @@
 # Set 206 (plan-set206 step 1 · user picks A2 B1 C1): the shared 3D arena under the prep and battle screens.
+# Set 215 (J2): the floor is now the Blender rune plaza scene (see _scene); the code floor below is its stand-in when it cannot load.
 # Placeholder look made only from code (B1): sky gradient, grass, a round stone plaza, 12 slot tiles with a rune rim, a midline,
 # one key light from the top-left (it matches the light painted into the sprites, art-style §2). Units are Sprite3D (A2):
 # Nearest filter, alpha-cut Discard, unshaded, one height for every unit, the quad leaned back so it faces camera angle A,
@@ -117,10 +118,11 @@ func build() -> void:
 	var dark := TH.dark
 	var env := Environment.new()
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("#2c3a5c") if dark else Color("#5f93c4")
-	sky_mat.sky_horizon_color = Color("#6f7488") if dark else Color("#cfe1e8")
+	# set 215 (J2): day colours from the Blender scene's world ramp (art/scene/runeplaza-v5.blend); dark theme = dusk (owner C1)
+	sky_mat.sky_top_color = Color("#232a55") if dark else Color("#3a6fc4")
+	sky_mat.sky_horizon_color = Color("#8a6f8c") if dark else Color("#bcd0e6")
 	sky_mat.ground_horizon_color = sky_mat.sky_horizon_color
-	sky_mat.ground_bottom_color = Color("#2e3a28") if dark else Color("#6d8a4c")
+	sky_mat.ground_bottom_color = Color("#2b3326") if dark else Color("#6d8a4c")
 	sky_mat.sun_angle_max = 0.0
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
@@ -144,8 +146,8 @@ func build() -> void:
 	add_child(env_node)
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.light_energy = 0.7 if dark else 1.15
-	sun.light_color = Color("#c9d4ff") if dark else Color("#fff1d6")
+	sun.light_energy = 0.75 if dark else 1.15
+	sun.light_color = Color("#ffb98a") if dark else Color("#fff1d6") # dusk: a low warm sun
 	# set 214 (find-cause): in the gl_compatibility renderer a shadowed sun is drawn in an extra pass that is added in
 	# sRGB space, not linear (measured: the added light matches sRGB addition to the unit) → 3–5× too bright, the plaza
 	# went pure white. Glow / HDR 2D did not change it. Units keep their blob shadow, so the sun casts no shadow.
@@ -157,7 +159,7 @@ func build() -> void:
 	cam.fov = FOV
 	cam.keep_aspect = Camera3D.KEEP_HEIGHT
 	cam.near = 0.3
-	cam.far = 200.0
+	cam.far = 2600.0 # set 215: the far hills of the rune plaza scene reach ~2,200 units
 	add_child(cam)
 	cam.transform = Transform3D(cam_basis(), Vector3(0, 9, 14))
 	_floor(dark)
@@ -184,7 +186,99 @@ func _box(sz: Vector3, at: Vector3, m: Material, nm: String = "") -> MeshInstanc
 	add_child(mi)
 	return mi
 
+# set 215 (J2, owner A2 + B1): the rune plaza scene made in Blender (art/blender/export_godot.py → art/arena/runeplaza.glb +
+# plaza.png). Its meshes carry their colour as vertex colours; the code gives each part its material here. When the scene
+# cannot load (a headless run on a fresh checkout without the import step) the old code floor stands in — same slots.
+const SCENE := "res://art/arena/runeplaza.glb"
+const PLAZA_TEX := "res://art/arena/plaza.png"
+const RING_R := 0.84 # rune ring around a slot (outer radius, world) — the tile is TILE wide
+const RING_W := 0.09
+var scene_loaded := false
+
 func _floor(dark: bool) -> void:
+	scene_loaded = _scene(dark)
+	if not scene_loaded:
+		_code_floor(dark)
+	rim_idle = Color("#4fd0ff") if dark else Color("#5bd3e6")
+	for s in 2:
+		for row in 3:
+			for lane in 2:
+				var c := slot_pos(s, row, lane)
+				var rk := key(s, row, lane)
+				# the carved rune ring that always shows (owner B1: round rings like the target picture)
+				var t1 := _ring(RING_R, RING_W, c + Vector3(0, 0.04, 0), _mat(rim_idle.darkened(0.25), 0.55 if dark else 0.35), "Tile" + rk.replace(":", "_"))
+				# the lit ring: shows while dragging or when a state lights the slot (tint)
+				var rm := _mat(rim_idle, 0.25)
+				var r1 := _ring(RING_R + 0.05, RING_W * 2.0, c + Vector3(0, 0.05, 0), rm, "Rim" + rk.replace(":", "_"))
+				tiles[rk] = rm
+				rims[rk] = r1
+				r1.set_meta("key", rk)
+				r1.visible = false
+				if s == 1:
+					foe_tiles.append([r1, r1.position.y])
+					foe_tiles.append([t1, t1.position.y])
+	if not scene_loaded: # the scene's plaza picture has its own midline
+		_box(Vector3(0.08, 0.04, 5.2), Vector3(0, 0.02, 0), _mat(Color("#cfc3a8") if dark else Color("#efe6d0"), 0.1), "Mid")
+
+func _ring(r: float, w: float, at: Vector3, m: Material, nm: String) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = r - w
+	tm.outer_radius = r
+	tm.rings = 48
+	tm.ring_segments = 6
+	mi.mesh = tm
+	mi.material_override = m
+	mi.scale = Vector3(1, 0.12, 1) # flat, lying in the stone
+	mi.position = at
+	mi.name = nm
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	return mi
+
+func _scene(dark: bool) -> bool:
+	if not ResourceLoader.exists(SCENE):
+		return false
+	var ps: Variant = ResourceLoader.load(SCENE)
+	if not (ps is PackedScene):
+		return false
+	var root: Node3D = (ps as PackedScene).instantiate()
+	root.name = "Plaza3D"
+	add_child(root)
+	var vc := func(rough: float) -> StandardMaterial3D:
+		var m := StandardMaterial3D.new()
+		m.vertex_color_use_as_albedo = true
+		m.roughness = rough
+		return m
+	var mats := {
+		"Near": vc.call(1.0), "Far": vc.call(1.0), "Flowers": vc.call(1.0), "Rocks": vc.call(0.95),
+		"Arch": vc.call(0.95), "Woods": vc.call(1.0),
+	}
+	var rune := StandardMaterial3D.new() # the carved runes on the standing stones glow (art-look §1 item 3: bright accents)
+	rune.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rune.albedo_color = Color("#8fe8ff")
+	rune.emission_enabled = true
+	rune.emission = Color("#5fd6ff")
+	rune.emission_energy_multiplier = 2.2 if dark else 1.2
+	mats["Runes"] = rune
+	var plaza := StandardMaterial3D.new()
+	var tex: Variant = ResourceLoader.load(PLAZA_TEX) if ResourceLoader.exists(PLAZA_TEX) else null
+	if tex is Texture2D:
+		plaza.albedo_texture = tex
+	plaza.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	plaza.alpha_scissor_threshold = 0.5
+	plaza.roughness = 1.0
+	mats["Plaza"] = plaza
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m: Variant = mats.get(String(mi.name))
+		if m == null:
+			m = mats.get(String(mi.get_parent().name)) # some importers wrap a mesh in a node of the object's name
+		if m != null:
+			mi.material_override = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # set 214: no shadowed sun in Compatibility
+	return true
+
+func _code_floor(dark: bool) -> void:
 	var ground := MeshInstance3D.new()
 	ground.name = "Ground"
 	var pm := PlaneMesh.new()
@@ -204,23 +298,6 @@ func _floor(dark: bool) -> void:
 	plaza.material_override = _mat(Color("#5d574e") if dark else Color("#a59a88"))
 	plaza.position = Vector3(0, -0.05, 0)
 	add_child(plaza)
-	var stone := _mat(Color("#6e675c") if dark else Color("#bdb2a0"))
-	rim_idle = Color("#3f8f9c") if dark else Color("#5bbfcf")
-	for s in 2:
-		for row in 3:
-			for lane in 2:
-				var c := slot_pos(s, row, lane)
-				var rm := _mat(rim_idle, 0.25)
-				var r1 := _box(Vector3(TILE + 0.14, 0.03, TILE + 0.14), c + Vector3(0, 0.015, 0), rm, "Rim" + key(s, row, lane).replace(":", "_"))
-				var t1 := _box(Vector3(TILE - 0.08, 0.05, TILE - 0.08), c + Vector3(0, 0.03, 0), stone, "Tile" + key(s, row, lane).replace(":", "_"))
-				tiles[key(s, row, lane)] = rm
-				rims[key(s, row, lane)] = r1
-				r1.set_meta("key", key(s, row, lane))
-				r1.visible = false
-				if s == 1:
-					foe_tiles.append([r1, r1.position.y])
-					foe_tiles.append([t1, t1.position.y])
-	_box(Vector3(0.08, 0.04, 5.2), Vector3(0, 0.02, 0), _mat(Color("#cfc3a8") if dark else Color("#efe6d0"), 0.1), "Mid")
 
 func _ready() -> void:
 	if cam != null:
