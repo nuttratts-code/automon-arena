@@ -23,3 +23,9 @@ Tells left (library §4): same cut corner everywhere (owner pick set 212) · coo
 Not shown: dark mode, 667 width.
 
 Rebuild: copy godot → <scratch>/g, drop MCPRuntimeServer line, `--headless --import`, then `python r1-patch-runend.py <g>` (copies r1-run_end.gd.txt) → `python r1-patch-battle.py <g>` → `python r1-patch-prep.py <g>`.
+
+## R2 — camera test (owner asked: prep camera lower so the background shows)
+Conflict: art-style §8 angle A (owner 7 Nov: high look-down, horizon ~40 % from the top) · stage3d.gd PITCH 40 actually puts the horizon off screen (set 215 note). Test only, owner decides (rule-change).
+- R2-cam22-*: PITCH 22 (const in stage3d.gd). Battle: standing stones + horizon show. Prep: almost no change (prep camera zooms into own half), back row hides behind the front row.
+- R2-cam24-zoomout-prep-late: PITCH 24 + prep board rect shrunk (app.gd board_targets: grow_individual(-side-50, -70, -side-50, -4)) → plaza edge + stones show at the top, units ~20 % smaller.
+Rebuild R2: after R1, `sed` PITCH in scripts/ui/stage3d.gd + the board_targets line above (test values, not patches).
