@@ -1,9 +1,10 @@
 # Reviews index
 
-V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
+| review-2026-11-12-skills.md | Set 209 extra skills research — user picked A2 (7 installed skills in runbooks) · B1–B3 (godot-play draft, godot-release, port-parity) applied; C2a = no outside skill, own workflow/gdscript.md | decided (open: godot-play live run) |
 | review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
 | review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; rest parked for Godot (set 189 C1, web UI frozen) | parked → Godot |
 | review-2026-11-10-ui-test-notes.md | Set 187 UI test notes = Godot UI list since set 189 C1 (web UI frozen) | open (Godot) |

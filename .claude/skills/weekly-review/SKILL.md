@@ -13,6 +13,7 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 - Sources: `git log --since='7 days ago' --format='%h %ad %s' --date=short origin/main` · claude/handoff.md · this week's entries in claude/archive/relay/ (Claude cannot read old chats).
 - List each time the user corrected or redid Claude's work, a gate failed first time, a bug was found by the user, or a rule caused wasted work.
 - Per item: where the fix belongs (CLAUDE.md · a topic file · a skill · nothing = one-off) + the exact text to add/remove.
+- Token use (set 209 A2): invoke `anthropic-skills:explain-usage` once and put the biggest sink + a cheaper way in the report (it sees this chat only — a hint, not the week's total).
 
 ## 2. Workflow audit — scope
 - Always: CLAUDE.md, claude/workflow.md, claude/workflow/*.md, claude/ops-rules.md, .claude/skills/*/SKILL.md, claude/handoff.md, claude/instructions.md, claude/reviews.md.
@@ -32,7 +33,7 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 6. **Stale text:** tool names that no longer exist (e.g. `get_artifact`) · links to moved sections ("CLAUDE.md 'X'") · paths (archive folders) · numbered handoff items that no longer exist · "Project only" style notes · old decisions overruled by newer ones.
 7. **Review hygiene:** every claude/review-*.md has a row in reviews.md · drafts "waiting for the user" are listed in handoff "Open decisions" · decided/applied files are moved to claude/archive/reviews/ · after `git mv`, grep the old name and fix references.
 8. **Thai summary:** claude/instructions.md version and content match the current CLAUDE.md (redo it whenever CLAUDE.md changed).
-9. **handoff:** Relay = newest 2 sets · no finished lines left in the Relay · Publish line = current only · counts/facts in State still true · set numbers not used twice (a duplicate = parallel chats → tell the user).
+9. **handoff:** Relay = newest 2 sets + open WIP sets (set 211 B1) · no finished lines left in the Relay · Publish line = current only · counts/facts in State still true · set numbers not used twice (a duplicate = parallel chats → tell the user).
 
 ## 3b. Rule compliance — were the rules actually followed? (set 158, user request)
 The audit above checks the TEXT of the rules; this checks the WORK of the week against them. Sources: this week's Relay entries (handoff + claude/archive/relay/) and `git log`/`git diff` on origin/main — Claude cannot read old chats, so a rule with no trace counts as "not shown" (say so, don't call it proven). Per set of the week:
@@ -41,11 +42,12 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 3. **New core/game files (HARD RULE 2):** `git log --since='7 days ago' --diff-filter=A --name-only --format= origin/main -- src/core src/game` → each one is in `CORE` in src/build.mjs.
 4. **Values (HARD RULE 6):** a set that changed game values has its cfgdiff review file + the "cells to set back" user todo; boss values written only after a shown before/after (bossrun --fit report → user picks; set 170).
 5. **Publish:** each publish names its gate commit + CI green (set 153 G1) and updated the existing Links URL.
-6. **Relay / lock:** every set number is unique · each chat pushed a 🔒 line and none is left after its close-out · Relay = newest 2 sets.
+6. **Relay / lock:** every set number is unique · each chat pushed a 🔒 line and none is left after its close-out · Relay = newest 2 sets + open WIP sets.
 7. **Close-out (HARD RULE 1):** each merged code set ended with a close-out that printed the skill check (`สกิลใหม่: …`).
 8. **Doc versions:** a Thai rule doc / CLAUDE.md changed → its version line bumped, claude/instructions.md regenerated (user picked: caught here, set 158 B2), and handoff "Doc versions" matches the file headers:
    `for f in combat-rules tribe-rules shop-merge-rules build-plan instructions; do h=$(sed -n 3p claude/$f.md | grep -oE '^V[0-9.]+'); grep -q "$f $h" claude/handoff.md || echo "DIFF $f file=$h"; done`
 9. **Measure:** measured only with permission (or a mechanic change), with a measure-log entry.
+10. **Review skills (set 209 A2):** UI sets' Relay lines carry `critique ✓`, code merges `review ✓`, each publish names its security-review result; a set that touched src/core or godot/scripts names `Godot tests n/n (golden)` (skill port-parity).
 Each miss → a report item: rule · set · evidence · why it was missed (rule not seen at that moment / trigger unclear / step forgotten) · where the fix belongs (skill description or step · merge-code check · hook · CLAUDE.md), with A1/A2 options. A rule missed twice → recommend moving it into a skill step or a merge-code check rather than adding more text.
 
 ## 4. Report

@@ -1,0 +1,36 @@
+extends Control
+# SAMPLE (set 208 round 7): tiny stat icons drawn in code — atk = sword · hp = heart · cd = clock
+
+@export var kind := "atk"
+@export var col := Color.WHITE
+
+func _draw() -> void:
+	var w := size.x
+	var h := size.y
+	var o := Color(0, 0, 0, 0.85)
+	if kind == "atk":
+		var a := Vector2(w * 0.2, h * 0.8)
+		var b := Vector2(w * 0.85, h * 0.15)
+		draw_line(a, b, o, 3.5)
+		draw_line(a, b, col, 1.8)
+		var g1 := Vector2(w * 0.12, h * 0.52)
+		var g2 := Vector2(w * 0.48, h * 0.88)
+		draw_line(g1, g2, o, 3.5)
+		draw_line(g1, g2, col, 1.8)
+	elif kind == "hp":
+		var pts := PackedVector2Array()
+		for i in 24:
+			var t := TAU * float(i) / 24.0
+			var x := 16.0 * pow(sin(t), 3)
+			var y := -(13.0 * cos(t) - 5.0 * cos(2 * t) - 2.0 * cos(3 * t) - cos(4 * t))
+			pts.append(Vector2(w / 2.0 + x * w / 36.0, h * 0.45 + y * h / 36.0))
+		draw_colored_polygon(pts, col)
+		pts.append(pts[0])
+		draw_polyline(pts, o, 1.0, true)
+	else:
+		var c := Vector2(w, h) / 2.0
+		var r := minf(w, h) * 0.42
+		draw_circle(c, r, o)
+		draw_circle(c, r - 1.2, col)
+		draw_line(c, c + Vector2(0, -r * 0.65), o, 1.4)
+		draw_line(c, c + Vector2(r * 0.5, 0), o, 1.4)

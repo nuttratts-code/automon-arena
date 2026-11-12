@@ -1,4 +1,4 @@
-# workflow · importing values from the Balance Room (English · V1.37 · 9 Nov 2026 · set 166: main account reads the db itself, no AMCFG1 paste · V1.36 · 8 Nov 2026 · set 157: points to skill balance-import · V1.35 · 8 Nov 2026 · set 153: check ① scope, cfgdiff file name, botgen time · V1.34 set 152 audit: setup before gate, AMCFG1 = one input path, gate time) · V1.33 set 151 review W6 step 4b
+# workflow · importing values from the Balance Room (English · V1.38 · 12 Nov 2026 · set 211: Godot data step + merge through merge-code · V1.37 · 9 Nov 2026 · set 166: main account reads the db itself, no AMCFG1 paste · V1.36 · 8 Nov 2026 · set 157: points to skill balance-import · V1.35 · 8 Nov 2026 · set 153: check ① scope, cfgdiff file name, botgen time · V1.34 set 152 audit: setup before gate, AMCFG1 = one input path, gate time) · V1.33 set 151 review W6 step 4b
 
 Split from workflow.md V1.21 · V1.32 (set 130) check-before-tuning §00 + stage tab imported via apply-stage + bossrun shown before write · older versions: git log
 
@@ -22,9 +22,9 @@ Heavy jobs run ONE at a time (2 cores), always in the background; do the light w
 3. **Do not run the full test suite here** (it fails anyway until bot teams are rebuilt). Grep tests for the changed IDs (`grep -n "'ID'" tests/*.js`), fix tests on changed kits (old kit → retired test `ID@n` in SC_OLD/SC_RETIRED), check only them: `node tools/bootstrap.mjs test <ID>` (seconds). Commit + push.
 4. Background: `node lab/botgen.mjs 2400 4` (botteams.md §13; ~6.5–13 min, not re-timed since set 99). Meanwhile: draft the handoff Relay line, `Artifact read` the 3 Links URLs (writer check).
 5. Bosses affected → background `node lab/bossref.mjs 600 300` if lab/bossref.json is stale, then `node lab/bossrun.mjs 600 75 62 50 --fit --md <file>` (report only) → show the user before → after (§00 step 5) → write only the picked cells. Commit + push.
-6. `node tools/bootstrap.mjs setup` until it passes (HARD RULE 3, set 152 D1 — fix every failure here, never in the gate).
-6b. Background: `node tools/bootstrap.mjs gate` ONCE (~4 min after a passing setup; longer if unit tests re-run). Meanwhile: finish handoff text.
-7. GATE: PASS → fast-forward main → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main → tell the user the cells to set back (§00 step 6).
+5b. **Godot data (V1.38, set 211):** `node tools/exportdata.mjs` → commit godot/data/game.json + hash (CI fails when it is stale) → skill `port-parity`.
+6. Merge through skill `merge-code` (V1.38, set 211 — security grep, code review, setup until it passes, gate ONCE, CI green; HARD RULE 3). Heavy jobs one at a time in the background. Meanwhile: finish handoff text.
+7. Merged + CI green → publish the 3 pages in parallel → clear config/main (chars/tribes {}, bump rev + savedAt, appliedAt/appliedNote; remove stale `stage` only if it is older than the game's) → push Relay to main → tell the user the cells to set back (§00 step 6).
 
 ## 8. Balance Room (ArtifactData)
 - **Read only when the user says they saved** · if handoff says "บาลานซ์: กำลังปรับ" do not import.

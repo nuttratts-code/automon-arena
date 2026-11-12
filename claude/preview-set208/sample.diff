@@ -1,0 +1,408 @@
+diff --git a/godot/scripts/ui/prep.gd b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/prep.gd
+index e3618d5..b1832f5 100644
+--- a/godot/scripts/ui/prep.gd
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/prep.gd
+@@ -47,7 +47,7 @@ var board_grid: Control # set 206: plain holder, cells placed by place_cells()
+ var col_labels: Array = []
+ var tribe_col: Button # set 207 P8: left column of tribe shapes + counts (replaces the top "เผ่า" button, user F1)
+ var tribe_list: VBoxContainer
+-var bench_row: HBoxContainer
++var bench_row: BoxContainer
+ var dock: PanelContainer
+ var shop_row: HBoxContainer
+ var btn_reroll: Button
+@@ -450,7 +450,15 @@ func _bind(lay: Control) -> void:
+ 	msg_label = _part(lay, "Msg", "Label")
+ 	tribe_col = _part(lay, "TribeCol", "Button")
+ 	tribe_list = _part(lay, "TribeList", "VBoxContainer")
+-	bench_row = _part(lay, "Bench", "HBoxContainer")
++	bench_row = _part(lay, "Bench", "VBoxContainer")
++	bench_row.add_theme_constant_override("separation", 4)
++	bench_row.anchor_right = 0.0
++	bench_row.offset_left = 6.0
++	bench_row.offset_right = 156.0
++	tribe_col.anchor_left = 1.0
++	tribe_col.anchor_right = 1.0
++	tribe_col.offset_left = -54.0
++	tribe_col.offset_right = -4.0
+ 	odds_btn = _part(lay, "ShopOdds", "Button")
+ 	odds_row = _part(lay, "OddsRow", "HBoxContainer")
+ 	btn_reroll = _part(lay, "Reroll", "Button")
+@@ -459,6 +467,18 @@ func _bind(lay: Control) -> void:
+ 	shop_row = _part(lay, "Shop", "HBoxContainer")
+ 	btn_fight = _part(lay, "Fight", "Button")
+ 	fight_t = _part(lay, "FightTitle", "Label")
++	odds_btn.anchor_left = 0.5
++	odds_btn.anchor_right = 0.5
++	odds_btn.offset_left = -170.0
++	odds_btn.offset_right = 170.0
++	odds_btn.offset_top = 34.0
++	odds_btn.offset_bottom = 62.0
++	odds_row.alignment = BoxContainer.ALIGNMENT_CENTER
++	shop_row.alignment = BoxContainer.ALIGNMENT_CENTER
++	dock.anchor_left = 0.5
++	dock.anchor_right = 0.5
++	dock.offset_left = -282.0
++	dock.offset_right = 282.0
+ 	col_labels = [_part(lay, "ColBack", "Label"), _part(lay, "ColMid", "Label"), _part(lay, "ColFront", "Label")]
+ 	btn_hi.pressed.connect(func() -> void: clear_highlight.emit())
+ 	btn_runes.pressed.connect(func() -> void: open_runes.emit())
+@@ -493,7 +513,8 @@ func _bind(lay: Control) -> void:
+ 		bench_row.add_child(c)
+ 	for i in int(R.RULES()["shop"]["slots"]):
+ 		var c := _new_cell({"at": "shop", "i": float(i)})
+-		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		c.custom_minimum_size.x = 104.0
++		c.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+ 		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 		shop_row.add_child(c)
+ 
+@@ -505,6 +526,7 @@ func _notification(what: int) -> void:
+ 
+ # room the board leaves on the left: right of the tribe column when it sits at the field's left edge (app.board_targets)
+ func board_left_room() -> float:
++	return 150.0
+ 	if tribe_col == null or not tribe_col.is_inside_tree() or field == null: # by position, not visibility: the board must not jump when the first unit is bought
+ 		return 6.0
+ 	var f := field.get_global_rect()
+@@ -513,7 +535,10 @@ func board_left_room() -> float:
+ 		return maxf(6.0, r.end.x - f.position.x + 6.0)
+ 	return 6.0
+ 
++var _trow: HBoxContainer
+ func _fill_tribe_col(counts: Dictionary, steps: Dictionary, have: Array) -> void:
++	_fill_trow(counts, steps, have)
++func _fill_tribe_col_old(counts: Dictionary, steps: Dictionary, have: Array) -> void:
+ 	for ch in tribe_list.get_children():
+ 		tribe_list.remove_child(ch)
+ 		ch.queue_free()
+@@ -579,6 +604,7 @@ func _fill_odds(lv: float) -> void:
+ 		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+ 		h.add_child(dot)
+ 		var l := TH.label(_n(odds[r]) + "%", 13, RAR_TOK.get(r, "mute"), "body_b")
++
+ 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		h.add_child(l)
+ 		odds_row.add_child(h)
+@@ -1018,23 +1044,46 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
+ 	if u == null:
+ 		return
+ 	var c: Dictionary = app.cm[u["id"]]
+-	var v := VBoxContainer.new()
++	var v: BoxContainer = HBoxContainer.new() if ref["at"] == "bench" else VBoxContainer.new()
+ 	v.alignment = BoxContainer.ALIGNMENT_CENTER
+ 	v.add_theme_constant_override("separation", 1)
++	if ref["at"] == "bench":
++		v.alignment = BoxContainer.ALIGNMENT_BEGIN
++		v.add_theme_constant_override("separation", 12)
++		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++		v.offset_left = 6
+ 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var on_stage: bool = ref["at"] == "board"
+ 	if on_stage: # set 206: the unit itself is a sprite on the 3D tile; the cell keeps tribe badge + stars + name at the feet
+-		v.alignment = BoxContainer.ALIGNMENT_END
++		v.alignment = BoxContainer.ALIGNMENT_CENTER
+ 		var mon0 := UV.badges(c, int(u["level"]), 14.0)
+ 		mon0.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+ 		v.add_child(mon0)
++	elif ref["at"] == "bench":
++		var mon := UV.make(c, 0, px, false)
++		mon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		v.add_child(mon)
++		var col := VBoxContainer.new()
++		col.alignment = BoxContainer.ALIGNMENT_CENTER
++		col.add_theme_constant_override("separation", 0)
++		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
++		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		var nm1 := TH.label(str(c["name"]), 13, "ink")
++		nm1.clip_text = true
++		nm1.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
++		nm1.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		col.add_child(nm1)
++		col.add_child(UV.tribes_stars(c, int(u["level"]), 11.0))
++		v.add_child(col)
+ 	else:
+ 		var mon := UV.make(c, int(u["level"]), px)
+ 		mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+ 		v.add_child(mon)
+-	if not on_stage: # set 206: on the arena the sprite is the unit; its name shows on the card when tapped
++	if not on_stage and ref["at"] != "bench": # set 206: on the arena the sprite is the unit; its name shows on the card when tapped
+ 		var nm := TH.label(str(c["name"]), 13, "ink")
+-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if ref["at"] == "bench" else HORIZONTAL_ALIGNMENT_CENTER
++		nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
++		if ref["at"] == "bench": nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL; nm.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 		nm.clip_text = true # set 207: the one-row tray keeps every bench cell the same width (full name on the card)
+ 		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+ 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+@@ -1105,22 +1154,28 @@ func _fill_shop(cell: Control, i: int) -> void:
+ 	v.name = "ShopCard"
+ 	v.add_theme_constant_override("separation", 1)
+ 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	var mon := UV.make(c, 0, 34)
+-	mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+-	v.add_child(mon)
+-	var tr := HBoxContainer.new()
++	var top := HBoxContainer.new()
++	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	var tr := VBoxContainer.new()
+ 	tr.name = "Tribes"
+-	tr.alignment = BoxContainer.ALIGNMENT_CENTER
++	tr.alignment = BoxContainer.ALIGNMENT_BEGIN
+ 	tr.add_theme_constant_override("separation", 3)
+ 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	var ts := [c["tribe"]]
+ 	ts.append_array(c["extraTribes"])
+ 	for t in ts:
+ 		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
+-		var sh := SHAPE.make(sp[0], sp[1], 11)
+-		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		var sh := SHAPE.make(sp[0], sp[1], 12)
+ 		tr.add_child(sh)
+-	v.add_child(tr)
++	top.add_child(tr)
++	var mon := UV.make(c, 0, 34, false)
++	mon.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
++	top.add_child(mon)
++	var pad := Control.new()
++	pad.custom_minimum_size = Vector2(12, 0)
++	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	top.add_child(pad)
++	v.add_child(top)
+ 	var gap := Control.new()
+ 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+ 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+@@ -1145,18 +1200,73 @@ func _fill_shop(cell: Control, i: int) -> void:
+ 	var ov := Control.new()
+ 	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 	cell.add_child(ov)
+-	if bool(s.get("locked", false)):
+-		var lk := TH.label(TH.ui_text("lock"), 13, "gold-ink", "body_b")
+-		lk.position = Vector2(2, -2)
+-		lk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		ov.add_child(lk)
++	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++	var lk: Control = load("res://scripts/ui/lock_icon.gd").new()
++	lk.locked = bool(s.get("locked", false))
++	lk.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	lk.set_anchors_preset(Control.PRESET_TOP_RIGHT)
++	lk.offset_left = -26
++	lk.offset_right = 0
++	lk.offset_top = 0
++	lk.offset_bottom = 26
++	ov.add_child(lk)
+ 	if ready:
+ 		var rib := TH.label(TH.ui_text("g_upstar"), 13, "on-accent", "body_b")
+ 		rib.name = "UpStar"
+ 		rib.add_theme_stylebox_override("normal", TH.box(TH.c("gold"), TH.c("gold"), 6, 0, 5, 0))
+ 		rib.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		rib.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+-		rib.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+-		rib.position = Vector2(-rib.get_combined_minimum_size().x + 3, -4)
++		rib.set_anchors_preset(Control.PRESET_CENTER_TOP)
++		rib.position = Vector2(-rib.get_combined_minimum_size().x / 2.0, -8)
+ 		ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ 		ov.add_child(rib)
++
++# SAMPLE (set 208 preview): tribe chips in a row at the field's top-right · only tribes on the team · count / next step
++func _fill_trow(counts: Dictionary, steps: Dictionary, have: Array) -> void:
++	tribe_col.visible = false
++	if _trow == null:
++		_trow = HBoxContainer.new()
++		_trow.name = "TribeRowSample"
++		_trow.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		_trow.add_theme_constant_override("separation", 6)
++		_trow.alignment = BoxContainer.ALIGNMENT_BEGIN
++		field.add_child(_trow)
++		_trow.anchor_left = 0.0
++		_trow.anchor_right = 0.6
++		_trow.offset_left = 0
++		_trow.offset_right = 0
++		_trow.offset_top = 0
++		_trow.offset_bottom = 52
++	for ch in _trow.get_children():
++		_trow.remove_child(ch)
++		ch.queue_free()
++	var tsteps: Array = R.RULES()["tribeSteps"]
++	for t in have:
++		var n := float(counts[t])
++		var nxt := float(tsteps[-1])
++		for x in tsteps:
++			if n < float(x):
++				nxt = float(x)
++				break
++		var on := float(steps.get(t, 0)) > 0.0
++		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
++		var colv := VBoxContainer.new()
++		colv.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		colv.add_theme_constant_override("separation", 1)
++		var ring := PanelContainer.new()
++		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		ring.custom_minimum_size = Vector2(30, 30)
++		ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
++		ring.add_theme_stylebox_override("panel", TH.box(Color(0.06, 0.05, 0.1, 0.9), TH.c(sp[1]), 15, 2, 0, 0))
++		var sh := SHAPE.make(sp[0], sp[1], 16)
++		sh.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
++		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		ring.add_child(sh)
++		colv.add_child(ring)
++		var l := TH.label("%s/%s" % [_n(n), _n(nxt)], 13, "ink", "body_b")
++		l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3) if on else Color(0.92, 0.92, 0.92))
++		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
++		l.add_theme_constant_override("outline_size", 4)
++		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
++		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		colv.add_child(l)
++		_trow.add_child(colv)
+diff --git a/godot/scripts/ui/unit_view.gd b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/unit_view.gd
+index 9b17835..b3d19dc 100644
+--- a/godot/scripts/ui/unit_view.gd
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/unit_view.gd
+@@ -11,7 +11,7 @@ static func rarity_token(c: Dictionary) -> String:
+ 	return RING_TOKEN[int(RING.get(c.get("rarity"), 0))]
+ 
+ # px = side of the picture (stars sit on its lower edge, like the web .lv badge)
+-static func make(c: Dictionary, level: int, px: float) -> Control:
++static func make(c: Dictionary, level: int, px: float, badge := true) -> Control:
+ 	var box := Control.new()
+ 	box.name = "Mon"
+ 	box.custom_minimum_size = Vector2(px, px)
+@@ -39,6 +39,7 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
+ 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		box.add_child(tr)
+ 		var b := SHAPE.make(sp[0], sp[1], maxf(10.0, px * 0.3))
++		b.visible = badge
+ 		b.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+ 		b.offset_left = -b.custom_minimum_size.x
+ 		b.offset_top = -b.custom_minimum_size.y
+@@ -53,9 +54,11 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
+ 		var pill := PanelContainer.new()
+ 		pill.name = "Stars"
+ 		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		pill.add_theme_stylebox_override("panel", TH.box(Color(20 / 255.0, 16 / 255.0, 12 / 255.0, 0.78), Color(0, 0, 0, 0), 4, 0, 3, 0))
++		pill.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+ 		var l := TH.label("★".repeat(level), 13, "ink")
+-		l.add_theme_color_override("font_color", Color.WHITE)
++		l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
++		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
++		l.add_theme_constant_override("outline_size", 4)
+ 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		pill.add_child(l)
+ 		pill.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+@@ -80,10 +83,33 @@ static func badges(c: Dictionary, level: int, px: float) -> Control:
+ 		var pill := PanelContainer.new()
+ 		pill.name = "Stars"
+ 		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		pill.add_theme_stylebox_override("panel", TH.box(Color(20 / 255.0, 16 / 255.0, 12 / 255.0, 0.78), Color(0, 0, 0, 0), 4, 0, 3, 0))
+-		var l := TH.label("★".repeat(level), 13, "ink")
+-		l.add_theme_color_override("font_color", Color.WHITE)
++		pill.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
++		var l := TH.label("★".repeat(level), 22, "ink")
++		l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
++		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
++		l.add_theme_constant_override("outline_size", 6)
+ 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ 		pill.add_child(l)
+ 		row.add_child(pill)
+ 	return row
++
++# SAMPLE (set 208 preview): tribe shapes (main first) then plain stars, one row
++static func tribes_stars(c: Dictionary, level: int, px: float) -> HBoxContainer:
++	var row := HBoxContainer.new()
++	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
++	row.add_theme_constant_override("separation", 3)
++	var ts := [c.get("tribe")]
++	ts.append_array(c.get("extraTribes", []))
++	for t in ts:
++		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
++		var b := SHAPE.make(sp[0], sp[1], px)
++		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
++		row.add_child(b)
++	if level > 0:
++		var l := TH.label("★".repeat(level), 13, "ink")
++		l.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
++		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
++		l.add_theme_constant_override("outline_size", 4)
++		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		row.add_child(l)
++	return row
+diff --git a/godot/scripts/ui/theme.gd b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/theme.gd
+index 2a4994e..261a932 100644
+--- a/godot/scripts/ui/theme.gd
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/theme.gd
+@@ -95,6 +95,13 @@ static func art(group: String, key: String) -> Texture2D:
+ 		if b64 is String:
+ 			var img := Image.new()
+ 			if img.load_png_from_buffer(Marshalls.base64_to_raw(b64)) == OK:
++				if group == "ui":
++					img.convert(Image.FORMAT_RGBA8)
++					var ur := img.get_used_rect()
++					var side := maxi(ur.size.x, ur.size.y)
++					var sq := Image.create(side, side, false, Image.FORMAT_RGBA8)
++					sq.blit_rect(img, ur, Vector2i((side - ur.size.x) / 2, (side - ur.size.y) / 2))
++					img = sq
+ 				tex = ImageTexture.create_from_image(img)
+ 		_tex[id] = tex
+ 	return _tex[id]
+diff --git a/godot/scripts/ui/app.gd b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/app.gd
+index 1d606dd..ec16ebc 100644
+--- a/godot/scripts/ui/app.gd
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/app.gd
+@@ -1047,7 +1047,7 @@ func board_targets() -> Array:
+ 	var br: Variant = null
+ 	var pf: Rect2 = prep.field.get_global_rect()
+ 	if pf.size.x > 40.0 and pf.size.y > 40.0:
+-		pr = pf.grow_individual(-prep.board_left_room(), -4.0, -6.0, -4.0) # set 207: labels lie on the floor (P6) · tribe column on the left (P8)
++		pr = pf.grow_individual(-prep.board_left_room(), -4.0, -prep.board_left_room(), -4.0) # set 207: labels lie on the floor (P6) · tribe column on the left (P8)
+ 	var bf: Rect2 = battle.field.get_global_rect()
+ 	if bf.size.x > 40.0 and bf.size.y > 40.0:
+ 		br = bf.grow_individual(-6.0, -4.0, -6.0, -4.0)
+diff --git a/godot/scenes/prep_layout.tscn b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scenes/prep_layout.tscn
+index 572c632..41a7fb2 100644
+--- a/godot/scenes/prep_layout.tscn
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scenes/prep_layout.tscn
+@@ -154,9 +154,9 @@ anchors_preset = 0
+ anchor_right = 1.0
+ anchor_bottom = 1.0
+ offset_left = 8.0
+-offset_top = 82.0
++offset_top = 44.0
+ offset_right = -8.0
+-offset_bottom = -151.0
++offset_bottom = -118.0
+ mouse_filter = 2
+ 
+ [node name="Board" type="Control" parent="Field" unique_id=1053553779]
+@@ -226,7 +226,7 @@ grow_horizontal = 2
+ grow_vertical = 0
+ mouse_filter = 2
+ 
+-[node name="Bench" type="HBoxContainer" parent="Tray" unique_id=34728014]
++[node name="Bench" type="VBoxContainer" parent="Tray" unique_id=34728014]
+ layout_mode = 1
+ anchors_preset = -1
+ anchor_top = -1.4640001
+diff --git a/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/lock_icon.gd b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/lock_icon.gd
+new file mode 100644
+index 0000000..1846c97
+--- /dev/null
++++ b/C:/Users/nuttr/AppData/Local/Temp/claude/9b0ae2bd46752663/3ab81399-0a3e-4734-83ea-22a8dc67136c/scratchpad/g/scripts/ui/lock_icon.gd
+@@ -0,0 +1,18 @@
++# SAMPLE ONLY (set 208 preview): padlock drawn in code · locked = gold closed · open = grey open shackle
++extends Control
++var locked := false
++func _draw() -> void:
++	var s := size
++	var w := minf(s.x, s.y) * 0.62
++	var o := (s - Vector2(w, w * 1.15)) / 2.0
++	var body := Rect2(o + Vector2(0, w * 0.5), Vector2(w, w * 0.65))
++	var col := Color(1.0, 0.82, 0.3) if locked else Color(0.85, 0.85, 0.85)
++	var dark := Color(0, 0, 0, 0.85)
++	var c := Vector2(o.x + w / 2.0, body.position.y)
++	var r := w * 0.32
++	var cs := c + (Vector2.ZERO if locked else Vector2(w * 0.28, -w * 0.12))
++	draw_arc(cs, r, PI, TAU, 16, dark, 5.0)
++	draw_arc(cs, r, PI, TAU, 16, col, 2.5)
++	draw_rect(body.grow(1.5), dark)
++	draw_rect(body, col)
++	draw_circle(body.get_center(), w * 0.09, dark)

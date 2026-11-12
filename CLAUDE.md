@@ -9,12 +9,17 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Publish + page tests | skill `publish-pages` (runbook) · claude/workflow/publish.md (rules) | publishing an artifact, running ui_smoke by hand |
 | Choices A1/B1 · buttons · guiding the user in tools | claude/workflow/replies.md | before asking the user to pick, or walking them through a tool |
 | UI work (design skill first) | skill `ui-work` (runbook) · claude/workflow/ui.md (rules) | building or reshaping any UI/page/mockup — a new tab, table or button of numbers counts |
+| Game-screen look: references · "looks AI-made" tells · DO/DON'T from similar games | skill `ui-patterns` (runbook, set 210) · claude/ui-patterns.md (library) | before any design sample or UI build of a Godot game screen; the owner says a screen looks generic / asks what similar games do |
 | UI sample loop (owner designs, Claude renders samples, code once at the end) | skill `ui-preview` (set 208) | the owner asks to see a sample/ตัวอย่าง before real code |
 | Balance import · cfgdiff · bossrun | skill `balance-import` (runbook) · claude/workflow/balance-import.md §00 (rules) | any task touching game values (HARD RULE 6) |
 | Chat start (fetch · Relay · 🔒 · branch) | skill `chat-start` (runbook; SessionStart hook prints the Relay) · claude/workflow/relay.md (rules) | first turn of every chat |
 | Battle-scene art look (pixel sprites in a lit 3D set · light · blur · skill VFX · plan P5) | skill `art-look` (runbook, set 201) · claude/art-style.md (rules) | building or changing how the battle scene looks in godot/, or preparing art for it |
 | Code branch → main (setup · gate · merge · CI) | skill `merge-code` (runbook) · HARD RULE 3 (rules) | a set changed code and is ready |
 | Play-test the game UI (Claude plays) | skill `sim-play` (runbook + scripts, set 179) | the user asks Claude to simulate play / bug-hunt the game page |
+| Play-test the Godot game (Claude plays, PC + open editor) | skill `godot-play` (runbook, set 209 — draft until first live run; needs the set 208 MCP addon) | the user asks Claude to play / bug-hunt the Godot build |
+| JS ↔ Godot parity (golden replay) | skill `port-parity` (runbook, set 209) · claude/plan-godot-migration.md §2–§3 (rules) | a set edits a src/core file with a "change both" comment, game.json, or godot/scripts logic |
+| GDScript notes for the port (rounding · sort · tests · scene traps) | claude/workflow/gdscript.md (set 209) | writing or editing any .gd file or Godot scene |
+| Godot release · itch.io zip | skill `godot-release` (runbook, set 209) · claude/workflow/publish.md §10 (rules) | the user orders a Godot build / itch.io upload |
 | Bug · failing test/gate/CI/page | skill `find-cause` (runbook) · HARD RULE 5 (rules) | anything fails or the user reports a bug |
 | Rule / design change | skill `rule-change` (runbook) · Decisions + Docs below (rules) | the user proposes or asks to change how the game works |
 | Measure (Claude measures) · bot teams | skill `measure-balance` (runbook) · claude/workflow/{measure,botteams}.md (rules) | only when the user orders a measurement |

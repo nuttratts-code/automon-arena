@@ -1,5 +1,11 @@
-; Automon Arena — Godot port (set 192, plan claude/plan-godot-migration.md P1 step 3).
-; Engine pinned: Godot 4.7.2-stable (godot/tools/get_godot.sh checks the SHA-512).
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
 [application]
@@ -8,17 +14,27 @@ config/name="Automon Arena"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7")
 
+[autoload]
+
+MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
+
 [display]
 
 window/size/viewport_width=854
 window/size/viewport_height=480
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-; set 196: base 854×480 logical px (1 px ≈ 1 CSS px of the web page on a phone held sideways); bigger screens scale up
-window/handheld/orientation=0
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
+
+[mcp_toolkit]
+
+updates/check_for_updates=false
+updates/install_mode="manual"
 
 [rendering]
 
-; gl_compatibility = the only renderer that runs in the browser (web export) and on older phones.
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

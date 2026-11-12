@@ -1,31 +1,18 @@
 ---
 name: ui-preview
-description: Automon Arena quick UI sample for the owner (ทำตัวอย่าง / เจนตัวอย่าง / ขอดูก่อน / ภาพตัวอย่าง / ลองแบบนี้ดู / mockup ก่อนแก้จริง) — render the REAL Godot prep/battle screen with a throwaway code patch, show the owner 1–2 screenshots, then restore the code. Use when the owner wants to see a layout/look idea before any real change, and keep looping sample after sample until they say "ทำจริง"; then implement everything once via ui-work. Not for final work (ui-work), values (balance-import) or the battle-scene art look (art-look).
+description: Automon Arena design-sample loop for the Godot screens (ภาพตัวอย่าง / ทำตัวอย่างให้ดู / ยังไม่แก้โค้ดจริง / ลองจัดหน้า) — the owner orders layout changes round by round, Claude shows a screenshot of each round WITHOUT touching the real code, and codes everything once at the end (via ui-work) when the owner says ทำจริง. Use when the owner wants to see a look before it is built.
 ---
+# ui-preview (set 208)
 
-# UI preview loop (set 208, user A1 — owner designs, Claude samples, code once at the end)
-
-Rules: nothing is committed during the loop · the owner's scene edits (godot/scenes/*.tscn) are never overwritten · every agreed point is written to a running list in chat (and in the Relay at close-out) so the final pass misses nothing · the owner's reference images = layout idea only, never copy another game's art/look (CLAUDE.md, art rules).
-
-## Setup (once per chat, owner's Windows PC)
-- `S=<scratchpad>`; engine: if `$S/godot/Godot_v4.7.2-stable_win64_console.exe` is missing → `mkdir -p "$S/godot" && unzip -q -o "$USERPROFILE/Downloads/Godot_v4.7.2-stable_win64.exe.zip" -d "$S/godot"` (cloud: ui-work 4e).
-- Back up every file the patch will touch: `cp godot/scripts/ui/prep.gd "$TEMP/prep.gd.bak"` (one .bak per file).
-- Ask the owner to Save (Ctrl+S) any scene they changed in the editor first — the shot reads the file on disk.
-
-## Each sample
-1. Start from the backup (`cp "$TEMP/prep.gd.bak" godot/scripts/ui/prep.gd`), then apply the patch with a small python replace that asserts each old snippet occurs once. Mark it `# PREVIEW ONLY (not committed)`. Size knobs via env vars (e.g. `PREVIEW_BENCH_W`) so one patch renders several variants.
-2. Render from the repo root (one size is enough for a sample; ~40 s):
-   `"$S/godot/Godot_v4.7.2-stable_win64_console.exe" --rendering-driver opengl3 --audio-driver Dummy --path godot --resolution 844x390 -s res://tests/shots.gd -- --out "$S/pvX" > "$S/pvX/run.log" 2>&1`
-3. Check: `grep -E "AUDIT 844x390 (prep|prep-bought|prep-late|prep-drag) |SCRIPT ERROR|Parse Error|^ERROR" "$S/pvX/run.log" | sort | uniq -c` — any ERROR = the sample is wrong (find out why before showing it).
-4. Read `prep-late.png` (full bench + board + tribes) and, if useful, `prep-bought.png` (early game). Look for overlap with the reroll button, tribe list, board tiles.
-5. Restore: `cp "$TEMP/prep.gd.bak" godot/scripts/ui/prep.gd` → `git status --short` must show only the owner's own edits.
-6. Copy the chosen PNGs to `$S/preview/<label>.png` (never into godot/ — Godot imports them) → SendUserFile (display render) → Thai reply: what each label shows, what overlaps, recommendation, the running list of agreed points.
-
-## Traps (found set 208)
-- `HBoxContainer` / `VBoxContainer` cannot change orientation (`ERROR: Can't change orientation of HBoxContainer`) — swap in a new container (copy anchors + offsets, move the children) or use `BoxContainer` / `GridContainer`.
-- Cells keep their content's minimum size: setting `custom_minimum_size = 0` does not shrink a cell below its label + sprite → a column of 5 overflows a short box; hide the name, shorten the box contents, or lay the cell out sideways (picture left, name right).
-- `_part(lay, name, cls)` binds by name AND class: changing a scene node's type needs the matching class in prep.gd `_bind`.
-- `editor_screenshot` (Godot MCP) shows the empty layout boxes only — the cells are made by code, so samples must come from shots.gd.
-
-## End of loop
-Owner says ทำจริง → follow skill `ui-work` with the agreed list (all sizes, tests, gate per HARD RULE 3).
+1. **Scratch copy, never the repo:** `cp -r godot <scratchpad>/g` (≈5 MB) and delete the `MCPRuntimeServer=` autoload line in the copy's project.godot (no MCP server in sample runs). The real branch and the open Godot editor stay untouched.
+2. **Godot binary:** reuse an existing `Godot_v4.7.2-stable_win64_console.exe` (find under `%TEMP%/claude/*/*/scratchpad/godot/`), else `godot/tools/get_godot.sh`.
+2b. **Pattern check (set 210):** before the first hack of a round that changes the LOOK (shape, colour, material, font, card/frame style — not a pure move/resize), run skill `ui-patterns` "Before drawing": 2 named references + 3 non-default decisions.
+3. **Hack the copy** with small Python patch files (write them with the Write tool; heredocs with GDScript break in Git Bash). Tabs: write 4 spaces and convert. Assert every old string exists.
+   - Slot cells are PanelContainers → anchors on their children are ignored; use alignment / spacers.
+   - Changing a node type in the scene (e.g. HBox→VBox) also needs the `_part(lay, name, type)` call changed.
+4. **Shoot:** `"$G" --rendering-driver opengl3 --audio-driver Dummy --path g --resolution 844x390 -s res://tests/shots.gd -- --out <dir>` (~1 min, no xvfb on Windows). Look at `prep-late` / `prep-upstar` / `prep`; AUDIT line must stay clean.
+5. **Show:** copy the chosen shots to `<scratchpad>/preview/Rn-*.png`, SendUserFile, reply with the 3-line Thai header + what changed + any guess you made. Before showing, run `design:design-critique` on the round's shot and add its top 1–2 findings as notes for the owner (set 209 A2) — critique findings never change the sample on their own; only the 5b tell fix may (set 211 A1). Round after round, keep patching the same copy.
+5b. **Tell count (set 210):** before SendUserFile, run skill `ui-patterns` "After the screenshot" on the round's shot; 3 or more tells → fix the sample first, except anything the owner picked (agreed list / notes.md / docs / Relay) — that one is never changed on Claude's own, ask A1/A2 (set 211 A1); report references · decisions · tells left in the reply.
+6. **Keep it safe across chats/PC shutdown (set 212 A2):** after EACH round, copy that round's patch script(s) into `claude/preview-setN/` as `rN-patch*.py` (new files the patch needs: `rN-<name>.gd.txt`) + the round images + update `notes.md` (agreed list + a "Rebuild:" line = the order of patches), commit + push on the WIP branch, name it in the Relay. Do NOT save a whole-folder `git diff --no-index` (it drags in godot/.godot cache files and CRLF-only noise; never delete the copy's `.godot` to clean it). Next chat: recreate the copy (step 1), apply the saved base diff if one exists (set 208 `sample.diff`: rewrite its scratch path prefix to `godot/`, `git apply -p1` inside an empty folder holding the copy as `godot/`), then run the patches in the "Rebuild:" order.
+6b. **Import before the first shot** of a fresh copy (and after anything touched `.godot`): `"$G" --headless --import --path g` — without it the MCP addon scripts fail to parse (`MCPToolkitError not declared`) and shots run with errors.
+7. **ทำจริง:** re-implement cleanly from notes.md through skill `ui-work` (all sizes, dark, tests, ripple) — never paste the sample hack as is.

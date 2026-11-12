@@ -1,5 +1,4 @@
 {
- "_note": "Set 201 (plan-set196 7f1). Credits screen data, read by scripts/ui/credits.gd (plain text only). HARD RULE 9 ② + S-B1. Godot's own licence + third-party notices come from the engine at run time (Engine.get_license_text / get_copyright_info / get_license_info), so they always match the shipped engine.",
  "v": 1,
  "title": "เครดิต",
  "close": "ปิด",

@@ -986,16 +986,21 @@ func test_prep_layout_scene() -> String:
 	var app := _app_tmp()
 	app.start_new_run(4242)
 	var bad := ""
-	for nm in ["Top", "Field", "Tray", "Hud", "TribeCol", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight"]:
+	for nm in ["Top", "Field", "Tray", "HudButtons", "Bench", "ShopOdds", "Reroll", "Dock", "Shop", "Fight", "TribeRow"]:
 		if bad == "" and app.prep.find_child(nm, true, false) == null:
 			bad = "the loaded layout lost %s" % nm
+	# set 208 (user B1): the owner drags every part — none may sit inside an auto row (a Container locks position + size)
+	for nm in ["HudTitle", "ChipHearts", "ChipGold", "HudButtons", "MsgBar", "Bench", "ShopOdds", "Reroll", "Dock", "Fight", "TribeRow"]:
+		var n: Node = app.prep.find_child(nm, true, false)
+		if bad == "" and n != null and n.get_parent() is Container:
+			bad = "%s sits in an auto row (%s) — the owner cannot drag it" % [nm, n.get_parent().name]
 	if bad == "" and app.prep.chip_gold.get_theme_color("font_color") != TH.c("gold-ink"):
 		bad = "metas must colour the labels (gold chip)"
 	# a copy with parts deleted
 	var Prep := load("res://scripts/ui/prep.gd")
 	var p2: Control = Prep.new()
 	var lay: Control = p2.build_layout()
-	for nm in ["Reroll", "TribeCol", "ShopOdds", "DiffBtn"]:
+	for nm in ["Reroll", "TribeRow", "ShopOdds", "DiffBtn"]:
 		var n: Node = lay.find_child(nm, true, false)
 		n.get_parent().remove_child(n)
 		n.free()
@@ -1007,7 +1012,7 @@ func test_prep_layout_scene() -> String:
 	p2.add_child(p2.card)
 	p2._build_menu()
 	p2.render()
-	if bad == "" and (p2.btn_reroll.get_parent() != null or p2.tribe_col.get_parent() != null):
+	if bad == "" and (p2.btn_reroll.get_parent() != null or p2.tribe_btn.get_parent() != null):
 		bad = "deleted parts get stand-ins outside the tree"
 	if bad == "" and p2.cells.size() != 6 + 5 + 5:
 		bad = "cells are still made without those parts (%d)" % p2.cells.size()
@@ -1082,8 +1087,10 @@ func test_stage3d() -> String:
 		bad = "the app must hold the Stage with its camera"
 	elif app.stage.count("prep") != 1:
 		bad = "one board unit = one sprite in the prep group (got %d)" % app.stage.count("prep")
-	elif app.prep.cells["b_0_0"].find_child("Mon", true, false) == null or app.prep.cells["b_0_0"].find_child("TextureRect", true, false) != null:
-		bad = "a board cell keeps badges only (the picture is the 3D sprite)"
+	elif app.prep.cells["b_0_0"].find_child("Mon", true, false) != null or app.prep.cells["b_0_0"].find_child("TextureRect", true, false) != null:
+		bad = "a board cell draws nothing of its own (set 212: the sprite + its 3D foot marks are the unit)"
+	elif app.stage.unit("prep", "b_0_0")["spr"].find_child("FootStars", false, false) == null or app.stage.unit("prep", "b_0_0")["spr"].find_child("FootTribe", false, false) == null:
+		bad = "a prep sprite carries its tribe shape + stars at its feet (set 212 note 14)"
 	elif app.prep.cells["n_0"].stage_slot.size() != 0:
 		bad = "bench cells stay 2D (no stage slot)"
 	if bad == "":
@@ -1097,8 +1104,8 @@ func test_stage3d() -> String:
 		if app.stage.foe_tiles.size() != 12 or app.stage.foe_tiles.any(func(it): return it[0].visible):
 			bad = "at the prep pose the 6 enemy rims + 6 tiles must be hidden (%d)" % app.stage.foe_tiles.size()
 		app.stage.set_k(1.0)
-		if bad == "" and app.stage.foe_tiles.any(func(it): return not it[0].visible or absf(it[0].position.y - float(it[1])) > 0.0001):
-			bad = "at the battle pose the enemy tiles stand in place"
+		if bad == "" and app.stage.foe_tiles.any(func(it): return absf(it[0].position.y - float(it[1])) > 0.0001 or it[0].visible == it[0].name.begins_with("Rim")):
+			bad = "at the battle pose the enemy tiles stand in place (their rims stay hidden until a state lights them, set 212 C1)"
 		app.stage.set_k(0.0)
 	if bad == "":
 		app._on_fight()
@@ -1110,3 +1117,105 @@ func test_stage3d() -> String:
 			bad = "the battle screen shows the battle group"
 	app.queue_free()
 	return "ok" if bad == "" else bad
+
+# set 212 (note 12 + C1): tile rims hidden at rest, all own-side rims while a unit is dragged, a lit rim always shows
+func test_rims_drag_only() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	_board_one(app)
+	app.prep.render()
+	var st: Node3D = app.stage
+	var own := func() -> Array: return st.rims.keys().filter(func(k): return str(k).begins_with("0:")).map(func(k): return st.rims[k])
+	var bad := ""
+	if own.call().size() != 6 or own.call().any(func(m): return m.visible):
+		bad = "own rims must be hidden at rest"
+	app.prep.drag_started({"at": "board", "row": 0.0, "lane": 0.0})
+	if bad == "" and own.call().any(func(m): return not m.visible):
+		bad = "every own rim shows while a unit is dragged"
+	app.prep.drag_ended()
+	if bad == "" and own.call().any(func(m): return m.visible):
+		bad = "rims hide again after the drag"
+	st.tint(0, 1, 1, Color.RED)
+	if bad == "" and not st.rims["0:1:1"].visible:
+		bad = "a lit rim shows without a drag"
+	st.tint(0, 1, 1, null)
+	if bad == "" and st.rims["0:1:1"].visible:
+		bad = "an unlit rim hides again"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# set 212 (note 4): tapping the padlock on a shop card locks / unlocks that slot (no card) · a tap elsewhere opens the card
+func test_shop_padlock_tap() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	app.prep.render()
+	var cell: Control = app.prep.cells["s_1"]
+	var bad := ""
+	var lk: Control = cell.find_child("LockTap", true, false)
+	if lk == null or cell.find_child("Stats", true, false) == null:
+		bad = "a shop card has a padlock + the stats row"
+	elif lk.custom_minimum_size.x < 24.0 or lk.custom_minimum_size.y < 24.0:
+		bad = "the padlock tap zone is at least 24 px"
+	if bad == "":
+		app.prep.lock_tapped({"at": "shop", "i": 1.0})
+		if not bool(app.P["shop"][1].get("locked", false)):
+			bad = "padlock tap must lock the slot"
+		elif app.prep.card.visible:
+			bad = "padlock tap must not open the card"
+		elif String(app.prep.cells["s_1"].find_child("LockTap", true, false).kind) != "lock":
+			bad = "a locked card shows the closed padlock"
+	if bad == "":
+		app.prep.lock_tapped({"at": "shop", "i": 1.0})
+		if bool(app.P["shop"][1].get("locked", false)):
+			bad = "a second tap unlocks"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# set 212: tribe chip row = only tribes on the team, "count/next step" (RULES.tribeSteps) · bench row = name + tribes/stars, no picture badge
+func test_tribe_row_bench_list() -> String:
+	var app := _app_tmp()
+	app.start_new_run(4242)
+	var bad := ""
+	app.prep.render()
+	if app.prep.tribe_btn.visible:
+		bad = "no units → no tribe chips"
+	_board_one(app)
+	app.prep.render()
+	var chips: Array = app.prep.tribe_chips.get_children()
+	if bad == "" and (not app.prep.tribe_btn.visible or chips.is_empty()):
+		bad = "a unit on the board shows its tribe chip"
+	if bad == "":
+		var l: Label = chips[0].find_child("Count", true, false)
+		if l == null or l.text != "1/%s" % app.prep._n(R.RULES()["tribeSteps"][0]):
+			bad = "chip text = count/next step (got %s)" % (l.text if l != null else "none")
+	if bad == "" and (app.prep.next_step(99.0) != float(R.RULES()["tribeSteps"][-1])):
+		bad = "past the top step the next step stays the top step"
+	if bad == "" and not (app.prep.bench_row is VBoxContainer):
+		bad = "the bench is a vertical list (set 212 note 1)"
+	app.do_buy(1, null) # slot 0 was bought by _board_one
+	var row: Control = app.prep.cells["n_0"].find_child("BenchRow", true, false)
+	if bad == "" and (row == null or row.find_child("TribesStars", true, false) == null or row.find_child("Name", true, false) == null):
+		bad = "a bench row holds the picture, the name and the tribe shapes + stars"
+	app.queue_free()
+	_cleanup()
+	return "ok" if bad == "" else bad
+
+# set 212 (security part 4): shipped data files carry no dev notes ("_note" / "about" keys) · tone.json only overrides known tokens
+func test_data_no_dev_notes() -> String:
+	for f in DirAccess.get_files_at("res://data"):
+		if not f.ends_with(".json"):
+			continue
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/" + f))
+		if d is Dictionary:
+			for k in d:
+				if str(k).begins_with("_") or str(k) == "about":
+					return "data/%s ships a dev note key '%s'" % [f, k]
+	var tone: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/tone.json"))
+	var col: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/colours.json"))
+	for m in ["light", "dark"]:
+		for k in tone[m]:
+			if not col[m].has(k) or not Color.html_is_valid(str(tone[m][k])):
+				return "tone.json %s.%s must override an existing colour token with a valid colour" % [m, k]
+	return "ok"

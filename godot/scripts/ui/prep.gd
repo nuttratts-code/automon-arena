@@ -45,9 +45,9 @@ var msg_bar: PanelContainer
 var msg_label: Label
 var board_grid: Control # set 206: plain holder, cells placed by place_cells()
 var col_labels: Array = []
-var tribe_col: Button # set 207 P8: left column of tribe shapes + counts (replaces the top "เผ่า" button, user F1)
-var tribe_list: VBoxContainer
-var bench_row: HBoxContainer
+var tribe_btn: Button # set 212 (notes 2/11): row of round tribe chips (shape + count/next step) at the field's top-left; tap = tribe popup
+var tribe_chips: GridContainer # one row; 3 columns at the field's top-right on a short window (_fit_bench)
+var bench_row: BoxContainer # set 212 (notes 1/10/19): a vertical list of 5 rows
 var dock: PanelContainer
 var shop_row: HBoxContainer
 var btn_reroll: Button
@@ -89,9 +89,25 @@ func setup(a: Control) -> void:
 	_build_menu()
 
 # set 205 arena move: p = 0 in place … 1 gone (top up, tray down, past the screen edge) · set 207: Top / Tray are free nodes
+# set 208: the distance counts the block's parts too (the owner may drag a part outside its block's box), from the block's resting spot
 func slide(p: float) -> void:
-	_slide_node(top_hold, -p * (top_hold.size.y + 16.0 + maxf(0.0, top_hold.position.y)))
-	_slide_node(tray_hold, p * (tray_hold.size.y + 16.0 + maxf(0.0, size.y - tray_hold.position.y - tray_hold.size.y)))
+	if top_hold != null and top_hold.get_parent() != null:
+		var r := _reach(top_hold)
+		_slide_node(top_hold, -p * (r.end.y + 16.0))
+	if tray_hold != null and tray_hold.get_parent() != null:
+		var r := _reach(tray_hold)
+		_slide_node(tray_hold, p * (size.y - r.position.y + 16.0))
+
+# the block + its visible direct parts, at the block's resting spot (parent coordinates)
+static func _reach(n: Control) -> Rect2:
+	var at := n.position
+	if n.has_meta("base"):
+		at.y -= n.offset_top - (n.get_meta("base") as Vector2).x
+	var r := Rect2(at, n.size)
+	for ch in n.get_children():
+		if ch is Control and (ch as Control).visible:
+			r = r.merge(Rect2(at + (ch as Control).position, (ch as Control).size))
+	return r
 
 static func _slide_node(n: Control, dy: float) -> void:
 	if n == null or n.get_parent() == null:
@@ -108,7 +124,7 @@ static func _slide_node(n: Control, dy: float) -> void:
 # The layout scene stores no colours, fonts or icons (light / dark themes and the embedded art differ): parts carry metas
 #   ink = colour token of a label · font = font key · sty = how its box is drawn · art = "group/key" icon
 # and get them here — unless the owner set an override on that part in the editor (then the editor value wins).
-const GLASS := 0.72 # P2: panels over the arena are see-through (the 3D floor shows behind them)
+const GLASS := 0.94 # P2 → set 212: near-solid panels (see-through glass was an "AI-made" tell; owner saw it R5–R9) · slot_cell.gd GLASS = same
 
 static func glass(col: Color) -> Color:
 	return Color(col, col.a * GLASS)
@@ -156,29 +172,33 @@ func _apply_sty(c: Control, sty: String) -> void:
 
 # ---------- the default layout (also what tools/make_prep_layout.gd saves as the scene) ----------
 # Root = free canvas: Top (top bar + message line) · Field (the window onto the 3D board + tribe column) · Tray (bench + shop).
-# Inside them the rows are containers (auto-arranged); the three blocks themselves sit anywhere.
+# set 208 (user B1): the blocks AND their parts are free boxes (plain Control, no auto rows) — the owner drags any part in the
+# Godot editor. Anchors keep each part glued to its edge (left parts left, right parts right, wide parts stretch with the window).
+# Only lists the code fills stay auto rows: HudButtons (buttons that hide/show), Bench / Shop cells, TribeList, the insides of a chip / reroll.
 func build_layout() -> Control:
 	var root := Control.new()
 	root.name = "Layout"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var top := VBoxContainer.new()
+	var top := Control.new()
 	top.name = "Top"
-	top.add_theme_constant_override("separation", 5)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	top.offset_left = 8
 	top.offset_right = -8
 	top.offset_top = 8
 	top.offset_bottom = 8 + 40 + 5 + 24
-	top.add_child(_build_hud())
-	top.add_child(_build_msg())
+	_build_hud(top)
+	var msg := _build_msg()
+	_place(msg, 0, 1, 0, 0, 45, 69)
+	top.add_child(msg)
 	root.add_child(top)
 	var f := _build_field()
 	f.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	f.offset_left = 8
 	f.offset_right = -8
-	f.offset_top = 8 + 40 + 5 + 24 + 5
-	f.offset_bottom = -(8 + BENCH_H + 4 + SHOP_H + 5)
+	f.offset_top = FIELD_TOP # set 212 (note 6): bigger arena — the field starts under the top bar (the message line floats over it)
+	f.offset_bottom = -(8 + TRAY_H - FIELD_INTO_TRAY)
 	root.add_child(f)
 	var tray := _build_tray()
 	tray.name = "Tray"
@@ -187,7 +207,7 @@ func build_layout() -> Control:
 	tray.offset_left = 8
 	tray.offset_right = -8
 	tray.offset_bottom = -8
-	tray.offset_top = -(8 + BENCH_H + 4 + SHOP_H)
+	tray.offset_top = -(8 + TRAY_H)
 	root.add_child(tray)
 	return root
 
@@ -221,21 +241,40 @@ func _hudbtn(text: String, nm: String) -> Button:
 	b.set_meta("sty", "glass_btn")
 	return b
 
-func _build_hud() -> Control:
-	var h := HBoxContainer.new()
-	h.name = "Hud"
-	h.custom_minimum_size.y = 40
-	h.add_theme_constant_override("separation", 8)
+# set 208: a free box at fixed edges · anchors al/ar (0 = left edge, 1 = right edge) + offsets, top/bottom from the block's top
+static func _place(c: Control, al: float, ar: float, ol: float, orr: float, ot: float, ob: float) -> void:
+	c.layout_mode = 1
+	c.anchor_left = al
+	c.anchor_right = ar
+	c.anchor_top = 0.0
+	c.anchor_bottom = 0.0
+	c.offset_left = ol
+	c.offset_right = orr
+	c.offset_top = ot
+	c.offset_bottom = ob
+
+# set 208: top bar parts sit free in Top: title · hearts · gold on the left, the button group glued to the right
+func _build_hud(top: Control) -> void:
 	var t := _lbl("", 14, "ink", "display")
 	t.name = "HudTitle"
-	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(t)
-	h.add_child(_chip("ChipHearts", "heart-bg", "heart-ink", "heart"))
-	h.add_child(_chip("ChipGold", "gold-bg", "gold-ink", "gold"))
-	var sp := Control.new()
-	sp.name = "Space"
-	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(sp)
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	t.clip_text = true
+	t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place(t, 0, 0, 0, 170, 0, 40)
+	top.add_child(t)
+	var hp := _chip("ChipHearts", "heart-bg", "heart-ink", "heart")
+	_place(hp, 0, 0, 178, 248, 2, 38)
+	top.add_child(hp)
+	var gd := _chip("ChipGold", "gold-bg", "gold-ink", "gold")
+	_place(gd, 0, 0, 256, 336, 2, 38)
+	top.add_child(gd)
+	var h := HBoxContainer.new() # buttons hide / show by state, so this one group keeps its auto row (drag the group)
+	h.name = "HudButtons"
+	h.alignment = BoxContainer.ALIGNMENT_END
+	h.add_theme_constant_override("separation", 8)
+	_place(h, 1, 1, -360, 0, 2, 38)
+	h.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	top.add_child(h)
 	var hb := _hudbtn("", "HiBar")
 	hb.visible = false
 	h.add_child(hb)
@@ -250,7 +289,6 @@ func _build_hud() -> Control:
 	var mb := _hudbtn("⋯", "MenuBtn")
 	mb.custom_minimum_size.x = 36
 	h.add_child(mb)
-	return h
 
 func _build_msg() -> Control:
 	var bar := PanelContainer.new()
@@ -283,60 +321,53 @@ func _build_field() -> Control:
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		l.visible = false
 		b.add_child(l)
-	# set 207 P8 (user F1): tribe column on the left = shape + how many units of that tribe you have; tap = tribe popup
-	var tc := Button.new()
-	tc.name = "TribeCol"
-	tc.set_meta("sty", "glass_btn")
-	tc.tooltip_text = TH.ui_text("tribe")
-	tc.position = Vector2(0, 4)
-	tc.size = Vector2(TRIBE_COL_W - 8.0, 40)
-	var tl := VBoxContainer.new()
-	tl.name = "TribeList"
-	tl.add_theme_constant_override("separation", 2)
+	# set 212 (notes 2/11): tribe chips in a row at the field's top-left, 12 px under its top edge = shape in a round chip +
+	# count/next step under it (yellow = step reached) · only tribes on the team · tap = tribe popup (no box: the chips are the look)
+	var tb := Button.new()
+	tb.name = "TribeRow"
+	tb.flat = true
+	tb.focus_mode = Control.FOCUS_NONE
+	tb.tooltip_text = TH.ui_text("tribe")
+	_place(tb, 0, 0, 0, 40, 12, 12 + TRIBE_ROW_H)
+	var tl := GridContainer.new()
+	tl.name = "TribeChips"
+	tl.columns = 99
+	tl.add_theme_constant_override("h_separation", 6)
+	tl.add_theme_constant_override("v_separation", 4)
 	tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tl.position = Vector2(8, 6)
-	tc.add_child(tl)
-	f.add_child(tc)
+	tb.add_child(tl)
+	f.add_child(tb)
 	return f
 
-# set 207 (user: bench and shop stay on two rows) · row 1 = bench ×5 + shop odds line · row 2 = reroll · shop ×5 · fight
-# P7/E1: no bench label or count · P3/B1: reroll = icon + price / "ฟรี n" · P4/C1: odds line, tap = shop popup · P5/D2: fight = title only
+# set 207: P7/E1 no bench label or count · P3/B1 reroll = icon + price / "ฟรี n" · P4/C1 odds line, tap = shop popup · P5/D2 fight = title only
+# set 208 (user B1): every part is a free box in the Tray block (the bench / shop cells inside stay auto rows)
+# set 212 (set 208 notes): bench = a 5-row list on the left, reaching up beside the arena (the owner's set 208 box) · shop cards
+# fixed width, centred (dock ±282) and taller (dock top 40) · odds line centred above them · reroll bottom-left · fight bottom-right
 func _build_tray() -> Control:
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override("separation", 4)
-	var r1 := HBoxContainer.new()
-	r1.name = "BenchBar"
-	r1.custom_minimum_size.y = BENCH_H
-	r1.add_theme_constant_override("separation", 8)
-	var bench := HBoxContainer.new()
+	var rows := Control.new()
+	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var y2 := TRAY_H - SHOP_H # top of reroll / fight
+	var bench := VBoxContainer.new()
 	bench.name = "Bench"
-	bench.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bench.size_flags_stretch_ratio = 1.9
 	bench.add_theme_constant_override("separation", 4)
-	r1.add_child(bench)
+	_place(bench, 0, 0, 0, BENCH_W, BENCH_TOP, BENCH_BOTTOM)
+	rows.add_child(bench)
 	var ob := Button.new()
 	ob.name = "ShopOdds"
 	ob.flat = true
-	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ob.size_flags_vertical = Control.SIZE_SHRINK_END
 	ob.custom_minimum_size.y = ODDS_H
 	ob.tooltip_text = TH.ui_text("odds")
 	var orow := HBoxContainer.new()
 	orow.name = "OddsRow"
 	orow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	orow.alignment = BoxContainer.ALIGNMENT_END
+	orow.alignment = BoxContainer.ALIGNMENT_CENTER
 	orow.add_theme_constant_override("separation", 10)
 	orow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ob.add_child(orow)
-	r1.add_child(ob)
-	rows.add_child(r1)
-	var row := HBoxContainer.new()
-	row.name = "TrayRow"
-	row.custom_minimum_size.y = SHOP_H
-	row.add_theme_constant_override("separation", 8)
+	_place(ob, 0.5, 0.5, -170, 170, DOCK_TOP - ODDS_H + 4, DOCK_TOP)
+	rows.add_child(ob)
 	var rr := Button.new()
 	rr.name = "Reroll"
-	rr.custom_minimum_size = Vector2(54, 0)
 	rr.tooltip_text = TH.ui_text("reroll")
 	rr.set_meta("sty", "glass_btn")
 	var rv := VBoxContainer.new()
@@ -355,18 +386,19 @@ func _build_tray() -> Control:
 	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rv.add_child(rt)
 	rr.add_child(rv)
-	row.add_child(rr)
+	_place(rr, 0, 0, 0, 54, y2, y2 + SHOP_H)
+	rows.add_child(rr)
 	var dk := PanelContainer.new()
 	dk.name = "Dock"
-	dk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var shop := HBoxContainer.new()
 	shop.name = "Shop"
+	shop.alignment = BoxContainer.ALIGNMENT_CENTER
 	shop.add_theme_constant_override("separation", 6)
 	dk.add_child(shop)
-	row.add_child(dk)
+	_place(dk, 0.5, 0.5, -DOCK_HALF, DOCK_HALF, DOCK_TOP, TRAY_H)
+	rows.add_child(dk)
 	var fb := Button.new()
 	fb.name = "Fight"
-	fb.custom_minimum_size = Vector2(96, 0)
 	fb.set_meta("sty", "primary")
 	var ft := _lbl("", 18, "on-accent", "display")
 	ft.name = "FightTitle"
@@ -376,14 +408,26 @@ func _build_tray() -> Control:
 	ft.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ft.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fb.add_child(ft)
-	row.add_child(fb)
-	rows.add_child(row)
+	_place(fb, 1, 1, -96, 0, y2, y2 + SHOP_H)
+	fb.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	rows.add_child(fb)
 	return rows
 
-const BENCH_H := 58.0
+const TRAY_H := 138.0 # Tray block height (reroll / fight row = its bottom SHOP_H)
 const SHOP_H := 76.0
 const ODDS_H := 32.0 # ≥ 24 px on the smallest phone (667×375 shows it at 0.78×)
-const TRIBE_COL_W := 58.0 # default width of the tribe column
+const FIELD_TOP := 44.0
+const FIELD_INTO_TRAY := 6.0 # the field ends just above the odds line
+const BENCH_W := 150.0
+const BENCH_TOP := -202.0 # bench box (Tray coordinates) = the owner's set 208 box: 5 rows of ~45 beside the arena
+const BENCH_BOTTOM := 42.0
+const BENCH_PX := 42.0 # bench picture = shop picture (note 19)
+const SHOP_W := 104.0 # fixed shop card width (note 4)
+const SHOP_PX := 42.0
+const DOCK_HALF := 282.0 # dock = ±282 around the centre (5 cards + gaps)
+const DOCK_TOP := 40.0 # note 15: taller cards (room for the stats row)
+const TRIBE_ROW_H := 52.0
+const LOCK_TAP := 32.0 # padlock tap zone on a shop card (≥ 24 px at 667×375 = 0.78×)
 
 # ---------- bind: find each part by name; a part the owner deleted gets a stand-in that is never shown ----------
 var _spare: Array = [] # stand-ins (not in the tree; freed with the screen)
@@ -413,9 +457,9 @@ func _bind(lay: Control) -> void:
 	btn_menu = _part(lay, "MenuBtn", "Button")
 	msg_bar = _part(lay, "MsgBar", "PanelContainer")
 	msg_label = _part(lay, "Msg", "Label")
-	tribe_col = _part(lay, "TribeCol", "Button")
-	tribe_list = _part(lay, "TribeList", "VBoxContainer")
-	bench_row = _part(lay, "Bench", "HBoxContainer")
+	tribe_btn = _part(lay, "TribeRow", "Button")
+	tribe_chips = _part(lay, "TribeChips", "GridContainer")
+	bench_row = _part(lay, "Bench", "BoxContainer")
 	odds_btn = _part(lay, "ShopOdds", "Button")
 	odds_row = _part(lay, "OddsRow", "HBoxContainer")
 	btn_reroll = _part(lay, "Reroll", "Button")
@@ -432,7 +476,7 @@ func _bind(lay: Control) -> void:
 	btn_legend.tooltip_text = TH.ui_text("lg_t")
 	btn_legend.pressed.connect(func() -> void: open_legend.emit())
 	btn_menu.pressed.connect(func() -> void: show_menu(not menu.visible))
-	tribe_col.pressed.connect(func() -> void: open_tribes.emit())
+	tribe_btn.pressed.connect(func() -> void: open_tribes.emit())
 	odds_btn.pressed.connect(func() -> void: app.open_shop_pop())
 	btn_reroll.pressed.connect(func() -> void: app.do_reroll())
 	btn_fight.pressed.connect(func() -> void: fight.emit())
@@ -458,49 +502,105 @@ func _bind(lay: Control) -> void:
 		bench_row.add_child(c)
 	for i in int(R.RULES()["shop"]["slots"]):
 		var c := _new_cell({"at": "shop", "i": float(i)})
-		c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		c.custom_minimum_size.x = SHOP_W
 		c.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		shop_row.add_child(c)
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and bench_row != null:
+		_fit_bench.call_deferred()
 	if what == NOTIFICATION_PREDELETE:
 		for s in _spare:
 			if is_instance_valid(s) and s.get_parent() == null:
 				s.free()
 
-# room the board leaves on the left: right of the tribe column when it sits at the field's left edge (app.board_targets)
-func board_left_room() -> float:
-	if tribe_col == null or not tribe_col.is_inside_tree() or field == null: # by position, not visibility: the board must not jump when the first unit is bought
+# set 212: a short window (400-high base, app._on_resize) leaves less height than the owner's tall bench box needs, so the bench
+# would run into the tribe chip row → the chip row moves to the field's top-right (the strip beside the centred board mirrors
+# the bench) as a 3-column grid; a taller window puts it back where the scene has it. The row's box counts even while hidden.
+const SHORT_COLS := 3
+func _fit_bench() -> void:
+	if bench_row == null or tribe_btn == null or not bench_row.is_inside_tree() or not tribe_btn.is_inside_tree():
+		return
+	if not tribe_btn.has_meta("own"):
+		tribe_btn.set_meta("own", [tribe_btn.anchor_left, tribe_btn.anchor_right, tribe_btn.offset_left, tribe_btn.offset_right, tribe_btn.offset_top, tribe_btn.offset_bottom])
+	var own: Array = tribe_btn.get_meta("own")
+	tribe_btn.anchor_left = own[0]
+	tribe_btn.anchor_right = own[1]
+	tribe_btn.offset_left = own[2]
+	tribe_btn.offset_right = own[3]
+	tribe_btn.offset_top = own[4]
+	tribe_btn.offset_bottom = own[5] # the scene's box decides (content may be shorter / longer)
+	tribe_chips.columns = 99
+	var t := tribe_btn.get_global_rect()
+	var b := bench_row.get_global_rect()
+	if t.position.x < b.end.x and t.end.x > b.position.x and b.position.y < t.end.y + 2.0 and b.end.y > t.position.y:
+		tribe_chips.columns = SHORT_COLS
+		var w := maxf(tribe_chips.get_combined_minimum_size().x, 30.0)
+		tribe_btn.anchor_left = 1.0
+		tribe_btn.anchor_right = 1.0
+		tribe_btn.offset_left = -w
+		tribe_btn.offset_right = 0.0
+		tribe_btn.offset_bottom = tribe_btn.offset_top + maxf(30.0, tribe_chips.get_combined_minimum_size().y)
+
+# room the board leaves on BOTH sides (app.board_targets; set 212 note 6: the board stays centred) = clear of the bench when the
+# bench reaches up beside the field at its left edge · by position, not content: the board must not jump when a unit is bought
+func board_side_room() -> float:
+	if bench_row == null or not bench_row.is_inside_tree() or field == null:
 		return 6.0
 	var f := field.get_global_rect()
-	var r := tribe_col.get_global_rect()
-	if r.position.x - f.position.x < f.size.x * 0.25 and r.end.x > f.position.x:
+	var r := bench_row.get_global_rect()
+	if r.position.x - f.position.x < f.size.x * 0.25 and r.end.x > f.position.x and r.position.y < f.end.y:
 		return maxf(6.0, r.end.x - f.position.x + 6.0)
 	return 6.0
 
-func _fill_tribe_col(counts: Dictionary, steps: Dictionary, have: Array) -> void:
-	for ch in tribe_list.get_children():
-		tribe_list.remove_child(ch)
+const STEP_ON := Color(1.0, 0.85, 0.3) # count text on the arena floor (outlined, both modes): yellow = a tribe step reached
+const STEP_OFF := Color(0.92, 0.92, 0.92)
+
+# next tribe step above n (RULES.tribeSteps 2/4/6); at the top step it stays the top step ("6/6")
+static func next_step(n: float) -> float:
+	var ts: Array = R.RULES()["tribeSteps"]
+	for x in ts:
+		if n < float(x):
+			return float(x)
+	return float(ts[-1])
+
+func _fill_tribe_row(counts: Dictionary, steps: Dictionary, have: Array) -> void:
+	for ch in tribe_chips.get_children():
+		tribe_chips.remove_child(ch)
 		ch.queue_free()
-	tribe_col.visible = not have.is_empty()
+	tribe_btn.visible = not have.is_empty()
 	for t in have:
-		var row := HBoxContainer.new()
-		row.name = "T_" + str(t)
-		row.add_theme_constant_override("separation", 5)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var on := float(steps.get(t, 0)) > 0.0
+		var col := VBoxContainer.new()
+		col.name = "T_" + str(t)
+		col.add_theme_constant_override("separation", 1)
+		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
+		var ring := PanelContainer.new()
+		ring.custom_minimum_size = Vector2(30, 30)
+		ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.add_theme_stylebox_override("panel", TH.box(Color(TH.c("panel"), GLASS), TH.c(sp[1]), 15, 2, 0, 0, false))
 		var sh := SHAPE.make(sp[0], sp[1], 16)
+		sh.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(sh)
-		var l := TH.label(_n(counts[t]), 14, "ink" if on else "mute", "body_b" if on else "body")
+		ring.add_child(sh)
+		col.add_child(ring)
+		var on := float(steps.get(t, 0)) > 0.0
+		var l := TH.label("%s/%s" % [_n(counts[t]), _n(next_step(float(counts[t])))], 13, "ink", "body_b")
+		l.name = "Count"
+		l.add_theme_color_override("font_color", STEP_ON if on else STEP_OFF)
+		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		l.add_theme_constant_override("outline_size", 4)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(l)
-		row.modulate = Color.WHITE if on else Color(1, 1, 1, 0.6)
-		tribe_list.add_child(row)
-	tribe_list.reset_size()
-	var want := tribe_list.get_combined_minimum_size() + Vector2(16.0, 12.0)
-	tribe_col.size = Vector2(maxf(tribe_col.size.x, want.x), want.y)
+		col.add_child(l)
+		tribe_chips.add_child(col)
+	tribe_chips.reset_size()
+	var want := tribe_chips.get_combined_minimum_size()
+	tribe_btn.size = Vector2(maxf(want.x, 30.0), maxf(30.0, want.y))
+	if tribe_btn.anchor_left == 1.0: # short window: keep the grid glued to the right edge
+		tribe_btn.offset_left = -tribe_btn.size.x
+		tribe_btn.offset_right = 0.0
 
 # set 206: every board cell on its projected slot rect (called whenever the camera moves or the field resizes)
 func place_cells() -> void:
@@ -682,6 +782,8 @@ func drag_started(ref: Dictionary) -> void:
 		src.modulate = Color(1, 1, 1, 0.35)
 	_stage_dim_drag(ref, true)
 	_show_col_labels(true)
+	if app.stage != null: # set 212 (note 12 + C1): the tile rims show only while a unit is dragged
+		app.stage.show_rims(true)
 	var u: Variant = unit_at(ref)
 	var targets: Array = merge_targets(u) if u != null else shop_merge_targets(shop_id(ref))
 	for t in targets:
@@ -713,6 +815,8 @@ func _stage_dim_drag(from: Variant, dim: bool) -> void: # the picked-up board un
 func drag_ended() -> void:
 	_stage_dim_drag(_drag_from, false)
 	_show_col_labels(false)
+	if app.stage != null:
+		app.stage.show_rims(false)
 	_drag_from = null
 	_hover = null
 	for k in cells:
@@ -923,13 +1027,13 @@ func render() -> void:
 	hud_title.text = TH.ui_text("round_boss" if rb != null else "round", {"n": _n(st["round"])}) + " · " + (TH.ui_text("wins_extra", {"w": _n(st["wins"])}) if bool(st["extra"]) else TH.ui_text("wins", {"w": _n(st["wins"]), "t": _n(S["winsToFinish"])}))
 	chip_hearts.text = _n(st["hearts"])
 	chip_gold.text = _n(st["gold"])
-	# set 207 P8: tribe column (shape + count, active bright) · rune button: count + warning when a held rune does nothing
+	# set 212: tribe chip row (shape + count/next step, reached = yellow) · rune button: count + warning when a held rune does nothing
 	var entries := SH.team_entries(st)
 	var counts := T.count_tribes(entries, app.cm)
 	var steps := T.tribe_steps(counts)
 	var have := counts.keys().filter(func(t): return float(counts[t]) > 0.0)
 	have.sort_custom(func(a, b): return float(counts[a]) > float(counts[b]))
-	_fill_tribe_col(counts, steps, have)
+	_fill_tribe_row(counts, steps, have)
 	var held := 0
 	for id in st["rn"]["bag"]:
 		if float(st["rn"]["bag"][id]) > 0.0:
@@ -952,10 +1056,10 @@ func render() -> void:
 		_fill_shop(cells["s_%d" % i], i)
 	for row in 3:
 		for lane in 2:
-			_fill_unit(cells["b_%d_%d" % [row, lane]], {"at": "board", "row": float(row), "lane": float(lane)}, 50.0)
+			_fill_unit(cells["b_%d_%d" % [row, lane]], {"at": "board", "row": float(row), "lane": float(lane)})
 	_stage_units()
 	for i in st["bench"].size():
-		_fill_unit(cells["n_%d" % i], {"at": "bench", "i": float(i)}, 34.0)
+		_fill_unit(cells["n_%d" % i], {"at": "bench", "i": float(i)})
 	# fight button: title only (set 207 P5/D2: no unit count, no new-player cue)
 	fight_t.text = TH.ui_text("fight_confirm") if app.confirm_empty or app.confirm_runes else TH.ui_text("fight_boss") if rb != null else TH.ui_text("fight")
 	btn_fight.disabled = bool(st["over"])
@@ -968,7 +1072,9 @@ func _clear(cell: Control) -> void:
 		cell.remove_child(ch)
 		ch.queue_free()
 
-func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
+# board cell = no drawing of its own (set 212 note 14: tribe + stars are 3D marks at the unit's feet, stage3d) · bench row =
+# picture 42 left (no badge, no stars) · name, under it tribe shapes (main first) left + stars right (notes 1/10/19) · no "+ถาวร" (note 13)
+func _fill_unit(cell: Control, ref: Dictionary) -> void:
 	_clear(cell)
 	var u: Variant = unit_at(ref)
 	cell.picked = sel != null and u != null and sel.has("uid") and float(sel["uid"]) == float(u["uid"])
@@ -983,38 +1089,36 @@ func _fill_unit(cell: Control, ref: Dictionary, px: float) -> void:
 	if u == null:
 		return
 	var c: Dictionary = app.cm[u["id"]]
-	var v := VBoxContainer.new()
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_theme_constant_override("separation", 1)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var on_stage: bool = ref["at"] == "board"
-	if on_stage: # set 206: the unit itself is a sprite on the 3D tile; the cell keeps tribe badge + stars + name at the feet
-		v.alignment = BoxContainer.ALIGNMENT_END
-		var mon0 := UV.badges(c, int(u["level"]), 14.0)
-		mon0.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		v.add_child(mon0)
-	else:
-		var mon := UV.make(c, int(u["level"]), px)
-		mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		v.add_child(mon)
-	if not on_stage: # set 206: on the arena the sprite is the unit; its name shows on the card when tapped
+	if ref["at"] == "bench":
+		var h := HBoxContainer.new()
+		h.name = "BenchRow"
+		h.add_theme_constant_override("separation", 12)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		h.offset_left = 3
+		h.offset_right = -6
+		var mon := UV.make(c, 0, BENCH_PX, false)
+		mon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(mon)
+		var col := VBoxContainer.new()
+		col.alignment = BoxContainer.ALIGNMENT_CENTER
+		col.add_theme_constant_override("separation", 0)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var nm := TH.label(str(c["name"]), 13, "ink")
-		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nm.clip_text = true # set 207: the one-row tray keeps every bench cell the same width (full name on the card)
+		nm.name = "Name"
+		nm.clip_text = true # long names end in "…" (full name on the card)
+		nm.set_meta("trim_ok", true) # tests/shots.gd audit: agreed trim (set 208 notes "Open")
 		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(nm)
-	if on_stage:
-		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	cell.add_child(v)
+		col.add_child(nm)
+		col.add_child(UV.tribes_stars(c, int(u["level"]), 11.0, true))
+		h.add_child(col)
+		cell.add_child(h)
 	var ov := Control.new()
 	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cell.add_child(ov)
-	if not (u["perm"] as Dictionary).is_empty():
-		var pd := TH.label(TH.ui_text("perm_dot"), 13, "gold-ink", "body_b")
-		pd.position = Vector2(4, 0)
-		pd.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ov.add_child(pd)
 	var worn: Array = app.runes_on(u)
 	if worn.size() > 0:
 		var rm := TH.label("◆%d" % worn.size(), 13, "r-epic" if ref["at"] == "board" else "mute", "body_b")
@@ -1036,14 +1140,15 @@ func _stage_units() -> void:
 		for lane in 2:
 			var u: Variant = unit_at({"at": "board", "row": float(row), "lane": float(lane)})
 			if u != null:
-				list.append({"id": "b_%d_%d" % [row, lane], "side": 0, "row": row, "lane": lane, "c": app.cm[u["id"]]})
+				list.append({"id": "b_%d_%d" % [row, lane], "side": 0, "row": row, "lane": lane, "c": app.cm[u["id"]], "level": int(u["level"])})
 	st.set_units("prep", list)
 	for it in list:
 		var cell: Control = cells[it["id"]]
 		st.shade("prep", it["id"], cell.hi < 0)
 
-# set 207 P9 (user G2): fixed card layout — picture top · every tribe (main + extra) · name bottom-left · price bottom-right;
-# nothing moves with state. Own a copy → yellowish card · buying it completes a star-up → "อัปดาว" ribbon top-right.
+# set 207 P9 (user G2) → set 212 (notes 4/15/17): fixed card, nothing moves with state — tribe shapes stacked on the left (main
+# first) · picture 42 (no badge) · padlock top-right (gold closed = locked, grey open; tap = lock / unlock) · stats row (level-1
+# attack · HP · cooldown) · name bottom-left · price bottom-right. Own a copy → yellowish card · buying it completes a star-up → "อัปดาว" top centre.
 func _fill_shop(cell: Control, i: int) -> void:
 	_clear(cell)
 	var s: Dictionary = P()["shop"][i]
@@ -1060,36 +1165,42 @@ func _fill_shop(cell: Control, i: int) -> void:
 		cell.add_child(l)
 		return
 	var c: Dictionary = app.cm[id]
+	var locked := bool(s.get("locked", false))
 	var cant := float(c["price"]) > float(P()["gold"])
 	var mine := SH.all_units(P()).filter(func(x): return x["u"]["id"] == id)
 	var lv1 := mine.filter(func(x): return float(x["u"]["level"]) == 1.0).size()
 	var ready := lv1 > 0 and float(lv1) >= merge_need(id) - 1.0
 	cell.owned = mine.size() > 0
-	cell.look(true, true, bool(s.get("locked", false)), cant)
+	cell.look(true, true, locked, cant)
 	var v := VBoxContainer.new()
 	v.name = "ShopCard"
 	v.add_theme_constant_override("separation", 1)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mon := UV.make(c, 0, 34)
-	mon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(mon)
-	var tr := HBoxContainer.new()
+	var top := HBoxContainer.new()
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tr := VBoxContainer.new()
 	tr.name = "Tribes"
-	tr.alignment = BoxContainer.ALIGNMENT_CENTER
 	tr.add_theme_constant_override("separation", 3)
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var ts := [c["tribe"]]
 	ts.append_array(c["extraTribes"])
 	for t in ts:
 		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
-		var sh := SHAPE.make(sp[0], sp[1], 11)
-		sh.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		tr.add_child(sh)
-	v.add_child(tr)
+		tr.add_child(SHAPE.make(sp[0], sp[1], 12))
+	top.add_child(tr)
+	var mon := UV.make(c, 0, SHOP_PX, false)
+	mon.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
+	top.add_child(mon)
+	var pad := Control.new() # keeps the picture centred against the tribe column (the padlock sits over this corner)
+	pad.custom_minimum_size = Vector2(12, 0)
+	pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(pad)
+	v.add_child(top)
 	var gap := Control.new()
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(gap)
+	v.add_child(stats_row(c, 1, 14))
 	var bot := HBoxContainer.new()
 	bot.add_theme_constant_override("separation", 3)
 	bot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1109,19 +1220,54 @@ func _fill_shop(cell: Control, i: int) -> void:
 	cell.add_child(v)
 	var ov := Control.new()
 	ov.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cell.add_child(ov)
-	if bool(s.get("locked", false)):
-		var lk := TH.label(TH.ui_text("lock"), 13, "gold-ink", "body_b")
-		lk.position = Vector2(2, -2)
-		lk.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ov.add_child(lk)
+	# padlock: slot_cell turns a tap inside this zone into lock / unlock (lock_tapped) instead of opening the card
+	var lk := SHAPE.make("lock" if locked else "unlock", "gold" if locked else "mute", LOCK_TAP)
+	lk.name = "LockTap"
+	lk.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	lk.offset_left = -LOCK_TAP + 4
+	lk.offset_right = 4
+	lk.offset_top = -4
+	lk.offset_bottom = LOCK_TAP - 4
+	ov.add_child(lk)
 	if ready:
 		var rib := TH.label(TH.ui_text("g_upstar"), 13, "on-accent", "body_b")
 		rib.name = "UpStar"
 		rib.add_theme_stylebox_override("normal", TH.box(TH.c("gold"), TH.c("gold"), 6, 0, 5, 0))
 		rib.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rib.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-		rib.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		rib.position = Vector2(-rib.get_combined_minimum_size().x + 3, -4)
-		ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		rib.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		rib.position = Vector2(-rib.get_combined_minimum_size().x / 2.0, -8)
 		ov.add_child(rib)
+
+# padlock tapped on a shop card (slot_cell) — same command as the card's lock button
+func lock_tapped(ref: Dictionary) -> void:
+	if ref["at"] != "shop" or not has_thing(ref):
+		return
+	app.do_lock(int(ref["i"]))
+	if card.visible:
+		_refresh_card()
+
+# set 212 (note 15): attack · HP · cooldown at that level — icons drawn in code (shape.gd), cooldown in seconds (".0" dropped)
+const STAT_TOK := {"atk": "n-burn", "hp": "hp", "cd": "accent"}
+func stats_row(c: Dictionary, level: int, fs: int) -> HBoxContainer:
+	var li := clampi(level, 1, 3) - 1
+	var row := HBoxContainer.new()
+	row.name = "Stats"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 7)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var cd: String = ("%.1f" % (float(c["cdMs"][li]) / 1000.0)).trim_suffix(".0")
+	for it in [["atk", _n(c["atk"][li])], ["hp", _n(c["hp"][li])], ["cd", cd]]:
+		var g := HBoxContainer.new()
+		g.name = "S_" + str(it[0])
+		g.add_theme_constant_override("separation", 2)
+		g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ic := SHAPE.make(it[0], STAT_TOK[it[0]], 12)
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		g.add_child(ic)
+		var nl := TH.label(it[1], fs, "ink", "body_b")
+		nl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		g.add_child(nl)
+		row.add_child(g)
+	return row

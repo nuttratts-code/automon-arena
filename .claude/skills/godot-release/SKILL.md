@@ -1,0 +1,14 @@
+---
+name: godot-release
+description: Automon Arena release of the Godot build (ออกตัวเกม / อัป itch.io / export / ทำไฟล์เกม / build เว็บ Godot) — latest main with green CI, parity + security checks, web export, WEB CHECK, clean file list, zip for the owner to upload to itch.io. Use when the user orders a Godot build for itch.io or any release file (plan-godot-migration step 9 — only on the user's order until the 3D work is done). The web game / Balance Room / check artifacts use publish-pages instead. Rules live in claude/workflow/publish.md §10 + claude/workflow/security.md parts 4–5 and win if anything differs.
+---
+# godot-release (set 209 — thin runbook; the build commands live ONLY in publish.md §10, do not copy them here)
+
+1. **Stop point (rule A1):** a release leaves the PC → before building, tell the user which commit and which target (web only today). The itch.io page stays Draft / Restricted until the user opens it (set 203 D1).
+2. **Latest main + CI:** `git fetch origin`, build from a clean worktree of origin/main; the newest code CI run on that commit is green including the `godot` and `godot-web` jobs (skill `ci-check` on the PC). Code changed after it → no release.
+3. **Parity + security before the build:** skill `port-parity` passed on this commit (or CI job `godot` green = the same check) · skill `security-review` on the code changed since the last release · secret grep (security.md part 1).
+4. **Build · check · zip:** publish.md §10 steps 1–3, exactly as written there (WEB CHECK: PASS needed).
+5. **Shipped files (security.md part 4):** the §10 step 2 file list, plus `strings build/web/index.pck | grep -i 'mcp'` empty (dev-only addon and its autoload must not ship) · credits screen shows the owner © line, the Godot MIT text and the font licences.
+6. **Hand over:** SendUserFile the zip; the user uploads by hand (set 203 C1). Claude never uploads and never uses butler or an API key unless the user orders it (then the key only through request_credential). Guide the page settings from §10 step 4; remind 2FA on itch.io once (part 5).
+7. **PC (Windows) / Android downloads:** not decided yet. They need PCK encryption with custom export templates (S-D1; key only in env / an Actions secret) → ask the user with options first and write the steps into publish.md before building anything.
+8. **Record:** Relay line per §10 step 5 (commit, WEB CHECK result, zip name); Links gets the page URL when the user sends it.

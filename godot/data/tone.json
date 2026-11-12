@@ -1,0 +1,25 @@
+{
+"v": 1,
+"light": {
+ "bg": "#e6edf1",
+ "panel": "#f6f9fb",
+ "card": "#ffffff",
+ "soft": "#e3ebf0",
+ "line": "#a9bfcb",
+ "arena-line": "#b9cbd5",
+ "mute": "#5f6b73",
+ "accent": "#2d5f7c",
+ "on-accent": "#ffffff"
+},
+"dark": {
+ "bg": "#121b21",
+ "panel": "#1c2a33",
+ "card": "#253743",
+ "soft": "#253743",
+ "line": "#7fa3b5",
+ "arena-line": "#34505e",
+ "mute": "#9aa9b3",
+ "accent": "#8cc0de",
+ "on-accent": "#13212a"
+}
+}

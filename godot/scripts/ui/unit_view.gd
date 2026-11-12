@@ -10,8 +10,19 @@ const RING_TOKEN := ["", "r-unc", "r-rare", "r-epic", "r-legend"]
 static func rarity_token(c: Dictionary) -> String:
 	return RING_TOKEN[int(RING.get(c.get("rarity"), 0))]
 
-# px = side of the picture (stars sit on its lower edge, like the web .lv badge)
-static func make(c: Dictionary, level: int, px: float) -> Control:
+# set 212 (note 3): stars everywhere = gold glyph with a thin dark outline, no background pill
+const STAR := Color(1.0, 0.85, 0.3)
+static func stars(level: int, fs: int) -> Label:
+	var l := TH.label("★".repeat(level), fs, "ink")
+	l.name = "StarText"
+	l.add_theme_color_override("font_color", STAR)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	l.add_theme_constant_override("outline_size", 4)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+# px = side of the picture (stars sit on its lower edge, like the web .lv badge) · badge = false: no tribe badge (set 212 bench / shop)
+static func make(c: Dictionary, level: int, px: float, badge: bool = true) -> Control:
 	var box := Control.new()
 	box.name = "Mon"
 	box.custom_minimum_size = Vector2(px, px)
@@ -38,13 +49,14 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
 		tr.offset_bottom = -3
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(tr)
-		var b := SHAPE.make(sp[0], sp[1], maxf(10.0, px * 0.3))
-		b.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-		b.offset_left = -b.custom_minimum_size.x
-		b.offset_top = -b.custom_minimum_size.y
-		b.offset_right = 0
-		b.offset_bottom = 0
-		box.add_child(b)
+		if badge:
+			var b := SHAPE.make(sp[0], sp[1], maxf(10.0, px * 0.3))
+			b.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+			b.offset_left = -b.custom_minimum_size.x
+			b.offset_top = -b.custom_minimum_size.y
+			b.offset_right = 0
+			b.offset_bottom = 0
+			box.add_child(b)
 	else:
 		var s := SHAPE.make(sp[0], sp[1], px)
 		s.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -53,11 +65,8 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
 		var pill := PanelContainer.new()
 		pill.name = "Stars"
 		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pill.add_theme_stylebox_override("panel", TH.box(Color(20 / 255.0, 16 / 255.0, 12 / 255.0, 0.78), Color(0, 0, 0, 0), 4, 0, 3, 0))
-		var l := TH.label("★".repeat(level), 13, "ink")
-		l.add_theme_color_override("font_color", Color.WHITE)
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pill.add_child(l)
+		pill.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		pill.add_child(stars(level, 13))
 		pill.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 		pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
 		pill.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -65,25 +74,24 @@ static func make(c: Dictionary, level: int, px: float) -> Control:
 		box.add_child(pill)
 	return box
 
-# set 206: a unit standing on the 3D arena is a sprite there; its cell keeps only the tribe badge + the stars (one row)
-static func badges(c: Dictionary, level: int, px: float) -> Control:
+# set 212 (notes 1/10): bench row line 2 = tribe shapes (main first) then plain stars (right-aligned when stars_right)
+static func tribes_stars(c: Dictionary, level: int, px: float, stars_right: bool = false) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.name = "Mon"
+	row.name = "TribesStars"
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 3)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	var sp: Array = TH.TRIBE_SHAPE.get(c.get("tribe"), ["square", "mute"])
-	var b := SHAPE.make(sp[0], sp[1], px)
-	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(b)
+	var ts := [c.get("tribe")]
+	ts.append_array(c.get("extraTribes", []))
+	for t in ts:
+		var sp: Array = TH.TRIBE_SHAPE.get(t, ["square", "mute"])
+		var b := SHAPE.make(sp[0], sp[1], px)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(b)
 	if level > 0:
-		var pill := PanelContainer.new()
-		pill.name = "Stars"
-		pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pill.add_theme_stylebox_override("panel", TH.box(Color(20 / 255.0, 16 / 255.0, 12 / 255.0, 0.78), Color(0, 0, 0, 0), 4, 0, 3, 0))
-		var l := TH.label("★".repeat(level), 13, "ink")
-		l.add_theme_color_override("font_color", Color.WHITE)
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pill.add_child(l)
-		row.add_child(pill)
+		if stars_right:
+			var gap := Control.new()
+			gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			row.add_child(gap)
+		row.add_child(stars(level, 13))
 	return row
