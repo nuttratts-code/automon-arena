@@ -22,6 +22,8 @@ re-implement cleanly (skill `ui-work` 4e Windows PC + 4f, skill `ui-patterns` 2b
   theme.gd / credits.gd comments; new test test_data_no_dev_notes guards every data/*.json.
 - Shots tool: `--light` forces the light theme on a dark-mode PC; label meta `trim_ok` = agreed "…" (bench names) not counted as clip.
 
+14. and 15. done at close-out (merge fcee61a, CI #914 green).
+
 ## Steps (tick + push each)
 1. [x] **Colours + boxes** — godot/data/colours.json (dark cool tokens above + light cool set; check every other screen still reads:
    popups, name screen, run end use the same tokens) · theme.gd `box()` cut corners · `primary()` = plate lit from top-left
@@ -53,6 +55,6 @@ re-implement cleanly (skill `ui-work` 4e Windows PC + 4f, skill `ui-patterns` 2b
 13. [x] **Ripple + docs** — grep every changed name (TribeCol, perm_dot, GLASS, glass_btn, BENCH_*, SHOP_H) across godot/ src/
     claude/ tests; ui.md / plan-godot-migration P4 notes if a rule changed; ui-patterns §6 (motif = cut corner, tone = cool: close
     those open points, bump version); commit line `ripple:`.
-14. [ ] **merge-code** — secret grep · `cd src && node tools/bootstrap.mjs setup` until PASS → `gate` once → merge to main → CI green
+14. [x] **merge-code** — secret grep · `cd src && node tools/bootstrap.mjs setup` until PASS → `gate` once → merge to main → CI green
     (skill ci-check) → Relay line (UI: design skill ✓ · shots ✓ · critique ✓ · patterns ✓ (tells left n)).
-15. [ ] **close-out** (HARD RULE 1). No artifact publish in this set (Godot build is not published as an artifact).
+15. [x] **close-out** (HARD RULE 1). No artifact publish in this set (Godot build is not published as an artifact).
