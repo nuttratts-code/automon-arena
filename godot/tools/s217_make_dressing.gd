@@ -43,6 +43,9 @@ func _mesh(parent: Node, nm: String, m: Mesh, col: Color, at: Vector3) -> MeshIn
 	_own(mi, parent)
 	return mi
 
+func _model_of(card: String) -> String: # card picture → 3D model file name (empty = keep the flat card)
+	return {"stone_tall": "stone_a_tall"}.get(card, "")
+
 func _initialize() -> void:
 	top = Node3D.new()
 	top.name = "ArenaDressing"
@@ -58,7 +61,15 @@ func _initialize() -> void:
 		["StoneTwist", "stone2", 11.0, -6.0, 4.2], ["StoneFallen", "stone_fallen", 4.0, -11.6, 2.4],
 		["RockL", "rock", -14.5, -2.5, 3.0], ["RockR", "rock", 15.0, -1.5, 2.6]]
 	for r in ring:
-		_card(stones, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], r[2] > 8.0)
+		var glb := "res://art/s217/3d/" + _model_of(r[1]) + ".glb"
+		if _model_of(r[1]) != "" and ResourceLoader.exists(glb): # set 217 R3: a real 3D stone (built from the owner's 5 views)
+			var inst: Node3D = (load(glb) as PackedScene).instantiate()
+			inst.name = r[0]
+			inst.position = Vector3(r[2], -0.05, r[3])
+			inst.rotation_degrees = Vector3(0, 12.0, 0)
+			_own(inst, stones)
+		else:
+			_card(stones, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], r[2] > 8.0)
 	# ---- grass + flowers
 	var grass := Node3D.new(); grass.name = "Grass"; _own(grass, top)
 	var tufts := [["grass1", -9.0, -7.8, 0.9], ["grass3", 8.6, -7.6, 0.8], ["grass0", -12.0, -4.0, 1.2],
