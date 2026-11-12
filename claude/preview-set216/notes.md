@@ -29,3 +29,9 @@ Conflict: art-style §8 angle A (owner 7 Nov: high look-down, horizon ~40 % from
 - R2-cam22-*: PITCH 22 (const in stage3d.gd). Battle: standing stones + horizon show. Prep: almost no change (prep camera zooms into own half), back row hides behind the front row.
 - R2-cam24-zoomout-prep-late: PITCH 24 + prep board rect shrunk (app.gd board_targets: grow_individual(-side-50, -70, -side-50, -4)) → plaza edge + stones show at the top, units ~20 % smaller.
 Rebuild R2: after R1, `sed` PITCH in scripts/ui/stage3d.gd + the board_targets line above (test values, not patches).
+
+## R3 — owner: "camera like Final Fantasy" (FF Resonance HD-2D: low, telephoto, scenery behind)
+Conflict (told the owner): changes art-style §8 angle A (7 Nov, high look-down) → rule-change + art-style update at ทำจริง.
+8. (R3, pending) stage3d.gd PITCH 40 → 20 · FOV 34 → 26 (longer lens = flatter, diorama feel) · prep board rect shrunk (app.gd board_targets grow_individual(-side-50, -70, -side-50, -4)) so the plaza edge + standing stones show above the team.
+Seen: battle shows stones + horizon; prep shows stones at the top; units ~20 % smaller in prep; at 20° back-row units sit behind front-row HP bars (battle foe side) — needs a fix at ทำจริง (lift HP bars / stagger lanes). Beyond the stones the scene is dark (hills/arch not in the 215 export). Tilt-shift blur not tried (Compatibility renderer has no DOF; would need a screen shader).
+Rebuild R3: after R1, sed PITCH 20.0 + FOV 26.0 in scripts/ui/stage3d.gd + the board_targets line.
