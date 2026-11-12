@@ -20,6 +20,13 @@ Samples made with skill `ui-preview` on a scratch copy of godot/. `sample.diff` 
 6. **Arena bigger:** Field offset_top 82→44, offset_bottom −151→−118; prep target margin 150 px on BOTH sides (board stays centred, clears the bench).
 7. **Heart / gold icons:** the 32 px tiles hold a tiny picture → crop to the used rect (squared) before scaling (theme.art, group "ui").
 
+## Round 5 (12 Nov, set 212) — UI temperature + shape motif, NOT yet picked by the owner
+- Rebuild: apply `sample.diff` (R1–R4), then `python r5-patch1.py <copy>` and `python r5-patch2.py <copy>`; shoot with env `UI_TEMP=warm` or `cool`.
+- Both: cut corners (chamfer, StyleBoxFlat corner_detail 1, radius ≤ 7, no anti-alias) on every box = our shape motif candidate (not diamond/hexagon; echoes the arena floor slabs) · panels near-solid (glass 0.72 → 0.94) · Fight button = plate lit from top-left (dark bottom 4 px / right 2 px edge).
+- R5-A1 warm: dark walnut panels #3b2716 + brass line #b8893e + brass Fight button (opposite of the cool grey-blue arena = DO 20, Claude's pick).
+- R5-A2 cool: slate panels #1c2a33 + steel-blue line #7fa3b5 + pale blue Fight button.
+- Tells left: one default sans font (display font = open point) · same corner cut on every box.
+
 ## Open / to watch
 - Gold stars blend into gold sprites (e.g. the snake) — owner may want white stars.
 - Odds text without outline sits on the floor (grey/blue digits a bit faint) — offered a faint backing strip.
