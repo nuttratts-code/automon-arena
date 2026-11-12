@@ -46,7 +46,14 @@ Samples made with skill `ui-preview` on a scratch copy of godot/. `sample.diff` 
 16. **Foot marks bigger, tribe shape = star size:** star font 64 × pixel 0.0058, shape side 0.34 world (outline included), row ~0.14 above the sprite's bottom.
 17. **Shop card picture 34 → 47 px** (largest that still fits the card at 844×390; 52 pushed the dock off screen).
 
+## Round 9 (12 Nov, set 212)
+- Rebuild: … → r8-patch.py → r9-patch.py (both parts; R9b is the final state).
+18. **Tribe mark level with the stars** (stars no longer pushed down; shape 5 % lower to match the star centres).
+19. **Bench picture = shop picture = 42 px** (owner: same picture size in both places). 47 did not fit 5 bench rows.
+20. **No stats on bench rows** — a 3rd line (attack/HP/cooldown) made the rows taller than the bench box (5th row ran under Reroll); owner said skip if cramped. Code kept behind `BENCH_STATS := false` in the sample.
+
 ## Open / to watch
+- Long bench names now end in "…" (e.g. ป้อมปราการเหล็ก) — the name column is narrower with the 42 px picture.
 - Cooldown shows a bare number (no "วิ") — unit on tap only.
 - Foot marks are small at 844 (shape ~11 px, stars ~14 px); back-row marks can be fully hidden by a tall front unit (owner's wish, but the player then cannot read that unit's stars without tapping).
 - Back-row stars sit at their tile's front edge, close to the heads of front-row units (snake) — watch on other team shapes.
