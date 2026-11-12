@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -24,11 +24,11 @@ Look here first: Game UI Database for "many games, one screen type", interfacein
 **Which games to look up for which screen** (start here, add more only if the owner asks):
 - Prep / shop / bench / board: TFT mobile · Dota Underlords mobile · Super Auto Pets · Auto Chess (§1, §1b). Not on Game UI Database (checked 12 Nov 2026): Auto Chess, Chess Rush, TFT, Hearthstone Battlegrounds, Octopath Traveler II → interfaceingame or owner screenshots.
 - Hub / home / lobby, mode picker, result: Brawl Stars · TFT mobile · Clash Royale · Underlords (§7).
-- Look / material / HD-2D feel: FF Resonance (reviews only) · Octopath line [K].
+- Look / material / HD-2D feel: FF Resonance (§1c) · Octopath Traveler + Champions of the Continent (§1d).
 - Card / tooltip / item text: Hearthstone · Backpack Battles · The Bazaar · Slay the Spire [K].
 - Collection / roster grid: Brawl Stars "Brawlers" · TFT "Little Legends" · Genshin "Character Archive" (titles seen on interfaceingame, pictures not yet seen).
 
-**Game UI Database how-to (V1.5):** the URL search page (`index.php?search=`) hits a bot check — never try to pass it; instead, on any game page, set the value of the header search input by `javascript_tool` and read the `a[href*="gameData.php"]` results (game ids). On a game page every screen is an `a.galleryimage` (title in `data-title`, full image in `href`, size in `data-size`); listing those is cheap. To view, overlay the chosen full images in a 1-column grid (4 columns for portrait phone shots) and `zoom` 0,0–800,600 twice (first capture blank) — 2 landscape or 4 portrait screens per image. Ids found: Underlords mobile 550 · FF Resonance 2598 · Triangle Strategy 1539 · Balatro 1935 · Marvel Snap 1785 · Brawl Stars 465 · Clash Royale 1299 · Hearthstone 628 · Octopath Traveler 741 · Sea of Stars 2196 · Into the Breach 483 · Fire Emblem Three Houses 419.
+**Game UI Database how-to (V1.5):** the URL search page (`index.php?search=`) hits a bot check — never try to pass it; instead, on any game page, set the value of the header search input by `javascript_tool` and read the `a[href*="gameData.php"]` results (game ids). On a game page every screen is an `a.galleryimage` (title in `data-title`, full image in `href`, size in `data-size`); listing those is cheap. To view, overlay the chosen full images in a 1-column grid (4 columns for portrait phone shots) and `zoom` 0,0–800,600 twice (first capture blank) — 2 landscape or 4 portrait screens per image. Ids found: Underlords mobile 550 · FF Resonance 2598 · Triangle Strategy 1539 · Balatro 1935 · Marvel Snap 1785 · Brawl Stars 465 · Clash Royale 1299 · Hearthstone 628 · Octopath Traveler 741 · Sea of Stars 2196 · Into the Breach 483 · Fire Emblem Three Houses 419 · Octopath COTC (mobile) 1533.
 
 **Evidence for new lines:** a screen Claude actually saw = [C: hub, date]; titles/tags only = [S-text]; memory = [K]. A new game block goes in §1 (prep) or §7 (hub/result) with its source URL in §6 "Image sources".
 
@@ -160,6 +160,31 @@ Why these five: Underlords = same genre on a landscape phone · FF Resonance = o
 - Battle: 3 lanes side by side, each with its rule card; enemy cards above, mine below; energy as a big number in a circle bottom-centre; Retreat bottom-left, End Turn bottom-right with "2/6" turn count.
 - Result: one word ("VICTORY!") on a slanted banner, nothing else at first.
 
+## 1d. Octopath Traveler — console original + mobile [C: gameuidatabase, 12 Nov 2026]
+
+The HD-2D line our look comes from. Champions of the Continent (COTC, id 1533) is the **HD-2D game built for a landscape phone** — the gap §6 listed.
+
+**Octopath Traveler (2018, id 741, console/PC)**
+- Battle: turn order = small heads on a thin line top-left (this turn · next turn); party status = right column of dark translucent strips (name, HP/SP numbers + thin bars, boost pips); one-line message banner top-centre; enemy weakness icons in a row under the enemy. The scene takes ~75 % of the screen.
+- Main menu: the world map (parchment) IS the background; dark tab list left (category words, the active one with a small diamond); party column right (sprite, level, HP/SP); play time + money top-right; button hints on a bottom strip.
+- Shop: one small dark panel (vendor name, item, price, a one-line description) over the full-colour town — the town is not dimmed; money top-right.
+- Victory: large serif "Victory!" top-left; reward rows (money, EXP, JP) each with a "+bonus"; bonus names in gold italic on the right ("Untouched", "Break"…); party cards along the bottom with level-up marks; battlefield visible behind.
+
+**Octopath Traveler: Champions of the Continent (2022, id 1533, mobile landscape)**
+- Hub = the town itself: the 4-member party stands in the HD-2D street at night; 2 currencies as plain chips top-centre; minimap top-right; a diamond marker over the door you can enter; along the bottom **9 icon + word buttons** in one row over the scene, 6 of them with a red "!" badge — badge overload (H6 broken in practice).
+- Party: parchment map background in a dark leather frame; top bar = back arrow, title, currencies, close ×; left = vertical arrow-shaped dark tabs (party, equipment, skills, status); rows = sprite + stars + level + HP/SP bars; front / back columns ("Not set" slots); page dots at the bottom.
+- Battle (phone): turn heads on a line top-left and top-centre; party status = right edge stacked cards (HP/SP numbers, boost pips, the chosen action under each); enemy shield number + weakness "?" icons under the enemy; bottom bar = Target Focus, Settings, **2× speed toggle**, 4 diamond buttons (flee, allies, switch, boost all) and one huge teal **Attack** button bottom-right.
+- Exchange shop: parchment panels; left tabs with red "N days remaining" badges; item rows = name, Details button, held count, price, − / + stepper; "Total required" + Trade button bottom-right.
+- Reward modal: 3 round emblems with rank + a progress bar each ("Left 90"), one OK button, a thin ornate frame with corner ornaments on black.
+
+**What the HD-2D line teaches us (idea level, not copied)**
+- O1. Battle UI lives on the **edges** (turn line top, party column right, actions bottom-right); the middle is the diorama. Same as FF Resonance → this is the HD-2D convention.
+- O2. **The world is the menu background** (map parchment, the town at night) instead of a flat panel; panels are dark translucent strips with thin rules. Ours: menus over the rune plaza scene, not over a flat colour.
+- O3. On a phone the main battle action becomes **one huge button bottom-right** and the rest shrink to small buttons — matches H1 / DO 5.
+- O4. Ornate type only on big words ("Victory!", titles); numbers and lists in plain type (confirms the §1 [S] line, now seen).
+- O5. A speed toggle (2×) sits in the battle bar on mobile — worth a thought for our auto-battle (owner decides; it touches battle pacing, ask first).
+- O6. Warning: COTC's 9 bottom buttons + 6 red badges is what our offline hub must NOT become (H4, H6).
+
 ---
 
 ## 2. DO — patterns worth using (idea level)
@@ -268,7 +293,7 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 - UI material: which world material the frames are made of (links to art-look target sheet, Gate 1).
 - ~~Shape motif (DO 19)~~ → **closed set 212 (owner B1):** cut corners (chamfer, radius ≤ 7, theme.gd box) = the arena floor slabs. Same cut on every box stays a known tell (owner pick).
 - ~~UI temperature (DO 20)~~ → **closed set 212 (owner R5-A2):** cool slate panels + steel-blue line + pale blue Fight plate (godot/data/tone.json). Revisit only if art-look Gate 1 changes the arena light.
-- FF Resonance screens seen (§1c, V1.5). Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board, an HD-2D shop/menu on a phone. §1 lines for those stay [K]/[S-text].
+- FF Resonance screens seen (§1c, V1.5). Still unseen: Hearthstone Battlegrounds tavern, Backpack Battles, The Bazaar board. (HD-2D on a phone: seen, §1d COTC.) §1 lines for those stay [K]/[S-text].
 - Image sources (12 Nov 2026): https://interfaceingame.com/games/teamfight-tactics-mobile/ · https://interfaceingame.com/games/dota-underlords-mobile/ · MobyGames Super Auto Pets screenshot · a fan wiki capture of the FF Resonance equipment screen (via image search). No image is stored in the repo.
 - Image sources (12 Nov 2026, V1.4): https://interfaceingame.com/screenshots/brawl-stars-main-menu/ · https://interfaceingame.com/screenshots/teamfight-tactics-mobile-main-menu/ · https://interfaceingame.com/screenshots/dota-underlords-mobile-game-summary/ · title/tag lists of clash-royale, brawl-stars, hearthstone, genshin-impact game pages. Not seen yet (page failed to show): Clash Royale main menu, TFT lobby.
 
