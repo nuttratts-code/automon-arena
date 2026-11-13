@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Weekly review / workflow audit (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม / สกิลไหนไม่ถูกใช้): the week's corrections and waste, whether the work followed the rules, docs and skills against each other and the code → claude/review-…md → A/B per change → edit only after the owner picks.
+description: Weekly review / workflow audit (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม / สกิลไหนไม่ถูกใช้ / ใช้โทเคนเปลือง): the week's corrections and waste, rule compliance, skill + doc usage and overlaps, token cost vs result → claude/review-…md → A/B per change → edit only after the owner picks.
 ---
 # Weekly review (D1 + workflow audit)
 
@@ -61,8 +61,30 @@ Each miss → a report item: rule · set · evidence · why it was missed (rule 
 - Apply with exact-string edits; bump each changed doc's version line (small +0.1); CLAUDE.md changed this week → regenerate claude/instructions.md once at the end of this review (set 220 D1).
 - Mark the review DECIDED, `git mv` it to claude/archive/reviews/, add/flip its row in reviews.md.
 - handoff: add the set to the Relay (move the oldest to claude/archive/relay/), update Doc versions; code fixes found by the audit go to "งานรอรวม", not into this docs set.
+- Every push to main goes from a clean worktree of origin/main (relay.md set 218 A1); `git cherry-pick` has no `-q` (a failed cherry-pick silently skipped the push in set 218).
 - Push to main. Push rejected → `git fetch` + `git merge origin/main` (never rebase), read the incoming commits first (another chat may be working → tell the user).
 - Docs-only = no gate, no close-out (HARD RULE 1 B1).
 
 ## 6. Cost
 - One round per week. After a round, if another round would need reading code tool by tool, say so in 1–2 Thai lines (cost vs benefit) and recommend stopping.
+- Sets 218–220 ran all three rounds below in one chat (owner asked each one) — fine for docs-only work, but end with a new-chat paste-prompt.
+
+## 7. Round 2 on request — skill + doc usage audit (set 219; owner: "สกิลไหนไม่ถูกเรียกใช้ ใช้น้อย/เยอะ กฎไหนถูกข้าม ขัดกัน/ซ้ำกัน")
+Evidence = git + Relay archives only (say "not shown ≠ unused"). Steps:
+1. **Usage per skill:** for each `.claude/skills/*/SKILL.md` → born date (`git log --diff-filter=A`), edit count, mentions in commit messages + `claude/archive/relay/*.md` + handoff. Group: heavy · used this week · dormant (name the freeze/decision that parked it) · never run. Also total size of all `description:` lines (loaded every chat; keep each ≤ 400 chars, set 219 A1).
+2. **Docs nobody points to:** for each claude/*.md + claude/workflow/*.md → last commit date, commits this week, how many of CLAUDE.md / skills / handoff / workflow name it. 0 refs + finished → archive (set 219 H1). Finished plan files still in claude/ → archive.
+3. **Skipped steps:** per set, the Relay line carries the markers the skills ask for (`critique ✓`, `review ✓`, `ripple ✓`, `Godot tests n/n`, tell count in notes.md). A step skipped every time = the step is wrong for that kind of work → narrow it (set 219 B1), don't just repeat it.
+4. **Overlaps:** compare the `Use when / Not for` of skills that share an area (ui-work · ui-preview · ui-patterns · art-look · asset-3d; sim-play · godot-play; publish-pages · godot-release; merge-code · port-parity). A set that did one area's work under another skill = overlap (set 217: arena look under ui-preview → moved to art-look §8). The same how-to in ≥ 2 skills (e.g. Godot binary) → one place + pointers (gdscript.md §7).
+5. **Rule vs practice:** HARD RULE text vs what the work does (e.g. `ripple:` on every commit vs only on merges → E1 set 218). Rules that stop the owner by design (sample loops) must be on CLAUDE.md's allowed-stop list (set 219 G1).
+6. **Outside-material check:** assets/tools with licence "UNVERIFIED" in art/PROVENANCE.csv (also on sample branches: `git show <branch>:art/PROVENANCE.csv`) → research the terms (WebSearch, sources in the review), then the owner decides; an owner exception to HARD RULE 9 ② is written in security.md part 2 with the accepted risk + conditions (set 219 D).
+7. **Lost files:** a branch reset/undo on main (e.g. 0455397) → `git diff <undo>^ <undo> --stat -- .claude CLAUDE.md claude` to find skills/docs it deleted; restore docs to main (set 218 B1).
+
+## 8. Round 3 on request — token cost vs result (set 220; owner: "จุดไหนใช้เปลืองและไม่คุ้มกับงานที่ออกมาที่สุด")
+Claude cannot see token counts → rank by file bytes + counts, label them estimates. Table columns: where · size/count · what came out (landed on main? decided? parked?) · verdict. Check each time:
+- **Fixed load per chat:** CLAUDE.md bytes · Relay hook output · all skill descriptions · handoff.md.
+- **Subagent work:** anything that starts subagents (each re-reads CLAUDE.md + sources). The brainstorm skill was deleted for this (set 220 A, owner order) — ideas are answered in the chat now.
+- **Loops:** sample/look rounds per set (rounds, chats, screenshots read as images) vs what reached main.
+- **Rewrites:** files regenerated often (instructions.md → only at the weekly review, set 220 D1).
+- **Big skill bodies (> 8 KB):** reference text (sources, lessons, trade-offs) → `claude/workflow/<skill>-ref.md`, heading + pointer stays so section numbers still work (set 220 E1).
+- Owner's standing answers (do not re-propose): look loops are rare → leave (B, set 220) · CLAUDE.md pointers were tried and got skipped → keep full rules in CLAUDE.md (C, set 220).
+
