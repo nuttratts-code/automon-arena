@@ -56,3 +56,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 ## R9 (13 Nov) — owner: "stand further apart?"
 - Camera 12°, SPR_H 2.3, frame (-10,-90). A = deeper only: LANE_Z −6.0/3.6, far-lane shift 1.8, COL_X 1.5/4.1/6.7 → no unit covers another, unit size ≈ R8 (far lane reads smaller by perspective). B = deeper + wider (COL_X 1.8/4.8/7.8) → camera pulls back, units smaller. Pick so far: A (Claude), owner to confirm.
 - Rebuild R9 A: R8 rebuild with `r7-patch-formation.py <g> 1.5,4.1,6.7 -6.0,3.6 1.8` (+ `r6-patch.py <g> 12`).
+
+## R10 (13 Nov) — owner: lanes stood off the plaza → fix · "take out the HP numbers, everything, for now"
+- s217_make_r6.gd PLAZA_K 1.35: plaza Ø 25.4 (was 18.9); stones + grass cards pushed out by the same factor (arena_dressing_r6.tscn rebuilt). All 12 slots now sit on the stone.
+- r10-patch-clean.py (copy only): unit HP bar + numbers + status chips hidden (battle_view card.visible = false) · floating damage numbers off (_float returns) · slot rune rings not drawn (mi.layers = 0 — visible = false is undone by _foe_rise) · feet stars + tribe mark hidden. Kept: HUD, shop, buttons, the "คู่แข่ง" text lines.
+- Note for ทำจริง: hiding HP/rings removes feedback the game needs (who is hurt, where to drop) — owner said "not used yet"; bring them back in a new style later.
+- Rebuild R10: R9 A rebuild + `python -I r10-patch-clean.py <g>` + `-s res://tools/s217_make_r6.gd`.

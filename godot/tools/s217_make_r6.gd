@@ -8,6 +8,7 @@ extends SceneTree
 #   godot --headless --path godot -s res://tools/s217_make_r6.gd
 
 const ST := preload("res://scripts/ui/stage3d.gd")
+const PLAZA_K := 1.35 # R10: plaza ×1.35 (owner: the deeper lanes stood off the plaza); stones + grass move out with it
 
 var top: Node3D
 
@@ -27,7 +28,7 @@ func _card(parent: Node, nm: String, file: String, at: Vector3, h: float) -> Spr
 	sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
 	sp.shaded = false
 	sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	sp.position = at
+	sp.position = Vector3(at.x * PLAZA_K, at.y, at.z * PLAZA_K)
 	_own(sp, parent)
 	return sp
 
@@ -48,7 +49,7 @@ func _model(parent: Node, nm: String, file: String, at: Vector3, sc: Vector3, ro
 	inst.name = nm
 	inst.scale = sc
 	inst.rotation_degrees = Vector3(0, rot_y, rot_z)
-	inst.position = at
+	inst.position = Vector3(at.x * PLAZA_K, at.y, at.z * PLAZA_K)
 	_own(inst, parent)
 	return inst
 
@@ -98,7 +99,7 @@ func _initialize() -> void:
 		n += 1
 	# ---- layer 1: the owner's 3D plaza (flattened to a low platform, top at y 0) + stones
 	var near := Node3D.new(); near.name = "Near"; _own(near, top)
-	var plaza := _model(near, "Plaza", "plaza_hy", Vector3.ZERO, Vector3(1, 0.16, 1), 0.0)
+	var plaza := _model(near, "Plaza", "plaza_hy", Vector3.ZERO, Vector3(PLAZA_K, 0.16, PLAZA_K), 0.0)
 	var box := _aabb(plaza)
 	plaza.position = Vector3(-box.get_center().x, -box.end.y, -box.get_center().z)
 	for mi in plaza.find_children("*", "MeshInstance3D", true, false): # the AI texture is painted bright: tone it under the sun

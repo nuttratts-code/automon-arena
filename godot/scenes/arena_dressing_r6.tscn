@@ -120,204 +120,204 @@ albedo_color = Color(1, 0.47843137, 0.41960785, 1)
 inner_radius = 0.7
 outer_radius = 0.84
 
-[node name="ArenaDressing" type="Node3D" unique_id=425657075]
+[node name="ArenaDressing" type="Node3D" unique_id=1712836622]
 
-[node name="Far" type="Node3D" parent="." unique_id=651175700]
+[node name="Far" type="Node3D" parent="." unique_id=1625283106]
 script = ExtResource("1_rer43")
 
-[node name="Sky" type="Sprite3D" parent="Far" unique_id=1902272689]
+[node name="Sky" type="Sprite3D" parent="Far" unique_id=1702476940]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -60)
 pixel_size = 0.02
 transparent = false
 texture = ExtResource("2_mfsdh")
 
-[node name="Hills" type="Sprite3D" parent="Far" unique_id=1505705218]
+[node name="Hills" type="Sprite3D" parent="Far" unique_id=1204089720]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -40)
 pixel_size = 0.02
 texture = ExtResource("3_gc5ve")
 
-[node name="Mid" type="Node3D" parent="." unique_id=628482095]
+[node name="Mid" type="Node3D" parent="." unique_id=1499302387]
 
-[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=655042534]
+[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=2108549641]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -6)
 material_override = SubResource("StandardMaterial3D_d0r7a")
 mesh = SubResource("PlaneMesh_8e34n")
 
-[node name="Grass1" type="Sprite3D" parent="Mid" unique_id=1323470498]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, -0.1, -8.6)
+[node name="Grass1" type="Sprite3D" parent="Mid" unique_id=58818063]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.825, -0.1, -11.610001)
 offset = Vector2(0, 256)
 pixel_size = 0.0017578125
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("5_ut5qf")
 
-[node name="Grass2" type="Sprite3D" parent="Mid" unique_id=455926019]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.4, -0.1, -8.4)
+[node name="Grass2" type="Sprite3D" parent="Mid" unique_id=1950032712]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.69, -0.1, -11.339999)
 offset = Vector2(0, 201)
 pixel_size = 0.0019900498
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("6_fjf4v")
 
-[node name="Grass3" type="Sprite3D" parent="Mid" unique_id=567404331]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -0.1, -4)
+[node name="Grass3" type="Sprite3D" parent="Mid" unique_id=489263255]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.2, -0.1, -5.4)
 offset = Vector2(0, 256)
 pixel_size = 0.00234375
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("7_p2tyl")
 
-[node name="Grass4" type="Sprite3D" parent="Mid" unique_id=951236887]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6, -0.1, -3.2)
+[node name="Grass4" type="Sprite3D" parent="Mid" unique_id=26714939]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.01, -0.1, -4.32)
 offset = Vector2(0, 256)
 pixel_size = 0.00234375
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("8_cipuk")
 
-[node name="Grass5" type="Sprite3D" parent="Mid" unique_id=496564543]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.1, -11)
+[node name="Grass5" type="Sprite3D" parent="Mid" unique_id=1106894630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.375, -0.1, -14.85)
 offset = Vector2(0, 256)
 pixel_size = 0.001953125
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("9_1vf4e")
 
-[node name="Grass6" type="Sprite3D" parent="Mid" unique_id=1134471670]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -0.1, -11.2)
+[node name="Grass6" type="Sprite3D" parent="Mid" unique_id=48594550]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.725, -0.1, -15.12)
 offset = Vector2(0, 256)
 pixel_size = 0.0021484375
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("10_3e517")
 
-[node name="Grass7" type="Sprite3D" parent="Mid" unique_id=1177176858]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -0.1, 4.5)
+[node name="Grass7" type="Sprite3D" parent="Mid" unique_id=899588645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.55, -0.1, 6.075)
 offset = Vector2(0, 256)
 pixel_size = 0.00390625
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("11_8w8he")
 
-[node name="Grass8" type="Sprite3D" parent="Mid" unique_id=1892777265]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -0.1, 4)
+[node name="Grass8" type="Sprite3D" parent="Mid" unique_id=316129353]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.55, -0.1, 5.4)
 offset = Vector2(0, 256)
 pixel_size = 0.003515625
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("9_1vf4e")
 
-[node name="Grass9" type="Sprite3D" parent="Mid" unique_id=1830596487]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, -0.1, 7.5)
+[node name="Grass9" type="Sprite3D" parent="Mid" unique_id=1551731243]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.175, -0.1, 10.125)
 offset = Vector2(0, 256)
 pixel_size = 0.002734375
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("5_ut5qf")
 
-[node name="Grass10" type="Sprite3D" parent="Mid" unique_id=237201902]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, -0.1, 7.5)
+[node name="Grass10" type="Sprite3D" parent="Mid" unique_id=1900343648]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.175, -0.1, 10.125)
 offset = Vector2(0, 201)
 pixel_size = 0.003233831
 billboard = 2
 alpha_cut = 2
 texture = ExtResource("6_fjf4v")
 
-[node name="Near" type="Node3D" parent="." unique_id=1154484224]
+[node name="Near" type="Node3D" parent="." unique_id=896257968]
 
 [node name="Plaza" type="Node3D" parent="Near" unique_id=1930697670 instance=ExtResource("12_tks1b")]
-transform = Transform3D(1, 0, 0, 0, 0.16, 0, 0, 0, 1, -0.01926899, -0.3263998, 0.036481857)
+transform = Transform3D(1.35, 0, 0, 0, 0.16, 0, 0, 0, 1.35, -0.026013374, -0.3263998, 0.049250603)
 
 [node name="StoneBig" type="Node3D" parent="Near" unique_id=190995634 instance=ExtResource("13_rwiqt")]
-transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -7.8, -0.05, -10.2)
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -10.530001, -0.05, -13.7699995)
 
 [node name="StoneBigSide" type="Node3D" parent="Near" unique_id=2079942919 instance=ExtResource("14_41p6s")]
-transform = Transform3D(0.45962667, 0, -0.38567257, 0, 0.5, 0, 0.38567257, 0, 0.45962667, -5.6, -0.05, -11)
+transform = Transform3D(0.45962667, 0, -0.38567257, 0, 0.5, 0, 0.38567257, 0, 0.45962667, -7.56, -0.05, -14.85)
 
-[node name="StoneFarL" type="Node3D" parent="Near" unique_id=1158429453 instance=ExtResource("14_41p6s")]
-transform = Transform3D(0.42499998, 0, 0.73612165, 0, 0.8, 0, -0.73612165, 0, 0.42499998, -13, -0.05, -6)
+[node name="StoneFarL" type="Node3D" parent="Near" unique_id=1502862725 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.42499998, 0, 0.73612165, 0, 0.8, 0, -0.73612165, 0, 0.42499998, -17.55, -0.05, -8.1)
 
-[node name="StoneMid" type="Node3D" parent="Near" unique_id=1715961466 instance=ExtResource("14_41p6s")]
-transform = Transform3D(-0.5362311, 0, 0.44995135, 0, 0.62, 0, -0.44995135, 0, -0.5362311, 0.8, -0.05, -13)
+[node name="StoneMid" type="Node3D" parent="Near" unique_id=406188918 instance=ExtResource("14_41p6s")]
+transform = Transform3D(-0.5362311, 0, 0.44995135, 0, 0.62, 0, -0.44995135, 0, -0.5362311, 1.08, -0.05, -17.55)
 
-[node name="StoneR" type="Node3D" parent="Near" unique_id=1474429521 instance=ExtResource("14_41p6s")]
-transform = Transform3D(0.91762954, 0, -0.24587809, 0, 0.95, 0, 0.24587809, 0, 0.91762954, 9, -0.05, -10.2)
+[node name="StoneR" type="Node3D" parent="Near" unique_id=699679340 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.91762954, 0, -0.24587809, 0, 0.95, 0, 0.24587809, 0, 0.91762954, 12.15, -0.05, -13.7699995)
 
-[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=2009769925 instance=ExtResource("14_41p6s")]
-transform = Transform3D(0.34202015, 0, -0.9396926, 0, 0.85, 0, 0.9396926, 0, 0.34202015, 13.8, -0.05, -3)
+[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=1625472033 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.34202015, 0, -0.9396926, 0, 0.85, 0, 0.9396926, 0, 0.34202015, 18.630001, -0.05, -4.05)
 
-[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=49984005 instance=ExtResource("14_41p6s")]
-transform = Transform3D(-0.15628336, 0, 0.8863269, 0, 0.75, 0, -0.8863269, 0, -0.15628336, -14.4, -0.05, 1)
+[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=1078937181 instance=ExtResource("14_41p6s")]
+transform = Transform3D(-0.15628336, 0, 0.8863269, 0, 0.75, 0, -0.8863269, 0, -0.15628336, -19.439999, -0.05, 1.35)
 
 [node name="FallenSlab" type="Node3D" parent="Near" unique_id=530392445 instance=ExtResource("15_em05e")]
-transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 5.2, -0.05, -12.4)
+transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 7.02, -0.05, -16.74)
 
-[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=911471984 instance=ExtResource("15_em05e")]
-transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 12.2, -0.05, 5)
+[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=1088281 instance=ExtResource("15_em05e")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 16.47, -0.05, 6.75)
 
-[node name="Guides" type="Node3D" parent="." unique_id=884636576]
+[node name="Guides" type="Node3D" parent="." unique_id=15384390]
 
-[node name="Slot0_0_0" type="MeshInstance3D" parent="Guides" unique_id=476391764]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -2.35, 0.02, -2.3)
+[node name="Slot0_0_0" type="MeshInstance3D" parent="Guides" unique_id=726623070]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -3.3, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_e6u7m")
 mesh = SubResource("TorusMesh_xodtq")
 
-[node name="Slot0_0_1" type="MeshInstance3D" parent="Guides" unique_id=113869650]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -1.35, 0.02, 2.3)
+[node name="Slot0_0_1" type="MeshInstance3D" parent="Guides" unique_id=1066105127]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -1.5, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_bs3pg")
 mesh = SubResource("TorusMesh_tpdf8")
 
-[node name="Slot0_1_0" type="MeshInstance3D" parent="Guides" unique_id=1397173997]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -4.35, 0.02, -2.3)
+[node name="Slot0_1_0" type="MeshInstance3D" parent="Guides" unique_id=1409293369]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -5.9, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_erf55")
 mesh = SubResource("TorusMesh_e1drm")
 
-[node name="Slot0_1_1" type="MeshInstance3D" parent="Guides" unique_id=1689191282]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -3.35, 0.02, 2.3)
+[node name="Slot0_1_1" type="MeshInstance3D" parent="Guides" unique_id=1585370963]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -4.1, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_o56tq")
 mesh = SubResource("TorusMesh_xb18i")
 
-[node name="Slot0_2_0" type="MeshInstance3D" parent="Guides" unique_id=1942773020]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -6.35, 0.02, -2.3)
+[node name="Slot0_2_0" type="MeshInstance3D" parent="Guides" unique_id=1204978505]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -8.5, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_3iumx")
 mesh = SubResource("TorusMesh_om5ko")
 
-[node name="Slot0_2_1" type="MeshInstance3D" parent="Guides" unique_id=2054490621]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -5.35, 0.02, 2.3)
+[node name="Slot0_2_1" type="MeshInstance3D" parent="Guides" unique_id=1414706195]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -6.7, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_shwsi")
 mesh = SubResource("TorusMesh_snfdx")
 
-[node name="Slot1_0_0" type="MeshInstance3D" parent="Guides" unique_id=1940323007]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 2.35, 0.02, -2.3)
+[node name="Slot1_0_0" type="MeshInstance3D" parent="Guides" unique_id=352271473]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 3.3, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_f31oc")
 mesh = SubResource("TorusMesh_eo4if")
 
-[node name="Slot1_0_1" type="MeshInstance3D" parent="Guides" unique_id=1754257028]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 1.35, 0.02, 2.3)
+[node name="Slot1_0_1" type="MeshInstance3D" parent="Guides" unique_id=164939350]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 1.5, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_5nxqd")
 mesh = SubResource("TorusMesh_w6ug6")
 
-[node name="Slot1_1_0" type="MeshInstance3D" parent="Guides" unique_id=1961850887]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 4.35, 0.02, -2.3)
+[node name="Slot1_1_0" type="MeshInstance3D" parent="Guides" unique_id=316353540]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 5.9, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_spo7i")
 mesh = SubResource("TorusMesh_pjj7h")
 
-[node name="Slot1_1_1" type="MeshInstance3D" parent="Guides" unique_id=129988939]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 3.35, 0.02, 2.3)
+[node name="Slot1_1_1" type="MeshInstance3D" parent="Guides" unique_id=1907542887]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 4.1, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_cxds1")
 mesh = SubResource("TorusMesh_kc2pe")
 
-[node name="Slot1_2_0" type="MeshInstance3D" parent="Guides" unique_id=1280673597]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 6.35, 0.02, -2.3)
+[node name="Slot1_2_0" type="MeshInstance3D" parent="Guides" unique_id=1254370851]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 8.5, 0.02, -6)
 material_override = SubResource("StandardMaterial3D_m75fs")
 mesh = SubResource("TorusMesh_5komi")
 
-[node name="Slot1_2_1" type="MeshInstance3D" parent="Guides" unique_id=507370612]
-transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 5.35, 0.02, 2.3)
+[node name="Slot1_2_1" type="MeshInstance3D" parent="Guides" unique_id=1859453133]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 6.7, 0.02, 3.6)
 material_override = SubResource("StandardMaterial3D_x6ece")
 mesh = SubResource("TorusMesh_w70x6")
 
-[node name="GameCam" type="Camera3D" parent="." unique_id=1099927085]
+[node name="GameCam" type="Camera3D" parent="." unique_id=1484177670]
 transform = Transform3D(1, 0, 0, 0, 0.92718387, 0.3746066, 0, -0.3746066, 0.92718387, 0, 10.876229, 21.210997)
 fov = 26.0
 far = 400.0
