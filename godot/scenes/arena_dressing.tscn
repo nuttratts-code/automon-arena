@@ -1,20 +1,20 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dw3a70fx16nar"]
 
-[ext_resource type="Texture2D" path="res://art/s217/backdrop.png" id="1_tfrlk"]
-[ext_resource type="PackedScene" path="res://art/s217/3d/stone_a_tall.glb" id="2_s8xpw"]
-[ext_resource type="Texture2D" path="res://art/s217/stone1.png" id="3_2o8tj"]
-[ext_resource type="Texture2D" path="res://art/s217/stone0.png" id="4_qvdth"]
-[ext_resource type="Texture2D" path="res://art/s217/stone3.png" id="5_8gjf2"]
-[ext_resource type="Texture2D" path="res://art/s217/stone2.png" id="6_8llci"]
-[ext_resource type="Texture2D" path="res://art/s217/stone_fallen.png" id="7_oo8iq"]
-[ext_resource type="Texture2D" path="res://art/s217/rock.png" id="8_t5a8i"]
-[ext_resource type="Texture2D" path="res://art/s217/grass1.png" id="9_rsstd"]
-[ext_resource type="Texture2D" path="res://art/s217/grass3.png" id="10_swvlc"]
-[ext_resource type="Texture2D" path="res://art/s217/grass0.png" id="11_lsww5"]
-[ext_resource type="Texture2D" path="res://art/s217/grass4.png" id="12_gp2mg"]
-[ext_resource type="Texture2D" path="res://art/s217/grass5.png" id="13_tk3xg"]
-[ext_resource type="Texture2D" path="res://art/s217/grass2.png" id="14_6b5t8"]
-[ext_resource type="Texture2D" path="res://art/s217/grass_big.png" id="15_xhae2"]
+[ext_resource type="Texture2D" uid="uid://dut2hp7vsmb0h" path="res://art/s217/backdrop.png" id="1_tfrlk"]
+[ext_resource type="PackedScene" uid="uid://dl6cvn3o63ifl" path="res://art/s217/3d/stone_hy_runes_full1k.glb" id="2_s8xpw"]
+[ext_resource type="Texture2D" uid="uid://dr7c84dexqkpk" path="res://art/s217/stone1.png" id="3_2o8tj"]
+[ext_resource type="Texture2D" uid="uid://bf0pcuyqtojn0" path="res://art/s217/stone0.png" id="4_qvdth"]
+[ext_resource type="Texture2D" uid="uid://8vuf1v7yyeqd" path="res://art/s217/stone3.png" id="5_8gjf2"]
+[ext_resource type="Texture2D" uid="uid://dburm2wujhnwn" path="res://art/s217/stone2.png" id="6_8llci"]
+[ext_resource type="Texture2D" uid="uid://cogal3p30a6xt" path="res://art/s217/stone_fallen.png" id="7_oo8iq"]
+[ext_resource type="Texture2D" uid="uid://cm5q7cgdo7r3n" path="res://art/s217/rock.png" id="8_t5a8i"]
+[ext_resource type="Texture2D" uid="uid://d3ufq0qnwjgqm" path="res://art/s217/grass1.png" id="9_rsstd"]
+[ext_resource type="Texture2D" uid="uid://dqs8pi35cfgr7" path="res://art/s217/grass3.png" id="10_swvlc"]
+[ext_resource type="Texture2D" uid="uid://c042x1mfeej4r" path="res://art/s217/grass0.png" id="11_lsww5"]
+[ext_resource type="Texture2D" uid="uid://c7p2hibuee4ec" path="res://art/s217/grass4.png" id="12_gp2mg"]
+[ext_resource type="Texture2D" uid="uid://njniuoupuwum" path="res://art/s217/grass5.png" id="13_tk3xg"]
+[ext_resource type="Texture2D" uid="uid://b4tfasv8yrxt6" path="res://art/s217/grass2.png" id="14_6b5t8"]
+[ext_resource type="Texture2D" uid="uid://cw8entkb7l0gs" path="res://art/s217/grass_big.png" id="15_xhae2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lfv2c"]
 shading_mode = 0
@@ -140,8 +140,8 @@ texture = ExtResource("1_tfrlk")
 
 [node name="Stones" type="Node3D" parent="." unique_id=690797895]
 
-[node name="StoneTall" type="Node3D" parent="Stones" unique_id=1158785930 instance=ExtResource("2_s8xpw")]
-transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -10.5, -0.05, -6.5)
+[node name="StoneTall" parent="Stones" unique_id=1158785930 instance=ExtResource("2_s8xpw")]
+transform = Transform3D(0.9396926, 0, -0.3420201, 0, 1, 0, 0.3420201, 0, 0.9396926, -10.5, -0.05, -6.5)
 
 [node name="StoneRound" type="Sprite3D" parent="Stones" unique_id=1692811949]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, -0.05, -9.6)
@@ -185,7 +185,7 @@ alpha_cut = 2
 texture = ExtResource("7_oo8iq")
 
 [node name="RockL" type="Sprite3D" parent="Stones" unique_id=154878531]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, -0.05, -2.5)
+transform = Transform3D(-0.1437835, 0, 0.9896092, 0, 1, 0, -0.9896092, 0, -0.1437835, -14.5, -0.05, -2.5)
 offset = Vector2(0, 256)
 pixel_size = 0.005859375
 billboard = 2

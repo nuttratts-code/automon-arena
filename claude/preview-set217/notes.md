@@ -20,3 +20,9 @@ Rebuild R2: on this branch nothing to rebuild — open godot/ in the editor.
 - s217_make_dressing.gd: `_model_of()` maps a card to a glb; StoneTall is now the 3D stone (rot Y 12°). Battle shot: works, MOVE CHECK PASS.
 - Seen: top cap patchy (top view weak) · hard seam where two views meet at the corners · the 3D stone is lit by the game sun so it reads a bit darker than the unlit cards · carved glyphs still hide F / P shapes (art-style §8) — owner to decide (repaint by Claude or regenerate).
 Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> stone_a_tall` → copy glb to godot/art/s217/3d/ → `godot --headless -s res://tools/s217_make_dressing.gd`.
+
+## R4 (13 Nov) — owner's Hunyuan3D stone
+- Owner made a 50k-tri rune stone in Tencent Hunyuan3D (4096 PBR textures, 24.7 MB). Tried in the stone viewer: 5k decimate (`stone_hy_runes`), 1.5k decimate + normal bake (`_lite`, UV smear on the back = bad), 2.5k with new UVs + colour/normal bake (`_bake`, thin light seams on the crack edge), full 50k + 1024 textures (`_full1k`, ≈ the original). The 4096 copy (`_full`) stays local, not committed.
+- **Owner pick: `stone_hy_runes_full1k`** (full mesh, textures 1024, metal/rough dropped = matte, Godot auto LOD). StoneTall in arena_dressing.tscn now uses it at rot Y 20° (runes face the battle camera); the owner's editor turns of RockL are kept. Battle shot 844×390 OK.
+- Open: Hunyuan3D licence unverified (art/PROVENANCE.csv) · glyphs still read like Latin F / P (art-style §8, same as the old card) · 50k tris each = heavy if many stones use it (whole plaza ~145k) → for more stones use the `_bake` route.
+- Build scripts (Blender 5.2 CLI, scratch only): import → clear parent + apply → scale to 4.13 tall → (decimate / smart UV + Cycles bake) → textures 1024 → export glb into godot/art/s217/3d/.

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ca63hbwt3f2ug"]
 
-[ext_resource type="Script" path="res://scenes/s217_stone_viewer.gd" id="1"]
+[ext_resource type="Script" uid="uid://0c1rylnvuvt5" path="res://scenes/s217_stone_viewer.gd" id="1"]
 
-[node name="StoneViewer" type="Node3D"]
+[node name="StoneViewer" type="Node3D" unique_id=1071380165]
+transform = Transform3D(0.9865716, 0, 0.16332942, 0, 1, 0, -0.16332942, 0, 0.9865716, 0, 0, 0)
 script = ExtResource("1")

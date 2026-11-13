@@ -44,7 +44,7 @@ func _mesh(parent: Node, nm: String, m: Mesh, col: Color, at: Vector3) -> MeshIn
 	return mi
 
 func _model_of(card: String) -> String: # card picture → 3D model file name (empty = keep the flat card)
-	return {"stone_tall": "stone_a_tall"}.get(card, "")
+	return {"stone_tall": "stone_hy_runes_full1k"}.get(card, "")
 
 func _initialize() -> void:
 	top = Node3D.new()
@@ -66,7 +66,7 @@ func _initialize() -> void:
 			var inst: Node3D = (load(glb) as PackedScene).instantiate()
 			inst.name = r[0]
 			inst.position = Vector3(r[2], -0.05, r[3])
-			inst.rotation_degrees = Vector3(0, 12.0, 0)
+			inst.rotation_degrees = Vector3(0, 20.0, 0) # runes face the battle camera
 			_own(inst, stones)
 		else:
 			_card(stones, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], r[2] > 8.0)
