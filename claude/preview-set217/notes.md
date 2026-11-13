@@ -133,3 +133,8 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - Lens-only try, PITCH 14 kept (fit_pose re-dollies the camera to the same board frame): A1 = FOV 26 (now) · A2 = FOV 19.2 vertical = the reference's 40.16° horizontal at our 844×390 screen. One `sed` on `const FOV` in the copy, s6v6 shot.
 - Seen: A2 = back lane a little bigger next to the front lane (flatter, more "diorama"), stones/hills larger behind; nobody hidden in 6 vs 6. Camera sits farther away (same frame).
 - Shots P0-A1-now-fov26 / P0-A2-narrow-fov19. Godot tests not run. Web-export checks (screen-texture mipmaps, alpha-cut sprite shadow) wait for the owner's OK to download the ~1 GB official export templates.
+- **Owner picked A2** (FOV 19.2, PITCH 14) for ทำจริง; art-style §8 will follow it then (C1).
+- **Web checks (owner OK'd the ~1 GB official templates, sha512 checked, web-only kept in %APPDATA%/Godot/export_templates/4.7.2.stable):** test copy boots into 6 vs 6 (`p0-web6v6.gd.txt` as the main scene in a copy, `p0-web.py` serves the export and shoots each STATE in the PC's Chrome, GPU = RX 580 via ANGLE D3D11, no console errors).
+  - Screen-texture mipmaps WORK on the web: STATE 2 (max_lod 3, narrow band) = same blur as the desktop opengl3 run → tilt-shift is safe to build on. Shot P0-web-blur-test.
+  - Alpha-cut Discard sprites DO cast sprite-shaped shadows on the web (STATE 3, sun shadow on): darker-pixel mask P0-web-shadow-mask. But the set 214 bug is there too: mean brightness 144 → 162 (+13 %) with the shadowed sun → real cast shadows still need that fix first; card/blob shadows stay.
+  - Not tested: SSAO (not used; compat).

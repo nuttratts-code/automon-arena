@@ -1,0 +1,84 @@
+extends Node
+# set 217 P0 (scratch copy only): boots straight into a 6 vs 6 battle and steps through 3 test states.
+# Each state sets the window title (= document.title on the web) to "STATE n" and holds 5 s.
+# Desktop run also saves PNGs to user://p0/.
+#   S1 normal look · S2 tilt-shift max_lod 3 (do screen-texture mipmaps blur on the web?) · S3 sun shadows on, sprites cast shadows
+
+var app: Node
+
+func _frames() -> void:
+	for k in 4:
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+
+func _find(n: Node, cls: String, out: Array) -> void:
+	if n.is_class(cls):
+		out.append(n)
+	for c in n.get_children():
+		_find(c, cls, out)
+
+func _state(tag: String) -> void:
+	await _frames()
+	DisplayServer.window_set_title(tag)
+	if not OS.has_feature("web"):
+		DirAccess.make_dir_recursive_absolute("user://p0")
+		get_viewport().get_texture().get_image().save_png("user://p0/%s.png" % tag.replace(" ", "_"))
+		print("SHOT ", tag, " ", ProjectSettings.globalize_path("user://p0"))
+	await get_tree().create_timer(5.0, true, false, true).timeout
+
+func _ready() -> void:
+	await get_tree().process_frame
+	app = load("res://scenes/main.tscn").instantiate()
+	app.set_meta("no_boot", true)
+	app.set_meta("force_light", true)
+	get_tree().root.add_child(app)
+	app.zoom_s = 0.0
+	await _frames()
+	app.name_scr.visible = false
+	app.player_name = "ทดสอบ"
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.set_speed(1, false)
+	app._on_fight()
+	await _frames()
+	app.battle.view.advance(1500.0)
+	await _frames()
+	var st: Node = app.stage
+	for id in (st.groups.get("battle", {}) as Dictionary).keys():
+		st.remove_unit("battle", id)
+	var you := ["HL-1", "HL-3", "PL-1", "PL-2", "HL-5", "HL-7"]
+	var foe := ["B1", "HL-2", "HL-4", "HL-6", "HL-8", "B2"]
+	var n := 9000
+	for s in 2:
+		for row in 3:
+			for lane in 2:
+				var ids: Array = you if s == 0 else foe
+				n += 1
+				st.add_unit("battle", {"id": n, "side": s, "row": row, "lane": lane, "c": {"id": ids[row * 2 + lane], "tribe": ""}})
+	st.show_group("battle")
+	Engine.time_scale = 0.0 # freeze the fight so all 3 states show the same frame
+	await _state("STATE 1")
+	var hd := app.find_child("HD2D", true, false)
+	if hd:
+		(hd.material as ShaderMaterial).set_shader_parameter("max_lod", 3.0)
+		(hd.material as ShaderMaterial).set_shader_parameter("focus_top", 0.45)
+		(hd.material as ShaderMaterial).set_shader_parameter("focus_bottom", 0.55)
+	await _state("STATE 2")
+	if hd:
+		(hd.material as ShaderMaterial).set_shader_parameter("max_lod", 1.0)
+		(hd.material as ShaderMaterial).set_shader_parameter("focus_top", 0.16)
+		(hd.material as ShaderMaterial).set_shader_parameter("focus_bottom", 0.86)
+	var lights := []
+	_find(st, "DirectionalLight3D", lights)
+	for l in lights:
+		(l as DirectionalLight3D).shadow_enabled = true
+	var sprites := []
+	_find(st, "SpriteBase3D", sprites)
+	for s in sprites:
+		(s as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	print("P0 lights ", lights.size(), " sprites ", sprites.size(), " hd2d ", hd != null)
+	await _state("STATE 3")
+	DisplayServer.window_set_title("DONE")
+	if not OS.has_feature("web"):
+		get_tree().quit()
