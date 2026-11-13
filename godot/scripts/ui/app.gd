@@ -1048,10 +1048,10 @@ func board_targets() -> Array:
 	var pf: Rect2 = prep.field.get_global_rect()
 	if pf.size.x > 40.0 and pf.size.y > 40.0:
 		var side: float = prep.board_side_room() # set 212 (note 6): same room both sides — the board stays centred and clears the bench
-		pr = pf.grow_individual(-side - 50.0, -120.0, -side - 50.0, -4.0) # set 207: labels lie on the floor (P6)
+		pr = pf.grow_individual(-side, -4.0, -side, -4.0) # set 207: labels lie on the floor (P6)
 	var bf: Rect2 = battle.field.get_global_rect()
 	if bf.size.x > 40.0 and bf.size.y > 40.0:
-		br = bf.grow_individual(-10.0, -90.0, -10.0, -4.0) # set 217 sample (owner R8): frame the units, not the whole plaza (was -90/-165)
+		br = bf.grow_individual(-6.0, -4.0, -6.0, -4.0)
 	return [pr, br]
 
 func refit_stage() -> void:
