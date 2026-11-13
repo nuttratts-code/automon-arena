@@ -10,7 +10,6 @@ extends SceneTree
 const ST := preload("res://scripts/ui/stage3d.gd")
 const PLAZA_K := 1.35 # R13: plaza ×1.35 so the deeper lanes (−5.2 / 3.2) stay well inside the stone
 const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)" # battle camera R13: 14°, units 2.0
-const STONE_K := 1.5 # R16 (owner F1): stones ×1.5, closer to the target painting (stones ≈ 1/3 of the plaza width)
 const PLAZA_TONE := Color(0.7, 0.67, 0.58) # R15 (owner C1) darker + warmer than R6's 0.74 grey; R16 = the mid tone (B)
 const GROUND_SHADER := """
 shader_type spatial;
@@ -31,7 +30,7 @@ void fragment() {
 	float m = smoothstep(0.3, 0.7, vn(wp.xz * 0.11));
 	vec3 c = mix(texture(tex, p).rgb, texture(tex, q).rgb, m);
 	float pa = vn(wp.xz * 0.045 + vec2(3.0, 7.0));
-	c *= mix(vec3(0.8, 0.9, 0.7), vec3(1.12, 1.08, 0.9), pa);
+	c *= mix(vec3(0.74, 0.82, 0.6), vec3(1.1, 1.05, 0.82), pa); // R17 olive shade + warm sun (= ground() in scripts/ui/s217_grass.gd — change both)
 	ALBEDO = c * tint;
 	ROUGHNESS = 1.0;
 }
@@ -160,24 +159,25 @@ func _initialize() -> void:
 	var lite := "stone_hy_runes_bake"
 	var rock := "rock_cliff_hy"
 	# R16 (owner: "take the back rocks out, place the stones like the target picture"): no cliff; the ring of standing
-	# stones follows the owner's target painting (rune meadow) — x / z in pre-PLAZA_K units (plaza edge ≈ 9.4), every
-	# stone turned so its front faces the battle camera (x 0, z ≈ +21) + its own extra turn. [name, file, x, z, scale, extra Y°, lean Z°]
+	# stones follows the owner's target painting (rune meadow) — x / z in pre-PLAZA_K units (plaza edge ≈ 9.4).
+	# R17 (owner: "rune side faces the middle of the plaza, sizes that differ"): every stone's rune face (+z of the model)
+	# turns to the plaza centre + its own small extra turn; final scales are per stone (no common ×1.5 any more).
+	# [name, file, x, z, scale (w, h, w), extra Y°, lean Z°]
 	var stones := [
-		["StoneL", lite, -10.1, -2.7, Vector3(0.95, 0.95, 0.95), 0, 0],       # tall, left of the plaza
-		["StoneFrontL", lite, -10.2, 2.9, Vector3(0.95, 0.85, 0.95), 10, 7],  # near-left, leaning out
-		["StoneBig", hero, -6.5, -8.3, Vector3.ONE, 0, 0],                    # hero (biggest, rune face) back-left
-		["StoneBigSide", lite, -5.0, -9.8, Vector3(0.55, 0.5, 0.55), 25, 0], # small companion right of the hero
-		["StoneMid", lite, -1.8, -10.4, Vector3(0.7, 0.62, 0.7), -10, 0],     # lone stone at the back, left of centre
-		["StoneShortR", lite, 6.2, -8.8, Vector3(0.6, 0.38, 0.6), 30, 0],     # short broken stone by the slab
-		["StoneR", lite, 8.0, -6.7, Vector3(0.95, 0.95, 0.95), 0, 0],         # tall, back-right
-		["StoneFrontR", lite, 10.7, -1.4, Vector3(1.05, 1.0, 1.05), 0, -4],   # biggest of the right side, near-right
+		["StoneL", lite, -10.1, -2.7, Vector3(1.1, 1.25, 1.1), 0, 0],           # tall, left of the plaza
+		["StoneFrontL", lite, -10.2, 2.9, Vector3(1.0, 0.85, 1.0), 10, 7],      # near-left, leaning out
+		["StoneBig", hero, -6.5, -8.3, Vector3(1.45, 1.45, 1.45), 0, 0],        # hero (biggest) back-left
+		["StoneBigSide", lite, -5.0, -9.8, Vector3(0.65, 0.5, 0.65), 15, 0],    # small companion right of the hero
+		["StoneMid", lite, -1.8, -10.4, Vector3(0.9, 0.8, 0.9), -8, 0],         # lone stone at the back, left of centre
+		["StoneShortR", lite, 6.2, -8.8, Vector3(0.9, 0.5, 0.9), 20, 0],        # short broken stone by the slab
+		["StoneR", lite, 8.0, -6.7, Vector3(1.05, 1.15, 1.05), 0, 0],          # tall, back-right
+		["StoneFrontR", lite, 10.7, -1.4, Vector3(1.3, 1.35, 1.3), 0, -4],      # biggest of the right side, near-right
 	]
 	for r in stones:
-		var post := Vector2(r[2] * PLAZA_K, r[3] * PLAZA_K)
-		var face := -rad_to_deg(atan2(post.x, 21.0 - post.y))
-		_model(near, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4] * STONE_K, face + r[5], r[6])
-	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(4.6, -0.05, -10.6), Vector3.ONE * STONE_K, 14)      # lying on the grass, back-right
-	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(8.6, -0.05, 6.0), Vector3(0.8, 0.8, 0.8) * STONE_K, -35) # broken rune slab, front-right edge
+		var face := rad_to_deg(atan2(-float(r[2]), -float(r[3]))) # model +z → plaza centre
+		_model(near, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], face + r[5], r[6])
+	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(4.6, -0.05, -10.6), Vector3(1.4, 1.4, 1.4), 14)      # lying on the grass, back-right
+	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(8.6, -0.05, 6.0), Vector3(1.1, 1.1, 1.1), -35) # broken rune slab, front-right edge
 	# small boulders like the painting (owner's rock outcrop, small): back-left far, by the slab, front-left rune rock, far right
 	_model(near, "RockFarL", rock, Vector3(-15.5, -0.05, -8.0), Vector3(1.0, 0.7, 1.0), 40)
 	_model(near, "RockSlab", rock, Vector3(2.8, -0.05, -10.9), Vector3(0.55, 0.4, 0.55), 110)

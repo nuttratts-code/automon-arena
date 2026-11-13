@@ -32,7 +32,7 @@ void fragment() {
 	float m = smoothstep(0.3, 0.7, vn(wp.xz * 0.11));
 	vec3 c = mix(texture(tex, p).rgb, texture(tex, q).rgb, m);
 	float pa = vn(wp.xz * 0.045 + vec2(3.0, 7.0));
-	c *= mix(vec3(0.8, 0.9, 0.7), vec3(1.12, 1.08, 0.9), pa);
+	c *= mix(vec3(0.74, 0.82, 0.6), vec3(1.1, 1.05, 0.82), pa); // R17 olive shade + warm sun (= ground() in scripts/ui/s217_grass.gd — change both)
 	ALBEDO = c * tint;
 	ROUGHNESS = 1.0;
 }
@@ -298,33 +298,33 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_wuyeb"]
 image = SubResource("Image_rgm1q")
 
-[node name="ArenaDressing" type="Node3D" unique_id=1329867587]
+[node name="ArenaDressing" type="Node3D" unique_id=1940794125]
 
-[node name="Far" type="Node3D" parent="." unique_id=394880945]
+[node name="Far" type="Node3D" parent="." unique_id=498508751]
 script = ExtResource("1_x4b1i")
 
-[node name="Sky" type="Sprite3D" parent="Far" unique_id=2046105669]
+[node name="Sky" type="Sprite3D" parent="Far" unique_id=1675231765]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -60)
 pixel_size = 0.02
 transparent = false
 texture = ExtResource("2_mb2cn")
 
-[node name="Hills" type="Sprite3D" parent="Far" unique_id=1961330326]
+[node name="Hills" type="Sprite3D" parent="Far" unique_id=1367293167]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -40)
 pixel_size = 0.02
 texture = ExtResource("3_6h8yh")
 
-[node name="Mid" type="Node3D" parent="." unique_id=448033646]
+[node name="Mid" type="Node3D" parent="." unique_id=1637339806]
 
-[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=492810597]
+[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=1162613861]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -6)
 material_override = SubResource("ShaderMaterial_1vf4e")
 mesh = SubResource("PlaneMesh_3e517")
 
-[node name="GrassBlades" type="MultiMeshInstance3D" parent="Mid" unique_id=2120724695]
+[node name="GrassBlades" type="MultiMeshInstance3D" parent="Mid" unique_id=1149317351]
 script = ExtResource("5_rer43")
 
-[node name="Pollen" type="CPUParticles3D" parent="Mid" unique_id=1833496736]
+[node name="Pollen" type="CPUParticles3D" parent="Mid" unique_id=686116284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -14)
 amount = 50
 lifetime = 9.0
@@ -340,67 +340,67 @@ initial_velocity_max = 0.45
 scale_amount_min = 0.6
 scale_amount_max = 1.2
 
-[node name="Near" type="Node3D" parent="." unique_id=1823529679]
+[node name="Near" type="Node3D" parent="." unique_id=1568337800]
 
 [node name="Plaza" type="Node3D" parent="Near" unique_id=740353332 instance=ExtResource("6_mfsdh")]
 transform = Transform3D(1.35, 0, 0, 0, 0.16, 0, 0, 0, 1.35, -0.026013374, -0.3263998, 0.049250603)
 script = ExtResource("7_gc5ve")
 
 [node name="StoneL" type="Node3D" parent="Near" unique_id=2079942919 instance=ExtResource("8_18wcw")]
-transform = Transform3D(1.2468892, 0, 0.6898493, 0, 1.425, 0, -0.6898493, 0, 1.2468892, -13.635, -0.05, -3.645)
+transform = Transform3D(0.28408372, 0, 1.0626836, 0, 1.25, 0, -1.0626836, 0, 0.28408372, -13.635, -0.05, -3.645)
 
-[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=795117622 instance=ExtResource("8_18wcw")]
-transform = Transform3D(0.93037647, -0.10221106, 1.0733008, 0.17366381, 1.2654964, 0, -1.0653005, 0.117033795, 0.93736345, -13.7699995, -0.05, 3.9150002)
+[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=1131863008 instance=ExtResource("8_18wcw")]
+transform = Transform3D(-0.4330968, 0.045200963, 0.89977735, 0.12186935, 0.8436642, 0, -0.8930705, 0.09320699, -0.43634927, -13.7699995, -0.05, 3.9150002)
 
 [node name="StoneBig" type="Node3D" parent="Near" unique_id=190995634 instance=ExtResource("9_ut5qf")]
-transform = Transform3D(1.447239, 0, 0.39433384, 0, 1.5, 0, -0.39433384, 0, 1.447239, -8.775, -0.05, -11.205)
+transform = Transform3D(1.1415919, 0, 0.8940178, 0, 1.45, 0, -0.8940178, 0, 1.1415919, -8.775, -0.05, -11.205)
 
-[node name="StoneBigSide" type="Node3D" parent="Near" unique_id=1303682437 instance=ExtResource("8_18wcw")]
-transform = Transform3D(0.66612184, 0, 0.4867307, 0, 0.75, 0, -0.4867307, 0, 0.66612184, -6.75, -0.05, -13.2300005)
+[node name="StoneBigSide" type="Node3D" parent="Near" unique_id=1486616777 instance=ExtResource("8_18wcw")]
+transform = Transform3D(0.48280978, 0, 0.43519497, 0, 0.5, 0, -0.43519497, 0, 0.48280978, -6.75, -0.05, -13.2300005)
 
-[node name="StoneMid" type="Node3D" parent="Near" unique_id=1787697025 instance=ExtResource("8_18wcw")]
-transform = Transform3D(1.0441847, 0, -0.110355005, 0, 0.93, 0, 0.110355005, 0, 1.0441847, -2.4299998, -0.05, -14.04)
+[node name="StoneMid" type="Node3D" parent="Near" unique_id=289674422 instance=ExtResource("8_18wcw")]
+transform = Transform3D(0.8995463, 0, 0.028572707, 0, 0.8, 0, -0.028572707, 0, 0.8995463, -2.4299998, -0.05, -14.04)
 
-[node name="StoneShortR" type="Node3D" parent="Near" unique_id=926645658 instance=ExtResource("8_18wcw")]
-transform = Transform3D(0.866346, 0, 0.24381278, 0, 0.57, 0, -0.24381278, 0, 0.866346, 8.37, -0.05, -11.88)
+[node name="StoneShortR" type="Node3D" parent="Near" unique_id=381731754 instance=ExtResource("8_18wcw")]
+transform = Transform3D(0.8686529, 0, -0.23546144, 0, 0.5, 0, 0.23546144, 0, 0.8686529, 8.37, -0.05, -11.88)
 
-[node name="StoneR" type="Node3D" parent="Near" unique_id=113605896 instance=ExtResource("8_18wcw")]
-transform = Transform3D(1.3409948, 0, -0.4820351, 0, 1.425, 0, 0.4820351, 0, 1.3409948, 10.8, -0.05, -9.045)
+[node name="StoneR" type="Node3D" parent="Near" unique_id=194367167 instance=ExtResource("8_18wcw")]
+transform = Transform3D(0.67417103, 0, -0.8049803, 0, 1.15, 0, 0.8049803, 0, 0.67417103, 10.8, -0.05, -9.045)
 
-[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=1774706841 instance=ExtResource("8_18wcw")]
-transform = Transform3D(1.3287114, 0.08848815, -0.84054625, -0.10986643, 1.4963461, 0, 0.83849883, 0.05584147, 1.331956, 14.445, -0.05, -1.89)
+[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=1008568388 instance=ExtResource("8_18wcw")]
+transform = Transform3D(0.16824518, 0.012217343, -1.2890133, -0.09068341, 1.3467115, 0, 1.2858733, 0.09337536, 0.168656, 14.445, -0.05, -1.89)
 
 [node name="FallenSlab" type="Node3D" parent="Near" unique_id=1556859946 instance=ExtResource("10_fjf4v")]
-transform = Transform3D(1.4554436, 0, 0.36288285, 0, 1.5, 0, -0.36288285, 0, 1.4554436, 6.21, -0.05, -14.31)
+transform = Transform3D(1.358414, 0, 0.33869067, 0, 1.4, 0, -0.33869067, 0, 1.358414, 6.21, -0.05, -14.31)
 
-[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=2128888347 instance=ExtResource("10_fjf4v")]
-transform = Transform3D(0.9829825, 0, -0.6882918, 0, 1.2, 0, 0.6882918, 0, 0.9829825, 11.610001, -0.05, 8.1)
+[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=1419141270 instance=ExtResource("10_fjf4v")]
+transform = Transform3D(0.90106726, 0, -0.6309341, 0, 1.1, 0, 0.6309341, 0, 0.90106726, 11.610001, -0.05, 8.1)
 
-[node name="RockFarL" type="Node3D" parent="Near" unique_id=196431772 instance=ExtResource("11_p2tyl")]
+[node name="RockFarL" type="Node3D" parent="Near" unique_id=1125852167 instance=ExtResource("11_p2tyl")]
 transform = Transform3D(0.76604444, 0, 0.6427876, 0, 0.7, 0, -0.6427876, 0, 0.76604444, -20.925, -0.05, -10.8)
 
-[node name="RockSlab" type="Node3D" parent="Near" unique_id=1735674893 instance=ExtResource("11_p2tyl")]
+[node name="RockSlab" type="Node3D" parent="Near" unique_id=2106573264 instance=ExtResource("11_p2tyl")]
 transform = Transform3D(-0.18811107, 0, 0.5168309, 0, 0.4, 0, -0.5168309, 0, -0.18811107, 3.78, -0.05, -14.714999)
 
-[node name="RockFrontL" type="Node3D" parent="Near" unique_id=354103533 instance=ExtResource("11_p2tyl")]
+[node name="RockFrontL" type="Node3D" parent="Near" unique_id=1538516580 instance=ExtResource("11_p2tyl")]
 transform = Transform3D(-0.6577848, 0, -0.23941411, 0, 0.5, 0, 0.23941411, 0, -0.6577848, -10.8, -0.05, 9.18)
 
-[node name="RockFarR" type="Node3D" parent="Near" unique_id=1225690913 instance=ExtResource("11_p2tyl")]
+[node name="RockFarR" type="Node3D" parent="Near" unique_id=2019835261 instance=ExtResource("11_p2tyl")]
 transform = Transform3D(0.6928203, 0, -0.4, 0, 0.5, 0, 0.4, 0, 0.6928203, 21.6, -0.05, -8.775)
 
-[node name="Guides" type="Node3D" parent="." unique_id=1398062840]
+[node name="Guides" type="Node3D" parent="." unique_id=1073667086]
 
-[node name="Slots" type="Node3D" parent="." unique_id=1181924885]
+[node name="Slots" type="Node3D" parent="." unique_id=129190215]
 
-[node name="Slot0_0_0" type="Marker3D" parent="Slots" unique_id=1251359880]
+[node name="Slot0_0_0" type="Marker3D" parent="Slots" unique_id=1557044375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_0" unique_id=1188802805]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_0" unique_id=545731086]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_rwiqt")
 mesh = SubResource("TorusMesh_41p6s")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_0" unique_id=1743669610]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_0" unique_id=1325323802]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -408,15 +408,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_d0r7a")
 
-[node name="Slot0_0_1" type="Marker3D" parent="Slots" unique_id=1166155924]
+[node name="Slot0_0_1" type="Marker3D" parent="Slots" unique_id=141905079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_1" unique_id=1913109160]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_1" unique_id=871487531]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_8e34n")
 mesh = SubResource("TorusMesh_e6u7m")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_1" unique_id=624576534]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_1" unique_id=1546523345]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -424,15 +424,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_bs3pg")
 
-[node name="Slot0_1_0" type="Marker3D" parent="Slots" unique_id=68535090]
+[node name="Slot0_1_0" type="Marker3D" parent="Slots" unique_id=1980198624]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_0" unique_id=1058074748]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_0" unique_id=1981124625]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_tpdf8")
 mesh = SubResource("TorusMesh_erf55")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_0" unique_id=210690936]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_0" unique_id=988896101]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -440,15 +440,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_o56tq")
 
-[node name="Slot0_1_1" type="Marker3D" parent="Slots" unique_id=40092337]
+[node name="Slot0_1_1" type="Marker3D" parent="Slots" unique_id=331060428]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_1" unique_id=2107325165]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_1" unique_id=1605821467]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_xb18i")
 mesh = SubResource("TorusMesh_3iumx")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_1" unique_id=1084007661]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_1" unique_id=265214039]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -456,15 +456,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_shwsi")
 
-[node name="Slot0_2_0" type="Marker3D" parent="Slots" unique_id=256081378]
+[node name="Slot0_2_0" type="Marker3D" parent="Slots" unique_id=1013736144]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.8, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_0" unique_id=612735934]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_0" unique_id=235057645]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_snfdx")
 mesh = SubResource("TorusMesh_f31oc")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_0" unique_id=657901542]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_0" unique_id=1978799450]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -472,15 +472,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_5nxqd")
 
-[node name="Slot0_2_1" type="Marker3D" parent="Slots" unique_id=997047952]
+[node name="Slot0_2_1" type="Marker3D" parent="Slots" unique_id=1759010277]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_1" unique_id=674816878]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_1" unique_id=858055705]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_w6ug6")
 mesh = SubResource("TorusMesh_spo7i")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_1" unique_id=1769885388]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_1" unique_id=2083725849]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 pixel_size = 0.0625
@@ -488,15 +488,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_cxds1")
 
-[node name="Slot1_0_0" type="Marker3D" parent="Slots" unique_id=522370729]
+[node name="Slot1_0_0" type="Marker3D" parent="Slots" unique_id=1183976032]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_0" unique_id=89331543]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_0" unique_id=1032055221]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_kc2pe")
 mesh = SubResource("TorusMesh_m75fs")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_0" unique_id=1557592017]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_0" unique_id=2053733442]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -505,15 +505,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_x6ece")
 
-[node name="Slot1_0_1" type="Marker3D" parent="Slots" unique_id=145262375]
+[node name="Slot1_0_1" type="Marker3D" parent="Slots" unique_id=934563868]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_1" unique_id=1266177947]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_1" unique_id=1207485515]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_w70x6")
 mesh = SubResource("TorusMesh_vvj0b")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_1" unique_id=2128717696]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_1" unique_id=118600102]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -522,15 +522,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_vc4ck")
 
-[node name="Slot1_1_0" type="Marker3D" parent="Slots" unique_id=432510009]
+[node name="Slot1_1_0" type="Marker3D" parent="Slots" unique_id=114015549]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_0" unique_id=1030959976]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_0" unique_id=292745911]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_e235p")
 mesh = SubResource("TorusMesh_mj8uj")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_0" unique_id=1813517217]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_0" unique_id=1913183527]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -539,15 +539,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_18t3d")
 
-[node name="Slot1_1_1" type="Marker3D" parent="Slots" unique_id=633742122]
+[node name="Slot1_1_1" type="Marker3D" parent="Slots" unique_id=621735536]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_1" unique_id=1575536602]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_1" unique_id=1775656237]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_cd3dm")
 mesh = SubResource("TorusMesh_sbjmn")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_1" unique_id=383844891]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_1" unique_id=1683909890]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -556,15 +556,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_i0cy3")
 
-[node name="Slot1_2_0" type="Marker3D" parent="Slots" unique_id=105029338]
+[node name="Slot1_2_0" type="Marker3D" parent="Slots" unique_id=796652961]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8, 0, -5.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_0" unique_id=1296180898]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_0" unique_id=933720237]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_g2wia")
 mesh = SubResource("TorusMesh_k4pwa")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_0" unique_id=126481798]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_0" unique_id=354578759]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -573,15 +573,15 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_aaf5q")
 
-[node name="Slot1_2_1" type="Marker3D" parent="Slots" unique_id=1302851286]
+[node name="Slot1_2_1" type="Marker3D" parent="Slots" unique_id=1965922830]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 0, 3.2)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_1" unique_id=1565779461]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_1" unique_id=2046804512]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_lg7os")
 mesh = SubResource("TorusMesh_3ju4o")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_1" unique_id=39714233]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_1" unique_id=1819013332]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
@@ -590,7 +590,7 @@ alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_wuyeb")
 
-[node name="GameCam" type="Camera3D" parent="." unique_id=495051910]
+[node name="GameCam" type="Camera3D" parent="." unique_id=1860951357]
 transform = Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)
 fov = 26.0
 far = 400.0
