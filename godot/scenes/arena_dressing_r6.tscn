@@ -1,0 +1,323 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/s217_far_fit.gd" id="1_rer43"]
+[ext_resource type="Texture2D" path="res://art/s217/sky_clouds.png" id="2_mfsdh"]
+[ext_resource type="Texture2D" path="res://art/s217/far_hills_v3.png" id="3_gc5ve"]
+[ext_resource type="Texture2D" path="res://art/s217/ground_tile.png" id="4_18wcw"]
+[ext_resource type="Texture2D" path="res://art/s217/grass1.png" id="5_ut5qf"]
+[ext_resource type="Texture2D" path="res://art/s217/grass3.png" id="6_fjf4v"]
+[ext_resource type="Texture2D" path="res://art/s217/grass0.png" id="7_p2tyl"]
+[ext_resource type="Texture2D" path="res://art/s217/grass4.png" id="8_cipuk"]
+[ext_resource type="Texture2D" path="res://art/s217/grass5.png" id="9_1vf4e"]
+[ext_resource type="Texture2D" path="res://art/s217/grass2.png" id="10_3e517"]
+[ext_resource type="Texture2D" path="res://art/s217/grass_big.png" id="11_8w8he"]
+[ext_resource type="PackedScene" path="res://art/s217/3d/plaza_hy.glb" id="12_tks1b"]
+[ext_resource type="PackedScene" path="res://art/s217/3d/stone_hy_runes_full1k.glb" id="13_rwiqt"]
+[ext_resource type="PackedScene" path="res://art/s217/3d/stone_hy_runes_bake.glb" id="14_41p6s"]
+[ext_resource type="PackedScene" path="res://art/s217/3d/stone_fallen_hy.glb" id="15_em05e"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d0r7a"]
+albedo_color = Color(0.78, 0.8, 0.72, 1)
+albedo_texture = ExtResource("4_18wcw")
+uv1_scale = Vector3(17.142857, 8, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_8e34n"]
+size = Vector2(120, 56)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e6u7m"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_xodtq"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bs3pg"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_tpdf8"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_erf55"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_e1drm"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o56tq"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_xb18i"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3iumx"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_om5ko"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shwsi"]
+shading_mode = 0
+albedo_color = Color(0.30980393, 0.8156863, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_snfdx"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f31oc"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_eo4if"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5nxqd"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_w6ug6"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spo7i"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_pjj7h"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cxds1"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_kc2pe"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m75fs"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_5komi"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_x6ece"]
+shading_mode = 0
+albedo_color = Color(1, 0.47843137, 0.41960785, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_w70x6"]
+inner_radius = 0.7
+outer_radius = 0.84
+
+[node name="ArenaDressing" type="Node3D" unique_id=425657075]
+
+[node name="Far" type="Node3D" parent="." unique_id=651175700]
+script = ExtResource("1_rer43")
+
+[node name="Sky" type="Sprite3D" parent="Far" unique_id=1902272689]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -60)
+pixel_size = 0.02
+transparent = false
+texture = ExtResource("2_mfsdh")
+
+[node name="Hills" type="Sprite3D" parent="Far" unique_id=1505705218]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -40)
+pixel_size = 0.02
+texture = ExtResource("3_gc5ve")
+
+[node name="Mid" type="Node3D" parent="." unique_id=628482095]
+
+[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=655042534]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -6)
+material_override = SubResource("StandardMaterial3D_d0r7a")
+mesh = SubResource("PlaneMesh_8e34n")
+
+[node name="Grass1" type="Sprite3D" parent="Mid" unique_id=1323470498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, -0.1, -8.6)
+offset = Vector2(0, 256)
+pixel_size = 0.0017578125
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("5_ut5qf")
+
+[node name="Grass2" type="Sprite3D" parent="Mid" unique_id=455926019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.4, -0.1, -8.4)
+offset = Vector2(0, 201)
+pixel_size = 0.0019900498
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("6_fjf4v")
+
+[node name="Grass3" type="Sprite3D" parent="Mid" unique_id=567404331]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -0.1, -4)
+offset = Vector2(0, 256)
+pixel_size = 0.00234375
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("7_p2tyl")
+
+[node name="Grass4" type="Sprite3D" parent="Mid" unique_id=951236887]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6, -0.1, -3.2)
+offset = Vector2(0, 256)
+pixel_size = 0.00234375
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("8_cipuk")
+
+[node name="Grass5" type="Sprite3D" parent="Mid" unique_id=496564543]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.1, -11)
+offset = Vector2(0, 256)
+pixel_size = 0.001953125
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("9_1vf4e")
+
+[node name="Grass6" type="Sprite3D" parent="Mid" unique_id=1134471670]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -0.1, -11.2)
+offset = Vector2(0, 256)
+pixel_size = 0.0021484375
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("10_3e517")
+
+[node name="Grass7" type="Sprite3D" parent="Mid" unique_id=1177176858]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -0.1, 4.5)
+offset = Vector2(0, 256)
+pixel_size = 0.00390625
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("11_8w8he")
+
+[node name="Grass8" type="Sprite3D" parent="Mid" unique_id=1892777265]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -0.1, 4)
+offset = Vector2(0, 256)
+pixel_size = 0.003515625
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("9_1vf4e")
+
+[node name="Grass9" type="Sprite3D" parent="Mid" unique_id=1830596487]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, -0.1, 7.5)
+offset = Vector2(0, 256)
+pixel_size = 0.002734375
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("5_ut5qf")
+
+[node name="Grass10" type="Sprite3D" parent="Mid" unique_id=237201902]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, -0.1, 7.5)
+offset = Vector2(0, 201)
+pixel_size = 0.003233831
+billboard = 2
+alpha_cut = 2
+texture = ExtResource("6_fjf4v")
+
+[node name="Near" type="Node3D" parent="." unique_id=1154484224]
+
+[node name="Plaza" type="Node3D" parent="Near" unique_id=1930697670 instance=ExtResource("12_tks1b")]
+transform = Transform3D(1, 0, 0, 0, 0.16, 0, 0, 0, 1, -0.01926899, -0.3263998, 0.036481857)
+
+[node name="StoneBig" type="Node3D" parent="Near" unique_id=190995634 instance=ExtResource("13_rwiqt")]
+transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.9396926, -7.8, -0.05, -10.2)
+
+[node name="StoneBigSide" type="Node3D" parent="Near" unique_id=2079942919 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.45962667, 0, -0.38567257, 0, 0.5, 0, 0.38567257, 0, 0.45962667, -5.6, -0.05, -11)
+
+[node name="StoneFarL" type="Node3D" parent="Near" unique_id=1158429453 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.42499998, 0, 0.73612165, 0, 0.8, 0, -0.73612165, 0, 0.42499998, -13, -0.05, -6)
+
+[node name="StoneMid" type="Node3D" parent="Near" unique_id=1715961466 instance=ExtResource("14_41p6s")]
+transform = Transform3D(-0.5362311, 0, 0.44995135, 0, 0.62, 0, -0.44995135, 0, -0.5362311, 0.8, -0.05, -13)
+
+[node name="StoneR" type="Node3D" parent="Near" unique_id=1474429521 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.91762954, 0, -0.24587809, 0, 0.95, 0, 0.24587809, 0, 0.91762954, 9, -0.05, -10.2)
+
+[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=2009769925 instance=ExtResource("14_41p6s")]
+transform = Transform3D(0.34202015, 0, -0.9396926, 0, 0.85, 0, 0.9396926, 0, 0.34202015, 13.8, -0.05, -3)
+
+[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=49984005 instance=ExtResource("14_41p6s")]
+transform = Transform3D(-0.15628336, 0, 0.8863269, 0, 0.75, 0, -0.8863269, 0, -0.15628336, -14.4, -0.05, 1)
+
+[node name="FallenSlab" type="Node3D" parent="Near" unique_id=530392445 instance=ExtResource("15_em05e")]
+transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 5.2, -0.05, -12.4)
+
+[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=911471984 instance=ExtResource("15_em05e")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 12.2, -0.05, 5)
+
+[node name="Guides" type="Node3D" parent="." unique_id=884636576]
+
+[node name="Slot0_0_0" type="MeshInstance3D" parent="Guides" unique_id=476391764]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -2.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_e6u7m")
+mesh = SubResource("TorusMesh_xodtq")
+
+[node name="Slot0_0_1" type="MeshInstance3D" parent="Guides" unique_id=113869650]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -1.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_bs3pg")
+mesh = SubResource("TorusMesh_tpdf8")
+
+[node name="Slot0_1_0" type="MeshInstance3D" parent="Guides" unique_id=1397173997]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -4.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_erf55")
+mesh = SubResource("TorusMesh_e1drm")
+
+[node name="Slot0_1_1" type="MeshInstance3D" parent="Guides" unique_id=1689191282]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -3.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_o56tq")
+mesh = SubResource("TorusMesh_xb18i")
+
+[node name="Slot0_2_0" type="MeshInstance3D" parent="Guides" unique_id=1942773020]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -6.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_3iumx")
+mesh = SubResource("TorusMesh_om5ko")
+
+[node name="Slot0_2_1" type="MeshInstance3D" parent="Guides" unique_id=2054490621]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, -5.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_shwsi")
+mesh = SubResource("TorusMesh_snfdx")
+
+[node name="Slot1_0_0" type="MeshInstance3D" parent="Guides" unique_id=1940323007]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 2.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_f31oc")
+mesh = SubResource("TorusMesh_eo4if")
+
+[node name="Slot1_0_1" type="MeshInstance3D" parent="Guides" unique_id=1754257028]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 1.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_5nxqd")
+mesh = SubResource("TorusMesh_w6ug6")
+
+[node name="Slot1_1_0" type="MeshInstance3D" parent="Guides" unique_id=1961850887]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 4.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_spo7i")
+mesh = SubResource("TorusMesh_pjj7h")
+
+[node name="Slot1_1_1" type="MeshInstance3D" parent="Guides" unique_id=129988939]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 3.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_cxds1")
+mesh = SubResource("TorusMesh_kc2pe")
+
+[node name="Slot1_2_0" type="MeshInstance3D" parent="Guides" unique_id=1280673597]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 6.35, 0.02, -2.3)
+material_override = SubResource("StandardMaterial3D_m75fs")
+mesh = SubResource("TorusMesh_5komi")
+
+[node name="Slot1_2_1" type="MeshInstance3D" parent="Guides" unique_id=507370612]
+transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 5.35, 0.02, 2.3)
+material_override = SubResource("StandardMaterial3D_x6ece")
+mesh = SubResource("TorusMesh_w70x6")
+
+[node name="GameCam" type="Camera3D" parent="." unique_id=1099927085]
+transform = Transform3D(1, 0, 0, 0, 0.92718387, 0.3746066, 0, -0.3746066, 0.92718387, 0, 10.876229, 21.210997)
+fov = 26.0
+far = 400.0
