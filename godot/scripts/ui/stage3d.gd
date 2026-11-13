@@ -353,17 +353,16 @@ func _s217_pixel_tex(d: Node) -> void:
 		var m: MeshInstance3D = mi
 		var mat: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
 		if mat is StandardMaterial3D:
+			if (m.global_transform * m.get_aabb()).size.x > 10.0:
+				continue # R21 owner: the floor stays sharp (full texture, smooth sampling) — only the props get pixel textures
 			var sm := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-			var t := _px_small(sm.albedo_texture, 256 if (m.global_transform * m.get_aabb()).size.x > 10.0 else 128) # the plaza is big: more texels
+			var t := _px_small(sm.albedo_texture, 128)
 			if t != null:
 				sm.albedo_texture = t
 				sm.normal_enabled = false # the 1024 normal map would bring the smooth detail back
 			sm.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 			m.material_override = sm
-		elif mat is ShaderMaterial and (mat as ShaderMaterial).get_shader_parameter("tex") is Texture2D: # the ground
-			var gm := (mat as ShaderMaterial).duplicate() as ShaderMaterial
-			gm.set_shader_parameter("tex", _px_small(gm.get_shader_parameter("tex"), 64))
-			m.material_override = gm
+		# R21 owner: the ground shader keeps its full tile texture (was shrunk to 64 px in R19/R20)
 
 func _px_small(t: Texture2D, size: int) -> Texture2D:
 	if t == null:

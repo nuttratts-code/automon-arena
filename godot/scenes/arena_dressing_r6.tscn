@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://dtlsvwktpyv4c" path="res://art/s217/sky_clouds.png" id="2_mb2cn"]
 [ext_resource type="Texture2D" uid="uid://b1mb1o126sw0f" path="res://art/s217/far_hills_v3.png" id="3_6h8yh"]
 [ext_resource type="Texture2D" uid="uid://218e2qps0pmf" path="res://art/s217/ground_tile.png" id="4_i8m0g"]
-[ext_resource type="Script" uid="uid://bofbdgc8km87k" path="res://scripts/ui/s217_grass.gd" id="5_rer43"]
 [ext_resource type="PackedScene" uid="uid://bgq0tlgrwkxvh" path="res://art/s217/3d/plaza_hy.glb" id="6_mfsdh"]
 [ext_resource type="Script" uid="uid://bg7h4er5ubr2r" path="res://scripts/ui/s217_tint.gd" id="7_gc5ve"]
 [ext_resource type="PackedScene" uid="uid://cigpeut6142av" path="res://art/s217/3d/stone_hy_runes_bake.glb" id="8_18wcw"]
@@ -320,10 +319,6 @@ texture = ExtResource("3_6h8yh")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -6)
 material_override = SubResource("ShaderMaterial_1vf4e")
 mesh = SubResource("PlaneMesh_3e517")
-
-[node name="GrassBlades" type="MultiMeshInstance3D" parent="Mid" unique_id=1149317351]
-cast_shadow = 0
-script = ExtResource("5_rer43")
 
 [node name="Pollen" type="CPUParticles3D" parent="Mid" unique_id=686116284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -14)

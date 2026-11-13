@@ -122,3 +122,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - stage3d `_s217_pixel_tex`: plaza 256 · props 128 · ground tile 64 (was 512 / 256 / 128).
 - Owner's 2nd editor save kept (StoneMid, StoneShortR → x 20.8, RockFarR → by the slab); baked grass cards stripped again. s217_grass.gd now drops its MultiMesh on EDITOR_PRE_SAVE and rebuilds on POST_SAVE, so Ctrl+S no longer bakes it.
 - Shot R20-6v6-battle.
+
+## R21 (13 Nov) — owner: "take the grass out, I'll generate a new picture; floor sharp, no more pixel" · "I saved the scene"
+- §8 check: no new owner save on disk (scene = the R20 commit, file time = that commit; editor not running) → nothing to strip.
+- Scene: `GrassBlades` node + its s217_grass.gd ext_resource removed by hand (script file kept for the owner's new grass picture; the ground shader comment that points to it still holds the colour pair).
+- stage3d `_s217_pixel_tex`: plaza (meshes > 10 m wide) and the ground shader keep their full textures + smooth sampling; only props stay pixel (128, Nearest). Reverses R20 M2 for the floor (owner's own sample call).
+- Shot R21-6v6-battle. Godot tests not run.
