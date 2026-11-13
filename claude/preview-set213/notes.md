@@ -1,6 +1,6 @@
 # Set 213 — prep/battle spacing sample (ui-preview)
 
-Source review: claude/review-2026-11-12-prep-ui.md. Owner picks (12 Nov): A1 outer margin 16 + phone safe area · B "ปล่อยไว้" (board position and the back-row star overlap stay as they are) · C: sell label + next-round gold · D1 samples first.
+Source review: claude/archive/reviews/review-2026-11-12-prep-ui.md. Owner picks (12 Nov): A1 outer margin 16 + phone safe area · B "ปล่อยไว้" (board position and the back-row star overlap stay as they are) · C: sell label + next-round gold · D1 samples first.
 
 ## Agreed list (owner confirms per round)
 1. (R1, pending) Outer margin 8 → 16 base on prep (Top/Field/Tray) and battle (MarginContainer). Top bar top 12.

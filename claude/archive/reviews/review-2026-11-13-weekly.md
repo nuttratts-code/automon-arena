@@ -1,6 +1,6 @@
 # Weekly review — 13 Nov 2026 (set 218)
 
-Status = open. Every item needs the owner's pick before any edit.
+Status = DECIDED 13 Nov 2026 (set 218): owner picked A1 B1 C1 D1 E1 F1 G1 H1 I1 — all applied.
 Window: commits on origin/main 6–14 Nov (sets 185–217, ~700 commits incl. relay). Claude cannot read old chats — "not shown" ≠ "broken".
 
 ## Part 1 — what went wrong this week
