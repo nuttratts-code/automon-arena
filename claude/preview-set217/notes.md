@@ -62,3 +62,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - r10-patch-clean.py (copy only): unit HP bar + numbers + status chips hidden (battle_view card.visible = false) · floating damage numbers off (_float returns) · slot rune rings not drawn (mi.layers = 0 — visible = false is undone by _foe_rise) · feet stars + tribe mark hidden. Kept: HUD, shop, buttons, the "คู่แข่ง" text lines.
 - Note for ทำจริง: hiding HP/rings removes feedback the game needs (who is hurt, where to drop) — owner said "not used yet"; bring them back in a new style later.
 - Rebuild R10: R9 A rebuild + `python -I r10-patch-clean.py <g>` + `-s res://tools/s217_make_r6.gd`.
+
+## R11 (13 Nov) — owner: "bring this spacing back (R8 pic) and write it into Godot; bring the character models, I'll adjust myself"
+- Written into the REAL godot files on this sample branch (never merge as is; tests not run — test_ui pins the old camera/slot numbers):
+  stage3d.gd PITCH 12 · SPR_H 2.3 · COL_X 1.5/4.1/6.7 · LANE_Z −4.0/3.0 · FAR_SHIFT 1.3 · S217_CLEAN (rings, foot stars, tribe marks off) · old runeplaza.glb hidden · loads arena_dressing_r6.tscn · `static var slot_override` filled from its Slots markers · battle_view.gd S217_CLEAN (HP bar/numbers/chips/damage numbers off) · app.gd battle frame (−10, −90).
+- arena_dressing_r6.tscn (PLAZA_K back to 1.0): new **Slots** node = 12 Marker3D `Slot<side>_<row>_<lane>` (side 0 = you, lane 0 = far line), each with a preview unit sprite (game art, game height, leaned 12°) + ring. Move a marker → that slot's unit stands there in the game (x/z only). GameCam = the measured battle camera at 12° (Transform3D(..., 0, 5.56, 19.10)).
+- Shot R11-battle-mid = same as R8 cam12, field clean. Rebuild: `godot --headless --path godot -s res://tools/s217_make_r6.gd` (overwrites the owner's marker moves — after the owner edits, edit the scene by hand instead).

@@ -1051,7 +1051,7 @@ func board_targets() -> Array:
 		pr = pf.grow_individual(-side - 50.0, -120.0, -side - 50.0, -4.0) # set 207: labels lie on the floor (P6)
 	var bf: Rect2 = battle.field.get_global_rect()
 	if bf.size.x > 40.0 and bf.size.y > 40.0:
-		br = bf.grow_individual(-90.0, -165.0, -90.0, -4.0)
+		br = bf.grow_individual(-10.0, -90.0, -10.0, -4.0) # set 217 sample (owner R8): frame the units, not the whole plaza (was -90/-165)
 	return [pr, br]
 
 func refit_stage() -> void:

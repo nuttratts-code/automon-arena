@@ -13,12 +13,18 @@ const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
 const SHAPE := preload("res://scripts/ui/shape.gd")
 
-const PITCH := 22.0 # degrees the camera looks down (angle A)
+# SET 217 SAMPLE BRANCH (owner 13 Nov, R8 look "เขียนลง Godot เลย"): camera 12° · bigger units · deeper staggered lanes.
+# Was: PITCH 22 · SPR_H 1.7 · COL_X 1.35/3.35/5.35 · LANE_Z ±2.3 · far-lane shift 1.0 (art-style §8, set 216 R5) —
+# changing them for real = rule-change at ทำจริง; tests that pin the old numbers are not updated on this branch.
+const PITCH := 12.0 # degrees the camera looks down (angle A)
 const FOV := 26.0 # vertical field of view, degrees
-const SPR_H := 1.7 # every unit stands this tall (world units)
+const SPR_H := 2.3 # every unit stands this tall (world units)
 const TILE := 1.8
-const COL_X := [1.35, 3.35, 5.35] # row 0 front … 2 back: distance from the midline
-const LANE_Z := [-2.3, 2.3] # lane 0 = far line (top of the screen), lane 1 = near line
+const COL_X := [1.5, 4.1, 6.7] # row 0 front … 2 back: distance from the midline
+const LANE_Z := [-4.0, 3.0] # lane 0 = far line (top of the screen), lane 1 = near line
+const FAR_SHIFT := 1.3 # the far lane stands this much further from the midline (staggered: nobody hides anybody)
+const S217_CLEAN := true # set 217 sample: no rune rings / foot stars / tribe marks on the field (owner: "not used yet")
+static var slot_override := {} # set 217: "side:row:lane" → feet position the owner set in arena_dressing_r6.tscn (Slots)
 
 signal moved # the camera changed: the screens put their cells on the new projected rects
 
@@ -46,7 +52,10 @@ static func key(side: int, row: int, lane: int) -> String:
 	return "%d:%d:%d" % [side, row, lane]
 
 static func slot_pos(side: int, row: int, lane: int) -> Vector3:
-	return Vector3((-1.0 if side == 0 else 1.0) * (float(COL_X[row]) + (1.0 if lane == 0 else 0.0)), 0.0, float(LANE_Z[lane]))
+	var o: Variant = slot_override.get(key(side, row, lane))
+	if o is Vector3:
+		return o
+	return Vector3((-1.0 if side == 0 else 1.0) * (float(COL_X[row]) + (FAR_SHIFT if lane == 0 else 0.0)), 0.0, float(LANE_Z[lane]))
 
 static func cam_basis() -> Basis:
 	return Basis.from_euler(Vector3(deg_to_rad(-PITCH), 0.0, 0.0))
@@ -233,6 +242,8 @@ func _ring(r: float, w: float, at: Vector3, m: Material, nm: String) -> MeshInst
 	mi.position = at
 	mi.name = nm
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if S217_CLEAN:
+		mi.layers = 0 # no camera draws layer 0 (visible = false would be undone by _foe_rise)
 	add_child(mi)
 	return mi
 
@@ -245,6 +256,7 @@ func _scene(dark: bool) -> bool:
 	var root: Node3D = (ps as PackedScene).instantiate()
 	root.name = "Plaza3D"
 	add_child(root)
+	root.visible = false # set 217 sample: the owner's Hunyuan3D plaza (arena_dressing_r6.tscn) replaces this one
 	var vc := func(rough: float) -> StandardMaterial3D:
 		var m := StandardMaterial3D.new()
 		m.vertex_color_use_as_albedo = true
@@ -304,11 +316,22 @@ func _card(file: String, at: Vector3, h: float, flip: bool = false, tint: Color 
 
 func _cards(dark: bool) -> void:
 	# set 217 sample: the owner places the cards in scenes/arena_dressing.tscn (Godot editor); Guides + GameCam are editor-only
-	var ps: Variant = load("res://scenes/arena_dressing.tscn") if ResourceLoader.exists("res://scenes/arena_dressing.tscn") else null
+	var path := "res://scenes/arena_dressing_r6.tscn" # set 217 R6–R8 (sample branch); the older scenes stay as fallbacks
+	if not ResourceLoader.exists(path):
+		path = "res://scenes/arena_dressing.tscn"
+	var ps: Variant = load(path) if ResourceLoader.exists(path) else null
 	if not (ps is PackedScene):
 		return
 	var d: Node3D = (ps as PackedScene).instantiate()
-	for nm in ["Guides", "GameCam"]:
+	var slots := d.get_node_or_null("Slots") # set 217: the owner moves the 12 slot markers in the editor → units stand there
+	if slots != null:
+		slot_override.clear()
+		for m in slots.get_children():
+			var nm := String(m.name) # "Slot<side>_<row>_<lane>"
+			var p := nm.trim_prefix("Slot").split("_")
+			if m is Node3D and p.size() == 3:
+				slot_override[key(int(p[0]), int(p[1]), int(p[2]))] = Vector3((m as Node3D).position.x, 0.0, (m as Node3D).position.z)
+	for nm in ["Guides", "GameCam", "Slots"]:
 		var n := d.get_node_or_null(nm)
 		if n != null:
 			d.remove_child(n)
@@ -593,6 +616,8 @@ func foot_marks(s: Sprite3D, c: Dictionary, level: int, tall: float) -> void:
 	shp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
 	shp.shaded = false
 	shp.double_sided = true
+	star.visible = not S217_CLEAN
+	shp.visible = not S217_CLEAN
 	var star_w := float(FOOT_FS) * 0.82 * float(n) * FOOT_PX
 	var total := MARK + FOOT_GAP + star_w
 	var y := -tall / 2.0 + FOOT_Y

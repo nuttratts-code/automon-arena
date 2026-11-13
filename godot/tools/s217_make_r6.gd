@@ -8,7 +8,8 @@ extends SceneTree
 #   godot --headless --path godot -s res://tools/s217_make_r6.gd
 
 const ST := preload("res://scripts/ui/stage3d.gd")
-const PLAZA_K := 1.35 # R10: plaza ×1.35 (owner: the deeper lanes stood off the plaza); stones + grass move out with it
+const PLAZA_K := 1.0 # R10 tried 1.35 for the −6.0 far lane; owner went back to the R8 lanes (−4.0 / 3.0) → plaza ×1
+const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.5608206, 19.101614)" # camera 12°, R8 framing
 
 var top: Node3D
 
@@ -121,26 +122,51 @@ func _initialize() -> void:
 	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(12.2, -0.05, 5.0), Vector3(0.8, 0.8, 0.8), -35)
 	# ---- editor-only guides (stage3d.gd deletes Guides + GameCam in the game)
 	var gd := Node3D.new(); gd.name = "Guides"; _own(gd, top)
+	# ---- the 12 slots (owner 13 Nov: "bring the character models, I'll adjust"): move a Slot marker in the editor and
+	# the game puts that slot's unit there (stage3d.gd reads Slots, then deletes it). Each marker holds a preview unit
+	# (real game sprite, game height, leaned like in the game) + a blue (you) / red (enemy) ring — editor only.
+	var slots := Node3D.new(); slots.name = "Slots"; _own(slots, top)
+	var TH := preload("res://scripts/ui/theme.gd")
+	var ids := ["HL-1", "HL-3", "PL-1", "PL-2", "HL-5", "HL-7", "B1", "B2", "HL-2", "HL-4", "HL-6", "HL-8"]
+	var i := 0
 	for s in 2:
 		for row in 3:
 			for lane in 2:
-				var mi := MeshInstance3D.new()
-				mi.name = "Slot%d_%d_%d" % [s, row, lane]
+				var mk := Marker3D.new()
+				mk.name = "Slot%d_%d_%d" % [s, row, lane]
+				mk.position = ST.slot_pos(s, row, lane)
+				_own(mk, slots)
+				var ring := MeshInstance3D.new(); ring.name = "Ring"
 				var tm := TorusMesh.new(); tm.inner_radius = 0.7; tm.outer_radius = 0.84
-				mi.mesh = tm
+				ring.mesh = tm
 				var m := StandardMaterial3D.new()
 				m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 				m.albedo_color = Color("#4fd0ff") if s == 0 else Color("#ff7a6b")
-				mi.material_override = m
-				mi.position = ST.slot_pos(s, row, lane) + Vector3(0, 0.02, 0)
-				mi.scale = Vector3(1, 0.12, 1)
-				_own(mi, gd)
+				ring.material_override = m
+				ring.position = Vector3(0, 0.03, 0)
+				ring.scale = Vector3(1, 0.12, 1)
+				_own(ring, mk)
+				var tex: Texture2D = TH.art("unit", ids[i])
+				i += 1
+				if tex == null:
+					continue
+				var sp := Sprite3D.new(); sp.name = "Preview"
+				sp.texture = tex
+				sp.pixel_size = ST.SPR_H / float(tex.get_height())
+				sp.offset = Vector2(0, tex.get_height() / 2.0) # feet on the marker
+				sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+				sp.shaded = false
+				sp.double_sided = true
+				sp.flip_h = s == 1
+				sp.rotation = Vector3(deg_to_rad(-ST.PITCH), 0, 0)
+				_own(sp, mk)
 	var cam := Camera3D.new()
 	cam.name = "GameCam"
 	cam.fov = ST.FOV
 	cam.keep_aspect = Camera3D.KEEP_HEIGHT
 	cam.far = 400.0
-	cam.transform = str_to_var("Transform3D(1, 0, 0, 0, 0.92718387, 0.3746066, 0, -0.3746066, 0.92718387, 0, 10.876229, 21.210997)")
+	cam.transform = str_to_var(GAME_CAM) # the battle camera on an 844×390 phone, read from a game run
 	_own(cam, top)
 	var ps := PackedScene.new()
 	ps.pack(top)

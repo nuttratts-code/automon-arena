@@ -8,6 +8,7 @@ extends Control
 const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
 const R := preload("res://scripts/rules.gd")
+const S217_CLEAN := true # set 217 sample branch: no HP bar / numbers / chips / damage numbers on the field (owner: "not used yet")
 
 signal time_changed(ms: float)
 signal log_line(text: String)
@@ -158,6 +159,7 @@ func _add_unit(u: Dictionary) -> Dictionary:
 	chips.add_theme_stylebox_override("normal", TH.box(Color(TH.c("panel"), 0.82), Color(0, 0, 0, 0), 5, 0, 3, 0))
 	card.add_child(chips)
 	cell.add_child(card)
+	card.visible = not S217_CLEAN
 	_cell_style(cell, true, false, picked != null and int(picked) == v["uid"])
 	v["card"] = card
 	v["cell"] = cell
@@ -281,6 +283,8 @@ func _paint(v: Dictionary) -> void:
 
 # ---------- floats ----------
 func _float(v: Dictionary, text: String, cls: String) -> void:
+	if S217_CLEAN:
+		return
 	if fast or not v.has("cell"):
 		return
 	var cell: Control = v["cell"]
