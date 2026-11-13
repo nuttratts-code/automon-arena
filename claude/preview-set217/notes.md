@@ -47,3 +47,8 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - Seen vs the reference: our units are much smaller (board fit keeps the whole plaza + reserves the top 165 px for scenery); reference units are big and the backdrop is a near wall.
 - Conflicts for ทำจริง (rule-change): art-style §8 angle A + set 217 C1 (22°) · set 216 R5 LANE_Z ±2.3 · stage3d formation constants feed tests (slot_pos tests, MOVE CHECK).
 - Rebuild R7: R6 rebuild, then `python -I r6-patch.py <g> 8` (or 12) + `python -I r7-patch-formation.py <g> 1.4,3.4,5.4 -3.6,3.0 1.0`, shots.
+
+## R8 (13 Nov) — owner: "ขยายตัวละคร" (bigger units)
+- r8-patch-bigger.py <g> <SPR_H> <side px> <top px> (copy only): SPR_H 1.7 → 2.3 · battle frame app.gd board_targets grow (-90,-165,-90) → (-10,-90,-10) so the camera frames the units, not the whole plaza · with R7 formation widened: COL_X 1.5/4.1/6.7 · LANE_Z −4.0/3.0 · far-lane shift 1.3 (tried SPR_H 2.6 + COL_X 1.3/3.1/4.9 first: big but units pile up).
+- Shots R8-cam8 / R8-cam12 battle + R8-cam12 prep: units ≈ 1.6× taller on screen, teams read apart, sky + hills stay. Left: big (×1.5) units still cover part of the far-lane unit behind · prep framing (pr rect, bench + shop room) keeps your 6 units crowded — prep needs its own pass.
+- Rebuild R8: R7 rebuild with `r7-patch-formation.py <g> 1.5,4.1,6.7 -4.0,3.0 1.3`, then `r8-patch-bigger.py <g> 2.3 10 90`, shots.
