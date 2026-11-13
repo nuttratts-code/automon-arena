@@ -13,16 +13,16 @@ const TH := preload("res://scripts/ui/theme.gd")
 const UV := preload("res://scripts/ui/unit_view.gd")
 const SHAPE := preload("res://scripts/ui/shape.gd")
 
-# SET 217 SAMPLE BRANCH (owner 13 Nov, R8 look "เขียนลง Godot เลย"): camera 12° · bigger units · deeper staggered lanes.
+# SET 217 SAMPLE BRANCH (owner 13 Nov R8 → R13 "inside the plaza, closest to the FF Resonance ref"): camera 14° · units 2.0 · two staggered lines, evenly interleaved (far lane = half a column out).
 # Was: PITCH 22 · SPR_H 1.7 · COL_X 1.35/3.35/5.35 · LANE_Z ±2.3 · far-lane shift 1.0 (art-style §8, set 216 R5) —
 # changing them for real = rule-change at ทำจริง; tests that pin the old numbers are not updated on this branch.
-const PITCH := 12.0 # degrees the camera looks down (angle A)
+const PITCH := 14.0 # degrees the camera looks down (angle A)
 const FOV := 26.0 # vertical field of view, degrees
-const SPR_H := 1.9 # every unit stands this tall (world units)
+const SPR_H := 2.0 # every unit stands this tall (world units)
 const TILE := 1.8
-const COL_X := [1.5, 4.1, 6.7] # row 0 front … 2 back: distance from the midline
-const LANE_Z := [-4.0, 3.0] # lane 0 = far line (top of the screen), lane 1 = near line
-const FAR_SHIFT := 1.3 # the far lane stands this much further from the midline (staggered: nobody hides anybody)
+const COL_X := [1.8, 4.2, 6.6] # row 0 front … 2 back: distance from the midline
+const LANE_Z := [-5.2, 3.2] # lane 0 = far line (top of the screen), lane 1 = near line
+const FAR_SHIFT := 1.2 # the far lane stands this much further from the midline (staggered: nobody hides anybody)
 const S217_CLEAN := true # set 217 sample: no rune rings / foot stars / tribe marks on the field (owner: "not used yet")
 static var slot_override := {} # set 217: "side:row:lane" → feet position the owner set in arena_dressing_r6.tscn (Slots)
 

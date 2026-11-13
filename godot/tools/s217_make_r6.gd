@@ -8,8 +8,8 @@ extends SceneTree
 #   godot --headless --path godot -s res://tools/s217_make_r6.gd
 
 const ST := preload("res://scripts/ui/stage3d.gd")
-const PLAZA_K := 1.0 # R10 tried 1.35 for the −6.0 far lane; owner went back to the R8 lanes (−4.0 / 3.0) → plaza ×1
-const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.4031944, 19.13512)" # camera 12°, R8 framing, units 1.9
+const PLAZA_K := 1.35 # R13: plaza ×1.35 so the deeper lanes (−5.2 / 3.2) stay well inside the stone
+const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)" # battle camera R13: 14°, units 2.0
 
 var top: Node3D
 
