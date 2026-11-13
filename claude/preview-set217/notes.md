@@ -41,3 +41,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - r6-patch.py (copy only): loads r6, hides runeplaza.glb, optional camera angle arg. Shots at PITCH 22 / 14 / 8: 22 = hills band only, no sky · 14 = hills + mist mountains, still no sky, plaza fills more · 8 = arch + sky edge show, but back units hide behind front ones (HP bars overlap) → 8 is out for play.
 - Seen: plaza texture still pale next to the grass · ground tile repeat visible as stripes · stones are still the one old model.
 - Rebuild R6: R5 copy steps, then `python -I r6-cut.py <sky> <hills> <ground> <g>/art/s217`, ai_glb_prep (plaza full --height 2.04 · fallen bake --tris 3000 --height 0.9), `python -I r6-patch.py <g> [pitch]`, import, `-s res://tools/s217_make_r6.gd`, shots `--light`.
+
+## R7 (13 Nov) — owner: likes camera 8° (R6 pic 3) + the staggered party of a FF-style reference screenshot (not stored)
+- r7-patch-formation.py <g> <COL_X> <LANE_Z> <far-lane x shift> (copy only). Tries: 8° + cols 1.6/4.0/6.4, lanes −3.2/2.6, shift 1.3 → board shrinks, units tiny · **8° and 12° + cols 1.4/3.4/5.4, lanes −3.6/3.0, shift 1.0** (shots R7-cam8 / R7-cam12) → sky + arch show, teams readable; big sprites (the foe bird) still overlap the far-lane unit's HP label; prep framing crowds units together.
+- Seen vs the reference: our units are much smaller (board fit keeps the whole plaza + reserves the top 165 px for scenery); reference units are big and the backdrop is a near wall.
+- Conflicts for ทำจริง (rule-change): art-style §8 angle A + set 217 C1 (22°) · set 216 R5 LANE_Z ±2.3 · stage3d formation constants feed tests (slot_pos tests, MOVE CHECK).
+- Rebuild R7: R6 rebuild, then `python -I r6-patch.py <g> 8` (or 12) + `python -I r7-patch-formation.py <g> 1.4,3.4,5.4 -3.6,3.0 1.0`, shots.
