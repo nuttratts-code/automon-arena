@@ -1,7 +1,9 @@
+@tool
 extends Node3D
 # SET 217 SAMPLE ONLY (branch ccr-882ceb4b-0ewtk1, never merge as is).
 # Stone viewer: open scenes/s217_stone_viewer.tscn and press F6. Shows every 3D stone in art/s217/3d/ turning slowly
-# next to its old flat card, in the game's daylight. Mouse wheel = zoom · left/right arrows = turn by hand · Space = pause.
+# next to its old flat card, in the game's daylight. Mouse wheel = zoom · drag with the left mouse button or ←/→ = turn
+# by hand · Space = pause. @tool: the stones also show in the editor (the editor's own camera; they do not turn there).
 
 var turn := true
 var models: Array[Node3D] = []
@@ -9,6 +11,8 @@ var cam: Camera3D
 var dist := 9.0
 
 func _ready() -> void:
+	for c in get_children():
+		c.queue_free() # rebuilt every time the scene opens
 	var env := Environment.new()
 	var sky := ProceduralSkyMaterial.new()
 	sky.sky_top_color = Color("#3a6fc4")
@@ -80,8 +84,11 @@ func _ready() -> void:
 	add_child(cam)
 	dist = maxf(9.0, x * 1.1)
 	_place_cam(x - 4.0)
+	if Engine.is_editor_hint():
+		cam.current = false
+		return
 	var help := Label.new()
-	help.text = "Wheel = zoom · ←/→ = turn · Space = pause turning · Esc = quit"
+	help.text = "Drag (left mouse) or ←/→ = turn · Wheel = zoom · Space = pause turning · Esc = quit"
 	help.position = Vector2(12, 8)
 	var cl := CanvasLayer.new()
 	cl.add_child(help)
@@ -94,6 +101,8 @@ func _place_cam(span: float) -> void:
 	cam.look_at(Vector3(_mid, 2.0, 0))
 
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	var r := 0.0
 	if turn:
 		r = 0.5 * delta
@@ -105,6 +114,13 @@ func _process(delta: float) -> void:
 		m.rotate_y(r)
 
 func _unhandled_input(e: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
+	if e is InputEventMouseMotion and (e.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		turn = false
+		for m in models:
+			m.rotate_y(e.relative.x * 0.01)
+		return
 	if e is InputEventKey and e.pressed:
 		if e.keycode == KEY_SPACE:
 			turn = not turn
