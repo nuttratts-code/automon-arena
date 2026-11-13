@@ -75,3 +75,8 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - Picked t4 → written to the real files (sample branch): PITCH 14 · SPR_H 2.0 · COL_X 1.8/4.2/6.6 · FAR_SHIFT 1.2 (= half the 2.4 column step) · LANE_Z −5.2/3.2 · plaza ×1.35 (Ø 25.4; farthest slot 9.3 from centre) · GameCam re-measured. Shots R13-battle-mid / R13-prep-late: two clear staggered lines, nobody hidden, sky still shows at the top.
 - Why not exactly the ref: the ref looks down more AND has a near cliff wall; our far view is open hills, so a steeper camera loses the hills (see R5/R6). 14° = the compromise.
 - R14 (owner: "show a 6 vs 6 fight"): s6v6.gd.txt (copy to <g>/tests/s6v6.gd) enters a fight, then swaps the stage's battle units for 12 sample units → R14-6v6-battle.png (R13 values). Reads as two straight lines of 3 per team (not yet the ref's diagonal); all 12 on the plaza and on screen.
+
+## Baseline (13 Nov, owner: "clear what is unused, this is the base to tune from")
+- **Base = R13/R14:** arena_dressing_r6.tscn + s217_make_r6.gd + s217_far_fit.gd + stage3d/battle_view/app.gd values in the Relay.
+- Removed (git history keeps them): R1–R5 flat cards (backdrop, stone0–3, rock, stone_fallen, stone_tall, far_sky, far_hills) · R3 hull stone (stone_a_tall + its 5 view pictures in art/s217/) · stone_hy_runes 5k + lite · arena_dressing.tscn / _r5.tscn + their tools · untracked: the 4096 stone_hy_runes_full copy, the editor's stray ae7b… copy in godot/scenes/. PROVENANCE rows of removed files dropped. The R1–R5 rebuild lines above no longer work (files gone).
+- Kept 3D: plaza_hy · stone_fallen_hy · stone_hy_runes_full1k (hero) · stone_hy_runes_bake (copies). Stone viewer (asset-3d) still lists whatever glb is in art/s217/3d/.

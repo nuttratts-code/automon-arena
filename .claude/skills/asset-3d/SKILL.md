@@ -40,7 +40,7 @@ Prompt = common prompt + background line + piece line (claude/preview-set217/ass
 | `decimate --tris 5000` | ≈ original up close | quick; never below ~10 % of source |
 | `bake --tris 2500` | front ≈ original, thin light seams on deep crack edges | every non-hero prop |
 | decimate to 3 % (old "lite") | UV smear, dark torn triangles on the back | **do not use** |
-Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Height 4.13 = the tall standing stone; other props: match the flat card they replace (card height in s217_make_dressing.gd `ring`).
+Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Height 4.13 = the tall standing stone; other props: pick a height that reads next to the 2.0-tall units (set 217 baseline; fallen slab 0.9, plaza --height 2.04 then flattened).
 
 ## 5. Claude — compare in the stone viewer (Gate)
 - Viewer = `scenes/s217_stone_viewer.tscn`: shows every glb in `art/s217/3d/` (x = 0, 4, 8 … in file-name order) + the old flat card last.
@@ -48,8 +48,8 @@ Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Heig
 - SendUserFile the shots, table: tris · textures · MB · close-up verdict. Owner picks. The owner can also open the editor (§0) and press F6 (drag = turn, wheel = zoom).
 
 ## 6. Claude — place it in the arena
-1. `git status` / `git diff godot/scenes/arena_dressing.tscn` first: the owner moves and turns things in the open editor — keep every owner change.
-2. Edit the scene file directly (not a regenerate): swap the `ext_resource` path + uid (uid from `<glb>.import`) of the node it replaces; set the turn so the front faces `GameCam` (camera sits at x 0, z +21: a node at x −10.5 needs ~ +20° Y). Mirror the change in `godot/tools/s217_make_dressing.gd` (`_model_of` map + rotation) so a rebuild gives the same.
+1. `git status` / `git diff godot/scenes/arena_dressing_r6.tscn` first: the owner moves and turns things in the open editor — keep every owner change.
+2. Edit the scene file directly (not a regenerate): swap the `ext_resource` path + uid (uid from `<glb>.import`) of the node it replaces; set the turn so the front faces `GameCam` (camera sits at x 0, z +21: a node at x −10.5 needs ~ +20° Y). Mirror the change in `godot/tools/s217_make_r6.gd` (`_model(...)` lines) so a rebuild gives the same.
 3. Game shot: `"<console.exe>" --rendering-driver opengl3 --audio-driver Dummy --path godot --resolution 844x390 -s res://tests/shots.gd -- --out <scratch> --light` → send `844x390-light-battle-mid.png`. (A hand-made scene shot shows the plaza white — the game applies its own plaza material; use shots.gd.)
 4. Tell the owner to press Reload in the open editor (the file changed outside it).
 
@@ -62,12 +62,12 @@ Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Heig
 When the owner wants to arrange the scene themselves, point to **Godot** (give these steps in Thai):
 | job | where |
 |---|---|
-| move / turn / scale stones, grass, far backdrop; add a prop; look through the game camera | **Godot** `scenes/arena_dressing.tscn` (no export loop, game camera built in) |
+| move / turn / scale stones, grass, far backdrop; add a prop; look through the game camera | **Godot** `scenes/arena_dressing_r6.tscn` (no export loop, game camera built in; `Slots` markers move where units stand) |
 | change a prop's shape or paint | Blender → this skill §4 again |
 | change the plaza floor (`art/arena/runeplaza.glb`) | Blender `art/scene/runeplaza-v5.blend` → Claude exports with `art/blender/export_godot.py` (edits made on the imported glb in Godot are lost) |
-Steps for the owner: open the editor (§0) → double-click `scenes/arena_dressing.tscn` → pick a node under `Stones` / `Grass` / `Far` → **W** move · **E** turn · **R** scale → game view: select `GameCam`, tick **Preview** (untick to keep editing) → new prop: drag a glb from `art/s217/3d/` onto `Stones` → **Ctrl+S** → tell Claude to commit.
+Steps for the owner: open the editor (§0) → double-click `scenes/arena_dressing_r6.tscn` → pick a node under `Near` / `Mid` / `Slots` → **W** move · **E** turn · **R** scale → game view: select `GameCam`, tick **Preview** (untick to keep editing) → new prop: drag a glb from `art/s217/3d/` onto `Near` → **Ctrl+S** → tell Claude to commit.
 Owner rules: `Guides` (slot rings, plaza disc, ground) are editor-only helpers — do not move them, real slots live in stage3d.gd · keep props in the back half / away from the camera side so nothing hides the units.
-Claude after the owner saves: `git diff godot/scenes/arena_dressing.tscn` → game shot (§6.3) → commit the scene as the owner's work. Never regenerate the scene with `s217_make_dressing.gd` over owner edits; mirror only what Claude itself changes into that tool.
+Claude after the owner saves: `git diff godot/scenes/arena_dressing_r6.tscn` → game shot (§6.3) → commit the scene as the owner's work. Never regenerate the scene with `s217_make_r6.gd` over owner edits; mirror only what Claude itself changes into that tool.
 
 ## 9. Traps seen (set 217)
 - `o.dimensions` right after the glTF import reads the wrong axis (importer parent turns Y-up → Z-up): clear the parent and apply transforms first (the script does).

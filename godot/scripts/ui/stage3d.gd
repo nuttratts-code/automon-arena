@@ -315,10 +315,8 @@ func _card(file: String, at: Vector3, h: float, flip: bool = false, tint: Color 
 	return sp
 
 func _cards(dark: bool) -> void:
-	# set 217 sample: the owner places the cards in scenes/arena_dressing.tscn (Godot editor); Guides + GameCam are editor-only
-	var path := "res://scenes/arena_dressing_r6.tscn" # set 217 R6–R8 (sample branch); the older scenes stay as fallbacks
-	if not ResourceLoader.exists(path):
-		path = "res://scenes/arena_dressing.tscn"
+	# set 217 sample: the owner places things in scenes/arena_dressing_r6.tscn (Godot editor); Guides + GameCam + Slots are editor-only
+	var path := "res://scenes/arena_dressing_r6.tscn" # set 217 baseline (owner 13 Nov: R13/R14 = the base to tune from; older scenes removed)
 	var ps: Variant = load(path) if ResourceLoader.exists(path) else null
 	if not (ps is PackedScene):
 		return
