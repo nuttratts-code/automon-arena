@@ -18,7 +18,7 @@ const SHAPE := preload("res://scripts/ui/shape.gd")
 # changing them for real = rule-change at ทำจริง; tests that pin the old numbers are not updated on this branch.
 const PITCH := 12.0 # degrees the camera looks down (angle A)
 const FOV := 26.0 # vertical field of view, degrees
-const SPR_H := 2.3 # every unit stands this tall (world units)
+const SPR_H := 1.9 # every unit stands this tall (world units)
 const TILE := 1.8
 const COL_X := [1.5, 4.1, 6.7] # row 0 front … 2 back: distance from the midline
 const LANE_Z := [-4.0, 3.0] # lane 0 = far line (top of the screen), lane 1 = near line

@@ -9,7 +9,7 @@ extends SceneTree
 
 const ST := preload("res://scripts/ui/stage3d.gd")
 const PLAZA_K := 1.0 # R10 tried 1.35 for the −6.0 far lane; owner went back to the R8 lanes (−4.0 / 3.0) → plaza ×1
-const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.5608206, 19.101614)" # camera 12°, R8 framing
+const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.4031944, 19.13512)" # camera 12°, R8 framing, units 1.9
 
 var top: Node3D
 

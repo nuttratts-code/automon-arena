@@ -264,30 +264,30 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_x056f"]
 image = SubResource("Image_dlxid")
 
-[node name="ArenaDressing" type="Node3D" unique_id=1490219927]
+[node name="ArenaDressing" type="Node3D" unique_id=98814046]
 
-[node name="Far" type="Node3D" parent="." unique_id=1813014040]
+[node name="Far" type="Node3D" parent="." unique_id=1407380593]
 script = ExtResource("1_rer43")
 
-[node name="Sky" type="Sprite3D" parent="Far" unique_id=595966810]
+[node name="Sky" type="Sprite3D" parent="Far" unique_id=1063749436]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -60)
 pixel_size = 0.02
 transparent = false
 texture = ExtResource("2_mfsdh")
 
-[node name="Hills" type="Sprite3D" parent="Far" unique_id=844883395]
+[node name="Hills" type="Sprite3D" parent="Far" unique_id=449071203]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -40)
 pixel_size = 0.02
 texture = ExtResource("3_gc5ve")
 
-[node name="Mid" type="Node3D" parent="." unique_id=1877546734]
+[node name="Mid" type="Node3D" parent="." unique_id=1889191922]
 
-[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=1702096822]
+[node name="Ground" type="MeshInstance3D" parent="Mid" unique_id=2013437742]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, -6)
 material_override = SubResource("StandardMaterial3D_d0r7a")
 mesh = SubResource("PlaneMesh_8e34n")
 
-[node name="Grass1" type="Sprite3D" parent="Mid" unique_id=1051413050]
+[node name="Grass1" type="Sprite3D" parent="Mid" unique_id=1876842242]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, -0.1, -8.6)
 offset = Vector2(0, 256)
 pixel_size = 0.0017578125
@@ -295,7 +295,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("5_ut5qf")
 
-[node name="Grass2" type="Sprite3D" parent="Mid" unique_id=726294774]
+[node name="Grass2" type="Sprite3D" parent="Mid" unique_id=1247431461]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.4, -0.1, -8.4)
 offset = Vector2(0, 201)
 pixel_size = 0.0019900498
@@ -303,7 +303,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("6_fjf4v")
 
-[node name="Grass3" type="Sprite3D" parent="Mid" unique_id=207912402]
+[node name="Grass3" type="Sprite3D" parent="Mid" unique_id=1915308399]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -0.1, -4)
 offset = Vector2(0, 256)
 pixel_size = 0.00234375
@@ -311,7 +311,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("7_p2tyl")
 
-[node name="Grass4" type="Sprite3D" parent="Mid" unique_id=930318707]
+[node name="Grass4" type="Sprite3D" parent="Mid" unique_id=614538427]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.6, -0.1, -3.2)
 offset = Vector2(0, 256)
 pixel_size = 0.00234375
@@ -319,7 +319,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("8_cipuk")
 
-[node name="Grass5" type="Sprite3D" parent="Mid" unique_id=1669113273]
+[node name="Grass5" type="Sprite3D" parent="Mid" unique_id=1299290112]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, -0.1, -11)
 offset = Vector2(0, 256)
 pixel_size = 0.001953125
@@ -327,7 +327,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("9_1vf4e")
 
-[node name="Grass6" type="Sprite3D" parent="Mid" unique_id=1766773499]
+[node name="Grass6" type="Sprite3D" parent="Mid" unique_id=1360261449]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, -0.1, -11.2)
 offset = Vector2(0, 256)
 pixel_size = 0.0021484375
@@ -335,7 +335,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("10_3e517")
 
-[node name="Grass7" type="Sprite3D" parent="Mid" unique_id=1866500163]
+[node name="Grass7" type="Sprite3D" parent="Mid" unique_id=168664541]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, -0.1, 4.5)
 offset = Vector2(0, 256)
 pixel_size = 0.00390625
@@ -343,7 +343,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("11_8w8he")
 
-[node name="Grass8" type="Sprite3D" parent="Mid" unique_id=1237146917]
+[node name="Grass8" type="Sprite3D" parent="Mid" unique_id=892571239]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, -0.1, 4)
 offset = Vector2(0, 256)
 pixel_size = 0.003515625
@@ -351,7 +351,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("9_1vf4e")
 
-[node name="Grass9" type="Sprite3D" parent="Mid" unique_id=1125498137]
+[node name="Grass9" type="Sprite3D" parent="Mid" unique_id=766841708]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.5, -0.1, 7.5)
 offset = Vector2(0, 256)
 pixel_size = 0.002734375
@@ -359,7 +359,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("5_ut5qf")
 
-[node name="Grass10" type="Sprite3D" parent="Mid" unique_id=1529512913]
+[node name="Grass10" type="Sprite3D" parent="Mid" unique_id=1184204147]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.5, -0.1, 7.5)
 offset = Vector2(0, 201)
 pixel_size = 0.003233831
@@ -367,7 +367,7 @@ billboard = 2
 alpha_cut = 2
 texture = ExtResource("6_fjf4v")
 
-[node name="Near" type="Node3D" parent="." unique_id=1487895632]
+[node name="Near" type="Node3D" parent="." unique_id=1495258410]
 
 [node name="Plaza" type="Node3D" parent="Near" unique_id=1930697670 instance=ExtResource("12_tks1b")]
 transform = Transform3D(1, 0, 0, 0, 0.16, 0, 0, 0, 1, -0.01926899, -0.3263998, 0.036481857)
@@ -378,230 +378,230 @@ transform = Transform3D(0.9396926, 0, 0.34202012, 0, 1, 0, -0.34202012, 0, 0.939
 [node name="StoneBigSide" type="Node3D" parent="Near" unique_id=2079942919 instance=ExtResource("14_41p6s")]
 transform = Transform3D(0.45962667, 0, -0.38567257, 0, 0.5, 0, 0.38567257, 0, 0.45962667, -5.6, -0.05, -11)
 
-[node name="StoneFarL" type="Node3D" parent="Near" unique_id=1222080388 instance=ExtResource("14_41p6s")]
+[node name="StoneFarL" type="Node3D" parent="Near" unique_id=77656370 instance=ExtResource("14_41p6s")]
 transform = Transform3D(0.42499998, 0, 0.73612165, 0, 0.8, 0, -0.73612165, 0, 0.42499998, -13, -0.05, -6)
 
-[node name="StoneMid" type="Node3D" parent="Near" unique_id=1121830259 instance=ExtResource("14_41p6s")]
+[node name="StoneMid" type="Node3D" parent="Near" unique_id=621064538 instance=ExtResource("14_41p6s")]
 transform = Transform3D(-0.5362311, 0, 0.44995135, 0, 0.62, 0, -0.44995135, 0, -0.5362311, 0.8, -0.05, -13)
 
-[node name="StoneR" type="Node3D" parent="Near" unique_id=4043748 instance=ExtResource("14_41p6s")]
+[node name="StoneR" type="Node3D" parent="Near" unique_id=1684571915 instance=ExtResource("14_41p6s")]
 transform = Transform3D(0.91762954, 0, -0.24587809, 0, 0.95, 0, 0.24587809, 0, 0.91762954, 9, -0.05, -10.2)
 
-[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=1808440047 instance=ExtResource("14_41p6s")]
+[node name="StoneFrontR" type="Node3D" parent="Near" unique_id=872260986 instance=ExtResource("14_41p6s")]
 transform = Transform3D(0.34202015, 0, -0.9396926, 0, 0.85, 0, 0.9396926, 0, 0.34202015, 13.8, -0.05, -3)
 
-[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=859221377 instance=ExtResource("14_41p6s")]
+[node name="StoneFrontL" type="Node3D" parent="Near" unique_id=1095234252 instance=ExtResource("14_41p6s")]
 transform = Transform3D(-0.15628336, 0, 0.8863269, 0, 0.75, 0, -0.8863269, 0, -0.15628336, -14.4, -0.05, 1)
 
 [node name="FallenSlab" type="Node3D" parent="Near" unique_id=530392445 instance=ExtResource("15_em05e")]
 transform = Transform3D(0.99026805, 0, 0.1391731, 0, 1, 0, -0.1391731, 0, 0.99026805, 5.2, -0.05, -12.4)
 
-[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=839388490 instance=ExtResource("15_em05e")]
+[node name="FallenSlabR" type="Node3D" parent="Near" unique_id=763481331 instance=ExtResource("15_em05e")]
 transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 12.2, -0.05, 5)
 
-[node name="Guides" type="Node3D" parent="." unique_id=1120143842]
+[node name="Guides" type="Node3D" parent="." unique_id=269568372]
 
-[node name="Slots" type="Node3D" parent="." unique_id=1182535543]
+[node name="Slots" type="Node3D" parent="." unique_id=1104455848]
 
-[node name="Slot0_0_0" type="Marker3D" parent="Slots" unique_id=803687191]
+[node name="Slot0_0_0" type="Marker3D" parent="Slots" unique_id=1094087422]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_0" unique_id=331514067]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_0" unique_id=1284933286]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_e6u7m")
 mesh = SubResource("TorusMesh_xodtq")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_0" unique_id=1588439886]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_0" unique_id=1049448168]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_tpdf8")
 
-[node name="Slot0_0_1" type="Marker3D" parent="Slots" unique_id=20009196]
+[node name="Slot0_0_1" type="Marker3D" parent="Slots" unique_id=134930272]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_1" unique_id=154122957]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_0_1" unique_id=615801387]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_erf55")
 mesh = SubResource("TorusMesh_e1drm")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_1" unique_id=667331714]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_0_1" unique_id=334185694]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_xb18i")
 
-[node name="Slot0_1_0" type="Marker3D" parent="Slots" unique_id=43400078]
+[node name="Slot0_1_0" type="Marker3D" parent="Slots" unique_id=2102903000]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_0" unique_id=1426617171]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_0" unique_id=2024644277]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_3iumx")
 mesh = SubResource("TorusMesh_om5ko")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_0" unique_id=1954911331]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_0" unique_id=893829315]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_snfdx")
 
-[node name="Slot0_1_1" type="Marker3D" parent="Slots" unique_id=1909262043]
+[node name="Slot0_1_1" type="Marker3D" parent="Slots" unique_id=274643468]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_1" unique_id=1022815434]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_1_1" unique_id=551895865]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_f31oc")
 mesh = SubResource("TorusMesh_eo4if")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_1" unique_id=18849167]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_1_1" unique_id=855162765]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_w6ug6")
 
-[node name="Slot0_2_0" type="Marker3D" parent="Slots" unique_id=1128761904]
+[node name="Slot0_2_0" type="Marker3D" parent="Slots" unique_id=1112249004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_0" unique_id=1359207525]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_0" unique_id=478296211]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_spo7i")
 mesh = SubResource("TorusMesh_pjj7h")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_0" unique_id=2144404722]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_0" unique_id=1196206471]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_kc2pe")
 
-[node name="Slot0_2_1" type="Marker3D" parent="Slots" unique_id=326279022]
+[node name="Slot0_2_1" type="Marker3D" parent="Slots" unique_id=1073177904]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.7, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_1" unique_id=2104081001]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot0_2_1" unique_id=1055390777]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_m75fs")
 mesh = SubResource("TorusMesh_5komi")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_1" unique_id=1762727323]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot0_2_1" unique_id=2054014314]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_w70x6")
 
-[node name="Slot1_0_0" type="Marker3D" parent="Slots" unique_id=1720500687]
+[node name="Slot1_0_0" type="Marker3D" parent="Slots" unique_id=969078786]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_0" unique_id=62773816]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_0" unique_id=515143602]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_vvj0b")
 mesh = SubResource("TorusMesh_bk8t7")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_0" unique_id=1531660278]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_0" unique_id=869014642]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_e235p")
 
-[node name="Slot1_0_1" type="Marker3D" parent="Slots" unique_id=1291074176]
+[node name="Slot1_0_1" type="Marker3D" parent="Slots" unique_id=551102459]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_1" unique_id=458909837]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_0_1" unique_id=1237124195]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_mj8uj")
 mesh = SubResource("TorusMesh_qujuo")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_1" unique_id=397451482]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_0_1" unique_id=540931423]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_cd3dm")
 
-[node name="Slot1_1_0" type="Marker3D" parent="Slots" unique_id=1154439525]
+[node name="Slot1_1_0" type="Marker3D" parent="Slots" unique_id=1180782070]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_0" unique_id=678929522]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_0" unique_id=398159826]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_sbjmn")
 mesh = SubResource("TorusMesh_u6sns")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_0" unique_id=950308073]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_0" unique_id=622467588]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_g2wia")
 
-[node name="Slot1_1_1" type="Marker3D" parent="Slots" unique_id=1819445576]
+[node name="Slot1_1_1" type="Marker3D" parent="Slots" unique_id=920127462]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_1" unique_id=973489464]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_1_1" unique_id=1812224983]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_k4pwa")
 mesh = SubResource("TorusMesh_8qk21")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_1" unique_id=2040382740]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_1_1" unique_id=1963050168]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_lg7os")
 
-[node name="Slot1_2_0" type="Marker3D" parent="Slots" unique_id=593592054]
+[node name="Slot1_2_0" type="Marker3D" parent="Slots" unique_id=1554503103]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_0" unique_id=676625991]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_0" unique_id=846875183]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_3ju4o")
 mesh = SubResource("TorusMesh_rgm1q")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_0" unique_id=895900613]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_0" unique_id=724656351]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_le323")
 
-[node name="Slot1_2_1" type="Marker3D" parent="Slots" unique_id=632118881]
+[node name="Slot1_2_1" type="Marker3D" parent="Slots" unique_id=1858598536]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.7, 0, 3)
 
-[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_1" unique_id=767276722]
+[node name="Ring" type="MeshInstance3D" parent="Slots/Slot1_2_1" unique_id=459635717]
 transform = Transform3D(1, 0, 0, 0, 0.12, 0, 0, 0, 1, 0, 0.03, 0)
 material_override = SubResource("StandardMaterial3D_0t4y2")
 mesh = SubResource("TorusMesh_e6k13")
 
-[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_1" unique_id=1113559922]
+[node name="Preview" type="Sprite3D" parent="Slots/Slot1_2_1" unique_id=386099995]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 0, 0)
 offset = Vector2(0, 16)
 flip_h = true
-pixel_size = 0.071875
+pixel_size = 0.059375
 alpha_cut = 1
 texture_filter = 0
 texture = SubResource("ImageTexture_x056f")
 
-[node name="GameCam" type="Camera3D" parent="." unique_id=675667712]
-transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.5608206, 19.101614)
+[node name="GameCam" type="Camera3D" parent="." unique_id=699097712]
+transform = Transform3D(1, 0, 0, 0, 0.9781476, 0.2079117, 0, -0.2079117, 0.9781476, 0, 5.4031944, 19.13512)
 fov = 26.0
 far = 400.0
