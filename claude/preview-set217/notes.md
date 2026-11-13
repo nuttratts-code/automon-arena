@@ -146,3 +146,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - Foreground rocks dropped (see patch header): needs either fewer front units in the corners or a lower UI; parked for the owner.
 - `zoom-start`/`zoom-mid` AUDIT lists the HUD as off screen mid-dolly; UI untouched by this patch — not checked whether the R21 base does the same.
 - Shots P1-6v6-battle / P1-battle-mid / P1-prep-late. Rebuild: copy → FOV 19.2 → p1-patch-depth.py. Godot tests not run.
+
+## P1t (14 Nov) — owner: "tune phase 1 more" → picked T1 + T2 + T3 + T4
+- `p1t-patch-tune.py <g>` after p1-patch-depth.py: T1 light fog #a9bccd at 0.45 (dark theme unchanged) · T2 plateau drop r 20→45 (was 24→55), hill peaks at 15 % / 20 % from the top (far card y −28.3, near −16.6) · T3 `CliffRim` = 9 rock_cliff_hy pieces on an arc r ≈ 22.5–24.9, sunk 1.2 m under the slope (`p1_drop()` copies the ground shader — change both) · T4 `LandmarkArch` = the hidden Arch mesh of runeplaza.glb (own Blender work, set 215), 4 m tall at (22, −15.2, −104) on the near hill line.
+- First T4 try at (−30, z −104, 6 m) read as a big close object next to the stones in prep → moved right + smaller; now visible in battle and prep.
+- Seen: sky band ~15 %, rocky lip marks the plateau edge, arch = landmark; light-theme hills still pale under the HD2D grade (phase 4).
+- Shots P1t-6v6-battle / P1t-battle-mid / P1t-prep-late. Rebuild: copy → FOV 19.2 → p1-patch-depth.py → p1t-patch-tune.py. Godot tests not run.
