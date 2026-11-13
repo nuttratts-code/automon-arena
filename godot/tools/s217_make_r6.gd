@@ -10,6 +10,7 @@ extends SceneTree
 const ST := preload("res://scripts/ui/stage3d.gd")
 const PLAZA_K := 1.35 # R13: plaza ×1.35 so the deeper lanes (−5.2 / 3.2) stay well inside the stone
 const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)" # battle camera R13: 14°, units 2.0
+const STONE_K := 1.5 # R16 (owner F1): stones ×1.5, closer to the target painting (stones ≈ 1/3 of the plaza width)
 const PLAZA_TONE := Color(0.7, 0.67, 0.58) # R15 (owner C1) darker + warmer than R6's 0.74 grey; R16 = the mid tone (B)
 const GROUND_SHADER := """
 shader_type spatial;
@@ -119,9 +120,12 @@ func _initialize() -> void:
 	gm.position = Vector3(0, -0.15, -6)
 	_own(gm, mid)
 	# R16 (owner): all cut-out grass cards removed ("หญ้าพุ่มที่ตัดแปะออกให้หมด"); _card() kept for later flat props.
+	var blades := MultiMeshInstance3D.new(); blades.name = "GrassBlades" # R16 (owner H1): 3D blades around the plaza rim, built at load
+	blades.set_script(load("res://scripts/ui/s217_grass.gd"))
+	_own(blades, mid)
 	# R15: slow drifting pollen motes over the meadow (life without new art)
 	var motes := CPUParticles3D.new(); motes.name = "Pollen"
-	motes.amount = 70
+	motes.amount = 50
 	motes.lifetime = 9.0
 	motes.preprocess = 9.0
 	motes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
@@ -134,12 +138,12 @@ func _initialize() -> void:
 	motes.initial_velocity_max = 0.45
 	motes.scale_amount_min = 0.6
 	motes.scale_amount_max = 1.2
-	var qm := QuadMesh.new(); qm.size = Vector2(0.09, 0.09)
+	var qm := QuadMesh.new(); qm.size = Vector2(0.07, 0.07)
 	var pm := StandardMaterial3D.new()
 	pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	pm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	pm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	pm.albedo_color = Color(1.0, 0.96, 0.75, 0.85)
+	pm.albedo_color = Color(1.0, 0.86, 0.55, 0.4) # R16 (owner G1): fainter + warmer
 	qm.material = pm
 	motes.mesh = qm
 	_own(motes, mid)
@@ -148,13 +152,10 @@ func _initialize() -> void:
 	var plaza := _model(near, "Plaza", "plaza_hy", Vector3.ZERO, Vector3(PLAZA_K, 0.16, PLAZA_K), 0.0)
 	var box := _aabb(plaza)
 	plaza.position = Vector3(-box.get_center().x, -box.end.y, -box.get_center().z)
-	for mi in plaza.find_children("*", "MeshInstance3D", true, false): # the AI texture is painted bright: tone it under the sun
-		var m: Material = (mi as MeshInstance3D).mesh.surface_get_material(0)
-		if m is StandardMaterial3D:
-			var d := (m as StandardMaterial3D).duplicate() as StandardMaterial3D
-			d.albedo_color = PLAZA_TONE
-			(mi as MeshInstance3D).material_override = d
-	top.set_editable_instance(plaza, true) # R15: without this the tone above was never saved (R6–R14 plaza stayed raw = pale)
+	# the AI texture is painted bright: tone it under the sun. R16: a tiny tint script on the instance root (material
+	# overrides on the glb's children are dropped by pack(); an editable instance saved the whole 50k mesh = 2.6 MB scene)
+	plaza.set_script(load("res://scripts/ui/s217_tint.gd"))
+	plaza.set("tone", PLAZA_TONE)
 	var hero := "stone_hy_runes_full1k"
 	var lite := "stone_hy_runes_bake"
 	var rock := "rock_cliff_hy"
@@ -174,9 +175,9 @@ func _initialize() -> void:
 	for r in stones:
 		var post := Vector2(r[2] * PLAZA_K, r[3] * PLAZA_K)
 		var face := -rad_to_deg(atan2(post.x, 21.0 - post.y))
-		_model(near, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], face + r[5], r[6])
-	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(4.6, -0.05, -10.6), Vector3.ONE, 14)      # lying on the grass, back-right
-	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(8.6, -0.05, 6.0), Vector3(0.8, 0.8, 0.8), -35) # broken rune slab, front-right edge
+		_model(near, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4] * STONE_K, face + r[5], r[6])
+	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(4.6, -0.05, -10.6), Vector3.ONE * STONE_K, 14)      # lying on the grass, back-right
+	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(8.6, -0.05, 6.0), Vector3(0.8, 0.8, 0.8) * STONE_K, -35) # broken rune slab, front-right edge
 	# small boulders like the painting (owner's rock outcrop, small): back-left far, by the slab, front-left rune rock, far right
 	_model(near, "RockFarL", rock, Vector3(-15.5, -0.05, -8.0), Vector3(1.0, 0.7, 1.0), 40)
 	_model(near, "RockSlab", rock, Vector3(2.8, -0.05, -10.9), Vector3(0.55, 0.4, 0.55), 110)
