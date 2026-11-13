@@ -1,9 +1,10 @@
 # Reviews index
 
-V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
+| review-2026-11-13-token-cost.md | Set 220 token cost vs result — A brainstorm deleted (owner); B look loops · C CLAUDE.md size · D instructions rewrite · E big skills waiting | open |
 | archive/reviews/review-2026-11-13-skills-audit.md | Set 219 skills + rule docs audit A–I — A1 B1 E1 F1 G1 H1 I2 applied; D: AI art (Gemini / Hunyuan3D) ships, owner accepted the licence risk | decided |
 | archive/reviews/review-2026-11-13-weekly.md | Set 218 weekly review A–I (sample branch push, asset-3d restore, sample mode, ripple line, handoff size) — owner picked all recommended, applied set 218 | decided |
 | review-2026-11-14-hd2d-gaps.md | Set 217 battle-scene look gaps vs HD-2D reference, phases 0–7 — camera A2 picked; phases open on the sample branch | open |
