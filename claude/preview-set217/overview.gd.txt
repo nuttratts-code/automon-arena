@@ -1,0 +1,20 @@
+extends SceneTree
+# scratch only: wide look at the dressing scene (like the owner's target painting's framing)
+func _initialize() -> void:
+	var out: String = OS.get_cmdline_user_args()[1]
+	var d: Node3D = (load("res://scenes/arena_dressing_r6.tscn") as PackedScene).instantiate()
+	for nm in ["Guides", "GameCam", "Slots"]:
+		var n := d.get_node_or_null(nm)
+		if n: n.free()
+	root.add_child(d)
+	var sun := DirectionalLight3D.new(); sun.rotation_degrees = Vector3(-50, -30, 0); sun.light_energy = 1.1; root.add_child(sun)
+	var env := WorldEnvironment.new(); env.environment = Environment.new()
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; env.environment.ambient_light_color = Color(0.75, 0.78, 0.8); env.environment.ambient_light_energy = 0.7
+	root.add_child(env)
+	var cam := Camera3D.new(); cam.fov = 50; root.add_child(cam)
+	cam.position = Vector3(0, 7.5, 27); cam.look_at(Vector3(0, 0, -4))
+	cam.make_current()
+	for k in 6: await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png(out)
+	quit()

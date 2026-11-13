@@ -10,8 +10,7 @@ extends SceneTree
 const ST := preload("res://scripts/ui/stage3d.gd")
 const PLAZA_K := 1.35 # R13: plaza ×1.35 so the deeper lanes (−5.2 / 3.2) stay well inside the stone
 const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)" # battle camera R13: 14°, units 2.0
-const PLAZA_TONE := Color(0.62, 0.58, 0.49) # R15 (owner C1): darker + warmer than R6's 0.74 grey so the stone sits with the grass
-const MEADOW_TUFTS := 46
+const PLAZA_TONE := Color(0.7, 0.67, 0.58) # R15 (owner C1) darker + warmer than R6's 0.74 grey; R16 = the mid tone (B)
 const GROUND_SHADER := """
 shader_type spatial;
 render_mode specular_disabled;
@@ -119,27 +118,7 @@ func _initialize() -> void:
 	gm.material_override = mat
 	gm.position = Vector3(0, -0.15, -6)
 	_own(gm, mid)
-	var tufts := [["grass1", -9.5, -8.6, 0.9], ["grass3", 9.4, -8.4, 0.8], ["grass0", -12.0, -4.0, 1.2],
-		["grass4", 12.6, -3.2, 1.2], ["grass5", -2.5, -11.0, 1.0], ["grass2", 3.5, -11.2, 1.1],
-		["grass_big", -13.0, 4.5, 2.0], ["grass5", 13.0, 4.0, 1.8], ["grass1", -10.5, 7.5, 1.4], ["grass3", 10.5, 7.5, 1.3]]
-	# R15 (owner: "the background ground looks empty and lifeless"): a seeded scatter of extra tufts on the meadow
-	# behind and beside the plaza (never in front of it, never inside it), bigger further back so the band reads full.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 21715
-	var kinds := ["grass0", "grass1", "grass2", "grass3", "grass4", "grass5"]
-	var placed := 0
-	while placed < MEADOW_TUFTS:
-		var x := rng.randf_range(-24.0, 24.0)
-		var z := rng.randf_range(-24.0, 3.0)
-		if Vector2(x, z).length() < 10.6 or (x < -9.0 and z < -9.0): # off the plaza, out of the cliff corner
-			continue
-		var far_k := clampf((-z - 6.0) / 18.0, 0.0, 1.0)
-		tufts.append([kinds[rng.randi() % kinds.size()], x, z, rng.randf_range(0.7, 1.2) + far_k * 0.9])
-		placed += 1
-	var n := 1
-	for t in tufts:
-		_card(mid, "Grass%d" % n, t[0], Vector3(t[1], -0.1, t[2]), t[3])
-		n += 1
+	# R16 (owner): all cut-out grass cards removed ("หญ้าพุ่มที่ตัดแปะออกให้หมด"); _card() kept for later flat props.
 	# R15: slow drifting pollen motes over the meadow (life without new art)
 	var motes := CPUParticles3D.new(); motes.name = "Pollen"
 	motes.amount = 70
@@ -178,22 +157,31 @@ func _initialize() -> void:
 	top.set_editable_instance(plaza, true) # R15: without this the tone above was never saved (R6–R14 plaza stayed raw = pale)
 	var hero := "stone_hy_runes_full1k"
 	var lite := "stone_hy_runes_bake"
-	_model(near, "StoneBig", hero, Vector3(-7.8, -0.05, -10.2), Vector3.ONE, 20)
-	_model(near, "StoneBigSide", lite, Vector3(-5.6, -0.05, -11.0), Vector3(0.6, 0.5, 0.6), -40)
-	_model(near, "StoneFarL", lite, Vector3(-13.0, -0.05, -6.0), Vector3(0.85, 0.8, 0.85), 60)
-	_model(near, "StoneMid", lite, Vector3(0.8, -0.05, -13.0), Vector3(0.7, 0.62, 0.7), 140)
-	_model(near, "StoneR", lite, Vector3(9.0, -0.05, -10.2), Vector3(0.95, 0.95, 0.95), -15)
-	_model(near, "StoneFrontR", lite, Vector3(13.8, -0.05, -3.0), Vector3(1.0, 0.85, 1.0), -70)
-	_model(near, "StoneFrontL", lite, Vector3(-14.4, -0.05, 1.0), Vector3(0.9, 0.75, 0.9), 100)
-	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(5.2, -0.05, -12.4), Vector3.ONE, 8)
-	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(12.2, -0.05, 5.0), Vector3(0.8, 0.8, 0.8), -35)
-	# R15 (owner A3): the owner's rock outcrop (Hunyuan, 3k bake, 1.6 × 1.6 × 1.0 at scale 1) = a cliff on the
-	# back-left only + small boulders at the plaza edge; the hills stay open on the right.
-	_model(near, "CliffL", "rock_cliff_hy", Vector3(-14.0, -0.3, -14.5), Vector3(7.5, 6.5, 5.5), 25)
-	_model(near, "CliffL2", "rock_cliff_hy", Vector3(-19.5, -0.3, -9.0), Vector3(6.0, 5.0, 5.0), 75)
-	_model(near, "RockR", "rock_cliff_hy", Vector3(10.6, -0.05, -6.8), Vector3(1.4, 0.95, 1.4), -30)
-	_model(near, "RockBack", "rock_cliff_hy", Vector3(-3.6, -0.05, -12.6), Vector3(0.9, 0.65, 0.9), 110)
-	_model(near, "RockL", "rock_cliff_hy", Vector3(-12.2, -0.05, -2.2), Vector3(1.1, 0.8, 1.1), 200)
+	var rock := "rock_cliff_hy"
+	# R16 (owner: "take the back rocks out, place the stones like the target picture"): no cliff; the ring of standing
+	# stones follows the owner's target painting (rune meadow) — x / z in pre-PLAZA_K units (plaza edge ≈ 9.4), every
+	# stone turned so its front faces the battle camera (x 0, z ≈ +21) + its own extra turn. [name, file, x, z, scale, extra Y°, lean Z°]
+	var stones := [
+		["StoneL", lite, -10.1, -2.7, Vector3(0.95, 0.95, 0.95), 0, 0],       # tall, left of the plaza
+		["StoneFrontL", lite, -10.2, 2.9, Vector3(0.95, 0.85, 0.95), 10, 7],  # near-left, leaning out
+		["StoneBig", hero, -6.5, -8.3, Vector3.ONE, 0, 0],                    # hero (biggest, rune face) back-left
+		["StoneBigSide", lite, -5.0, -9.8, Vector3(0.55, 0.5, 0.55), 25, 0], # small companion right of the hero
+		["StoneMid", lite, -1.8, -10.4, Vector3(0.7, 0.62, 0.7), -10, 0],     # lone stone at the back, left of centre
+		["StoneShortR", lite, 6.2, -8.8, Vector3(0.6, 0.38, 0.6), 30, 0],     # short broken stone by the slab
+		["StoneR", lite, 8.0, -6.7, Vector3(0.95, 0.95, 0.95), 0, 0],         # tall, back-right
+		["StoneFrontR", lite, 10.7, -1.4, Vector3(1.05, 1.0, 1.05), 0, -4],   # biggest of the right side, near-right
+	]
+	for r in stones:
+		var post := Vector2(r[2] * PLAZA_K, r[3] * PLAZA_K)
+		var face := -rad_to_deg(atan2(post.x, 21.0 - post.y))
+		_model(near, r[0], r[1], Vector3(r[2], -0.05, r[3]), r[4], face + r[5], r[6])
+	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(4.6, -0.05, -10.6), Vector3.ONE, 14)      # lying on the grass, back-right
+	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(8.6, -0.05, 6.0), Vector3(0.8, 0.8, 0.8), -35) # broken rune slab, front-right edge
+	# small boulders like the painting (owner's rock outcrop, small): back-left far, by the slab, front-left rune rock, far right
+	_model(near, "RockFarL", rock, Vector3(-15.5, -0.05, -8.0), Vector3(1.0, 0.7, 1.0), 40)
+	_model(near, "RockSlab", rock, Vector3(2.8, -0.05, -10.9), Vector3(0.55, 0.4, 0.55), 110)
+	_model(near, "RockFrontL", rock, Vector3(-8.0, -0.05, 6.8), Vector3(0.7, 0.5, 0.7), 200)
+	_model(near, "RockFarR", rock, Vector3(16.0, -0.05, -6.5), Vector3(0.8, 0.5, 0.8), -30)
 	# ---- editor-only guides (stage3d.gd deletes Guides + GameCam in the game)
 	var gd := Node3D.new(); gd.name = "Guides"; _own(gd, top)
 	# ---- the 12 slots (owner 13 Nov: "bring the character models, I'll adjust"): move a Slot marker in the editor and
