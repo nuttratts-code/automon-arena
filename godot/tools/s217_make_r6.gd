@@ -10,6 +10,32 @@ extends SceneTree
 const ST := preload("res://scripts/ui/stage3d.gd")
 const PLAZA_K := 1.35 # R13: plaza ×1.35 so the deeper lanes (−5.2 / 3.2) stay well inside the stone
 const GAME_CAM := "Transform3D(1, 0, 0, 0, 0.9702957, 0.2419219, 0, -0.2419219, 0.9702957, 0, 6.106494, 18.876345)" # battle camera R13: 14°, units 2.0
+const PLAZA_TONE := Color(0.62, 0.58, 0.49) # R15 (owner C1): darker + warmer than R6's 0.74 grey so the stone sits with the grass
+const MEADOW_TUFTS := 46
+const GROUND_SHADER := """
+shader_type spatial;
+render_mode specular_disabled;
+uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_enable;
+uniform vec3 tint = vec3(0.78, 0.8, 0.72);
+uniform float tile = 7.0;
+varying vec3 wp;
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void fragment() {
+	vec2 p = wp.xz / tile;
+	vec2 q = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * p * 0.61 + vec2(0.37, 0.11);
+	float m = smoothstep(0.3, 0.7, vn(wp.xz * 0.11));
+	vec3 c = mix(texture(tex, p).rgb, texture(tex, q).rgb, m);
+	float pa = vn(wp.xz * 0.045 + vec2(3.0, 7.0));
+	c *= mix(vec3(0.8, 0.9, 0.7), vec3(1.12, 1.08, 0.9), pa);
+	ALBEDO = c * tint;
+	ROUGHNESS = 1.0;
+}
+"""
 
 var top: Node3D
 
@@ -83,21 +109,61 @@ func _initialize() -> void:
 	var gm := MeshInstance3D.new(); gm.name = "Ground"
 	var plane := PlaneMesh.new(); plane.size = Vector2(120, 56)
 	gm.mesh = plane
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = load("res://art/s217/ground_tile.png")
-	mat.uv1_scale = Vector3(120.0 / 7.0, 56.0 / 7.0, 1) # one tile = 7 units
-	mat.roughness = 1.0
-	mat.albedo_color = Color(0.78, 0.8, 0.72)
+	# R15 (owner C2): anti-tiling ground — the tile is sampled twice (second copy turned + scaled) and the two are
+	# blended by soft noise, plus big sunlit / shaded meadow patches, so the repeat no longer reads as stripes.
+	var sh := Shader.new()
+	sh.code = GROUND_SHADER
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("tex", load("res://art/s217/ground_tile.png"))
 	gm.material_override = mat
 	gm.position = Vector3(0, -0.15, -6)
 	_own(gm, mid)
 	var tufts := [["grass1", -9.5, -8.6, 0.9], ["grass3", 9.4, -8.4, 0.8], ["grass0", -12.0, -4.0, 1.2],
 		["grass4", 12.6, -3.2, 1.2], ["grass5", -2.5, -11.0, 1.0], ["grass2", 3.5, -11.2, 1.1],
 		["grass_big", -13.0, 4.5, 2.0], ["grass5", 13.0, 4.0, 1.8], ["grass1", -10.5, 7.5, 1.4], ["grass3", 10.5, 7.5, 1.3]]
+	# R15 (owner: "the background ground looks empty and lifeless"): a seeded scatter of extra tufts on the meadow
+	# behind and beside the plaza (never in front of it, never inside it), bigger further back so the band reads full.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21715
+	var kinds := ["grass0", "grass1", "grass2", "grass3", "grass4", "grass5"]
+	var placed := 0
+	while placed < MEADOW_TUFTS:
+		var x := rng.randf_range(-24.0, 24.0)
+		var z := rng.randf_range(-24.0, 3.0)
+		if Vector2(x, z).length() < 10.6 or (x < -9.0 and z < -9.0): # off the plaza, out of the cliff corner
+			continue
+		var far_k := clampf((-z - 6.0) / 18.0, 0.0, 1.0)
+		tufts.append([kinds[rng.randi() % kinds.size()], x, z, rng.randf_range(0.7, 1.2) + far_k * 0.9])
+		placed += 1
 	var n := 1
 	for t in tufts:
 		_card(mid, "Grass%d" % n, t[0], Vector3(t[1], -0.1, t[2]), t[3])
 		n += 1
+	# R15: slow drifting pollen motes over the meadow (life without new art)
+	var motes := CPUParticles3D.new(); motes.name = "Pollen"
+	motes.amount = 70
+	motes.lifetime = 9.0
+	motes.preprocess = 9.0
+	motes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	motes.emission_box_extents = Vector3(22, 1.6, 9)
+	motes.position = Vector3(0, 1.8, -14)
+	motes.direction = Vector3(1, 0.25, 0)
+	motes.spread = 40.0
+	motes.gravity = Vector3.ZERO
+	motes.initial_velocity_min = 0.15
+	motes.initial_velocity_max = 0.45
+	motes.scale_amount_min = 0.6
+	motes.scale_amount_max = 1.2
+	var qm := QuadMesh.new(); qm.size = Vector2(0.09, 0.09)
+	var pm := StandardMaterial3D.new()
+	pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	pm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	pm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	pm.albedo_color = Color(1.0, 0.96, 0.75, 0.85)
+	qm.material = pm
+	motes.mesh = qm
+	_own(motes, mid)
 	# ---- layer 1: the owner's 3D plaza (flattened to a low platform, top at y 0) + stones
 	var near := Node3D.new(); near.name = "Near"; _own(near, top)
 	var plaza := _model(near, "Plaza", "plaza_hy", Vector3.ZERO, Vector3(PLAZA_K, 0.16, PLAZA_K), 0.0)
@@ -107,8 +173,9 @@ func _initialize() -> void:
 		var m: Material = (mi as MeshInstance3D).mesh.surface_get_material(0)
 		if m is StandardMaterial3D:
 			var d := (m as StandardMaterial3D).duplicate() as StandardMaterial3D
-			d.albedo_color = Color(0.74, 0.74, 0.72)
+			d.albedo_color = PLAZA_TONE
 			(mi as MeshInstance3D).material_override = d
+	top.set_editable_instance(plaza, true) # R15: without this the tone above was never saved (R6–R14 plaza stayed raw = pale)
 	var hero := "stone_hy_runes_full1k"
 	var lite := "stone_hy_runes_bake"
 	_model(near, "StoneBig", hero, Vector3(-7.8, -0.05, -10.2), Vector3.ONE, 20)
@@ -120,6 +187,13 @@ func _initialize() -> void:
 	_model(near, "StoneFrontL", lite, Vector3(-14.4, -0.05, 1.0), Vector3(0.9, 0.75, 0.9), 100)
 	_model(near, "FallenSlab", "stone_fallen_hy", Vector3(5.2, -0.05, -12.4), Vector3.ONE, 8)
 	_model(near, "FallenSlabR", "stone_fallen_hy", Vector3(12.2, -0.05, 5.0), Vector3(0.8, 0.8, 0.8), -35)
+	# R15 (owner A3): the owner's rock outcrop (Hunyuan, 3k bake, 1.6 × 1.6 × 1.0 at scale 1) = a cliff on the
+	# back-left only + small boulders at the plaza edge; the hills stay open on the right.
+	_model(near, "CliffL", "rock_cliff_hy", Vector3(-14.0, -0.3, -14.5), Vector3(7.5, 6.5, 5.5), 25)
+	_model(near, "CliffL2", "rock_cliff_hy", Vector3(-19.5, -0.3, -9.0), Vector3(6.0, 5.0, 5.0), 75)
+	_model(near, "RockR", "rock_cliff_hy", Vector3(10.6, -0.05, -6.8), Vector3(1.4, 0.95, 1.4), -30)
+	_model(near, "RockBack", "rock_cliff_hy", Vector3(-3.6, -0.05, -12.6), Vector3(0.9, 0.65, 0.9), 110)
+	_model(near, "RockL", "rock_cliff_hy", Vector3(-12.2, -0.05, -2.2), Vector3(1.1, 0.8, 1.1), 200)
 	# ---- editor-only guides (stage3d.gd deletes Guides + GameCam in the game)
 	var gd := Node3D.new(); gd.name = "Guides"; _own(gd, top)
 	# ---- the 12 slots (owner 13 Nov: "bring the character models, I'll adjust"): move a Slot marker in the editor and
