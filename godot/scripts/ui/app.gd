@@ -100,6 +100,8 @@ func build() -> void:
 	stage.build()
 	add_child(stage)
 	stage.moved.connect(_place_cells)
+	if Stage3D.S217_CLEAN and not TH.dark: # set 217 sample R19 (owner L1 + L4): HD-2D screen pass over the 3D, under the UI
+		add_child(preload("res://scripts/ui/s217_hd2d.gd").new())
 	world = Arena.new()
 	world.app = self
 	add_child(world) # under every screen: it draws only while the camera moves

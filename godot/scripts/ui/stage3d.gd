@@ -338,6 +338,98 @@ func _cards(dark: bool) -> void:
 		for sp in d.find_children("*", "Sprite3D", true, false):
 			sp.modulate = sp.modulate * Color(0.62, 0.58, 0.72)
 	add_child(d)
+	if S217_CLEAN: # after the scene is in the tree: global transforms work and the plaza tint script has run
+		d.ready.connect(func() -> void:
+			_s217_pixel_tex(d)
+			_s217_stone_shadows(d), CONNECT_ONE_SHOT)
+
+# ---- set 217 sample R19 (owner L2 + L3), HD-2D tricks on the owner's dressing scene ----
+var _px_cache := {}
+
+func _s217_pixel_tex(d: Node) -> void:
+	# L3: HD-2D sets are pixel-art textures on 3D shapes, point-sampled. Ours are smooth AI paintings → shrink each
+	# albedo to about the sprites' pixel density and sample it Nearest, so the stones / plaza / ground read as pixel art.
+	for mi in d.find_children("*", "MeshInstance3D", true, false):
+		var m: MeshInstance3D = mi
+		var mat: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+		if mat is StandardMaterial3D:
+			var sm := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+			var t := _px_small(sm.albedo_texture, 512 if (m.global_transform * m.get_aabb()).size.x > 10.0 else 256) # the plaza is big: more texels
+			if t != null:
+				sm.albedo_texture = t
+				sm.normal_enabled = false # the 1024 normal map would bring the smooth detail back
+			sm.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			m.material_override = sm
+		elif mat is ShaderMaterial and (mat as ShaderMaterial).get_shader_parameter("tex") is Texture2D: # the ground
+			var gm := (mat as ShaderMaterial).duplicate() as ShaderMaterial
+			gm.set_shader_parameter("tex", _px_small(gm.get_shader_parameter("tex"), 128))
+			m.material_override = gm
+
+func _px_small(t: Texture2D, size: int) -> Texture2D:
+	if t == null:
+		return null
+	if _px_cache.has(t):
+		return _px_cache[t]
+	var img := t.get_image()
+	if img == null:
+		return null
+	if img.is_compressed():
+		img.decompress()
+	img.resize(size, size, Image.INTERPOLATE_LANCZOS)
+	var out := ImageTexture.create_from_image(img)
+	_px_cache[t] = out
+	return out
+
+func _s217_stone_shadows(d: Node) -> void:
+	# L2: the shadowed sun is broken in gl_compatibility (set 214 find-cause: 3–5× too bright), so every stone / rock /
+	# slab gets a soft shadow card on the ground, stretched away from the sun (HD-2D games anchor props the same way).
+	var near := d.get_node_or_null("Near")
+	if near == null:
+		return
+	var sun_dir := Vector3(0.55, -0.72, -0.42).normalized()
+	var flat := Vector2(sun_dir.x, sun_dir.z).normalized()
+	var reach := Vector2(sun_dir.x, sun_dir.z).length() / -sun_dir.y # shadow length per unit of height
+	var gt := GradientTexture2D.new()
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(0.5, 0.0)
+	var gr := Gradient.new()
+	gr.set_color(0, Color(0, 0, 0, 0.42))
+	gr.set_color(1, Color(0, 0, 0, 0))
+	gt.gradient = gr
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = gt
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.render_priority = -1
+	for n in near.get_children():
+		var nm := String(n.name)
+		if not (n is Node3D) or not (nm.begins_with("Stone") or nm.begins_with("Rock") or nm.begins_with("Fallen")):
+			continue
+		var box := AABB()
+		var first := true
+		for mi in (n as Node3D).find_children("*", "MeshInstance3D", true, false):
+			var b: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+		if first:
+			continue
+		var h := box.size.y
+		var w := maxf(box.size.x, box.size.z)
+		var base := Vector2(box.get_center().x, box.get_center().z)
+		var lenv := maxf(w, h * reach)
+		var c := base + flat * (lenv * 0.5 - w * 0.25)
+		var on_plaza := c.length() < 12.4
+		var q := MeshInstance3D.new()
+		q.name = "Shadow" + nm
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(w * 1.1, lenv + w * 0.5)
+		q.mesh = pm
+		q.material_override = mat
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		q.position = Vector3(c.x, 0.02 if on_plaza else -0.13, c.y)
+		q.rotation.y = atan2(flat.x, flat.y)
+		d.add_child(q)
 
 func _code_floor(dark: bool) -> void:
 	var ground := MeshInstance3D.new()
