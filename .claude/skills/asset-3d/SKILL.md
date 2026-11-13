@@ -1,6 +1,6 @@
 ---
 name: asset-3d
-description: Automon Arena 3D prop pipeline (งาน 3D / โมเดล 3D / ไฟล์ .glb / Hunyuan3D / Tripo / Meshy / Stable Fast 3D / เจนรูป Gemini ไปทำ 3D / หิน 3D / ลดโพลี / ลดความละเอียด / bake / ใส่โมเดลในลาน) — from the owner's Gemini picture, through an AI image-to-3D site, to a light, matte, correctly sized model standing in the Godot arena. Use whenever the owner drops a .glb, asks how to make a 3D prop, or asks to reduce / compare / place a 3D model. Not for character sprites (art-style §2–7), screen layout (ui-work) or the battle lighting look (art-look). Rules in claude/workflow/security.md (part 2), claude/art-style.md §8 and art/PROVENANCE.csv win if anything differs.
+description: Automon Arena 3D prop pipeline (งาน 3D / โมเดล 3D / ไฟล์ .glb / Hunyuan3D / Tripo / Meshy / Stable Fast 3D / เจนรูป Gemini ไปทำ 3D / หิน 3D / ลดโพลี / ลดความละเอียด / bake / ใส่โมเดลในลาน / จัดฉากเอง / ตกแต่งฉาก / Blender หรือ Godot) — from the owner's Gemini picture, through an AI image-to-3D site, to a light, matte, correctly sized model standing in the Godot arena. Use whenever the owner drops a .glb, asks how to make a 3D prop, asks to reduce / compare / place a 3D model, or wants to dress the arena by hand (§8: Godot for placing, Blender for shaping). Not for character sprites (art-style §2–7), screen layout (ui-work) or the battle lighting look (art-look). Rules in claude/workflow/security.md (part 2), claude/art-style.md §8 and art/PROVENANCE.csv win if anything differs.
 ---
 # 3D props: Gemini picture → AI 3D → Blender prep → Godot arena (set 217 R4, 13 Nov 2026)
 
@@ -58,7 +58,18 @@ Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Heig
 - Area notes (e.g. claude/preview-<set>/notes.md): candidates, pick, open issues.
 - Commit ONLY: the picked glb + its extracted pngs + `.import` files, the scene / tool edits, PROVENANCE, notes, `.uid` files. **Never** the source download, the 4096 "full" compare copy, or a stray copy the editor made (set 217: the owner's drag left a 24 MB copy in `godot/scenes/`) — mention those to the owner instead. Secret grep + `ripple:` line (HARD RULES 8–9). Sample-branch art never goes to main until the licence is checked and the owner says ทำจริง.
 
-## 8. Traps seen (set 217)
+## 8. Owner dresses the arena by hand (owner pick 13 Nov: Godot for placing, Blender for shaping)
+When the owner wants to arrange the scene themselves, point to **Godot** (give these steps in Thai):
+| job | where |
+|---|---|
+| move / turn / scale stones, grass, far backdrop; add a prop; look through the game camera | **Godot** `scenes/arena_dressing.tscn` (no export loop, game camera built in) |
+| change a prop's shape or paint | Blender → this skill §4 again |
+| change the plaza floor (`art/arena/runeplaza.glb`) | Blender `art/scene/runeplaza-v5.blend` → Claude exports with `art/blender/export_godot.py` (edits made on the imported glb in Godot are lost) |
+Steps for the owner: open the editor (§0) → double-click `scenes/arena_dressing.tscn` → pick a node under `Stones` / `Grass` / `Far` → **W** move · **E** turn · **R** scale → game view: select `GameCam`, tick **Preview** (untick to keep editing) → new prop: drag a glb from `art/s217/3d/` onto `Stones` → **Ctrl+S** → tell Claude to commit.
+Owner rules: `Guides` (slot rings, plaza disc, ground) are editor-only helpers — do not move them, real slots live in stage3d.gd · keep props in the back half / away from the camera side so nothing hides the units.
+Claude after the owner saves: `git diff godot/scenes/arena_dressing.tscn` → game shot (§6.3) → commit the scene as the owner's work. Never regenerate the scene with `s217_make_dressing.gd` over owner edits; mirror only what Claude itself changes into that tool.
+
+## 9. Traps seen (set 217)
 - `o.dimensions` right after the glTF import reads the wrong axis (importer parent turns Y-up → Z-up): clear the parent and apply transforms first (the script does).
 - An exported model still drags its unused metal/rough png: Godot extracts it next to the glb — the script drops it; delete leftovers by hand.
 - Matte fix does not change the colour: a pale/blue side is the AI's paint, not reflection.
