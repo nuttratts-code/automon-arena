@@ -1,8 +1,10 @@
 ---
 name: merge-code
-description: Automon Arena merge of a code branch into main (รวมเข้า main / merge / ส่งโค้ด / เทสต์ผ่านแล้ว) — setup until all unit tests pass, then the full gate ONCE, merge, push, CI check, Relay line, then close-out. Use whenever a set changed anything under src/ (or other non-docs files) and the work is ready. Rules live in CLAUDE.md HARD RULES 2/3/5 + claude/workflow/setup.md §5 and win if anything differs.
+description: Code branch → main (รวมเข้า main / merge / ส่งโค้ด / เทสต์ผ่านแล้ว): setup until unit tests pass, gate ONCE, merge with the ripple line, push, CI check, Relay line, then close-out. Use whenever a set changed anything outside docs (src/, godot/) and is ready.
 ---
 # Merge code to main (set 158 — skill from HARD RULE 3 + setup.md + relay.md)
+
+> Rules: CLAUDE.md HARD RULES 2/3/5/8 + claude/workflow/setup.md §5 — they win if anything differs (description trimmed set 219 A1).
 
 Docs-only commits (claude/, *.md, .claude/skills, Relay) skip this skill and go straight to main.
 

@@ -1,8 +1,10 @@
 ---
 name: rule-change
-description: Automon Arena change of a game rule, design or doc decision (เปลี่ยนกฎ / แก้กฎ / ดีไซน์ / ไอเดียใหม่ / ระบบใหม่) — conflict check against the docs, 2–3 options + a recommended one with A1/A2 buttons, then after confirmation edit only that section of the Thai rule doc, bump its version, handle the (ค่าเสนอ) label and the handoff Doc versions line. Use when the user proposes or asks about changing how the game works. Game NUMBERS go through balance-import (HARD RULE 6). Rules live in CLAUDE.md "Decisions"/"Docs" + claude/workflow/replies.md and win if anything differs.
+description: Change a game rule, design or doc decision (เปลี่ยนกฎ / แก้กฎ / ดีไซน์ / ไอเดียใหม่ / ระบบใหม่): conflict check, 2–3 options + a recommended one, then edit only that section of the Thai doc, bump its version, handle (ค่าเสนอ) and the Doc versions line. Numbers go through balance-import.
 ---
 # Rule / design change (set 158 — skill from CLAUDE.md Decisions + Docs)
+
+> Rules: CLAUDE.md "Decisions"/"Docs" + claude/workflow/replies.md — they win if anything differs (description trimmed set 219 A1).
 
 1. **Find the spot:** grep the rule id or heading (`grep -n '^##.* C-6' claude/combat-rules.md`) and read only that section. C- combat-rules · T- tribe-rules · S- shop-merge-rules · build-plan. Also check code that implements it (src/core) when the change affects behaviour.
 2. **Conflict check (set 118):** the request contradicts or changes something already decided (doc + rule id + set, handoff "Closed by user, do not re-propose") → STOP, tell the user in Thai: what exists now, what would change, every side effect. Wait.

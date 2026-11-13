@@ -1,12 +1,14 @@
 ---
 name: godot-play
-description: Automon Arena simulated play of the GODOT game through the Godot MCP Toolkit (เล่นจำลอง Godot / ลองเล่นใน Godot / หาบัคหน้าจอ Godot / playtest Godot) — Claude starts the game from the owner's open editor, clicks through a run, screenshots each screen and reads the game log. Owner's PC only, Godot editor open; depends on the set 208 addon trial (delete this skill if the addon is removed). Use when the user asks Claude to play-test or bug-hunt the Godot build; the frozen web game page uses sim-play instead. Fixes still follow find-cause (HARD RULE 5) and merge-code.
+description: Claude plays the GODOT game through the Godot MCP Toolkit (เล่นจำลอง Godot / หาบัคหน้าจอ Godot / playtest Godot) from the owner's open editor: clicks through a run, screenshots, reads the log. Owner's PC only. Draft — never run live yet. Fixes go through find-cause + merge-code.
 ---
 # godot-play (set 209 — DRAFT: written from the MCP tool descriptions, not yet run live. First real use: correct the steps, then delete this note.)
 
+> Rules: claude/workflow/gdscript.md + HARD RULE 5 — they win if anything differs (description trimmed set 219 A1).
+
 Read + play only. Never call a tool that edits the project from this skill (script_write, script_edit, node_set_property, node_manage, scene_create*, scene_delete_node, project_set_setting, autoload_manage, editor_save_scene …) — the owner may have unsaved layout edits. Denied in `.claude/settings.json` and never to be worked around: execute_code, node_call_method, save_*.
 
-0. **Before starting:** tell the owner a game window will open on their screen. `CONNECT_FAILED … 127.0.0.1:6550` = the editor is closed → ask the owner to open godot/ in Godot. `AUTH_FAILED: no registry entry` = ask the owner to reload the project (security.md part 2).
+0. **Engine binary / editor:** claude/workflow/gdscript.md §7. **Before starting:** tell the owner a game window will open on their screen. `CONNECT_FAILED … 127.0.0.1:6550` = the editor is closed → ask the owner to open godot/ in Godot. `AUTH_FAILED: no registry entry` = ask the owner to reload the project (security.md part 2).
 1. **Tools:** one ToolSearch `select:` for `mcp__godot-mcp-toolkit__` game_start, game_stop, input_simulate, runtime_screenshot, debugger_get_log, runtime_get_script_vars.
 2. **Start:** `game_start {scene_path:"main", if_running:"return"}`.
 3. **Per screen, in the order of a run** (name → rune offer → prep/shop → unit card → battle → result → match details → run end → resume → Log):

@@ -1,4 +1,4 @@
-# pending.md — open balance items + proposed values not yet measured (V1.3 · 8 Nov 2026 set 139 round 2: rechecked vs code + measure-log, done/obsolete items removed — older list in git history)
+# pending.md — BALANCE pending only: open balance items + proposed values not yet measured (the งานรอรวม list lives in handoff "Pending bundle"; set 219 H1) (V1.4 · 13 Nov 2026 set 219 title · V1.3 · 8 Nov 2026 set 139 round 2: rechecked vs code + measure-log, done/obsolete items removed — older list in git history)
 Open when doing a balance/import batch or when the user asks. Measure only when the user allows (ops-rules); balance status line lives at the top of handoff Relay.
 
 ## Open balance items (ask permission before each measurement · bundle with other questions)

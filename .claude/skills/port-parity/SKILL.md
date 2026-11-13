@@ -1,8 +1,10 @@
 ---
 name: port-parity
-description: Automon Arena JS ↔ Godot parity check (parity / พอร์ต / ผลไม่ตรงกัน / golden / แก้ core แล้ว Godot ต้องตรง) — the JS core is the reference; after a change to src/core, to game values or to godot/scripts logic, rebuild the golden fixtures from JS and replay them in Godot until every log matches exactly. Use whenever a set edits a src/core file that carries a "change both" comment, changes game values (game.json), or edits godot/scripts/*.gd game logic. Rules live in claude/plan-godot-migration.md (§2 steps 1–6, §3 risks) and win if anything differs.
+description: JS ↔ Godot parity (parity / พอร์ต / ผลไม่ตรงกัน / golden): JS core is the reference — rebuild golden fixtures from JS and replay them in Godot until every log matches. Use when a set edits a src/core file with a "change both" comment, game.json values, or godot/scripts game logic.
 ---
 # port-parity (set 209 — runbook from plan-godot-migration §2/§3; the CI job `godot` runs the same commands)
+
+> Rules: claude/plan-godot-migration.md §2–§3 — they win if anything differs (description trimmed set 219 A1).
 
 1. **Find the pairs:** `git diff --name-only origin/main...HEAD -- src/core godot/scripts godot/data` → for each changed src/core file `grep -n "change both" <file>`: the .gd file and test named there change in the same commit (and the other way round). JS is the reference — never bend JS to match Godot unless JS is the bug (skill `find-cause`).
 2. **Values or data changed:** `cd src && node tools/exportdata.mjs` → godot/data/game.json + hash (CI fails when it is stale). Game values themselves only through `balance-import` (HARD RULE 6).

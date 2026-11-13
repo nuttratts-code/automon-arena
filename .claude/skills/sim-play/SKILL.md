@@ -1,8 +1,10 @@
 ---
 name: sim-play
-description: Automon Arena simulated playthrough of the GAME page on a phone held sideways (จำลองการเล่น / เล่นจำลอง / ตรวจหน้าเกม / หาบัค UI / เช็คบัคหน้าเกม). A Playwright bot plays whole runs (UI drags + bot shop), opens every popup, takes screenshots and flags page errors, off-screen / covered buttons and clipped text. Use when the user asks Claude to play-test or bug-hunt the game UI without listing the bugs. Fixes still follow find-cause (HARD RULE 5) and the merge gate (HARD RULE 3).
+description: Playwright bot plays the WEB game page on a sideways phone (จำลองการเล่น / ตรวจหน้าเกม / หาบัค UI): whole runs, every popup, screenshots, page errors, off-screen buttons, clipped text. Dormant: web game frozen since set 189 — the Godot build uses godot-play.
 ---
 # Simulated phone playthrough (set 179)
+
+> Rules: CLAUDE.md HARD RULES 3/5 — they win if anything differs (description trimmed set 219 A1).
 
 Scripts live in this folder. OUT = a fresh folder in the scratchpad (never rm -rf a variable path; make a new folder name instead).
 

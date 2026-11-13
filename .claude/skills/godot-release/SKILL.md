@@ -1,8 +1,10 @@
 ---
 name: godot-release
-description: Automon Arena release of the Godot build (ออกตัวเกม / อัป itch.io / export / ทำไฟล์เกม / build เว็บ Godot) — latest main with green CI, parity + security checks, web export, WEB CHECK, clean file list, zip for the owner to upload to itch.io. Use when the user orders a Godot build for itch.io or any release file (plan-godot-migration step 9 — only on the user's order until the 3D work is done). The web game / Balance Room / check artifacts use publish-pages instead. Rules live in claude/workflow/publish.md §10 + claude/workflow/security.md parts 4–5 and win if anything differs.
+description: Godot release for itch.io (ออกตัวเกม / อัป itch.io / export / ทำไฟล์เกม): latest main + green CI, parity + security checks, web export, WEB CHECK, clean file list, zip for the owner. Only on the owner's order. Web artifacts use publish-pages.
 ---
 # godot-release (set 209 — thin runbook; the build commands live ONLY in publish.md §10, do not copy them here)
+
+> Rules: claude/workflow/publish.md §10 + claude/workflow/security.md parts 4–5 — they win if anything differs (description trimmed set 219 A1).
 
 1. **Stop point (rule A1):** a release leaves the PC → before building, tell the user which commit and which target (web only today). The itch.io page stays Draft / Restricted until the user opens it (set 203 D1).
 2. **Latest main + CI:** `git fetch origin`, build from a clean worktree of origin/main; the newest code CI run on that commit is green including the `godot` and `godot-web` jobs (skill `ci-check` on the PC). Code changed after it → no release.

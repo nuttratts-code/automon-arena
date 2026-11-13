@@ -1,8 +1,10 @@
 ---
 name: brainstorm
-description: Automon Arena expert-panel brainstorm (ระดมสมอง / brainstorm / ประชุมผู้เชี่ยวชาญ / ถกกัน / หาวิธีที่ดีที่สุด / เคล็ดลับ) — research reliable sources once, then 4–5 simulated experts (separate subagents) answer on their own first, then argue against each other, then a moderator writes the meeting summary with pros/cons, a decision table and A1/A2 options. Use when the user asks for a brainstorm, an expert debate, or "the best way / tips" on a topic (game design, UI, workflow, art, tools, marketing…). Not for bugs (find-cause) or game numbers (balance-import). Calling this skill = the user's approval for subagents (CLAUDE.md token rule), within the size the user picks.
+description: Expert-panel brainstorm (ระดมสมอง / ประชุมผู้เชี่ยวชาญ / ถกกัน / หาวิธีที่ดีที่สุด / เคล็ดลับ): research once, 4–5 simulated experts answer alone, then argue, then a moderator summary with a decision table and A1/A2 options. Calling it = the owner's OK for subagents. Not bugs (find-cause) or numbers (balance-import).
 ---
 # Brainstorm — expert panel (set 164)
+
+> Rules: claude/review-2026-11-09-brainstorm-skill.md (sources) — they win if anything differs (description trimmed set 219 A1).
 
 Why this shape (sources in claude/review-2026-11-09-brainstorm-skill.md): people/agents who think alone first give more and less-anchored ideas than an open group (Nominal Group / Delphi); a debate round between model instances fixes errors (multiagent debate) but can converge on a confident WRONG answer, so a skeptic and a minority report are mandatory; a pre-mortem ("it already failed — why?") finds more risks than "what could go wrong?"; multi-agent runs cost many times a normal chat, so size is chosen up front.
 

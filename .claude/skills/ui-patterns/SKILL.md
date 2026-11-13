@@ -1,8 +1,10 @@
 ---
 name: ui-patterns
-description: Automon Arena design check against the pattern library (ดูเหมือน AI ทำ / ให้ดูมืออาชีพ / อ้างอิงเกมอื่น / ขอไอเดีย UI / เกมอื่นทำยังไง / หน้าแรก / hub / ล็อบบี้ / หน้าผลจบ / TFT / Auto Chess / Final Fantasy Resonance / ควรทำ ไม่ควรทำ / ตรวจดีไซน์) — before any design sample or UI build for the game, pick named references, write three non-default decisions, then count "AI-made" tells and genre failures on the screenshot before the owner sees it. Use inside ui-preview and ui-work for the Godot game screens, and whenever the owner asks why a screen looks generic or asks what similar games do. Not for Balance Room / check / runlog pages (tools, not the game's face). The library claude/ui-patterns.md holds the patterns and wins if anything differs.
+description: Design check against the pattern library (ดูเหมือน AI ทำ / ให้ดูมืออาชีพ / อ้างอิงเกมอื่น / ขอไอเดีย UI / เกมอื่นทำยังไง / หน้าผลจบ / ตรวจดีไซน์): named references + three non-default decisions before a build, then count AI-made tells on the screenshot. Godot game screens only, inside ui-preview and ui-work.
 ---
 # UI patterns check (set 210 — user order: research similar games so designs stop looking AI-made)
+
+> Rules: claude/ui-patterns.md — they win if anything differs (description trimmed set 219 A1).
 
 Library: `claude/ui-patterns.md` (§0 where to look up other games' screens + how · §1 per-game notes · §1b–§1d screens actually seen · §2 DO · §3 DON'T · §4 AI tells + fixes · §5 this check · §6 open points · §7 hub/home + result screens · §8 idea mode). Read only the sections the screen needs; never re-research a game that is already in §1/§7.
 

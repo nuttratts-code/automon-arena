@@ -1,8 +1,10 @@
 ---
 name: measure-balance
-description: Automon Arena balance measuring by Claude (วัดบาลานซ์ / วัดค่า / measure / botgen / runlen / ความยาวแมตช์ / วัดบอส / บอสแยกเผ่า) — permission first, 12,000 / 24,000 matches seed 4242, outlier + abnormal-match checks, measure-log entry, bot teams and match length after values change. Use only when the user orders a measurement or a skill-mechanic change affects characters in use. Normally the user measures in the Balance Room (วิเคราะห์ button) — then use balance-import instead. Rules live in claude/workflow/measure.md (§00 §0 §12 §6 §11) + botteams.md §13 and win if anything differs.
+description: Claude measures balance (วัดบาลานซ์ / วัดค่า / botgen / runlen / ความยาวแมตช์ / วัดบอส): permission first, 12,000/24,000 matches seed 4242, outlier + abnormal checks, measure-log entry. Only when the owner orders it or a skill-mechanic change hits characters in use; owner measures in the Balance Room → balance-import.
 ---
 # Measure balance (set 158 — skill from measure.md + botteams.md)
+
+> Rules: claude/workflow/measure.md (§00 §0 §12 §6 §11) + botteams.md §13 — they win if anything differs (description trimmed set 219 A1).
 
 1. **Blocked?** handoff `บาลานซ์: กำลังปรับ` → do not measure; log it as "รอวัด". Stop.
 2. **Permission (§12):** ask the user before every measurement, together with the set's other questions (rule A1). Exceptions that need no permission: tests, ui_smoke, non-simulating data checks. Publishing character values = permission to measure first; never publish unmeasured character values.
