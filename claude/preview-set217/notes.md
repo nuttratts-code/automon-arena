@@ -138,3 +138,11 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
   - Screen-texture mipmaps WORK on the web: STATE 2 (max_lod 3, narrow band) = same blur as the desktop opengl3 run → tilt-shift is safe to build on. Shot P0-web-blur-test.
   - Alpha-cut Discard sprites DO cast sprite-shaped shadows on the web (STATE 3, sun shadow on): darker-pixel mask P0-web-shadow-mask. But the set 214 bug is there too: mean brightness 144 → 162 (+13 %) with the shadowed sun → real cast shadows still need that fix first; card/blob shadows stay.
   - Not tested: SSAO (not used; compat).
+
+## P1 (14 Nov) — review phase 1 depth blockout (owner: "Start Phase 1"), on top of P0 camera A2 (FOV 19.2)
+- `p1-patch-depth.py <g>` (after `const FOV := 19.2`): plateau ground (Ground plane 600×500 subdivided, drops 60 m between r 24 and 55 m around (0, −2): the "high meadow" of §8) · far layers placed IN THE WORLD instead of the camera-locked Far cards (sky quad z −300 no fog · hills z −200 bluish · hills z −110 flipped) · fog depth 15 → 260 curve 1.8.
+- Measured cameras (FOV 19.2, 844×390): battle (0, 7.6, 24.5) · prep (−4.4, 10.3, 37.1); top-of-view ray falls 4.4° → anything that should show sky must be below that ray (hills peaks placed at 10 % / 16 % from the top in battle).
+- Seen: battle-mid/prep show a clear plateau edge, two hill bands and sky behind the stones (depth + parallax on the dolly). Light-theme 6v6 (HD2D pass + light fog colour) washes the hills out — fog colour/amount is a phase 4 tuning item.
+- Foreground rocks dropped (see patch header): needs either fewer front units in the corners or a lower UI; parked for the owner.
+- `zoom-start`/`zoom-mid` AUDIT lists the HUD as off screen mid-dolly; UI untouched by this patch — not checked whether the R21 base does the same.
+- Shots P1-6v6-battle / P1-battle-mid / P1-prep-late. Rebuild: copy → FOV 19.2 → p1-patch-depth.py. Godot tests not run.
