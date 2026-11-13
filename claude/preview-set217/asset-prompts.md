@@ -79,3 +79,23 @@ letters or numbers.
 ## 5. v2 (12 พ.ย.) — ชิ้นหิน: ภาพ 5 มุมเพื่อให้ Claude ขึ้นรูปเองใน Blender (แทนหมวด 1 + Stable Fast 3D)
 Claude สร้างรูปทรงจากเส้นขอบของภาพ 4 ด้าน แล้วแปะภาพลายจากทุกด้าน + ด้านบน (Blender, ไม่ใช้โปรแกรม AI 3D) · แสงต้อง**เท่ากันทุกทิศ** (ให้แสงในเกมทำหน้าที่แทน) · พื้นหลัง magenta (หินเป็นสีเทา ใช้พื้นเทาจะตัดยาก) · ไฟล์: `ชื่อชิ้น_front/right/back/left/top.png` → `godot/art/s217/src/`
 คำสั่งที่ใช้อยู่ในแชท set 217 (ข้อความตอบล่าสุด) — หมวด 2 (หญ้า ลาน พื้น ฉากไกล ฟ้า) ยังใช้คำสั่งเดิม
+
+## 6. v3 (13 พ.ย., R6) — เริ่มใหม่จากภาพต้นแบบ "ทุ่งหินรูน" (เจ้าของเลือก B1 · C1 · D1 · เรื่องมุมกล้องรอดูหลังได้ภาพครบ)
+แนบ**ภาพต้นแบบทุ่งหินรูน**ทุกครั้ง แล้ววาง "คำสั่งกลาง" (หมวด 0) ตามด้วยคำสั่งเฉพาะชิ้น · เจนทีละชิ้น ทีละภาพ · ถ้ามีตัวอักษรจริงปนออกมา ให้เจนใหม่
+
+### 6.1 หิน 🧊 → Hunyuan3D (6 ชิ้น)
+ต่อท้ายทุกชิ้น: `Three-quarter front view from slightly above (about 20°). Even soft light from all sides, no strong shadows. Background: plain flat white, no gradient.`
+ใช้คำสั่งของชิ้นที่ 1–6 จากหมวด 1 (stone_a_tall · stone_b_round · stone_c_slim · stone_d_pillar · stone_e_short · stone_fallen) โดยตั้งค่า Hunyuan3D แบบเดียวกับก้อนที่ทำไปแล้ว ส่งไฟล์ .glb มาได้เลย Claude จะลดขนาดโมเดลเหลือ 2–3k เหลี่ยมใน Blender และปรับสีให้อุ่นเหมือนภาพต้นแบบ
+
+### 6.2 ฉากไกล 🖼 (2 ภาพ, สัดส่วน 2:1)
+| ไฟล์ | คำสั่งเฉพาะชิ้น (ไม่ต้องใช้บรรทัด "ONE single isolated object" ของคำสั่งกลาง) |
+|---|---|
+| far_hills | `Wide panorama 2:1 matching the attached painting: rolling green meadow hills fading into blue mist, distant blue mountain ranges, a small ruined stone arch on a hill right of centre. NO standing stones, NO plaza, NO flowers in front. The bottom quarter is plain meadow grass. The sky must be EMPTY plain flat magenta (#FF00FF), no clouds, no gradient.` |
+| sky_clouds | `Wide panorama 2:1 of the sky from the attached painting: bright blue sky with big soft cumulus clouds, warm cream-gold light on their edges, painterly. Sky only, no land, no mountains.` |
+(ภาพเนินเขาใช้ท้องฟ้าสีบานเย็น ไม่ใช้สีเขียวตามหมวด 2 ข้อ 18 เพราะเนินเขาเป็นสีเขียว ถ้าใช้พื้นเขียวจะตัดฉากออกยาก)
+
+### 6.3 พื้น 🖼 (2 ภาพ, จัตุรัส ≥1024)
+ใช้คำสั่งของชิ้นที่ 16 `plaza_top` และ 17 `ground_tile` จากหมวด 2 แล้วต่อท้าย `Colours to match the attached painting: pale warm grey slabs, yellow-green meadow.`
+
+### 6.4 ส่งงาน
+แนบไฟล์มาในแชทนี้ หรือวางใน `godot/art/s217/src/` (ภาพ) และ `godot/art/s217/3d/` (.glb) · ชื่อไฟล์ตามคอลัมน์ "ไฟล์" · กอหญ้าใช้ของเดิม (grass0–5) ไม่ต้องเจนใหม่
