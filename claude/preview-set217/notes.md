@@ -128,3 +128,8 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - Scene: `GrassBlades` node + its s217_grass.gd ext_resource removed by hand (script file kept for the owner's new grass picture; the ground shader comment that points to it still holds the colour pair).
 - stage3d `_s217_pixel_tex`: plaza (meshes > 10 m wide) and the ground shader keep their full textures + smooth sampling; only props stay pixel (128, Nearest). Reverses R20 M2 for the floor (owner's own sample call).
 - Shot R21-6v6-battle. Godot tests not run.
+
+## P0 (14 Nov) — review-2026-11-14-hd2d-gaps.md Phase 0, owner picks A3 (see both lenses) · B2 (web checks before ทำจริง) · C1 (art-style §8 follows the chosen camera at ทำจริง)
+- Lens-only try, PITCH 14 kept (fit_pose re-dollies the camera to the same board frame): A1 = FOV 26 (now) · A2 = FOV 19.2 vertical = the reference's 40.16° horizontal at our 844×390 screen. One `sed` on `const FOV` in the copy, s6v6 shot.
+- Seen: A2 = back lane a little bigger next to the front lane (flatter, more "diorama"), stones/hills larger behind; nobody hidden in 6 vs 6. Camera sits farther away (same frame).
+- Shots P0-A1-now-fov26 / P0-A2-narrow-fov19. Godot tests not run. Web-export checks (screen-texture mipmaps, alpha-cut sprite shadow) wait for the owner's OK to download the ~1 GB official export templates.
