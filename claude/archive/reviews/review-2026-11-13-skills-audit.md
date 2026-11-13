@@ -1,6 +1,6 @@
 # Skills + rule docs audit — usage, skipped rules, overlaps (13 Nov 2026, set 219)
 
-Status = owner picked A1 B1 D2 E1 F1 G1 H1 I2 (13 Nov) — all applied set 219 except D: D2 research done (below), D waits for the owner's final pick.
+Status = owner picked A1 B1 D2 E1 F1 G1 H1 I2 (13 Nov) — all applied set 219. D: after the D2 research the owner chose "ship them in the released game" (risk accepted, conditions in security.md part 2). DECIDED.
 Evidence = git history (1,152 commits since 25 Oct) + Relay archives. Claude cannot read old chats: "used" = a commit/Relay line names it; "not shown" ≠ proven unused.
 
 ## 1. Usage of the 21 skills

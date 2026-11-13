@@ -50,7 +50,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 
 ## Scope
 - MVP1 = single-player/offline; don't propose systems beyond it — done = web game v132 (set 193 B1). MVP1.5 = Godot port, same scope, target 31 Dec 2026 (set 193 C1). If behind build-plan.md → warn + suggest cuts. MVP2 = Ghost battle + online.
-- Placeholder art (set 172): game page = free CC0 pixel tiles from Dungeon Crawl Stone Soup (art/placeholder/, credits there); Balance Room / check page = coloured shapes + names. Must not resemble the original game (the user makes real art later).
+- Placeholder art (set 172): game page = free CC0 pixel tiles from Dungeon Crawl Stone Soup (art/placeholder/, credits there); Balance Room / check page = coloured shapes + names. Must not resemble the original game (the user makes real art later). AI-made art (owner's Gemini pictures + Hunyuan3D models, set 217) may ship — owner accepted the licence risk, conditions in claude/workflow/security.md part 2 (set 219 D).
 
 ## Decisions
 - **Ask everything up front, then run to the end (user rule 8 Nov, set 150 A1):** at the start of a task set, ask ALL questions needed to finish it in one go (one AskUserQuestion round, more calls only if > 4 questions); after the answers, work to the end without stopping. Stop mid-task only when: publishing an artifact · changing game values / writing the Balance Room db (HARD RULE 6 per-cell picks and bossrun before/after still apply — ask those up front when the data is already known) · a test/gate fails or the cause is unknown (HARD RULE 5) · something irreversible or outside the agreed scope · a sample-loop round (ui-preview / art-look §8 look samples — each round waits for the owner by design, set 219 G1).
