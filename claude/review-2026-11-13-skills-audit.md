@@ -1,6 +1,6 @@
 # Skills + rule docs audit — usage, skipped rules, overlaps (13 Nov 2026, set 219)
 
-Status = open. Every item needs the owner's pick before any edit.
+Status = owner picked A1 B1 D2 E1 F1 G1 H1 I2 (13 Nov) — all applied set 219 except D: D2 research done (below), D waits for the owner's final pick.
 Evidence = git history (1,152 commits since 25 Oct) + Relay archives. Claude cannot read old chats: "used" = a commit/Relay line names it; "not shown" ≠ proven unused.
 
 ## 1. Usage of the 21 skills
@@ -60,3 +60,12 @@ Evidence = git history (1,152 commits since 25 Oct) + Relay archives. Claude can
 ### I. instructions.md says "1 หน้า" but is 17 KB
 - I1 (rec): rewrite to a real 1 page (~6 KB): rules + "where to look"; history lines → git.
 - I2: keep the full copy, just drop "1 หน้า" from the title.
+
+## D2 result — licence research (13 Nov 2026, web search; not legal advice)
+- **Gemini images (sky, far hills, ground tile, grass, plaza/stone source pictures):** Google's Gemini terms say Google does not claim ownership of generated content, but outputs are not exclusive (others may get similar ones) and the user is responsible for their use. Commercial use: no explicit ban, no explicit grant, no IP indemnity (secondary sources read it as allowed). Purely AI-made images may get no copyright protection (US) → others could copy them freely. The invisible SynthID watermark must not be removed to hide the origin. Sources: ai.google.dev/gemini-api/terms-archive/terms_11_20_25 · terms.law/ai-output-rights/gemini · licenseorg.com/guide/ai-content/google-gemini-image.
+- **Hunyuan3D models (stones, plaza, fallen slab, cliff rock):** the open-model licences (Tencent Hunyuan 3D 2.0 / 2.1 Community License) do NOT apply in the EU, UK and South Korea (use there = unlicensed); 2.0 adds extra commercial terms above a monthly-active-user limit; outputs may not be used to train other AI models. The terms of the hosted site the owner used (3d.hunyuan.tencent.com) were NOT found publicly → still UNVERIFIED. itch.io sells worldwide, EU/UK included. Sources: huggingface.co/tencent/Hunyuan3D-2/blob/main/LICENSE · scancode-licensedb.aboutcode.org/tencent-hunyuan-3d-2.0-cla.html · gitserver.onethingai.com/ai-models/Hunyuan3D-2.1/raw/branch/main/LICENSE.
+- **Options now:**
+  - Dα (rec): both stay placeholder on the SAMPLE — NO MERGE branch only; PROVENANCE rows get the findings above; Hunyuan pieces never ship (EU/UK gap + unknown site terms) unless the owner reads the site's own terms while logged in and they allow it; Gemini pieces may ship only after the owner's explicit OK, keeping SynthID. security.md part 2 gets this as a rule.
+  - Dβ: replace all AI pieces with CC0 / own Blender work before ทำจริง (no AI art in the game at all).
+  - Dγ: owner checks the Hunyuan site terms first (screenshot to Claude), then decide.
+

@@ -1,8 +1,10 @@
 ---
 name: ci-check
-description: Automon Arena CI check on the owner's Windows PC (เช็ค CI / CI เขียวไหม / ผลเทสต์บน GitHub / run บน main) — where `gh` is not installed and no GitHub connector is loaded. Read the GitHub Actions list in the built-in browser and report the run for a commit. Use whenever chat-start, merge-code or publish-pages needs the CI result of a commit on main and `gh` / GitHub MCP is missing.
+description: CI result on the owner's Windows PC (เช็ค CI / CI เขียวไหม / ผลเทสต์บน GitHub) when `gh` and the GitHub connector are missing: read the GitHub Actions list in the built-in browser and report the run for a commit. Used by chat-start, merge-code and publish-pages.
 ---
 # CI check without gh (set 207, user A1 — chat-start needed it and `gh` was missing on the PC)
+
+> Rules: CLAUDE.md "Git workflow" (CI rule set 153 G1) — they win if anything differs (description trimmed set 219 A1).
 
 1. Try the cheap way first only if it exists: `gh run list --branch main --limit 5` (PowerShell). "not recognized" / "command not found" → step 2. (Cloud chats: GitHub MCP `actions_list`, merge-code step 6.)
 2. Built-in browser (`mcp__Claude_Browser__navigate`, no dev server needed):

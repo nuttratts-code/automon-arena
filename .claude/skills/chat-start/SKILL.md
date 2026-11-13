@@ -1,8 +1,10 @@
 ---
 name: chat-start
-description: Automon Arena start of every chat (เริ่มแชท / เริ่มงาน / ทำต่อ / อ่าน handoff) — fetch, read the Relay, check the บาลานซ์ line, push the 🔒 lock line, open the WIP branch or a fresh branch from main, then propose the next task set. Use at the first turn of EVERY chat in this repo, before any other work, even when the user only asks a question. Rules live in CLAUDE.md "Git workflow"/"New chat" + claude/workflow/relay.md and win if anything differs.
+description: Start of every chat (เริ่มแชท / ทำต่อ / อ่าน handoff): fetch, read the Relay, check the บาลานซ์ line, push the 🔒 lock line, open the WIP branch or a fresh branch, propose the next set. Use at the first turn of EVERY chat in this repo, even for a question.
 ---
 # Chat start (set 158 — skill from CLAUDE.md "Git workflow" + relay.md)
+
+> Rules: CLAUDE.md "Git workflow"/"New chat" + claude/workflow/relay.md — they win if anything differs (description trimmed set 219 A1).
 
 The SessionStart hook (.claude/hooks/session-start.sh) already ran `git fetch` and printed the Relay block — use that output; re-read handoff.md only if the hook printed nothing.
 

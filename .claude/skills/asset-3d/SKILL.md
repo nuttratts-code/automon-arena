@@ -1,15 +1,17 @@
 ---
 name: asset-3d
-description: Automon Arena 3D prop pipeline (งาน 3D / โมเดล 3D / ไฟล์ .glb / Hunyuan3D / Tripo / Meshy / Stable Fast 3D / เจนรูป Gemini ไปทำ 3D / หิน 3D / ลดโพลี / ลดความละเอียด / bake / ใส่โมเดลในลาน / จัดฉากเอง / ตกแต่งฉาก / Blender หรือ Godot) — from the owner's Gemini picture, through an AI image-to-3D site, to a light, matte, correctly sized model standing in the Godot arena. Use whenever the owner drops a .glb, asks how to make a 3D prop, asks to reduce / compare / place a 3D model, or wants to dress the arena by hand (§8: Godot for placing, Blender for shaping). Not for character sprites (art-style §2–7), screen layout (ui-work) or the battle lighting look (art-look). Rules in claude/workflow/security.md (part 2), claude/art-style.md §8 and art/PROVENANCE.csv win if anything differs.
+description: 3D props (โมเดล 3D / .glb / Hunyuan3D / Tripo / เจนรูป Gemini ไปทำ 3D / ลดโพลี / bake / จัดฉากเอง) — owner's picture → AI 3D site → Blender prep → viewer compare → placed in the Godot arena. Use when the owner drops a .glb or asks to make, reduce, compare or place a 3D model. Not sprites, screens or lighting (art-look).
 ---
 # 3D props: Gemini picture → AI 3D → Blender prep → Godot arena (set 217 R4, 13 Nov 2026)
+
+> Rules: claude/workflow/security.md part 2, claude/art-style.md §8, art/PROVENANCE.csv — they win if anything differs (description trimmed set 219 A1).
 
 > **Set 218 B1 — restored to main from sample branch ccr-882ceb4b-0ewtk1 (1c6e8c8).** Scripts and scenes it names (art/blender/*.py, godot/tools/stone_viewer_shot.gd, godot/tools/s217_*.gd, godot/scenes/arena_dressing_r6.tscn, art/s217/, claude/preview-set217/) exist only on that sample branch until ทำจริง brings them to main: read them with `git show ccr-882ceb4b-0ewtk1:<path>`; never merge the sample branch.
 
 Owner makes the pictures and the 3D file (steps 1–2); Claude does the rest. **Gate** = stop, show pictures, A1/A2 buttons, wait.
 
 ## 0. Fixed facts
-- **Tools on the owner's PC:** Blender 5.2 `"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"` (CLI `-b --factory-startup`) · Godot console exe: reuse `%TEMP%/claude/*/*/scratchpad/godot/Godot_v4.7.2-stable_win64_console.exe`, else unzip `~/Downloads/Godot_v4.7.2-stable_win64.exe.zip` (skill ui-work 4e) · the editor exe beside it opens the project: `<Godot_v4.7.2-stable_win64.exe> --path godot -e res://scenes/<scene>.tscn` (run in background).
+- **Tools on the owner's PC:** Blender 5.2 `"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"` (CLI `-b --factory-startup`) · Godot console + editor exe: claude/workflow/gdscript.md §7.
 - **Scripts (tested set 217):** `art/blender/glb_info.py` (read a glb header, plain Python) · `art/blender/ai_glb_prep.py` (Blender: scale + matte + textures + full/decimate/bake) · `godot/tools/stone_viewer_shot.gd` (viewer screenshots) · `godot/tests/shots.gd` (real game screens).
 - **Budgets:** the whole rune plaza = ~145k tris. Hero prop (one, close to the camera) = full mesh OK (Godot builds LODs on import, `meshes/generate_lods=true`) with 1024 textures. Every other prop = bake route 1.5k–3k tris, 1024 (big) / 512 (small) textures. Source 4096 textures are never needed: 4096→1024 looked the same in the game (set 217 R4).
 - **Security part 2:** an AI 3D file is an outside asset → site name + version/plan + date + prompt in `art/PROVENANCE.csv`, licence status written (UNVERIFIED until checked), owner OK, never on main / in a release while UNVERIFIED. Hunyuan3D, Tripo, Meshy, Stable Fast 3D each have their own terms (region and revenue limits) — check the one actually used.

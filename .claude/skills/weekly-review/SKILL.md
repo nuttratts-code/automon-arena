@@ -1,8 +1,10 @@
 ---
 name: weekly-review
-description: Automon Arena weekly review (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม) (CLAUDE.md "Weekly review", rule D1 set 150 + workflow audit sets 152–153). Use when the user says "รีวิวสัปดาห์" (planned every Friday) or asks to review/audit the workflow, rules or docs for unclear or conflicting points. Finds user corrections and waste of the week, checks whether the week's work actually followed the rules (UI, gate, values, publish, lock, close-out, doc versions), then audits the rule docs against each other and against the code, writes claude/review-YYYY-MM-DD-weekly.md, asks A/B per change, and edits only after approval.
+description: Weekly review / workflow audit (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม / สกิลไหนไม่ถูกใช้): the week's corrections and waste, whether the work followed the rules, docs and skills against each other and the code → claude/review-…md → A/B per change → edit only after the owner picks.
 ---
 # Weekly review (D1 + workflow audit)
+
+> Rules: CLAUDE.md "Weekly review" (set 150 D1, sets 152–153) — they win if anything differs (description trimmed set 219 A1).
 
 Report first, edit only after the user picks. Read with grep / `sed -n`, never whole large files. Reply format, labels and buttons: CLAUDE.md + claude/workflow/replies.md.
 

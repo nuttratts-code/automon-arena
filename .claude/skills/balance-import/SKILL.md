@@ -1,8 +1,10 @@
 ---
 name: balance-import
-description: Automon Arena import of game values from the Balance Room (นำค่าเข้าเกม / AMCFG1 / ค่าจากห้องบาลานซ์ / ปรับค่า) (AMCFG1 code → cfgdiff → user picks → apply → tests → gate → publish → cells to set back). Use for ANY task that touches game values (characters, tribes, rules, runes, bosses, mode settings, bossrun/botgen/import) — HARD RULE 6. Ordered runbook; the rules themselves live in claude/workflow/balance-import.md (§00 + §0) and win if anything differs.
+description: Import game values from the Balance Room (นำค่าเข้าเกม / AMCFG1 / ค่าจากห้องบาลานซ์ / ปรับค่า): AMCFG1 → cfgdiff → owner picks per cell → apply → tests → gate → publish → cells to set back. Use for ANY task touching game values (HARD RULE 6). Dormant while the web game is frozen unless values change.
 ---
 # Balance import runbook (set 157 — skill from the close-out skill check)
+
+> Rules: claude/workflow/balance-import.md §00 + §0 — they win if anything differs (description trimmed set 219 A1).
 
 Stop first if the handoff Relay says `บาลานซ์: กำลังปรับ` (HARD RULE 4). All commands run in `src/`. Heavy jobs (botgen, bossrun, gate) run ONE at a time in the background (2 cores); do light work meanwhile.
 

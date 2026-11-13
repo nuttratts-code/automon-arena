@@ -1,8 +1,10 @@
 ---
 name: close-out
-description: Automon Arena close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด). Use when a code branch is merged to main (docs-only commits do not count), when the user says the work is done/live, or after ~15 turns in one chat. Updates claude/handoff.md, pushes, and prints the Thai close-out message with a ready-to-paste prompt for the next chat.
+description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด): after a code merge to main (docs-only commits do not count), when the owner says done/live, or after ~15 turns. Skill check, handoff update + push, Thai close-out message with the paste-prompt for the next chat.
 ---
 # Close-out (HARD RULE 1, moved here from CLAUDE.md in set 150)
+
+> Rules: CLAUDE.md HARD RULE 1 + claude/workflow/relay.md — they win if anything differs (description trimmed set 219 A1).
 
 0. **Skill check (user rule set 155 A1 — every close-out, BEFORE step 1, because a new chat cannot read this chat):** look at what this chat did and decide if a procedure should become a skill. Candidate when ALL: it will happen again (done ≥ 2 times, or clearly recurring) · it has several steps (~5+) or exact commands · it went wrong or the user corrected it at least once. Not a candidate: one-off work, or a procedure already fully written in a topic file/skill (then propose editing that file instead).
    - Candidate → explain in Thai (what the skill would do, which steps/commands, why) and ask with buttons: A1 จดเป็นสกิล · A2 แก้ไฟล์หัวเรื่องเดิมแทน · A3 ไม่ต้อง. On A1/A2: write it now (`.claude/skills/<name>/SKILL.md`, English, frontmatter name + description with its trigger; test every command in it once; set 209 A2: use `anthropic-skills:skill-creator` for the writing guide and the description / trigger check — its eval runs spawn subagents, so only with the user's OK), add a pointer where CLAUDE.md or the topic file covers that work, commit + push (docs-only → main), then continue with step 1.

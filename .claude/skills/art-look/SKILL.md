@@ -1,8 +1,10 @@
 ---
 name: art-look
-description: Automon Arena battle-scene art look (งานภาพ / ฉากสู้ / ภาพ HD-2D / พิกเซลบนฉาก 3D / แสง เงา เบลอ tilt-shift / เอฟเฟกต์สกิล / sprite ในฉาก / look spike / P5) — pixel sprites in a lit 3D diorama inside the Godot port, tuned toward the owner's reference look. Use for any task that builds or changes how the battle scene LOOKS in godot/ (arena, lights, post effects, sprite placement, skill VFX, look tests) or that prepares art for it. Not for screens/menus (ui-work), game rules (rule-change) or values (balance-import). Rules live in claude/art-style.md, claude/plan-godot-migration.md P5 and claude/workflow/security.md and win if anything differs.
+description: Battle-scene look in the Godot port (ฉากสู้ / ภาพ HD-2D / แสง เงา เบลอ / เอฟเฟกต์สกิล / sprite ในฉาก / ปรับลาน / ตัวอย่างฉาก) — pixel sprites in a lit 3D set: arena, camera, light, fog, post effects, VFX, look samples. Not screens/menus (ui-work/ui-preview), props (asset-3d), values (balance-import).
 ---
 # Art look (set 201 — research 11 Nov 2026; owner picks A1 · B1 · C1 · D2)
+
+> Rules: claude/art-style.md, claude/plan-godot-migration.md P5, claude/workflow/security.md — they win if anything differs (description trimmed set 219 A1).
 
 Claude does the work; the owner decides. Every **Gate** below = stop, show stills next to the target, offer A1/A2 (+ a recommended one), wait.
 
@@ -66,6 +68,25 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
    CPUParticles3D if GPU particles misbehave in the web export. **Gate 3:** owner picks the way per effect family.
 6. **Check on real targets.** Stills at 1366×768 · 844×390 · 667×375 (ui-work 4e) + the web export in Chromium + frame time on a phone-class device. Report per §1 item: pass / gap / next fix. Below 30 fps on the phone → cut effects in this order: SSAO, shadow size, glow, blur quality.
 7. **Record + merge.** Assets added → `art/PROVENANCE.csv` row (id · tool · prompt · date · model · human-edit · licence) and credits where the licence asks. Then `merge-code` (setup → gate; Godot tests must still pass). Relay line says `art: stills 3 sizes ✓ · web export ✓ · provenance ✓`.
+
+## 8. Look samples (set 219 E1 — set 217 ran 20+ arena rounds under ui-preview and never opened this skill)
+- Arena / battle-scene look samples start HERE: conflict check against art-style.md (§8 camera angle) at the first round, not at ทำจริง.
+- Mechanics = skill ui-preview steps 1–6c (scratch copy or sample branch mode, patch scripts, notes.md, Rebuild line); 3D props = skill asset-3d.
+- No per-round design-critique / tell count (those are for screen UI); instead run the §1 checklist once per phase and record it in notes.md.
+
+### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
+- **Horizon math:** the camera sees from PITCH−FOV/2 to PITCH+FOV/2 below level (FOV 26 → ±13°). PITCH > 13° = no horizon on screen, so far paintings stand where the view meets the ground. Fit far cards to the LIVE camera every frame (`scripts/ui/s217_far_fit.gd`: sky fills the view, hills keep their shape with the bottom on the ground line) instead of placing them in the world; crop any big foreground meadow off the far picture (the 3D ground is the foreground).
+- **Far layers in the world (set 217 P1, replaces the live-fit cards above once the owner keeps it):** measure the camera first (CAMXF line below). Everything below the top-of-view ray (PITCH − FOV/2 below level; FOV 19.2 / PITCH 14 → 4.4°) can show; to see sky, drop the ground past the plaza (plateau: ground shader `VERTEX.y -= 60·smoothstep(20, 45, r)`) and put each card's visible top where you want it on screen: `y = cam.y − D·tan(PITCH − FOV/2 + frac·FOV)` (frac 0 = screen top). Sky quad no fog, hills keep fog. Patches + numbers: claude/preview-set217/p1-patch-depth.py + p1t-patch-tune.py. Props on the slope reuse the shader drop in GDScript (`p1_drop`, change both).
+- **Foreground framing does not fit a 6 vs 6 board** (P1): the board fills the width, free corners sit under the speed/stop/skip buttons → rocks cover front-lane units or hide behind the UI. Ask the owner before trying again.
+- **Web look check (P0):** official templates live in `%APPDATA%/Godot/export_templates/4.7.2.stable` (web only, sha512 from get_godot.sh). Copy main scene → `claude/preview-set217/p0-web6v6.gd.txt` (boots into 6 vs 6, freezes time, steps STATE n via the window title), `--export-release Web`, then `CHROMIUM_PATH=<Chrome> python -I claude/preview-set217/p0-web.py <build> <shots>` (real GPU, headed). Compare with the desktop opengl3 PNGs of the same states.
+- **Patch files on Windows:** some .gd files are CRLF → normalise to 
+ before `assert old in s`, write back CRLF (p1-patch-depth.py `patch()`); rebuild from fresh repo copies of the patched files, never re-run a patch on an already patched copy.
+- **Formation rule:** at a low camera, depth barely moves a unit up the screen, so the far lane must sit HALF a column out (FAR_SHIFT = column step / 2) → 6 different x per team, nobody hidden; give the lanes depth (R13: COL_X 1.8/4.2/6.6 · FAR_SHIFT 1.2 · LANE_Z −5.2/3.2), then grow the plaza until the farthest slot has margin. Wider columns make the camera dolly out (units shrink) — prefer depth.
+- **One try per command:** `claude/preview-set217/r13-try.sh <g> <out> <pitch> <spr_h> <cols> <lanes> <far_shift> <plaza_k> <side px> <top px>` (needs `export G=<console exe>`) patches the copy, rebuilds the dressing scene, shoots. Compare `battle-mid` AND `prep-late` (prep crowds first).
+- **Measure the battle camera** for the editor's GameCam: in the copy only, add `if k == 1.0: print("CAMXF ", var_to_str(cam.transform))` in stage3d `set_k`, run the shots, copy the most frequent CAMXF line.
+- **6 vs 6 shot** (bot round 1 has only 2–3 units): copy `claude/preview-set217/s6v6.gd.txt` to `<g>/tests/s6v6.gd` and run it like shots.gd → `6v6-battle.png`.
+- **Hide field overlays** for a clean look: `mi.layers = 0` on the rings (`visible = false` is undone by `_foe_rise`), card.visible / `_float` return in battle_view (R11 put them behind `S217_CLEAN` flags).
+- **Before regenerating a scene the owner may have edited** (`s217_make_*.gd` overwrites it): `git status`/`git diff` the .tscn first; if changed, edit the file by hand instead.
 
 ## 5. Do / Don't
 Do: mock-up and camera before assets · one finished sample (1 unit + arena + light + post) before scaling up · one texel density and one palette file · a light flash with every effect · CC0 or own-made assets first · measure frame time after each added effect.
