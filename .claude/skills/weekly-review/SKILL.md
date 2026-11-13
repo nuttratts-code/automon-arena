@@ -13,11 +13,12 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 - Sources: `git log --since='7 days ago' --format='%h %ad %s' --date=short origin/main` · claude/handoff.md · this week's entries in claude/archive/relay/ (Claude cannot read old chats).
 - List each time the user corrected or redid Claude's work, a gate failed first time, a bug was found by the user, or a rule caused wasted work.
 - Per item: where the fix belongs (CLAUDE.md · a topic file · a skill · nothing = one-off) + the exact text to add/remove.
-- Token use (set 209 A2): invoke `anthropic-skills:explain-usage` once and put the biggest sink + a cheaper way in the report (it sees this chat only — a hint, not the week's total).
+- Token use (set 209 A2): if a usage skill is installed (e.g. `anthropic-skills:explain-usage`; set 218 I1: often not), invoke it once; else name the biggest reads of this chat and put the biggest sink + a cheaper way in the report (it sees this chat only — a hint, not the week's total).
 
 ## 2. Workflow audit — scope
 - Always: CLAUDE.md, claude/workflow.md, claude/workflow/*.md, claude/ops-rules.md, .claude/skills/*/SKILL.md, claude/handoff.md, claude/instructions.md, claude/reviews.md.
 - Deep checks only for the docs changed this week:
+  Cloud clones are shallow (set 218 I1: 58 commits) → first `git fetch -q --shallow-since="$(date -d '8 days ago' +%F)" origin main`.
   `B=$(git rev-list -1 --before='7 days ago' origin/main); [ -n "$B" ] || B=$(git rev-list --max-parents=0 origin/main | tail -1); git diff --stat $B origin/main -- CLAUDE.md claude/workflow* claude/ops-rules.md .claude/skills`
   (the fallback is the first commit, for when the history is younger than 7 days). A full deep audit of everything only when the user asks for it.
 

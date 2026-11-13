@@ -12,7 +12,7 @@ Every commit that changes behaviour, a value, a name, a text the player sees, a 
    Grep the OLD spelling too (renames). Thai text: grep a short unique part.
 3. **Walk the map below** for the area you touched, even when grep finds nothing (behaviour copies use different words).
 4. **Each hit: fix it, or say why not** (old review file, retired test `ID@n`, intentionally different).
-5. **Record it in the commit message:** `ripple: <term> → checked code/doc/tests/ui_smoke/balance/check · fixed: <files> · left: <file — why>`. The Relay line of the set gets `ripple ✓`.
+5. **Record it in the merge commit to main** (or the single commit when there is no branch; WIP/sample commits exempt, set 218 E1): `ripple: <term> → checked code/doc/tests/ui_smoke/balance/check · fixed: <files> · left: <file — why>`. The Relay line of the set gets `ripple ✓`.
 
 ## Map — what usually moves together
 | You change | Also check |

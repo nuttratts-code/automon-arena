@@ -13,12 +13,14 @@ description: Automon Arena close-out block (HARD RULE 1; ปิดงาน / �
 Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
-   - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step (with a plan file: its name + next step number; a finished plan moves to claude/archive/, set 163 C1).
+   - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step (with a plan file: its name + next step number; a finished plan moves to claude/archive/, set 163 C1). **Cap ≈ 600 characters per set entry (set 218 H1):** status · branch + last sha · gate/publish · values · next step; round-by-round detail goes to the set's notes.md / plan file and the entry links it (on a sample branch as `<branch>:path`).
    - Relay keeps only the newest 2 sets + any set still open as WIP (set 211 B1: a WIP set stays until its own close-out); move older entries to claude/archive/relay/ (append to the newest relay-*.md archive file).
    - Update "Doc versions" if any doc version was bumped; update "Publish (current)" if something was published — that line keeps ONLY the current versions + the commit they came from; older entries go to the archive (review W7, set 151).
    - Remove this chat's 🔒 lock line from the Relay (workflow/relay.md, review W2).
    - Keep handoff ≤ 1 screen.
 2. **Commit + push** (docs-only Relay commit may go straight to main).
+   - **Push to main only from a clean worktree of origin/main (set 218 A1):** same commands as chat-start step 4 (worktree add → edit → commit → `git push origin HEAD:main` → worktree remove/prune). Never `git push origin <work-branch>:main` or `HEAD:main` from a work/sample branch — set 217 fast-forwarded a whole sample branch onto main that way (undone in 0455397).
+   - **Before every push (set 218 D1):** `git status --porcelain` is empty and `git show --stat HEAD` lists every file the step meant to change (sets 208/210 pushed commits with a file missing).
 3. **Output in Thai, in this order** (start with the 3-line header from CLAUDE.md "Reply format"):
    - `ควรเปิดแชทใหม่ได้แล้ว`
    - Skill check result (step 0): the new skill's name, or `สกิลใหม่: ไม่มี`.

@@ -1,9 +1,13 @@
 # Reviews index
 
-V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
+| archive/reviews/review-2026-11-13-weekly.md | Set 218 weekly review A–I (sample branch push, asset-3d restore, sample mode, ripple line, handoff size) — owner picked all recommended, applied set 218 | decided |
+| review-2026-11-14-hd2d-gaps.md | Set 217 battle-scene look gaps vs HD-2D reference, phases 0–7 — camera A2 picked; phases open on the sample branch | open |
+| archive/reviews/review-2026-11-12-prep-ui.md | Set 213 prep/battle spacing review — R1+R2 built set 213 (merge 62c2339) | decided |
+| archive/reviews/review-2026-11-11-godot-mcp.md | Godot MCP options (set 208) — owner tried NPGameDev toolkit as dev-only addon (set 208 E1/F2) | decided |
 | review-2026-11-12-skills.md | Set 209 extra skills research — user picked A2 (7 installed skills in runbooks) · B1–B3 (godot-play draft, godot-release, port-parity) applied; C2a = no outside skill, own workflow/gdscript.md | decided (open: godot-play live run) |
 | review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
 | review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; rest parked for Godot (set 189 C1, web UI frozen) | parked → Godot |
@@ -15,7 +19,7 @@ V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 1
 | review-2026-11-09-bosstribe.md | Set 167 boss win % by team tribe — input of the boss brainstorm | decided (kept: linked) |
 | review-2026-11-09-brainstorm-skill.md | Set 164 brainstorm skill design sources (linked from CLAUDE.md + skill) | decided (kept: linked) |
 | review-2026-11-09-brainstorm-runstats.md | Set 165 run-end stats brainstorm — phase 1 built set 165 (Balance Room สรุปแรง/อ่อน) · real-player tab set 177 · phase 2 waits for ~30 human runs | decided (phase 2 parked) |
-| review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm — user A1: UI set 1 shipped set 169, recap + tribe highlight set 171 · 44px sweep + names hidden (B1) done set 183 · cold-start test skipped by user (C2) | done set 183 |
+| archive/reviews/review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm — user A1: UI set 1 shipped set 169, recap + tribe highlight set 171 · 44px sweep + names hidden (B1) done set 183 · cold-start test skipped by user (C2) | done set 183 |
 | archive/reviews/review-2026-11-09-balance-ux.md | Set 161 Balance Room UX review — 18 fixes shipped set 161 | decided |
 | archive/reviews/review-2026-11-09-superpowers.md | Set 163 Superpowers ideas — B1 find-cause skill + C1 plan files adopted | decided |
 | archive/reviews/review-2026-11-09-bossv2-fit.md | Set 168 boss v2 calibrator + tribe report | decided |
