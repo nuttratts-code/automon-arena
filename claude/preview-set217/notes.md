@@ -116,3 +116,9 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - L3 = stage3d `_s217_pixel_tex`: every dressing albedo shrunk (plaza 512, props 256, ground tile 128, Lanczos) + Nearest, normal maps off → texel ≈ the sprites' pixel size.
 - Both run on the dressing's `ready` (in the tree, after the plaza tint script). Shots R19-before / R19-hd2d-6v6-battle. Rebuild: copy app.gd, stage3d.gd, s217_hd2d.gd into the copy, s6v6 shot.
 - Cost: one full-screen pass (3–5 texture reads per pixel) + ~16 shadow quads; textures get smaller. Godot tests not run.
+
+## R20 (13 Nov) — owner: "too much blur" (M1) · "ground more pixel" (M2) · "use my latest save"
+- s217_hd2d.gd: focus band y 0.16–0.86, ramp 0.30, max mip 1.0 (was 0.24–0.80 / 0.22 / 1.8).
+- stage3d `_s217_pixel_tex`: plaza 256 · props 128 · ground tile 64 (was 512 / 256 / 128).
+- Owner's 2nd editor save kept (StoneMid, StoneShortR → x 20.8, RockFarR → by the slab); baked grass cards stripped again. s217_grass.gd now drops its MultiMesh on EDITOR_PRE_SAVE and rebuilds on POST_SAVE, so Ctrl+S no longer bakes it.
+- Shot R20-6v6-battle.

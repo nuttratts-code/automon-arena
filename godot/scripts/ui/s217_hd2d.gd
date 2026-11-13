@@ -10,10 +10,10 @@ extends ColorRect
 const SHADER := """
 shader_type canvas_item;
 uniform sampler2D scr : hint_screen_texture, filter_linear_mipmap;
-uniform float focus_top = 0.24;    // screen y (0 = top) where the sharp band starts
-uniform float focus_bottom = 0.80; // … and ends
-uniform float soft = 0.22;         // blur ramp length
-uniform float max_lod = 1.8;       // strongest blur (mip level)
+uniform float focus_top = 0.16;    // screen y (0 = top) where the sharp band starts
+uniform float focus_bottom = 0.86; // … and ends
+uniform float soft = 0.30;         // blur ramp length
+uniform float max_lod = 1.0;       // strongest blur (mip level)
 uniform float vignette = 0.38;
 uniform vec3 warm = vec3(1.05, 1.0, 0.9);
 uniform float glow = 0.9;

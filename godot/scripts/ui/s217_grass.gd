@@ -62,6 +62,13 @@ void fragment() {
 func _ready() -> void:
 	_build()
 
+func _notification(what: int) -> void:
+	# R20: the editor saved the built cards into the scene on every Ctrl+S (0.6–2.2 MB) — drop them for the save only
+	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		multimesh = null
+	elif what == NOTIFICATION_EDITOR_POST_SAVE:
+		_build()
+
 func _tuft_texture() -> ImageTexture:
 	# a painterly grass tuft drawn blade by blade: R = per-blade light (0..1), A = shape
 	var W := 128
