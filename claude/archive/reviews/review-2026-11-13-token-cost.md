@@ -1,6 +1,6 @@
 # Token cost review — where tokens go vs what comes out (13 Nov 2026, set 220)
 
-Status = open for items B–F (owner picks). Item A (delete brainstorm) = owner order, applied set 220.
+Status = DECIDED 13 Nov 2026 (set 220): A deleted (owner order) · B leave ("rare") · C leave ("pointers were tried before and got skipped") · D1 applied · E1 applied.
 Claude cannot see real token counts or old chats. Sizes below are file bytes (≈ 1 token per 3–4 English bytes; Thai costs about 2–3× more per byte) and counts from git — estimates, ranked by "cost vs result".
 
 | # | Where | Size / count | What came out | Verdict |

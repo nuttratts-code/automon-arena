@@ -35,7 +35,7 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 5b. **Missed ripples (set 186 A1):** this week's fixes that were found AFTER a set closed ("doc said X, game never did", old name in a test, stale version) → which ripple.md map row would have caught it; add/extend that row. Commits on main without a `ripple:` line that changed behaviour/values/names → list them.
 6. **Stale text:** tool names that no longer exist (e.g. `get_artifact`) · links to moved sections ("CLAUDE.md 'X'") · paths (archive folders) · numbered handoff items that no longer exist · "Project only" style notes · old decisions overruled by newer ones.
 7. **Review hygiene:** every claude/review-*.md has a row in reviews.md · drafts "waiting for the user" are listed in handoff "Open decisions" · decided/applied files are moved to claude/archive/reviews/ · after `git mv`, grep the old name and fix references.
-8. **Thai summary:** claude/instructions.md version and content match the current CLAUDE.md (redo it whenever CLAUDE.md changed).
+8. **Thai summary (set 220 D1):** claude/instructions.md is regenerated HERE, once per weekly review, from the current CLAUDE.md (not after every CLAUDE.md change; the owner asks → any time).
 9. **handoff:** Relay = newest 2 sets + open WIP sets (set 211 B1) · no finished lines left in the Relay · Publish line = current only · counts/facts in State still true · set numbers not used twice (a duplicate = parallel chats → tell the user).
 
 ## 3b. Rule compliance — were the rules actually followed? (set 158, user request)
@@ -47,7 +47,7 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 5. **Publish:** each publish names its gate commit + CI green (set 153 G1) and updated the existing Links URL.
 6. **Relay / lock:** every set number is unique · each chat pushed a 🔒 line and none is left after its close-out · Relay = newest 2 sets + open WIP sets.
 7. **Close-out (HARD RULE 1):** each merged code set ended with a close-out that printed the skill check (`สกิลใหม่: …`).
-8. **Doc versions:** a Thai rule doc / CLAUDE.md changed → its version line bumped, claude/instructions.md regenerated (user picked: caught here, set 158 B2), and handoff "Doc versions" matches the file headers:
+8. **Doc versions:** a Thai rule doc / CLAUDE.md changed → its version line bumped, claude/instructions.md regenerated at this review (set 158 B2 + set 220 D1), and handoff "Doc versions" matches the file headers:
    `for f in combat-rules tribe-rules shop-merge-rules build-plan instructions; do h=$(sed -n 3p claude/$f.md | grep -oE '^V[0-9.]+'); grep -q "$f $h" claude/handoff.md || echo "DIFF $f file=$h"; done`
 9. **Measure:** measured only with permission (or a mechanic change), with a measure-log entry.
 10. **Review skills (set 209 A2):** UI sets' Relay lines carry `critique ✓`, code merges `review ✓`, each publish names its security-review result; a set that touched src/core or godot/scripts names `Godot tests n/n (golden)` (skill port-parity).
@@ -58,7 +58,7 @@ Each miss → a report item: rule · set · evidence · why it was missed (rule 
 - Commit + push to main (docs-only). Explain in Thai chat, then the AskUserQuestion buttons (max 4 per call).
 
 ## 5. After the user picks
-- Apply with exact-string edits; bump each changed doc's version line (small +0.1); CLAUDE.md changed → regenerate claude/instructions.md.
+- Apply with exact-string edits; bump each changed doc's version line (small +0.1); CLAUDE.md changed this week → regenerate claude/instructions.md once at the end of this review (set 220 D1).
 - Mark the review DECIDED, `git mv` it to claude/archive/reviews/, add/flip its row in reviews.md.
 - handoff: add the set to the Relay (move the oldest to claude/archive/relay/), update Doc versions; code fixes found by the audit go to "งานรอรวม", not into this docs set.
 - Push to main. Push rejected → `git fetch` + `git merge origin/main` (never rebase), read the incoming commits first (another chat may be working → tell the user).

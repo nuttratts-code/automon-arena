@@ -9,7 +9,7 @@ Order follows art-look §2: camera → blockout → real assets → lighting las
 ## Phase 0 — lock the base (no new art)
 1. Camera decision: keep PITCH 14 · VFOV 26 (dist ~19.9 m) or reference lens HFOV 40.16 KEEP_WIDTH pulled back to ~28 m (flatter "diorama"; re-check R13 "nobody hides anyone"; fit_pose/project() must switch to the horizontal fov).
 2. ทำจริง set 217: rule-change (art-style §8 camera A "horizon ~40 % from top" + set 216 R5) → fresh branch from main → rebuild from claude/preview-set217/notes.md (never regenerate s217_make_r6; owner hand-edited .tscn) → update test_ui camera/slot pins → setup → gate.
-3. Web-export checks before building on them (art-look §7 "not verified"): screen-texture mipmaps for tilt-shift · alpha-cut Discard sprite shadows · SSAO cost.
+3. Web-export checks before building on them (claude/workflow/art-look-ref.md §7 "not verified"): screen-texture mipmaps for tilt-shift · alpha-cut Discard sprite shadows · SSAO cost.
 
 ## Phase 1 — depth blockout (Claude, placeholder art)
 4. Ground outside the plaza slopes down 5–15 m from ~13 m to 40–100 m (reference shows sky this way, not by lowering pitch).

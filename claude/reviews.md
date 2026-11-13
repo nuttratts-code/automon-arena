@@ -4,7 +4,7 @@ V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 
 
 | File | Topic | Status |
 | --- | --- | --- |
-| review-2026-11-13-token-cost.md | Set 220 token cost vs result — A brainstorm deleted (owner); B look loops · C CLAUDE.md size · D instructions rewrite · E big skills waiting | open |
+| archive/reviews/review-2026-11-13-token-cost.md | Set 220 token cost vs result — A brainstorm deleted · B/C left (owner) · D1 instructions only at weekly review · E1 art-look/asset-3d reference split out | decided |
 | archive/reviews/review-2026-11-13-skills-audit.md | Set 219 skills + rule docs audit A–I — A1 B1 E1 F1 G1 H1 I2 applied; D: AI art (Gemini / Hunyuan3D) ships, owner accepted the licence risk | decided |
 | archive/reviews/review-2026-11-13-weekly.md | Set 218 weekly review A–I (sample branch push, asset-3d restore, sample mode, ripple line, handoff size) — owner picked all recommended, applied set 218 | decided |
 | review-2026-11-14-hd2d-gaps.md | Set 217 battle-scene look gaps vs HD-2D reference, phases 0–7 — camera A2 picked; phases open on the sample branch | open |
