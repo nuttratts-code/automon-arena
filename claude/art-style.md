@@ -1,4 +1,4 @@
-# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.4 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.5 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
 
 **สถานะ (6 พ.ย. 2026):** พักงานภาพไว้ระหว่าง MVP1 · ตัดสินแล้ว: หลัง MVP1 ย้ายเกมไป Godot (ภาพ HD-2D แท้ต้องใช้ฉาก 3D) · ผลทดลอง: AI วาดตัวละครพิกเซลได้ดี (HL-1 ผ่าน) แต่ฉากจาก AI ดูเป็น AI/ไม่ใช่ HD-2D → ฉากใช้ 3D (Blender ทดลองแล้ว: art/blender/arena_scene.py รันด้วย `pip install bpy pillow` แล้ว `python arena_scene.py <out.png>`) · ยังไม่ตัดสิน: ขนาดตัว 64/96 px · ภาพเปลี่ยนตามเลเวลหรือไม่
 
@@ -35,7 +35,7 @@
 ## 4. ขั้นตอนกับ Gemini
 1. เปิดแชทใหม่ใน Gemini วาง **ข้อความตั้งต้น (ข้อ 5)** ก่อนครั้งเดียว
 2. ขอทีละตัวด้วย **แม่แบบตัวละคร (ข้อ 6)** · ทำ HL-1 ก่อน จนชอบ = **ภาพต้นแบบ**
-3. ตัวต่อไป: แนบภาพต้นแบบทุกครั้ง + "same pixel style, palette and size as the attached image"
+3. ตัวต่อไป: แนบภาพต้นแบบทุกครั้ง (ตอนนี้ = `art/library/pictures/sprites/PL-1_still2_veo_2026-11-14.jpg`) เพื่อลอก**แค่สไตล์พิกเซล**: ขนาดเม็ด ขอบ การลงเงา โทนสีหม่น · **ม่อนแต่ละตัวต้องเป็นสัตว์คนละชนิด ทรงตัวไม่ซ้ำ** (ผู้ใช้ชุด 225b — ด้วง SF-1 รอบแรกออกมาเป็นกิ้งก่าตัวเดิมเปลี่ยนสี) · สีสดเกิน → สั่งให้หม่นลงตามต้นแบบ
 4. ภาพจาก AI มักเป็น "พิกเซลปลอม" (เม็ดไม่เท่ากัน ขอบฟุ้ง) → เก็บงานใน **Aseprite** (หรือ Pixelorama ฟรี):
    ย่อเป็น 64×64 แบบ Nearest Neighbor → ลดสีเหลือ ~16 → ลบพื้นหลัง → แก้เม็ดเพี้ยน → จัดเท้าแถว 58 → บันทึก PNG
 5. ตั้งชื่อไฟล์ตาม ID เช่น `HL-1.png` แล้วส่งมาให้ Claude ต่อเข้าเกม
@@ -46,19 +46,21 @@
 You are helping me make ORIGINAL creature sprites for my indie fantasy auto-battler game.
 Style rules for every image:
 - True pixel art sprite, every pixel a clean square block, no anti-aliasing, no blur. Same pixel size as the attached reference.
-- Fantasy creature, not human. Full body, 3/4 view facing right.
+- From the attached reference copy ONLY the pixel size, outline, shading and colour mood (muted, earthy, 2-3 shade steps, small surface texture). NEVER copy its species, body shape, pose or colours: every creature is a different kind of animal with its own silhouette.
+- Fantasy creature, not human. Full body, 3/4 view facing LEFT, like the reference.
 - Dark outline around the whole body — but **effects outside the body (sparks, lightning, loose glow) never have a dark rim** (owner rule set 225). Light from top-left, 2-3 shade steps per colour, max 16 colours.
 - Must read clearly at small size: strong silhouette, clear gaps between limbs and body, at least one light colour area, eyes clearly visible.
 - Every creature has 1-2 effect spots built into its body (a glowing eye, a flame tail tip, a crystal, a rune) where magic can shine and spark.
 - Fit inside the middle 80% of the image with empty space on every side. Body about as wide as it is tall; no very long tails or wings.
-- Plain flat solid #FF00FF magenta background.
-NEVER: shadow, ground, floor line, text, frame; pink or magenta-like colours on the creature; many loose floating particles (at most 2-3, touching the body); resembling any existing game, monster-collecting franchise or character.
+- Plain flat solid background in the colour I name for each creature (pure green #00FF00, or magenta #FF00FF for green creatures).
+NEVER: shadow, ground, floor line, text, frame; the background colour (or anything close to it) on the creature; many loose floating particles (at most 2-3, touching the body); resembling any existing game, monster-collecting franchise or character.
 Each creature has 2 forms: FORM 1 (basic) and FORM 3 (evolved, used at max level). Reply "ready".
 ```
 
 ## 6. แม่แบบตัวละคร (เปลี่ยนเฉพาะในวงเล็บ)
 ```
-FORM 1. Character: [ID] — [creature in a few words]
+FORM 1. Character: [ID] — [creature in a few words — a species no other creature uses]
+Background: [pure green #00FF00 · หรือ magenta #FF00FF ถ้าตัวโทนเขียว]
 Tribe look: [ข้อ 3 แปลเป็นอังกฤษ เช่น "steel tribe: silver-grey and muted blue, boxy plate armour, broad shoulders"]
 Rarity: [common / uncommon / rare / epic / legendary] (more ornaments and size for higher rarity)
 Pose: [idle battle stance ...], feet planted
