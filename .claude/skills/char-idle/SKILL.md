@@ -97,7 +97,9 @@ It prints grid, still-camera range, loop + frame numbers, outline colour. `--fra
 - **GIF trap:** PIL ADAPTIVE palette drops small accents (the eye vanished from GIFs only). Use `quantize(colors=256, method=FASTOCTREE, dither=NONE)` and count the accent pixels per GIF frame before sending.
 - Outline: the owner tried sel-out and no-line (set 223) and **kept the black outline** — do not offer again unless asked.
 
-**B6. Store + record** after the owner says it is done: copy the sheet + APNG + the owner's .pxo to art/library/pictures/sprites/ as `<ID>_idle8_*_<date>` + INDEX.csv rows (a later owner fix = new `_v2` names, never overwrite — library rule 1); row in claude/idle-picks.csv with `variant=video` and the frame numbers in `note`. Docs-only → straight to main.
+**B5c. Scene match S2 (owner pick set 226, art-style §4 step 6):** after the owner's last touch-up, `python -I scenematch.py <sheet_8x1.png> <out.png> 2` → frames ÷2.4 (64 px spec), 16 colours, sat 0.7, values squeezed 0.78 toward 0.42, warm-olive ×(1.02, 1, 0.9), outline = inside ×0.45 (dark, from the sheet's own outline). Show it in the arena next to the full-size sheet (B5b; shown ×4 at 1080p). Steps 3–4 (soft outline, sky rim) were tried and not picked. The S2 sheet is the in-game file; the full-size sheet stays in the library as the source.
+
+**B6. Store + record** after the owner says it is done: copy the sheet + APNG + the owner's .pxo (+ the B5c `_s2` sheet) to art/library/pictures/sprites/ as `<ID>_idle8_*_<date>` + INDEX.csv rows (a later owner fix = new `_v2` names, never overwrite — library rule 1); row in claude/idle-picks.csv with `variant=video` and the frame numbers in `note`. Docs-only → straight to main.
 
 ## Route A — code idle variants (fallback after a 2nd video fail, or on the owner's order)
 A1. **Rows:** defaults neck 28% / waist 56% / hip 70% of the height fit HL-1. For other shapes (blob, bird, long tail) look at the png on a coordinate grid and pass the rows by hand.

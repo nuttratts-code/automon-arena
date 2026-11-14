@@ -1,4 +1,4 @@
-# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.5 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.6 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
 
 **สถานะ (6 พ.ย. 2026):** พักงานภาพไว้ระหว่าง MVP1 · ตัดสินแล้ว: หลัง MVP1 ย้ายเกมไป Godot (ภาพ HD-2D แท้ต้องใช้ฉาก 3D) · ผลทดลอง: AI วาดตัวละครพิกเซลได้ดี (HL-1 ผ่าน) แต่ฉากจาก AI ดูเป็น AI/ไม่ใช่ HD-2D → ฉากใช้ 3D (Blender ทดลองแล้ว: art/blender/arena_scene.py รันด้วย `pip install bpy pillow` แล้ว `python arena_scene.py <out.png>`) · ยังไม่ตัดสิน: ขนาดตัว 64/96 px · ภาพเปลี่ยนตามเลเวลหรือไม่
 
@@ -39,6 +39,7 @@
 4. ภาพจาก AI มักเป็น "พิกเซลปลอม" (เม็ดไม่เท่ากัน ขอบฟุ้ง) → เก็บงานใน **Aseprite** (หรือ Pixelorama ฟรี):
    ย่อเป็น 64×64 แบบ Nearest Neighbor → ลดสีเหลือ ~16 → ลบพื้นหลัง → แก้เม็ดเพี้ยน → จัดเท้าแถว 58 → บันทึก PNG
 5. ตั้งชื่อไฟล์ตาม ID เช่น `HL-1.png` แล้วส่งมาให้ Claude ต่อเข้าเกม
+6. **ปรับเข้าฉาก S2 (ตัดสินแล้ว · ผู้ใช้ชุด 226 เลือกจากภาพเทียบ s226-scenematch-S0-S4 — ตัวเจนสีจัดเกินฉาก):** หลัง idle 8 เฟรมผ่านแล้ว Claude ทำแผ่นภาพ S2 อีกชุดด้วย `scenematch.py <sheet> <out> 2` (สกิล char-idle B5c): ย่อ ÷2.4 ให้ได้ขนาดสเปกข้อ 2 · เหลือ 16 สี · ความสดเหลือ 70% · บีบความต่างสว่าง-มืดเหลือ 78% เข้าหากลาง · โทนอุ่นอมเขียวมะกอก — ตัวเลขชุดนี้มาจากตัวอย่างที่ผู้ใช้เลือก ปรับได้รายตัว · ไฟล์ S2 = ตัวที่ใช้ในเกม (ไฟล์เดิมเก็บไว้) · ข้อความตั้งต้นข้อ 5 เพิ่มบรรทัดสี/ลาย (ชุด 226) ให้ตัวใหม่หม่นตั้งแต่ตอนเจน
 - ห้ามพิมพ์ชื่อเกมอื่น ชื่อตัวละครเกมอื่น ชื่อศิลปิน หรือคำว่า HD-2D ในคำสั่ง (บรรยายลักษณะแทน)
 
 ## 5. ข้อความตั้งต้น (วางใน Gemini ครั้งแรก)
@@ -49,6 +50,7 @@ Style rules for every image:
 - From the attached reference copy ONLY the pixel size, outline, shading and colour mood (muted, earthy, 2-3 shade steps, small surface texture). NEVER copy its species, body shape, pose or colours: every creature is a different kind of animal with its own silhouette.
 - Fantasy creature, not human. Full body, 3/4 view facing LEFT, like the reference.
 - Dark outline around the whole body — but **effects outside the body (sparks, lightning, loose glow) never have a dark rim** (owner rule set 225). Light from top-left, 2-3 shade steps per colour, max 16 colours.
+- Colours sit in a soft painted meadow (muted green-grey, warm light): slightly greyed, earthy, mid values; no pure white, no neon. Markings and patterns use neighbouring shades of the main colour (low contrast) — NEVER bold contrasting stripes, diamonds, checkers or spots in a second bright colour. Cute small proportions are fine, but it must not look like a toy or a bright mobile-game cartoon.
 - Must read clearly at small size: strong silhouette, clear gaps between limbs and body, at least one light colour area, eyes clearly visible.
 - Every creature has 1-2 effect spots built into its body (a glowing eye, a flame tail tip, a crystal, a rune) where magic can shine and spark.
 - Fit inside the middle 80% of the image with empty space on every side. Body about as wide as it is tall; no very long tails or wings.
