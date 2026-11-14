@@ -156,6 +156,7 @@ Use the attached painting as the style reference: painterly hand-painted fantasy
 ```
 
 ### 7.3 หินตั้ง 5 แบบ + หินเล็ก 🧊 → Hunyuan3D (8 ภาพ)
+> **อัปเดต set 221 (ตรวจคลัง art/library แล้ว):** มีของอยู่แล้ว → **ไม่ต้องเจน** stone_e (ใช้ภาพ `stone_short_broken` ในคลัง เอาเข้า Hunyuan3D ได้เลย) · **ไม่ต้องเจน** rock_a–c (ใช้ `rocks_sheet` ในคลัง) · โมเดล `0c2fca14` = หินแบบที่ 2 (Claude เตรียมให้) → ที่เหลือให้เจนคือ stone_b / stone_c / stone_d (หรือน้อยกว่านั้นถ้าพอแล้ว)
 ภาพหินแต่ละภาพ → อัปโหลดเข้า Hunyuan3D (ตั้งค่าเหมือนก้อนเดิม) → ดาวน์โหลด .glb ชื่อเดียวกับภาพ · Claude ลดเหลี่ยมใน Blender เอง · ขนาดในภาพไม่สำคัญ Claude ปรับสเกลในเกม แต่**สัดส่วนสูง:กว้าง**ต้องตรงตามคำสั่ง
 จดไว้ให้ Claude ด้วย: ชื่อเว็บ/รุ่นที่ใช้ + วันที่ (สำหรับ art/PROVENANCE.csv)
 
