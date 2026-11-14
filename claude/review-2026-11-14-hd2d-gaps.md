@@ -20,7 +20,7 @@ Order follows art-look §2: camera → blockout → real assets → lighting las
 
 ## Phase 2 — sprites stand in the scene (owner art)
 9. Real 64×64 sprites (art-style §2) replacing CC0 32×32 placeholders.
-10. Minimum frames: idle / attack / hit / die (reference idle = 6 images at 7.5 fps).
+10. ~~Minimum frames: idle / attack / hit / die~~ **Decided set 221 (owner A2): idle strip (4 frames, proposal) + ONE attack still per character; attack = code lunge + swap to the still; hit / die = code only (flash, shake, knock-back / tilt + fade).** art-style §2 V0.4.
 11. Scene tint via modulate first; normal-map lighting only as an A/B for the owner (art-look §4 step 3).
 12. Glowing outline on selected/acting unit · small foot shadow.
 
