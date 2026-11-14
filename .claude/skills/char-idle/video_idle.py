@@ -1,6 +1,7 @@
 # set 222: Gemini idle video -> 8 real-pixel frames (route B of skill char-idle). Sample/art tool, not game code.
 # Minimal processing on purpose (owner set 222: "the more it is cleaned, the worse it looks"):
-#   snap to the video's pixel grid -> magenta key -> drop pink fringe only where it touches transparency
+#   snap to the video's pixel grid -> background key (colour read from frame 0's border: green #00FF00 or magenta,
+#   set 225b) -> peel the background-tinted fringe on the silhouette (<= 4 px deep) + loose specks
 #   -> pick the best loop inside the part where the camera is still -> 8 evenly spaced frames -> fill missing dark outline.
 # No palette, no temporal median, no optical flow.
 # run: python -I video_idle.py <video.mp4> <still_px.png> <out_dir> [n_frames=8] [ms=250] [--frames a,b,c,...]
@@ -17,18 +18,30 @@ MS = int(args[4]) if len(args) > 4 else 250
 os.makedirs(out, exist_ok=True)
 
 cap = cv2.VideoCapture(vid); fps = cap.get(cv2.CAP_PROP_FPS) or 24
-raw = []
+# frames are kept as uint8 and cropped to frame 0's character box + a wide margin: a 1080p clip as int arrays ran
+# out of memory on the owner's PC (set 225b)
+raw = []; box = None; FW = FH = 0
 while True:
     ok, f = cap.read()
     if not ok: break
-    raw.append(cv2.cvtColor(f, cv2.COLOR_BGR2RGB).astype(int))
+    f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
+    if box is None:
+        FH, FW = f.shape[:2]
+        BGC = np.median(np.concatenate([f[:6].reshape(-1, 3), f[-6:].reshape(-1, 3)]), 0).astype(int)
+        ys, xs = np.where(np.abs(f.astype(int) - BGC).sum(-1) >= 90); M = max(60, FH // 8)
+        box = (max(0, ys.min() - M), min(FH, ys.max() + M), max(0, xs.min() - M), min(FW, xs.max() + M))
+    raw.append(f[box[0]:box[1], box[2]:box[3]].copy())
 H0, W0 = raw[0].shape[:2]
-print(f'video {W0}x{H0} {fps:.0f} fps {len(raw)} frames ({len(raw)/fps:.1f} s)')
+GREEN = BGC[1] > BGC[0] + 40 and BGC[1] > BGC[2] + 40
+print(f'video {FW}x{FH} {fps:.0f} fps {len(raw)} frames ({len(raw)/fps:.1f} s)  background #%02x%02x%02x (%s)' % (*BGC, 'green' if GREEN else 'magenta'))
 
-def magenta(g): return (g[..., 0] > 170) & (g[..., 1] < 120) & (g[..., 2] > 150)
+def magenta(g): return np.abs(g.astype(int) - BGC).sum(-1) < 90        # = background key (name kept from set 222)
+def tint(f):                                                          # pixel mixed with the background colour
+    r, g, b = (f[..., k].astype(int) for k in range(3))
+    return ((g > r + 10) & (g > b + 10)) if GREEN else (b >= g + 12)
 
 # ---- 1 pixel grid from frame 0 (period by Fourier on edge strength, phase by least change inside blocks) ----
-a = raw[0]; m = ~magenta(a); ys, xs = np.where(m)
+a = raw[0].astype(int); m = ~magenta(a); ys, xs = np.where(m)
 reg = a[max(0, ys.min() - 8):ys.max() + 8, max(0, xs.min() - 8):xs.max() + 8].mean(-1)
 def spectrum(g):
     g = g - g.mean(); n = np.arange(len(g)); P = np.arange(4, 24, 0.02)
@@ -46,7 +59,7 @@ print(f'grid block {B:.2f} px  phase ({ox}, {oy})')
 # ---- 2 snap + key every frame ----
 snap = []
 for f in raw:
-    g = f[cy][:, cx]
+    g = np.median(np.stack([f[cy + dy][:, cx + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1)]), 0).astype(np.uint8)   # 3x3 median: less video noise
     snap.append(np.dstack([g, np.where(magenta(g), 0, 255)]).astype(np.uint8))
 snap = np.array(snap)
 
@@ -92,7 +105,7 @@ def n4(mask):
 
 # outline colour = most common dark edge colour of the picked video frames, so filled pixels match the video's own line
 # (still_px.png is only a fallback when the video has no dark edge at all)
-se = np.concatenate([f[edge(f[..., 3] > 0)][:, :3] for f in fr]).astype(int); se = se[se.sum(1) < 150]
+se = np.concatenate([f[edge(f[..., 3] > 0) & ~tint(f)][:, :3] for f in fr]).astype(int); se = se[se.sum(1) < 150]
 if not len(se):
     st = np.asarray(Image.open(still_p).convert('RGBA')); se = st[edge(st[..., 3] > 0)][:, :3].astype(int); se = se[se.sum(1) < 150]
 v, c = np.unique(se, axis=0, return_counts=True); OUT = v[c.argmax()]
@@ -112,11 +125,22 @@ def offpal(f, d=60):
     px = f[..., :3].reshape(-1, 3).astype(int); best = np.full(len(px), 1 << 30)
     for c in PAL: best = np.minimum(best, ((px - c) ** 2).sum(1))
     return (best > d * d).reshape(f.shape[:2])
-added = []; fxrim = []
+added = []; fxrim = []; peeled = []
 for f in fr:
-    al = f[..., 3] > 0; r, g, b = (f[..., k].astype(int) for k in range(3))
-    fringe = al & (r - g > 35) & (b - g > 30) & n4(~al)          # pink rim on the silhouette only
-    f[fringe, 3] = 0
+    np_ = 0
+    for _ in range(4):                                            # background-tinted rim, silhouette inward (set 225b)
+        al = f[..., 3] > 0; k = al & n4(~al) & tint(f)
+        if not k.any(): break
+        f[k, 3] = 0; np_ += int(k.sum())
+    for _ in range(3):                                            # 1-px spurs
+        al = f[..., 3] > 0; p = np.pad(al, 1)
+        nb = sum(p[1 + dy:1 + dy + al.shape[0], 1 + dx:1 + dx + al.shape[1]].astype(int) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+        k = al & (nb <= 1)
+        if not k.any(): break
+        f[k, 3] = 0; np_ += int(k.sum())
+    nc, lab, st_, _c = cv2.connectedComponentsWithStats((f[..., 3] > 0).astype(np.uint8), connectivity=8)
+    small = np.isin(lab, [k for k in range(1, nc) if st_[k, cv2.CC_STAT_AREA] < 4]); f[small, 3] = 0
+    f[f[..., 3] == 0, :3] = 0; peeled.append(np_ + int(small.sum()))
     al = f[..., 3] > 0
     dark = f[..., :3].astype(int).sum(-1) < 150
     fx = al & ~core & ~dark & offpal(f)                           # effect pixels outside the body
@@ -129,6 +153,7 @@ for f in fr:
     light = edge(al) & ~dark & ~fx                                # body edge pixel that is not dark = outline missing
     add = n4(light) & ~al & ~n4(fx)
     f[add, :3] = OUT; f[add, 3] = 255; added.append(int(add.sum()))
+print('background rim + specks removed per frame', peeled)
 print('outline pixels added per frame', added)
 print('dark rim removed around effects per frame', fxrim)
 

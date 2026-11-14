@@ -20,7 +20,8 @@ Scripts here (Python 3 + numpy + Pillow (+ opencv-python for video); run with `p
 3. **Store the snapped png** next to the original as `<ID>_still_px<W>x<H>_<date>.png` + INDEX.csv row.
 
 ## Route B — Gemini video → 8 frames (default, set 222 L1)
-**B1. Owner makes ONE video** in Gemini from a **padded input** (set 225, owner: full body every time, saves Gemini quota by cutting re-rolls): Claude makes `<ID>_gemini_in_1280x720.png` = the snapped still ×4 (nearest) centred on a 1280×720 flat #FF00FF canvas (~45–50% of the height, wide margin all round) — the same 16:9 shape as the video, so Gemini has no reason to zoom/crop. Fall-back: the snapped-or-original still (a new Gemini chat, attach the still, paste the fixed prompt below; fill `[EFFECT]` per character — e.g. HL-1: `small blue sparks in the eye visor and a few tiny lightning sparks on the raised fist`, or `none`).
+**B1. Owner makes ONE video** in Gemini from a **padded input** (set 225, owner: full body every time, saves Gemini quota by cutting re-rolls): Claude makes `<ID>_gemini_in_1280x720.png` = the snapped still ×4 (nearest) centred on a 1280×720 flat canvas (~45–55% of the height, wide margin all round) — the same 16:9 shape as the video, so Gemini has no reason to zoom/crop. **Background colour = opposite of the creature (owner rule set 225b):** red / orange / brown / yellow creature → **green #00FF00**; green creature → **magenta #FF00FF**; mixed → the one with less of it in the body. (A dull pink came back from Veo as #BA5089, too close to a red body → fuzzy edge; green stayed #09FA10 and peeled clean.)
+- **Generator settings (owner rule set 225b, PL-1 v2):** Veo 3.1 (Quality if credits allow, else Fast) · **Frames** (image = first frame; also last frame if offered — NOT Ingredients, it redraws) · 16:9 · **1080p** (1 game pixel ≈ 6 video px vs 5.4 at 720p) · x1 · download **.mp4, never GIF** (GIF = 480×270 dithered). Omni Flash zoomed, redrew and leaned the body. A stop-motion / held-poses prompt FAILED (set 225b) — do not use. Fall-back: the snapped-or-original still (a new Gemini chat, attach the still, paste the fixed prompt below; fill `[BG NAME] [BG HEX]` = `pure green #00FF00` or `magenta #FF00FF` and `[EFFECT]` per character — e.g. HL-1: `small blue sparks in the eye visor and a few tiny lightning sparks on the raised fist`, or `none`).
 - **Length:** Gemini decides the clip length (HL-1 clips: 10 s, 24 fps, 1280×720) — any length is fine. Only ~1.5 s of it is used, so **one clip per character**; never ask for longer or for several.
 - **Retry at most once**, only for a fail in B4. Second fail → route A (saves Gemini quota).
 - The video stays in the owner's Downloads (not in the repo: big, and only the frames are used).
@@ -31,11 +32,11 @@ Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
 
-FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty [BG NAME] margin on every side as the input image. Never zoom in, never crop any part of the body.
 
 AUDIO: none. Silent video, no music, no sound effects.
 
-BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
+BACKGROUND: flat solid [BG NAME] [BG HEX] for the entire video, exactly like the input image. No floor, no ground line, no shadow, no gradient, no vignette, no glow or light spill from the character onto the background.
 
 MOTION: very small and slow. Only the chest and shoulders rise and fall slightly, like slow breathing (one breath every 2 seconds). Arms move together with the shoulders by 1–2 pixels at most. Feet and legs stay perfectly still and planted. Glowing parts (eyes, runes, crystals) may glow brighter and dimmer gently with each breath.
 
@@ -53,7 +54,8 @@ If it zooms or adds smoke: put `Static shot, tripod camera, sprite sheet style a
 
 **B3. Run** `video_idle.py <video> <ID>_still_px….png <scratch>/<ID>`. What it does — and nothing more (set 222):
 - grid = one block size for both axes (Fourier) + phase (least change inside blocks) from frame 0; every frame snapped on that same grid;
-- magenta → transparent; pink fringe removed **only where it touches transparency**;
+- background colour read from frame 0's border (green or magenta) → transparent; frames kept uint8 and cropped to the character box + margin (a 1080p clip as int arrays ran out of RAM, set 225b); each block = 3×3 median;
+- **background-tinted rim peeled** from the silhouette inward (≤ 4 px; green bg: g > r+10 and g > b+10 · magenta bg: b ≥ g+12) + 1-px spurs + specks < 4 px (set 225b: the pink rim left loose dots — owner: "no aura round the body at all"); prints `background rim + specks removed per frame`;
 - camera check on the **feet strip** (bottom 8 rows must not move/grow; sparks change the top/sides, so the whole box is no test) — later frames (Gemini often zooms near the end) are dropped;
 - loop pick: the most alike start/end pair 1.2–3.0 s apart inside the still part → 8 evenly spaced frames, 250 ms each (owner set 225b; art-style §2);
 - **missing dark outline filled**: a transparent pixel next to a light edge pixel gets the most common dark edge colour of the picked frames (HL-1 `#0b0931`); ~40–110 px per frame. It does NOT catch every gap (diagonal corners, gaps inside the body) — the owner finishes them by hand (B5);
