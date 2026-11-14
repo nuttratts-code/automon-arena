@@ -281,6 +281,29 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 		st.add_child(sp)
 		x += w * 0.8
 		i += 1
+	# s226 R3 plaza in 3D: the owner's Hunyuan plaza was squashed to 16 % height (stone relief ~3 cm = reads flat).
+	# pzy = new height scale (the slab's top stays where it was + lift), lift = raise the whole disc so its side shows,
+	# pzn = normal map strength, sunel/sunaz = a lower raking sun from the top-left so the grooves catch light.
+	var pzy := float(EV.get("pzy", "0.16"))
+	var lift := float(EV.get("lift", "0.0"))
+	for n in st.find_children("Plaza", "", true, false):
+		if "tone" in n:
+			var p3 := n as Node3D
+			var slab_top := p3.position.y + 2.02 * p3.scale.y # slab top (mesh top ~2.02 m)
+			p3.scale.y = pzy
+			p3.position.y = slab_top - 2.02 * pzy + lift
+			for mi in p3.find_children("*", "MeshInstance3D", true, false):
+				var mo := (mi as MeshInstance3D).material_override as StandardMaterial3D
+				if mo != null:
+					mo.normal_scale = float(EV.get("pzn", "1.0"))
+					mo.roughness = 0.9
+	if lift > 0.0: # units stand on the raised top
+		for g in (st.groups.get("battle", {}) as Dictionary).values():
+			for k in ["spr", "shadow", "ring"]:
+				if g.get(k) != null:
+					(g[k] as Node3D).position.y += lift
+	if EV.has("sunel"):
+		st.sun.rotation_degrees = Vector3(-float(EV["sunel"]), float(EV.get("sunaz", "-50")), 0.0)
 	# key-light pool on the board (ref: sunlit play area, darker rim) — one warm spot from above-left
 	var pool := float(EV.get("pool", "0.0")) # s226: no visible effect on the plaza (its shader ignores spot lights?) — off
 	if pool > 0.0:
