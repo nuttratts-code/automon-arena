@@ -1,4 +1,9 @@
-# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.6 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+# แนวภาพ Automon Arena — "ภาพวาดในฉากแสงจริง" V2.0 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+
+> **V2.0 (ตัดสินแล้ว · ผู้ใช้ชุด 227, 15 พ.ย. 2026):** ตัวละครเปลี่ยนจาก**พิกเซลอาร์ต**เป็น**ภาพวาด 2D สไตล์เดียวกับฉาก** (พิกเซลทุกแบบ K0–K4 รวมภาพชั่วคราว DCSS วางในสนามแล้วไม่เข้ากับฉากที่เป็นภาพวาด · หมูป่าภาพวาดเข้ากันกว่า) · ท่ายืน = **วิดีโอ Veo → 32 เฟรม** (ผู้ใช้เลือกจากเทียบ 16/32/64 · 64 กินหน่วยความจำ 2 เท่าแต่ตาแทบไม่เห็นต่าง) · ทางสำรอง = ยืดภาพหายใจด้วยโค้ด (M3) · ทุกตัวต้อง**ดูแฟนตาซี + เห็นเอกลักษณ์เผ่าชัด**ทั้งสีและทรง · หน้าไม่โหดมาก (ผู้ใช้ชุด 227) · ร่าง 1 ก่อนทุกตัว · ขั้นตอน: สกิล char-idle เส้นทาง P · ภาพเทียบ: `ccr-882ceb4b-0ewtk1:claude/preview-set217/notes.md` s227 R1–R6
+> - **ข้อที่พิกเซลเท่านั้น (ใช้ไม่ได้แล้วกับตัวใหม่):** ข้อ 2 ผืน 64×64 / เส้นขอบ 1 px / 16 สี / ขยาย 2× · ท่ายืน 8 เฟรม 250 ms + เกลาใน Pixelorama · ข้อ 4 ขั้น 4 และ 6 (ย่อ/ลดสี/S2) · ข้อความตั้งต้นพิกเซลเดิม (ดูประวัติ git V1.6) · PL-1/SF-1 พิกเซลเดิม = ต้องวาดใหม่แบบภาพวาด
+> - **ภาพวาดในเกม:** ตัวสูง ~150 px บนจอ 1920×1080 (1 จุดภาพ = 1 จุดจอ · ค่าเสนอ) · ภาพแบนไม่รับแสงแดด (ลองแบบรับแสงแล้วตัวมืดแบน) · แผ่นภาพ 32 เฟรมเรียงเป็น**ตาราง**ไม่เกินกว้าง 4096 px ตอนทำจริง (มือถือโหลดภาพกว้างเกินไม่ได้)
+> - **ยังไม่ตัดสิน:** เงา — ลองเงาตามรูปตัวแบบนุ่ม/คม (s227 R6) ผู้ใช้ว่า "ยังแปลกๆ" จดไว้แก้ทีหลัง · ตอนนี้ใช้เงากลมเดิม (ชุด 226)
 
 **สถานะ (6 พ.ย. 2026):** พักงานภาพไว้ระหว่าง MVP1 · ตัดสินแล้ว: หลัง MVP1 ย้ายเกมไป Godot (ภาพ HD-2D แท้ต้องใช้ฉาก 3D) · ผลทดลอง: AI วาดตัวละครพิกเซลได้ดี (HL-1 ผ่าน) แต่ฉากจาก AI ดูเป็น AI/ไม่ใช่ HD-2D → ฉากใช้ 3D (Blender ทดลองแล้ว: art/blender/arena_scene.py รันด้วย `pip install bpy pillow` แล้ว `python arena_scene.py <out.png>`) · ยังไม่ตัดสิน: ขนาดตัว 64/96 px · ภาพเปลี่ยนตามเลเวลหรือไม่
 
@@ -42,33 +47,42 @@
 6. **ปรับเข้าฉาก S2 (ตัดสินแล้ว · ผู้ใช้ชุด 226 เลือกจากภาพเทียบ s226-scenematch-S0-S4 — ตัวเจนสีจัดเกินฉาก):** หลัง idle 8 เฟรมผ่านแล้ว Claude ทำแผ่นภาพ S2 อีกชุดด้วย `scenematch.py <sheet> <out> 2` (สกิล char-idle B5c): ย่อ ÷2.4 ให้ได้ขนาดสเปกข้อ 2 · เหลือ 16 สี · ความสดเหลือ 70% · บีบความต่างสว่าง-มืดเหลือ 78% เข้าหากลาง · โทนอุ่นอมเขียวมะกอก — ตัวเลขชุดนี้มาจากตัวอย่างที่ผู้ใช้เลือก ปรับได้รายตัว · ไฟล์ S2 = ตัวที่ใช้ในเกม (ไฟล์เดิมเก็บไว้) · ข้อความตั้งต้นข้อ 5 เพิ่มบรรทัดสี/ลาย (ชุด 226) ให้ตัวใหม่หม่นตั้งแต่ตอนเจน
 - ห้ามพิมพ์ชื่อเกมอื่น ชื่อตัวละครเกมอื่น ชื่อศิลปิน หรือคำว่า HD-2D ในคำสั่ง (บรรยายลักษณะแทน)
 
-## 5. ข้อความตั้งต้น (วางใน Gemini ครั้งแรก)
+## 5. ข้อความตั้งต้น — ภาพวาด V2.0 (วางใน Gemini ครั้งแรก · แนบภาพฉาก `art/library/pictures/originals/target_rune_meadow_gemini_2026-11-13.jpeg` · ผู้ใช้ชุด 227)
 ```
-You are helping me make ORIGINAL creature sprites for my indie fantasy auto-battler game.
+You are helping me paint ORIGINAL creatures for my indie fantasy auto-battler game.
 Style rules for every image:
-- True pixel art sprite, every pixel a clean square block, no anti-aliasing, no blur. Same pixel size as the attached reference.
-- From the attached reference copy ONLY the pixel size, outline, shading and colour mood (muted, earthy, 2-3 shade steps, small surface texture). NEVER copy its species, body shape, pose or colours: every creature is a different kind of animal with its own silhouette.
-- Fantasy creature, not human. Full body, 3/4 view facing LEFT, like the reference.
-- Dark outline around the whole body — but **effects outside the body (sparks, lightning, loose glow) never have a dark rim** (owner rule set 225). Light from top-left, 2-3 shade steps per colour, max 16 colours.
-- Colours sit in a soft painted meadow (muted green-grey, warm light): slightly greyed, earthy, mid values; no pure white, no neon. Markings and patterns use neighbouring shades of the main colour (low contrast) — NEVER bold contrasting stripes, diamonds, checkers or spots in a second bright colour. Cute small proportions are fine, but it must not look like a toy or a bright mobile-game cartoon.
-- Must read clearly at small size: strong silhouette, clear gaps between limbs and body, at least one light colour area, eyes clearly visible.
-- Every creature has 1-2 effect spots built into its body (a glowing eye, a flame tail tip, a crystal, a rune) where magic can shine and spark.
-- Fit inside the middle 80% of the image with empty space on every side. Body about as wide as it is tall; no very long tails or wings.
-- Plain flat solid background in the colour I name for each creature (pure green #00FF00, or magenta #FF00FF for green creatures).
-NEVER: shadow, ground, floor line, text, frame; the background colour (or anything close to it) on the creature; many loose floating particles (at most 2-3, touching the body); resembling any existing game, monster-collecting franchise or character.
-Each creature has 2 forms: FORM 1 (basic) and FORM 3 (evolved, used at max level). Reply "ready".
+- Copy ONLY the painting style, brushwork, colour mood and warm top-left sunlight of the attached landscape painting, so every creature looks painted by the same artist and belongs in that scene. Do not copy anything else from it.
+- Soft painterly fantasy illustration with clear readable shapes and a slightly darker painted edge. NOT pixel art, NOT 3D render, NOT anime, NOT a cute mascot or toy.
+- Clearly a FANTASY creature, not a normal animal: start from a real animal for believable anatomy, then add magical features of its tribe (horns, crystals, runes, plates, glowing parts) so nobody would mistake it for a real animal.
+- Faces are expressive and likeable: confident, determined or curious — never horror, never gore, no snarling rage face.
+- TRIBE IDENTITY is the most important rule. Each creature belongs to one of 6 tribes and must be recognisable by colour AND silhouette even without a frame:
+  - steel: silver-grey and muted blue, boxy plate armour, broad shoulders, shield-like plates, rivets
+  - fire: red-orange and gold, shapes pointing upward, horns, flame crests
+  - storm: yellow and electric purple, diamond shapes, zigzag spikes, lean and fast
+  - wind: mint green and white, round flowing shapes, cloak-like membranes, wings, feathers
+  - spirit: translucent sky-blue to lavender-blue, floating, runes, magic rings, hexagon patterns
+  - demon: dark purple and oxblood red, pentagon-shaped heavy body, curved horns, thick spikes, glowing eyes
+- Colours stay earthy and slightly greyed like the painting; markings use neighbouring shades of the main colour; no neon, no pure white, no pink on the body.
+- Every creature has 1-2 effect spots built into its body (glowing eyes, ember veins, a crystal, a rune) where magic can shine.
+- Full body, 3/4 view facing LEFT, feet planted (spirits hover). Whole body inside the middle 80% of the image, empty space on every side; body about as wide as it is tall; no very long tails or wings.
+- Plain flat solid background in the colour I name (pure green #00FF00, or magenta #FF00FF for green creatures), edge to edge — no painted frame or border.
+- Each creature has 2 forms: FORM 1 (basic, young, simpler, fewer ornaments) and FORM 3 (evolved max-level form: the same creature grown about 20% bigger, stronger pose, more armour or ornaments, one new signature feature). I will always say which form I want; FORM 3 comes later with the approved FORM 1 attached.
+NEVER: shadow, ground, floor, grass, text, frame, border, glow spilling onto the background, smoke, loose floating particles, the background colour on the creature, resembling any existing game, monster-collecting franchise or character.
+Reply "ready".
 ```
 
-## 6. แม่แบบตัวละคร (เปลี่ยนเฉพาะในวงเล็บ)
+## 6. แม่แบบตัวละคร — ภาพวาด (เปลี่ยนเฉพาะในวงเล็บ · ตัวอย่างที่ผ่าน = WN-1 ชุด 227)
 ```
-FORM 1. Character: [ID] — [creature in a few words — a species no other creature uses]
-Background: [pure green #00FF00 · หรือ magenta #FF00FF ถ้าตัวโทนเขียว]
-Tribe look: [ข้อ 3 แปลเป็นอังกฤษ เช่น "steel tribe: silver-grey and muted blue, boxy plate armour, broad shoulders"]
-Rarity: [common / uncommon / rare / epic / legendary] (more ornaments and size for higher rarity)
-Pose: [idle battle stance ...], feet planted
-Effect spot: [1-2 จุด เช่น "glowing blue visor eye; lightning can spark from the fists"]
-Key feature: [จุดเด่นจากสกิล 1 อย่าง]
+FORM 1. Character: [ID] — [young + creature in a few words — a species no other creature uses] ([rarity]: simple, few ornaments)
+Tribe: [tribe] — make the [tribe] identity obvious: [silhouette + tribe features from rule list]
+Fantasy features: [2-3 magical features in tribe colours]
+Face: [confident / curious ...] — not scary
+Effect spots: [1-2 spots]
+Pose: [ready stance ...], feet planted
+Background: [pure green #00FF00 / magenta #FF00FF if green creature]
 ```
+WN-1 ที่ผ่าน (ชุด 227): `young demon boar fighter · short thick curved horns · ridge of short dark spikes · cracked oxblood-red plates on shoulders/forehead with ember-orange veins · small pentagon rune on the shoulder plate · face confident and a little cheeky · effect spots: glowing ember eyes + ember veins in the horn cracks · pure green`
+ชนิดสัตว์ที่เลือกแล้ว (ผู้ใช้ชุด 227): HL-1 ปูเปลือกเหล็ก · WY-1 เหยี่ยวเล็ก · WN-1 หมูป่าเขาโค้ง · PT-1 ผีเสื้อกลางคืนเรืองแสง · PL-1 กิ้งก่าไฟ · SF-1 ด้วงสายฟ้า (PL-1/SF-1 วาดใหม่แบบภาพวาด)
 ร่าง 3 (แนบร่าง 1 ที่ผ่านแล้วของตัวนั้นแทนภาพต้นแบบ):
 ```
 FORM 3 of the attached creature (its evolved max-level form).
