@@ -94,6 +94,9 @@ func _initialize() -> void:
 		s.frame = (k * 3) % s.hframes
 		if look != "A":
 			s.modulate = Color(0.97, 0.96, 0.93) # scene tint: sprites sit in the same light as the set
+			if EV.get("shade", "0") == "1": # s227: painted sprite takes the scene sun
+				s.shaded = true
+				s.modulate = Color.WHITE
 			if look == "C":
 				s.shaded = true # takes the sun + sky ambient like the set (hd-2d-ref 2.3 minimum)
 				s.modulate = Color.WHITE
