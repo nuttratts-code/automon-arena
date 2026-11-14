@@ -142,3 +142,27 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
+
+## PL-1 GREEN background (owner, set 225b: pink bg #BA5089 came back too close to the red body → fuzzy edge) — attach PL-1_gemini_in_green_1280x720.png · Veo 3.1 · Frames · 16:9 · 720p · .mp4
+Rule of thumb (proposal, not yet in art-style): red/orange/brown creature → green #00FF00 bg · green creature → magenta #FF00FF.
+```
+Animate this exact pixel-art character as a subtle idle breathing loop.
+
+CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (back spikes, tail flame tip) down to the feet, with the same wide empty green margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
+
+BACKGROUND: flat solid pure green #00FF00 for the entire video, exactly like the input image. No floor, no ground line, no shadow, no gradient, no vignette, no glow or light spill from the character onto the background.
+
+MOTION: very small and slow. Only the chest and shoulders rise and fall slightly, like slow breathing (one breath every 2 seconds). Front legs move together with the shoulders by 1–2 pixels at most. All four feet stay perfectly still and planted. The body does not lean, the head does not turn.
+
+EFFECT: the flame on the tail tip flickers gently
+
+STYLE LOCK: keep the exact same pixel art, same pixel size, same palette, same dark outlines and same details as the input image in every frame. Do not redraw. Crisp hard pixel edges, no blur, no anti-aliasing, no motion blur.
+
+DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFECT.
+
+LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
+```
