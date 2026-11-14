@@ -166,3 +166,27 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
+
+## SF-1 NEW (storm beetle, owner set 225b) — attach SF-1_gemini_in_green_1920x1080.png · Veo 3.1 · Frames · 16:9 · 1080p · .mp4
+Still: owner Gemini 2nd try (muted colours), snapped 132x111 (block 4.3), green rim + loose spark dots removed, x5 on #00FF00.
+```
+Animate this exact pixel-art character as a subtle idle breathing loop.
+
+CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (the forked horn tips and its sparks) down to the feet, with the same wide empty green margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
+
+BACKGROUND: flat solid pure green #00FF00 for the entire video, exactly like the input image. No floor, no ground line, no shadow, no gradient, no vignette, no glow or light spill from the character onto the background.
+
+MOTION: very small and slow. Only the shell rises and falls slightly, like slow breathing (one breath every 2 seconds). The head and horn move together with the shell by 1–2 pixels at most. All six legs stay perfectly still and planted. The body does not lean, the head does not turn.
+
+EFFECT: a few tiny bright yellow electric sparks flicker on and off around the two tips of the forked horn, with no dark outline on the sparks
+
+STYLE LOCK: keep the exact same pixel art, same pixel size, same palette, same dark outlines and same details as the input image in every frame. Do not redraw. Crisp hard pixel edges, no blur, no anti-aliasing, no motion blur.
+
+DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFECT.
+
+LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
+```
