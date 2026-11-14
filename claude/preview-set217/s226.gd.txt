@@ -45,6 +45,8 @@ func _initialize() -> void:
 	# you (left): front row 0 → back row 2; foe mirrors the same six
 	var ids := ["PL-1g", "SF-1g", "SF-1g", "PL-1g", "PL-1g", "SF-1g"]
 	var foe := ["SF-1g", "PL-1g", "PL-1g", "SF-1g", "SF-1g", "PL-1g"]
+	if EV.has("ids"): ids = Array(EV["ids"].split("/"))
+	if EV.has("foe"): foe = Array(EV["foe"].split("/"))
 	var n := 9000
 	var map := {}
 	var map_side := {}
@@ -82,14 +84,14 @@ func _initialize() -> void:
 						var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
 						img.set_pixel(x, y, Color(lerpf(l, c.r, csat), lerpf(l, c.g, csat), lerpf(l, c.b, csat), c.a))
 		s.texture = ImageTexture.create_from_image(img)
-		s.hframes = 8
+		s.hframes = int(EV.get("hf", "8"))
 		s.flip_h = map_side[id] == 0 # new set faces left (art-style V1.5)
 		if false:
 			pass
 		s.pixel_size = wpp * float(EV.get("k", "1"))   # s226 V3: chunky sheet shown K x = same size, bigger pixels
 		var new_tall: float = s.pixel_size * float(img.get_height())
 		s.position += st.lean() * ((new_tall - old_tall) / 2.0)
-		s.frame = (k * 3) % 8
+		s.frame = (k * 3) % s.hframes
 		if look != "A":
 			s.modulate = Color(0.97, 0.96, 0.93) # scene tint: sprites sit in the same light as the set
 			if look == "C":
