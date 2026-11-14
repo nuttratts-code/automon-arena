@@ -327,6 +327,9 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 			var feet: Vector3 = sp.position - st.lean() * (tall * 0.5)
 			var sd := Sprite3D.new()
 			sd.texture = sp.texture
+			if EV.has("shtex"): # s227: soft shadow sheet (blurred silhouette, fades away from the feet)
+				var simg := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s.png" % EV["shtex"]))
+				sd.texture = ImageTexture.create_from_image(simg)
 			sd.hframes = sp.hframes
 			sd.frame = sp.frame
 			sd.flip_h = sp.flip_h
@@ -336,6 +339,9 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 			sd.shaded = false
 			sd.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 			sd.modulate = Color(EV.get("shc", "#0a0f1a")) * Color(1, 1, 1, sha)
+			if EV.has("shtex"):
+				sd.modulate = Color(1, 1, 1, sha)
+				sd.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 			sd.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			sd.render_priority = -1
 			st.add_child(sd)
