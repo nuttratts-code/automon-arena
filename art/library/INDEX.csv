@@ -1,0 +1,20 @@
+file,what,source,date,made-by,in-game-now,licence-status
+3d/originals/stone_runes_hunyuan_2026-11-13_ae7bb1d9.glb,rune standing stone - raw 50k + 4096 textures (source of stone_hy_runes*),Tencent Hunyuan3D (web version not recorded),2026-11-13,owner,no (prepared copies used),AI placeholder - UNVERIFIED
+3d/originals/rock_outcrop_hunyuan_2026-11-13_298c9495.glb,layered rock outcrop - raw 50k (source of rock_cliff_hy),Tencent Hunyuan3D,2026-11-13,owner,no (prepared copy used),AI placeholder - UNVERIFIED
+3d/originals/stone_unnamed_hunyuan_2026-11-13_0c2fca14.glb,tall stone - raw 50k; downloaded 20:21 and never imported; owner to say what it is,Tencent Hunyuan3D,2026-11-13,owner,no,AI placeholder - UNVERIFIED
+3d/prepared/stone_hy_runes_full1k.glb (+ _texture_pbr_20250901*.png),rune stone full 50k + 1024 textures (hero stone),Hunyuan3D + Blender 5.2 script,2026-11-13,Claude,yes (sample branch),AI placeholder - UNVERIFIED
+3d/prepared/stone_hy_runes_bake.glb (+ _bake_*.png),rune stone 2.5k + baked colour/normal (copies),Hunyuan3D + Blender 5.2 Cycles bake,2026-11-13,Claude,yes (sample branch),AI placeholder - UNVERIFIED
+3d/prepared/stone_hy_runes.glb (+ stone_hy_runes_texture_pbr_20250901*.png),rune stone decimated 5k,Hunyuan3D + Blender 5.2 script,2026-11-13,Claude,no (removed baseline set 217),AI placeholder - UNVERIFIED
+3d/prepared/stone_hy_runes_lite.glb (+ _lite_*.png),rune stone 1.5k + normal bake (back smeared),Hunyuan3D + Blender 5.2 Cycles bake,2026-11-13,Claude,no (removed baseline set 217),AI placeholder - UNVERIFIED
+3d/prepared/stone_a_tall.glb (+ _atlas.png),tall stone built from the 5 owner views (visual hull + projected paint),Blender 5.2 script r3-hull-stone.py from pictures/s217/stone_a_tall_*.webp,2026-11-12,Claude,no (removed baseline set 217),views AI placeholder; mesh own script
+3d/prepared/rock_cliff_hy.glb (+ _color/_normal.png),rock outcrop 3k baked (cliff rim + small boulders),Hunyuan3D + Blender ai_glb_prep bake,2026-11-13,Claude,yes (sample branch),AI placeholder - UNVERIFIED
+3d/prepared/stone_fallen_hy.glb (+ _color/_normal.png),fallen stone slab 3k,Gemini picture + Hunyuan3D + Blender script,2026-11-13,Claude,yes (sample branch),AI placeholder - UNVERIFIED
+3d/prepared/plaza_hy.glb (+ _texture_pbr_20250901*.png),rune plaza 50k (diameter 18.9),Gemini picture + Hunyuan3D + Blender script,2026-11-13,Claude,yes (sample branch),AI placeholder - UNVERIFIED
+pictures/s217/stone_a_tall_{front,left,back,right,top}.webp,5 views of the tall stone,Gemini or GPT image (owner),2026-11-12,owner,no,AI placeholder
+pictures/s217/backdrop.png,hills + arch backdrop card (cut from owner sheet),Gemini + r1-cut.py,2026-11-12,owner+Claude cut,no,AI placeholder
+pictures/s217/far_hills.png + far_sky.png,far layers cut from the owner's full target picture (R5),Gemini + cut script,2026-11-13,owner+Claude cut,no,AI placeholder
+pictures/s217/far_hills_v3.png,far hills (magenta sky keyed),Gemini asset-prompts §6.2 + r6-cut.py,2026-11-13,owner+Claude cut,yes (sample branch),AI placeholder
+pictures/s217/sky_clouds.png,sky panorama,Gemini asset-prompts §6.2,2026-11-13,owner,yes (sample branch),AI placeholder
+pictures/s217/ground_tile.png,meadow ground tile,Gemini asset-prompts §6.3,2026-11-13,owner,yes (sample branch),AI placeholder
+pictures/s217/grass0-5.png + grass_big.png,grass cards cut from the owner 6-grass sheet + grass_big,Gemini + r1-cut.py,2026-11-12,owner+Claude cut,no (grass removed R21),AI placeholder
+pictures/s217/stone0-3.png + stone_tall.png + stone_fallen.png + rock.png,flat stone/rock cards cut from the owner 4-stone sheet and pictures,Gemini + r1-cut.py,2026-11-12,owner+Claude cut,no (removed baseline set 217),AI placeholder
