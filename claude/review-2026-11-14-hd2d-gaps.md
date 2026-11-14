@@ -50,3 +50,9 @@ Order follows art-look §2: camera → blockout → real assets → lighting las
 Schedule note: P5 art is not counted in the 31 Dec target (plan-godot-migration); phases 1+ eat into it.
 
 Security: docs only; no secrets, no outside assets added.
+
+## Outside references noted (set 221, owner: "just note it", nothing decided)
+Read these when a phase starts; ideas only, own code:
+- claude/review-2026-11-14-meowa-template.md: Godot HD-2D template, NO licence. P2 idle frame offset + foot shadow · P3 near-camera framing props · P4 drifting cloud shadows in the ground shader, cool-ambient shadow sample · P7 one web count switch.
+- claude/review-2026-11-14-lumina.md: three.js HD-2D engine, MIT. P2 sun-facing sprite shadow copy (after the set 214 fix) · P4 pixel-exact sharp band + gentler edge, fog = sky horizon colour, bloom clamp, split toning · P7 shader warm-up at load.
+- Player opinions (web search, set 221): the top complaint is too much blur ("everything off-centre is blurred"), then heavy bloom and 2D/3D mismatch. Keep the sharp band wide in P4.
