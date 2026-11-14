@@ -36,14 +36,14 @@ Pose: hovering upright, wings open but compact (body about as wide as tall), sma
 Background: pure green #00FF00
 ```
 
-## PL-1 — fire lizard (green)
+## PL-1 — fire lynx (green) · owner B2 set 228 (fire lizard dropped)
 ```
-FORM 1. Character: PL-1 — young fire lizard spark-caster, small agile salamander body (common: simple, few ornaments)
-Tribe: fire — make the fire identity obvious: shapes pointing upward, a short flame-shaped crest on the head and back, two small horns, red-orange scales with gold belly
-Fantasy features: gold ember-vein lines along the back · flame crest frills · a short tail that curls up with a small flame at the tip
+FORM 1. Character: PL-1 — young fire lynx spark-caster, a small wild cat with tall tufted ears (common: simple, few ornaments)
+Tribe: fire — make the fire identity obvious: shapes pointing upward, tall pointed ears whose tufts are small flames, a short flame-shaped crest of fur on the head and back, two tiny horns, red-orange fur with gold chest and cheek ruff
+Fantasy features: gold ember-vein lines along the back · flame tufts on the ear tips · short bobbed tail with an ember glow at the tip
 Face: eager, cheeky and confident — not scary
-Effect spots: the flame on the tail tip + glowing ember eyes
-Pose: low ready stance on four legs, head up, one front foot lifted as if about to throw a spark; tail curled up close to the body, not long
+Effect spots: the flame tufts on the ears + glowing ember eyes
+Pose: low ready stance on four paws, head up, one front paw lifted with a tiny ember between the claws as if about to throw a spark; tail short
 Background: pure green #00FF00
 ```
 
