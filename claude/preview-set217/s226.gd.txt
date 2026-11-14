@@ -99,12 +99,15 @@ func _initialize() -> void:
 			var sh: MeshInstance3D = st.groups["battle"][id]["shadow"]
 			var g := Gradient.new()
 			g.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
-			g.colors = PackedColorArray([Color(0.05, 0.06, 0.1, 0.7), Color(0.05, 0.06, 0.1, 0.42), Color(0.05, 0.06, 0.1, 0.0)])
+			var ba := float(EV.get("bloba", "0.7")) # s226 R5: round shadow strength
+			var bc := Color(EV.get("blobc", "#0d0f1a"))
+			g.colors = PackedColorArray([Color(bc, ba), Color(bc, ba * 0.6), Color(bc, 0.0)])
 			var t := GradientTexture2D.new()
 			t.gradient = g; t.fill = GradientTexture2D.FILL_RADIAL
 			t.fill_from = Vector2(0.5, 0.5); t.fill_to = Vector2(1.0, 0.5); t.width = 64; t.height = 64
 			(sh.material_override as StandardMaterial3D).albedo_texture = t
-			sh.scale = Vector3(1.15, 1, 1.0)
+			sh.scale = Vector3(1.15 * float(EV.get("blob", "1.0")), 1.0, float(EV.get("blobd", EV.get("blob", "1.0"))))
+			sh.position.z += float(EV.get("blobz", "0.0")) # s226 R5: a bit in front of the feet so the body does not hide it
 		sprs.append(s)
 		k += 1
 	if look != "A":
@@ -304,7 +307,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
 			for k in ["spr", "shadow", "ring"]:
 				if g.get(k) != null:
-					(g[k] as Node3D).position.y += lift
+					(g[k] as Node3D).position.y += lift + (float(EV.get("bloby", "0.0")) if k == "shadow" else 0.0)
 	if EV.has("sunel"):
 		st.sun.rotation_degrees = Vector3(-float(EV["sunel"]), float(EV.get("sunaz", "-50")), 0.0)
 	# s226 R4 cast shadows: each sprite drawn again flat on the ground, dark + see-through, stretched away from the
