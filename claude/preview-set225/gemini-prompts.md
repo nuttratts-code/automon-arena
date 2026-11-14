@@ -143,7 +143,7 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
 
-## PL-1 GREEN background (owner, set 225b: pink bg #BA5089 came back too close to the red body → fuzzy edge) — attach PL-1_gemini_in_green_1280x720.png · Veo 3.1 · Frames · 16:9 · 720p · .mp4
+## PL-1 GREEN background — input = owner's NEW still (Veo frame, snapped 136x100, block 5.73) ×4 on #00FF00 (owner, set 225b: pink bg #BA5089 came back too close to the red body → fuzzy edge) — attach PL-1_gemini_in_green_1280x720.png · Veo 3.1 · Frames · 16:9 · 720p · .mp4
 Rule of thumb (proposal, not yet in art-style): red/orange/brown creature → green #00FF00 bg · green creature → magenta #FF00FF.
 ```
 Animate this exact pixel-art character as a subtle idle breathing loop.
