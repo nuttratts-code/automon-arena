@@ -3,6 +3,16 @@
 How: new Gemini chat → paste the starter (claude/art-style.md §5) + attach `art/library/pictures/originals/target_rune_meadow_gemini_2026-11-13.jpeg` → wait for "ready" → one block below per message. Also attach the approved WN-1 still `art/library/pictures/sprites/WN-1_still_paint_gemini_2026-11-15.jpg` and write "style reference only — different species" (keeps the same painter look).
 Roles come from src/core/characters.js (HL-1 front · PT-1 front healer · PL-1/SF-1/WY-1 mid+back). All common rarity.
 
+## Review round 1 (set 228) — PL-1 lynx + SF-1 beetle match WN-1 style · WY-1 + PT-1 came out paler/softer (pastel mascot look)
+Fix line for a still with text / light rays / ground shadow (send in the same Gemini chat with the image):
+```
+Same image, keep the creature exactly as it is. Remove the "PL-1" text, remove the light rays in the top-left corner and remove the shadow under the feet. Background: plain flat pure green #00FF00 edge to edge.
+```
+Style line to add at the top of a redo (attach WN-1 + the approved PL-1/SF-1 stills):
+```
+STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.
+```
+
 ## HL-1 — steel crab (green)
 ```
 FORM 1. Character: HL-1 — young iron-shell crab brawler, stocky and low (common: simple, few ornaments)
