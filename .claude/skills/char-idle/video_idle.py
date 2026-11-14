@@ -38,7 +38,8 @@ print(f'video {FW}x{FH} {fps:.0f} fps {len(raw)} frames ({len(raw)/fps:.1f} s)  
 def magenta(g): return np.abs(g.astype(int) - BGC).sum(-1) < 90        # = background key (name kept from set 222)
 def tint(f):                                                          # pixel mixed with the background colour
     r, g, b = (f[..., k].astype(int) for k in range(3))
-    return ((g > r + 10) & (g > b + 10)) if GREEN else (b >= g + 12)
+    # green bg: dark outline + green -> low red; a yellow spark on green keeps a high red, so it is NOT bleed (SF-1 set 225b)
+    return ((g > r + 10) & (g > b + 10) & (r < 140)) if GREEN else (b >= g + 12)
 
 # ---- 1 pixel grid from frame 0 (period by Fourier on edge strength, phase by least change inside blocks) ----
 a = raw[0].astype(int); m = ~magenta(a); ys, xs = np.where(m)
