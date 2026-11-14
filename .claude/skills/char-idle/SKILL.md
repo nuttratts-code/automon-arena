@@ -10,6 +10,7 @@ Scripts here (Python 3 + numpy + Pillow (+ opencv-python for video); run with `p
 - `snap.py <in.jpg> <out.png> <block_px> <offset_px> <grid_n>` — AI "fake pixel" still → real-pixel RGBA, magenta bg → transparent, trimmed.
 - `video_idle.py <video.mp4> <still_px.png> <out_dir> [n=8] [ms=190] [--frames=a,b,…]` — route B, see step B3. ~5 s per video.
 - `colour_lock.py` · `part_copy.py` · `pxo_frames.py` — B4b steady colour, smeared part from frame 1, read the owner's .pxo (set 225).
+- `outline_fill.py <in> <out>` — full 1 px outline incl. diagonal corners + pink fringe → outline, when B3's fill leaves gaps (WY-1 set 225, owner asked Claude to do it, not by hand) · `eye_recolour.py <out> <in>` — eyes to one colour in all 8 frames, head offset tracked (WY-1 constants inside).
 - `idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row]` — route A, 8 code variants, 2.4 s loop, ×3 zoom.
 
 ## Shared steps (every character)
