@@ -17,6 +17,10 @@ uniform float max_lod = 1.0;       // strongest blur (mip level)
 uniform float vignette = 0.38;
 uniform vec3 warm = vec3(1.05, 1.0, 0.9);
 uniform float glow = 0.9;
+uniform float sat = 0.95;          // s225: saturation (1 = none)
+uniform float contrast = 0.96;     // s225: 1 = none, <1 softer
+uniform vec3 lift = vec3(0.0);     // s225: shadow lift colour (FFR meadow ~ 0.009/0.018/0.028)
+uniform float bloom_all = 0.0;     // s225: bloom of any bright saturated pixel (lava, halo, sparks)
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	float d = max(focus_top - uv.y, uv.y - focus_bottom);
@@ -30,9 +34,19 @@ void fragment() {
 		g += s * cy;
 	}
 	c += g * glow * 0.5;
-	// warm grade + a touch less contrast (L4)
-	c = mix(vec3(dot(c, vec3(0.3, 0.59, 0.11))), c, 0.95) * warm;
-	c = mix(c, vec3(0.5), 0.04);
+	if (bloom_all > 0.0) {
+		vec3 bb = vec3(0.0);
+		for (int i = 0; i < 2; i++) {
+			vec3 s = textureLod(scr, uv, 2.0 + float(i) * 1.5).rgb;
+			float mx = max(s.r, max(s.g, s.b)); float mn = min(s.r, min(s.g, s.b));
+			bb += s * smoothstep(0.35, 0.7, mx - mn) * smoothstep(0.6, 0.9, mx);
+		}
+		c += bb * bloom_all * 0.5;
+	}
+	float l = dot(c, vec3(0.3, 0.59, 0.11));
+	c = mix(vec3(l), c, sat) * warm;
+	c = mix(vec3(0.5), c, contrast);
+	c += lift * (1.0 - clamp(l, 0.0, 1.0)) * 4.0;
 	// vignette
 	vec2 v = (uv - vec2(0.5, 0.52)) * vec2(1.25, 1.0);
 	c *= 1.0 - vignette * smoothstep(0.35, 0.85, length(v));

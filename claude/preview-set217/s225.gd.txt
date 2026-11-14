@@ -1,0 +1,112 @@
+extends SceneTree
+# set 225 arena sample (copy only): 6 vs 6 with the six FORM 1 idle sheets, pixel-perfect, look A (P1t as is) / B (HD-2D tuned).
+#   godot --rendering-driver opengl3 --audio-driver Dummy --path <g> --resolution 844x390 -s res://tests/s225.gd -- --out <dir> --look A|B [--frames 16]
+var app: Node
+
+func _frames() -> void:
+	for k in 4:
+		await process_frame
+	await RenderingServer.frame_post_draw
+
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	var out: String = args[args.find("--out") + 1]
+	var look: String = args[args.find("--look") + 1] if args.has("--look") else "A"
+	var nf: int = int(args[args.find("--frames") + 1]) if args.has("--frames") else 1
+	DirAccess.make_dir_recursive_absolute(out)
+	await process_frame
+	app = load("res://scenes/main.tscn").instantiate()
+	app.set_meta("no_boot", true)
+	app.set_meta("force_light", true)
+	root.add_child(app)
+	app.zoom_s = 0.0
+	await _frames()
+	app.name_scr.visible = false
+	app.player_name = "ทดสอบ"
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.set_speed(1, false)
+	app._on_fight()
+	await _frames()
+	app.battle.view.advance(1500.0)
+	await _frames()
+	var st: Node = app.stage
+	for id in (st.groups.get("battle", {}) as Dictionary).keys():
+		st.remove_unit("battle", id)
+	# you (left): front row 0 → back row 2; foe mirrors the same six
+	var ids := ["HL-1", "WN-1", "PL-1", "SF-1", "WY-1", "PT-1"]
+	var foe := ["SF-1", "WY-1", "HL-1", "PT-1", "WN-1", "PL-1"]
+	var n := 9000
+	var map := {}
+	for s in 2:
+		for row in 3:
+			for lane in 2:
+				var cid: String = (ids if s == 0 else foe)[row * 2 + lane]
+				n += 1
+				map[n] = cid
+				st.add_unit("battle", {"id": n, "side": s, "row": row, "lane": lane, "c": {"id": "HL-1", "tribe": ""}})
+	st.show_group("battle")
+	await _frames()
+	var cam := root.get_viewport().get_camera_3d()
+	# one pixel size for every unit = pixel-perfect at the board centre depth (hd-2d-ref: one UUPerPixel for all)
+	var d0: float = (Vector3.ZERO - cam.global_position).dot(-cam.global_transform.basis.z)
+	var wpp: float = 2.0 * d0 * tan(deg_to_rad(cam.fov) / 2.0) / float(DisplayServer.window_get_size().y)
+	var sprs := []
+	var k := 0
+	for id in map.keys():
+		var s: Sprite3D = st.groups["battle"][id]["spr"]
+		var old_tall: float = s.pixel_size * float(s.texture.get_height())
+		var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s.png" % map[id]))
+		s.texture = ImageTexture.create_from_image(img)
+		s.hframes = 8
+		s.pixel_size = wpp
+		var new_tall: float = wpp * float(img.get_height())
+		s.position += st.lean() * ((new_tall - old_tall) / 2.0)
+		s.frame = (k * 3) % 8
+		if look != "A":
+			s.modulate = Color(0.97, 0.96, 0.93) # scene tint: sprites sit in the same light as the set
+			if look == "C":
+				s.shaded = true # takes the sun + sky ambient like the set (hd-2d-ref 2.3 minimum)
+				s.modulate = Color.WHITE
+			# contact shadow: darker core + soft rim (hd-2d-ref: sprites grounded by a foot shadow)
+			var sh: MeshInstance3D = st.groups["battle"][id]["shadow"]
+			var g := Gradient.new()
+			g.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+			g.colors = PackedColorArray([Color(0.05, 0.06, 0.1, 0.7), Color(0.05, 0.06, 0.1, 0.42), Color(0.05, 0.06, 0.1, 0.0)])
+			var t := GradientTexture2D.new()
+			t.gradient = g; t.fill = GradientTexture2D.FILL_RADIAL
+			t.fill_from = Vector2(0.5, 0.5); t.fill_to = Vector2(1.0, 0.5); t.width = 64; t.height = 64
+			(sh.material_override as StandardMaterial3D).albedo_texture = t
+			sh.scale = Vector3(1.15, 1, 1.0)
+		sprs.append(s)
+		k += 1
+	if look != "A":
+		var env: Environment = st.env_node.environment
+		env.fog_depth_begin = 10.0      # hd-2d-ref: thin air starts 10 m from the camera
+		env.fog_depth_curve = 2.2
+		env.fog_light_color = Color("#b7c8da")
+		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+		st.sun.light_energy = 1.25
+		st.sun.light_color = Color("#fff4dc")
+		var hd: ColorRect = app.get_node("HD2D")
+		var m: ShaderMaterial = hd.material
+		m.set_shader_parameter("warm", Vector3(1.02, 1.0, 0.96))
+		m.set_shader_parameter("sat", 1.15)
+		m.set_shader_parameter("contrast", 1.05)
+		m.set_shader_parameter("lift", Vector3(0.006, 0.012, 0.02))
+		m.set_shader_parameter("bloom_all", 0.6)
+		m.set_shader_parameter("glow", 0.35) # cyan rune bloom was blowing the pale ghost out
+		m.set_shader_parameter("vignette", 0.32)
+		m.set_shader_parameter("focus_top", 0.22)
+		m.set_shader_parameter("focus_bottom", 0.88)
+		m.set_shader_parameter("soft", 0.22)
+		m.set_shader_parameter("max_lod", 1.6)
+	await _frames()
+	print("S225 look ", look, " wpp ", wpp, " cam ", cam.global_position)
+	for f in nf:
+		for s in sprs:
+			(s as Sprite3D).frame = ((s as Sprite3D).frame + (1 if f > 0 else 0)) % 8
+		await _frames()
+		root.get_texture().get_image().save_png(out.path_join("%s_f%02d.png" % [look, f]))
+	quit()
