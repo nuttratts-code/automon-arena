@@ -54,6 +54,13 @@ If it zooms or adds smoke: put `Static shot, tripod camera, sprite sheet style a
 - out: `idle_0..7.png`, `sheet_8x1_<W>x<H>.png`, `anim.png` (APNG), `preview.gif` (×4 on grey).
 It prints grid, still-camera range, loop + frame numbers, outline colour. `--frames=…` forces frame numbers (HL-1 approved: `105,110,114,119,123,128,133,137`).
 
+**B3b. Video cropped part of the body (set 224, PL-1 — owner: never re-roll for this, it wastes Gemini quota):** Gemini often zooms so the legs or a flame tip leave the frame in EVERY frame. Do not retry; patch it:
+- the B3 frames use the same block size as the still (check: width matches) → find the video frame's place on the still (best offset of frame 0 against the still; PL-1 = 3 rows down, 1 col left);
+- canvas = the still's size; rows above a seam row (≈ 2 rows above the video's bottom edge) come from each video frame, rows below from the still (legs stay planted). **Rows above the video's top edge must stay EMPTY** — filling them from the still left a frozen flame tip on every frame (set 224 bug);
+- a part cut flat by the frame top (flame, ear): add a 5-row tapering tip per frame from that frame's own top-row colours (brightest inside, darkest at the sides, leaning like the still);
+- the legs from the still look frozen → measure the body rise per frame (mean top row of the back) and offer leg variants in ONE GIF (1 still · 2 stretch with falloff · 3 rigid thigh follows the rise + shin stretches · 4 = 2 + knee 1 px forward · 5 = 2 ×2); owner picked **3** for PL-1;
+- owner edits to frame 0 (e.g. flame outline removed) → copy that frame's region as is and apply the same rule to the other frames **inside a box with both x limits** (an open-ended box also stripped the horn outline, set 224 bug); count outline px of nearby parts before/after.
+
 **B4. Check, then show** (Read the sheet; send preview.gif with SendUserFile). Fail = retry the video (B1 limit):
 - camera still < 3 s, or no loop found (script stops) · seam change > 25% (visible jump) · the character is redrawn (different shape/details from the still) · background not flat magenta.
 - Shimmer of ~15% of pixels per frame is normal for AI video — the owner accepted it (set 222). Do NOT clean it (palette lock, temporal median, optical flow, hysteresis all made it worse in set 222).
