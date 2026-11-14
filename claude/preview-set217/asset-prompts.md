@@ -115,7 +115,7 @@ Claude สร้างรูปทรงจากเส้นขอบของ�
 | 7 | หิน stone_a_tall | **ไม่ต้องเจน** · หินรูน + 0c2fca14 เป็นหินสูงอยู่แล้ว | — | ✅ ข้าม |
 | 8 | ลานหิน · แผ่นหินล้ม · หินผา · หินรูน · ท้องฟ้า · เนินไกล · พื้นหญ้า | ครบทั้งภาพ/ไฟล์ดิบ/โมเดล | — | ✅ มีแล้ว |
 | 9 | ซุ้มประตูบนเนิน | ตอนนี้ใช้ซุ้มจากฉาก Blender เดิม · มีภาพ `arch_ruin_picture` ในคลังถ้าอยากทำ 3D ใหม่ (ไม่บังคับ) | — | ✅ มีแล้ว |
-| 10 | ตัวละคร HL-1: ภาพนิ่ง + แถบ idle (2 ไฟล์ · idle อย่างเดียว) | เจนภาพ Gemini + เก็บงาน Aseprite | 7.4 | ⬜ ต้องเจน |
+| 10 | ตัวละคร: ภาพนิ่ง 1 ภาพต่อตัว (idle ทำด้วยโค้ด) | เจนภาพ Gemini ส่งมาตรงๆ | 7.4 | ✅ HL-1 (14 พ.ย.) · ⬜ ตัวอื่น |
 
 ### 7.0 วิธีใช้
 - เปิดแชท Gemini ใหม่ · **แนบภาพต้นแบบ "ทุ่งหินรูน"** ทุกครั้ง (ยกเว้นตัวละครหมวด 7.4 ที่ใช้ภาพต้นแบบตัวละครแทน)
@@ -236,14 +236,9 @@ Key feature: huge riveted fists, glowing blue eye slit
 Size: the character is about 46 pixels tall inside the 64x64 frame, feet on the 58th pixel row, centred.
 ```
 
-> **ตัดสินแล้ว set 221 (เจ้าของ A2, art-style §2 V0.4):** ตัวละครแต่ละตัวทำแค่ **ภาพนิ่ง + แถบ idle 4 เฟรม** (เปลี่ยนจาก A2 หลังลองเจนท่าโจมตีแล้วยาก) · ท่าโจมตี โดนตี และตาย ใช้โค้ดทำ ไม่ต้องวาด
+> **ตัดสินแล้ว set 221:** ตัวละครแต่ละตัวทำแค่ **ภาพนิ่ง 1 ภาพ** (คำสั่งขั้น A-1) · ท่า idle = โค้ดยืดหดทั้งตัว + จุดเรืองแสงกะพริบ · ท่าโจมตี โดนตี และตาย = โค้ด · **ไม่ต้องเก็บงานใน Aseprite** ส่งภาพจาก Gemini มาตรงๆ ได้ Claude จับตารางพิกเซลและตัดพื้นหลังให้เอง
 
-**ขั้น B-1: แถบ idle** (แนบภาพต้นแบบ HL-1)
-```
-Same character as the attached image: identical design, colours, palette, outline and size. Make a horizontal sprite strip of 4 frames side by side, each frame exactly 64x64 pixels on the same pixel grid, total image 256 x 64. Animation: breathing idle: body rises 1 pixel on frames 2-3, fists bob slightly, eye slit pulses brighter on frame 3. Feet stay on the 58th pixel row in every frame, and the character does not drift sideways between frames. 3/4 view facing right. Plain flat solid #FF00FF magenta background, no ground, no shadow, no text, no frame borders between frames.
-```
-
-ชื่อไฟล์: `HL-1.png` (ภาพนิ่ง) · `HL-1_idle.png` (แถบ 4 เฟรม) · พอ HL-1 ผ่านแล้ว ตัวต่อไปใช้แม่แบบ art-style §6 + "same pixel style, palette and size as the attached image" แล้วเปลี่ยนคำบรรยายท่า idle ให้ตรงกับตัวนั้น
+ชื่อไฟล์: `HL-1.png` · ตัวต่อไปใช้แม่แบบ art-style §6 + "same pixel style, palette and size as the attached image" (แนบภาพ HL-1) · บอก Gemini ให้มีจุดเรืองแสง 1 จุดถ้าเข้ากับตัว (ตา รูน คริสตัล) เพราะ idle จะทำให้จุดนั้นกะพริบ
 
 ### 7.5 ไม่ต้องเจน
 ท้องฟ้า เนินไกล พื้นลาน และพื้นหญ้าใช้ของเดิม (P1t) · เงา แสง หมอก การโยกตามลม แสงเรืองของรูน และเอฟเฟกต์ Claude ทำในเกมเอง
