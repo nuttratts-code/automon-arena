@@ -99,7 +99,7 @@ It prints grid, still-camera range, loop + frame numbers, outline colour. `--fra
 
 ## Route A — code idle variants (fallback after a 2nd video fail, or on the owner's order)
 A1. **Rows:** defaults neck 28% / waist 56% / hip 70% of the height fit HL-1. For other shapes (blob, bird, long tail) look at the png on a coordinate grid and pass the rows by hand.
-A2. **Glow:** the printed `glow px` must be > 0 and on the eyes/runes. 0 or wrong spots → tell the owner (option: a mask file later, art-style §2).
+A2. **Glow:** the printed `glow px` must be > 0 and on the effect spots. Default rule = blue (eyes/runes); other colours or a pale-blue body → `--glow=H0-H1:S:V[:Y0-Y1]` (hue degrees, wraps; repeatable) + `--glow-k` strength (set 225: WN-1 `340-45:.5:.75`, PT-1 halo `245-300:.3:.45:0-19` k 0.5). Check a ×8 mask picture before rendering.
 A3. **Render** `idle_variants.py` → scratchpad; Read frame ~20 to check; send with SendUserFile.
 A4. **Gate — owner picks:** explain the 8 in Thai first, then AskUserQuestion (max 4 options per question → show the recommended 3–4):
    1 sprite-res scale (reference only, looks wrong) · 2 strong squash 2.5%/1.5% · **3 light squash 1.2%/0.8% + breath hold** · 4 accordion (drop a row at waist, then neck) · 5 upper body sinks 1 px · 6 = 3 + 1 px sway · 7 hover 0–2 px (flying / spirit) · 8 still + glow only (stone / statue / object).

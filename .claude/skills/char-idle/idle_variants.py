@@ -1,11 +1,16 @@
 # char-idle skill (set 221): 8 code-idle variants for ONE character still, side by side, for the owner to pick.
-# run: python -I idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row]
+# run: python -I idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row] [--glow=H0-H1:S:V[:Y0-Y1] ...] [--glow-k=1.0]
+#   --glow (set 225, repeatable) = glow mask by hue range in degrees (H0>H1 wraps, e.g. 340-45 = reds), min saturation, min value 0..1,
+#   optional sprite rows Y0-Y1; replaces the default blue rule. --glow-k = glow strength (1.0 = old default).
 #   rows = sprite rows (0 = top) where the neck / waist / hip are; default = 28% / 56% / 70% of the height.
 #   still.png = grid-snapped RGBA (snap.py). Glow = pixels with blue > red + 70 (eyes, runes); none found = no glow.
 import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+GLOW = [a[7:] for a in sys.argv if a.startswith('--glow=')]
+GK = float(next((a[9:] for a in sys.argv if a.startswith('--glow-k=')), 1.0))
+sys.argv = [a for a in sys.argv if not a.startswith('--')]
 src, out = sys.argv[1], sys.argv[2]
 spr = np.asarray(Image.open(src).convert('RGBA')).copy()
 H, W = spr.shape[:2]
@@ -20,11 +25,24 @@ PAD = 6
 CW, CH = (W + 2 * PAD) * Z, (H + PAD + 2) * Z
 
 def eye_mask(a):
-    return (a[:, :, 2].astype(int) > a[:, :, 0].astype(int) + 70) & (a[:, :, 3] > 0)
+    if not GLOW:
+        return (a[:, :, 2].astype(int) > a[:, :, 0].astype(int) + 70) & (a[:, :, 3] > 0)
+    f = a[:, :, :3] / 255.; mx = f.max(2); d = mx - f.min(2) + 1e-9; r, g, b = f[..., 0], f[..., 1], f[..., 2]
+    h = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60
+    sat = d / (mx + 1e-9); yy = np.arange(a.shape[0])[:, None] + np.zeros(a.shape[1])
+    m = np.zeros(a.shape[:2], bool)
+    for rule in GLOW:
+        p = rule.split(':'); h0, h1 = (float(x) for x in p[0].split('-'))
+        hm = (h >= h0) & (h <= h1) if h0 <= h1 else (h >= h0) | (h <= h1)
+        k = hm & (sat > float(p[1])) & (mx > float(p[2]))
+        if len(p) > 3:
+            y0, y1 = (int(x) for x in p[3].split('-')); k &= (yy >= y0) & (yy <= y1)
+        m |= k
+    return m & (a[:, :, 3] > 0)
 
 def glow(a, k):
     a = a.copy(); e = eye_mask(a)
-    a[e, :3] = np.clip(a[e, :3].astype(int) + (k * np.array([60, 80, 40])).astype(int), 0, 255)
+    a[e, :3] = np.clip(a[e, :3].astype(int) + (GK * k * np.array([60, 80, 40])).astype(int), 0, 255)
     return a
 
 def breath(t, hold=False):
