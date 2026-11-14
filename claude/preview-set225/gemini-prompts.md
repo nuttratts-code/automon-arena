@@ -1,10 +1,16 @@
-# Set 225 — Gemini idle prompts (one video each · new Gemini chat · attach the still from art/library/pictures/sprites/: SF-1, WN-1, PT-1 = <ID>_still_gemini_2026-11-14.jpg · WY-1 = WY-1_still_px85x89_2026-11-14.png (swirls already erased))
+# Set 225 — Gemini idle prompts (v2: full body + silent)
 
-## SF-1
+One video per creature · a NEW Gemini chat each time · attach `claude/preview-set225/<ID>_gemini_in_1280x720.png` (still ×4 on a wide magenta 16:9 canvas) · order: SF-1 → WY-1 → WN-1 → PT-1.
+
+## SF-1 — attach SF-1_gemini_in_1280x720.png
 ```
 Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
 
 BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
 
@@ -19,11 +25,15 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
 
-## WY-1
+## WY-1 — attach WY-1_gemini_in_1280x720.png
 ```
 Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
 
 BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
 
@@ -38,11 +48,15 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
 
-## WN-1
+## WN-1 — attach WN-1_gemini_in_1280x720.png
 ```
 Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
 
 BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
 
@@ -57,11 +71,15 @@ DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFEC
 LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
 ```
 
-## PT-1
+## PT-1 — attach PT-1_gemini_in_1280x720.png
 ```
 Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
 
 BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
 

@@ -18,7 +18,7 @@ Scripts here (Python 3 + numpy + Pillow (+ opencv-python for video); run with `p
 3. **Store the snapped png** next to the original as `<ID>_still_px<W>x<H>_<date>.png` + INDEX.csv row.
 
 ## Route B — Gemini video → 8 frames (default, set 222 L1)
-**B1. Owner makes ONE video** in Gemini from the snapped-or-original still (a new Gemini chat, attach the still, paste the fixed prompt below; fill `[EFFECT]` per character — e.g. HL-1: `small blue sparks in the eye visor and a few tiny lightning sparks on the raised fist`, or `none`).
+**B1. Owner makes ONE video** in Gemini from a **padded input** (set 225, owner: full body every time, saves Gemini quota by cutting re-rolls): Claude makes `<ID>_gemini_in_1280x720.png` = the snapped still ×4 (nearest) centred on a 1280×720 flat #FF00FF canvas (~45–50% of the height, wide margin all round) — the same 16:9 shape as the video, so Gemini has no reason to zoom/crop. Fall-back: the snapped-or-original still (a new Gemini chat, attach the still, paste the fixed prompt below; fill `[EFFECT]` per character — e.g. HL-1: `small blue sparks in the eye visor and a few tiny lightning sparks on the raised fist`, or `none`).
 - **Length:** Gemini decides the clip length (HL-1 clips: 10 s, 24 fps, 1280×720) — any length is fine. Only ~1.5 s of it is used, so **one clip per character**; never ask for longer or for several.
 - **Retry at most once**, only for a fail in B4. Second fail → route A (saves Gemini quota).
 - The video stays in the owner's Downloads (not in the repo: big, and only the frames are used).
@@ -28,6 +28,10 @@ Fixed prompt (English, paste as is):
 Animate this exact pixel-art character as a subtle idle breathing loop.
 
 CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
+
+FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty magenta margin on every side as the input image. Never zoom in, never crop any part of the body.
+
+AUDIO: none. Silent video, no music, no sound effects.
 
 BACKGROUND: flat solid magenta #FF00FF for the entire video. No floor, no ground line, no shadow, no gradient, no vignette.
 
