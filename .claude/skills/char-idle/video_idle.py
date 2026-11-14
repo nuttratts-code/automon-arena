@@ -98,16 +98,39 @@ if not len(se):
 v, c = np.unique(se, axis=0, return_counts=True); OUT = v[c.argmax()]
 print('outline colour #%02x%02x%02x' % tuple(OUT))
 
-added = []
+# effects outside the body (sparks, lightning, loose glow) never get a dark rim (owner rule set 225).
+# effect pixel = outside the body core AND a colour the still does not have (so a swaying tail, which is outside
+# the core but in body colours, still counts as body and keeps its outline).
+# body core = pixels present in >= 5 of the 8 frames, grown by 2 px. Dark rim pixels the video drew around an
+# effect (dark, outside the core, touching an effect pixel) are made transparent; no outline is added next to effects.
+def grow(m, k):
+    for _ in range(k): m = m | n4(m)
+    return m
+core = grow((fr[..., 3] > 0).sum(0) >= 5, 2)
+_st = np.asarray(Image.open(still_p).convert('RGBA')); PAL = np.unique(_st[_st[..., 3] > 0][:, :3], axis=0).astype(int)
+def offpal(f, d=60):
+    px = f[..., :3].reshape(-1, 3).astype(int); best = np.full(len(px), 1 << 30)
+    for c in PAL: best = np.minimum(best, ((px - c) ** 2).sum(1))
+    return (best > d * d).reshape(f.shape[:2])
+added = []; fxrim = []
 for f in fr:
     al = f[..., 3] > 0; r, g, b = (f[..., k].astype(int) for k in range(3))
     fringe = al & (r - g > 35) & (b - g > 30) & n4(~al)          # pink rim on the silhouette only
     f[fringe, 3] = 0
     al = f[..., 3] > 0
-    light = edge(al) & (f[..., :3].astype(int).sum(-1) >= 150)    # edge pixel that is not dark = outline missing
-    add = n4(light) & ~al
+    dark = f[..., :3].astype(int).sum(-1) < 150
+    fx = al & ~core & ~dark & offpal(f)                           # effect pixels outside the body
+    nc, lab = cv2.connectedComponents(al.astype(np.uint8), connectivity=8)
+    loose = np.isin(lab, [k for k in range(1, nc) if not (core & (lab == k)).any()])   # bits not touching the body = effect, any colour
+    rim = al & ~core & dark & (n4(fx) | loose)                    # video's own dark rim around them
+    fx = fx | (loose & ~dark)
+    f[rim, 3] = 0; fxrim.append(int(rim.sum()))
+    al = f[..., 3] > 0
+    light = edge(al) & ~dark & ~fx                                # body edge pixel that is not dark = outline missing
+    add = n4(light) & ~al & ~n4(fx)
     f[add, :3] = OUT; f[add, 3] = 255; added.append(int(add.sum()))
 print('outline pixels added per frame', added)
+print('dark rim removed around effects per frame', fxrim)
 
 # ---- 6 export ----
 ims = [Image.fromarray(f) for f in fr]

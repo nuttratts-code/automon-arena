@@ -55,6 +55,7 @@ If it zooms or adds smoke: put `Static shot, tripod camera, sprite sheet style a
 - camera check on the **feet strip** (bottom 8 rows must not move/grow; sparks change the top/sides, so the whole box is no test) — later frames (Gemini often zooms near the end) are dropped;
 - loop pick: the most alike start/end pair 1.2–3.0 s apart inside the still part → 8 evenly spaced frames, 190 ms each;
 - **missing dark outline filled**: a transparent pixel next to a light edge pixel gets the most common dark edge colour of the picked frames (HL-1 `#0b0931`); ~40–110 px per frame. It does NOT catch every gap (diagonal corners, gaps inside the body) — the owner finishes them by hand (B5);
+- **effects never get a dark rim (owner rule set 225):** effect pixel = outside the body core (present in ≥ 5 of 8 frames, grown 2 px) AND a colour the still does not have, or any bit not touching the body. No outline is added next to them and the video's own dark pixels around them are made transparent. A swaying tail/wing stays body (body colours) and keeps its outline. Prints `dark rim removed around effects per frame`; Read a ×8 crop of the effect frames to check.
 - out: `idle_0..7.png`, `sheet_8x1_<W>x<H>.png`, `anim.png` (APNG), `preview.gif` (×4 on grey).
 It prints grid, still-camera range, loop + frame numbers, outline colour. `--frames=…` forces frame numbers (HL-1 approved: `105,110,114,119,123,128,133,137`).
 

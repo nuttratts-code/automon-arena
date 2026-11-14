@@ -1,4 +1,4 @@
-# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.1 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.2 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
 
 **สถานะ (6 พ.ย. 2026):** พักงานภาพไว้ระหว่าง MVP1 · ตัดสินแล้ว: หลัง MVP1 ย้ายเกมไป Godot (ภาพ HD-2D แท้ต้องใช้ฉาก 3D) · ผลทดลอง: AI วาดตัวละครพิกเซลได้ดี (HL-1 ผ่าน) แต่ฉากจาก AI ดูเป็น AI/ไม่ใช่ HD-2D → ฉากใช้ 3D (Blender ทดลองแล้ว: art/blender/arena_scene.py รันด้วย `pip install bpy pillow` แล้ว `python arena_scene.py <out.png>`) · ยังไม่ตัดสิน: ขนาดตัว 64/96 px · ภาพเปลี่ยนตามเลเวลหรือไม่
 
@@ -47,7 +47,7 @@ You are helping me make ORIGINAL creature sprites for my indie fantasy auto-batt
 Style rules for every image:
 - True pixel art sprite, every pixel a clean square block, no anti-aliasing, no blur. Same pixel size as the attached reference.
 - Fantasy creature, not human. Full body, 3/4 view facing right.
-- Dark outline around the whole body. Light from top-left, 2-3 shade steps per colour, max 16 colours.
+- Dark outline around the whole body — but **effects outside the body (sparks, lightning, loose glow) never have a dark rim** (owner rule set 225). Light from top-left, 2-3 shade steps per colour, max 16 colours.
 - Must read clearly at small size: strong silhouette, clear gaps between limbs and body, at least one light colour area, eyes clearly visible.
 - Every creature has 1-2 effect spots built into its body (a glowing eye, a flame tail tip, a crystal, a rune) where magic can shine and spark.
 - Fit inside the middle 80% of the image with empty space on every side. Body about as wide as it is tall; no very long tails or wings.
