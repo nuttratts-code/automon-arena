@@ -21,7 +21,7 @@ Tribe: wind — make the wind identity obvious: round flowing body, short rounde
 Fantasy features: two long curling crest feathers on the head · swirl-shaped wind marks on the wing feathers · small mint crystal bead on the chest feathers
 Face: sharp, curious and focused, keen eyes — not scary
 Effect spots: the swirl marks on the wings + the chest crystal
-Pose: perched on both feet, wings half raised ready to take off, head turned forward; wings stay compact, not spread wide
+Pose: standing on both feet, both wings opened and raised UP high above the back in a V shape (like stretching before take-off) so the inner wing feathers and their swirl marks face the viewer; wingtips point up, not out to the sides, so the whole creature is still about as wide as it is tall; head turned forward
 Background: magenta #FF00FF
 ```
 
