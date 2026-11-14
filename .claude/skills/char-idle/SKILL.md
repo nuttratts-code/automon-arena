@@ -9,6 +9,7 @@ description: Character still → idle (ภาพนิ่งตัวละค�
 Scripts here (Python 3 + numpy + Pillow (+ opencv-python for video); run with `python -I`):
 - `snap.py <in.jpg> <out.png> <block_px> <offset_px> <grid_n>` — AI "fake pixel" still → real-pixel RGBA, magenta bg → transparent, trimmed.
 - `video_idle.py <video.mp4> <still_px.png> <out_dir> [n=8] [ms=190] [--frames=a,b,…]` — route B, see step B3. ~5 s per video.
+- `colour_lock.py` · `part_copy.py` · `pxo_frames.py` — B4b steady colour, smeared part from frame 1, read the owner's .pxo (set 225).
 - `idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row]` — route A, 8 code variants, 2.4 s loop, ×3 zoom.
 
 ## Shared steps (every character)
@@ -75,6 +76,12 @@ It prints grid, still-camera range, loop + frame numbers, outline colour. `--fra
 - outline colour: type the hex printed in B3 into the colour box; Pencil (P); click frames in the timeline;
 - save: File → Export → Spritesheet, 8 columns × 1 row, over the sheet file → tell Claude. Claude splits the sheet back into `idle_0..7.png` + `anim.png` (crop by width/8).
 - **The owner often presses Save instead (set 223 trap):** that writes `<file>.pxo` next to the APNG and the sheet stays old. Always check file times first; read the frames from the .pxo (zip: `data.json` → `frames[i].cels[layer]` `image_size` + `offset`; `image_data/frames/<i+1>/layer_<l+1>` = raw RGBA of that cel size, placed at its offset). Unsaved edits sit only in the open window (title ends with `(*)`) and in `%APPDATA%/Pixelorama/backups/` — never close that window for the owner.
+
+**B4b. Steady colour + smeared parts (set 225, SF-1 — owner: later frames must keep frame 1's colours):** run before B5 on every character, then show a before/after GIF:
+- `python -I colour_lock.py <frames_dir> <out_dir>` — removes each frame's colour drift vs frame 1, a pixel close (< 40) to frame 1's colour at the same spot takes it, moved parts take the nearest frame 1 colour; sparks (white/pink light) untouched. Prints shift / locked / moved / spark kept per frame. (This replaces the set 222 "do not clean" advice for colour only; shimmer cleaners like temporal median stay dropped.)
+- a part still muddy after that (SF-1 ears: video blurred yellow + purple into brown) → `python -I part_copy.py <dir> <out> x0 x1 y0 y1` pastes frame 1's box into frames 2–8 at the best offset (head bob 0–2 px). Box on the part only (above the head line). Find the box on a ×12 grid crop of frame 1.
+- **Frame order check after the owner's save:** measure a moving part (tail tip x per frame) — SF-1's save had frames 1↔2 swapped (tail went right then jumped left); a smooth swing = one way for ~half the frames, then back. Fix the order from the owner's frames, never from the old ones (owner: "แก้จากงานที่ผมปรับ").
+- Read the save with `python -I pxo_frames.py <file.pxo> <out_dir>` (B5 trap) — always work on top of the owner's latest save, in a NEW folder, and open the result in a new Pixelorama window.
 
 **B5a. Effect pass (set 223 — every character has effects in other places, so nothing here is fixed to HL-1):**
 1. `python -I fx_map.py <frames_dir> <out.png>` → numbered red boxes on frame 0 + one line per spot (box, frames, colour). Send the picture; explain each spot in Thai.
