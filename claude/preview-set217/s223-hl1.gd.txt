@@ -51,14 +51,24 @@ func _initialize() -> void:
 	var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/hl1_idle.png"))
 	s.texture = ImageTexture.create_from_image(img)
 	s.hframes = 8
-	s.pixel_size = tall / 81.0
-	await _frames()
 	var cam := root.get_viewport().get_camera_3d()
+	# pixel-perfect: 1 texel = 1 screen px at the sprite's depth
+	var d: float = (s.global_position - cam.global_position).dot(-cam.global_transform.basis.z)
+	var wpp: float = 2.0 * d * tan(deg_to_rad(cam.fov) / 2.0) / float(DisplayServer.window_get_size().y)
+	var new_tall: float = 81.0 * wpp
+	s.pixel_size = wpp
+	s.position += st.lean() * ((new_tall - tall) / 2.0)
+	print("PIXEL vis ", root.get_viewport().get_visible_rect().size, " tex ", root.get_texture().get_size(), " wpp ", wpp, " old tall ", tall, " new tall ", new_tall)
+	await _frames()
 	var p := cam.unproject_position(s.global_position)
 	print("HL1_AT ", int(p.x), " ", int(p.y), " TALL_PX ", int(tall))
 	for k in 16:
 		s.frame = k % 8
 		await _frames()
 		root.get_texture().get_image().save_png(out.path_join("f%02d.png" % k))
+	s.visible = false
+	await _frames()
+	root.get_texture().get_image().save_png(out.path_join("none.png"))
+	print("WIN ", DisplayServer.window_get_size())
 	print("SHOT hl1 ok")
 	quit()
