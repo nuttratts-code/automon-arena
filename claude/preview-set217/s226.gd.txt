@@ -66,7 +66,13 @@ func _initialize() -> void:
 	for id in map.keys():
 		var s: Sprite3D = st.groups["battle"][id]["spr"]
 		var old_tall: float = s.pixel_size * float(s.texture.get_height())
-		var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s.png" % map[id]))
+		if EV.get("troll", "0") == "1": # s226 V2: keep the old placeholder (DCSS troll), same screen height as the new set (~110 px)
+			s.pixel_size = wpp * 110.0 / float(s.texture.get_height())
+			s.position += st.lean() * ((s.pixel_size * float(s.texture.get_height()) - old_tall) / 2.0)
+			s.flip_h = map_side[id] == 1
+			sprs.append(s)
+			continue
+		var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s%s.png" % [map[id], EV.get("suf", "")]))
 		if csat < 1.0: # desaturate the character only, the set keeps its colours
 			for y in img.get_height():
 				for x in img.get_width():
@@ -79,8 +85,8 @@ func _initialize() -> void:
 		s.flip_h = map_side[id] == 0 # new set faces left (art-style V1.5)
 		if false:
 			pass
-		s.pixel_size = wpp
-		var new_tall: float = wpp * float(img.get_height())
+		s.pixel_size = wpp * float(EV.get("k", "1"))   # s226 V3: chunky sheet shown K x = same size, bigger pixels
+		var new_tall: float = s.pixel_size * float(img.get_height())
 		s.position += st.lean() * ((new_tall - old_tall) / 2.0)
 		s.frame = (k * 3) % 8
 		if look != "A":
