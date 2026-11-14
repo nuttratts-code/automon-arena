@@ -3,7 +3,7 @@
 #   snap to the video's pixel grid -> magenta key -> drop pink fringe only where it touches transparency
 #   -> pick the best loop inside the part where the camera is still -> 8 evenly spaced frames -> fill missing dark outline.
 # No palette, no temporal median, no optical flow.
-# run: python -I video_idle.py <video.mp4> <still_px.png> <out_dir> [n_frames=8] [ms=190] [--frames a,b,c,...]
+# run: python -I video_idle.py <video.mp4> <still_px.png> <out_dir> [n_frames=8] [ms=250] [--frames a,b,c,...]
 #   --frames = use these raw frame numbers instead of the automatic loop pick (printed on every run).
 import sys, os
 import numpy as np, cv2
@@ -13,7 +13,7 @@ args = [a for a in sys.argv[1:] if not a.startswith('--frames')]
 force = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--frames=')), None)
 vid, still_p, out = args[0], args[1], args[2]
 N = int(args[3]) if len(args) > 3 else 8
-MS = int(args[4]) if len(args) > 4 else 190
+MS = int(args[4]) if len(args) > 4 else 250
 os.makedirs(out, exist_ok=True)
 
 cap = cv2.VideoCapture(vid); fps = cap.get(cv2.CAP_PROP_FPS) or 24

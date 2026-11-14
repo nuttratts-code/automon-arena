@@ -33,11 +33,11 @@ ims=[Image.fromarray(f[y0:y1,x0:x1]) for f in frames]
 w,h=ims[0].size
 for i,im in enumerate(ims): im.save(f'{dst}/idle_{i}.png')
 sh=Image.new('RGBA',(w*8,h)); [sh.paste(im,(i*w,0)) for i,im in enumerate(ims)]; sh.save(f'{dst}/sheet_8x1_{w}x{h}.png')
-ims[0].save(f'{dst}/anim.png',save_all=True,append_images=ims[1:],duration=190,loop=0)
+ims[0].save(f'{dst}/anim.png',save_all=True,append_images=ims[1:],duration=250,loop=0)
 g=[]
 for im in ims:
     bg=Image.new('RGBA',im.size,(128,128,128,255)); bg.alpha_composite(im)
     g.append(bg.resize((w*4,h*4),0).convert('RGB').quantize(colors=256,method=Image.Quantize.FASTOCTREE,dither=Image.Dither.NONE))
-g[0].save(f'{dst}/preview.gif',save_all=True,append_images=g[1:],duration=190,loop=0)
+g[0].save(f'{dst}/preview.gif',save_all=True,append_images=g[1:],duration=250,loop=0)
 z=Image.new('RGBA',(w,h),(200,200,200,255)); z.alpha_composite(ims[0]); z.resize((w*8,h*8),0).save(f'{dst}/z0.png')
 print('size',w,h,'(pink->outline, added) per frame',stats)

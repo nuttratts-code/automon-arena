@@ -35,7 +35,7 @@ for k,im in enumerate(ims): im.save(f'{out}/idle_{k}.png')
 sh=Image.new('RGBA',(W*8,H))
 for k,im in enumerate(ims): sh.paste(im,(k*W,0))
 sh.save(f'{out}/sheet_8x1_{W}x{H}.png')
-ims[0].save(f'{out}/anim.png',save_all=True,append_images=ims[1:],duration=190,loop=0,disposal=1)
+ims[0].save(f'{out}/anim.png',save_all=True,append_images=ims[1:],duration=250,loop=0,disposal=1)
 old=[Image.open(f'{src}/idle_{k}.png').convert('RGBA') for k in range(8)]
 g=[]
 for o,im in zip(old,ims):
@@ -43,4 +43,4 @@ for o,im in zip(old,ims):
     for j,x in enumerate((o,im)):
         bb=x.resize((W*4,H*4),Image.NEAREST); c.paste(bb,(10+j*(W*4+10),10),bb)
     g.append(c.quantize(colors=256,method=Image.FASTOCTREE,dither=Image.Dither.NONE))
-g[0].save(f'{out}/compare_before_left_after_right.gif',save_all=True,append_images=g[1:],duration=190,loop=0)
+g[0].save(f'{out}/compare_before_left_after_right.gif',save_all=True,append_images=g[1:],duration=250,loop=0)

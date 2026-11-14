@@ -37,12 +37,12 @@ dst=sys.argv[1]
 w,h=out[0].size
 for i,im in enumerate(out): im.save(f'{dst}/idle_{i}.png')
 sh=Image.new('RGBA',(w*8,h)); [sh.paste(im,(i*w,0)) for i,im in enumerate(out)]; sh.save(f'{dst}/sheet_8x1_{w}x{h}.png')
-out[0].save(f'{dst}/anim.png',save_all=True,append_images=out[1:],duration=190,loop=0)
+out[0].save(f'{dst}/anim.png',save_all=True,append_images=out[1:],duration=250,loop=0)
 g=[]
 for im in out:
     bg=Image.new('RGBA',im.size,(128,128,128,255)); bg.alpha_composite(im)
     g.append(bg.resize((w*4,h*4),0).convert('RGB').quantize(colors=256,method=Image.Quantize.FASTOCTREE,dither=Image.Dither.NONE))
-g[0].save(f'{dst}/preview.gif',save_all=True,append_images=g[1:],duration=190,loop=0)
+g[0].save(f'{dst}/preview.gif',save_all=True,append_images=g[1:],duration=250,loop=0)
 tiles=[]
 for im in out:
     c=im.crop((42,19,82,45)); bg=Image.new('RGBA',c.size,(200,200,200,255)); bg.alpha_composite(c); tiles.append(bg.resize((c.width*6,c.height*6),0))

@@ -55,7 +55,7 @@ If it zooms or adds smoke: put `Static shot, tripod camera, sprite sheet style a
 - grid = one block size for both axes (Fourier) + phase (least change inside blocks) from frame 0; every frame snapped on that same grid;
 - magenta → transparent; pink fringe removed **only where it touches transparency**;
 - camera check on the **feet strip** (bottom 8 rows must not move/grow; sparks change the top/sides, so the whole box is no test) — later frames (Gemini often zooms near the end) are dropped;
-- loop pick: the most alike start/end pair 1.2–3.0 s apart inside the still part → 8 evenly spaced frames, 190 ms each;
+- loop pick: the most alike start/end pair 1.2–3.0 s apart inside the still part → 8 evenly spaced frames, 250 ms each (owner set 225b; art-style §2);
 - **missing dark outline filled**: a transparent pixel next to a light edge pixel gets the most common dark edge colour of the picked frames (HL-1 `#0b0931`); ~40–110 px per frame. It does NOT catch every gap (diagonal corners, gaps inside the body) — the owner finishes them by hand (B5);
 - **effects never get a dark rim (owner rule set 225):** effect pixel = outside the body core (present in ≥ 5 of 8 frames, grown 2 px) AND a colour the still does not have, or any bit not touching the body. No outline is added next to them and the video's own dark pixels around them are made transparent. A swaying tail/wing stays body (body colours) and keeps its outline. Prints `dark rim removed around effects per frame`; Read a ×8 crop of the effect frames to check.
 - out: `idle_0..7.png`, `sheet_8x1_<W>x<H>.png`, `anim.png` (APNG), `preview.gif` (×4 on grey).
@@ -112,5 +112,5 @@ GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; j
 ## Notes
 - claude/idle-picks.csv is what the Godot code reads later (wired into godot/ only on the owner's order, with a ripple check — HARD RULE 8). Route B in game = AnimatedSprite3D / SpriteFrames from the 8 frames; route A = Sprite3D scale at screen resolution (never resize the image itself).
 - Size: 8 frames × 48 characters ≈ 3 MB (fine); 37 frames ≈ 14 MB.
-- Numbers (190 ms, 1.2–3.0 s, 25%, 1.2%, 2.4 s…) are ค่าเสนอ until tested in the real game.
+- Numbers (1.2–3.0 s, 25%, 1.2%, 2.4 s…) are ค่าเสนอ until tested in the real game.
 - Attack / hit / death are code for every character (art-style §2) — not part of this skill.

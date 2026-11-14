@@ -1,10 +1,10 @@
-# pxo_frames.py <file.pxo> <out_dir> [ms=190] (set 225) — read the owner's Pixelorama save (B5 trap) back into
+# pxo_frames.py <file.pxo> <out_dir> [ms=250] (set 225) — read the owner's Pixelorama save (B5 trap) back into
 # idle_0..N.png + sheet_Nx1_<W>x<H>.png + anim.png (APNG) + preview.gif (x4 on grey, FASTOCTREE palette, no dither).
 # .pxo = zip: data.json (size_x/size_y, frames[i].cels[l] image_size/offset as "Vector2i(a, b)") +
 # image_data/frames/<i+1>/layer_<l+1> = raw RGBA of the cel size, placed at its offset; layers composited bottom-up.
 import sys, os, re, json, zipfile, numpy as np
 from PIL import Image
-src, out = sys.argv[1], sys.argv[2]; MS = int(sys.argv[3]) if len(sys.argv) > 3 else 190
+src, out = sys.argv[1], sys.argv[2]; MS = int(sys.argv[3]) if len(sys.argv) > 3 else 250
 os.makedirs(out, exist_ok=True)
 z = zipfile.ZipFile(src); d = json.loads(z.read('data.json')); W, H = d['size_x'], d['size_y']; names = set(z.namelist())
 def v2(s, dflt):
