@@ -20,7 +20,7 @@ Order follows art-look §2: camera → blockout → real assets → lighting las
 
 ## Phase 2 — sprites stand in the scene (owner art)
 9. Real 64×64 sprites (art-style §2) replacing CC0 32×32 placeholders.
-10. ~~Minimum frames: idle / attack / hit / die~~ **Decided set 221 (owner A2, then idle only after trying the attack pose): ONE still per character (Gemini idle strips came out bad); idle = code squash/stretch from the feet + glow pulse on emissive pixels (eyes/runes) — owner picked option 1 + eye glow from s221-idle-options.gif; no attack still; attack = code lunge + squash/stretch + skill flash; hit = code (flash, shake, knock-back); die (owner set 221) = darken to a black silhouette + small pixel stars circling above the head, then fade out — all code.** art-style §2 V0.4.
+10. ~~Minimum frames: idle / attack / hit / die~~ **Decided set 221 (owner A2, then idle only after trying the attack pose): ONE still per character (Gemini idle strips came out bad); idle = code squash/stretch from the feet + glow pulse on emissive pixels (eyes/runes) — owner picked option 1 + eye glow from s221-idle-options.gif; no attack still; attack = code lunge + squash/stretch + skill flash; hit = code (flash, shake, knock-back); die (owner set 221) = darken to a black silhouette + small pixel stars circling above the head, then fade out — all code.** art-style §2 V0.4. **Updated set 222 L1: idle = Gemini video → 8 frames first, code idle = fallback (skill char-idle).**
 11. Scene tint via modulate first; normal-map lighting only as an A/B for the owner (art-look §4 step 3).
 12. Glowing outline on selected/acting unit · small foot shadow.
 
