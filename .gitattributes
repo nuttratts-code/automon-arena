@@ -14,3 +14,4 @@
 godot/data/fonts/OFL-*.txt -text
 *.webp binary
 *.jpg binary
+*.pxo binary
