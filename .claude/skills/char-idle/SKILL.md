@@ -1,8 +1,8 @@
 ---
 name: char-idle
-description: Character still → idle (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ Gemini / 8 เฟรม / ยืดหด / ตาเรือง / เลือกท่าหายใจ / เติมขอบดำ) — snap the owner's Gemini still to real pixels, then route B first: the owner makes ONE Gemini video from the still with the fixed prompt, Claude turns it into 8 real-pixel frames (video_idle.py), the owner touches them up in Pixelorama; route A (8 code-idle variants, owner picks) only when the video fails. Record in claude/idle-picks.csv. Use whenever the owner sends a new character still or video, or asks to redo a character's idle. Rules: claude/art-style.md §2 (wins if anything differs).
+description: Character still → idle (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ Gemini / 8 เฟรม / ยืดหด / ตาเรือง / เลือกท่าหายใจ / เติมขอบดำ) — snap the owner's Gemini still to real pixels, then route B first: the owner makes ONE Gemini video from the still with the fixed prompt, Claude turns it into 8 real-pixel frames (video_idle.py), the owner touches them up in Pixelorama; route A (8 code-idle variants, owner picks) only when the video fails. Record in claude/idle-picks.csv. Also the effect pass (หาจุดเรือง / ลบสายฟ้า / ตาให้คม — owner picks keep/remove/crisp per spot), reading the owner's Pixelorama .pxo save, and the pixel-perfect arena check (ใส่ในฉาก / ขนาดพอดีพิกเซล). Use whenever the owner sends a new character still or video, or asks to redo or finish a character's idle. Rules: claude/art-style.md §2 (wins if anything differs).
 ---
-# Character still → idle (set 221 · route B video added set 222, 14 Nov 2026)
+# Character still → idle (set 221 · route B video added set 222 · effect pass + arena check set 223, 14 Nov 2026)
 
 > Owner rules: set 222 L1 = **video first (route B), code idle (route A) only when the video fails** · set 221 = never apply a code variant silently, the owner picks per character · set 222 = **minimal processing** ("the more it is cleaned, the worse it looks"). Rules: claude/art-style.md §2 · art store: art/library/README.md (usable pieces only, never delete) · licence: AI art = placeholder, UNVERIFIED (set 219 D).
 
@@ -61,8 +61,20 @@ It prints grid, still-camera range, loop + frame numbers, outline colour. `--fra
 - open **`anim.png` (APNG)** — it opens as 8 frames. A plain PNG sheet opens as ONE picture (set 222 trap);
 - outline colour: type the hex printed in B3 into the colour box; Pencil (P); click frames in the timeline;
 - save: File → Export → Spritesheet, 8 columns × 1 row, over the sheet file → tell Claude. Claude splits the sheet back into `idle_0..7.png` + `anim.png` (crop by width/8).
+- **The owner often presses Save instead (set 223 trap):** that writes `<file>.pxo` next to the APNG and the sheet stays old. Always check file times first; read the frames from the .pxo (zip: `data.json` → `frames[i].cels[layer]` `image_size` + `offset`; `image_data/frames/<i+1>/layer_<l+1>` = raw RGBA of that cel size, placed at its offset). Unsaved edits sit only in the open window (title ends with `(*)`) and in `%APPDATA%/Pixelorama/backups/` — never close that window for the owner.
 
-**B6. Store + record** after the owner says it is done: copy the frames + sheet + APNG to art/library/pictures/sprites/ as `<ID>_idle8_video_<date>_*` + INDEX.csv rows; row in claude/idle-picks.csv with `variant=video` and the frame numbers in `note`. Docs-only → straight to main.
+**B5a. Effect pass (set 223 — every character has effects in other places, so nothing here is fixed to HL-1):**
+1. `python -I fx_map.py <frames_dir> <out.png>` → numbered red boxes on frame 0 + one line per spot (box, frames, colour). Send the picture; explain each spot in Thai.
+2. Owner picks per spot: **keep · remove · make crisp** (A1/A2… buttons).
+3. remove → `fx_remove.py` (fills masked pixels from their neighbours) · crisp eye/visor line → `fx_eyeline.py` (fixed-length 2-row line, keeps the video's glow pulse in 3 levels from each frame's original brightness — the owner rejected a pulse-less eye; loose sparks lose their black rim). **Both scripts still hold HL-1's box/colour constants** (`reg[...]`, thresholds): set them from the B5a.1 line of that spot before running; Read a ×7 crop of all 8 frames before/after each run.
+4. Re-open the result in Pixelorama for the owner (new window; output to a NEW folder so an open window is never overwritten).
+
+**B5b. Arena check (owner A1 set 223):** copy godot → scratchpad copy, apply the current sample camera patches (preview-set217 notes: FOV 19.2 → p1-patch-depth.py → p1t-patch-tune.py), put the sheet at `<g>/tests/hl1_idle.png`, `arena_shot.gd.txt` → `<g>/tests/`, run with the console exe `--rendering-driver opengl3 --audio-driver Dummy --resolution 844x390 -s res://tests/<name>.gd -- --out <dir>` (it swaps unit id 9001 for the sheet; change the id/slot for another character).
+- **Pixel-perfect** (1 texel = 1 screen px): `pixel_size = 2·d·tan(fov/2) / DisplayServer.window_get_size().y` (NOT get_visible_rect = 854×480 base, NOT the root texture size). At the old fixed height the 2-row eye dropped out in some frames. Check: sprite height on screen = alpha height in the sheet (diff against a shot with the sprite hidden).
+- **GIF trap:** PIL ADAPTIVE palette drops small accents (the eye vanished from GIFs only). Use `quantize(colors=256, method=FASTOCTREE, dither=NONE)` and count the accent pixels per GIF frame before sending.
+- Outline: the owner tried sel-out and no-line (set 223) and **kept the black outline** — do not offer again unless asked.
+
+**B6. Store + record** after the owner says it is done: copy the sheet + APNG + the owner's .pxo to art/library/pictures/sprites/ as `<ID>_idle8_*_<date>` + INDEX.csv rows (a later owner fix = new `_v2` names, never overwrite — library rule 1); row in claude/idle-picks.csv with `variant=video` and the frame numbers in `note`. Docs-only → straight to main.
 
 ## Route A — code idle variants (fallback after a 2nd video fail, or on the owner's order)
 A1. **Rows:** defaults neck 28% / waist 56% / hip 70% of the height fit HL-1. For other shapes (blob, bird, long tail) look at the png on a coordinate grid and pass the rows by hand.

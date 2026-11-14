@@ -1,0 +1,74 @@
+extends SceneTree
+# set 217 R14 (sample copy only, copy to <g>/tests/s6v6.gd): the battle screen with a full 6 vs 6 on the arena.
+# Starts a run like tests/shots.gd, enters a fight, then swaps the stage's battle units for 12 sample units (one per slot).
+#   godot --rendering-driver opengl3 --audio-driver Dummy --path <g> --resolution 844x390 -s res://tests/s6v6.gd -- --out <dir>
+
+var app: Node
+
+func _frames() -> void:
+	for k in 4:
+		await process_frame
+	await RenderingServer.frame_post_draw
+
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	var out: String = args[args.find("--out") + 1]
+	DirAccess.make_dir_recursive_absolute(out)
+	await process_frame
+	app = load("res://scenes/main.tscn").instantiate()
+	app.set_meta("no_boot", true)
+	app.set_meta("force_light", true)
+	root.add_child(app)
+	app.zoom_s = 0.0
+	await _frames()
+	app.name_scr.visible = false
+	app.player_name = "ทดสอบ"
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.set_speed(1, false)
+	app._on_fight()
+	await _frames()
+	app.battle.view.advance(1500.0)
+	await _frames()
+	var st: Node = app.stage
+	for id in (st.groups.get("battle", {}) as Dictionary).keys():
+		st.remove_unit("battle", id)
+	var you := ["HL-1", "HL-3", "PL-1", "PL-2", "HL-5", "HL-7"]
+	var foe := ["B1", "HL-2", "HL-4", "HL-6", "HL-8", "B2"]
+	var n := 9000
+	for s in 2:
+		for row in 3:
+			for lane in 2:
+				var ids: Array = you if s == 0 else foe
+				n += 1
+				st.add_unit("battle", {"id": n, "side": s, "row": row, "lane": lane, "c": {"id": ids[row * 2 + lane], "tribe": ""}})
+	st.show_group("battle")
+	await _frames()
+	# set 223: HL-1 (you, row 0 lane 0 = id 9001) gets the owner's idle sheet 8x1 96x81
+	var s: Sprite3D = st.groups["battle"][9001]["spr"]
+	var tall: float = s.pixel_size * float(s.texture.get_height())
+	var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/hl1_idle.png"))
+	s.texture = ImageTexture.create_from_image(img)
+	s.hframes = 8
+	var cam := root.get_viewport().get_camera_3d()
+	# pixel-perfect: 1 texel = 1 screen px at the sprite's depth
+	var d: float = (s.global_position - cam.global_position).dot(-cam.global_transform.basis.z)
+	var wpp: float = 2.0 * d * tan(deg_to_rad(cam.fov) / 2.0) / float(DisplayServer.window_get_size().y)
+	var new_tall: float = 81.0 * wpp
+	s.pixel_size = wpp
+	s.position += st.lean() * ((new_tall - tall) / 2.0)
+	print("PIXEL vis ", root.get_viewport().get_visible_rect().size, " tex ", root.get_texture().get_size(), " wpp ", wpp, " old tall ", tall, " new tall ", new_tall)
+	await _frames()
+	var p := cam.unproject_position(s.global_position)
+	print("HL1_AT ", int(p.x), " ", int(p.y), " TALL_PX ", int(tall))
+	for k in 16:
+		s.frame = k % 8
+		await _frames()
+		root.get_texture().get_image().save_png(out.path_join("f%02d.png" % k))
+	s.visible = false
+	await _frames()
+	root.get_texture().get_image().save_png(out.path_join("none.png"))
+	print("WIN ", DisplayServer.window_get_size())
+	print("SHOT hl1 ok")
+	quit()
