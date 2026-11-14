@@ -1,4 +1,4 @@
-# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.0 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
+# แนวภาพ Automon Arena — "พิกเซลแสงจริง" V1.1 (ค่าเสนอทั้งไฟล์ รอผู้ใช้ยืนยัน ยกเว้นข้อที่เขียนว่า "ตัดสินแล้ว")
 
 **สถานะ (6 พ.ย. 2026):** พักงานภาพไว้ระหว่าง MVP1 · ตัดสินแล้ว: หลัง MVP1 ย้ายเกมไป Godot (ภาพ HD-2D แท้ต้องใช้ฉาก 3D) · ผลทดลอง: AI วาดตัวละครพิกเซลได้ดี (HL-1 ผ่าน) แต่ฉากจาก AI ดูเป็น AI/ไม่ใช่ HD-2D → ฉากใช้ 3D (Blender ทดลองแล้ว: art/blender/arena_scene.py รันด้วย `pip install bpy pillow` แล้ว `python arena_scene.py <out.png>`) · ยังไม่ตัดสิน: ขนาดตัว 64/96 px · ภาพเปลี่ยนตามเลเวลหรือไม่
 
@@ -16,7 +16,10 @@
 - สัดส่วน: หัวต่อตัว ~1:2.5 (ตัวเล็กน่ารักแต่ดูเท่)
 - เส้นขอบ 1 px สีเข้มของสีหลัก (ไม่ใช่ดำสนิท) · แสงจากซ้ายบน · สีรวมไม่เกิน ~16 สีต่อตัว
 - ในเกมขยาย 2× แบบไม่เบลอ (เห็นเม็ดพิกเซล)
-- **ท่าทาง (ตัดสินแล้ว · ผู้ใช้ชุด 221, 14 พ.ย. 2026 — เลือก A2 ก่อน แล้วลองเจนท่าโจมตีแล้วยาก จึงเปลี่ยนเป็น idle อย่างเดียว):** ตัวละครทุกตัววาดแค่ **ภาพนิ่ง 1 ภาพ** (Gemini เจนแถบ idle ไม่ดี) · **idle (ผู้ใช้ชุด 222 L1, 14 พ.ย. 2026) = วิดีโอก่อน:** ผู้ใช้เจนวิดีโอ Gemini 1 คลิปจากภาพนิ่ง (คำสั่งตายตัวในสกิล char-idle) → Claude ตัดเป็น **8 เฟรม** จากวิดีโอตรงๆ ปรับน้อยที่สุด (จัดลงพิกเซล ลบพื้นชมพู เติมขอบดำที่หาย — ห้ามล้างภาพหนัก ผู้ใช้ว่ายิ่งปรับยิ่งเละ) · เฟรมละ ~190 ms (ค่าเสนอ) · ผู้ใช้เกลาต่อเองใน Pixelorama · เอฟเฟกต์ในวิดีโอ (ประกายตา สายฟ้า) เก็บไว้ได้ · ภาพสั่นนิดๆ ระหว่างเฟรมยอมรับได้ · วิดีโอไม่ผ่าน 2 ครั้ง (หรือผู้ใช้สั่ง) → ใช้ **idle โค้ด** ด้านล่างแทน · HL-1 = วิดีโอ (ชุด 222) · **idle โค้ด (ทางสำรอง · ผู้ใช้เลือกแบบ 1 + ตาเรือง จากตัวอย่าง s221-idle-options.gif):** ยืดหดทั้งตัวแบบหายใจ ยึดเท้า + จุดเรืองแสงของตัว (ตา/รูน/คริสตัล) สว่างขึ้นลงตามจังหวะ · **ค่าตั้งต้น = แบบ 3 (ผู้ใช้เลือกจาก s221-squash-variants.gif ชุด 221) แต่เลือกแยกรายตัว: ทุกตัวต้องทำภาพ 8 แบบให้ผู้ใช้เลือกเอง (สกิล char-idle) แล้วจดใน claude/idle-picks.csv · แบบ 3 =** สูงลด ~1.2% กว้างเพิ่ม ~0.8% (ค่าเสนอ) · จังหวะหายใจ เข้า 35% → ค้าง 15% → ออก 35% → พัก 15% ของรอบ ~2.4 วิ (ค่าเสนอ) · ย่อด้วย scale ของ Sprite3D ที่ขนาดจอ ห้ามย่อตัวภาพที่ขนาดสไปรต์ (แบบนั้นเม็ดพิกเซลหาย-โผล่สุ่ม ผู้ใช้ว่าแปลก) · หาจุดเรืองด้วยสีสดสว่างอัตโนมัติ ถ้าหาผิดตัวไหนค่อยทำภาพมาสก์แยก · ไม่มีภาพท่าโจมตี · ท่าโจมตีในเกม = โค้ดพุ่งตัวไปข้างหน้าแล้วถอยกลับ (ยืด-หดตัวนิดหน่อย + แสงวาบจากเอฟเฟกต์สกิล) · โดนตี = โค้ดล้วน (กะพริบขาว สั่น เด้งถอย) · **ตาย (ผู้ใช้กำหนด ชุด 221) = ตัวค่อยๆ มืดเป็นเงาดำ + ดาวพิกเซลเล็กๆ หมุนวนเหนือหัว แล้วจางหายไป** (โค้ดทำทั้งหมด ดาววาดด้วยโค้ด · ความเร็ว/จำนวนดาว = ค่าเสนอ: มืดลง ~0.4 วิ · ดาว 3 ดวง หมุน ~0.8 วิ · จางหาย ~0.3 วิ) ไม่ต้องวาด · เหตุผล: ตัวละคร 48 ตัว วาดครบ 4 ท่าต่อตัวงานเยอะเกิน
+- **ท่าทาง (ตัดสินแล้ว · ผู้ใช้ชุด 221, 14 พ.ย. 2026 — เลือก A2 ก่อน แล้วลองเจนท่าโจมตีแล้วยาก จึงเปลี่ยนเป็น idle อย่างเดียว):** ตัวละครทุกตัววาดแค่ **ภาพนิ่ง 1 ภาพต่อร่าง** (ร่างดูข้อถัดไป · Gemini เจนแถบ idle ไม่ดี) · **idle (ผู้ใช้ชุด 222 L1, 14 พ.ย. 2026) = วิดีโอก่อน:** ผู้ใช้เจนวิดีโอ Gemini 1 คลิปจากภาพนิ่ง (คำสั่งตายตัวในสกิล char-idle) → Claude ตัดเป็น **8 เฟรม** จากวิดีโอตรงๆ ปรับน้อยที่สุด (จัดลงพิกเซล ลบพื้นชมพู เติมขอบดำที่หาย — ห้ามล้างภาพหนัก ผู้ใช้ว่ายิ่งปรับยิ่งเละ) · เฟรมละ ~190 ms (ค่าเสนอ) · ผู้ใช้เกลาต่อเองใน Pixelorama · เอฟเฟกต์ในวิดีโอ (ประกายตา สายฟ้า) เก็บไว้ได้ · ภาพสั่นนิดๆ ระหว่างเฟรมยอมรับได้ · วิดีโอไม่ผ่าน 2 ครั้ง (หรือผู้ใช้สั่ง) → ใช้ **idle โค้ด** ด้านล่างแทน · HL-1 = วิดีโอ (ชุด 222) · **idle โค้ด (ทางสำรอง · ผู้ใช้เลือกแบบ 1 + ตาเรือง จากตัวอย่าง s221-idle-options.gif):** ยืดหดทั้งตัวแบบหายใจ ยึดเท้า + จุดเรืองแสงของตัว (ตา/รูน/คริสตัล) สว่างขึ้นลงตามจังหวะ · **ค่าตั้งต้น = แบบ 3 (ผู้ใช้เลือกจาก s221-squash-variants.gif ชุด 221) แต่เลือกแยกรายตัว: ทุกตัวต้องทำภาพ 8 แบบให้ผู้ใช้เลือกเอง (สกิล char-idle) แล้วจดใน claude/idle-picks.csv · แบบ 3 =** สูงลด ~1.2% กว้างเพิ่ม ~0.8% (ค่าเสนอ) · จังหวะหายใจ เข้า 35% → ค้าง 15% → ออก 35% → พัก 15% ของรอบ ~2.4 วิ (ค่าเสนอ) · ย่อด้วย scale ของ Sprite3D ที่ขนาดจอ ห้ามย่อตัวภาพที่ขนาดสไปรต์ (แบบนั้นเม็ดพิกเซลหาย-โผล่สุ่ม ผู้ใช้ว่าแปลก) · หาจุดเรืองด้วยสีสดสว่างอัตโนมัติ ถ้าหาผิดตัวไหนค่อยทำภาพมาสก์แยก · ไม่มีภาพท่าโจมตี · ท่าโจมตีในเกม = โค้ดพุ่งตัวไปข้างหน้าแล้วถอยกลับ (ยืด-หดตัวนิดหน่อย + แสงวาบจากเอฟเฟกต์สกิล) · โดนตี = โค้ดล้วน (กะพริบขาว สั่น เด้งถอย) · **ตาย (ผู้ใช้กำหนด ชุด 221) = ตัวค่อยๆ มืดเป็นเงาดำ + ดาวพิกเซลเล็กๆ หมุนวนเหนือหัว แล้วจางหายไป** (โค้ดทำทั้งหมด ดาววาดด้วยโค้ด · ความเร็ว/จำนวนดาว = ค่าเสนอ: มืดลง ~0.4 วิ · ดาว 3 ดวง หมุน ~0.8 วิ · จางหาย ~0.3 วิ) ไม่ต้องวาด · เหตุผล: ตัวละคร 48 ตัว วาดครบ 4 ท่าต่อตัวงานเยอะเกิน
+- **2 ร่าง (ตัดสินแล้ว · ผู้ใช้ชุด 224, 14 พ.ย. 2026):** ดาว 1–2 = **ร่าง 1** · ดาว 3 = **ร่าง 3** (ร่างวิวัฒน์ ตัวเดิมโตขึ้น: ชนิด/หน้า/สีหลัก/ขนาดเม็ดเดิม ใหญ่ขึ้น ~20% (ค่าเสนอ) ท่ามั่นขึ้น เกราะ/ของประดับมากขึ้น + จุดเด่นใหม่ 1 อย่าง) · ร่าง 3 สั่งหลังร่าง 1 ของตัวนั้นผ่านแล้วเท่านั้น โดยแนบร่าง 1 ไป · **ตอนนี้ทำร่าง 1 ก่อนทุกตัว** (ผู้ใช้ชุด 224) ร่าง 3 ทำทีหลัง · ทุกร่างมี idle ของตัวเอง (สกิล char-idle) · claude/idle-picks.csv มีช่อง `form` (1 / 3) · โค้ดเปลี่ยนร่างตอนรวมร่างขึ้นดาว 3 ใน Godot = ทำตอนทำจริงตามสั่ง
+- **จุดเอฟเฟกต์ประจำตัว (ตัดสินแล้ว · ผู้ใช้ชุด 224):** ออกแบบทุกตัวให้มี **จุดเอฟเฟกต์ 1–2 จุด** ที่ติดตัว เช่น HL-1 ตาเรือง + ปล่อยสายฟ้าจากกำปั้น · PL-1 ไฟที่ปลายหาง · ใช้ 2 ทาง: ① บรรทัด EFFECT ในวิดีโอ idle ② จุดยึดเอฟเฟกต์สกิลในเกม (โค้ดทำแสง/อนุภาคที่จุดนั้น ข้อ 1) · จดจุดไว้ในคำสั่งภาพ (บรรทัด `Effect spot` ข้อ 6)
+- **ห้าม / ไม่ควร ในภาพนิ่ง (ผู้ใช้ชุด 224 จากรีวิวภาพชุดแรก):** ห้าม: เงา/พื้นใต้ตัว · สีชมพูหรือม่วงอมชมพูบนตัว (ตัดพื้นชมพูแล้วขอบเพี้ยน) · ตัวชิด/ล้นขอบภาพ · คล้ายตัวในเกมดัง — ไม่ควร: ทั้งตัวสีเข้มหมด (ย่อแล้วเป็นก้อนมืด) · ชิ้นเล็กลอยแยกจากตัวเยอะ (ไม่เกิน 2–3 ชิ้นและติดตัว) · ตัวระดับธรรมดาดูหรูเกิน · หาง/ปีกยาวจนภาพกว้างกว่าตัวอื่นมาก · ต้องไม่ใช่มนุษย์ = สัตว์/สิ่งมีชีวิตแฟนตาซี (ผู้ใช้ชุด 224)
 - ความหายากสูง = รายละเอียด/ชิ้นเกราะ/ของประดับมากขึ้น ตัวใหญ่ขึ้นได้ (ตำนานเต็ม 64 px)
 
 ## 3. เผ่า: สี + โครงร่าง (ให้จำได้แม้ไม่มีกรอบสี)
@@ -40,25 +43,34 @@
 
 ## 5. ข้อความตั้งต้น (วางใน Gemini ครั้งแรก)
 ```
-You are helping me make ORIGINAL character sprites for my indie auto-battler game.
+You are helping me make ORIGINAL creature sprites for my indie fantasy auto-battler game.
 Style rules for every image:
-- True pixel art sprite, 64x64 pixel grid, every pixel a clean square block, no anti-aliasing, no blur.
-- Chibi-heroic proportions (head : body about 1 : 2.5), full body, 3/4 view facing right.
-- 1-pixel dark outline tinted with the main colour (not pure black).
-- Light from top-left, 2-3 shade steps per colour, max 16 colours.
-- Warm high-fantasy mood, rich but not neon colours.
-- Plain flat solid #FF00FF magenta background, nothing else, no ground, no shadow, no text, no signature, no frame.
-- Must be original: do not resemble any existing game, franchise or character.
-Reply "ready" and wait for my character descriptions.
+- True pixel art sprite, every pixel a clean square block, no anti-aliasing, no blur. Same pixel size as the attached reference.
+- Fantasy creature, not human. Full body, 3/4 view facing right.
+- Dark outline around the whole body. Light from top-left, 2-3 shade steps per colour, max 16 colours.
+- Must read clearly at small size: strong silhouette, clear gaps between limbs and body, at least one light colour area, eyes clearly visible.
+- Every creature has 1-2 effect spots built into its body (a glowing eye, a flame tail tip, a crystal, a rune) where magic can shine and spark.
+- Fit inside the middle 80% of the image with empty space on every side. Body about as wide as it is tall; no very long tails or wings.
+- Plain flat solid #FF00FF magenta background.
+NEVER: shadow, ground, floor line, text, frame; pink or magenta-like colours on the creature; many loose floating particles (at most 2-3, touching the body); resembling any existing game, monster-collecting franchise or character.
+Each creature has 2 forms: FORM 1 (basic) and FORM 3 (evolved, used at max level). Reply "ready".
 ```
 
 ## 6. แม่แบบตัวละคร (เปลี่ยนเฉพาะในวงเล็บ)
 ```
-Character: [ID] — [creature/role in a few words]
+FORM 1. Character: [ID] — [creature in a few words]
 Tribe look: [ข้อ 3 แปลเป็นอังกฤษ เช่น "steel tribe: silver-grey and muted blue, boxy plate armour, broad shoulders"]
 Rarity: [common / uncommon / rare / epic / legendary] (more ornaments and size for higher rarity)
-Pose: [idle battle stance / holding a big shield / ...]
+Pose: [idle battle stance ...], feet planted
+Effect spot: [1-2 จุด เช่น "glowing blue visor eye; lightning can spark from the fists"]
 Key feature: [จุดเด่นจากสกิล 1 อย่าง]
+```
+ร่าง 3 (แนบร่าง 1 ที่ผ่านแล้วของตัวนั้นแทนภาพต้นแบบ):
+```
+FORM 3 of the attached creature (its evolved max-level form).
+Evolved: [สิ่งที่โตขึ้น/เพิ่มขึ้น 1 บรรทัด]
+Keep: the same species, same face, same main colours, same effect spots and same pixel size, so it is clearly the same creature grown up.
+Change: about 20% bigger, stronger pose, more armour or ornaments, one new signature feature. Still fits the middle 80% of the image.
 ```
 
 ## 7. ตัวทดลองตัวแรก: HL-1 (กำปั้นเหล็ก)

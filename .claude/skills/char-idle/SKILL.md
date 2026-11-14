@@ -12,6 +12,7 @@ Scripts here (Python 3 + numpy + Pillow (+ opencv-python for video); run with `p
 - `idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row]` — route A, 8 code variants, 2.4 s loop, ×3 zoom.
 
 ## Shared steps (every character)
+0. **Forms + effect spots (set 224, art-style §2):** each character has FORM 1 (stars 1–2) and FORM 3 (star 3); do every FORM 1 first, FORM 3 only after its FORM 1 is done. File names carry `_f3` for FORM 3 (`<ID>_f3_still_…`, `<ID>_f3_idle8_…`); idle-picks.csv `form` = 1 or 3. Each creature is designed with 1–2 effect spots (art-style §2) — the video `[EFFECT]` line uses those spots. Stills: check the art-style §2 never/should-not list first (shadow, pink, edge, dark mush, loose particles).
 1. **Store the original still** in art/library/pictures/sprites/ as `<ID>_still_gemini_<date>.<ext>` + INDEX.csv row (only if usable — broken/wrong pictures: tell the owner, do not store).
 2. **Find the grid:** zoom the source edges (crop + Read) — block size = width of one fake pixel (HL-1: 20.0 px on a 2000 px image), offset = where the first block starts, grid_n = blocks across. Run `snap.py`; Read the result at ×8 — stair-stepped clean edges = right; doubled/half pixels = wrong block or offset, retry.
 3. **Store the snapped png** next to the original as `<ID>_still_px<W>x<H>_<date>.png` + INDEX.csv row.
@@ -83,7 +84,7 @@ A3. **Render** `idle_variants.py` → scratchpad; Read frame ~20 to check; send 
 A4. **Gate — owner picks:** explain the 8 in Thai first, then AskUserQuestion (max 4 options per question → show the recommended 3–4):
    1 sprite-res scale (reference only, looks wrong) · 2 strong squash 2.5%/1.5% · **3 light squash 1.2%/0.8% + breath hold** · 4 accordion (drop a row at waist, then neck) · 5 upper body sinks 1 px · 6 = 3 + 1 px sway · 7 hover 0–2 px (flying / spirit) · 8 still + glow only (stone / statue / object).
    Recommend by body: heavy/armoured → 3 or 5 · flying → 7 · object-like → 8 · soft/blob → 2. A new mix → new function in idle_variants.py (keep old numbers; new = 9, 10…).
-A5. **Record** in claude/idle-picks.csv (`character,variant,neck_row,waist_row,hip_row,set,note`).
+A5. **Record** in claude/idle-picks.csv (`character,variant,neck_row,waist_row,hip_row,set,note,form`).
 
 ## Tried in set 222 and dropped — do not offer again unless the owner asks
 GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · PixelLab (paid; no result came back) · heavy cleaning of video frames (see B4).
