@@ -75,6 +75,14 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 - No per-round design-critique / tell count (those are for screen UI); instead run the §1 checklist once per phase and record it in notes.md.
 
 - **Outside references (set 221):** blur/bloom/fog/grade/shadow/web ideas from other HD-style projects + player complaints → claude/workflow/art-look-ref.md §9; read it at the start of each gaps phase.
+### 8c. Arena sample shots on the owner's PC (set 226, owner A2 — 7 rounds, 2 traps)
+1. Sample branch in a scratchpad worktree (never switch the main folder). Copy `godot/` → `<scratch>/g`, delete `<g>/.godot`, drop the `MCPRuntimeServer` line from `<g>/project.godot`, `sed` `const FOV := 26.0` → `19.2` in `scripts/ui/stage3d.gd`.
+2. `python -I claude/preview-set217/p1-patch-depth.py <g>` → `p1t-patch-tune.py <g>`; sheets to `<g>/tests/s225/`; `s226.gd.txt` → `<g>/tests/s226.gd`.
+3. Every new picture (sheet, card) goes in BEFORE `Godot_v4.7.2-stable_win64_console.exe --headless --path <g> --import` — a file added after the import does not load and fails silently (trap 1).
+4. Shot: console exe `--rendering-driver opengl3 --audio-driver Dummy --path <g> --resolution 1920x1080 -s res://tests/s226.gd -- --out <dir> --look G <args>` (current args: last "Current pick" line of preview-set217/notes.md s226). Wrap it in a small `shot.sh <name> <look> [args]` in the scratchpad.
+5. Placing things by screen position: `project_ray_*` and the visible rect are the 854×480 base here — compute rays from `cam.fov` + `cam.global_transform.basis` (trap 2); test a hidden object by colouring it red and counting red pixels.
+6. Compare sheets with PIL (Tahoma for Thai labels), crops at 1:1 for pixel questions; copy script + shots + a notes.md line to the sample branch, commit, push.
+
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 
