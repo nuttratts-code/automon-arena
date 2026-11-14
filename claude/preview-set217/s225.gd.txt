@@ -116,7 +116,7 @@ func _initialize() -> void:
 		m.set_shader_parameter("focus_bottom", 0.88)
 		m.set_shader_parameter("soft", 0.22)
 		m.set_shader_parameter("max_lod", 1.6)
-	if look == "D" or look == "E": # B4: the real screenshot colours (hd-2d-ref 7.5): pale, soft, cool shadows, teal-grey haze, grey-blue sky
+	if look == "D" or look == "E" or look == "F": # B4: the real screenshot colours (hd-2d-ref 7.5): pale, soft, cool shadows, teal-grey haze, grey-blue sky
 		var env2: Environment = st.env_node.environment
 		env2.fog_light_color = Color("#b4cfd6") # teal-grey haze (ref far hills 103,156,152)
 		env2.fog_density = 0.4
@@ -132,7 +132,7 @@ func _initialize() -> void:
 		m2.set_shader_parameter("bloom_all", 0.35)
 		m2.set_shader_parameter("glow", 0.3)
 		m2.set_shader_parameter("vignette", 0.3)
-	if look == "E": # B5: background only, matched to the ref screenshot's measured colours (hd-2d-ref 7.5 + compare shot)
+	if look == "E" or look == "F": # B5: background only, matched to the ref screenshot's measured colours (hd-2d-ref 7.5 + compare shot)
 		var e: Environment = st.env_node.environment
 		e.fog_light_color = Color(EV.get("fog", "#8fb3ae"))
 		e.fog_density = float(EV.get("fogd", "0.5"))
@@ -154,6 +154,8 @@ func _initialize() -> void:
 		m3.set_shader_parameter("sat", float(EV.get("psat", "0.9")))
 		m3.set_shader_parameter("contrast", float(EV.get("pcon", "1.02")))
 		m3.set_shader_parameter("vignette", float(EV.get("vig", "0.42")))
+	if look == "F": # B6: scene layers like the ref, owner's own pieces only (grass cards art/s217, stones, cliff, slab)
+		_b6(st, cam, EV)
 	await _frames()
 	print("S225 look ", look, " wpp ", wpp, " cam ", cam.global_position)
 	for f in nf:
@@ -162,3 +164,52 @@ func _initialize() -> void:
 		await _frames()
 		root.get_texture().get_image().save_png(out.path_join("%s_s%s_c%s_f%02d.png" % [look, str(sat), str(csat), f]))
 	quit()
+
+
+func _card(st: Node, file: String, at: Vector3, width: float, tint: Color) -> void:
+	var t: Variant = load(file)
+	if not (t is Texture2D):
+		return
+	var sp := Sprite3D.new()
+	sp.texture = t
+	sp.pixel_size = width / float((t as Texture2D).get_width())
+	sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	sp.shaded = false
+	sp.modulate = tint
+	sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sp.position = at + Vector3(0, width * float((t as Texture2D).get_height()) / float((t as Texture2D).get_width()) * 0.5 - 0.12, 0)
+	st.add_child(sp)
+
+func _b6(st: Node, cam: Camera3D, EV: Dictionary) -> void:
+	# 1 ground: shift the yellow-green toward the ref's blue-green (74,127,111) — a tint cannot add blue the texture lacks
+	var teal := float(EV.get("teal", "0.5"))
+	for mi in st.find_children("*", "MeshInstance3D", true, false):
+		var mo: Material = (mi as MeshInstance3D).material_override
+		if mo is ShaderMaterial and (mo as ShaderMaterial).get_shader_parameter("tint") != null:
+			var sh := Shader.new()
+			sh.code = (mo as ShaderMaterial).shader.code.replace("ALBEDO = c * tint;", "float l = dot(c, vec3(0.3, 0.59, 0.11));
+	c = mix(c, l * vec3(0.78, 1.32, 1.18), %s);
+	ALBEDO = c * tint;" % str(teal))
+			(mo as ShaderMaterial).shader = sh
+	# 2 plaza: warm beige like the ref's dirt path, a bit darker (owner tone script on the Plaza node)
+	for n in st.find_children("Plaza", "", true, false):
+		if "tone" in n:
+			var pt: Array = str(EV.get("plaza", "0.66,0.6,0.48")).split_floats(",")
+			n.tone = Color(pt[0], pt[1], pt[2])
+	# 3 grass tufts: a ring at the plaza rim (back + sides), never inside the board
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 22501
+	var files := ["grass0", "grass1", "grass2", "grass3", "grass4", "grass5", "grass_big"]
+	var gtint := Color(0.62, 0.74, 0.66)
+	var ring_n := int(EV.get("tufts", "70"))
+	for i in ring_n:
+		var a := rng.randf_range(PI * 0.92, PI * 2.08) # back half + the two sides
+		var r := rng.randf_range(15.0, 21.0)
+		var at := Vector3(cos(a) * r * 1.12, 0, sin(a) * r - 1.5)
+		var w := rng.randf_range(float(EV.get("tw0", "0.7")), float(EV.get("tw1", "1.4")))
+		_card(st, "res://art/s217/%s.png" % files[rng.randi() % files.size()], at, w, gtint * rng.randf_range(0.85, 1.05))
+	# 4 foreground framing: big tufts at the bottom corners, soft in the tilt-shift band (ref: grass between camera and field)
+	if EV.get("fg", "1") == "1": # the view's bottom edge meets the ground at z ~7, half-width ~6 m there
+		for fx in [[-7.4, 7.6, 2.2], [-5.6, 8.4, 1.6], [7.4, 7.8, 2.1], [5.8, 8.6, 1.5]]:
+			_card(st, "res://art/s217/%s.png" % files[rng.randi() % files.size()], Vector3(fx[0], 0, fx[1]), fx[2], gtint * 0.72)
