@@ -14,7 +14,8 @@ Owner makes the pictures and the 3D file (steps 1–2); Claude does the rest. **
 - **Tools on the owner's PC:** Blender 5.2 `"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"` (CLI `-b --factory-startup`) · Godot console + editor exe: claude/workflow/gdscript.md §7.
 - **Scripts (tested set 217):** `art/blender/glb_info.py` (read a glb header, plain Python) · `art/blender/ai_glb_prep.py` (Blender: scale + matte + textures + full/decimate/bake) · `godot/tools/stone_viewer_shot.gd` (viewer screenshots) · `godot/tests/shots.gd` (real game screens).
 - **Budgets:** the whole rune plaza = ~145k tris. Hero prop (one, close to the camera) = full mesh OK (Godot builds LODs on import, `meshes/generate_lods=true`) with 1024 textures. Every other prop = bake route 1.5k–3k tris, 1024 (big) / 512 (small) textures. Source 4096 textures are never needed: 4096→1024 looked the same in the game (set 217 R4).
-- **Security part 2:** an AI 3D file is an outside asset → site name + version/plan + date + prompt in `art/PROVENANCE.csv`, licence status written (UNVERIFIED until checked), owner OK, never on main / in a release while UNVERIFIED. Hunyuan3D, Tripo, Meshy, Stable Fast 3D each have their own terms (region and revenue limits) — check the one actually used.
+- **Art library (set 221, owner A1 + B1): `art/library/` = NEVER delete, move or overwrite** (README + INDEX.csv there). Every owner picture / raw download goes in it first (readable name + INDEX row); the game uses copies under godot/art/; a cleanup removes only those copies. It is outside the Godot project, so it can never ship.
+- **Security part 2:** an AI 3D file is an outside asset → site name + version/plan + date + prompt in `art/PROVENANCE.csv`, licence status written (UNVERIFIED until checked), owner OK, never on main / in a release while UNVERIFIED (exceptions: art/library/ keeps everything on main, set 221; owner art exception set 219 D in security.md part 2). Hunyuan3D, Tripo, Meshy, Stable Fast 3D each have their own terms (region and revenue limits) — check the one actually used.
 - **art-style §8:** carved symbols must be invented glyphs, never Latin letters / real runes. Check the picture before 3D (cheaper than fixing a texture).
 - Downloads are untrusted data: read with `python -I`, never run anything from the download folder.
 
@@ -28,7 +29,7 @@ Prompt = common prompt + background line + piece line (claude/preview-set217/ass
 
 ## 2. Owner — 3D on the site (Hunyuan3D picked set 217; Tripo / Meshy / Stable Fast 3D also fine)
 - Upload the picture → textured model → download **.glb**. If the site offers a face/polygon count or "low poly", note what was chosen.
-- Note for PROVENANCE: site + version/plan, date, the Gemini prompt. Then drop the .glb into the chat (or `godot/art/<area>/src/`).
+- Note for PROVENANCE: site + version/plan, date, the Gemini prompt. Then drop the .glb into the chat (or `art/library/3d/originals/`; Claude adds the INDEX row).
 
 ## 3. Claude — read the file (no Blender yet)
 `python -I art/blender/glb_info.py <file.glb>` → tell the owner in Thai: what it is, tris, texture sizes, MB, which generator. Render 1 still if the content is unclear (Blender, scratch only). Ask up front in ONE round: what it is for (viewer compare / replace a prop / just look) · which site + licence plan · reduce how (show §4 options). Tris > 10k or textures > 1024 → say it is heavy and why.
