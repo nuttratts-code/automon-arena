@@ -12,6 +12,7 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out: String = args[args.find("--out") + 1]
 	var look: String = args[args.find("--look") + 1] if args.has("--look") else "A"
+	var sat: float = float(args[args.find("--sat") + 1]) if args.has("--sat") else 1.15
 	var nf: int = int(args[args.find("--frames") + 1]) if args.has("--frames") else 1
 	DirAccess.make_dir_recursive_absolute(out)
 	await process_frame
@@ -92,7 +93,7 @@ func _initialize() -> void:
 		var hd: ColorRect = app.get_node("HD2D")
 		var m: ShaderMaterial = hd.material
 		m.set_shader_parameter("warm", Vector3(1.02, 1.0, 0.96))
-		m.set_shader_parameter("sat", 1.15)
+		m.set_shader_parameter("sat", sat)
 		m.set_shader_parameter("contrast", 1.05)
 		m.set_shader_parameter("lift", Vector3(0.006, 0.012, 0.02))
 		m.set_shader_parameter("bloom_all", 0.6)
@@ -102,11 +103,27 @@ func _initialize() -> void:
 		m.set_shader_parameter("focus_bottom", 0.88)
 		m.set_shader_parameter("soft", 0.22)
 		m.set_shader_parameter("max_lod", 1.6)
+	if look == "D": # B4: the real screenshot colours (hd-2d-ref 7.5): pale, soft, cool shadows, teal-grey haze, grey-blue sky
+		var env2: Environment = st.env_node.environment
+		env2.fog_light_color = Color("#b4cfd6") # teal-grey haze (ref far hills 103,156,152)
+		env2.fog_density = 0.4
+		env2.fog_depth_curve = 2.0
+		for mi in st.find_children("*", "MeshInstance3D", true, false):
+			var mm := (mi as MeshInstance3D).material_override as StandardMaterial3D
+			if mm != null and mm.albedo_texture != null and mm.albedo_texture.resource_path.ends_with("sky_clouds.png"):
+				mm.albedo_color = Color(0.74, 0.83, 0.88) # pale grey-blue like the ref sky (170, 195, 202)
+		var m2: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
+		m2.set_shader_parameter("sat", 0.85)
+		m2.set_shader_parameter("contrast", 0.97)
+		m2.set_shader_parameter("warm", Vector3(1.03, 1.01, 0.97))
+		m2.set_shader_parameter("bloom_all", 0.35)
+		m2.set_shader_parameter("glow", 0.3)
+		m2.set_shader_parameter("vignette", 0.3)
 	await _frames()
 	print("S225 look ", look, " wpp ", wpp, " cam ", cam.global_position)
 	for f in nf:
 		for s in sprs:
 			(s as Sprite3D).frame = ((s as Sprite3D).frame + (1 if f > 0 else 0)) % 8
 		await _frames()
-		root.get_texture().get_image().save_png(out.path_join("%s_f%02d.png" % [look, f]))
+		root.get_texture().get_image().save_png(out.path_join("%s_s%s_f%02d.png" % [look, str(sat), f]))
 	quit()
