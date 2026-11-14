@@ -152,3 +152,7 @@ Rebuild R3: `bvenv/bin/python r3-hull-stone.py front left back right top <out> s
 - First T4 try at (−30, z −104, 6 m) read as a big close object next to the stones in prep → moved right + smaller; now visible in battle and prep.
 - Seen: sky band ~15 %, rocky lip marks the plateau edge, arch = landmark; light-theme hills still pale under the HD2D grade (phase 4).
 - Shots P1t-6v6-battle / P1t-battle-mid / P1t-prep-late. Rebuild: copy → FOV 19.2 → p1-patch-depth.py → p1t-patch-tune.py. Godot tests not run.
+
+## s223 (14 Nov) — HL-1 idle in the arena (owner A1)
+- Copy of godot → FOV 19.2 → p1-patch-depth.py → p1t-patch-tune.py; `s223-hl1.gd.txt` (copy to <g>/tests/, needs <g>/tests/hl1_idle.png = the 8x1 sheet) = s6v6 + HL-1 (id 9001, you row 0 lane 0) gets the sheet as Sprite3D hframes 8, then 16 shots one per frame.
+- Shots s223-arena-HL-1-idle(.gif/-zoom.gif/.png) + 8frames grid. Seen: at battle size the 81 px sprite draws ~75 px tall with Nearest → some rows are skipped, so the 2-row eye line drops out in frames 3 and 7 (flicker that is not in the art) · the light-theme HD2D grade makes the grey metal read whiter than the sheet.
