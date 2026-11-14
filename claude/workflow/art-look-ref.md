@@ -30,3 +30,16 @@ V1.0 · 13 Nov 2026 (set 220 E1). Section numbers match skill art-look.
 - Earlier project research: claude/review-2026-11-10-brainstorm-art-workflow.md
 - Verified set 214: a shadowed sun is 3–5× too bright in Compatibility (sRGB-space shadow pass) → stage sun has shadows off; any real cast shadow needs a re-test first (claude/preview-set214/notes.md).
 - Not verified: Alpha-cut Discard casting shadows in Compatibility; screen-texture mipmaps in the web export; SSAO cost on phones. Test each in step 2 before building on it.
+
+## 9. Outside references — ideas to use (set 221, 14 Nov 2026; full notes: claude/review-2026-11-14-meowa-template.md, review-2026-11-14-lumina.md, end of review-2026-11-14-hd2d-gaps.md)
+Licences: Meowa HD2D template + SimpleHD2D = NO licence (ideas only, never files or numbers) · Luminati (gitlab stubborn-hug/lumina, three.js) = MIT (close ports need credit + owner OK). Each idea goes through its phase's normal gate.
+- **Blur (player complaint #1, "everything off-centre is blurred"):** keep the sharp band wide and pixel-exact (no mip sampling inside it), with a gradual edge ramp. Never blur unit sprites.
+- **Bloom:** threshold + soft knee + a brightness clamp so single hot pixels can't flicker. Bloom only on emissive accents (runes, VFX); no whole-screen bloom.
+- **Fog:** fog colour = the far sky's horizon colour, so the far ground melts into the sky. Keep the first metres in front of the camera fog-free.
+- **Grade:** split toning (warm highlights, cool shadows) is one pass, cheaper than a coloured ambient. This is option 2 of gaps item 17.
+- **Shadows:** foot blob/card under every unit now (our L2 card code). Sun-facing sprite shadow copy (alpha-tested current frame) only after the set 214 compat-brightness fix. Cloud shadows = scrolling soft noise in the ground shader (Decals don't run in Compatibility).
+- **Life:** each unit's idle starts at a different frame · top-weighted wind sway with a per-position phase (have it: s217_grass) · emissive VFX colours > 1 + a short point light.
+- **Framing:** 1–2 near-camera props at the screen edges, blurred by the tilt band (check the shop panel doesn't cover them).
+- **Dressing tool:** GridMap + MeshLibrary of pixel-textured blocks lets the owner paint plaza/ruin pieces by hand.
+- **Web/phone:** one central switch for particle/card counts · warm up every material/VFX once behind the loading screen (Compatibility compiles on first sight → hitch on the first skill). Don't copy the "turn everything off on web" approach; our mip tilt-shift works on the web (P0).
+- **Identity:** critics call the style "wearing thin" (2025). Lean on our own touches (rune glow, high-meadow plateau, tribe colours).

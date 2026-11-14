@@ -74,6 +74,7 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 - Mechanics = skill ui-preview steps 1–6c (scratch copy or sample branch mode, patch scripts, notes.md, Rebuild line); 3D props = skill asset-3d.
 - No per-round design-critique / tell count (those are for screen UI); instead run the §1 checklist once per phase and record it in notes.md.
 
+- **Outside references (set 221):** blur/bloom/fog/grade/shadow/web ideas from other HD-style projects + player complaints → claude/workflow/art-look-ref.md §9; read it at the start of each gaps phase.
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 

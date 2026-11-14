@@ -1,6 +1,6 @@
 # workflow · publish and test the pages
 
-V1.33 · 11 Nov 2026 (set 203: §10 itch.io web build) · V1.32 · 8 Nov 2026 (set 157: points to skill publish-pages) · V1.31 · 8 Nov 2026 (set 153: CI rule G1, gate text points to CLAUDE.md) · V1.30 · 8 Nov 2026 (set 152 workflow audit: §3 = Artifact tool procedure, CI check before publish) · V1.29 · 8 Nov 2026 (set 151 review: W1 false-FAIL rerun 9.3 · W10 bug test 9.1a) · V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
+V1.34 · 14 Nov 2026 (set 221: §10 step 4 public-text trademark check) · V1.33 · 11 Nov 2026 (set 203: §10 itch.io web build) · V1.32 · 8 Nov 2026 (set 157: points to skill publish-pages) · V1.31 · 8 Nov 2026 (set 153: CI rule G1, gate text points to CLAUDE.md) · V1.30 · 8 Nov 2026 (set 152 workflow audit: §3 = Artifact tool procedure, CI check before publish) · V1.29 · 8 Nov 2026 (set 151 review: W1 false-FAIL rerun 9.3 · W10 bug test 9.1a) · V1.28 · 31 Oct 2026 (3 rewritten for the mcp artifact tools + gate first; 9 level 2 = gate) · older versions: git log
 
 Step-by-step runbook: skill `.claude/skills/publish-pages/SKILL.md` (set 155). This file holds the rules and wins if they differ; when a rule here changes, update the skill in the same commit.
 
@@ -45,6 +45,6 @@ Decided set 203: B1 no PCK encryption on web (security.md ④) · C1 the user up
 1. Build from the LATEST main whose newest code CI run is green (§3 rule G1): `godot/tools/get_godot.sh <dir> templates` → `godot --headless --path godot --import` → `godot --headless --path godot --export-release Web ../build/web/index.html` (same commands as the CI `godot-web` job).
 2. Check: `python3 -I godot/tools/web_check.py build/web <shots dir>` → WEB CHECK: PASS · file list: `unzip -l` shows only index.{html,js,wasm,pck,png,icon.png,apple-touch-icon.png,audio*.worklet.js}; `strings build/web/index.pck | grep -i 'tests/\|tools/\|golden'` empty (data-file `_note` texts are known, see handoff pending).
 3. Zip the files of build/web at the zip root (index.html must be at the top level): `cd build/web && zip -9 <scratchpad>/automon-arena-web-<sha>.zip *` → send it to the user (SendUserFile).
-4. itch.io page settings (user, Claude guides): Kind of project = HTML · upload the zip → tick "This file will be played in the browser" · Embed options: viewport 854 × 480 (the game base size), tick Mobile friendly (orientation Landscape), Fullscreen button, leave SharedArrayBuffer OFF (threads are off in the export) · Visibility = Draft or Restricted.
+4. itch.io page settings (user, Claude guides): Kind of project = HTML · upload the zip → tick "This file will be played in the browser" · Embed options: viewport 854 × 480 (the game base size), tick Mobile friendly (orientation Landscape), Fullscreen button, leave SharedArrayBuffer OFF (threads are off in the export) · Visibility = Draft or Restricted. · Public text (set 221): title, page text, trailer and credits never say "HD-2D"/"HD2D" (Square Enix trademark) nor name other games.
 5. Relay line: commit sha, WEB CHECK result, zip name; Links gets the itch.io page URL once the user sends it.
 
