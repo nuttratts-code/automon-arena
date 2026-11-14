@@ -13,6 +13,12 @@ func _initialize() -> void:
 	var out: String = args[args.find("--out") + 1]
 	var look: String = args[args.find("--look") + 1] if args.has("--look") else "A"
 	var sat: float = float(args[args.find("--sat") + 1]) if args.has("--sat") else 1.15
+	var csat: float = float(args[args.find("--csat") + 1]) if args.has("--csat") else 1.0 # characters only
+	var EV := {}
+	for a in args:
+		if a.begins_with("--e:"):
+			var kv := a.substr(4).split("=")
+			EV[kv[0]] = kv[1]
 	var nf: int = int(args[args.find("--frames") + 1]) if args.has("--frames") else 1
 	DirAccess.make_dir_recursive_absolute(out)
 	await process_frame
@@ -59,6 +65,13 @@ func _initialize() -> void:
 		var s: Sprite3D = st.groups["battle"][id]["spr"]
 		var old_tall: float = s.pixel_size * float(s.texture.get_height())
 		var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s.png" % map[id]))
+		if csat < 1.0: # desaturate the character only, the set keeps its colours
+			for y in img.get_height():
+				for x in img.get_width():
+					var c := img.get_pixel(x, y)
+					if c.a > 0.0:
+						var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+						img.set_pixel(x, y, Color(lerpf(l, c.r, csat), lerpf(l, c.g, csat), lerpf(l, c.b, csat), c.a))
 		s.texture = ImageTexture.create_from_image(img)
 		s.hframes = 8
 		s.pixel_size = wpp
@@ -103,7 +116,7 @@ func _initialize() -> void:
 		m.set_shader_parameter("focus_bottom", 0.88)
 		m.set_shader_parameter("soft", 0.22)
 		m.set_shader_parameter("max_lod", 1.6)
-	if look == "D": # B4: the real screenshot colours (hd-2d-ref 7.5): pale, soft, cool shadows, teal-grey haze, grey-blue sky
+	if look == "D" or look == "E": # B4: the real screenshot colours (hd-2d-ref 7.5): pale, soft, cool shadows, teal-grey haze, grey-blue sky
 		var env2: Environment = st.env_node.environment
 		env2.fog_light_color = Color("#b4cfd6") # teal-grey haze (ref far hills 103,156,152)
 		env2.fog_density = 0.4
@@ -113,17 +126,39 @@ func _initialize() -> void:
 			if mm != null and mm.albedo_texture != null and mm.albedo_texture.resource_path.ends_with("sky_clouds.png"):
 				mm.albedo_color = Color(0.74, 0.83, 0.88) # pale grey-blue like the ref sky (170, 195, 202)
 		var m2: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
-		m2.set_shader_parameter("sat", 0.85)
+		m2.set_shader_parameter("sat", sat if args.has("--sat") else 0.85)
 		m2.set_shader_parameter("contrast", 0.97)
 		m2.set_shader_parameter("warm", Vector3(1.03, 1.01, 0.97))
 		m2.set_shader_parameter("bloom_all", 0.35)
 		m2.set_shader_parameter("glow", 0.3)
 		m2.set_shader_parameter("vignette", 0.3)
+	if look == "E": # B5: background only, matched to the ref screenshot's measured colours (hd-2d-ref 7.5 + compare shot)
+		var e: Environment = st.env_node.environment
+		e.fog_light_color = Color(EV.get("fog", "#8fb3ae"))
+		e.fog_density = float(EV.get("fogd", "0.5"))
+		e.ambient_light_sky_contribution = float(EV.get("amb", "0.8"))
+		st.sun.light_energy = float(EV.get("sun", "0.95"))
+		var gt: Array = str(EV.get("ground", "0.56,0.7,0.6")).split_floats(",")
+		var sk: Array = str(EV.get("sky", "0.6,0.7,0.76")).split_floats(",")
+		for mi in st.find_children("*", "MeshInstance3D", true, false):
+			var mo: Material = (mi as MeshInstance3D).material_override
+			if mo is ShaderMaterial and (mo as ShaderMaterial).get_shader_parameter("tint") != null:
+				(mo as ShaderMaterial).set_shader_parameter("tint", Vector3(gt[0], gt[1], gt[2])); print("TINT ", mi.name)
+			elif mo is StandardMaterial3D and (mo as StandardMaterial3D).albedo_texture != null and (mo as StandardMaterial3D).albedo_texture.resource_path.ends_with("sky_clouds.png"):
+				(mo as StandardMaterial3D).albedo_color = Color(sk[0], sk[1], sk[2])
+			elif mo is StandardMaterial3D and (mo as StandardMaterial3D).albedo_texture != null and (mo as StandardMaterial3D).albedo_texture.resource_path.ends_with("far_hills_v3.png"):
+				var hl: Array = str(EV.get("hills", "0.55,0.75,0.72")).split_floats(",")
+				var far: bool = (mi as Node3D).position.z < -150.0
+				(mo as StandardMaterial3D).albedo_color = Color(hl[0], hl[1], hl[2]) * (0.9 if far else 1.0)
+		var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
+		m3.set_shader_parameter("sat", float(EV.get("psat", "0.9")))
+		m3.set_shader_parameter("contrast", float(EV.get("pcon", "1.02")))
+		m3.set_shader_parameter("vignette", float(EV.get("vig", "0.42")))
 	await _frames()
 	print("S225 look ", look, " wpp ", wpp, " cam ", cam.global_position)
 	for f in nf:
 		for s in sprs:
 			(s as Sprite3D).frame = ((s as Sprite3D).frame + (1 if f > 0 else 0)) % 8
 		await _frames()
-		root.get_texture().get_image().save_png(out.path_join("%s_s%s_f%02d.png" % [look, str(sat), f]))
+		root.get_texture().get_image().save_png(out.path_join("%s_s%s_c%s_f%02d.png" % [look, str(sat), str(csat), f]))
 	quit()
