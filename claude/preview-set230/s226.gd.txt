@@ -1404,6 +1404,10 @@ uniform vec3 deep = vec3(0.16, 0.36, 0.46);
 uniform vec3 skyc = vec3(0.66, 0.80, 0.90);
 uniform vec3 shore_c = vec3(0.78, 0.86, 0.80);
 uniform float shore_w = 2.2;
+uniform float glit = 0.0; // s234: glints like the owner's water ref (bright flecks, stretched across the view)
+uniform float gsx = 0.7;
+uniform float gsz = 0.18;
+uniform float gthr = 0.55;
 varying vec3 wp2;
 void vertex() { wp2 = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
 void fragment() {
@@ -1415,6 +1419,13 @@ void fragment() {
 	float rip = vn(q + vec2(TIME * 0.05, TIME * 0.03)) * 0.6 + vn(q * 3.1 - vec2(TIME * 0.08, 0.0)) * 0.4;
 	vec3 c = mix(deep, skyc, clamp(fres + (rip - 0.5) * 0.25, 0.0, 1.0));
 	c += vec3(0.9, 0.85, 0.7) * smoothstep(0.82, 0.95, rip) * 0.12; // sparkles
+	if (glit > 0.0) {
+		vec2 g2 = vec2(wp2.x * gsx, wp2.z * gsz);
+		float s1 = vn(g2 + vec2(TIME * 0.4, TIME * 0.15));
+		float s2 = vn(g2 * 2.3 + vec2(-TIME * 0.3, 7.3));
+		float gl = smoothstep(gthr, gthr + 0.12, s1 * s2 * 1.8) * (0.4 + 0.6 * fres);
+		c += vec3(1.0, 0.98, 0.92) * gl * glit;
+	}
 	float sh = 1.0 - smoothstep(0.0, shore_w, depth);
 	c = mix(c, shore_c, sh * 0.75);
 	ALBEDO = c;
@@ -1430,6 +1441,9 @@ func _s233_water(st: Node, EV: Dictionary) -> void:
 	var m := _s233_mat(sh, old.material_override as ShaderMaterial, 0.0, 0.0, EV)
 	var wl := float(EV["wl"])
 	m.set_shader_parameter("wl", wl)
+	for k in ["glit", "gsx", "gsz", "gthr"]:
+		if EV.has(k):
+			m.set_shader_parameter(k, float(EV[k]))
 	for k in ["deep", "skyc", "shore_c"]:
 		if EV.has("w" + k):
 			var cc := Color(EV["w" + k])
