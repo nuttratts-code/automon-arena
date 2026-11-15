@@ -235,3 +235,7 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - `bushes=<n>` (`_s235_bushes`): cards round the ring at r `br0`–`br1` (12.6–16.5 m), back half + sides (z ≤ 2), |x| ≥ `bgap` 4.5 (back opening kept), height `bushh` 1.6 × 0.65–1.3, tint `busht`. Picked 30, `busht=0.64,0.72,0.6` (0.78 read as yellow haystacks — the art itself is golden).
 - `ivy=<k>` (`_s235_ivy`): k strands per stone in `ivys` (StoneL, StoneR, StoneBig, StoneShortR) from the mesh AABB: anchor 72–90 % up, x within ±`ivyx` 0.15 × width (0.3 hung in the air beside StoneL's leaning top), length 35–75 % of the stone, hanging down (offset), camera side.
 - Copies + originals: art/library/pictures/s235/ (INDEX rows). Args: r32_args.txt.
+
+## Round 33 (set 235) — owner: ivy out; more bushes/trees like the AI picture
+- Ivy off (no `ivy=`). Bushes `bushes=60 bushh=2.0 br0=12.4 br1=17.5 busht=0.62,0.72,0.58`. New `treemore=1` adds 6 trees (x ±6.5…22, z −3…−22) behind/between the stones → both sides read as a wooded edge, back opening still clear. The right fallen slab is now mostly hidden by bushes.
+- Args: r33_args.txt.

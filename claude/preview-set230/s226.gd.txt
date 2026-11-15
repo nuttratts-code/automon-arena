@@ -1870,6 +1870,9 @@ func _s235_trees(st: Node, EV: Dictionary) -> void:
 	var near := [["treeB0", -19.0, -8.0, 1.15, false], ["treeB2", -25.0, -15.0, 1.0, true], ["treeA0", -15.5, -19.0, 0.85, false],
 		["treeB1", 20.0, -9.0, 1.1, true], ["treeB0", 25.0, -17.0, 0.95, false], ["treeA0", 15.0, -21.0, 0.8, true],
 		["treeB2", -9.0, -24.0, 0.7, false], ["treeB1", 10.0, -26.0, 0.65, false]]
+	if EV.get("treemore", "0") == "1": # s235 r33: owner "more bushes/trees like the AI picture" — fill both sides behind the stones
+		near += [["treeB1", -13.0, -15.0, 0.75, true], ["treeA0", -21.0, -3.0, 0.9, false], ["treeB2", -6.5, -21.0, 0.6, true],
+			["treeB0", 14.5, -15.5, 0.7, false], ["treeB2", 22.0, -3.5, 0.95, true], ["treeA0", 6.5, -22.0, 0.55, false]]
 	var n := 0
 	for e in near:
 		var x: float = e[1]; var z: float = e[2]
