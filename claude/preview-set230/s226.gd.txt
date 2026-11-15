@@ -2032,15 +2032,16 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 	var path := r.resource_path
 	var builtin := path == "" or path.contains("::")
 	var out: Resource = r
-	if r is Texture2D and (builtin or r is ImageTexture) and not (r is ViewportTexture):
+	if r is Texture2D and not (r is ViewportTexture):
 		var img := (r as Texture2D).get_image()
-		var key := str(hash(img.get_data())) + "_%dx%d" % [img.get_width(), img.get_height()]
-		var f := dir + "/tex/t_" + key + ".png"
+		var nm := ("t_" + str(hash(img.get_data())) + "_%dx%d" % [img.get_width(), img.get_height()]) if builtin else path.get_file().get_basename()
+		var f := dir + "/tex/" + nm + ".webp"
 		if pass_n == 1:
-			if not _s236_tex.has(key):
-				if img.has_mipmaps(): img.clear_mipmaps()
+			if not _s236_tex.has(nm):
 				if img.is_compressed(): img.decompress()
-				img.save_png(ProjectSettings.globalize_path(f)); _s236_tex[key] = f
+				if img.has_mipmaps(): img.clear_mipmaps()
+				var lossy := img.get_width() * img.get_height() > 300000 and img.get_format() != Image.FORMAT_L8 and img.get_format() != Image.FORMAT_R8
+				img.save_webp(ProjectSettings.globalize_path(f), lossy, 0.9); _s236_tex[nm] = f
 		else:
 			var t: Variant = load(f)
 			if t == null: print("S236 MISSING ", f)
@@ -2048,7 +2049,13 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 		_s236_seen[r] = out
 		return out
 	_s236_seen[r] = out
-	if not builtin: return out # external file (glb, png, gdshader): kept by path
+	if not builtin:
+		if pass_n == 2 and r is Shader and path.begins_with("res://tests/"): # sample shader → the arena folder
+			var f := dir + "/shader/" + path.get_file()
+			var fa := FileAccess.open(ProjectSettings.globalize_path(f), FileAccess.WRITE)
+			fa.store_string((r as Shader).code); fa.close()
+			r.take_over_path(f)
+		return out
 	# built-in: walk its own resource properties first
 	for pr in r.get_property_list():
 		if pr["type"] == TYPE_OBJECT and (int(pr["usage"]) & PROPERTY_USAGE_STORAGE):
@@ -2065,6 +2072,10 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 					if v is Resource:
 						var nv := _s236_res(v, dir, pass_n)
 						if nv != v: r.set(pr["name"], nv)
+	if pass_n == 1 and r is ArrayMesh:
+		for si in (r as ArrayMesh).get_surface_count():
+			var sm: Material = (r as ArrayMesh).surface_get_material(si)
+			if sm != null: _s236_res(sm, dir, pass_n)
 	if pass_n == 2:
 		if r is Shader:
 			_s236_n += 1
@@ -2073,6 +2084,9 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 			fa.store_string((r as Shader).code); fa.close()
 			r.take_over_path(f)
 		elif r is ArrayMesh:
+			for si in (r as ArrayMesh).get_surface_count():
+				var sm: Material = (r as ArrayMesh).surface_get_material(si)
+				if sm != null: (r as ArrayMesh).surface_set_material(si, _s236_res(sm, dir, pass_n) as Material)
 			_s236_n += 1
 			var f := dir + "/mesh/m%03d.res" % _s236_n
 			ResourceSaver.save(r, f, ResourceSaver.FLAG_COMPRESS)
@@ -2095,7 +2109,7 @@ func _s236_bake(st: Node, cam: Camera3D, EV: Dictionary) -> void:
 	if EV["bake"] == "0":
 		_s236_dump(st, 0, int(EV.get("bdepth", "2"))); return
 	var pass_n := int(EV["bake"])
-	var dir := "res://bake236"
+	var dir: String = EV.get("bdir", "res://art/arena_r36")
 	for sub in ["", "/tex", "/shader", "/mesh"]: DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir + sub))
 	var rt := Node3D.new(); rt.name = "ArenaR36"
 	st.get_parent().add_child(rt)
@@ -2126,4 +2140,5 @@ func _s236_bake(st: Node, cam: Camera3D, EV: Dictionary) -> void:
 	if pass_n == 2:
 		var ps := PackedScene.new()
 		var err := ps.pack(rt)
-		print("S236 pack ", err, " save ", ResourceSaver.save(ps, dir + "/arena_r36.tscn"))
+		print("S236 pack ", err, " save ", ResourceSaver.save(ps, dir + "/arena_r36.tscn")) # owner opens this one in the editor
+		print("S236 done")

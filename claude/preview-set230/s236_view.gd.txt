@@ -27,7 +27,7 @@ func _initialize() -> void:
 		var nm := String(c.name)
 		if nm.begins_with("Tile") or nm.begins_with("Rim") or nm.begins_with("U"): continue
 		if c is Node3D: (c as Node3D).visible = false
-	var ar: Node3D = load("res://bake236/arena_r36.tscn").instantiate()
+	var ar: Node3D = load("res://art/arena_r36/arena_r36.tscn").instantiate()
 	st.add_child(ar)
 	st.env_node.environment = (ar.get_node("Env") as WorldEnvironment).environment
 	ar.get_node("Env").queue_free()
