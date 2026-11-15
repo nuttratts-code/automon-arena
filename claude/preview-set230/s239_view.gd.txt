@@ -46,6 +46,9 @@ func _initialize() -> void:
 	if args.has("--extra"):
 		_s239_extra(ar, st.cam, args)
 		for k in 2: await _frames()
+	if args.has("--matte"):
+		_s239_matte(ar, st, args)
+		for k in 2: await _frames()
 	if args.has("--sharp"):
 		m3.set_shader_parameter("focus_top", -1.0); m3.set_shader_parameter("focus_bottom", 2.0)
 	if args.has("--depth"):
@@ -157,3 +160,39 @@ func _s239_extra(ar: Node3D, cam: Camera3D, args: PackedStringArray) -> void:
 		for c in [ar.get_node_or_null("S233Near"), ar.get_node_or_null("ArenaDressing/Mid/Ground")]:
 			if c: (c.material_override as ShaderMaterial).set_shader_parameter("tint", Vector3(v[0], v[1], v[2]))
 	print("S239 extra trees ", nt, " (templates ", trees.size(), ") patches ", np, " rocks ", nr, " (templates ", rocks.size(), ")")
+
+
+# ---- set 238 A1 SAMPLE: S2/S3 = picture layers cut from the owner's game-camera picture; F1 stays real 3D
+func _card(cam: Camera3D, tex: Texture2D, dist: float) -> MeshInstance3D:
+	var h := 2.0 * dist * tan(deg_to_rad(cam.fov) * 0.5)
+	var vs := cam.get_viewport().get_visible_rect().size
+	var q := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(h * vs.x / vs.y, h); q.mesh = qm
+	var sm := ShaderMaterial.new(); var sh := Shader.new()
+	sh.code = """shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled;
+uniform sampler2D tex : source_color, filter_linear;
+void fragment() { vec4 c = texture(tex, UV); ALBEDO = c.rgb; ALPHA = c.a; ALPHA_SCISSOR_THRESHOLD = 0.5; }"""
+	sm.shader = sh; sm.set_shader_parameter("tex", tex); q.material_override = sm
+	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; q.extra_cull_margin = 16384.0
+	cam.add_child(q); q.position = Vector3(0, 0, -dist)
+	return q
+func _s239_matte(ar: Node3D, st: Node, args: PackedStringArray) -> void:
+	var cam: Camera3D = st.cam
+	var hid := 0
+	for c in ar.find_children("*", "GeometryInstance3D", true, false):
+		var gi := c as GeometryInstance3D
+		var nm := String(gi.name)
+		if nm == "S233Near" or nm == "Ground" or nm.begins_with("S230"): continue
+		var p := gi.global_position
+		if gi is MeshInstance3D and (gi as MeshInstance3D).mesh and p.length() < 0.01:
+			var bb: AABB = (gi as MeshInstance3D).mesh.get_aabb(); p = bb.get_center()
+		if Vector2(p.x, p.z).length() > 22.0:
+			gi.visible = false; hid += 1
+	for t in ["S233Near", "ArenaDressing/Mid/Ground"]:
+		var n := ar.get_node_or_null(t)
+		if n: (n.material_override as ShaderMaterial).set_shader_parameter("pdrop", 60.0)
+	var dir := args[args.find("--matte") + 1]
+	_card(cam, load(dir + "/matte_s3.png"), 150.0)
+	_card(cam, load(dir + "/matte_s2.png"), 75.0)
+	st.sun.look_at_from_position(Vector3(45, 40, -90), Vector3.ZERO)
+	print("S239 matte hid ", hid)

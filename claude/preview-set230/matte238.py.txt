@@ -1,0 +1,41 @@
+# set 238 A1 SAMPLE: S2/S3 matte layers cut from the owner's game-camera picture using the owner's zone lines
+import sys, numpy as np
+from PIL import Image, ImageFilter
+from scipy import ndimage
+clean, marked, outdir = sys.argv[1:4]
+c = np.asarray(Image.open(clean).convert('RGB')).astype(int)
+m = np.asarray(Image.open(marked).convert('RGB')).astype(int)
+r, g, b = m[..., 0], m[..., 1], m[..., 2]
+diff = np.abs(m - c).sum(-1) > 90                       # drawn pixels differ from the clean picture
+red = diff & (r > 170) & (g < 90) & (b < 90)
+ora = diff & (r > 190) & (g >= 90) & (g < 190) & (b < 90)
+yel = diff & (r > 190) & (g >= 190) & (b < 120)
+red[600:, :] = False  # owner's 'F1' letters on the plaza are not the line
+lab, n = ndimage.label(ndimage.binary_dilation(ora, iterations=2))
+sz = ndimage.sum(ora, lab, range(1, n + 1))
+ora = ora & np.isin(lab, [i + 1 for i in range(n) if sz[i] >= 300])
+ora[:, 1260:] = False
+print('px red', red.sum(), 'orange', ora.sum(), 'yellow', yel.sum())
+H, W = red.shape
+rows = np.arange(H)[:, None]
+def lowest(mask, xs=None):
+    y = np.full(W, np.nan)
+    for x in range(W):
+        idx = np.nonzero(mask[:, x])[0]
+        if idx.size: y[x] = idx.max()
+    ok = ~np.isnan(y)
+    return y, ok
+ry, rok = lowest(red)
+ry = np.interp(np.arange(W), np.nonzero(rok)[0], ry[rok])
+bg = rows < (ry[None, :] - 2)
+oy, ook = lowest(ora)
+oy2 = oy.copy(); oy2[~ook] = 1e9
+s2 = (rows > oy2[None, :]) & bg
+s3 = bg & ~s2
+print('bg', round(bg.mean(), 3), 's2', round(s2.mean(), 3), 's3', round(s3.mean(), 3), 'orange cols', int(ook.sum()))
+for nm, mk in [('s3', s3 | s2), ('s2', s2)]:            # S3 card carries everything behind F1 (S2 drawn on top of it)
+    a = Image.fromarray((mk * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
+    im = Image.open(clean).convert('RGBA'); im.putalpha(a); im.save(f'{outdir}/matte_{nm}.png')
+dbg = np.asarray(Image.open(clean).convert('RGB')).astype(float)
+dbg[s3] = dbg[s3] * 0.5 + np.array([255, 230, 0]) * 0.5; dbg[s2] = dbg[s2] * 0.5 + np.array([255, 120, 0]) * 0.5
+Image.fromarray(dbg.astype(np.uint8)).save(f'{outdir}/matte_check.jpg', quality=85)

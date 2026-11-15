@@ -1,0 +1,22 @@
+# set 238 A1 SAMPLE: pre-correct the matte colours so that, after the game's tonemap/post, they look like the owner's picture
+import numpy as np, sys
+from PIL import Image
+from scipy import ndimage
+ren = np.asarray(Image.open('colm.png').convert('RGB')).astype(float)
+src = Image.open('matte_s3.png'); pic = np.asarray(src.convert('RGBA').resize((ren.shape[1], ren.shape[0])), dtype=float)
+m = pic[..., 3] > 200
+m = ndimage.binary_erosion(m, iterations=6)
+out = {}
+for ch in range(3):
+    a = np.sort(pic[..., ch][m]); b = np.sort(ren[..., ch][m])
+    q = np.linspace(0, 1, 256)
+    pa = np.quantile(a, q); pb = np.quantile(b, q)   # picture value pa[i] renders as pb[i]
+    # want: corrected value c with render(c) = x  ->  c = pa at the quantile where pb == x
+    xs = np.arange(256)
+    out[ch] = np.clip(np.interp(xs, pb, pa), 0, 255)
+    print('ch', ch, 'x=64->', int(out[ch][64]), ' 128->', int(out[ch][128]), ' 200->', int(out[ch][200]))
+np.save('lut.npy', np.stack([out[0], out[1], out[2]]))
+for nm in ['s3', 's2']:
+    im = np.asarray(Image.open(f'matte_{nm}.png').convert('RGBA')).copy()
+    for ch in range(3): im[..., ch] = out[ch][im[..., ch]].astype(np.uint8)
+    Image.fromarray(im).save(f'matte_{nm}_fix.png')

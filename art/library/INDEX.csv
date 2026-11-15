@@ -101,3 +101,5 @@ pictures/s238/trees_leafy_sheet_gemini_2026-11-15.jpg,3 full leafy trees on mage
 pictures/s238/treesD_sheet_gemini_2026-11-15.jpg,3 full leafy painted trees on magenta (owner: replaces all r38 trees),Google Gemini (owner; chat upload),2026-11-15,owner,r38 sample,AI placeholder
 pictures/s238/treesE_gaps_sheet_gemini_2026-11-15.jpg,same 3 trees with see-through gaps in the crowns,Google Gemini (owner; chat upload),2026-11-15,owner,r38 sample,AI placeholder
 pictures/s238/tree[DE][0-2]_key_2026-11-15.png,the 6 trees of sheets D + E keyed + split,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,r38 sample,AI placeholder
+pictures/s238/target_lowangle_clean_gemini_2026-11-15.jpg,game-camera target (low angle: plaza + 12 units + runestones + lake + right forest + sun upper right) - clean; S2/S3 matte source (set 238 A1),Google Gemini (owner; chat upload),2026-11-15,owner,r38 sample,AI placeholder
+pictures/s238/target_lowangle_zones_marked_2026-11-15.jpg,same picture with owner zone lines F1 red / S2 orange / S3 yellow (mask source),owner drawing on Gemini picture,2026-11-15,owner,no (mask source),AI placeholder
