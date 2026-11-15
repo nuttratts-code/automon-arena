@@ -16,6 +16,9 @@ uniform float dirt_amt = 1.0;
 uniform float dry_amt = 0.5;
 uniform float path_amt = 1.0;
 uniform float hue_amt = 1.0;
+uniform float fall = 0.0; // s233 C1: metres the land drops from the rim out to fall_r (0 = old plateau drop)
+uniform float fall_r0 = 16.0;
+uniform float fall_r1 = 70.0;
 varying vec3 wp;
 varying float roll;
 float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -32,6 +35,7 @@ float th(vec2 p) {
 	float r = length(p) / plaza_r;
 	float shelf = -0.04 - 0.11 * smoothstep(1.15, 1.6, r);
 	float dr = length(vec2(p.x * 0.85, p.y + 2.0));
+	if (fall > 0.0) { return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) - 40.0 * smoothstep(90.0, 140.0, dr); }
 	return shelf + mound(p) - 60.0 * smoothstep(20.0, 45.0, dr);
 }
 float path_px(float z) { return 1.0 + 0.32 * (-z - 11.0) + 1.2 * sin(z * 0.21); }

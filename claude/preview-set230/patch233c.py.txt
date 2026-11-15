@@ -1,0 +1,72 @@
+import sys, os
+T = sys.argv[1]
+def patch(p, pairs, tail=''):
+    p = os.path.join(T, p)
+    s = open(p, encoding='utf-8').read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (p, a[:70])
+        s = s.replace(a, b)
+    s += tail
+    open(p, 'w', encoding='utf-8').write(s)
+
+# C1 (FF): flat to the plaza rim, then the land FALLS (tfall m by r tf1), low mounds ride on the slope
+patch('s233_terrain.gdshader', [
+('uniform float hue_amt = 1.0;', 'uniform float hue_amt = 1.0;\nuniform float fall = 0.0; // s233 C1: metres the land drops from the rim out to fall_r (0 = old plateau drop)\nuniform float fall_r0 = 16.0;\nuniform float fall_r1 = 70.0;'),
+('	return shelf + mound(p) - 60.0 * smoothstep(20.0, 45.0, dr);',
+ '	if (fall > 0.0) { return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) - 40.0 * smoothstep(90.0, 140.0, dr); }\n	return shelf + mound(p) - 60.0 * smoothstep(20.0, 45.0, dr);'),
+])
+patch('s226.gd', [
+('	return shelf + mound - 60.0 * smoothstep(20.0, 45.0, dr)',
+ '	var fall := float(EV.get("tfall", "0"))\n	if fall > 0.0:\n		return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) - 40.0 * smoothstep(90.0, 140.0, dr)\n	return shelf + mound - 60.0 * smoothstep(20.0, 45.0, dr)'),
+('	m.set_shader_parameter("hue_amt", float(EV.get("thue", "1.0")))',
+ '	m.set_shader_parameter("hue_amt", float(EV.get("thue", "1.0")))\n	m.set_shader_parameter("fall", float(EV.get("tfall", "0")))\n	m.set_shader_parameter("fall_r0", float(EV.get("tf0", "16")))\n	m.set_shader_parameter("fall_r1", float(EV.get("tf1", "70")))'),
+('	pm.size = Vector2(110, 90)\n	pm.subdivide_width = 274\n	pm.subdivide_depth = 224',
+ '	pm.size = Vector2(160, 130)\n	pm.subdivide_width = 319\n	pm.subdivide_depth = 259'),
+('	near.global_position = Vector3(0, 0, -25)', '	near.global_position = Vector3(0, 0, -45)'),
+# D1: small low patches in the plaza joints near the broken rim; E1: mid band 22-60 m of big low clumps
+('	var n_bl := 0\n	# s231 flowers', '''	var n_in := int(EV.get("pgin", "0")) # s233 D1: grass in the joints near the broken rim (outside the slot area)
+	for i in n_in:
+		var a := rng.randf_range(0.0, TAU)
+		var rr := r * rng.randf_range(0.8, 0.99)
+		centres.append([c + Vector2(cos(a), sin(a)) * rr, pr * rng.randf_range(0.25, 0.5), pr * rng.randf_range(0.15, 0.3), a + PI * 0.5, float(EV.get("pginh", "0.5")), 0.3])
+	var n_mid := int(EV.get("pgmid", "0")) # s233 E1: mid layer 22-60 m, back half, big low clumps on the terrain
+	for i in n_mid:
+		var a := rng.randf_range(PI * 0.95, PI * 2.05)
+		var rr := rng.randf_range(float(EV.get("pgm0", "22")), float(EV.get("pgm1", "60")))
+		centres.append([Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0), pr * rng.randf_range(1.6, 3.2), pr * rng.randf_range(0.6, 1.1), a + PI * 0.5, float(EV.get("pgmh", "2.2")) * rng.randf_range(0.7, 1.3), 0.15])
+	var n_bl := 0
+	# s231 flowers'''),
+('	if EV.get("pg", "0") == "1": _s231_patches(st, EV)',
+ '	if EV.get("pg", "0") == "1": _s231_patches(st, EV)\n	if EV.has("rmid"): _s233_rocks(st, EV) # s233 E1: owner rock meshes in the mid layer'),
+], '''
+
+# s233 E1: owner's own rock / fallen-slab meshes (art/s217/3d, Hunyuan, placeholder) scattered 22-60 m behind, sat on th().
+func _s233_rocks(st: Node, EV: Dictionary) -> void:
+	var files := ["res://art/s217/3d/rock_cliff_hy.glb", "res://art/s217/3d/stone_fallen_hy.glb"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23302
+	var n := int(EV.get("rmid", "10"))
+	var tone: Array = str(EV.get("rmtone", "0.8,0.82,0.78")).split_floats(",")
+	for i in n:
+		var ps := load(files[i % files.size()]) as PackedScene
+		if ps == null:
+			continue
+		var r3 := ps.instantiate() as Node3D
+		var a := rng.randf_range(PI * 1.0, PI * 2.0)
+		var rr := rng.randf_range(float(EV.get("rm0", "24")), float(EV.get("rm1", "58")))
+		var p := Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0)
+		var s := rng.randf_range(0.6, 1.6) * (1.0 + rr / 40.0)
+		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.9), s)
+		r3.rotation.y = rng.randf_range(0.0, TAU)
+		st.add_child(r3)
+		r3.global_position = Vector3(p.x, _s233_th(p, EV) - 0.3 * s, p.y)
+		for mi in r3.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+			if src is StandardMaterial3D:
+				var d := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+				d.albedo_color = Color(tone[0], tone[1], tone[2])
+				m.material_override = d
+	print("s233 rocks: ", n)
+''')
+print('patched')
