@@ -1,0 +1,48 @@
+extends SceneTree
+# s236: load bake236/arena_r36.tscn into the real app's stage (no sample code) → screenshot. -- --out <png> [--units 1]
+var app: Node
+func _frames() -> void:
+	for k in 4: await process_frame
+	await RenderingServer.frame_post_draw
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	var out: String = args[args.find("--out") + 1]
+	await process_frame
+	app = load("res://scenes/main.tscn").instantiate()
+	app.set_meta("no_boot", true); app.set_meta("force_light", true)
+	root.add_child(app)
+	app.zoom_s = 0.0
+	await _frames()
+	app.name_scr.visible = false
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.set_speed(1, false); app._on_fight()
+	await _frames()
+	app.battle.view.advance(1500.0)
+	await _frames()
+	var st: Node = app.stage
+	for c in st.get_children():
+		if c == st.cam or c == st.env_node or c == st.sun: continue
+		var nm := String(c.name)
+		if nm.begins_with("Tile") or nm.begins_with("Rim") or nm.begins_with("U"): continue
+		if c is Node3D: (c as Node3D).visible = false
+	var ar: Node3D = load("res://bake236/arena_r36.tscn").instantiate()
+	st.add_child(ar)
+	st.env_node.environment = (ar.get_node("Env") as WorldEnvironment).environment
+	ar.get_node("Env").queue_free()
+	var bs: DirectionalLight3D = ar.get_node("Sun")
+	for pr in ["transform", "light_color", "light_energy", "light_indirect_energy", "shadow_enabled"]: st.sun.set(pr, bs.get(pr))
+	bs.queue_free()
+	var gc: Camera3D = ar.get_node("GameCam")
+	st.cam.transform = gc.transform; st.cam.fov = gc.fov
+	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
+	var post: Dictionary = ar.get_meta("post", {})
+	for k in post.keys(): m3.set_shader_parameter(k, post[k])
+	for cl in app.find_children("*", "CanvasLayer", true, false): (cl as CanvasLayer).visible = false
+	for k in 3: await _frames()
+	st.cam.transform = gc.transform
+	await _frames()
+	root.get_texture().get_image().save_png(out)
+	print("S236 view saved")
+	quit()

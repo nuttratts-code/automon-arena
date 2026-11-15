@@ -202,6 +202,11 @@ func _initialize() -> void:
 			(sp as Node3D).visible = false
 		for mi in st.find_children("*", "MeshInstance3D", true, false):
 			if (mi as MeshInstance3D).mesh is PlaneMesh and ((mi as MeshInstance3D).mesh as PlaneMesh).size.x < 3.0: (mi as Node3D).visible = false
+	if EV.has("bake"): # s236: save the arena as a real scene (plan-set236 step 2)
+		if EV.has("cpitch"): cam.transform = cam233
+		await _s236_bake(st, cam, EV)
+		quit()
+		return
 	for f in nf:
 		if EV.has("cpitch"): cam.transform = cam233
 		for s in sprs:
@@ -1832,6 +1837,7 @@ func _s235_longshadow(st: Node, sprs: Array, EV: Dictionary) -> void:
 		sh.modulate = Color(0.05, 0.06, 0.1, float(EV["ulong"]))
 		sh.offset = Vector2(0, h * 0.5)
 		sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		sh.set_meta("unit_fx", true) # s236 bake skips it
 		st.add_child(sh)
 		var sc := s.global_transform.basis.get_scale()
 		var yv := dir * L * sc.y
@@ -1977,3 +1983,147 @@ func _s235_ivy(st: Node, EV: Dictionary) -> void:
 			sp.global_position = Vector3(x, top, box.end.z * 0.6 + c.z * 0.4)
 			made += 1
 	print("s233 ivy ", made)
+
+
+func _s236_dump(n: Node, d: int, maxd: int) -> void:
+	var vis := (n as Node3D).visible if n is Node3D else true
+	var extra := ""
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh: extra = (n as MeshInstance3D).mesh.get_class()
+	if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh: extra = "MM %d" % (n as MultiMeshInstance3D).multimesh.instance_count
+	print("  ".repeat(d), n.name, " [", n.get_class(), "] vis=", vis, " kids=", n.get_child_count(), " ", extra)
+	if d < maxd:
+		var seen := {}
+		for c in n.get_children():
+			var key: String = c.get_class() + ":" + String(c.name).rstrip("0123456789")
+			seen[key] = int(seen.get(key, 0)) + 1
+			if int(seen[key]) <= 3: _s236_dump(c, d + 1, maxd)
+		for key in seen.keys():
+			if int(seen[key]) > 3: print("  ".repeat(d + 1), "… ", key, " x", seen[key])
+
+var _s236_tex := {} # image hash → res path (pass 2) / saved (pass 1)
+var _s236_n := 0
+var _s236_seen := {}
+
+func _s236_keep(c: Node) -> bool:
+	if c is Node3D and not (c as Node3D).visible: return false
+	if c is Camera3D or c is WorldEnvironment or c is DirectionalLight3D: return false
+	var nm := String(c.name)
+	if nm.begins_with("Tile") or nm.begins_with("Rim") or nm.begins_with("Ub_") or (nm.begins_with("U") and nm.substr(1).is_valid_int()): return false
+	if c.has_meta("unit_fx") or c.has_meta("follow") or shadows.has(c): return false
+	return true
+
+func _s236_prune(n: Node) -> void:
+	for c in n.get_children():
+		if c is Node3D and not (c as Node3D).visible:
+			n.remove_child(c); c.queue_free()
+		else:
+			_s236_prune(c)
+
+func _s236_own(n: Node, owner_node: Node) -> void:
+	for c in n.get_children():
+		c.owner = owner_node
+		if c.scene_file_path != "": c.scene_file_path = "" # make local: the sample changed nodes inside these instances
+		if c.get_script() != null: print("S236 script ", c.name, " ", (c.get_script() as Script).resource_path)
+		_s236_own(c, owner_node)
+
+func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
+	if r == null: return r
+	if _s236_seen.has(r): return _s236_seen[r]
+	var path := r.resource_path
+	var builtin := path == "" or path.contains("::")
+	var out: Resource = r
+	if r is Texture2D and (builtin or r is ImageTexture) and not (r is ViewportTexture):
+		var img := (r as Texture2D).get_image()
+		var key := str(hash(img.get_data())) + "_%dx%d" % [img.get_width(), img.get_height()]
+		var f := dir + "/tex/t_" + key + ".png"
+		if pass_n == 1:
+			if not _s236_tex.has(key):
+				if img.has_mipmaps(): img.clear_mipmaps()
+				if img.is_compressed(): img.decompress()
+				img.save_png(ProjectSettings.globalize_path(f)); _s236_tex[key] = f
+		else:
+			var t: Variant = load(f)
+			if t == null: print("S236 MISSING ", f)
+			else: out = t
+		_s236_seen[r] = out
+		return out
+	_s236_seen[r] = out
+	if not builtin: return out # external file (glb, png, gdshader): kept by path
+	# built-in: walk its own resource properties first
+	for pr in r.get_property_list():
+		if pr["type"] == TYPE_OBJECT and (int(pr["usage"]) & PROPERTY_USAGE_STORAGE):
+			var v: Variant = r.get(pr["name"])
+			if v is Resource:
+				var nv := _s236_res(v, dir, pass_n)
+				if nv != v: r.set(pr["name"], nv)
+	if r is ShaderMaterial or r is StandardMaterial3D or r is ORMMaterial3D:
+		var sh_params: Array = []
+		if r is ShaderMaterial:
+			for pr in r.get_property_list():
+				if String(pr["name"]).begins_with("shader_parameter/"):
+					var v: Variant = r.get(pr["name"])
+					if v is Resource:
+						var nv := _s236_res(v, dir, pass_n)
+						if nv != v: r.set(pr["name"], nv)
+	if pass_n == 2:
+		if r is Shader:
+			_s236_n += 1
+			var f := dir + "/shader/s%03d.gdshader" % _s236_n
+			var fa := FileAccess.open(ProjectSettings.globalize_path(f), FileAccess.WRITE)
+			fa.store_string((r as Shader).code); fa.close()
+			r.take_over_path(f)
+		elif r is ArrayMesh:
+			_s236_n += 1
+			var f := dir + "/mesh/m%03d.res" % _s236_n
+			ResourceSaver.save(r, f, ResourceSaver.FLAG_COMPRESS)
+			r.take_over_path(f)
+	return out
+
+func _s236_walk(n: Node, dir: String, pass_n: int) -> void:
+	for pr in n.get_property_list():
+		if pr["type"] == TYPE_OBJECT and (int(pr["usage"]) & PROPERTY_USAGE_STORAGE):
+			var v: Variant = n.get(pr["name"])
+			if v is Resource:
+				var nv := _s236_res(v, dir, pass_n)
+				if nv != v: n.set(pr["name"], nv)
+		elif String(pr["name"]).begins_with("surface_material_override/"):
+			var v2: Variant = n.get(pr["name"])
+			if v2 is Resource: n.set(pr["name"], _s236_res(v2, dir, pass_n))
+	for c in n.get_children(): _s236_walk(c, dir, pass_n)
+
+func _s236_bake(st: Node, cam: Camera3D, EV: Dictionary) -> void:
+	if EV["bake"] == "0":
+		_s236_dump(st, 0, int(EV.get("bdepth", "2"))); return
+	var pass_n := int(EV["bake"])
+	var dir := "res://bake236"
+	for sub in ["", "/tex", "/shader", "/mesh"]: DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir + sub))
+	var rt := Node3D.new(); rt.name = "ArenaR36"
+	st.get_parent().add_child(rt)
+	rt.global_transform = st.global_transform
+	for c in st.get_children():
+		if _s236_keep(c): c.reparent(rt, true)
+	_s236_prune(rt)
+	var env := WorldEnvironment.new(); env.name = "Env"; env.environment = st.env_node.environment.duplicate(true); rt.add_child(env)
+	var sun := DirectionalLight3D.new(); sun.name = "Sun"
+	for pr in ["transform", "light_color", "light_energy", "light_indirect_energy", "shadow_enabled", "light_angular_distance", "directional_shadow_mode", "directional_shadow_max_distance", "shadow_bias", "shadow_blur"]:
+		sun.set(pr, st.sun.get(pr))
+	rt.add_child(sun)
+	var gc := Camera3D.new(); gc.name = "GameCam"; gc.transform = st.global_transform.affine_inverse() * cam.global_transform; gc.fov = cam.fov; gc.near = cam.near; gc.far = cam.far; gc.keep_aspect = cam.keep_aspect
+	rt.add_child(gc)
+	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
+	var post := {}
+	for pr in m3.get_property_list():
+		var nm := String(pr["name"])
+		if nm.begins_with("shader_parameter/"):
+			var v: Variant = m3.get(nm)
+			if not (v is Object): post[nm.substr(17)] = v
+	rt.set_meta("post", post)
+	_s236_own(rt, rt)
+	_s236_walk(rt, dir, pass_n)
+	var cnt := 0
+	for c in rt.find_children("*", "", true, false): cnt += 1
+	print("S236 pass ", pass_n, " nodes ", cnt, " textures ", _s236_tex.size(), " files ", _s236_n)
+	if pass_n == 2:
+		var ps := PackedScene.new()
+		var err := ps.pack(rt)
+		print("S236 pack ", err, " save ", ResourceSaver.save(ps, dir + "/arena_r36.tscn"))
