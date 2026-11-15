@@ -210,3 +210,6 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Near grass `pgnh=1.8` (was 3.0). Flowers only in the near corner grass: `pgf=0.08` (per-blade chance) × patch factor — new `pgnf` (near, 1.0) · `pgbf` (stone-base grass, default 1.0 → 0) · `pginf` (rim joint grass, default 0.3 → 0). Ring/far/front factors already 0.
 - Units on: r28_args.txt still holds `nounits=1` (clean shot for the AI); add `--e:nounits=0` for the game view (stand-ins = scratch only, the shot is never committed).
 - Args: r28_args.txt · code snapshot s226.gd.txt updated.
+
+## Round 29 (set 235) — owner: "front grass lower again"
+- Near corner grass `pgnh=1.2` (was 1.8) + front crack grass `pgfgh=0.8` (was 1.05). Flowers + units as round 28. Args: r29_args.txt (+ `--e:nounits=0` for units).
