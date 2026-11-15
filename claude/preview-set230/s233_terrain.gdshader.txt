@@ -29,6 +29,7 @@ uniform float clump_amt = 0.0; // s233 R15 B2: dark/light grass clumps (meadow n
 uniform vec3 grade = vec3(1.0); // s233 R15 B2: shared colour grade
 uniform float meadow = 0.0; // s237 A1: real meadow layout (owner AI picture): lake basin far back, left rock ridge, right hills, mountains. th237() mirrors tests/s226.gd _s237_th() - change both.
 uniform float shore_y = -5.2;
+uniform float mt_k = 1.0; // s237: terrain mountain scale (mtk)
 varying float slope;
 varying vec3 wp;
 varying float roll;
@@ -60,7 +61,7 @@ float th237(vec2 p) {
 	float w = (sd > 0.0 || t < 0.05) ? 11.0 : 26.0;
 	float ridge = (4.5 + 2.5 * fbm(p * 0.05 + vec2(8.8, 2.2))) * (1.0 - smoothstep(2.5, w, d)) * (1.0 - 0.6 * smoothstep(0.75, 1.0, t)) * smoothstep(0.0, 0.06, t + 0.02);
 	float dm = length(vec2((p.x + 15.0) * 0.8, p.y + 172.0));
-	float back = smoothstep(-40.0, -110.0, p.y);
+	float back = smoothstep(-40.0, -110.0, p.y) * mt_k;
 	float mt = (60.0 * smoothstep(150.0, 270.0, dm) * (0.35 + 0.65 * fbm(p * 0.011 + vec2(2.7, 9.1))) + 25.0 * smoothstep(110.0, 200.0, dm) * fbm(p * 0.025 + vec2(6.3, 1.1))) * back;
 	return shelf + mnd + plain + basin + hr + ridge + mt;
 }

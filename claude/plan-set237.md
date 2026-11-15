@@ -9,12 +9,11 @@ Security line (HARD RULE 9): same as set 236. Only the owner's AI trees/bushes, 
 1. [x] Meadow height `th237()` in `tests/s233_terrain.gdshader` + `_s237_th()` in `tests/s226.gd` (change both). Flat meadow to z −60, gentle drop to the lake shore at z ≈ −105, lake basin centred (−15, −172) r 150×72, water `wl=-2`, rock ridge (−16,−46)→(−62,−122) with a steep meadow-side face + rock tint on slopes, right hills from x 18, hills/mountains past dm 110 (back half only). Paths `path237()` / `_s237_path()`: left↔right across the plaza, and from the plaza back (x≈3) winding to the lake.
 2. [x] Placement `_s237_trees` (belts measured off the picture: sides z −22…−72, front sides, right hill, left lakeside, far shore, ridge-top row; ≥ 3.6 m apart, dry land only, off the paths, outside r 17.5) + 26 meadow shrubs + 16 owner rock meshes on the ridge face (`_s237_ridge_rocks`). Bush ring skips the path.
 3. [x] Args `claude/preview-set230/r37_args.txt` (= r36 + `meadow=1 wl=-2 hc2=0 tpath=1 rmid=12` + mist over the lake). Bake → `<g>/art/arena_r37/arena_r37.tscn` (900 nodes, 13 MB, self-contained). View check `ARENA=res://art/arena_r37/arena_r37.tscn` + `tests/s236_view.gd` = OK.
-4. [ ] **Owner decision (conflict):** art-style §8 ban (owner, 7 Nov) = "meadow + big trees with light shafts + winding stream + dirt path in the middle of the frame". r37 has the back path in mid-frame (no stream; the sun-shaft card from r36 is still there). Stills: `claude/preview-set237/r37-game.jpg` (path) vs `r37-game-nopath.jpg`.
-5. [ ] After the pick: rule-change art-style §8 (r37 = the arena, ban wording) + re-bake if the path changes → plan-set236 step 4 uses `arena_r37` instead of `arena_r36`.
-
-- Owner 15 Nov: backdrop behind the lake back like r36 (far hills card `hc2=1`) → re-baked.
+4. [x] Owner 15 Nov: **paths removed** (`tpath=0`; trees/bushes no longer keep gaps for them), so the §8 ban ("dirt path mid-frame") is no longer hit; no ban change needed.
+5. [x] Owner 15 Nov: **layered mountains behind the lake** like the picture: `_s237_layers` = 3 own procedural ridge quads (z −282/−290/−298, just in front of the sky card at −300; near green → far pale blue, sharper peaks far, no fog on them) + mist at their feet (`mist=22 mz 255–280 mty −1`); terrain's own mountains off (`mtk=0`, both copies have `mt_k`); the r36 hills card is off again (`hc2=0`). Re-baked arena_r37 (3 S237Range nodes), view check OK. Full args: preview-set230/r37_args.txt.
+6. [ ] rule-change art-style §8: r37 = the arena (replaces r36) → plan-set236 step 4 ports `arena_r37`.
 
 ## Known gaps
-- With the 8.5° camera, mountains above ~15 m sit above the top of the frame; only their feet show (the owner kept the camera).
+- With the 8.5° camera the frame top is ~1° above the horizon: the far ridge peaks are cut by the frame (the owner kept the camera).
 - Overhead views show horizontal shadow stripes on the far ground (shadow cascades on the displaced terrain; not in the game view).
 - Units in the in-game check are still the old main sizes (stage3d port = set 236 step 4).

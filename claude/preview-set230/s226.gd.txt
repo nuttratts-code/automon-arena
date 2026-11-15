@@ -361,6 +361,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
 	if EV.get("meadow", "0") == "1": _s237_ridge_rocks(st, EV)
+	if EV.has("mlayers"): _s237_layers(st, EV)
 	if EV.has("mist"): _s234_mist(st, EV) # s234 B3-like: low mist drifting on the back slope (owner AI ref picture)
 	if EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off
 	if EV.has("rfront"): _s233_front(st, EV)
@@ -1346,6 +1347,7 @@ func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: D
 	m.set_shader_parameter("clump_amt", float(EV.get("tclump", "0")))
 	m.set_shader_parameter("meadow", 1.0 if EV.get("meadow", "0") == "1" else 0.0)
 	m.set_shader_parameter("shore_y", float(EV.get("wl", "-5.2")))
+	m.set_shader_parameter("mt_k", float(EV.get("mtk", "1.0")))
 	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")
 	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))
 	if EV.has("thazec"):
@@ -1926,7 +1928,7 @@ func _s235_bushes(st: Node, EV: Dictionary) -> void:
 		var x := cos(a) * rr * 1.12
 		var z := sin(a) * rr - 1.5
 		if absf(x) < gap or z > 2.0: continue
-		if EV.get("meadow", "0") == "1" and _s237_path(Vector2(x, z)) < 1.8: continue
+		if EV.get("meadow", "0") == "1" and EV.get("tpath", "1") != "0" and _s237_path(Vector2(x, z)) < 1.8: continue
 		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.65, 1.3)
 		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
 		made += 1
@@ -2181,12 +2183,15 @@ func _s237_th(p: Vector2) -> float:
 	var w := 11.0 if (sd > 0.0 or t < 0.05) else 26.0
 	var ridge := (4.5 + 2.5 * _s233_fbm(p * 0.05 + Vector2(8.8, 2.2))) * (1.0 - smoothstep(2.5, w, d)) * (1.0 - 0.6 * smoothstep(0.75, 1.0, t)) * smoothstep(0.0, 0.06, t + 0.02)
 	var dm := Vector2((p.x + 15.0) * 0.8, p.y + 172.0).length()
-	var back := smoothstep(-40.0, -110.0, p.y)
+	var back := smoothstep(-40.0, -110.0, p.y) * _s237_mtk
 	var mt := (60.0 * smoothstep(150.0, 270.0, dm) * (0.35 + 0.65 * _s233_fbm(p * 0.011 + Vector2(2.7, 9.1))) + 25.0 * smoothstep(110.0, 200.0, dm) * _s233_fbm(p * 0.025 + Vector2(6.3, 1.1))) * back
 	return shelf + mnd + plain + basin + hr + ridge + mt
 
 # distance to the nearest dirt path edge (negative = on it); same paths as path237() in the shader (no noise here)
+var _s237_mtk := 1.0 # s237: terrain mountain scale (mtk); low when the silhouette layers stand behind
+var _s237_np := false # s237: owner removed the dirt paths (tpath=0) -> nothing avoids them
 func _s237_path(p: Vector2) -> float:
+	if _s237_np: return 99.0
 	var pz := -1.0 + 1.8 * sin(p.x * 0.05 + 0.6)
 	var d1 := absf(p.y - pz) - 0.8 + (99.0 if absf(p.x) >= 95.0 else 0.0)
 	var px := 3.0 + 14.0 * smoothstep(-14.0, -100.0, p.y) + 2.5 * sin(p.y * 0.13)
@@ -2196,6 +2201,8 @@ func _s237_path(p: Vector2) -> float:
 # trees in belts like the owner picture: both plaza sides, front corners, on the left ridge, right hill slope,
 # left lakeside behind the ridge, and a far-shore line. Only on dry land, off the paths, never on the plaza ring.
 func _s237_trees(st: Node, EV: Dictionary) -> void:
+	_s237_np = EV.get("tpath", "1") == "0"
+	_s237_mtk = float(EV.get("mtk", "1.0"))
 	var d := "res://tests/s225/"
 	var H := float(EV.get("treeh", "11.0"))
 	var tn: Array = str(EV.get("treet", "0.6,0.74,0.6")).split_floats(",")
@@ -2286,3 +2293,71 @@ func _s237_ridge_rocks(st: Node, EV: Dictionary) -> void:
 				dd.albedo_color = Color(tone[0], tone[1], tone[2])
 				m.material_override = dd
 	print("s237 ridge rocks ", n)
+
+
+# s237 (owner: layered mountains behind the lake like the AI picture): N silhouette quads, near -> far, each lighter/bluer,
+# feet below the water line so the mist hides them. Own procedural shader (no outside asset).
+const LAYER237 := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled;
+uniform vec3 top_c = vec3(0.4, 0.55, 0.42);
+uniform vec3 foot_c = vec3(0.7, 0.78, 0.76);
+uniform float base = 0.35;
+uniform float amp = 0.45;
+uniform float freq = 3.0;
+uniform float peak = 0.0;
+uniform float seed = 0.0;
+float h(float x) { return fract(sin(x * 127.1 + seed) * 43758.5453); }
+float n1(float x) { float i = floor(x); float f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h(i), h(i + 1.0), f); }
+float ridge(float u) {
+	float x = u * freq;
+	float r = n1(x) * 0.55 + n1(x * 2.1 + 3.0) * 0.28 + n1(x * 4.7 + 7.0) * 0.12 + n1(x * 11.0) * 0.05;
+	r = mix(r, 1.0 - abs(r * 2.0 - 1.0), peak); // sharper peaks for the far range
+	return base + amp * r;
+}
+void fragment() {
+	float y = 1.0 - UV.y;
+	float rr = ridge(UV.x);
+	if (y > rr) { discard; }
+	float e = 0.004;
+	float sl = (ridge(UV.x + e) - ridge(UV.x - e)) / (2.0 * e);
+	float lit = clamp(0.5 + sl * 0.08, 0.0, 1.0); // sun from the right: right-facing slopes lighter
+	float t = clamp(y / max(rr, 0.001), 0.0, 1.0);
+	vec3 c = mix(foot_c, top_c, smoothstep(0.0, 0.85, t));
+	c *= mix(0.86, 1.1, lit);
+	c *= 0.94 + 0.12 * n1(UV.x * 90.0 + y * 40.0); // faint forest/rock grain
+	ALBEDO = c;
+}
+"""
+func _s237_layers(st: Node, EV: Dictionary) -> void:
+	var sh := Shader.new()
+	sh.code = LAYER237
+	# [z, width, height, base, amp, freq, peak, top colour, foot colour]
+	var L := [[-282.0, 320.0, 11.0, 0.3, 0.7, 7.0, 0.4, Color(0.33, 0.47, 0.36), Color(0.6, 0.7, 0.66)],
+		[-290.0, 320.0, 14.0, 0.35, 0.65, 5.5, 0.7, Color(0.42, 0.55, 0.57), Color(0.67, 0.76, 0.79)],
+		[-298.0, 320.0, 18.0, 0.35, 0.65, 4.5, 1.0, Color(0.56, 0.65, 0.75), Color(0.76, 0.82, 0.88)]] # just in front of the sky card (z -300)
+	var foot := float(EV.get("mlfoot", "-4.0"))
+	var hk := float(EV.get("mlh", "1.0"))
+	var n := 0
+	for l in L:
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		var tc: Color = l[7]
+		var fc: Color = l[8]
+		m.set_shader_parameter("top_c", Vector3(tc.r, tc.g, tc.b))
+		m.set_shader_parameter("foot_c", Vector3(fc.r, fc.g, fc.b))
+		m.set_shader_parameter("base", l[3]); m.set_shader_parameter("amp", l[4])
+		m.set_shader_parameter("freq", l[5]); m.set_shader_parameter("peak", l[6])
+		m.set_shader_parameter("seed", 11.0 * n + 3.0)
+		var q := MeshInstance3D.new()
+		q.name = "S237Range%d" % n
+		var qm := QuadMesh.new()
+		var h: float = l[2] * hk
+		qm.size = Vector2(l[1], h)
+		q.mesh = qm
+		q.material_override = m
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		st.add_child(q)
+		q.global_position = Vector3(-15.0, foot + h * 0.5, l[0])
+		n += 1
+	print("s237 layers ", n)
