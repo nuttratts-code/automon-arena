@@ -909,6 +909,19 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 			var cc := Vector2(box.get_center().x, box.get_center().z)
 			centres.append([cc, box.size.x * 0.5 + pr * 0.5, box.size.z * 0.5 + pr * 0.4, 0.0])
 	var n_bl := 0
+	# s231 flowers: owner sheet flowersA = 19 stems side by side (equal cells, stem bottom-centred)
+	var fl_p := float(EV.get("pgf", "0"))
+	var fl_n := int(EV.get("pgfn", "19"))
+	var fl_mat: ShaderMaterial = null
+	var n_fl := 0
+	if fl_p > 0.0:
+		var ft := _s230_tex("flowersA", true)
+		fl_mat = (mats[0] as ShaderMaterial).duplicate()
+		fl_mat.set_shader_parameter("tex", ft)
+		var ftt: Array = str(EV.get("pgft", "1,1,1")).split_floats(",")
+		fl_mat.set_shader_parameter("tint", Vector3(ftt[0], ftt[1], ftt[2]))
+		fl_mat.set_shader_parameter("root_dark", 0.8)
+		fl_mat.set_meta("aspect", float(ft.get_width()) / fl_n / ft.get_height())
 	for ci in centres.size():
 		var cen: Vector2 = centres[ci][0]
 		var rx: float = centres[ci][1]
@@ -917,6 +930,9 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		var stn := SurfaceTool.new()
 		stn.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var cnt := int(clampf(dens * rx * rz, 6, 260))
+		var stf := SurfaceTool.new()
+		stf.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var pf := 0
 		var ca := cos(yaw)
 		var sa := sin(yaw)
 		for b in cnt:
@@ -948,10 +964,40 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 				stn.set_uv(q[idx][1])
 				stn.add_vertex(q[idx][0])
 			n_bl += 1
+			if fl_mat != null and rng.randf() < fl_p:
+				var fh := gh * rng.randf_range(0.75, 1.05) * float(EV.get("pgfh", "1.0"))
+				var fw := fh * float(fl_mat.get_meta("aspect"))
+				var fyy := rng.randf_range(0.0, TAU)
+				var fd := Vector3(cos(fyy), 0, sin(fyy))
+				var fl := deg_to_rad(rng.randf_range(-12.0, 12.0))
+				var fup := Vector3.UP * cos(fl) * fh + Vector3(-fd.z, 0, fd.x) * sin(fl) * fh
+				var k := rng.randi() % fl_n
+				var fu0 := float(k) / fl_n
+				var fu1 := float(k + 1) / fl_n
+				if rng.randf() < 0.5:
+					var tmp := fu0
+					fu0 = fu1
+					fu1 = tmp
+				var fb := Vector3(p.x + rng.randf_range(-0.1, 0.1), y - 0.02, p.y + rng.randf_range(-0.1, 0.1))
+				var fq := [[fb - fd * fw * 0.5, Vector2(fu0, 1), 0.0], [fb + fd * fw * 0.5, Vector2(fu1, 1), 0.0], [fb + fd * fw * 0.5 + fup, Vector2(fu1, 0), 1.0], [fb - fd * fw * 0.5 + fup, Vector2(fu0, 0), 1.0]]
+				for idx in [0, 1, 2, 0, 2, 3]:
+					stf.set_normal(Vector3.UP)
+					stf.set_color(Color(fq[idx][2], 0, 0))
+					stf.set_uv(fq[idx][1])
+					stf.add_vertex(fq[idx][0])
+				pf += 1
+				n_fl += 1
+		if pf > 0:
+			var fmi := MeshInstance3D.new()
+			fmi.name = "S231Flowers%d" % ci
+			fmi.mesh = stf.commit()
+			fmi.material_override = fl_mat
+			fmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			st.add_child(fmi)
 		var mi := MeshInstance3D.new()
 		mi.name = "S231Patch%d" % ci
 		mi.mesh = stn.commit()
 		mi.material_override = mats[ci % mats.size()]
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		st.add_child(mi)
-	print("s231 patches: ", centres.size(), " patches, ", n_bl, " blades")
+	print("s231 patches: ", centres.size(), " patches, ", n_bl, " blades, ", n_fl, " flowers")

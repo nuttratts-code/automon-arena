@@ -74,3 +74,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Owner made 3 Gemini blade sheets (magenta bg, `Downloads/download (1).zip`) → keyed (`min(R,B)−G` alpha 30–110, despill) → `<g>/tests/s225/bladesA/B/C.png` (scratch only; into art/library only when the owner keeps them).
 - `--e:pg=1` (`_s231_patches` + `s231_patch.gdshader`, own code): rim patches (`pgn`, size `pgr`, ragged ellipse along the rim) + one patch per stone footprint (`pgs`); per blade a quad showing a random ⅓ slice of a sheet, height `pgh`, density `pgd`; shader forces the normal up on both faces (cull_disabled flips back faces → black blades — found in p1), root darkening `pgroot`, wind `pgw`, baked shade map sampled by world xz.
 - Sheet `s231-ffr-grass.png`: old G2 cards · C3 · H1 `pg=1 pgh=1.0 pgd=40 pgb=1.4 pgroot=0.7 pgt=0.95,1.2,0.75` (16 rim patches) · H2 = H1 + `pgn=10` · 1:1 G2 vs H1. Tried and dropped: pgh 1.4 (reads as a hedge), untinted (grey).
+
+## Round 6 — flowers in the grass patches (set 231)
+- Owner made 2 Gemini wildflower sheets (magenta bg, `Downloads/download (2).zip`, 20 stems). Keyed by colour distance to the sampled bg (not the grass keyer: its despill kills blue/lilac) → 19 stems packed into equal cells, bottom-aligned → `<g>/tests/s225/flowersA.png` (2774×374). Keyer: scratchpad `tools/key_flowers.py` (code kept in this note's history only).
+- `_s231_patches` args: `pgf` chance of a flower per blade (0.06 ≈ 1 per 16 blades) · `pgfn` stems in the sheet (19) · `pgfh` height × pgh · `pgft` tint. Flowers lean ±12°, own mesh `S231Flowers%d`, same patch shader (root_dark 0.8).
+- Sheet: s231-flowers.png (H1 / H2 + `--e:pgf=0.06`). Waiting for owner pick.
