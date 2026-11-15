@@ -195,3 +195,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Clearer distance + softer mist: `thaze=0.3` (was 0.8) · `fogd=0.22` (was 0.35) · mist `mista=0.4 mistw=1.9 mh=1.2` (0.6/2.2 + mx0=0 = a white glow wall).
 - Still different: AI sky deeper blue with brighter orange cloud tops · AI corner grass thicker (owner chose crack grass, kept) · sun glare on the sea a bit strong.
 - Args: r25_args.txt. Waiting for owner: OK → extras back / tweaks.
+
+## Round 26 (set 235) — owner: round 25 "looks odd" → picked A2 = front corner grass (small separate tufts stuck on the big slabs)
+- Cause: bigger tiles (gtile 11) = fewer joints, so crack blades only landed in a few spots.
+- Fix: joint test looser + more tries + wider + denser: `pgcj=0.2 pgct=16 pgcs=2.4 pgcd=4.5` → blades now run as lines along the joints, still dense at the frame edge, thinning inward (r24 b fade kept). Other odd spots offered (A1 blurry big slabs, A3 glare, A4 banded meadow) — owner did not pick them.
+- Args: r26_args.txt.
