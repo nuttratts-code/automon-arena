@@ -317,6 +317,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
+	if EV.get("pg", "0") == "1": _s231_patches(st, EV) # s231 B1: FF Re-style flat grass patches
 	if EV.get("rg", "0") == "1": _s231_grass(st, EV) # s231: grass tufts on the ground rim + at stone bases (FF Re)
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
@@ -759,6 +760,8 @@ func _s230_shade(st: Node, EV: Dictionary) -> void:
 		gm.set_shader_parameter("use_shade", true)
 		gm.set_shader_parameter("shade_tex", shtex)
 		gm.set_shader_parameter("shade_ext", ext)
+		gnode.set_meta("shade_tex", shtex)
+		gnode.set_meta("shade_ext", ext)
 	var mi := MeshInstance3D.new()
 	mi.name = "S230Shade"
 	var pm := PlaneMesh.new()
@@ -840,3 +843,115 @@ func _s231_grass(st: Node, EV: Dictionary) -> void:
 			var p := cc + Vector2(cos(a) * hx, sin(a) * hz) * rng.randf_range(0.8, 1.05)
 			_card(st, "res://art/s217/%s.png" % files[rng.randi() % files.size()], Vector3(p.x, gy.call(p), p.y), rng.randf_range(float(EV.get("sgw0", "0.35")), float(EV.get("sgw1", "0.8"))), tint * rng.randf_range(0.8, 1.0))
 	print("s231 grass: rim ", n_rim, " stones ", n_st)
+
+
+# s231 B1 (owner grass sheets bladesA/B/C, keyed from magenta): FF Re grass003-style patches = many small blade cards
+# leaning 10-40 deg from vertical in every direction, wide and low, normals straight up, root dark, slow wind.
+# Args: pgn rim patches · pgs 1 = a patch at each stone · pgh blade height · pgd blades per patch unit area ·
+# pgr patch radius · pgt tint · pgb bright · pgtex A/B/C/ABC · pgw wind.
+func _s231_patches(st: Node, EV: Dictionary) -> void:
+	var g := st.find_child("S230Ground", true, false) as MeshInstance3D
+	if g == null:
+		print("s231 patches: needs gnd=1")
+		return
+	var r := (g.mesh as CylinderMesh).top_radius
+	var top := g.global_position.y + 0.15
+	var c := Vector2(g.global_position.x, g.global_position.z)
+	var texs := []
+	for k in str(EV.get("pgtex", "ABC")):
+		texs.append(_s230_tex("blades" + k, true))
+	var sh := load("res://tests/s231_patch.gdshader") as Shader
+	var tt: Array = str(EV.get("pgt", "1,1,1")).split_floats(",")
+	var mats := []
+	for t in texs:
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.set_shader_parameter("tex", t)
+		m.set_shader_parameter("tint", Vector3(tt[0], tt[1], tt[2]))
+		m.set_shader_parameter("bright", float(EV.get("pgb", "1.0")))
+		m.set_shader_parameter("root_dark", float(EV.get("pgroot", "0.55")))
+		m.set_shader_parameter("wind", float(EV.get("pgw", "0.04")))
+		if g.has_meta("shade_tex"):
+			m.set_shader_parameter("use_shade", true)
+			m.set_shader_parameter("shade_tex", g.get_meta("shade_tex"))
+			m.set_shader_parameter("shade_ext", g.get_meta("shade_ext"))
+		mats.append(m)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23111
+	var gh := float(EV.get("pgh", "0.5"))
+	var dens := float(EV.get("pgd", "26"))
+	var pr := float(EV.get("pgr", "1.6"))
+	var centres := [] # [centre, rx (along rim), rz (across), yaw]
+	var n_rim := int(EV.get("pgn", "16"))
+	for i in n_rim:
+		var a := TAU * (float(i) + rng.randf_range(-0.35, 0.35)) / n_rim
+		var rr := r * rng.randf_range(0.98, 1.08)
+		centres.append([c + Vector2(cos(a), sin(a)) * rr, pr * rng.randf_range(0.7, 1.4), pr * rng.randf_range(0.35, 0.6), a + PI * 0.5])
+	if EV.get("pgs", "1") == "1":
+		for n in st.find_children("*", "", true, false):
+			var nm := String(n.name)
+			if not (nm.begins_with("Stone") or nm.begins_with("Fallen") or nm.begins_with("Rock")):
+				continue
+			var pn := String(n.get_parent().name) if n.get_parent() != null else ""
+			if pn.begins_with("Stone") or pn.begins_with("Fallen") or pn.begins_with("Rock"):
+				continue
+			var box := AABB()
+			var first := true
+			for mi in n.find_children("*", "MeshInstance3D", true, false):
+				var mm := mi as MeshInstance3D
+				if mm.mesh == null or not mm.is_visible_in_tree():
+					continue
+				var b: AABB = mm.global_transform * mm.get_aabb()
+				box = b if first else box.merge(b)
+				first = false
+			if first:
+				continue
+			var cc := Vector2(box.get_center().x, box.get_center().z)
+			centres.append([cc, box.size.x * 0.5 + pr * 0.5, box.size.z * 0.5 + pr * 0.4, 0.0])
+	var n_bl := 0
+	for ci in centres.size():
+		var cen: Vector2 = centres[ci][0]
+		var rx: float = centres[ci][1]
+		var rz: float = centres[ci][2]
+		var yaw: float = centres[ci][3]
+		var stn := SurfaceTool.new()
+		stn.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var cnt := int(clampf(dens * rx * rz, 6, 260))
+		var ca := cos(yaw)
+		var sa := sin(yaw)
+		for b in cnt:
+			# denser in the middle, thin at the edge (FF patch outline is ragged)
+			var ang := rng.randf_range(0.0, TAU)
+			var rad := sqrt(rng.randf()) * rng.randf_range(0.75, 1.0)
+			var lx := cos(ang) * rad * rx
+			var lz := sin(ang) * rad * rz
+			var p := cen + Vector2(lx * ca - lz * sa, lx * sa + lz * ca)
+			var y := top if p.distance_to(c) < r else 0.0
+			var h := gh * rng.randf_range(0.55, 1.1) * (1.0 - 0.45 * rad)
+			var fy := rng.randf_range(0.0, TAU)
+			var d := Vector3(cos(fy), 0, sin(fy))
+			var nrm := Vector3(-d.z, 0, d.x)
+			var lean := deg_to_rad(rng.randf_range(10.0, 40.0)) * (1.0 if rng.randf() < 0.5 else -1.0)
+			var up := Vector3.UP * cos(lean) * h + nrm * sin(lean) * h
+			var u0 := rng.randf_range(0.0, 0.66)
+			var w := h * 0.55
+			var flip := rng.randf() < 0.5
+			var ua := u0 + (0.34 if flip else 0.0)
+			var ub := u0 + (0.0 if flip else 0.34)
+			var base := Vector3(p.x, y - 0.02, p.y)
+			var bl := base - d * w * 0.5
+			var br := base + d * w * 0.5
+			var q := [[bl, Vector2(ua, 1), 0.0], [br, Vector2(ub, 1), 0.0], [br + up, Vector2(ub, 0), 1.0], [bl + up, Vector2(ua, 0), 1.0]]
+			for idx in [0, 1, 2, 0, 2, 3]:
+				stn.set_normal(Vector3.UP)
+				stn.set_color(Color(q[idx][2], 0, 0))
+				stn.set_uv(q[idx][1])
+				stn.add_vertex(q[idx][0])
+			n_bl += 1
+		var mi := MeshInstance3D.new()
+		mi.name = "S231Patch%d" % ci
+		mi.mesh = stn.commit()
+		mi.material_override = mats[ci % mats.size()]
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		st.add_child(mi)
+	print("s231 patches: ", centres.size(), " patches, ", n_bl, " blades")
