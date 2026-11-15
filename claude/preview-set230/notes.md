@@ -169,3 +169,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 
 ## Round 20 (set 234) — owner: "lower again"
 - `pgfarh=0.9 pginh=0.7 pgfgh=1.05` (~half of round 18). Ring now a low lawn edge; stones stand clear. Args: r20_args.txt.
+
+## Round 21 (set 234) — owner: "does the grass look floating?" → yes → F1 plaza ends under the grass
+- Cause (1:1 crop): front corner patches stood on the flagstones with a straight bottom edge and nothing under them; back joint tufts stood on slab faces.
+- F1 `--e:gmask=1` (`_s234_gmask` in s226.gd + `use_gmask` in s230_ground.gdshader): 512² top-down mask (±`gmext` 16 m) of every grass patch within 1.3 r of the plaza (ellipse × `gmk`, soft edge) → plaza shader: noise + joints break the cut, inside = soil (`gmsoil` #33261a, mossy speckle), a dirty slab rim just outside. Picked `gmk=1.5 gmcut=0.4` (gmk 1.0 = tufts still on slabs). Roots darker `pgroot=0.85`.
+- Bare soil now shows a bit past the corner grass — reads as worn earth; shrink with gmk 1.2–1.3 if the owner wants less.
+- Args: r21_args.txt (= r20 + gmask). Shader copy: s230_ground.gdshader.txt.

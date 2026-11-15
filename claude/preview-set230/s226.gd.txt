@@ -969,6 +969,7 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		var a := rng.randf_range(PI * 0.95, PI * 2.05)
 		var rr := rng.randf_range(float(EV.get("pgm0", "22")), float(EV.get("pgm1", "60")))
 		centres.append([Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0), pr * rng.randf_range(1.6, 3.2), pr * rng.randf_range(0.6, 1.1), a + PI * 0.5, float(EV.get("pgmh", "2.2")) * rng.randf_range(0.7, 1.3), 0.15])
+	if EV.get("gmask", "0") == "1": _s234_gmask(g, c, r, centres, EV)
 	var n_bl := 0
 	# s231 flowers: owner sheet flowersA = 19 stems side by side (equal cells, stem bottom-centred)
 	var fl_p := float(EV.get("pgf", "0"))
@@ -1641,3 +1642,40 @@ func _s234_mist(st: Node, EV: Dictionary) -> void:
 	for d in [15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140]:
 		prof.append("%d:%.1f" % [d, _s233_th(Vector2(0, -d), EV)])
 	print("s233 mist: ", n, " th(z) ", " ".join(prof))
+
+
+# s234 F1 (owner: grass looks like it floats on the slabs): top-down mask of every grass patch near the plaza -> the
+# plaza shader paints soil there (slabs gone) with a dirty broken rim, so the grass grows out of earth.
+func _s234_gmask(g: MeshInstance3D, c: Vector2, r: float, centres: Array, EV: Dictionary) -> void:
+	var ext := float(EV.get("gmext", "16"))
+	var res := 512
+	var img := Image.create(res, res, false, Image.FORMAT_L8)
+	var k := float(EV.get("gmk", "1.0")) # mask ellipse size vs the patch
+	var n := 0
+	for cc in centres:
+		var cen: Vector2 = cc[0]
+		if cen.distance_to(c) > r * 1.3: continue
+		var rx: float = cc[1] * k
+		var rz: float = cc[2] * k
+		var yaw: float = cc[3]
+		var ca := cos(yaw); var sa := sin(yaw)
+		var big := maxf(rx, rz)
+		var x0 := int((cen.x - big + ext) / (2.0 * ext) * res); var x1 := int((cen.x + big + ext) / (2.0 * ext) * res)
+		var y0 := int((cen.y - big + ext) / (2.0 * ext) * res); var y1 := int((cen.y + big + ext) / (2.0 * ext) * res)
+		for py in range(maxi(y0, 0), mini(y1 + 1, res)):
+			for px in range(maxi(x0, 0), mini(x1 + 1, res)):
+				var w := Vector2((px + 0.5) / res * 2.0 * ext - ext, (py + 0.5) / res * 2.0 * ext - ext) - cen
+				var lx := w.x * ca + w.y * sa
+				var lz := -w.x * sa + w.y * ca
+				var e := sqrt((lx / rx) * (lx / rx) + (lz / rz) * (lz / rz))
+				var v := 1.0 - smoothstep(0.55, 1.0, e)
+				if v > img.get_pixel(px, py).r: img.set_pixel(px, py, Color(v, v, v))
+		n += 1
+	var m := g.material_override as ShaderMaterial
+	m.set_shader_parameter("use_gmask", true)
+	m.set_shader_parameter("grass_mask", ImageTexture.create_from_image(img))
+	m.set_shader_parameter("gm_ext", ext)
+	m.set_shader_parameter("gm_cut", float(EV.get("gmcut", "0.45")))
+	var sc := Color(EV.get("gmsoil", "#33261a"))
+	m.set_shader_parameter("soil", Vector3(sc.r, sc.g, sc.b))
+	print("s233 gmask patches ", n)
