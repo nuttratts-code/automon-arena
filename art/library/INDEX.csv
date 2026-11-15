@@ -91,3 +91,5 @@ pictures/s235/bushes_sheet_B_gemini_2026-11-15.jpg,7 watercolour bushes in a row
 pictures/s235/ivy_sheet_A_gemini_2026-11-15.jpg,hanging ivy strands on magenta (thin stems break when keyed - not used),Google Gemini (owner; chat upload),2026-11-15,owner,no (keys into fragments),AI placeholder
 pictures/s235/ivy_sheet_B_gemini_2026-11-15.jpg,hanging ivy strands on light magenta (used),Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r32),AI placeholder
 pictures/s235/bush_[AB]*_key / ivy_B*_key_2026-11-15.png,bushes A0-8 B0-6 + 8 long ivy strands keyed + split by blobs,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,sample only (set 235 r32),AI placeholder
+pictures/s238/sprigs_sheet_A_gemini_2026-11-15.jpg,12 small leafy sprig clumps on magenta - pieces for bushes built like the grass (set 238 B1) and small tree-crown clusters,Google Gemini (owner; chat upload),2026-11-15,owner,not yet,AI placeholder
+pictures/s238/sprig_A[0-11]_key_2026-11-15.png,the 12 sprig clumps keyed + split,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,not yet,AI placeholder
