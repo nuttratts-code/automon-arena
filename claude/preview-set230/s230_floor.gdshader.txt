@@ -1,0 +1,44 @@
+// s230 sample: FF Re-style shared floor/stone material (own code). base texture x tint, world-aligned tiled
+// stone detail (triplanar), moss top layer on up-facing faces masked by world noise. Same layers on plaza + stones.
+shader_type spatial;
+render_mode cull_disabled;
+uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic;
+uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic;
+uniform bool has_normal = false;
+uniform float normal_amt = 1.0;
+uniform vec3 tint = vec3(1.0);
+uniform sampler2D detail_tex : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float detail_scale = 1.0; // metres per tile
+uniform float detail_amt = 0.6;
+uniform sampler2D moss_noise : filter_linear, repeat_enable;
+uniform vec3 moss_col : source_color = vec3(0.36, 0.44, 0.2);
+uniform float moss_scale = 3.0;
+uniform float moss_amt = 0.6;
+uniform float moss_cut = 0.55; // noise threshold (higher = fewer patches)
+uniform float moss_up = 0.6; // min world normal y
+uniform float brightness = 1.0;
+varying vec3 wp;
+varying vec3 wn;
+void vertex() {
+	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wn = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+}
+float det(vec3 p, vec3 n) {
+	vec3 b = pow(abs(n), vec3(4.0)); b /= (b.x + b.y + b.z);
+	float dx = texture(detail_tex, p.zy / detail_scale).r;
+	float dy = texture(detail_tex, p.xz / detail_scale).r;
+	float dz = texture(detail_tex, p.xy / detail_scale).r;
+	return dx * b.x + dy * b.y + dz * b.z;
+}
+void fragment() {
+	vec3 col = texture(albedo_tex, UV).rgb * tint;
+	float d = det(wp, wn);
+	float dm = mix(1.0, d * 2.0, detail_amt);
+	col *= dm;
+	float nz = texture(moss_noise, wp.xz / moss_scale).r;
+	float m = smoothstep(moss_up, moss_up + 0.2, wn.y) * smoothstep(moss_cut, moss_cut + 0.15, nz) * moss_amt;
+	col = mix(col, moss_col * dm, m);
+	ALBEDO = col * brightness;
+	ROUGHNESS = 0.9;
+	if (has_normal) { NORMAL_MAP = texture(normal_tex, UV).rgb; NORMAL_MAP_DEPTH = normal_amt; }
+}

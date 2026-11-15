@@ -314,6 +314,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 					if EV.has("pnor"): mo.normal_texture = _s230_tex(EV["pnor"], true)
 	if EV.get("rim", "0") == "1": _rim(st, EV) # s229: tie the plaza edge to the grass
 	if EV.has("stone_tone"): _stone_tone(st, EV) # s229: stones vs plaza colour
+	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
 			for k in ["spr", "shadow", "ring"]:
@@ -468,3 +469,68 @@ func _s230_tex(nm: String, mip: bool) -> ImageTexture:
 	if mip: im.generate_mipmaps()
 	print("s230 tex ", nm, " ", im.get_size(), " mips ", im.has_mipmaps())
 	return ImageTexture.create_from_image(im)
+
+
+# s230: swap plaza + stone materials for one shared layered shader (tests/s230_floor.gdshader). Args:
+# dsc detail tile metres · damt detail strength · mamt moss strength · mcut moss noise cut · msc moss patch size m
+# mcol moss colour · mstone=0 keeps moss off the stones · bri brightness.
+func _s230_floor(st: Node, EV: Dictionary) -> void:
+	var sh := load("res://tests/s230_floor.gdshader") as Shader
+	var dt: Texture2D = _s230_tex("det_stone", true)
+	if EV.get("dnoise", "0") == "1": # s230: own-made grain (no picture, no repeat pattern): two noise layers, cellular + fbm
+		var dn := NoiseTexture2D.new()
+		dn.width = 1024
+		dn.height = 1024
+		dn.seamless = true
+		dn.generate_mipmaps = true
+		var dfn := FastNoiseLite.new()
+		dfn.seed = 2301
+		dfn.noise_type = FastNoiseLite.TYPE_CELLULAR if EV.get("dcell", "1") == "1" else FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		dfn.cellular_return_type = FastNoiseLite.RETURN_DISTANCE2_SUB
+		dfn.frequency = float(EV.get("dfreq", "0.02"))
+		dfn.fractal_type = FastNoiseLite.FRACTAL_FBM
+		dfn.fractal_octaves = 4
+		dn.noise = dfn
+		dt = dn
+	var nt := NoiseTexture2D.new()
+	nt.width = 512
+	nt.height = 512
+	nt.seamless = true
+	var fn := FastNoiseLite.new()
+	fn.seed = 230
+	fn.frequency = 0.012
+	fn.fractal_octaves = 4
+	nt.noise = fn
+	var mc: Array = str(EV.get("mcol", "0.36,0.44,0.2")).split_floats(",")
+	var n_done := 0
+	for n in st.find_children("*", "", true, false):
+		var nm := String(n.name)
+		var is_plaza := nm == "Plaza" and "tone" in n
+		if not (is_plaza or nm.begins_with("Stone") or nm.begins_with("Fallen") or nm.begins_with("Rock")):
+			continue
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+			if not (src is StandardMaterial3D):
+				continue
+			var s3 := src as StandardMaterial3D
+			var sm := ShaderMaterial.new()
+			sm.shader = sh
+			sm.set_shader_parameter("albedo_tex", s3.albedo_texture)
+			if s3.normal_texture != null:
+				sm.set_shader_parameter("normal_tex", s3.normal_texture)
+				sm.set_shader_parameter("has_normal", true)
+				sm.set_shader_parameter("normal_amt", s3.normal_scale)
+			sm.set_shader_parameter("tint", Vector3(s3.albedo_color.r, s3.albedo_color.g, s3.albedo_color.b))
+			sm.set_shader_parameter("detail_tex", dt)
+			sm.set_shader_parameter("detail_scale", float(EV.get("dsc", "1.0")))
+			sm.set_shader_parameter("detail_amt", float(EV.get("damt", "0.6")))
+			sm.set_shader_parameter("moss_noise", nt)
+			sm.set_shader_parameter("moss_col", Vector3(mc[0], mc[1], mc[2]))
+			sm.set_shader_parameter("moss_scale", float(EV.get("msc", "3.0")))
+			sm.set_shader_parameter("moss_amt", 0.0 if (not is_plaza and EV.get("mstone", "1") == "0") else float(EV.get("mamt", "0.6")))
+			sm.set_shader_parameter("moss_cut", float(EV.get("mcut", "0.55")))
+			sm.set_shader_parameter("brightness", float(EV.get("bri", "1.0")))
+			m.material_override = sm
+			n_done += 1
+	print("s230 floor shader on ", n_done, " meshes")

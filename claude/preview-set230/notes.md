@@ -26,3 +26,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Layers: Base texture tiled by `Base_Scale` (0.02 far ground · 0.1 outer ground · 1.0 rocks) · vertex colour R = dirt path layer · G = stone/cliff layer · Top layer world-aligned (grass on up-facing faces, dirt patches on grass) masked by slope + a noise texture · `Brightness` multiplier (0.5 cliffs · 0.6 far ground).
 - Textures are 256–1024, smooth (not pixel); detail comes from tiling, not from one big unique texture. Path colour in a screenshot = (179,163,123) warm beige; whole picture paler/softer, cool shadows.
 - For Automon: plaza = one unique Hunyuan texture (soft, 25 px/m) vs stones with their own textures → explains both the soft look and the colour gap. FFR-style fix = A2+: a tiled stone detail layer (world-aligned, ~1 m) + a shared moss/grass Top layer (noise mask) on BOTH plaza and stones, same Brightness family.
+
+## FF Re-style floor sample (owner: "Make the sample")
+- Own code only: `s230_floor.gdshader.txt` → `<g>/tests/s230_floor.gdshader` (import before shots, trap 1). `s226.gd` `--e:ffr=1` swaps plaza + Stone*/Fallen*/Rock* (15 meshes) to it: base texture × tint · world-aligned triplanar detail (`dsc` m per tile, `damt`) · moss on up-facing faces masked by world noise (`mamt`, `mcut`, `msc`, `mcol`, `mstone=0`) · `bri`.
+- Detail source: `--e:dnoise=1` = FastNoiseLite grain (`dcell=1` cellular, 0 = smooth mottling, `dfreq`), no picture, no repeat. Without it = high-pass crop of the fallen-stone atlas (`tests/s225/det_stone.png`) → reads as a grid even after rot/flip averaging (D) — dropped.
+- Sheet `s230-ffr-floor.png`: A tint 3 only · B `dnoise=1 damt=0.35 dsc=2` · C `dnoise=1 dcell=0 damt=0.5 dsc=2 mamt=0.7 mcut=0.5` · D picture detail. Owner picks.
+- Rendered plaza mean colour barely moves (A 133,125,109 → B/C ~126,123,103); the change is texture, not colour.
