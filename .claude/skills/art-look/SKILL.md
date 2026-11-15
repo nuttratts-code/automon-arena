@@ -105,6 +105,15 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 
 4. **Set 234 lessons (rounds 16–24):** compare every round against the target picture with `claude/preview-set230/cmp234.sh.txt` (render + stack ref over shot) and check a **1:1 crop** of edges/corners before sending — "floating grass" only showed at full size. The view is narrow (FOV 19.2): only about ±30 m wide at 100 m and ±6.6 m at the front row (z 7), so props past that are off screen; print a th(z) height profile before placing far props (visible ridge face 74–92 m; 40–70 m hidden in the bay; > 100 m on the sea). GDScript `posmod` is integer-only → use `fposmod` for texture-tile lookups. Clean shots for the owner's AI: `--e:noui=1 --e:nounits=1 --e:pg=0`.
 
+### 8g. Bake an arena into the editable scene + view check (sets 236–237, owner A2 — done 4×)
+Scratch copy `<g>` = `%TEMP%/claude/6778d44212994c0a/e44da554-341a-472f-839e-ef20a29a07a0/scratchpad/g`, tools in `<g>/../tools`, Godot = `…/GitHub/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe` (GD).
+1. **Before every bake:** `ls --time-style=+%H:%M:%S <g>/art/<name>/<name>.tscn` — a time newer than your last bake = the owner saved hand edits in Godot → ask before baking (a bake overwrites the whole file).
+2. Bake (folder name = scene name, `bdir` default r36): `sh shot233v.sh <x>1 $(cat rNN_args.txt) --e:bdir=res://art/<name> --e:bake=1` → `timeout 900 $GD --headless --import --path <g>` → same with `--e:bake=2`; `out/last.log` must show `S236 pack 0 save 0`. Self-contained check: `grep -o 'path="[^"]*"' <tscn> | grep -v res://art/<name>/` = empty.
+3. View check in the real app: `ARENA=res://art/<name>/<name>.tscn $GD --rendering-driver opengl3 --audio-driver Dummy --path <g> --resolution 1920x1080 -s res://tests/s236_view.gd -- --out <png>`.
+4. Owner has Godot open → tell them to press **Reload** when it asks. Open the editor for them: `Start-Process <GD without _console> --editor --path <g> res://art/<name>/<name>.tscn`.
+5. **Far-layer trap (set 237):** the sky card sits at z −300 (width 300) and hides anything behind it; the ground mesh ends at z −450 and shows a flat edge if the terrain rises there. Backdrop quads go just in front of z −300; check with a raised debug camera (`--e:cpitch=2 --e:cpos=0,25,40`). `shot233.sh` greps only s225/s230/s233 lines — use `shot233v.sh` + `out/last.log` to see `s237 …` prints.
+6. Terrain height lives twice (`th237()` shader + `_s237_th()` GDScript): edit both in one script, assert each replace hit; GLSL-only lines (ternary, `slope`) have no GDScript twin.
+
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 
