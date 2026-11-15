@@ -1912,10 +1912,10 @@ func _s238_sharpen(im: Image, k: float, r: int) -> Image:
 			d[i + c] = clampi(int(d[i + c] + k * (d[i + c] - bd[i + c])), 0, 255)
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, d)
 var _s238_tex := {}
-func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> void:
+func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> MeshInstance3D:
 	if not _s238_tex.has(file):
 		var im := Image.load_from_file(ProjectSettings.globalize_path(file))
-		if im == null: return
+		if im == null: return null
 		if _s238_shp > 0.0: im = _s238_sharpen(im, _s238_shp, 3)
 		if _s238_shp2 > 0.0: im = _s238_sharpen(im, _s238_shp2, 2)
 		im.generate_mipmaps()
@@ -1944,6 +1944,7 @@ func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip
 	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	st.add_child(q)
 	q.global_position = at - Vector3(0, h * 0.03, 0)
+	return q
 
 func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> void:
 	if _s238_sway > 0.0:
@@ -2461,6 +2462,175 @@ func _s237_layers(st: Node, EV: Dictionary) -> void:
 # (fit from the plaza size: pos 0,19.5,38.4 · pitch 17.2 · fov 46.8). Polygons in world x,z.
 # T2 = left grove from the plaza side to the lake · T1 = right lakeside grove · right forest past the green line (x >= 43)
 # · MM = owner crossed out -> no trees around (90,-132) · O1 = a bush clump at (10.4,-31.5). Ridge + its rocks are gone (rdg=0).
+# ---- s238 step 6c (owner A1/B1): trees built from pieces = still trunk card (owner Gemini trunk sheets B/C)
+# + 32-48 leaf-cluster cards (owner sprig sheet A) around the branch zone, each cluster sways on its own;
+# bushes = 3-5 sprigs like the grass patches. Clusters live in one MultiMesh per tree/bush (atlas 4x3, INSTANCE_CUSTOM =
+# cell, flip, shade, sway weight). Far trees stay single cards (FF Resonance: near = leaf cards, far = billboards).
+const LEAF238 := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, shadows_disabled, depth_prepass_alpha;
+uniform sampler2D tex : source_color, filter_linear_mipmap;
+uniform vec3 tint = vec3(1.0);
+uniform vec2 grid = vec2(4.0, 3.0);
+uniform float amp = 0.02;
+uniform float spd = 1.3;
+uniform float bias = -1.0;
+varying vec4 cd;
+void vertex() {
+	cd = INSTANCE_CUSTOM;
+	vec3 o = MODEL_MATRIX[3].xyz;
+	float sx = length(MODEL_MATRIX[0].xyz);
+	float sy = length(MODEL_MATRIX[1].xyz);
+	vec3 v = VERTEX * vec3(sx, sy, 1.0);
+	float ph = o.x * 0.31 + o.z * 0.17 + o.y * 0.53;
+	float t = clamp(VERTEX.y, 0.0, 1.0);
+	v.x += (sin(TIME * spd + ph) + 0.35 * sin(TIME * spd * 2.3 + ph * 1.7)) * amp * 4.0 * sy * (0.35 + 0.65 * t) * cd.w;
+	v.y += sin(TIME * spd * 1.3 + ph * 1.1) * amp * 1.2 * sy * cd.w;
+	VERTEX = v;
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0), vec4(0.0, 1.0, 0.0, 0.0), vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0), MODEL_MATRIX[3]);
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+}
+void fragment() {
+	float cell = floor(cd.x + 0.5);
+	vec2 cr = vec2(mod(cell, grid.x), floor(cell / grid.x));
+	vec2 uv = (cr + vec2(mix(UV.x, 1.0 - UV.x, cd.y), UV.y)) / grid;
+	vec4 c = texture(tex, uv, bias);
+	ALBEDO = c.rgb * tint * cd.z;
+	ALPHA = c.a;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
+}
+"""
+const LEAF_CW := 480
+const LEAF_CH := 352
+var _s238_leaf_tex: ImageTexture = null
+var _s238_leaf_sh: Shader = null
+var _s238_trk := {} # trunk file -> [anchors (Vector2 u,v from top), tips, trunk axis u, aspect w/h]
+func _s238_leaf_atlas() -> ImageTexture:
+	if _s238_leaf_tex != null: return _s238_leaf_tex
+	var at := Image.create(LEAF_CW * 4, LEAF_CH * 3, false, Image.FORMAT_RGBA8)
+	for i in 12:
+		var im := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s238/sprig_A%d_key_2026-11-15.png" % i))
+		im.convert(Image.FORMAT_RGBA8)
+		var x := (i % 4) * LEAF_CW + (LEAF_CW - im.get_width()) / 2
+		var y := (i / 4) * LEAF_CH + LEAF_CH - 12 - im.get_height()
+		at.blit_rect(im, Rect2i(0, 0, im.get_width(), im.get_height()), Vector2i(x, y))
+	if _s238_shp > 0.0: at = _s238_sharpen(at, _s238_shp, 3)
+	if _s238_shp2 > 0.0: at = _s238_sharpen(at, _s238_shp2, 2)
+	at.generate_mipmaps()
+	_s238_leaf_tex = ImageTexture.create_from_image(at)
+	return _s238_leaf_tex
+
+func _s238_trunk_info(file: String) -> Array:
+	if _s238_trk.has(file): return _s238_trk[file]
+	var im := Image.load_from_file(ProjectSettings.globalize_path(file))
+	var w := im.get_width(); var h := im.get_height()
+	var ax := 0.0; var na := 0
+	for y in range(int(h * 0.85), h, 4):
+		for x in range(0, w, 4):
+			if im.get_pixel(x, y).a > 0.5: ax += x; na += 1
+	ax = ax / maxf(1.0, na)
+	var pts: Array[Vector2] = []
+	var tips: Array[Vector2] = []
+	for y in range(0, int(h * 0.7), 6):
+		for x in range(0, w, 6):
+			if im.get_pixel(x, y).a > 0.5: pts.append(Vector2(float(x) / w, float(y) / h))
+	for cx in 8: # tips: top-most opaque point per 1/8 width column
+		var best := Vector2(-1, 2)
+		for q in pts:
+			if int(q.x * 8.0) == cx and q.y < best.y: best = q
+		if best.x >= 0.0: tips.append(best)
+	var r := [pts, tips, ax / w, float(w) / float(h)]
+	_s238_trk[file] = r
+	return r
+
+func _s238_mm(st: Node, at: Vector3, items: Array, tint: Color, amp: float, spd: float, nm: String) -> void:
+	if _s238_leaf_sh == null:
+		_s238_leaf_sh = Shader.new(); _s238_leaf_sh.code = LEAF238
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = true
+	var qm := QuadMesh.new()
+	qm.size = Vector2(1, 1)
+	qm.center_offset = Vector3(0, 0.5, 0)
+	mm.mesh = qm
+	mm.instance_count = items.size()
+	for i in items.size():
+		var it: Array = items[i]
+		var sz: Vector2 = it[1]
+		mm.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3(sz.x, sz.y, 1.0)), it[0]))
+		mm.set_instance_custom_data(i, Color(it[2], it[3], it[4], it[5]))
+	var mi := MultiMeshInstance3D.new()
+	mi.name = nm
+	mi.multimesh = mm
+	var m := ShaderMaterial.new()
+	m.shader = _s238_leaf_sh
+	m.set_shader_parameter("tex", _s238_leaf_atlas())
+	m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+	m.set_shader_parameter("amp", amp)
+	m.set_shader_parameter("spd", spd)
+	m.set_shader_parameter("bias", _s238_bias)
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	st.add_child(mi)
+	mi.global_position = at
+
+var _s238_pt_n := 0
+func _s238_ptree(st: Node, EV: Dictionary, at: Vector3, h: float, rng: RandomNumberGenerator) -> void:
+	var trunks := ["B0", "B1", "B2", "C0", "C1", "C2"]
+	var tf := "res://tests/s238/trunk_%s_key_2026-11-15.png" % trunks[rng.randi() % trunks.size()]
+	var flip := rng.randf() < 0.5
+	var info := _s238_trunk_info(tf)
+	var tt: Array = str(EV.get("trkt", "0.8,0.78,0.74")).split_floats(",")
+	var tq := _s238_card(st, tf, at, h, Color(tt[0], tt[1], tt[2]), flip)
+	if tq == null: return
+	var tm := (tq.material_override as ShaderMaterial).duplicate() as ShaderMaterial
+	tm.set_shader_parameter("amp", 0.0) # trunk + branches stay still
+	tq.material_override = tm
+	tq.name = "Trunk%d" % _s238_pt_n
+	var w: float = h * float(info[3])
+	var pts: Array = info[0]
+	var tips: Array = info[1]
+	var ax: float = info[2]
+	var lo: Array = str(EV.get("leafn", "32,48")).split_floats(",")
+	var n := rng.randi_range(int(lo[0]), int(lo[1]))
+	var ls := float(EV.get("leafs", "0.30"))
+	var items := []
+	var cand: Array[Vector2] = []
+	for q in tips: cand.append(q)
+	var guard := 0
+	while cand.size() < n and guard < n * 60 and pts.size() > 0:
+		guard += 1
+		var q: Vector2 = pts[rng.randi() % pts.size()]
+		var wgt := 0.25 + 1.6 * absf(q.x - ax) + 0.9 * (1.0 - q.y / 0.7)
+		if rng.randf() * 1.6 < wgt: cand.append(q)
+	for q in cand:
+		var u := (1.0 - q.x) if flip else q.x
+		var cx := (u - 0.5) * w
+		var cy := -h * 0.03 + (1.0 - q.y) * h
+		var cw := h * ls * rng.randf_range(0.7, 1.15)
+		var ch := cw * float(LEAF_CH) / float(LEAF_CW)
+		var dz := rng.randf_range(-0.9, 0.9)
+		var shade := lerpf(0.72, 1.05, (dz + 0.9) / 1.8) * lerpf(0.9, 1.08, clampf(1.0 - q.y / 0.62, 0.0, 1.0))
+		var off := Vector3(cx + rng.randf_range(-0.04, 0.04) * h, cy - ch * 0.5 + rng.randf_range(-0.03, 0.03) * h, dz)
+		items.append([off, Vector2(cw, ch), float(rng.randi() % 12), 1.0 if rng.randf() < 0.5 else 0.0, shade, rng.randf_range(0.6, 1.0)])
+	var lt: Array = str(EV.get("leaft", "0.92,0.98,0.9")).split_floats(",")
+	_s238_mm(st, at, items, Color(lt[0], lt[1], lt[2]), _s238_sway, 1.2, "Leaves%d" % _s238_pt_n)
+	_s238_pt_n += 1
+
+func _s238_pbush(st: Node, at: Vector3, bh: float, tint: Color, rng: RandomNumberGenerator) -> void:
+	var k := rng.randi_range(3, 5)
+	var items := []
+	for i in k:
+		var cw := bh * rng.randf_range(1.0, 1.35) * (1.15 if i == 0 else 1.0)
+		var ch := cw * float(LEAF_CH) / float(LEAF_CW)
+		var a := rng.randf() * TAU
+		var r := 0.0 if i == 0 else bh * rng.randf_range(0.25, 0.55)
+		var off := Vector3(cos(a) * r, -ch * 0.04, sin(a) * r * 0.6)
+		var shade := lerpf(0.78, 1.05, clampf(0.5 + off.z / (bh * 0.66), 0.0, 1.0))
+		items.append([off, Vector2(cw, ch), float(rng.randi() % 12), 1.0 if rng.randf() < 0.5 else 0.0, shade, 1.0])
+	_s238_mm(st, at, items, tint, _s238_sway * 1.8, 1.6, "Bush%d" % _s238_pt_n)
+	_s238_pt_n += 1
+
 func _s238_in(p: Vector2, poly: Array) -> bool:
 	var c := false
 	var j := poly.size() - 1
@@ -2499,6 +2669,8 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 		["righthill", [Vector2(72, -60), Vector2(140, -60), Vector2(140, -210), Vector2(72, -210)], 30, gk, 3.0],
 		["leftlake", [Vector2(-130, -110), Vector2(-60, -110), Vector2(-60, -185), Vector2(-130, -185)], 18, gk, 3.0],
 		["far", [Vector2(60, -262), Vector2(130, -262), Vector2(130, -330), Vector2(60, -330)], 16, gk, 3.0]]
+	var tpc: bool = str(EV.get("tpc", "0")) == "1" # s238 6c: near trees from trunk + leaf pieces
+	var bpc: bool = str(EV.get("bpc", "0")) == "1" # s238 6c: bushes from 3-5 sprigs
 	var placed: Array[Vector2] = []
 	var n := 0
 	var cnt := {}
@@ -2525,7 +2697,9 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 			var far := p.y < -170.0
 			var f := ("treeC%d" % (n % 3)) if far else (("treeA%d" if n % 3 == 0 else "treeB%d") % (n % 3))
 			var tc := Color(ft[0], ft[1], ft[2]) if far else Color(tn[0], tn[1], tn[2])
-			_s235_tree_card(st, d + f + ".png", Vector3(p.x, gy, p.y), H * float(g[3]) * dk.call(p.y) * rng.randf_range(0.75, 1.25), tc, rng.randf() < 0.5)
+			var th: float = H * float(g[3]) * dk.call(p.y) * rng.randf_range(0.75, 1.25)
+			if tpc and not far: _s238_ptree(st, EV, Vector3(p.x, gy, p.y), th, rng)
+			else: _s235_tree_card(st, d + f + ".png", Vector3(p.x, gy, p.y), th, tc, rng.randf() < 0.5)
 			got += 1
 			n += 1
 		cnt[g[0]] = got
@@ -2544,14 +2718,16 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 		if _s238_in(p, G[0][1]) or _s238_in(p, G[1][1]): continue
 		var gy := _s237_th(p)
 		if gy < wl + 0.4: continue
-		_s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, gy, p.y), bh * dk.call(p.y) * rng.randf_range(0.6, 1.4), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
+		if bpc: _s238_pbush(st, Vector3(p.x, gy, p.y), bh * dk.call(p.y) * rng.randf_range(0.6, 1.4), Color(bt[0], bt[1], bt[2]), rng)
+		else: _s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, gy, p.y), bh * dk.call(p.y) * rng.randf_range(0.6, 1.4), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
 		mb += 1
 	var o1: Array = str(EV.get("o1", "10.4,-31.5")).split_floats(",")
 	var no1 := int(EV.get("o1n", "7"))
 	for i in no1:
 		var a := TAU * float(i) / float(no1) + rng.randf_range(-0.3, 0.3)
 		var p := Vector2(o1[0], o1[1]) + Vector2(cos(a), sin(a)) * (0.0 if i == 0 else rng.randf_range(1.4, 2.8))
-		_s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, _s237_th(p), p.y), bh * rng.randf_range(0.9, 1.5), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
+		if bpc: _s238_pbush(st, Vector3(p.x, _s237_th(p), p.y), bh * rng.randf_range(0.9, 1.5), Color(bt[0], bt[1], bt[2]), rng)
+		else: _s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, _s237_th(p), p.y), bh * rng.randf_range(0.9, 1.5), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
 	print("s238 trees ", n, " ", cnt, " meadow bushes ", mb, " O1 ", no1)
 
 

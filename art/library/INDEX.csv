@@ -93,3 +93,8 @@ pictures/s235/ivy_sheet_B_gemini_2026-11-15.jpg,hanging ivy strands on light mag
 pictures/s235/bush_[AB]*_key / ivy_B*_key_2026-11-15.png,bushes A0-8 B0-6 + 8 long ivy strands keyed + split by blobs,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,sample only (set 235 r32),AI placeholder
 pictures/s238/sprigs_sheet_A_gemini_2026-11-15.jpg,12 small leafy sprig clumps on magenta - pieces for bushes built like the grass (set 238 B1) and small tree-crown clusters,Google Gemini (owner; chat upload),2026-11-15,owner,not yet,AI placeholder
 pictures/s238/sprig_A[0-11]_key_2026-11-15.png,the 12 sprig clumps keyed + split,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,not yet,AI placeholder
+pictures/s238/trunks_sheet_A_gemini_2026-11-15.jpg,3 bare trunks with branches on magenta (tops cropped by the frame - not used yet),Google Gemini (owner; chat upload),2026-11-15,owner,not yet,AI placeholder
+pictures/s238/trunks_sheet_B_gemini_2026-11-15.jpg,3 bare trunks with branches on magenta (set 238 A1 tree trunks),Google Gemini (owner; chat upload),2026-11-15,owner,r38 sample,AI placeholder
+pictures/s238/trunks_sheet_C_gemini_2026-11-15.jpg,3 straight bare trunks with branches on magenta (set 238 A1 tree trunks),Google Gemini (owner; chat upload),2026-11-15,owner,r38 sample,AI placeholder
+pictures/s238/trunk_[BC][0-2]_key_2026-11-15.png,the 6 trunks of sheets B + C keyed + split,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,r38 sample,AI placeholder
+pictures/s238/trees_leafy_sheet_gemini_2026-11-15.jpg,3 full leafy trees on magenta (owner upload; not used yet - possible far-tree cards),Google Gemini (owner; chat upload),2026-11-15,owner,not yet,AI placeholder
