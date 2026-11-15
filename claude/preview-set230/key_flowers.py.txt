@@ -1,0 +1,31 @@
+import sys
+from PIL import Image, ImageFilter
+import numpy as np
+out = sys.argv[1]; srcs = sys.argv[2:]
+stems = []
+for src in srcs:
+    im = np.asarray(Image.open(src).convert("RGB")).astype(np.float32)
+    bg = np.median(im[:20].reshape(-1, 3), axis=0)
+    d = np.sqrt(((im - bg) ** 2).sum(-1))
+    a = np.clip((d - 60) / 60.0, 0, 1)
+    a = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))).astype(np.float32) / 255
+    # despill: remove bg colour mixed into semi-transparent edge pixels
+    k = 1 - a[..., None]
+    rgb = np.clip((im - bg * k * 0.85) / np.maximum(1 - k * 0.85, 0.15), 0, 255)
+    rgba = np.dstack([rgb, a * 255]).astype(np.uint8)
+    col = (a > 0.5).sum(0) > 2
+    xs = np.where(col)[0]
+    groups = []; s = xs[0]; p = xs[0]
+    for x in xs[1:]:
+        if x - p > 6: groups.append((s, p)); s = x
+        p = x
+    groups.append((s, p))
+    for x0, x1 in groups:
+        sub = rgba[:, max(x0 - 3, 0):x1 + 4]
+        rows = np.where((sub[..., 3] > 128).sum(1) > 0)[0]
+        stems.append(Image.fromarray(sub[rows[0]:rows[-1] + 1]))
+cw = max(s.width for s in stems); ch = max(s.height for s in stems)
+atlas = Image.new("RGBA", (cw * len(stems), ch), (0, 0, 0, 0))
+for i, s in enumerate(stems):
+    atlas.paste(s, (i * cw + (cw - s.width) // 2, ch - s.height))
+atlas.save(out); print(len(stems), "stems", atlas.size, "heights", [s.height for s in stems])
