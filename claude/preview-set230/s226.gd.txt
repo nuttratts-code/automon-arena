@@ -360,6 +360,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
+	if EV.get("meadow", "0") == "1": _s237_ridge_rocks(st, EV)
 	if EV.has("mist"): _s234_mist(st, EV) # s234 B3-like: low mist drifting on the back slope (owner AI ref picture)
 	if EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off
 	if EV.has("rfront"): _s233_front(st, EV)
@@ -1300,6 +1301,7 @@ func _s233_vn(p: Vector2) -> float:
 func _s233_fbm(p: Vector2) -> float:
 	return _s233_vn(p) * 0.55 + _s233_vn(p * 2.03 + Vector2(5.1, 5.1)) * 0.3 + _s233_vn(p * 4.1 + Vector2(9.7, 9.7)) * 0.15
 func _s233_th(p: Vector2, EV: Dictionary) -> float:
+	if EV.get("meadow", "0") == "1": return _s237_th(p)
 	var r := p.length() / 11.7
 	var shelf := -0.04 - 0.11 * smoothstep(1.15, 1.6, r)
 	var mound := float(EV.get("tamp", "1.6")) * smoothstep(1.35, 2.8, r) * pow(_s233_fbm(p * 0.07), 1.3)
@@ -1342,6 +1344,8 @@ func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: D
 	m.set_shader_parameter("vroll", float(EV.get("tvroll", "0")))
 	m.set_shader_parameter("hill3", float(EV.get("thill3", "0")))
 	m.set_shader_parameter("clump_amt", float(EV.get("tclump", "0")))
+	m.set_shader_parameter("meadow", 1.0 if EV.get("meadow", "0") == "1" else 0.0)
+	m.set_shader_parameter("shore_y", float(EV.get("wl", "-5.2")))
 	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")
 	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))
 	if EV.has("thazec"):
@@ -1870,6 +1874,9 @@ func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color,
 	sp.global_position = at - Vector3(0, h * 0.03, 0)
 
 func _s235_trees(st: Node, EV: Dictionary) -> void:
+	if EV.get("meadow", "0") == "1":
+		_s237_trees(st, EV)
+		return
 	var d := "res://tests/s225/"
 	var H := float(EV.get("treeh", "9.0"))
 	var tn: Array = str(EV.get("treet", "0.95,0.97,0.92")).split_floats(",")
@@ -1919,6 +1926,7 @@ func _s235_bushes(st: Node, EV: Dictionary) -> void:
 		var x := cos(a) * rr * 1.12
 		var z := sin(a) * rr - 1.5
 		if absf(x) < gap or z > 2.0: continue
+		if EV.get("meadow", "0") == "1" and _s237_path(Vector2(x, z)) < 1.8: continue
 		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.65, 1.3)
 		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
 		made += 1
@@ -2148,5 +2156,133 @@ func _s236_bake(st: Node, cam: Camera3D, EV: Dictionary) -> void:
 	if pass_n == 2:
 		var ps := PackedScene.new()
 		var err := ps.pack(rt)
-		print("S236 pack ", err, " save ", ResourceSaver.save(ps, dir + "/arena_r36.tscn")) # owner opens this one in the editor
+		print("S236 pack ", err, " save ", ResourceSaver.save(ps, dir + "/" + dir.get_file() + ".tscn")) # owner opens this one in the editor
 		print("S236 done")
+
+
+# ---- s237 A1 (owner AI overhead picture): real meadow layout. _s237_th mirrors th237() in tests/s233_terrain.gdshader - change both.
+func _s237_th(p: Vector2) -> float:
+	var r := p.length() / 11.7
+	var shelf := -0.04 - 0.11 * smoothstep(1.15, 1.6, r)
+	var mnd := 1.0 * smoothstep(1.35, 2.8, r) * pow(_s233_fbm(p * 0.07), 1.3)
+	var zf := -105.0 - 15.0 * _s233_fbm(Vector2(p.x * 0.03, 3.1))
+	var plain := -0.3 * smoothstep(-14.0, -60.0, p.y) - 2.4 * smoothstep(-60.0, zf, p.y)
+	var ex := (p.x + 15.0) / 150.0
+	var ez := (p.y + 172.0) / 72.0
+	var e := ex * ex + ez * ez
+	var basin := -6.5 * (1.0 - smoothstep(0.5, 1.0, e))
+	var hr := 13.0 * smoothstep(18.0, 85.0, p.x) * smoothstep(-15.0, -45.0, p.y) * (0.55 + 0.45 * _s233_fbm(p * 0.02 + Vector2(4.2, 1.3))) * smoothstep(0.9, 1.4, e)
+	var a := Vector2(-16.0, -46.0)
+	var ab := Vector2(-62.0, -122.0) - a
+	var ap := p - a
+	var t := clampf(ap.dot(ab) / ab.dot(ab), 0.0, 1.0)
+	var d := (ap - ab * t).length()
+	var sd := ab.x * ap.y - ab.y * ap.x
+	var w := 11.0 if (sd > 0.0 or t < 0.05) else 26.0
+	var ridge := (4.5 + 2.5 * _s233_fbm(p * 0.05 + Vector2(8.8, 2.2))) * (1.0 - smoothstep(2.5, w, d)) * (1.0 - 0.6 * smoothstep(0.75, 1.0, t)) * smoothstep(0.0, 0.06, t + 0.02)
+	var dm := Vector2((p.x + 15.0) * 0.8, p.y + 172.0).length()
+	var back := smoothstep(-40.0, -110.0, p.y)
+	var mt := (60.0 * smoothstep(150.0, 270.0, dm) * (0.35 + 0.65 * _s233_fbm(p * 0.011 + Vector2(2.7, 9.1))) + 25.0 * smoothstep(110.0, 200.0, dm) * _s233_fbm(p * 0.025 + Vector2(6.3, 1.1))) * back
+	return shelf + mnd + plain + basin + hr + ridge + mt
+
+# distance to the nearest dirt path edge (negative = on it); same paths as path237() in the shader (no noise here)
+func _s237_path(p: Vector2) -> float:
+	var pz := -1.0 + 1.8 * sin(p.x * 0.05 + 0.6)
+	var d1 := absf(p.y - pz) - 0.8 + (99.0 if absf(p.x) >= 95.0 else 0.0)
+	var px := 3.0 + 14.0 * smoothstep(-14.0, -100.0, p.y) + 2.5 * sin(p.y * 0.13)
+	var d2 := absf(p.x - px) - 0.7 + (0.0 if (p.y <= -11.0 and p.y >= -104.0) else 99.0)
+	return minf(d1, d2)
+
+# trees in belts like the owner picture: both plaza sides, front corners, on the left ridge, right hill slope,
+# left lakeside behind the ridge, and a far-shore line. Only on dry land, off the paths, never on the plaza ring.
+func _s237_trees(st: Node, EV: Dictionary) -> void:
+	var d := "res://tests/s225/"
+	var H := float(EV.get("treeh", "11.0"))
+	var tn: Array = str(EV.get("treet", "0.6,0.74,0.6")).split_floats(",")
+	var ft: Array = str(EV.get("tft", "0.66,0.8,0.7")).split_floats(",")
+	var wl := float(EV.get("wl", "-5.2"))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23701
+	var k := float(EV.get("tdens", "1.0"))
+	# [x0, x1, z0, z1, count]
+	var belts := [[-34.0, -12.0, -60.0, -22.0, 14], [12.0, 42.0, -72.0, -22.0, 20], [-40.0, -16.0, 6.0, -20.0, 10], [16.0, 40.0, 6.0, -20.0, 10],
+		[30.0, 130.0, -165.0, -50.0, 45], [-130.0, -40.0, -170.0, -100.0, 22], [-150.0, 130.0, -330.0, -250.0, 50]]
+	var placed: Array[Vector2] = []
+	var n := 0
+	for b in belts:
+		var want := int(float(b[4]) * k)
+		var got := 0
+		var tries := 0
+		while got < want and tries < want * 30:
+			tries += 1
+			var p := Vector2(rng.randf_range(b[0], b[1]), rng.randf_range(b[2], b[3]))
+			if p.length() < 17.5 or _s237_path(p) < 2.2: continue
+			var gy := _s237_th(p)
+			if gy < wl + 0.5: continue
+			var ok := true
+			for q in placed:
+				if q.distance_to(p) < 3.6: ok = false; break
+			if not ok: continue
+			placed.append(p)
+			var far := p.y < -170.0
+			var f := ("treeC%d" % (n % 3)) if far else (("treeA%d" if n % 3 == 0 else "treeB%d") % (n % 3))
+			var tc := Color(ft[0], ft[1], ft[2]) if far else Color(tn[0], tn[1], tn[2])
+			_s235_tree_card(st, d + f + ".png", Vector3(p.x, gy, p.y), H * rng.randf_range(0.75, 1.25), tc, rng.randf() < 0.5)
+			got += 1
+			n += 1
+	# a row on the left ridge top (back side of the crest)
+	var a := Vector2(-16.0, -46.0)
+	var ab := Vector2(-62.0, -122.0) - a
+	var nrm := -Vector2(-ab.y, ab.x).normalized() # back of the crest (sd < 0 side, away from the meadow)
+	for i in int(22 * k):
+		var p := a + ab * rng.randf_range(0.08, 0.95) + nrm * rng.randf_range(1.0, 10.0)
+		var gy := _s237_th(p)
+		if gy < wl + 0.5: continue
+		_s235_tree_card(st, d + ("treeB%d" % (i % 3)) + ".png", Vector3(p.x, gy, p.y), H * rng.randf_range(0.7, 1.15), Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
+		n += 1
+	# low shrubs scattered over the back meadow (owner picture: bushes along the paths, not a bare lawn)
+	var bf := []
+	for i in 9: bf.append("res://tests/s225/bushA%d.png" % i)
+	var bt: Array = str(EV.get("busht", "0.52,0.68,0.5")).split_floats(",")
+	var nb := int(EV.get("mbush", "26"))
+	var mb := 0
+	var tr := 0
+	while mb < nb and tr < nb * 30:
+		tr += 1
+		var p := Vector2(rng.randf_range(-30.0, 40.0), rng.randf_range(-100.0, -24.0))
+		if absf(p.x) < 7.0 and p.y > -40.0: continue # keep the view behind the plaza open
+		if _s237_path(p) < 1.6: continue
+		var gy := _s237_th(p)
+		if gy < wl + 0.4: continue
+		_s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, gy, p.y), float(EV.get("bushh", "2.0")) * rng.randf_range(0.6, 1.4), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
+		mb += 1
+	print("s237 trees ", n, " meadow bushes ", mb)
+
+# owner rock meshes along the steep meadow face of the left ridge (the rock wall in the picture)
+func _s237_ridge_rocks(st: Node, EV: Dictionary) -> void:
+	var ps := load("res://art/s217/3d/rock_cliff_hy.glb") as PackedScene
+	if ps == null: return
+	var tone: Array = str(EV.get("rmtone", "0.8,0.82,0.78")).split_floats(",")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23702
+	var a := Vector2(-16.0, -46.0)
+	var ab := Vector2(-62.0, -122.0) - a
+	var nrm := Vector2(-ab.y, ab.x).normalized() # meadow side (sd > 0)
+	var n := int(EV.get("rridge", "16"))
+	for i in n:
+		var t := (float(i) + rng.randf_range(0.0, 0.8)) / float(n) * 0.9 + 0.03
+		var p := a + ab * t + nrm * rng.randf_range(3.0, 6.0)
+		var r3 := ps.instantiate() as Node3D
+		var s := rng.randf_range(2.6, 4.2)
+		r3.scale = Vector3(s, s * rng.randf_range(0.8, 1.3), s)
+		r3.rotation.y = rng.randf_range(0.0, TAU)
+		st.add_child(r3)
+		r3.global_position = Vector3(p.x, _s237_th(p) - 0.6, p.y)
+		for mi in r3.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+			if src is StandardMaterial3D:
+				var dd := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+				dd.albedo_color = Color(tone[0], tone[1], tone[2])
+				m.material_override = dd
+	print("s237 ridge rocks ", n)
