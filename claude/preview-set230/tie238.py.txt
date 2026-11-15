@@ -1,0 +1,37 @@
+# set 238 A1 SAMPLE round 5: tie F1 to the picture backdrop — distance haze on the rim, one sun glow over the frame, soft blur ramp
+import sys, numpy as np
+from PIL import Image, ImageFilter
+col, dep, out = sys.argv[1:4]
+hz, gl, s2, s3, r0, r1 = [float(v) for v in sys.argv[4:10]]
+c = np.asarray(Image.open(col).convert('RGB')).astype(float)
+d = np.asarray(Image.open(dep).convert('RGB')).astype(float) / 255
+dist = np.where(d[..., 0] < 0.995, d[..., 0] * 150, np.maximum(d[..., 1] * 600, 150))
+H, W = dist.shape
+def ss(a, b, x): t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
+hud = np.zeros((H, W), bool); hud[:110, :420] = True; hud[:110, 1740:] = True; hud[int(H*0.85):] = True
+# 1) distance haze (aerial perspective) on the real 3D part: warm sunlit mist like the picture
+hcol = np.array([238, 230, 205.0])
+a = hz * ss(34, 62, dist) * (dist < 70)
+a[hud] = 0
+c = c * (1 - a[..., None]) + hcol * a[..., None]
+# 1b) warm the cold-blue shadows of the real 3D part (backlit sky fill read as blue; the picture's shade is warm grey)
+lum = c.mean(-1) / 255
+k = 0 * ((1 - lum) ** 1.5 * (dist < 70) * ~hud)[..., None]
+c = c * (1 - k) + c * np.array([1.07, 1.0, 0.84]) * k
+# 2) one sun glow over the whole frame from the picture's sun (upper right) — screen blend
+yy, xx = np.mgrid[0:H, 0:W]
+r = np.hypot((xx - 0.86 * W) / W, (yy + 0.08 * H) / W)
+g = gl * np.clip(1 - r / 0.95, 0, 1) ** 1.6
+g[hud & (yy > H * 0.5)] = 0
+gc = np.array([255, 236, 196.0]) * g[..., None]
+c = 255 - (255 - c) * (255 - gc) / 255
+im = Image.fromarray(c.clip(0, 255).astype(np.uint8))
+# 3) blur: soft ramp from the plaza's back edge (r0..r1) to S2, then S3
+sig = s2 * ss(r0, r1, dist) + (s3 - s2) * ss(110, 150, dist)
+sig[hud] = 0
+lv = [0.0, s2, s3]; ims = [np.asarray(im).astype(float)] + [np.asarray(im.filter(ImageFilter.GaussianBlur(s))).astype(float) for s in lv[1:]]
+o = np.zeros_like(ims[0])
+for i in range(2):
+    w = np.clip((sig - lv[i]) / (lv[i + 1] - lv[i]), 0, 1); inb = (sig >= lv[i]) & (sig <= lv[i + 1])
+    o = np.where(inb[..., None], ims[i] * (1 - w[..., None]) + ims[i + 1] * w[..., None], o)
+Image.fromarray(o.clip(0, 255).astype(np.uint8)).save(out, quality=90); print('ok')

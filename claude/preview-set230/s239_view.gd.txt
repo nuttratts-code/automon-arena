@@ -195,4 +195,10 @@ func _s239_matte(ar: Node3D, st: Node, args: PackedStringArray) -> void:
 	_card(cam, load(dir + "/matte_s3.png"), 150.0)
 	_card(cam, load(dir + "/matte_s2.png"), 75.0)
 	st.sun.look_at_from_position(Vector3(45, 40, -90), Vector3.ZERO)
+	var e: Environment = st.env_node.environment
+	if args.has("--amb"):
+		var v := args[args.find("--amb") + 1].split_floats(",")
+		e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		e.ambient_light_color = Color(v[0], v[1], v[2]); e.ambient_light_energy = v[3]
+		e.ambient_light_sky_contribution = 0.0
 	print("S239 matte hid ", hid)
