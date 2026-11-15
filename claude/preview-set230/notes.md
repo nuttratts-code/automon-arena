@@ -252,3 +252,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - New `bback=<n>` (in `_s235_bushes`): bushes alternating left/right of the back opening, |x| `bgap`–`bbx` (4.5–12), z −`bbz0`…−`bbz1` (12.5–18). Picked 30 → the back arc reads as a full hedge both sides of the gap; the small left stone (StoneMid) is half hidden.
 - Lesson: "add more like the picture" = more on the BACK of the plaza unless the owner names the front; ask before putting anything in the camera-near band.
 - Args: r35_args.txt.
+
+## Round 36 (set 235) — owner crop of AI picture 2: the hazy tree line on the slope right of the lake ("can we do this spot?")
+- `treefar` now takes `tfx0`/`tfx1` (x range), `tfmix=1` (alternate C + B trees), `tft` (own tint), `tfy` (ground floor, unused). Picked `treefar=80 tfx0=6 tfx1=34 tfz0=78 tfz1=90 tfh=0.28 tft=0.66,0.8,0.7` = a dense line on the ridge face right of the gap, next to the sea.
+- Tried first: z 24–42 (the bay) = hidden behind the near right trees; z 80–96 at tfh 0.33 + light tint = scattered pale lollipops, some floating over the sea line.
+- Args: r36_args.txt.

@@ -1884,10 +1884,12 @@ func _s235_trees(st: Node, EV: Dictionary) -> void:
 	rng.seed = 23503
 	var nf := int(EV.get("treefar", "0"))
 	for i in nf:
-		var x := rng.randf_range(-45.0, 45.0)
+		var x := rng.randf_range(float(EV.get("tfx0", "-45")), float(EV.get("tfx1", "45")))
 		var z := -rng.randf_range(float(EV.get("tfz0", "80")), float(EV.get("tfz1", "95")))
-		var f := "treeC%d" % (i % 3)
-		_s235_tree_card(st, d + f + ".png", Vector3(x, _s233_th(Vector2(x, z), EV), z), H * float(EV.get("tfh", "0.8")) * rng.randf_range(0.7, 1.2), tint, rng.randf() < 0.5)
+		var f := ("treeC%d" if i % 2 == 0 else "treeB%d") % (i % 3) if EV.get("tfmix", "0") == "1" else "treeC%d" % (i % 3)
+		var ft: Array = str(EV.get("tft", "%f,%f,%f" % [tint.r, tint.g, tint.b])).split_floats(",")
+		var gy := maxf(_s233_th(Vector2(x, z), EV), float(EV.get("tfy", "-99"))) # s235 r36: tfy = floor so trees in the hidden bay still reach up
+		_s235_tree_card(st, d + f + ".png", Vector3(x, gy, z), H * float(EV.get("tfh", "0.8")) * rng.randf_range(0.7, 1.2), Color(ft[0], ft[1], ft[2]), rng.randf() < 0.5)
 		n += 1
 	print("s233 trees ", n)
 
