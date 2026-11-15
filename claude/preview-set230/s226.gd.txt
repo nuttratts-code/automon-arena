@@ -2196,7 +2196,9 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 	if pass_n == 2:
 		if r is Shader:
 			_s236_n += 1
-			var f := dir + "/shader/s%03d.gdshader" % _s236_n
+			# s238 6c fix: name by content, not by a counter — a counter gave the same file name to a different shader
+			# after a re-bake, and the open editor (cached by path) then drew the old scene with the wrong shaders/meshes
+			var f := dir + "/shader/s_%x.gdshader" % (hash((r as Shader).code) & 0xFFFFFFFF)
 			var fa := FileAccess.open(ProjectSettings.globalize_path(f), FileAccess.WRITE)
 			fa.store_string((r as Shader).code); fa.close()
 			r.take_over_path(f)
@@ -2205,7 +2207,13 @@ func _s236_res(r: Resource, dir: String, pass_n: int) -> Resource:
 				var sm: Material = (r as ArrayMesh).surface_get_material(si)
 				if sm != null: (r as ArrayMesh).surface_set_material(si, _s236_res(sm, dir, pass_n) as Material)
 			_s236_n += 1
-			var f := dir + "/mesh/m%03d.res" % _s236_n
+			var mh := str((r as ArrayMesh).get_surface_count())
+			for si in (r as ArrayMesh).get_surface_count():
+				var ar: Array = (r as ArrayMesh).surface_get_arrays(si)
+				mh += str(hash(ar[Mesh.ARRAY_VERTEX])) + str(hash(ar[Mesh.ARRAY_TEX_UV])) + str(hash(ar[Mesh.ARRAY_INDEX]))
+				var sm2: Material = (r as ArrayMesh).surface_get_material(si)
+				if sm2 != null: mh += sm2.resource_path
+			var f := dir + "/mesh/m_%x.res" % (hash(mh) & 0xFFFFFFFF)
 			ResourceSaver.save(r, f, ResourceSaver.FLAG_COMPRESS)
 			r.take_over_path(f)
 	return out
