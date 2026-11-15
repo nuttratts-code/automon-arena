@@ -83,6 +83,14 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 5. Placing things by screen position: `project_ray_*` and the visible rect are the 854×480 base here — compute rays from `cam.fov` + `cam.global_transform.basis` (trap 2); test a hidden object by colouring it red and counting red pixels.
 6. Compare sheets with PIL (Tahoma for Thai labels), crops at 1:1 for pixel questions; copy script + shots + a notes.md line to the sample branch, commit, push.
 
+### 8d. Drop any picture into the arena + set fixes (set 229, owner A2 — 15+ shots in one chat)
+1. Picture → sprite: key the background (green: `g - max(r,b)` alpha; white: flood-fill from the edges, min channel > 232), crop, resize to a fixed height (~180 px = painted size) with LANCZOS → `<g>/tests/s225/<ID>.png`. `s226.gd` reads these with `Image.load_from_file`, so no re-import needed (trap 1 is for `res://` textures only).
+2. Shot args: `--e:hf=1 --e:k=1 --e:ids=A/B/C/D/E/F --e:foe=…` (6 each side; left side is flipped). Pixel sprites: 80 px tall + `--e:k=2` (=FF Re ×2; ×3 crowds 6v6). ALWAYS pass the full look-G arg list — a shot without it renders the old default look (happened twice).
+3. Set fixes added to the scratch copy (sample-only, not on any branch yet): env `S229_SMOOTH=1` skips stage3d `_s217_pixel_tex` (stones back to full smooth textures) · `--e:lod=1.2` lighter blur · `--e:stone_tone=r,g,b` tints Stone*/Fallen*/Rock* · `--e:ptex=<file>` swaps the plaza albedo (file in tests/s225) · `--e:pzn=1` · `--e:rim=1 …` fake contact ring (owner rejected — not shadow).
+4. Plaza mesh carries its own grass skirt above the ground: a ring/decal at y 0.02 is hidden — test placement in red first (§8c.5).
+5. Texel density check before blaming colour: `tests/s229_texel.gd` prints texture px per metre per prop (plaza 25 vs stones 74–89 at 1024 px). The library originals (`art/library/3d/originals/*.glb`) hold 4096 textures — prep scaled them down.
+6. Other games' pictures used only as look references stay in the scratchpad — never commit or ship (HARD RULE 9 ②).
+
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 

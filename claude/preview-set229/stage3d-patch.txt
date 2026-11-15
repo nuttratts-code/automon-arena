@@ -1,0 +1,7 @@
+			sp.modulate = sp.modulate * Color(0.62, 0.58, 0.72)
+	add_child(d)
+	if S217_CLEAN: # after the scene is in the tree: global transforms work and the plaza tint script has run
+		d.ready.connect(func() -> void:
+			if OS.get_environment("S229_SMOOTH") != "1": _s217_pixel_tex(d)
+			_s217_stone_shadows(d)
+			_p1_far(d)

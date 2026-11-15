@@ -1,0 +1,31 @@
+extends SceneTree
+# s229: texture pixels per metre on each prop as placed in the arena (sqrt(uv area * tex px^2 / world area))
+func _initialize() -> void:
+	var sc: Node = (load("res://scenes/arena_dressing_r6.tscn") as PackedScene).instantiate()
+	root.add_child(sc)
+	await process_frame
+	for n in ["Plaza", "StoneL", "StoneBig", "StoneR", "StoneFrontR", "FallenSlab", "RockFarL"]:
+		var node := sc.find_child(n, true, false) as Node3D
+		var wa := 0.0
+		var ua := 0.0
+		var tw := 0
+		for mi in node.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var x := m.global_transform
+			for s in m.mesh.get_surface_count():
+				var arr := m.mesh.surface_get_arrays(s)
+				var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+				var uv: PackedVector2Array = arr[Mesh.ARRAY_TEX_UV]
+				var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+				var mat := m.mesh.surface_get_material(s) as StandardMaterial3D
+				if mat and mat.albedo_texture: tw = mat.albedo_texture.get_width()
+				var i := 0
+				while i + 2 < idx.size():
+					var a := x * v[idx[i]]; var b := x * v[idx[i + 1]]; var c := x * v[idx[i + 2]]
+					wa += (b - a).cross(c - a).length() * 0.5
+					var p := uv[idx[i]]; var q := uv[idx[i + 1]]; var r := uv[idx[i + 2]]
+					ua += absf((q - p).x * (r - p).y - (q - p).y * (r - p).x) * 0.5
+					i += 3
+		var aabb := AABB()
+		print("%-12s tex %d px · surface %.0f m2 · uv used %.0f%% · %.0f tex px per metre" % [n, tw, wa, ua * 100.0, sqrt(ua * tw * tw / wa)])
+	quit()
