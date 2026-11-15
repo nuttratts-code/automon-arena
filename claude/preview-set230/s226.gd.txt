@@ -290,6 +290,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 			(s as Sprite3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	if EV.has("birds"): _s235_birds(st, EV)
 	if EV.has("ulong"): _s235_longshadow(st, sprs, EV)
+	if EV.has("trees"): _s235_trees(st, EV)
 	# foreground grass strip: its top reaches screen y = fgy, on a plane between the camera and the board
 	var vp := Vector2(DisplayServer.window_get_size())
 	var t: Texture2D = load("res://art/s217/grass_strip_front.png")
@@ -1837,3 +1838,48 @@ func _s235_longshadow(st: Node, sprs: Array, EV: Dictionary) -> void:
 		sh.global_transform = Transform3D(Basis(xv, yv, zv), Vector3(p.x, 0.03, p.z))
 		n += 1
 	print("s233 long shadows ", n)
+
+
+# s235: owner Gemini tree sheets (scratch tests/s225/tree[ABC][0-2].png, keyed by tools/key_trees.py) as upright cards.
+# Near trees frame the plaza left/right like owner AI picture 2; small hazy ones dot the far ridge.
+func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> void:
+	var img := Image.load_from_file(ProjectSettings.globalize_path(file))
+	if img == null: return
+	var t := ImageTexture.create_from_image(img)
+	var sp := Sprite3D.new()
+	sp.texture = t
+	sp.pixel_size = h / float(img.get_height())
+	sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+	sp.shaded = false
+	sp.flip_h = flip
+	sp.modulate = tint
+	sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sp.offset = Vector2(0, img.get_height() * 0.5)
+	st.add_child(sp)
+	sp.global_position = at - Vector3(0, h * 0.03, 0)
+
+func _s235_trees(st: Node, EV: Dictionary) -> void:
+	var d := "res://tests/s225/"
+	var H := float(EV.get("treeh", "9.0"))
+	var tn: Array = str(EV.get("treet", "0.95,0.97,0.92")).split_floats(",")
+	var tint := Color(tn[0], tn[1], tn[2])
+	# [file, x, z, height factor, flip]
+	var near := [["treeB0", -19.0, -8.0, 1.15, false], ["treeB2", -25.0, -15.0, 1.0, true], ["treeA0", -15.5, -19.0, 0.85, false],
+		["treeB1", 20.0, -9.0, 1.1, true], ["treeB0", 25.0, -17.0, 0.95, false], ["treeA0", 15.0, -21.0, 0.8, true],
+		["treeB2", -9.0, -24.0, 0.7, false], ["treeB1", 10.0, -26.0, 0.65, false]]
+	var n := 0
+	for e in near:
+		var x: float = e[1]; var z: float = e[2]
+		_s235_tree_card(st, d + str(e[0]) + ".png", Vector3(x, _s233_th(Vector2(x, z), EV), z), H * float(e[3]), tint, bool(e[4]))
+		n += 1
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23503
+	var nf := int(EV.get("treefar", "0"))
+	for i in nf:
+		var x := rng.randf_range(-45.0, 45.0)
+		var z := -rng.randf_range(float(EV.get("tfz0", "80")), float(EV.get("tfz1", "95")))
+		var f := "treeC%d" % (i % 3)
+		_s235_tree_card(st, d + f + ".png", Vector3(x, _s233_th(Vector2(x, z), EV), z), H * float(EV.get("tfh", "0.8")) * rng.randf_range(0.7, 1.2), tint, rng.randf() < 0.5)
+		n += 1
+	print("s233 trees ", n)

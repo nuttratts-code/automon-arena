@@ -1,0 +1,29 @@
+# key_trees.py <sheet> <out_prefix> : magenta key (soft edge) + edge-only despill, split trees by empty columns
+import sys
+from PIL import Image, ImageFilter
+import numpy as np
+src, pre = sys.argv[1], sys.argv[2]
+im = np.asarray(Image.open(src).convert("RGB")).astype(np.float32)
+r, g, b = im[..., 0], im[..., 1], im[..., 2]
+m = np.clip((np.minimum(r, b) - g - 15) / 50.0, 0, 1)          # magenta-ness 0..1
+a = np.clip((0.45 - m) / 0.3, 0, 1)                            # soft alpha
+a8 = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))).astype(np.float32) / 255
+edge = (m > 0.02).astype(np.float32)                           # pixels touched by the background
+edge = np.asarray(Image.fromarray((edge * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))).astype(np.float32) / 255
+r2 = r * (1 - edge) + np.minimum(r, g * 1.1 + 20) * edge
+b2 = b * (1 - edge) + np.minimum(b, g * 0.95 + 5) * edge
+rgba = np.clip(np.dstack([r2, g, b2, a8 * 255]), 0, 255).astype(np.uint8)
+col = (a8 > 0.5).sum(axis=0) > 3
+runs, x = [], 0
+W = col.shape[0]
+while x < W:
+    if col[x]:
+        s = x
+        while x < W and col[x]: x += 1
+        if x - s > 40: runs.append((s, x))
+    x += 1
+for i, (s, e) in enumerate(runs):
+    t = Image.fromarray(rgba[:, max(0, s - 4):min(W, e + 4)], "RGBA")
+    t = t.crop(t.getbbox())
+    if t.height > 1024: t = t.resize((round(t.width * 1024 / t.height), 1024), Image.LANCZOS)
+    t.save(f"{pre}{i}.png"); print(pre, i, t.size)

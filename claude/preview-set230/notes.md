@@ -223,3 +223,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Birds: new `birds=16` (`_s235_birds`, code-drawn dark V, billboards) at `bx=12 by=3 bz=120 bsz=0.04` — the camera sees little sky, by 30 was above the frame.
 - Waiting for owner art (A1 second half): trees left/right, bushes round the ring, ivy on the standing stones (Gemini, magenta bg like the grass sheets).
 - Args: r30_args.txt (+ `--e:nounits=0` for units) · code snapshot s226.gd.txt.
+
+## Round 31 (set 235) — owner tree sheets (3 Gemini sheets × 3 trees on magenta)
+- Key: new `tools/key_trees.py` (copy key_trees.py.txt) — soft alpha from magenta-ness, despill ONLY near the background (the grass keyer's global despill turns brown/orange trunks green), split by empty columns → scratch `tests/s225/tree[ABC][0-2].png` (A = 3D-render oak green/olive/orange · B = painterly round green · C = light hazy teal-gold). Copies + originals: art/library/pictures/s235/ (INDEX rows).
+- Scene: new `trees=1` (`_s235_trees`): Sprite3D cards, FIXED_Y billboard, unshaded, bottom on `_s233_th`. Near list (8 trees, mostly B + A0) at x ±15–25, z −8…−26; `treeh=11` m, `treet=0.72,0.8,0.72` (unshaded cards glowed yellow at 0.95). `treefar=<n>` = small C trees on the far ridge (z 80–95, `tfh` × treeh): at tfh 0.8 they floated huge in the sky; 0.3 reads OK but they stand right above the sea line.
+- Owner choice: **b** `treefar=26 tfh=0.3` (far ridge trees) vs **c** `treefar=0` (near trees only). r31_args.txt = c; add `--e:treefar=26 --e:tfh=0.3` for b.
+- Still waiting for: bushes round the ring, ivy for the standing stones, far tree clusters (sheet 2 of the prompt list).
