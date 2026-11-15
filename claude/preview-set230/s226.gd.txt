@@ -956,6 +956,7 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 	var n_fg := int(EV.get("pgfg", "0"))
 	for i in n_fg:
 		var fx := lerpf(-9.0, 9.0, (float(i) + rng.randf_range(0.0, 0.8)) / maxf(n_fg, 1))
+		if absf(fx) < float(EV.get("pgfgx", "0")): continue # s234: front grass only at the corners (owner AI picture)
 		var fz := float(EV.get("pgfgz", "7.6")) + rng.randf_range(-0.4, 0.6) + 0.06 * absf(fx)
 		centres.append([Vector2(fx, fz), pr * rng.randf_range(0.9, 1.4), pr * rng.randf_range(0.35, 0.55), 0.0, float(EV.get("pgfgh", "1.6")) * (0.7 + 0.06 * absf(fx)), float(EV.get("pgfgf", "0.4"))])
 	var n_in := int(EV.get("pgin", "0")) # s233 D1: grass in the joints near the broken rim (outside the slot area)

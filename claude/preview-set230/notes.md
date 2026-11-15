@@ -156,3 +156,10 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Mist (`_s234_mist`, MIST234 shader, new): `mist=9 mista=0.7 mz0=30 mz1=60 mx0=15 mx1=90 mty=-1.5 mh=0.9 mistw=1.3` = banks rising out of the bay on the right; on the ridge at th() they sat above the crest (red debug showed big blobs in the sky).
 - Light/plaza: `sunc=#ffd59a sun=1.3 fog=#c4cbbd ptint=1.38,1.27,1.06 pamt=0.1`. Plaza now a bit orange vs the picture's grey-beige — next tweak if the owner wants.
 - Args: r17_args.txt (clean = with noui/nounits; drop both for the game view). Waiting for owner: OK / tweaks → ทำจริง.
+
+## Round 18 (set 234) — owner: "not alike at all — match the picture first, add extras later"
+- All round-17 extras off: back-slope rocks/bushes (`rmid=0 pgmid=0`), front rocks (`rfront=0`), every flower (`pgf=0 pgfarf=0 pgfgf=0`).
+- Match moves: grass deeper green + taller (`pgt=0.74,1.05,0.48 pgb=1.25 pgfarh=1.7 pginh=1.4`) · front grass only at the two bottom corners (new `pgfgx` = skip front patches with |x| < it: `pgfg=40 pgfgx=5 pgfgh=1.9 pgfgz=7.0`) · plaza grey-beige + brighter (`ptint=1.16,1.13,1.07 gbri=1.18`) · fog `#c9cab8` · mist on the right slope only (`mist=8 mista=0.45 mz0=74 mz1=95 mx0=4 mx1=30 mty=-3 mistw=1.4`).
+- Camera kept K2: the AI picture's stones, ring line and horizon land on the same screen rows as our K2 shot; a pulled-back camera (0,8,38 / pitch 10) was clearly worse. Width trap: at ~100 m the view is only ~±30 m wide, so mist at x 25–90 was off screen.
+- Still different from the picture: AI flagstones bigger with crisper joints · warmer orange clouds · AI mist softer and wider · fallen rune slab hidden in our grass.
+- Tool: cmp234.sh.txt (render + stack the AI ref over our shot). Args: r18_args.txt.

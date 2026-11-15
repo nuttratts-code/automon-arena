@@ -1,0 +1,7 @@
+#!/bin/sh
+# cmp.sh <name> [args] : render, then stack AI ref (top) over our shot (bottom) at 960 wide
+T=$(dirname "$0"); N=$1; shift
+sh $T/shot233.sh $N "$@" | grep -iE "error"
+python -c "
+from PIL import Image;import sys
+a=Image.open(sys.argv[1]).convert('RGB').resize((960,530));b=Image.open(sys.argv[2]).convert('RGB').resize((960,540));c=Image.new('RGB',(960,1075),'white');c.paste(a,(0,0));c.paste(b,(0,535));c.save(sys.argv[3])" "$TEMP/claude/6778d44212994c0a/d89f9a5c-98d2-4bc1-84d5-c0258b2751f7/images/2.jpg" $T/../out/$N/G_s1.15_c1.0_f00.png $T/../out/${N}_cmp.png
