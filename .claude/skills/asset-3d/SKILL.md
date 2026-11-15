@@ -13,7 +13,7 @@ Owner makes the pictures and the 3D file (steps 1–2); Claude does the rest. **
 ## 0. Fixed facts
 - **Tools on the owner's PC:** Blender 5.2 `"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"` (CLI `-b --factory-startup`) · Godot console + editor exe: claude/workflow/gdscript.md §7.
 - **Scripts (tested set 217):** `art/blender/glb_info.py` (read a glb header, plain Python) · `art/blender/ai_glb_prep.py` (Blender: scale + matte + textures + full/decimate/bake) · `godot/tools/stone_viewer_shot.gd` (viewer screenshots) · `godot/tests/shots.gd` (real game screens).
-- **Budgets:** the whole rune plaza = ~145k tris. Hero prop (one, close to the camera) = full mesh OK (Godot builds LODs on import, `meshes/generate_lods=true`) with 1024 textures. Every other prop = bake route 1.5k–3k tris, 1024 (big) / 512 (small) textures. Source 4096 textures are never needed: 4096→1024 looked the same in the game (set 217 R4).
+- **Budgets:** the whole rune plaza = ~145k tris. Hero prop (one, close to the camera) = full mesh OK (Godot builds LODs on import, `meshes/generate_lods=true`) with 1024 textures. Standing stones / any prop in the plaza ring (close to the camera) = `decimate --tris 12000` with the original texture at 1024 (set 238, 16 Nov: bake 2.5k cracked their edges — seams + slivers; 12k = full 50k = original). Small or far props = bake route 1.5k–3k tris, 1024 (big) / 512 (small) textures. Source 4096 textures are never needed: 4096→1024 looked the same in the game (set 217 R4).
 - **Art library (set 221, owner A1 + B1): `art/library/` = only usable pieces get in (not broken / against the rules / duplicate / unused / about to be regenerated; unsure → ask the owner), then NEVER delete, move or overwrite** (README + INDEX.csv there). Every owner picture / raw download goes in it first (readable name + INDEX row); the game uses copies under godot/art/; a cleanup removes only those copies. It is outside the Godot project, so it can never ship.
 - **Security part 2:** an AI 3D file is an outside asset → site name + version/plan + date + prompt in `art/PROVENANCE.csv`, licence status written (UNVERIFIED until checked), owner OK, never on main / in a release while UNVERIFIED (exceptions: art/library/ keeps everything on main, set 221; owner art exception set 219 D in security.md part 2). Hunyuan3D, Tripo, Meshy, Stable Fast 3D each have their own terms (region and revenue limits) — check the one actually used.
 - **art-style §8:** carved symbols must be invented glyphs, never Latin letters / real runes. Check the picture before 3D (cheaper than fixing a texture).
@@ -43,13 +43,15 @@ Prompt = common prompt + background line + piece line (claude/preview-set217/ass
 |---|---|---|
 | `full` | 50k, 1024 tex, ≈ the original | hero prop; owner pick set 217 |
 | `decimate --tris 5000` | ≈ original up close | quick; never below ~10 % of source |
-| `bake --tris 2500` | front ≈ original, thin light seams on deep crack edges | every non-hero prop |
+| `decimate --tris 12000` | = full 50k up close, clean edges | props in the plaza ring (set 238 owner A1) |
+| `bake --tris 2500` | front ≈ original, thin light seams on deep crack edges; close up the edges crack (set 238) | small or far props only |
 | decimate to 3 % (old "lite") | UV smear, dark torn triangles on the back | **do not use** |
 Read the printed `TRIS a -> b`, `DIMS` (Z must = --height) and `IMG` lines. Height 4.13 = the tall standing stone; other props: pick a height that reads next to the 2.0-tall units (set 217 baseline; fallen slab 0.9, plaza --height 2.04 then flattened).
 
 ## 5. Claude — compare in the stone viewer (Gate)
 - Viewer = `scenes/s217_stone_viewer.tscn`: shows every glb in `art/s217/3d/` (x = 0, 4, 8 … in file-name order) + the old flat card last.
 - `"<console.exe>" --headless --path godot --import` (new files) → `"<console.exe>" --rendering-driver opengl3 --audio-driver Dummy --path godot --resolution 1600x900 -s res://tools/stone_viewer_shot.gd -- --out <scratch> --at <x of the candidate>` → `row.png` + `close0-2.png` (front, 80°, 160°). Look at the back too.
+- **Always judge CLOSE-UP too** (set 238: a 15 Nov verdict "no gain" made only at game-camera distance was wrong): one still with the candidates side by side in the arena light, e.g. `tests/s239_stonecmp.gd` (copy claude/preview-set230/s239_stonecmp.gd.txt: game copy | original file as-is | candidate + arena shader). If the original file itself looks soft there, the cause is the AI texture, not the prep.
 - SendUserFile the shots, table: tris · textures · MB · close-up verdict. Owner picks. The owner can also open the editor (§0) and press F6 (drag = turn, wheel = zoom).
 
 ## 6. Claude — place it in the arena
