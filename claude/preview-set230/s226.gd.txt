@@ -1383,6 +1383,8 @@ func _s233_rocks(st: Node, EV: Dictionary) -> void:
 		var a := rng.randf_range(PI * 1.0, PI * 2.0)
 		var rr := rng.randf_range(float(EV.get("rm0", "24")), float(EV.get("rm1", "58")))
 		var p := Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0)
+		if EV.has("rmx") and absf(p.x) > float(EV["rmx"]): # s235: rocks only in the back opening (owner AI picture 2)
+			r3.queue_free(); continue
 		var s := rng.randf_range(0.6, 1.6) * (1.0 + rr / 40.0) * float(EV.get("rmsc", "1.0"))
 		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.9) * float(EV.get("rmsy", "1.0")), s)
 		r3.rotation.y = rng.randf_range(0.0, TAU)
@@ -1911,6 +1913,15 @@ func _s235_bushes(st: Node, EV: Dictionary) -> void:
 		if absf(x) < gap or z > 2.0: continue
 		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.65, 1.3)
 		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
+		made += 1
+	var nf := int(EV.get("bfront", "0")) # s235 r34: big dark bushes in the two front corners (owner AI picture 2)
+	for i in nf:
+		var sd := -1.0 if i % 2 == 0 else 1.0
+		var x := sd * rng.randf_range(float(EV.get("bfx0", "6.0")), float(EV.get("bfx1", "8.5")))
+		var z := float(EV.get("bfz", "6.5")) + rng.randf_range(-0.8, 0.8)
+		var h := float(EV.get("bfh", "1.3")) * rng.randf_range(0.7, 1.2)
+		var ft: Array = str(EV.get("bft", "0.45,0.58,0.42")).split_floats(",")
+		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, 0.0, z), h, Color(ft[0], ft[1], ft[2]), rng.randf() < 0.5)
 		made += 1
 	print("s233 bushes ", made)
 

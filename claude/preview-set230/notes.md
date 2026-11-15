@@ -239,3 +239,10 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 ## Round 33 (set 235) — owner: ivy out; more bushes/trees like the AI picture
 - Ivy off (no `ivy=`). Bushes `bushes=60 bushh=2.0 br0=12.4 br1=17.5 busht=0.62,0.72,0.58`. New `treemore=1` adds 6 trees (x ±6.5…22, z −3…−22) behind/between the stones → both sides read as a wooded edge, back opening still clear. The right fallen slab is now mostly hidden by bushes.
 - Args: r33_args.txt.
+
+## Round 34 (set 235) — owner: "make it like this picture" (AI picture 2 again)
+- Greener: trees `treet=0.6,0.74,0.6`, bushes `busht=0.52,0.68,0.5` (the AI greens are dark; ours read golden).
+- Rocks in the back opening: `rmid=40 rm0=15 rm1=24 rmsc=0.75` + new `rmx=9` (keep only |x| ≤ 9) = rock outcrops + fallen slabs on the meadow behind the gap, like the picture's scattered stones.
+- Front corner bushes: new `bfront=<n>` (in `_s235_bushes`): big dark bushes alternating left/right at |x| `bfx0`–`bfx1`, z `bfz`, height `bfh`, tint `bft`. Trap: x 6.8–9.5 at z 8.2 = outside the frame; picked `bfront=8 bfz=7.8 bfx0=4.6 bfx1=6.6 bfh=1.8` — they overlap the feet of the front-row corner units a little (the AI picture does too).
+- Light rays to the right (`r1x=12 r2x=8 ray=0.22`) did not show — dropped.
+- Args: r34_args.txt.
