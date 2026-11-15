@@ -63,3 +63,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - **Moss:** `mtint 0.9,1.6,0.5` → moss mean (98,171,43) = neon. New `mtint=0.88,1.1,0.66` → (95,117,57) olive. Joint moss now quiet at 1:1 (may be too faint — owner says).
 - Sheet `s231-shade-fix.png`: before (C4 old) · C2 · C3 · C4 (all new moss + fix) · 1:1 before/C4 · debug map · diff. Owner picks C2/C3/C4 + moss strength + sun direction (most stones stand at the back, so shadows falling away from the camera show little; a sun from the front-left would put shadows toward the camera).
 - **Owner pick (set 231): C3** = `--e:shade=1 --e:shd=0.55 --e:sao=0.8 --e:saor=14` + `--e:mtint=0.88,1.1,0.66` on the shot231 base; sun stays at the base (`sunel=32 sunaz=-55`, no FF Re low sun); moss strength not commented → kept as is.
+
+## Round 4 (set 231) — grass at the rim + stone bases (owner: "Grass at the edge")
+- `--e:rg=1` (`_s231_grass`, needs `gnd=1`): tufts from the existing `art/s217/grass0-5` cards (own placeholder set) all round the ground disc edge (`rgn`, band `rgin`–`rgout` × radius, width `rgw0`–`rgw1`) + around each top-level Stone/Fallen/Rock footprint (`sgn` per stone, `sgw0`–`sgw1`), tint `rgt` 0.55,0.66,0.5. Seed 23101.
+- Sheet `s231-rim-grass.png` (all on C3): C3 · G1 thin `rgn=80 sgn=4` · G2 medium (defaults: rgn 140, sgn 7) · G3 thick `rgn=260 rgout=1.12 rgw1=1.1 sgn=12 sgw1=1.0` · 1:1 C3 vs G2.
+- Own read: G2 softens the hard plaza/grass line and ties the stones down; front rim sits under the foreground strip. Cards are unshaded (no baked shade on them) — fine at this size.

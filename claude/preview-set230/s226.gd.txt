@@ -317,6 +317,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
+	if EV.get("rg", "0") == "1": _s231_grass(st, EV) # s231: grass tufts on the ground rim + at stone bases (FF Re)
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
 			for k in ["spr", "shadow", "ring"]:
@@ -788,3 +789,54 @@ func _s230_blur(im: Image, r: float) -> Image:
 	b.resize(small, small, Image.INTERPOLATE_BILINEAR)
 	b.resize(w, w, Image.INTERPOLATE_CUBIC)
 	return b
+
+
+# s231 (FF Re: grass cards along the ground edge and at the foot of every rock). Args: rgn rim count · rgw0/rgw1 rim
+# width · sgn tufts per stone · sgw0/sgw1 stone tuft width · rgt tint · rgin/rgout rim band (x disc radius).
+func _s231_grass(st: Node, EV: Dictionary) -> void:
+	var g := st.find_child("S230Ground", true, false) as MeshInstance3D
+	if g == null:
+		print("s231 grass: needs gnd=1")
+		return
+	var r := (g.mesh as CylinderMesh).top_radius
+	var top := g.global_position.y + 0.15
+	var c := Vector2(g.global_position.x, g.global_position.z)
+	var tt: Array = str(EV.get("rgt", "0.55,0.66,0.5")).split_floats(",")
+	var tint := Color(tt[0], tt[1], tt[2])
+	var files := ["grass0", "grass1", "grass2", "grass3", "grass4", "grass5"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23101
+	var gy := func(p: Vector2) -> float: return top if p.distance_to(c) < r else 0.0
+	var n_rim := int(EV.get("rgn", "140"))
+	for i in n_rim:
+		var a := rng.randf_range(0.0, TAU)
+		var rr := r * rng.randf_range(float(EV.get("rgin", "0.97")), float(EV.get("rgout", "1.05")))
+		var p := c + Vector2(cos(a), sin(a)) * rr
+		_card(st, "res://art/s217/%s.png" % files[rng.randi() % files.size()], Vector3(p.x, gy.call(p), p.y), rng.randf_range(float(EV.get("rgw0", "0.4")), float(EV.get("rgw1", "0.9"))), tint * rng.randf_range(0.85, 1.05))
+	var n_st := 0
+	for n in st.find_children("*", "", true, false):
+		var nm := String(n.name)
+		if not (nm.begins_with("Stone") or nm.begins_with("Fallen") or nm.begins_with("Rock")):
+			continue
+		if n.get_parent() != null and (String(n.get_parent().name).begins_with("Stone") or String(n.get_parent().name).begins_with("Fallen") or String(n.get_parent().name).begins_with("Rock")):
+			continue
+		var box := AABB()
+		var first := true
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.mesh == null or not m.is_visible_in_tree():
+				continue
+			var b: AABB = m.global_transform * m.get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+		if first:
+			continue
+		n_st += 1
+		var cc := Vector2(box.get_center().x, box.get_center().z)
+		var hx := box.size.x * 0.5
+		var hz := box.size.z * 0.5
+		for k in int(EV.get("sgn", "7")):
+			var a := rng.randf_range(0.0, TAU)
+			var p := cc + Vector2(cos(a) * hx, sin(a) * hz) * rng.randf_range(0.8, 1.05)
+			_card(st, "res://art/s217/%s.png" % files[rng.randi() % files.size()], Vector3(p.x, gy.call(p), p.y), rng.randf_range(float(EV.get("sgw0", "0.35")), float(EV.get("sgw1", "0.8"))), tint * rng.randf_range(0.8, 1.0))
+	print("s231 grass: rim ", n_rim, " stones ", n_st)
