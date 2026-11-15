@@ -1029,6 +1029,7 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 			var lx := cos(ang) * rad * rx
 			var lz := sin(ang) * rad * rz
 			var p := cen + Vector2(lx * ca - lz * sa, lx * sa + lz * ca)
+			var cfade := 0.0
 			if crack and p.distance_to(c) < r * 0.97:
 				var ok := false
 				for t in int(EV.get("pgct", "24")):
@@ -1041,12 +1042,19 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 					ang = rng.randf_range(0.0, TAU); rad = sqrt(rng.randf()) * rng.randf_range(0.75, 1.0)
 					lx = cos(ang) * rad * rx; lz = sin(ang) * rad * rz
 					p = cen + Vector2(lx * ca - lz * sa, lx * sa + lz * ca)
+				# s234 owner: dense at the plaza edge, thinning toward the middle
+				var inn := smoothstep(0.0, float(EV.get("pgcf", "4.0")), r * 0.97 - p.distance_to(c))
+				if EV.has("pgcxo"): # fade by screen side: dense at |x| >= pgcxo (frame edge), sparse by |x| = pgcxi
+					inn = 1.0 - smoothstep(float(EV.get("pgcxi", "2.5")), float(EV["pgcxo"]), absf(p.x))
+				if ok and rng.randf() > lerpf(1.0, float(EV.get("pgcmin", "0.08")), inn): ok = false
 				if not ok:
 					cdrop += 1
 					continue
 				ckeep += 1
+				cfade = inn
 			var y := top if p.distance_to(c) < r * 0.9 else (_s233_th(p, EV) if EV.get("terr", "0") == "1" else (top if p.distance_to(c) < r else 0.0))
 			var h := gh * hk * rng.randf_range(0.55, 1.1) * (1.0 - 0.45 * rad)
+			if crack: h *= lerpf(1.0, float(EV.get("pgch", "0.55")), cfade)
 			var fy := rng.randf_range(0.0, TAU)
 			var d := Vector3(cos(fy), 0, sin(fy))
 			var nrm := Vector3(-d.z, 0, d.x)

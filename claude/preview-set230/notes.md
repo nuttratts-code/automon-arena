@@ -184,3 +184,7 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - `--e:pgcrack=1`: front corner patches spread wider (`pgcs`), each blade tries `pgct` spots and is kept only where the plaza joint mask (tests/s225/gsp_joint.png, tiled by `gtile` 1.8 like the shader) is > `pgcj`; density × `pgcd`. Those patches skip the shadow mask (the dark joint is the root).
 - Trap (find-cause): first tries sampled one pixel for every blade — GDScript `posmod` is integer-only and floored p/tile to 0; use `fposmod`. Also `_s230_tex(..).get_image()` is fine but the direct PNG load is simpler.
 - Variants: **a** `pgcj=0.3 pgcs=2.0 pgcd=0.6 pgct=10` = fuller tufts in the cracks · **b** `pgcs=2.4 pgcd=0.4 pgct=6 pgfgh=0.9` = sparse sprigs. r23_args.txt = a. Waiting for owner pick.
+
+## Round 24 (set 234) — owner: crack grass "many from the edge, fewer and fewer inward"
+- Each crack blade (after the joint test) is kept with prob lerp(1, `pgcmin`, inn) and its height × lerp(1, `pgch`, inn). First `inn` = distance inside the plaza rim (`pgcf`) → wrong: the front corners sit 2–4 m inside the rim, so everything thinned. Now `pgcxo` set → inn by screen side: dense at |x| ≥ `pgcxo` (frame edge ≈ ±6.6 m at the front row z 7), sparse by |x| = `pgcxi`. Front patches allowed from |x| 3 (`pgfgx=3.0`).
+- **a** `pgcs=2.0 pgcd=1.6 pgcxo=6.5 pgcxi=2.5 pgcmin=0.05 pgch=0.5` = short fade · **b** `pgcd=2.2 pgcxo=7.0 pgcxi=1.5 pgcmin=0.1 pgch=0.45` = longer fade reaching further in. Args: r24a_args.txt / r24b_args.txt. Waiting for owner pick.
