@@ -200,3 +200,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Cause: bigger tiles (gtile 11) = fewer joints, so crack blades only landed in a few spots.
 - Fix: joint test looser + more tries + wider + denser: `pgcj=0.2 pgct=16 pgcs=2.4 pgcd=4.5` → blades now run as lines along the joints, still dense at the frame edge, thinning inward (r24 b fade kept). Other odd spots offered (A1 blurry big slabs, A3 glare, A4 banded meadow) — owner did not pick them.
 - Args: r26_args.txt.
+
+## Round 27 (set 235) — owner screenshot: tall blurred grass right against the screen at the bottom corner, then fading
+- New `--e:pgnear=<n>` (s226.gd, after the front patches): n dense clumps alternating left/right at |x| `pgnx0`–`pgnx1`, z `pgnz` ± 0.7, height `pgnh` × lerp(0.6, 1, toward the frame edge), no joint test (crack flag 0) so they stay full. The bottom-of-frame DoF blurs them like the owner picture.
+- Trap: `pgnz=9.0` = below the bottom screen edge (nothing showed); 8.0 sits just inside the frame. Picked `pgnear=30 pgnz=8.0 pgnh=3.0 pgnx0=5.5 pgnx1=9`.
+- Args: r27_args.txt · code snapshot s226.gd.txt updated.

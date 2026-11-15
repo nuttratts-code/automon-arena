@@ -959,6 +959,13 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		if absf(fx) < float(EV.get("pgfgx", "0")): continue # s234: front grass only at the corners (owner AI picture)
 		var fz := float(EV.get("pgfgz", "7.6")) + rng.randf_range(-0.4, 0.6) + 0.06 * absf(fx)
 		centres.append([Vector2(fx, fz), pr * rng.randf_range(0.9, 1.4), pr * rng.randf_range(0.35, 0.55), 0.0, float(EV.get("pgfgh", "1.6")) * (0.7 + 0.06 * absf(fx)), float(EV.get("pgfgf", "0.4")), 1.0 if EV.get("pgcrack", "0") == "1" else 0.0])
+	var n_nr := int(EV.get("pgnear", "0")) # s235: owner "grass right against the screen at the corners, then fade" — dense clumps nearest the camera
+	for i in n_nr:
+		var sd := -1.0 if i % 2 == 0 else 1.0
+		var nx := sd * rng.randf_range(float(EV.get("pgnx0", "5.0")), float(EV.get("pgnx1", "8.5")))
+		var nz := float(EV.get("pgnz", "9.0")) + rng.randf_range(-0.6, 0.8)
+		var hk := clampf((absf(nx) - float(EV.get("pgnx0", "5.0"))) / 2.5, 0.0, 1.0) # taller toward the frame edge
+		centres.append([Vector2(nx, nz), pr * rng.randf_range(0.8, 1.2), pr * rng.randf_range(0.4, 0.6), 0.0, float(EV.get("pgnh", "1.6")) * lerpf(0.6, 1.0, hk) * rng.randf_range(0.85, 1.15), 0.0, 0.0])
 	var n_in := int(EV.get("pgin", "0")) # s233 D1: grass in the joints near the broken rim (outside the slot area)
 	for i in n_in:
 		var a := rng.randf_range(0.0, TAU)
