@@ -1,0 +1,29 @@
+extends SceneTree
+# set 238: hide props left floating behind the owner's back cut line (shader bcut_z / bcut_w, same wave). Hidden, not deleted.
+const BZ := -19.3
+const BW := 0.6
+func zcut(x: float) -> float:
+	return BZ + BW * (sin(x * 0.31 + 1.3) + 0.6 * sin(x * 0.83 + 0.4))
+func _init():
+	var path := "res://art/arena_r38/arena_r38.tscn"
+	var root = load(path).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	await process_frame
+	var cam = root.find_child("GameCam", true, false)
+	var hid := 0
+	for n in root.find_children("*", "GeometryInstance3D", true, false):
+		if not n.is_visible_in_tree(): continue
+		if n.name in ["Ground", "S233Near"] or String(n.name).begins_with("S230"): continue
+		if cam and cam.is_ancestor_of(n): continue
+		var c: Vector3 = (n.global_transform * n.get_aabb()).get_center()
+		if Vector2(c.x, c.z).length() > 26.0: continue
+		if c.z < zcut(c.x) + 1.0:
+			n.visible = false
+			hid += 1
+			print("H ", n.name, " ", c)
+	var ps := PackedScene.new()
+	var e1 = ps.pack(root)
+	var e2 = ResourceSaver.save(ps, path)
+	print("BACKCUT hidden ", hid, " pack ", e1, " save ", e2)
+	quit()
