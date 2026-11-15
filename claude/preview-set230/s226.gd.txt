@@ -291,6 +291,8 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.has("birds"): _s235_birds(st, EV)
 	if EV.has("ulong"): _s235_longshadow(st, sprs, EV)
 	if EV.has("trees"): _s235_trees(st, EV)
+	if EV.has("bushes"): _s235_bushes(st, EV)
+	if EV.has("ivy"): _s235_ivy(st, EV)
 	# foreground grass strip: its top reaches screen y = fgy, on a plane between the camera and the board
 	var vp := Vector2(DisplayServer.window_get_size())
 	var t: Texture2D = load("res://art/s217/grass_strip_front.png")
@@ -1883,3 +1885,72 @@ func _s235_trees(st: Node, EV: Dictionary) -> void:
 		_s235_tree_card(st, d + f + ".png", Vector3(x, _s233_th(Vector2(x, z), EV), z), H * float(EV.get("tfh", "0.8")) * rng.randf_range(0.7, 1.2), tint, rng.randf() < 0.5)
 		n += 1
 	print("s233 trees ", n)
+
+
+# s235: owner bush sheets (tests/s225/bushA0-8, bushB0-6) round the ring sides + behind the stones; back centre left open.
+func _s235_bushes(st: Node, EV: Dictionary) -> void:
+	var files := []
+	for i in 9: files.append("res://tests/s225/bushA%d.png" % i)
+	for i in 7: files.append("res://tests/s225/bushB%d.png" % i)
+	var tn: Array = str(EV.get("busht", "0.78,0.84,0.76")).split_floats(",")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23504
+	var n := int(EV["bushes"])
+	var gap := float(EV.get("bgap", "4.5"))
+	var made := 0
+	var tries := 0
+	while made < n and tries < n * 20:
+		tries += 1
+		var a := rng.randf_range(PI * 0.93, PI * 2.07) # back half + sides (z <= ~2)
+		var rr := rng.randf_range(float(EV.get("br0", "12.6")), float(EV.get("br1", "16.5")))
+		var x := cos(a) * rr * 1.12
+		var z := sin(a) * rr - 1.5
+		if absf(x) < gap or z > 2.0: continue
+		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.65, 1.3)
+		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
+		made += 1
+	print("s233 bushes ", made)
+
+# s235: owner ivy strands (tests/s225/ivyB*, long ones only) hanging from the tops of the big standing stones, camera side.
+func _s235_ivy(st: Node, EV: Dictionary) -> void:
+	var strands := []
+	for i in 10:
+		var f := "res://tests/s225/ivyB%d.png" % i
+		var im := Image.load_from_file(ProjectSettings.globalize_path(f))
+		if im != null and im.get_height() >= 400: strands.append(im)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23505
+	var tn: Array = str(EV.get("ivyt", "0.8,0.86,0.78")).split_floats(",")
+	var made := 0
+	for nm in str(EV.get("ivys", "StoneL,StoneR,StoneBig,StoneShortR")).split(","):
+		var stone := st.find_child(nm, true, false) as Node3D
+		if stone == null: continue
+		var box := AABB(); var first := true
+		for mi in stone.find_children("*", "MeshInstance3D", true, false) + ([stone] if stone is MeshInstance3D else []):
+			var m := mi as MeshInstance3D
+			if m.mesh == null: continue
+			var b: AABB = m.global_transform * m.get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+		if first: continue
+		var k := int(EV["ivy"])
+		for j in k:
+			var im: Image = strands[rng.randi() % strands.size()]
+			var sp := Sprite3D.new()
+			sp.texture = ImageTexture.create_from_image(im)
+			var L := box.size.y * rng.randf_range(0.35, 0.75)
+			sp.pixel_size = L / float(im.get_height())
+			sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+			sp.alpha_cut = SpriteBase3D.ALPHA_CUT_OPAQUE_PREPASS
+			sp.shaded = false
+			sp.flip_h = rng.randf() < 0.5
+			sp.modulate = Color(tn[0], tn[1], tn[2])
+			sp.offset = Vector2(0, -im.get_height() * 0.5) # hang down from the anchor
+			sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			st.add_child(sp)
+			var c := box.get_center()
+			var x := c.x + box.size.x * rng.randf_range(-float(EV.get("ivyx", "0.15")), float(EV.get("ivyx", "0.15")))
+			var top := box.position.y + box.size.y * rng.randf_range(0.72, 0.9)
+			sp.global_position = Vector3(x, top, box.end.z * 0.6 + c.z * 0.4)
+			made += 1
+	print("s233 ivy ", made)

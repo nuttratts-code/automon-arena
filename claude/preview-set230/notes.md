@@ -229,3 +229,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Scene: new `trees=1` (`_s235_trees`): Sprite3D cards, FIXED_Y billboard, unshaded, bottom on `_s233_th`. Near list (8 trees, mostly B + A0) at x ±15–25, z −8…−26; `treeh=11` m, `treet=0.72,0.8,0.72` (unshaded cards glowed yellow at 0.95). `treefar=<n>` = small C trees on the far ridge (z 80–95, `tfh` × treeh): at tfh 0.8 they floated huge in the sky; 0.3 reads OK but they stand right above the sea line.
 - Owner choice: **b** `treefar=26 tfh=0.3` (far ridge trees) vs **c** `treefar=0` (near trees only). r31_args.txt = c; add `--e:treefar=26 --e:tfh=0.3` for b.
 - Still waiting for: bushes round the ring, ivy for the standing stones, far tree clusters (sheet 2 of the prompt list).
+
+## Round 32 (set 235) — owner bush sheets (A grid 9, B row 7) + ivy sheets (A, B)
+- Key: new `tools/key_blobs.py` (copy key_blobs.py.txt) = key_trees key + split by 2-D connected blobs (dilate 6 px so loose leaves stay with their plant; sorted by row then x) → `tests/s225/bushA0-8, bushB0-6, ivyA*, ivyB*`. Ivy A's thin stems break into ~17 fragments → not used; ivy B: long strands (height ≥ 400 px) only.
+- `bushes=<n>` (`_s235_bushes`): cards round the ring at r `br0`–`br1` (12.6–16.5 m), back half + sides (z ≤ 2), |x| ≥ `bgap` 4.5 (back opening kept), height `bushh` 1.6 × 0.65–1.3, tint `busht`. Picked 30, `busht=0.64,0.72,0.6` (0.78 read as yellow haystacks — the art itself is golden).
+- `ivy=<k>` (`_s235_ivy`): k strands per stone in `ivys` (StoneL, StoneR, StoneBig, StoneShortR) from the mesh AABB: anchor 72–90 % up, x within ±`ivyx` 0.15 × width (0.3 hung in the air beside StoneL's leaning top), length 35–75 % of the stone, hanging down (offset), camera side.
+- Copies + originals: art/library/pictures/s235/ (INDEX rows). Args: r32_args.txt.

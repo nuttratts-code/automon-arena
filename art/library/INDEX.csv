@@ -86,3 +86,8 @@ pictures/s235/trees_sheet_A_gemini_2026-11-15.jpg,3 trees on magenta (sheet A) f
 pictures/s235/trees_sheet_B_gemini_2026-11-15.jpg,3 trees on magenta (sheet B) for arena tree cards,Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r31),AI placeholder
 pictures/s235/trees_sheet_C_gemini_2026-11-15.jpg,3 trees on magenta (sheet C) for arena tree cards,Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r31),AI placeholder
 pictures/s235/tree_[ABC][0-2]_key_2026-11-15.png,the 9 trees keyed + split (soft magenta key + edge-only despill),Claude key_trees.py (claude/preview-set230/key_trees.py.txt),2026-11-15,Claude,sample only (set 235 r31),AI placeholder
+pictures/s235/bushes_sheet_A_gemini_2026-11-15.jpg,9 painted bushes in a 3-row grid on magenta,Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r32),AI placeholder
+pictures/s235/bushes_sheet_B_gemini_2026-11-15.jpg,7 watercolour bushes in a row on magenta (middle trio joined = one piece),Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r32),AI placeholder
+pictures/s235/ivy_sheet_A_gemini_2026-11-15.jpg,hanging ivy strands on magenta (thin stems break when keyed - not used),Google Gemini (owner; chat upload),2026-11-15,owner,no (keys into fragments),AI placeholder
+pictures/s235/ivy_sheet_B_gemini_2026-11-15.jpg,hanging ivy strands on light magenta (used),Google Gemini (owner; chat upload),2026-11-15,owner,sample only (set 235 r32),AI placeholder
+pictures/s235/bush_[AB]*_key / ivy_B*_key_2026-11-15.png,bushes A0-8 B0-6 + 8 long ivy strands keyed + split by blobs,Claude key_blobs.py (claude/preview-set230/key_blobs.py.txt),2026-11-15,Claude,sample only (set 235 r32),AI placeholder

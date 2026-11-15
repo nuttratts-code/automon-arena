@@ -1,0 +1,34 @@
+# key_blobs.py <sheet> <out_prefix> [min_px] : magenta key like key_trees.py, then split by 2-D connected blobs (grid sheets)
+import sys
+from PIL import Image, ImageFilter
+import numpy as np
+from scipy import ndimage
+src, pre = sys.argv[1], sys.argv[2]
+minpx = int(sys.argv[3]) if len(sys.argv) > 3 else 4000
+im = np.asarray(Image.open(src).convert("RGB")).astype(np.float32)
+r, g, b = im[..., 0], im[..., 1], im[..., 2]
+m = np.clip((np.minimum(r, b) - g - 15) / 50.0, 0, 1)
+a = np.clip((0.45 - m) / 0.3, 0, 1)
+a8 = np.asarray(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))).astype(np.float32) / 255
+edge = (m > 0.02).astype(np.uint8) * 255
+edge = np.asarray(Image.fromarray(edge).filter(ImageFilter.MaxFilter(5))).astype(np.float32) / 255
+r2 = r * (1 - edge) + np.minimum(r, g * 1.1 + 20) * edge
+b2 = b * (1 - edge) + np.minimum(b, g * 0.95 + 5) * edge
+rgba = np.clip(np.dstack([r2, g, b2, a8 * 255]), 0, 255).astype(np.uint8)
+mask = ndimage.binary_dilation(a8 > 0.3, iterations=6)          # join loose leaves to their plant
+lab, n = ndimage.label(mask)
+objs = ndimage.find_objects(lab)
+keep = []
+for i, sl in enumerate(objs):
+    area = int((lab[sl] == i + 1).sum())
+    if area >= minpx: keep.append((sl[1].start, sl[0].start, sl, i + 1))
+keep.sort(key=lambda k: (k[1] // 300, k[0]))                     # rows top→bottom, then left→right
+for j, (_, _, sl, idx) in enumerate(keep):
+    piece = rgba[sl].copy()
+    piece[..., 3] = np.where(lab[sl] == idx, piece[..., 3], 0)
+    t = Image.fromarray(piece, "RGBA"); bb = t.getbbox()
+    if bb is None: continue
+    t = t.crop(bb)
+    if max(t.size) > 1024:
+        k = 1024 / max(t.size); t = t.resize((round(t.width * k), round(t.height * k)), Image.LANCZOS)
+    t.save(f"{pre}{j}.png"); print(pre, j, t.size)
