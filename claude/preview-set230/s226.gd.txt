@@ -357,7 +357,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
-	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s238_hrc = float(EV.get("hrc", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0")); _s238_sway = float(EV.get("tsway", "0")); _s238_shp = float(EV.get("tshp", "0")); _s238_bias = float(EV.get("tbias", "-1.0"))
+	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s238_hrc = float(EV.get("hrc", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0")); _s238_sway = float(EV.get("tsway", "0")); _s238_shp = float(EV.get("tshp", "0")); _s238_bias = float(EV.get("tbias", "-1.0")); _s238_base = float(EV.get("tbase", "0.45")); _s238_shp2 = float(EV.get("tshp2", "0"))
 	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
@@ -1875,10 +1875,11 @@ uniform float flip = 0.0;
 uniform float h = 10.0;
 uniform float amp = 0.02;
 uniform float spd = 1.2;
-uniform float bias = -1.0; // s238 r5: sharper mip pick (owner: bushes blurry next to the grass)
+uniform float bias = -1.0;
+uniform float base = 0.4; // s238 r6 (owner): the trunk stays still, only the part above this height fraction sways // s238 r5: sharper mip pick (owner: bushes blurry next to the grass)
 void vertex() {
 	vec3 o = MODEL_MATRIX[3].xyz;
-	float t = clamp(VERTEX.y / h, 0.0, 1.0);
+	float t = clamp((VERTEX.y / h - base) / (1.0 - base), 0.0, 1.0);
 	float ph = o.x * 0.31 + o.z * 0.17;
 	VERTEX.x += (sin(TIME * spd + ph) + 0.35 * sin(TIME * spd * 2.3 + ph * 1.7)) * amp * h * t * t;
 	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0), vec4(0.0, 1.0, 0.0, 0.0), vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0), MODEL_MATRIX[3]);
@@ -1895,12 +1896,14 @@ var _s238_sway := 0.0 # s238: wind amount for tree/bush cards (tsway); 0 = old s
 var _s238_sh: Shader = null
 var _s238_shp := 0.0 # s238 r5: unsharp amount for tree/bush card pictures (tshp)
 var _s238_bias := -1.0
+var _s238_base := 0.45 # trunk share of a tree card that never moves (tbase)
+var _s238_shp2 := 0.0 # fine-detail unsharp (tshp2)
 # unsharp mask on the colour (alpha untouched): c + k * (c - blur(c))
-func _s238_sharpen(im: Image, k: float) -> Image:
+func _s238_sharpen(im: Image, k: float, r: int) -> Image:
 	im.convert(Image.FORMAT_RGBA8)
 	var w := im.get_width(); var h := im.get_height()
 	var b := im.duplicate() as Image
-	b.resize(maxi(1, w / 3), maxi(1, h / 3), Image.INTERPOLATE_BILINEAR)
+	b.resize(maxi(1, w / r), maxi(1, h / r), Image.INTERPOLATE_BILINEAR)
 	b.resize(w, h, Image.INTERPOLATE_BILINEAR)
 	var d := im.get_data(); var bd := b.get_data()
 	for i in range(0, d.size(), 4):
@@ -1913,7 +1916,8 @@ func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip
 	if not _s238_tex.has(file):
 		var im := Image.load_from_file(ProjectSettings.globalize_path(file))
 		if im == null: return
-		if _s238_shp > 0.0: im = _s238_sharpen(im, _s238_shp)
+		if _s238_shp > 0.0: im = _s238_sharpen(im, _s238_shp, 3)
+		if _s238_shp2 > 0.0: im = _s238_sharpen(im, _s238_shp2, 2)
 		im.generate_mipmaps()
 		_s238_tex[file] = ImageTexture.create_from_image(im)
 	var t: ImageTexture = _s238_tex[file]
@@ -1935,6 +1939,7 @@ func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip
 	var small := h < 4.0 # bushes sway a bit more than trees, like the grass
 	m.set_shader_parameter("amp", _s238_sway * (1.8 if small else 1.0))
 	m.set_shader_parameter("spd", 1.6 if small else 1.1)
+	m.set_shader_parameter("base", 0.15 if small else _s238_base)
 	q.material_override = m
 	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	st.add_child(q)
@@ -2477,7 +2482,7 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 	rng.seed = 23801
 	var k := float(EV.get("tdens", "1.0"))
 	var mm := Vector2(90.0, -132.0)
-	_s238_sway = float(EV.get("tsway", "0")); _s238_shp = float(EV.get("tshp", "0")); _s238_bias = float(EV.get("tbias", "-1.0"))
+	_s238_sway = float(EV.get("tsway", "0")); _s238_shp = float(EV.get("tshp", "0")); _s238_bias = float(EV.get("tbias", "-1.0")); _s238_base = float(EV.get("tbase", "0.45")); _s238_shp2 = float(EV.get("tshp2", "0"))
 	# owner round 4: back trees smaller so they read further away (1.0 near the plaza -> tfar at z -170 and beyond)
 	var tfar := float(EV.get("tfar", "1.0"))
 	var dk := func(z: float) -> float: return lerpf(1.0, tfar, smoothstep(-35.0, -170.0, z))
