@@ -12,6 +12,8 @@ Security line (HARD RULE 9): same as set 236. Only the owner's AI trees/bushes, 
 4. [ ] **Owner decision (conflict):** art-style §8 ban (owner, 7 Nov) = "meadow + big trees with light shafts + winding stream + dirt path in the middle of the frame". r37 has the back path in mid-frame (no stream; the sun-shaft card from r36 is still there). Stills: `claude/preview-set237/r37-game.jpg` (path) vs `r37-game-nopath.jpg`.
 5. [ ] After the pick: rule-change art-style §8 (r37 = the arena, ban wording) + re-bake if the path changes → plan-set236 step 4 uses `arena_r37` instead of `arena_r36`.
 
+- Owner 15 Nov: backdrop behind the lake back like r36 (far hills card `hc2=1`) → re-baked.
+
 ## Known gaps
 - With the 8.5° camera, mountains above ~15 m sit above the top of the frame; only their feet show (the owner kept the camera).
 - Overhead views show horizontal shadow stripes on the far ground (shadow cascades on the displaced terrain; not in the game view).
