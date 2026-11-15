@@ -92,3 +92,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Sheet (stand-ins → scratch only, never committed): before · F1 (`fs=1 fly=XD:0.45`) · S2 · S3 + zoom. Own read: F1 grounds every unit, flyer reads as flying; S3 calms the red ogre most; rim light barely shows at this size. Waiting for owner pick.
 - ③ Note for owner art (Gemini prompts): creature main colour must contrast grey stone + green grass (stone golem disappears on the floor — avoid grey/olive bodies or add a bright accent colour); ask for light from the upper-left in every prompt; flyers drawn without a ground shadow (code adds it).
 - **Owner pick (set 232): F1 + S2** = `--e:fs=1 --e:fly=XD:0.45 --e:sm=1 --e:smsat=0.85 --e:smcap=0.3 --e:smk=0.35 --e:smdir=0.24 --e:smao=0.3 --e:smrim=0.35 --e:stint=0.92,0.9,0.86` — now baked into `shot232.sh.txt` (the base for later shots).
+
+## Round 8 (set 233) — old grass out + motion sample (owner: "แก้หญ้า ลบของเก่าทิ้ง … ภาพเคลื่อนไหว")
+- Old grass removed from the shot: s217 tuft cards ring (`tufts=0`), corner cards (`fg=0`), front `grass_strip_front` (`fgs=0`, new switch in `_g`). Not touched: `scripts/ui/s217_grass.gd` (not in the shot path).
+- New: `_s231_patches` takes `pgfar` patches in the old tuft ring (r `pgfr0`–`pgfr1` 14–21, height × `pgfarh`, flowers × `pgfarf` 0.3) + `pgfg` patches along the front edge (z `pgfgz` 7.6, height × `pgfgh`, flowers × `pgfgf` 0.4). Picked: pgfar 40 · pgfg 14 · pgfarh 1.0 · pgfgh 1.2 (1.5/1.6 = a wall of grass + flower carpet). Base args: `shot233.sh.txt`.
+- `--e:anim=1 --frames N` (`_s233_anim`, own code) + `GDX="--fixed-fps 30"` (new hook in shot.sh): grass wind, pollen, units breathe from the feet, flyer hovers (shadow shrinks), one lunge every `beat` 0.9 s alternating sides, target flashes + shakes. 120 frames 1280×720 ≈ 53 s. Clip = stand-ins → scratch only, never committed.
+- Waiting for owner: grass OK? → then plan step 5 ทำจริง.

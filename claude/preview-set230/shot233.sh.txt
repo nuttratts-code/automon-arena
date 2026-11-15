@@ -1,0 +1,6 @@
+#!/bin/sh
+# shot233.sh <name> [extra --e: args] — shot232 + set 233 grass swap (old tuft cards + front strip out, owner blade patches far + front)
+# motion: GDX="--fixed-fps 30" RES=1280x720 sh shot233.sh <name> --e:anim=1 --frames 120
+T=$(dirname "$0")
+N=$1; shift
+sh $T/shot232.sh $N --e:tufts=0 --e:fg=0 --e:fgs=0 --e:pgfar=40 --e:pgfg=14 --e:pgfarh=1.0 --e:pgfgh=1.2 "$@"
