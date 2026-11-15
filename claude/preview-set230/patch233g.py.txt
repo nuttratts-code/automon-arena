@@ -1,0 +1,134 @@
+import sys, os
+T = sys.argv[1]
+def patch(p, pairs, tail=''):
+    p = os.path.join(T, p)
+    s = open(p, encoding='utf-8').read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (p, a[:70])
+        s = s.replace(a, b)
+    s += tail
+    open(p, 'w', encoding='utf-8').write(s)
+
+# s233 R15 B2: meadow clumps (darker/lighter patches) + one colour grade so plaza and meadow share a tone
+patch('s233_terrain.gdshader', [
+('uniform float hill3 = 0.0; // middle ridge at dr 140',
+ 'uniform float hill3 = 0.0; // middle ridge at dr 140\nuniform float clump_amt = 0.0; // s233 R15 B2: dark/light grass clumps (meadow not a lawn)\nuniform vec3 grade = vec3(1.0); // s233 R15 B2: shared colour grade'),
+('	float far = smoothstep(50.0, 260.0, length(vec2(wp.x * 0.85, wp.z + 2.0)));\n	c = mix(c * tint, haze_col, far * haze_amt);',
+ '	float cl = fbm(wp.xz * 0.21 + vec2(13.0, 29.0)) * 0.7 + vn(wp.xz * 0.9) * 0.3;\n	c *= mix(1.0, mix(0.6, 1.12, smoothstep(0.32, 0.72, cl)), clump_amt);\n	float far = smoothstep(50.0, 260.0, length(vec2(wp.x * 0.85, wp.z + 2.0)));\n	c = mix(c * tint * grade, haze_col, far * haze_amt);'),
+])
+patch('s226.gd', [
+('	m.set_shader_parameter("hill3", float(EV.get("thill3", "0")))',
+ '	m.set_shader_parameter("hill3", float(EV.get("thill3", "0")))\n	m.set_shader_parameter("clump_amt", float(EV.get("tclump", "0")))\n	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")\n	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))'),
+('	if EV.has("wl"): _s233_water(st, EV) # s233 R13: sea in the valley (owner W1)',
+ '	if EV.has("wl"): _s233_water(st, EV) # s233 R13: sea in the valley (owner W1)\n	if EV.has("ptint"): _s233_ptint(st, EV) # s233 R15 B2: plaza stones in the meadow tone\n	if EV.has("wfall") and EV.has("wl"): _s233_fall(st, EV) # s233 R15 A2: waterfall into the sea'),
+], '''
+
+# s233 R15 B2: the plaza used the cool teal ground tint; warm it toward the meadow tone (sample only)
+func _s233_ptint(st: Node, EV: Dictionary) -> void:
+	var g := st.find_child("S230Ground", true, false) as MeshInstance3D
+	if g == null:
+		return
+	var pt: Array = str(EV["ptint"]).split_floats(",")
+	(g.material_override as ShaderMaterial).set_shader_parameter("tint", Vector3(pt[0], pt[1], pt[2]))
+	print("s233 ptint ", pt)
+
+# s233 R15 A2 (owner): a waterfall into the sea. Our own look [APPROX]: an owner rock as the cliff, a scrolling
+# streak sheet, foam on the water and a mist card. Placed where the far ridge leaves the sea at x = wfall.
+const FALL_NOISE := """
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+"""
+const FALL_SHEET := """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+uniform vec3 c_deep = vec3(0.42, 0.62, 0.70);
+uniform vec3 c_foam = vec3(0.93, 0.97, 1.0);
+%s
+void fragment() {
+	vec2 uv = UV;
+	float wob = (vn(vec2(uv.y * 4.0, TIME * 0.5)) - 0.5) * 0.12;
+	float edge = smoothstep(0.0, 0.2, uv.x + wob) * smoothstep(1.0, 0.8, uv.x - wob);
+	float s = vn(vec2(uv.x * 22.0, uv.y * 2.5 - TIME * 1.6)) * 0.6 + vn(vec2(uv.x * 55.0, uv.y * 6.0 - TIME * 2.4)) * 0.4;
+	vec3 c = mix(c_deep, c_foam, smoothstep(0.3, 0.75, s));
+	c = mix(c, c_foam, smoothstep(0.65, 1.0, uv.y));
+	ALBEDO = c;
+	ALPHA = edge * smoothstep(0.0, 0.05, uv.y) * (0.7 + 0.3 * s);
+}
+"""
+const FALL_FOAM := """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+uniform float k = 0.85;
+%s
+void fragment() {
+	float d = length((UV - 0.5) * 2.0);
+	float n = vn(UV * 9.0 + vec2(TIME * 0.4, -TIME * 0.3)) * 0.6 + vn(UV * 23.0 - TIME * 0.5) * 0.4;
+	ALBEDO = vec3(0.95, 0.98, 1.0);
+	ALPHA = smoothstep(1.0, 0.2, d + (n - 0.5) * 0.5) * k * (0.55 + 0.45 * n);
+}
+"""
+func _s233_fx_mesh(st: Node, code: String, size: Vector2, face_z: bool, pos: Vector3, k: float) -> MeshInstance3D:
+	var sh := Shader.new()
+	sh.code = code % FALL_NOISE
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	if k >= 0.0:
+		m.set_shader_parameter("k", k)
+	var pm := PlaneMesh.new()
+	pm.size = size
+	if face_z:
+		pm.orientation = PlaneMesh.FACE_Z
+	var mi := MeshInstance3D.new()
+	mi.mesh = pm
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	st.add_child(mi)
+	mi.global_position = pos
+	return mi
+
+func _s233_fall(st: Node, EV: Dictionary) -> void:
+	var wl := float(EV["wl"])
+	var x := float(EV["wfall"])
+	var zs := -95.0
+	var was_sea := false
+	var z := -25.0
+	while z > -220.0:
+		var g := _s233_th(Vector2(x, z), EV)
+		if g < wl - 0.3:
+			was_sea = true
+		elif was_sea and g > wl + 0.3:
+			zs = z
+			break
+		z -= 1.0
+	print("s233 fall: shore at z ", zs, " (sea seen ", was_sea, ")")
+	var H := float(EV.get("wfh", "11"))
+	var w := float(EV.get("wfw", "3.5"))
+	var ps := load("res://art/s217/3d/rock_cliff_hy.glb") as PackedScene
+	var r3 := ps.instantiate() as Node3D
+	st.add_child(r3)
+	var bb := AABB()
+	var first := true
+	for mi in r3.find_children("*", "MeshInstance3D", true, false):
+		var a: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).mesh.get_aabb()
+		bb = a if first else bb.merge(a)
+		first = false
+	var ks := H / maxf(bb.size.y, 0.01)
+	r3.scale = Vector3(ks * float(EV.get("wfrx", "1.4")), ks, ks)
+	r3.global_position = Vector3(x, wl - 1.0, zs - 4.0) - Vector3(bb.get_center().x * ks, bb.position.y * ks, bb.get_center().z * ks)
+	var tone: Array = str(EV.get("rmtone", "0.8,0.82,0.78")).split_floats(",")
+	for mi in r3.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh.get_surface_count() > 0 else null)
+		if src is StandardMaterial3D:
+			var d := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+			d.albedo_color = Color(tone[0], tone[1], tone[2])
+			m.material_override = d
+	var front := zs - 4.0 + bb.size.z * ks * 0.5 * float(EV.get("wffront", "0.6"))
+	var hf := H - 1.6
+	_s233_fx_mesh(st, FALL_SHEET, Vector2(w, hf), true, Vector3(x, wl - 1.0 + 0.6 + hf * 0.5, front), -1.0)
+	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 3.2, w * 2.0), false, Vector3(x, wl + 0.08, front + w * 0.4), 0.9)
+	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 2.6, hf * 0.45), true, Vector3(x, wl + hf * 0.18, front + 0.8), 0.45)
+	print("s233 fall at x ", x, " front z ", front, " top ", wl - 1.0 + H)
+''')
+print('patched')

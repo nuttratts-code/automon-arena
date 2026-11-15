@@ -25,6 +25,8 @@ uniform vec3 haze_col = vec3(0.62, 0.74, 0.86);
 uniform float haze_amt = 0.0;
 uniform float vroll = 0.0; // s233 R12: rolling hills filling the valley floor (it read as a sea)
 uniform float hill3 = 0.0; // middle ridge at dr 140
+uniform float clump_amt = 0.0; // s233 R15 B2: dark/light grass clumps (meadow not a lawn)
+uniform vec3 grade = vec3(1.0); // s233 R15 B2: shared colour grade
 varying vec3 wp;
 varying float roll;
 float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -89,8 +91,10 @@ void fragment() {
 	float path = smoothstep(0.35, -0.1, pd) * smoothstep(-9.5, -13.0, wp.z) * (0.55 + 0.45 * vn(wp.xz * 1.3));
 	float dm = clamp(max(max(ring, spots), path * path_amt) * dirt_amt, 0.0, 1.0);
 	c = mix(c, dirt * (0.75 + 0.5 * vn(wp.xz * 2.1)), dm);
+	float cl = fbm(wp.xz * 0.21 + vec2(13.0, 29.0)) * 0.7 + vn(wp.xz * 0.9) * 0.3;
+	c *= mix(1.0, mix(0.6, 1.12, smoothstep(0.32, 0.72, cl)), clump_amt);
 	float far = smoothstep(50.0, 260.0, length(vec2(wp.x * 0.85, wp.z + 2.0)));
-	c = mix(c * tint, haze_col, far * haze_amt);
+	c = mix(c * tint * grade, haze_col, far * haze_amt);
 	ALBEDO = c;
 	ROUGHNESS = 1.0;
 }

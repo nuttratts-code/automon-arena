@@ -1,0 +1,18 @@
+import sys, os
+p = os.path.join(sys.argv[1], 's226.gd')
+s = open(p, encoding='utf-8').read()
+a = '''		elif was_sea and g > wl + 0.3:
+			zs = z
+			break'''
+b = '''		elif was_sea and g > wl + 0.3:
+			zs = z # near side of the far ridge (hidden by the plateau)
+		if zs > -95.0 and z < zs and g < wl - 1.0:
+			zs = z - float(EV.get("wfoff", "18")) # R15: past the ridge, in the visible sea = a sea cliff
+			break'''
+assert s.count(a) == 1
+s = s.replace(a, b)
+a2 = '	r3.global_position = Vector3(x, wl - 1.0, zs - 4.0)'
+assert s.count(a2) == 1
+s = s.replace(a2, '	r3.global_position = Vector3(x, wl - 2.5, zs - 4.0)')
+open(p, 'w', encoding='utf-8').write(s)
+print('patched')
