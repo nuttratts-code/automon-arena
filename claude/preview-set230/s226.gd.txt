@@ -316,6 +316,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.has("stone_tone"): _stone_tone(st, EV) # s229: stones vs plaza colour
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
+	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
 			for k in ["spr", "shadow", "ring"]:
@@ -588,6 +589,9 @@ func _s230_ground(st: Node, EV: Dictionary) -> void:
 	sm.set_shader_parameter("tint", Vector3(gt[0], gt[1], gt[2]))
 	sm.set_shader_parameter("moss_tint", Vector3(mt[0], mt[1], mt[2]))
 	sm.set_shader_parameter("joint_amt", float(EV.get("jamt", "0.8")))
+	if EV.get("jtex", "0") == "1":
+		sm.set_shader_parameter("use_joint_tex", true)
+		sm.set_shader_parameter("joint_tex", _s230_tex("gsp_joint", true))
 	sm.set_shader_parameter("joint_lo", float(EV.get("jlo", "0.03")))
 	sm.set_shader_parameter("joint_hi", float(EV.get("jhi", "0.065")))
 	sm.set_shader_parameter("patch_amt", float(EV.get("pamt", "0.35")))
@@ -633,3 +637,129 @@ func _s230_ground(st: Node, EV: Dictionary) -> void:
 			m.material_override = ms
 			n_st += 1
 	print("s230 ground: stones with moss ", n_st)
+
+
+# s230 "baked" shade (FF Re bakes lightmaps; Compatibility has no live sun shadows): once per shot, rasterise every
+# stone mesh into a top-down height grid, cast it along the sun direction (shadow) + blur its footprint (contact AO),
+# then lay the result over plaza + grass as one multiply plane. Args: shd shadow strength · sao AO strength ·
+# sres grid px · sext area half-size (units) · sblur shadow softness px · saor AO radius px · sy plane height.
+func _s230_shade(st: Node, EV: Dictionary) -> void:
+	if EV.get("slist", "0") == "1":
+		for q in st.find_children("*", "MeshInstance3D", true, false):
+			var q3 := q as Node3D
+			if q3.is_visible_in_tree(): print("s230 mesh ", q3.get_path(), " at ", q3.global_position.round())
+	if EV.get("skeep", "0") == "0": # hide the set 226 fake shadow cards (the bake replaces them)
+		for q in st.find_children("Shadow*", "", true, false):
+			(q as Node3D).visible = false
+	var res := int(EV.get("sres", "512"))
+	var ext := float(EV.get("sext", "26.0"))
+	var hmap := PackedFloat32Array()
+	hmap.resize(res * res)
+	var n_v := 0
+	for n in st.find_children("*", "", true, false):
+		var nm := String(n.name)
+		if not (nm.begins_with("Stone") or nm.begins_with("Fallen") or nm.begins_with("Rock")):
+			continue
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.mesh == null or not m.is_visible_in_tree():
+				continue
+			var xf := m.global_transform
+			for si in m.mesh.get_surface_count():
+				var verts: PackedVector3Array = m.mesh.surface_get_arrays(si)[Mesh.ARRAY_VERTEX]
+				var step := maxi(1, verts.size() / 20000)
+				for vi in range(0, verts.size(), step):
+					var p := xf * verts[vi]
+					var gx := int((p.x + ext) / (2.0 * ext) * res)
+					var gz := int((p.z + ext) / (2.0 * ext) * res)
+					if gx < 0 or gz < 0 or gx >= res or gz >= res:
+						continue
+					var k := gz * res + gx
+					if p.y > hmap[k]:
+						hmap[k] = p.y
+					n_v += 1
+	# fill small holes between sampled vertices (3x3 max)
+	var h2 := hmap.duplicate()
+	for z in range(1, res - 1):
+		for x in range(1, res - 1):
+			var mx := hmap[z * res + x]
+			for dz in [-1, 0, 1]:
+				for dx in [-1, 0, 1]:
+					mx = maxf(mx, hmap[(z + dz) * res + x + dx])
+			h2[z * res + x] = mx
+	hmap = h2
+	var sun: DirectionalLight3D = st.sun
+	if EV.has("sunel"): # same rotation the look code applies later
+		sun.rotation_degrees = Vector3(-float(EV["sunel"]), float(EV.get("sunaz", "-50")), 0.0)
+	var ldir := -sun.global_transform.basis.z # direction the light travels
+	var horiz := Vector2(ldir.x, ldir.z)
+	var elev_tan := absf(ldir.y) / maxf(horiz.length(), 0.001)
+	horiz = horiz.normalized()
+	var shadow := PackedFloat32Array()
+	shadow.resize(res * res)
+	var occ := PackedFloat32Array()
+	occ.resize(res * res)
+	var cell := 2.0 * ext / res
+	for z in res:
+		for x in res:
+			var h := hmap[z * res + x]
+			if h <= 0.05:
+				continue
+			occ[z * res + x] = 1.0
+			var length_cells := (h / elev_tan) / cell
+			var steps := int(minf(length_cells, res * 0.5))
+			for s in steps:
+				var sx := int(x + horiz.x * s)
+				var sz := int(z + horiz.y * s)
+				if sx < 0 or sz < 0 or sx >= res or sz >= res:
+					break
+				shadow[sz * res + sx] = 1.0
+	var img := Image.create(res, res, false, Image.FORMAT_RGB8)
+	var img_ao := Image.create(res, res, false, Image.FORMAT_L8)
+	for z in res:
+		for x in res:
+			var v := shadow[z * res + x]
+			img.set_pixel(x, z, Color(v, v, v))
+			img_ao.set_pixel(x, z, Color(occ[z * res + x], 0, 0))
+	img = _s230_blur(img, float(EV.get("sblur", "3")))
+	img_ao = _s230_blur(img_ao, float(EV.get("saor", "10")))
+	var sd := float(EV.get("shd", "0.45"))
+	var ao := float(EV.get("sao", "0.55"))
+	var out := Image.create(res, res, false, Image.FORMAT_RGB8)
+	for z in res:
+		for x in res:
+			var occ_here := occ[z * res + x]
+			var a := clampf(img_ao.get_pixel(x, z).r * 2.0, 0.0, 1.0) * (1.0 - occ_here)
+			var f := (1.0 - sd * img.get_pixel(x, z).r) * (1.0 - ao * a)
+			out.set_pixel(x, z, Color(f, f, f))
+	out.generate_mipmaps()
+	out.save_png(ProjectSettings.globalize_path("res://tests/s225/_s230_shade_dbg.png"))
+	var mi := MeshInstance3D.new()
+	mi.name = "S230Shade"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(2.0 * ext, 2.0 * ext)
+	mi.mesh = pm
+	var sh := Shader.new()
+	sh.code = """shader_type spatial;
+render_mode blend_mul, unshaded, depth_draw_never, cull_disabled, shadows_disabled;
+uniform sampler2D shade : filter_linear_mipmap;
+void fragment() { ALBEDO = texture(shade, UV).rgb; }
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("shade", ImageTexture.create_from_image(out))
+	mi.material_override = mat
+	st.add_child(mi)
+	mi.global_position = Vector3(0.0, float(EV.get("sy", "0.02")), 0.0)
+	print("s230 shade: verts ", n_v, " sun elev tan ", elev_tan, " dir ", horiz)
+
+
+func _s230_blur(im: Image, r: float) -> Image:
+	if r <= 0.0:
+		return im
+	var w := im.get_width()
+	var small := maxi(8, int(w / maxf(r, 1.0)))
+	var b := im.duplicate() as Image
+	b.resize(small, small, Image.INTERPOLATE_BILINEAR)
+	b.resize(w, w, Image.INTERPOLATE_CUBIC)
+	return b

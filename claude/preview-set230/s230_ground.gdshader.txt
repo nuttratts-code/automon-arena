@@ -17,6 +17,8 @@ uniform float noise_scale = 4.0;
 uniform float joint_lo = 0.18;
 uniform float joint_hi = 0.30;
 uniform float joint_amt = 0.8;
+uniform bool use_joint_tex = false;
+uniform sampler2D joint_tex : filter_linear_mipmap, repeat_enable; // joints mask made from the flagstone picture (s230)
 uniform float patch_amt = 0.35;
 uniform float patch_cut = 0.62;
 uniform vec3 centre = vec3(0.0);
@@ -39,7 +41,7 @@ void fragment() {
 	float nz = texture(noise_tex, wuv / noise_scale).r;
 	if (is_ground) {
 		vec3 b = texture(base_tex, wuv / tile).rgb;
-		float j = 1.0 - smoothstep(joint_lo, joint_hi, lum(b));
+		float j = use_joint_tex ? smoothstep(joint_lo, joint_hi, texture(joint_tex, wuv / tile).r) : 1.0 - smoothstep(joint_lo, joint_hi, lum(b));
 		float d = length(wp.xz - centre.xz) / radius;
 		float edge = smoothstep(edge_from, 1.0, d) * smoothstep(0.35, 0.6, nz);
 		float pat = smoothstep(patch_cut, patch_cut + 0.12, nz) * patch_amt;
