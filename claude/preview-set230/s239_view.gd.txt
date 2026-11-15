@@ -43,6 +43,9 @@ func _initialize() -> void:
 	for k in 3: await _frames()
 	st.cam.transform = gc.transform
 	await _frames()
+	if args.has("--extra"):
+		_s239_extra(ar, st.cam, args)
+		for k in 2: await _frames()
 	if args.has("--sharp"):
 		m3.set_shader_parameter("focus_top", -1.0); m3.set_shader_parameter("focus_bottom", 2.0)
 	if args.has("--depth"):
@@ -69,3 +72,88 @@ void fragment() {
 	root.get_texture().get_image().save_png(out)
 	print("S236 view saved")
 	quit()
+
+
+# ---- set 239 SAMPLE round 3: more trees by distance (owner picture) + meadow tie-in (grass tufts, small rocks, tint)
+var _hs: Array = []  # [Vector2 xz, float y] ground samples from existing trees / bushes
+func _h(p: Vector2) -> float:
+	var best: Array = []
+	for s in _hs:
+		var d: float = (s[0] as Vector2).distance_to(p)
+		best.append([d, s[1]])
+	best.sort_custom(func(a, b): return a[0] < b[0])
+	var w := 0.0; var y := 0.0
+	for i in mini(4, best.size()):
+		var k: float = 1.0 / (float(best[i][0]) + 1.0); w += k; y += float(best[i][1]) * k
+	return y / w
+func _hit(cam: Camera3D, sp: Vector2) -> Vector3:
+	var o := cam.project_ray_origin(sp); var n := cam.project_ray_normal(sp)
+	var y := -2.0
+	var p := Vector3.ZERO
+	for it in 4:
+		var t := (y - o.y) / n.y
+		p = o + n * t
+		y = _h(Vector2(p.x, p.z))
+	return Vector3(p.x, y, p.z)
+func _band(rng: RandomNumberGenerator, a0: Vector2, a1: Vector2, b0: Vector2, b1: Vector2) -> Vector2:
+	var u := rng.randf(); var v := rng.randf()
+	return a0.lerp(a1, u).lerp(b0.lerp(b1, u), v)
+func _s239_extra(ar: Node3D, cam: Camera3D, args: PackedStringArray) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = 239
+	var trees: Array = []; var patches: Array = []; var rocks: Array = []
+	for c in ar.get_children():
+		if c is MeshInstance3D and c.mesh is QuadMesh and c.material_override is ShaderMaterial:
+			var sp: String = (c.material_override as ShaderMaterial).shader.resource_path
+			if sp.ends_with("s_eb88c55.gdshader") and (c.mesh as QuadMesh).size.y > 3.0:
+				trees.append(c); _hs.append([Vector2(c.position.x, c.position.z), c.position.y])
+		elif String(c.name).begins_with("Bush"):
+			_hs.append([Vector2(c.position.x, c.position.z), c.position.y])
+		elif String(c.name).begins_with("S231Patch"):
+			patches.append(c)
+	for c in ar.find_children("*", "Node3D", true, false):
+		var nm := String(c.name)
+		if nm.begins_with("stone_fallen") or nm.begins_with("rock_cliff"): rocks.append(c)
+	var vs := Vector2(1920, 1080) / Vector2(cam.get_viewport().get_visible_rect().size)
+	var sc := Vector2(cam.get_viewport().get_visible_rect().size) / Vector2(1920, 1080)
+	var nt := 0
+	# right forest: dense belt receding toward the lake (owner picture S3, right of centre)
+	var plan := [[44, Vector2(1150, 296), Vector2(1920, 372), Vector2(1150, 316), Vector2(1920, 430), 0.5, 0.78],
+		[6, Vector2(330, 298), Vector2(560, 298), Vector2(330, 322), Vector2(560, 318), 0.55, 0.8],
+		[4, Vector2(0, 305), Vector2(160, 305), Vector2(0, 340), Vector2(160, 335), 0.6, 0.85]]
+	for pl in plan:
+		for i in int(pl[0]):
+			var spt: Vector2 = _band(rng, pl[1], pl[2], pl[3], pl[4]) * sc
+			var p := _hit(cam, spt)
+			var t: MeshInstance3D = trees[rng.randi() % trees.size()].duplicate()
+			var dist := p.distance_to(cam.global_position)
+			var k := (1.0 - 0.45 * smoothstep(45.0, 140.0, dist)) * rng.randf_range(float(pl[5]), float(pl[6]))
+			t.scale = Vector3(k, k, k)
+			var qh: float = (t.mesh as QuadMesh).size.y
+			t.position = p + Vector3(0, qh * 0.5 * k - qh * 0.5, 0)  # card centre offset: keep base on ground
+			ar.add_child(t); nt += 1
+	# meadow tie-in: grass tufts carried out from the plaza rim into S2, fading out with distance
+	var np := 0
+	for i in 40:
+		var spt: Vector2 = _band(rng, Vector2(150, 470), Vector2(1800, 470), Vector2(150, 540), Vector2(1800, 540)) * sc
+		var q := _hit(cam, spt)
+		if Vector2(q.x, q.z).length() < 16.0: continue
+		var src: MeshInstance3D = patches[rng.randi() % patches.size()]
+		var bb: AABB = src.mesh.get_aabb()
+		var base := Vector3(bb.get_center().x, bb.position.y, bb.get_center().z)
+		var d := src.duplicate() as MeshInstance3D
+		d.position = q - base
+		ar.add_child(d); np += 1
+	var nr := 0
+	for i in 7:
+		if rocks.is_empty(): break
+		var spt: Vector2 = _band(rng, Vector2(650, 390), Vector2(950, 390), Vector2(650, 470), Vector2(950, 470)) * sc
+		var q := _hit(cam, spt)
+		var r: Node3D = rocks[rng.randi() % rocks.size()].duplicate()
+		r.global_transform = Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.4, 0.8)), q + Vector3(0, -0.15, 0))
+		ar.add_child(r); nr += 1
+	var tint := args.find("--gtint")
+	if tint >= 0:
+		var v := args[tint + 1].split_floats(",")
+		for c in [ar.get_node_or_null("S233Near"), ar.get_node_or_null("ArenaDressing/Mid/Ground")]:
+			if c: (c.material_override as ShaderMaterial).set_shader_parameter("tint", Vector3(v[0], v[1], v[2]))
+	print("S239 extra trees ", nt, " (templates ", trees.size(), ") patches ", np, " rocks ", nr, " (templates ", rocks.size(), ")")
