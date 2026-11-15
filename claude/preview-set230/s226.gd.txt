@@ -946,7 +946,7 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 				continue
 			var cc := Vector2(box.get_center().x, box.get_center().z)
 			centres.append([cc, box.size.x * 0.5 + pr * 0.5, box.size.z * 0.5 + pr * 0.4, 0.0])
-	for e in centres: e.append(1.0); e.append(1.0)
+	for e in centres: e.append(1.0); e.append(float(EV.get("pgbf", "1.0"))) # s235 pgbf: flowers in the stone-base grass
 	# s233: the old tuft ring (r 15-21 behind the plaza, tufts=) and the front strip go; same blade patches there instead
 	var n_far := int(EV.get("pgfar", "0"))
 	for i in n_far:
@@ -965,12 +965,12 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		var nx := sd * rng.randf_range(float(EV.get("pgnx0", "5.0")), float(EV.get("pgnx1", "8.5")))
 		var nz := float(EV.get("pgnz", "9.0")) + rng.randf_range(-0.6, 0.8)
 		var hk := clampf((absf(nx) - float(EV.get("pgnx0", "5.0"))) / 2.5, 0.0, 1.0) # taller toward the frame edge
-		centres.append([Vector2(nx, nz), pr * rng.randf_range(0.8, 1.2), pr * rng.randf_range(0.4, 0.6), 0.0, float(EV.get("pgnh", "1.6")) * lerpf(0.6, 1.0, hk) * rng.randf_range(0.85, 1.15), 0.0, 0.0])
+		centres.append([Vector2(nx, nz), pr * rng.randf_range(0.8, 1.2), pr * rng.randf_range(0.4, 0.6), 0.0, float(EV.get("pgnh", "1.6")) * lerpf(0.6, 1.0, hk) * rng.randf_range(0.85, 1.15), float(EV.get("pgnf", "0")), 0.0])
 	var n_in := int(EV.get("pgin", "0")) # s233 D1: grass in the joints near the broken rim (outside the slot area)
 	for i in n_in:
 		var a := rng.randf_range(0.0, TAU)
 		var rr := r * rng.randf_range(0.8, 0.99)
-		centres.append([c + Vector2(cos(a), sin(a)) * rr, pr * rng.randf_range(0.25, 0.5), pr * rng.randf_range(0.15, 0.3), a + PI * 0.5, float(EV.get("pginh", "0.5")), 0.3])
+		centres.append([c + Vector2(cos(a), sin(a)) * rr, pr * rng.randf_range(0.25, 0.5), pr * rng.randf_range(0.15, 0.3), a + PI * 0.5, float(EV.get("pginh", "0.5")), float(EV.get("pginf", "0.3"))])
 	var n_mid := int(EV.get("pgmid", "0")) # s233 E1: mid layer 22-60 m, back half, big low clumps on the terrain
 	for i in n_mid:
 		var a := rng.randf_range(PI * 0.95, PI * 2.05)

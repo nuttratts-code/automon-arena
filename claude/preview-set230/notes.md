@@ -205,3 +205,8 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - New `--e:pgnear=<n>` (s226.gd, after the front patches): n dense clumps alternating left/right at |x| `pgnx0`–`pgnx1`, z `pgnz` ± 0.7, height `pgnh` × lerp(0.6, 1, toward the frame edge), no joint test (crack flag 0) so they stay full. The bottom-of-frame DoF blurs them like the owner picture.
 - Trap: `pgnz=9.0` = below the bottom screen edge (nothing showed); 8.0 sits just inside the frame. Picked `pgnear=30 pgnz=8.0 pgnh=3.0 pgnx0=5.5 pgnx1=9`.
 - Args: r27_args.txt · code snapshot s226.gd.txt updated.
+
+## Round 28 (set 235) — owner: near grass lower + flowers mixed in + show the units
+- Near grass `pgnh=1.8` (was 3.0). Flowers only in the near corner grass: `pgf=0.08` (per-blade chance) × patch factor — new `pgnf` (near, 1.0) · `pgbf` (stone-base grass, default 1.0 → 0) · `pginf` (rim joint grass, default 0.3 → 0). Ring/far/front factors already 0.
+- Units on: r28_args.txt still holds `nounits=1` (clean shot for the AI); add `--e:nounits=0` for the game view (stand-ins = scratch only, the shot is never committed).
+- Args: r28_args.txt · code snapshot s226.gd.txt updated.
