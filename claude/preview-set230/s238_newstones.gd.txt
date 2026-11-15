@@ -1,0 +1,36 @@
+extends SceneTree
+# set 238 (owner A1-A4 + B1): keep the 2 big rune stones (StoneBig hero, StoneR); the other 6 standing stones get the owner's new stone models (bake route). Same stone shader, new baked colour/normal.
+const SWAP := {"StoneL": "stone_tall2_hy", "StoneFrontL": "stone_block_hy", "StoneBigSide": "stone_taper_hy", "StoneMid": "stone_plain_hy", "StoneShortR": "stone_taper_hy", "StoneFrontR": "stone_tall2_hy"}
+func _grab(nm: String) -> Array:
+	var sc: Node = (load("res://art/arena_r38/3d/%s.glb" % nm) as PackedScene).instantiate()
+	var mi: MeshInstance3D = sc.find_children("*", "MeshInstance3D", true, false)[0]
+	var mesh: Mesh = mi.mesh
+	var sm: BaseMaterial3D = mesh.surface_get_material(0)
+	var p := "res://art/arena_r38/mesh/%s.res" % nm
+	if not ResourceLoader.exists(p):
+		var m2: Mesh = mesh.duplicate()
+		m2.surface_set_material(0, null)
+		print("SAVE mesh ", ResourceSaver.save(m2, p))
+	return [load(p), sm.albedo_texture, sm.normal_texture]
+func _init():
+	var path := "res://art/arena_r38/arena_r38.tscn"
+	var root = load(path).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	var cache := {}
+	for k in SWAP:
+		var nm: String = SWAP[k]
+		if not cache.has(nm): cache[nm] = _grab(nm)
+		var r: Array = cache[nm]
+		var mi: MeshInstance3D = root.get_node("ArenaDressing/Near/" + k).get_child(0)
+		var mat: ShaderMaterial = (mi.material_override as ShaderMaterial).duplicate()
+		mat.set_shader_parameter("base_tex", r[1])
+		mat.set_shader_parameter("base_nor", r[2])
+		mat.set_shader_parameter("has_base_nor", r[2] != null)
+		mi.mesh = r[0]
+		mi.material_override = mat
+		mi.name = nm
+		print("SWAP ", k, " -> ", nm, " tex ", r[1].resource_path if r[1] else "none", " nor ", r[2] != null)
+	var ps := PackedScene.new()
+	print("NEWSTONES pack ", ps.pack(root), " save ", ResourceSaver.save(ps, path))
+	quit()
