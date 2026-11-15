@@ -2491,7 +2491,8 @@ func _s238_cards(st: Node, EV: Dictionary) -> void:
 	var vs := float(EV.get("mlv0", "212"))
 	var wl := float(EV.get("wl", "-5.2"))
 	var tn: Array = str(EV.get("mltint", "1,1,1")).split_floats(",")
-	var PAD := 300.0
+	var PAD := float(EV.get("mlpad", "300")) # side pad columns in the card image
+	var pre := str(EV.get("mlset", "")) # s238 round 3: "fh_" = owner's earlier far_hills_v3 cut into layers
 	# one shared shore row so the layers line up exactly as in the picture
 	var rel := Vector3(0, wl, cp.z - 300.0 * cos(pr)) - cp
 	var ys := 540.0 - rel.dot(B.y) / rel.dot(fwd) * (540.0 / thf) + float(EV.get("mldy", "0"))
@@ -2499,7 +2500,7 @@ func _s238_cards(st: Node, EV: Dictionary) -> void:
 	sh.code = CARD238
 	var n := 0
 	for c in [["s3", 316.0], ["s2", 308.0], ["s1", 300.0]]:
-		var img := Image.load_from_file(ProjectSettings.globalize_path("res://art/s238/%s.png" % c[0]))
+		var img := Image.load_from_file(ProjectSettings.globalize_path("res://art/s238/%s%s.png" % [pre, c[0]]))
 		if img == null: continue
 		img.generate_mipmaps()
 		var D: float = c[1]

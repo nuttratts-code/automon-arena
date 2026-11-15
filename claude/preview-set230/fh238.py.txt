@@ -1,0 +1,57 @@
+# s238 round 3 (owner A1/B1): the owner's earlier backdrop far_hills_v3.png (set 217) cut into 3 layers along its ridges.
+# Side tiles = mirrored copies with the arch painted out (so it shows once). Rows 250..707 kept; row 625 = mist foot -> water line.
+import numpy as np, cv2
+from PIL import Image
+from scipy.ndimage import median_filter
+im=np.asarray(Image.open(r'C:/Users/nuttr/OneDrive/Documents/GitHub/automon-arena/art/library/pictures/s217/far_hills_v3.png').convert('RGBA')).copy()
+Y0=250; im=im[Y0:]; H,W=im.shape[:2]
+rgb=im[...,:3].copy(); A=im[...,3].astype(np.float32)/255
+L=cv2.GaussianBlur(cv2.cvtColor(rgb,cv2.COLOR_RGB2LAB)[...,0].astype(float),(5,5),0)
+gy=np.zeros_like(L); gy[2:-2]=L[:-4]-L[4:]
+def pl(pts):  # display coords (1600 wide, y+220 crop) -> per-column row in this crop
+    xs=[p[0]*1.28 for p in pts]; ys=[p[1]*1.28+220-Y0 for p in pts]
+    return np.interp(np.arange(W),xs,ys)
+def snap(g,r):
+    out=np.zeros(W)
+    for x in range(W):
+        a=int(max(0,g[x]-r)); b=int(min(H-3,g[x]+r)); out[x]=a+np.argmax(np.abs(gy[a:b,x]))
+    return median_filter(out,21)
+s2=snap(pl([(0,105),(150,112),(300,138),(450,163),(560,178),(650,170),(760,140),(850,115),(950,100),(1080,88),(1250,75),(1400,55),(1500,45),(1600,36)]),12)
+ax0,ax1=int(1080*1.28),int(1180*1.28)   # arch columns: keep it on the mid layer
+arch_top=np.argmax(A[:,ax0:ax1]>0.5,axis=0).astype(float)
+s2[ax0:ax1]=np.minimum(s2[ax0:ax1],arch_top)
+s1=snap(pl([(0,230),(200,262),(380,300),(600,270),(800,250),(1000,232),(1100,215),(1200,205),(1300,210),(1400,215),(1500,195),(1600,175)]),12)
+def lay(line):
+    yy=np.arange(H)[:,None]; return np.clip((yy-line[None,:]+1)/2,0,1)
+# arch-less copy for the mirrored side tiles
+far=np.argmax(A>0.5,axis=0).astype(float)
+nb=np.r_[far[ax0-30:ax0],far[ax1:ax1+30]]; fr=np.median(nb)
+# side copies: no arch -> cut everything above the hill line under the arch (a soft dip in the far range)
+A2=A.copy(); rgb2=rgb.copy()
+xa,xb=ax0-10,ax1+10
+hl=np.interp(np.arange(xa,xb),[xa,xb],[s2[xa],s2[xb]])+2
+for i,x in enumerate(range(xa,xb)):
+    f=min(1.0,min(i,xb-xa-1-i)/8.0)
+    yy=np.arange(H)
+    keep=np.clip((yy-hl[i]+1)/3,0,1)
+    A2[:,x]=A2[:,x]*(1-f+f*keep)
+def tiles(rgbx,ax,line_a,line_b):
+    pass
+out={}
+for n,line in (('s3',None),('s2',s2),('s1',s1)):
+    a=A if line is None else A*lay(line)
+    lb=s2 if n=='s2' else s1
+    a2=A2 if line is None else A2*lay(line)
+    mid=np.dstack([rgb,(a*255).astype(np.uint8)])
+    side=np.dstack([rgb2,(a2*255).astype(np.uint8)])[:,::-1]
+    out[n]=np.concatenate([side,mid,side],axis=1)
+    Image.fromarray(out[n]).save(f'cards/fh_{n}.png')
+bg=np.zeros((H,3*W,3),np.float32); bg[:]=(30,30,90)
+for n in ('s3','s2','s1'):
+    c=out[n].astype(np.float32); a=c[...,3:]/255; bg=bg*(1-a)+c[...,:3]*a
+pv=bg.astype(np.uint8)
+for arr,col in ((s2,(255,255,0)),(s1,(0,120,255))):
+    for x in range(W): pv[int(np.clip(arr[x],0,H-1)),W+x]=col
+Image.fromarray(pv).resize((1536,115)).save('cards/fh_stack.png')
+Image.fromarray(pv[:,W:2*W]).resize((1024,229)).save('cards/fh_mid.png')
+print(H,W,'shore row',625-Y0)
