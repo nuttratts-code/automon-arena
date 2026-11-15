@@ -23,6 +23,8 @@ uniform float hill1 = 0.0; // s233 R11: ridge band rising again past the valley 
 uniform float hill2 = 0.0; // far ridge band (m)
 uniform vec3 haze_col = vec3(0.62, 0.74, 0.86);
 uniform float haze_amt = 0.0;
+uniform float vroll = 0.0; // s233 R12: rolling hills filling the valley floor (it read as a sea)
+uniform float hill3 = 0.0; // middle ridge at dr 140
 varying vec3 wp;
 varying float roll;
 float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -43,7 +45,10 @@ float th(vec2 p) {
 		float c1 = (dr - 95.0) / 26.0; float c2 = (dr - 190.0) / 42.0; // two ridge lines = two layers like the owner painting
 		float r1 = hill1 * exp(-c1 * c1) * (0.45 + 0.55 * fbm(p * 0.016 + vec2(3.3, 1.7)));
 		float r2 = hill2 * exp(-c2 * c2) * (0.45 + 0.55 * fbm(p * 0.009 + vec2(7.1, 2.9)));
-		return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) + r1 + r2 - 30.0 * smoothstep(250.0, 330.0, dr);
+		float c3 = (dr - 140.0) / 22.0;
+		float r3 = hill3 * exp(-c3 * c3) * (0.4 + 0.6 * fbm(p * 0.013 + vec2(5.2, 8.4)));
+		float vr = vroll * smoothstep(38.0, 75.0, dr) * fbm(p * 0.022 + vec2(1.9, 6.1));
+		return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) + r1 + r2 + r3 + vr - 30.0 * smoothstep(250.0, 330.0, dr);
 	}
 	if (fall > 0.0) { return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) - 40.0 * smoothstep(90.0, 140.0, dr); }
 	return shelf + mound(p) - 60.0 * smoothstep(20.0, 45.0, dr);
