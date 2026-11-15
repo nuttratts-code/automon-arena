@@ -188,3 +188,10 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 ## Round 24 (set 234) — owner: crack grass "many from the edge, fewer and fewer inward"
 - Each crack blade (after the joint test) is kept with prob lerp(1, `pgcmin`, inn) and its height × lerp(1, `pgch`, inn). First `inn` = distance inside the plaza rim (`pgcf`) → wrong: the front corners sit 2–4 m inside the rim, so everything thinned. Now `pgcxo` set → inn by screen side: dense at |x| ≥ `pgcxo` (frame edge ≈ ±6.6 m at the front row z 7), sparse by |x| = `pgcxi`. Front patches allowed from |x| 3 (`pgfgx=3.0`).
 - **a** `pgcs=2.0 pgcd=1.6 pgcxo=6.5 pgcxi=2.5 pgcmin=0.05 pgch=0.5` = short fade · **b** `pgcd=2.2 pgcxo=7.0 pgcxi=1.5 pgcmin=0.1 pgch=0.45` = longer fade reaching further in. Args: r24a_args.txt / r24b_args.txt. Waiting for owner pick.
+
+## Round 25 (set 235) — owner picked r24 **b** (long fade); A1 = close the remaining gaps vs the AI picture
+- Bigger flagstones: `gtile=11` (was 8; 12 slightly too big). Crack grass follows the same tile (jtile = gtile), so fewer joints → `pgcd=3.0` to keep the corner density.
+- Warmer clouds: `sky=0.8,0.78,0.78` (tints the whole sky texture — 0.95,0.86,0.76 killed the blue; a clouds-only tint would need shader work).
+- Clearer distance + softer mist: `thaze=0.3` (was 0.8) · `fogd=0.22` (was 0.35) · mist `mista=0.4 mistw=1.9 mh=1.2` (0.6/2.2 + mx0=0 = a white glow wall).
+- Still different: AI sky deeper blue with brighter orange cloud tops · AI corner grass thicker (owner chose crack grass, kept) · sun glare on the sea a bit strong.
+- Args: r25_args.txt. Waiting for owner: OK → extras back / tweaks.
