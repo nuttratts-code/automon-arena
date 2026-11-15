@@ -1,0 +1,108 @@
+// s230 sample: FF Re-style layered material (own code). Ground: tiled CC0 flagstone (world xz) + moss in joints/edge by mask.
+// Stones: own albedo/normal + the SAME moss texture on up-facing faces. Textures: Poly Haven CC0 (grey_stone_path, mossy_rock).
+shader_type spatial;
+uniform bool is_ground = true;
+uniform sampler2D base_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D base_nor : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D base_rough : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform bool has_base_nor = true;
+uniform sampler2D detail_tex : source_color, filter_linear_mipmap, repeat_enable; // set 238 A1: rune-stone grain/cracks laid over the soft new stones (high-pass, triplanar)
+uniform float detail_amt = 0.0;
+uniform float detail_tile = 1.6;
+uniform vec3 tint = vec3(1.0);
+uniform float tile = 1.8;
+uniform sampler2D moss_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D moss_nor : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float moss_tile = 3.0;
+uniform vec3 moss_tint = vec3(1.0);
+uniform sampler2D noise_tex : filter_linear, repeat_enable;
+uniform float noise_scale = 4.0;
+uniform float joint_lo = 0.18;
+uniform float joint_hi = 0.30;
+uniform float joint_amt = 0.8;
+uniform bool use_joint_tex = false;
+uniform sampler2D joint_tex : filter_linear_mipmap, repeat_enable; // joints mask made from the flagstone picture (s230)
+uniform float patch_amt = 0.35;
+uniform float patch_cut = 0.62;
+uniform vec3 centre = vec3(0.0);
+uniform float radius = 10.0;
+uniform float edge_from = 0.82;
+uniform float up_from = 0.55;
+uniform float stone_moss = 0.7;
+uniform float bright = 1.0;
+uniform bool ragged = false; // s233 A1: broken edge - warped outline, missing slabs near the rim, a few loose slabs outside
+uniform float rag_amp = 0.22;
+uniform float hole_amt = 0.5;
+uniform float loose_amt = 0.18;
+uniform bool use_shade = false; // s231: baked shade map sampled by world xz (the y 0.02 plane sits under the raised ground)
+uniform sampler2D shade_tex : filter_linear_mipmap;
+uniform float shade_ext = 26.0;
+uniform bool use_gmask = false; // s234 F1: plaza slabs end under the grass - soil there, broken slab edge around it
+uniform sampler2D grass_mask : filter_linear;
+uniform float gm_ext = 16.0;
+uniform float gm_cut = 0.45;
+uniform vec3 soil = vec3(0.2, 0.15, 0.1);
+uniform float gm_shadow = 0.0; // s234 F2: >0 = soft contact shadow under the grass instead of soil
+varying vec3 wp;
+varying vec3 wn;
+void vertex() {
+	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wn = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+	if (is_ground) { TANGENT = vec3(1.0, 0.0, 0.0); BINORMAL = vec3(0.0, 0.0, -1.0); }
+}
+float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+void fragment() {
+	vec2 wuv = wp.xz;
+	vec3 moss = texture(moss_tex, wuv / moss_tile).rgb * moss_tint;
+	float nz = texture(noise_tex, wuv / noise_scale).r;
+	if (is_ground) {
+		vec3 b = texture(base_tex, wuv / tile).rgb;
+		float j = use_joint_tex ? smoothstep(joint_lo, joint_hi, texture(joint_tex, wuv / tile).r) : 1.0 - smoothstep(joint_lo, joint_hi, lum(b));
+		float d = length(wp.xz - centre.xz) / radius;
+		float bm = 0.0;
+		if (ragged) {
+			float n2 = texture(noise_tex, wuv / 9.0 + vec2(0.31, 0.77)).r;
+			float n3 = texture(noise_tex, wuv / 1.6 + vec2(0.53, 0.19)).r;
+			float dw = d + (n2 - 0.5) * rag_amp * 2.0;
+			float thr = 1.0 - hole_amt * smoothstep(0.78, 1.0, dw);
+			bool keep = dw < 1.0 && n3 < thr;
+			bool loose = d < 1.14 && n3 < loose_amt;
+			if (!(keep || loose)) { discard; }
+			bm = smoothstep(thr - 0.12, thr, n3) + smoothstep(0.92, 1.0, dw);
+		}
+		float edge = smoothstep(edge_from, 1.0, d) * smoothstep(0.35, 0.6, nz);
+		float pat = smoothstep(patch_cut, patch_cut + 0.12, nz) * patch_amt;
+		float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge + bm * 0.6, 0.0, 1.0);
+		ALBEDO = mix(b * tint, moss, m) * bright;
+		if (use_gmask) {
+			float gmv = texture(grass_mask, (wp.xz + gm_ext) / (2.0 * gm_ext)).r;
+			if (gm_shadow > 0.0) {
+				ALBEDO *= 1.0 - gm_shadow * smoothstep(0.0, 0.9, gmv);
+			} else {
+			float n4 = texture(noise_tex, wuv / 2.3 + vec2(0.11, 0.63)).r;
+			float cut = gmv + (n4 - 0.5) * 0.6 + j * 0.25 * step(0.05, gmv);
+			vec3 sc = soil * (0.75 + 0.5 * n4);
+			sc = mix(sc, moss * 0.55, 0.25 * smoothstep(0.4, 0.8, nz));
+			float e = smoothstep(gm_cut - 0.18, gm_cut, cut); // dirty, mossy slab rim next to the soil
+			ALBEDO = mix(ALBEDO, mix(ALBEDO, sc, 0.55), e);
+			if (cut > gm_cut) { ALBEDO = sc; m = 1.0; }
+			}
+		}
+		if (use_shade) { ALBEDO *= texture(shade_tex, (wp.xz + shade_ext) / (2.0 * shade_ext)).rgb; }
+		ROUGHNESS = mix(texture(base_rough, wuv / tile).r, 0.95, m);
+		NORMAL_MAP = mix(texture(base_nor, wuv / tile).rgb, texture(moss_nor, wuv / moss_tile).rgb, m);
+	} else {
+		vec3 b = texture(base_tex, UV).rgb * tint;
+		if (detail_amt > 0.0) {
+			vec3 bw = pow(abs(wn), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+			vec2 u1 = wp.zy / detail_tile; vec2 u2 = wp.xz / detail_tile; vec2 u3 = wp.xy / detail_tile;
+			float hi = lum(texture(detail_tex, u1).rgb) * bw.x + lum(texture(detail_tex, u2).rgb) * bw.y + lum(texture(detail_tex, u3).rgb) * bw.z;
+			float lo = lum(textureLod(detail_tex, u1, 6.0).rgb) * bw.x + lum(textureLod(detail_tex, u2, 6.0).rgb) * bw.y + lum(textureLod(detail_tex, u3, 6.0).rgb) * bw.z;
+			b *= clamp(1.0 + (hi - lo) * 2.2 * detail_amt, 0.45, 1.6);
+		}
+		float m = smoothstep(up_from, up_from + 0.25, wn.y) * smoothstep(0.3, 0.55, nz) * stone_moss;
+		ALBEDO = mix(b, moss, m) * bright;
+		ROUGHNESS = 0.9;
+		if (has_base_nor) { NORMAL_MAP = texture(base_nor, UV).rgb; }
+	}
+}

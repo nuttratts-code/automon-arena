@@ -1,0 +1,24 @@
+extends SceneTree
+# set 238 A1: rune-stone surface detail on the new stones (shader detail_tex/detail_amt) + remove the 4 S238CoverBush* (owner: wrong rocks)
+const NEW := ["stone_tall2_hy", "stone_plain_hy", "stone_taper_hy", "stone_block_hy"]
+func _init():
+	var amt := float(OS.get_environment("DAMT")) if OS.get_environment("DAMT") != "" else 1.0
+	var path := "res://art/arena_r38/arena_r38.tscn"
+	var root = load(path).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	var nb := 0
+	for n in root.find_children("S238CoverBush*", "", true, false):
+		n.get_parent().remove_child(n); n.free(); nb += 1
+	var det: Texture2D = load("res://art/arena_r38/tex/stone_hy_runes_full1k_texture_pbr_20250901.webp")
+	var ns := 0
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null: continue
+		if not NEW.has(mi.mesh.resource_path.get_file().get_basename()): continue
+		var mat: ShaderMaterial = mi.material_override
+		mat.set_shader_parameter("detail_tex", det)
+		mat.set_shader_parameter("detail_amt", amt)
+		ns += 1
+	var ps := PackedScene.new()
+	print("SD bushes removed ", nb, " stones ", ns, " amt ", amt, " pack ", ps.pack(root), " save ", ResourceSaver.save(ps, path))
+	quit()

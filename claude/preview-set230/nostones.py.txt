@@ -1,0 +1,36 @@
+# set 238: paint the picture's own 2 runestones out of the S3 matte (owner red marks) - mirrored foliage from beside each stone, feathered; then the S3 blur (premultiplied sigma 3.12)
+import numpy as np
+from PIL import Image, ImageFilter
+src = np.asarray(Image.open('matte_s3_fix.png')).astype(float)
+out = src.copy()
+# the faint magenta mask outline left in the fix file: replace with a 7x7 median of non-line pixels
+r, g, b = src[..., 0], src[..., 1], src[..., 2]
+line = (r > g + 25) & (b > g + 25) & (src[..., 3] > 0)
+from scipy.ndimage import median_filter
+for c in range(3):
+    med = median_filter(np.where(line, np.nan, src[..., c]), size=7, mode='nearest') if False else median_filter(src[..., c], size=7)
+    src[..., c] = np.where(line, med, src[..., c])
+out = src.copy()
+print('line px', int(line.sum()))
+H, W = src.shape[:2]
+def fill(x0, x1, y0, y1, srcx, feather=18):
+    w = np.zeros((H, W))
+    w[y0:y1, x0:x1] = 1.0
+    w = np.asarray(Image.fromarray((w * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(feather))).astype(float) / 255
+    w = np.clip(w * 2.0, 0, 1)  # full cover inside, soft edge outside
+    xs = np.arange(W)
+    sx = np.clip(srcx(xs), 0, W - 1).astype(int)
+    patch = src[:, sx, :3]
+    m = w[..., None] * (src[..., 3:4] > 0)
+    out[..., :3] = out[..., :3] * (1 - m) + patch * m
+fill(170, 420, 110, 400, lambda x: 650 - (x - 170))      # left stone top <- mirrored tree band right of it (x 400-650)
+fill(170, 420, 360, 540, lambda x: 40 + np.abs(((x - 170) % 260) - 130), feather=10)  # ping-pong = mirrored repeats, no hard seams  # left stone foot <- bushes left of it (x 40-170), no small runestone copies
+fill(1705, 1895, 200, 540, lambda x: 1704 - (x - 1705))  # right stone <- mirrored forest/bushes left of it
+Image.fromarray(np.clip(out + .5, 0, 255).astype(np.uint8)).save('matte_s3_fix.png')
+a = out / 255; p = a.copy(); p[..., :3] *= p[..., 3:4]
+b = np.stack([np.asarray(Image.fromarray((p[..., i] * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3.12))).astype(float) / 255 for i in range(4)], -1)
+r = b.copy(); r[..., :3] = np.where(b[..., 3:4] > 1e-3, b[..., :3] / np.maximum(b[..., 3:4], 1e-3), 0)
+Image.fromarray(np.clip(r * 255 + .5, 0, 255).astype(np.uint8)).save('../g/art/arena_r38/tex/matte238_s3.png')
+bg = Image.new('RGBA', (W, H), (255, 0, 255, 255)); bg.alpha_composite(Image.fromarray(np.clip(out + .5, 0, 255).astype(np.uint8)))
+bg = bg.convert('RGB'); c = Image.new('RGB', (1250, 480)); c.paste(bg.crop((0, 100, 700, 580)), (0, 0)); c.paste(bg.crop((1450, 100, 2000, 580)), (700, 0)); c.save('stones_out.png')
+print('ok')
