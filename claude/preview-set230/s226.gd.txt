@@ -283,6 +283,13 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	var tn: Array = str(EV.get("stint", "0.95,0.93,0.88")).split_floats(",")
 	for s in sprs:
 		(s as Sprite3D).modulate = Color(tn[0], tn[1], tn[2])
+	if EV.get("sky2", "0") == "1": _s235_sky(st, EV)
+	if EV.get("ushd", "0") == "1": # s235: units cast real sun shadows (owner AI picture 2: long shadows)
+		for s in sprs:
+			(s as Sprite3D).alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			(s as Sprite3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	if EV.has("birds"): _s235_birds(st, EV)
+	if EV.has("ulong"): _s235_longshadow(st, sprs, EV)
 	# foreground grass strip: its top reaches screen y = fgy, on a plane between the camera and the board
 	var vp := Vector2(DisplayServer.window_get_size())
 	var t: Texture2D = load("res://art/s217/grass_strip_front.png")
@@ -952,6 +959,7 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 	for i in n_far:
 		var a := rng.randf_range(PI * 0.92, PI * 2.08)
 		var rr := rng.randf_range(float(EV.get("pgfr0", "14")), float(EV.get("pgfr1", "21")))
+		if absf(cos(a) * rr * 1.12) < float(EV.get("pggap", "0")): continue # s235: opening at the back (owner AI picture 2: path down to the lake)
 		centres.append([Vector2(cos(a) * rr * 1.12, sin(a) * rr - 1.5), pr * rng.randf_range(1.2, 2.2), pr * rng.randf_range(0.5, 0.9), a + PI * 0.5, float(EV.get("pgfarh", "1.5")) * rng.randf_range(0.8, 1.2), float(EV.get("pgfarf", "0.3"))])
 	var n_fg := int(EV.get("pgfg", "0"))
 	for i in n_fg:
@@ -1735,3 +1743,97 @@ func _s234_gmask(g: MeshInstance3D, c: Vector2, r: float, centres: Array, EV: Di
 	var sc := Color(EV.get("gmsoil", "#33261a"))
 	m.set_shader_parameter("soil", Vector3(sc.r, sc.g, sc.b))
 	print("s233 gmask patches ", n)
+
+
+# s235 (owner AI picture 2): deeper blue sky + warm cloud tops, tinted apart. Blue-ness of each texel picks the tint.
+const SKY235 := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled;
+uniform sampler2D tex : source_color, filter_linear_mipmap;
+uniform vec3 blue_k = vec3(0.8, 0.9, 1.1);
+uniform vec3 cloud_k = vec3(1.15, 1.0, 0.85);
+uniform float bsharp = 4.0;
+void fragment() {
+	vec4 c = texture(tex, UV);
+	if (c.a < 0.5) discard;
+	float b = clamp((c.b - max(c.r, c.g * 0.9)) * bsharp, 0.0, 1.0);
+	ALBEDO = mix(c.rgb * cloud_k, c.rgb * blue_k, b);
+}
+"""
+
+func _s235_sky(st: Node, EV: Dictionary) -> void:
+	var sh := Shader.new()
+	sh.code = SKY235
+	var bk: Array = str(EV.get("skyb", "0.8,0.9,1.1")).split_floats(",")
+	var ck: Array = str(EV.get("skyc", "1.15,1.0,0.85")).split_floats(",")
+	var n := 0
+	for mi in st.find_children("*", "MeshInstance3D", true, false):
+		var mo := (mi as MeshInstance3D).material_override as StandardMaterial3D
+		if mo == null or mo.albedo_texture == null or not mo.albedo_texture.resource_path.ends_with("sky_clouds.png"): continue
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.set_shader_parameter("tex", mo.albedo_texture)
+		m.set_shader_parameter("blue_k", Vector3(bk[0], bk[1], bk[2]))
+		m.set_shader_parameter("cloud_k", Vector3(ck[0], ck[1], ck[2]))
+		m.set_shader_parameter("bsharp", float(EV.get("skys", "4.0")))
+		(mi as MeshInstance3D).material_override = m
+		n += 1
+	print("s235 sky quads ", n)
+
+# s235: a loose flock of small dark V birds far off (sample only)
+func _s235_birds(st: Node, EV: Dictionary) -> void:
+	var img := Image.create(32, 14, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var bc := Color(0.18, 0.2, 0.22, 1.0)
+	for i in 14:
+		var y := int(abs(float(i) - 6.5) * 0.0) # placeholder keeps the loop simple
+		var yy := 2 + int(float(i) * 0.55)
+		img.set_pixel(i + 2, yy, bc); img.set_pixel(i + 2, yy + 1, bc)
+		img.set_pixel(29 - i, yy, bc); img.set_pixel(29 - i, yy + 1, bc)
+	var t := ImageTexture.create_from_image(img)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23502
+	var cx := float(EV.get("bx", "15")); var cy := float(EV.get("by", "38")); var cz := -float(EV.get("bz", "160"))
+	for i in int(EV["birds"]):
+		var sp := Sprite3D.new()
+		sp.texture = t
+		sp.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		sp.shaded = false
+		sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		sp.pixel_size = float(EV.get("bsz", "0.06")) * rng.randf_range(0.7, 1.2)
+		sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		st.add_child(sp)
+		sp.global_position = Vector3(cx + rng.randf_range(-14.0, 14.0), cy + rng.randf_range(-5.0, 5.0), cz + rng.randf_range(-10.0, 10.0))
+		sp.flip_h = rng.randf() < 0.5
+
+
+# s235: fake long sun shadow per unit = the sprite's silhouette lying flat on the ground from its feet
+# (the plaza shading is baked, so real shadow maps do not show on it). ulong = alpha, ulen = length factor, udir = x,z.
+func _s235_longshadow(st: Node, sprs: Array, EV: Dictionary) -> void:
+	var dv: Array = str(EV.get("udir", "-1,0.35")).split_floats(",")
+	var dir := Vector3(dv[0], 0.0, dv[1]).normalized()
+	var L := float(EV.get("ulen", "0.9"))
+	var n := 0
+	for s0 in sprs:
+		var s := s0 as Sprite3D
+		if s == null or s.texture == null: continue
+		var h := float(s.texture.get_height())
+		var sh := Sprite3D.new()
+		sh.texture = s.texture
+		sh.pixel_size = s.pixel_size
+		sh.flip_h = s.flip_h
+		sh.shaded = false
+		sh.no_depth_test = false
+		sh.modulate = Color(0.05, 0.06, 0.1, float(EV["ulong"]))
+		sh.offset = Vector2(0, h * 0.5)
+		sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		st.add_child(sh)
+		var sc := s.global_transform.basis.get_scale()
+		var yv := dir * L * sc.y
+		var zv := Vector3(0, 1, 0)
+		var xv := yv.cross(zv).normalized() * sc.x
+		var p := s.global_position
+		var bottom := p.y - (h * 0.5 - s.offset.y) * s.pixel_size * sc.y if s.centered else p.y
+		sh.global_transform = Transform3D(Basis(xv, yv, zv), Vector3(p.x, 0.03, p.z))
+		n += 1
+	print("s233 long shadows ", n)

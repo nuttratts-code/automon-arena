@@ -213,3 +213,13 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 
 ## Round 29 (set 235) — owner: "front grass lower again"
 - Near corner grass `pgnh=1.2` (was 1.8) + front crack grass `pgfgh=0.8` (was 1.05). Flowers + units as round 28. Args: r29_args.txt (+ `--e:nounits=0` for units).
+
+## Round 30 (set 235) — owner AI picture 2 (Gemini render of our r29 shot: trees + bushes + ivy, flowers round the ring, opening at the back, mist banks, blue sky + warm clouds, long unit shadows, birds) · owner A1 = everything that needs no new art first
+- Flowers round the ring + stone bases: `pgfarf=0.3 pgbf=0.6 pginf=0.3` (pgf 0.08 per blade).
+- Opening at the back: new `pggap=4` skips ring patches with |x| < 4. Gentle slope to the lake tried (`tfall=7 tf0=20 tf1=75`) = the far ridge rises and hides the sea → terrain kept (tfall 14).
+- Mist banks: `mist=16 mx0=-35 mx1=30 mz0=78 mz1=100 mistw=0.7 mh=0.7 mty=-1 mista=0.8` (mistw 1.9 × mh 1.2 = quads ~40 m tall = a white wall).
+- Sky: new `sky2=1` (`_s235_sky`, SKY235 shader replaces the sky_clouds quad material): blue texels × `skyb` (0.8,0.9,1.1), others × `skyc` (1.15,1.0,0.85), `skys` = blue-mask sharpness.
+- Long unit shadows: real ones do not work — the plaza shading is baked, shadow maps never show on it (`ushd=1` + sun from behind also made every sprite dark). New `ulong=<alpha>` (`_s235_longshadow`): each unit's silhouette lies flat on the ground from its feet toward `udir` (-1,0.35 = left, like the picture), length `ulen`. Picked `ulong=0.5 ulen=1.3`.
+- Birds: new `birds=16` (`_s235_birds`, code-drawn dark V, billboards) at `bx=12 by=3 bz=120 bsz=0.04` — the camera sees little sky, by 30 was above the frame.
+- Waiting for owner art (A1 second half): trees left/right, bushes round the ring, ivy on the standing stones (Gemini, magenta bg like the grass sheets).
+- Args: r30_args.txt (+ `--e:nounits=0` for units) · code snapshot s226.gd.txt.
