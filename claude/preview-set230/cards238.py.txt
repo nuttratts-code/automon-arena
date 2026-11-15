@@ -10,6 +10,11 @@ m=np.zeros((H,W),np.uint8)
 for x0,y0,x1,y1 in [(0,0,275,28),(0,24,58,195),(940,0,1058,28),(1608,0,2000,28),(1900,34,1990,112),(1912,114,1972,140)]:
     m[y0:y1,x0:x1]=255
 img=cv2.inpaint(img,m,9,cv2.INPAINT_TELEA)
+# s238 round 2 (owner): the picture's own foreground (right-shore trees, rock, near hill) sat on the card feet -> paint it over with the mist
+Lf=cv2.cvtColor(img,cv2.COLOR_RGB2LAB)[...,0]
+fm=np.zeros((H,W),np.uint8); fm[165:,1540:]=(Lf[165:,1540:]<190).astype(np.uint8)*255
+fm=cv2.dilate(fm,np.ones((7,7),np.uint8))
+img=cv2.inpaint(img,fm,15,cv2.INPAINT_TELEA)
 L=cv2.GaussianBlur(cv2.cvtColor(img,cv2.COLOR_RGB2LAB)[...,0].astype(float),(5,5),0)
 gy=np.zeros_like(L); gy[2:-2]=L[:-4]-L[4:]   # + where brighter above (sky/haze above a darker ridge)
 r,g,b=ann[:H,:,0],ann[:H,:,1],ann[:H,:,2]
@@ -35,6 +40,9 @@ s3[1600:]=np.maximum(s3[1600:],48) # under the painted-out editor toolbar
 s2=snap(yel,16)
 s1=snap(blu,14)
 s1[1490:1680]=np.minimum(s1[1490:1680],blu[1490:1680]) # keep the spire the owner traced
+# right end (gizmo + near hill smear): mirror the clean hill 1700-1850 over 1850-2000
+img[:,1850:]=img[:,1849:1699:-1]
+for arr in (s3,s1): arr[1850:]=arr[1849:1699:-1]
 xs=np.arange(W)
 x2a,x2b=xs[yok].min(),xs[yok].max(); x1a=xs[bok].min()
 print('S2 x',x2a,x2b,'S1 from',x1a)
@@ -53,6 +61,7 @@ c3=card(s3,0,W-1,0,0)
 s2f=s2.copy(); s2f[:x2a]=np.maximum(snap(np.full(W,95.0),40,lo=50)[:x2a], s3[:x2a])
 c2=card(s2f,60,min(W-1,x2b+40),60,80)
 c1=card(s1,max(0,x1a-60),W-1,120,0)
+c1[:28,1600:,3]=0 # painted-out editor toolbar over the spire tips (above the frame in game anyway)
 PAD=300
 def pad(c):  # mirror the side columns so the card reaches past the frame edges
     l=c[:,60:60+PAD][:,::-1].copy(); c=c.copy(); c[:,:60]=c[:,120:60:-1]
