@@ -1,0 +1,107 @@
+import sys, os
+T = sys.argv[1]
+def patch(p, pairs, tail=''):
+    p = os.path.join(T, p)
+    s = open(p, encoding='utf-8').read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (p, a[:70])
+        s = s.replace(a, b)
+    s += tail
+    open(p, 'w', encoding='utf-8').write(s)
+
+patch('s230_ground.gdshader', [
+('uniform float bright = 1.0;', '''uniform float bright = 1.0;
+uniform bool ragged = false; // s233 A1: broken edge - warped outline, missing slabs near the rim, a few loose slabs outside
+uniform float rag_amp = 0.22;
+uniform float hole_amt = 0.5;
+uniform float loose_amt = 0.18;'''),
+('''		float d = length(wp.xz - centre.xz) / radius;
+''', '''		float d = length(wp.xz - centre.xz) / radius;
+		float bm = 0.0;
+		if (ragged) {
+			float n2 = texture(noise_tex, wuv / 9.0 + vec2(0.31, 0.77)).r;
+			float n3 = texture(noise_tex, wuv / 1.6 + vec2(0.53, 0.19)).r;
+			float dw = d + (n2 - 0.5) * rag_amp * 2.0;
+			float thr = 1.0 - hole_amt * smoothstep(0.78, 1.0, dw);
+			bool keep = dw < 1.0 && n3 < thr;
+			bool loose = d < 1.14 && n3 < loose_amt;
+			if (!(keep || loose)) { discard; }
+			bm = smoothstep(thr - 0.12, thr, n3) + smoothstep(0.92, 1.0, dw);
+		}
+'''),
+('float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge, 0.0, 1.0);',
+ 'float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge + bm * 0.6, 0.0, 1.0);'),
+])
+
+patch('s226.gd', [
+('''	cm.top_radius = r
+	cm.bottom_radius = r * 1.02''', '''	cm.top_radius = r * (1.18 if EV.get("rag", "0") == "1" else 1.0) # s233 A1: room for the warped edge + loose slabs
+	cm.bottom_radius = cm.top_radius * 1.02
+	if EV.get("rag", "0") == "1":
+		sm.set_shader_parameter("ragged", true)
+		sm.set_shader_parameter("rag_amp", float(EV.get("ragamp", "0.22")))
+		sm.set_shader_parameter("hole_amt", float(EV.get("raghole", "0.5")))
+		sm.set_shader_parameter("loose_amt", float(EV.get("ragloose", "0.18")))'''),
+('			var y := top if p.distance_to(c) < r else 0.0\n',
+ '			var y := top if p.distance_to(c) < r * 0.9 else (_s233_th(p, EV) if EV.get("terr", "0") == "1" else (top if p.distance_to(c) < r else 0.0))\n'),
+('	if EV.get("pg", "0") == "1": _s231_patches(st, EV)',
+ '	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground\n	if EV.get("pg", "0") == "1": _s231_patches(st, EV)'),
+], '''
+
+# s233 B1: rolling ground - same th() as tests/s233_terrain.gdshader (change both). A fine near mesh over the arena +
+# the old far Ground gets the same shader, sunk a little so the near mesh wins where both exist.
+func _s233_h(p: Vector2) -> float:
+	return fposmod(sin(p.dot(Vector2(127.1, 311.7))) * 43758.5453, 1.0)
+func _s233_vn(p: Vector2) -> float:
+	var i := p.floor()
+	var f := p - i
+	f = f * f * (Vector2(3, 3) - 2.0 * f)
+	return lerpf(lerpf(_s233_h(i), _s233_h(i + Vector2(1, 0)), f.x), lerpf(_s233_h(i + Vector2(0, 1)), _s233_h(i + Vector2(1, 1)), f.x), f.y)
+func _s233_fbm(p: Vector2) -> float:
+	return _s233_vn(p) * 0.55 + _s233_vn(p * 2.03 + Vector2(5.1, 5.1)) * 0.3 + _s233_vn(p * 4.1 + Vector2(9.7, 9.7)) * 0.15
+func _s233_th(p: Vector2, EV: Dictionary) -> float:
+	var r := p.length() / 11.7
+	var shelf := -0.04 - 0.11 * smoothstep(1.15, 1.6, r)
+	var mound := float(EV.get("tamp", "1.6")) * smoothstep(1.35, 2.8, r) * pow(_s233_fbm(p * 0.07), 1.3)
+	var dr := Vector2(p.x * 0.85, p.y + 2.0).length()
+	return shelf + mound - 60.0 * smoothstep(20.0, 45.0, dr)
+
+func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: Dictionary) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	m.set_shader_parameter("tex", om.get_shader_parameter("tex"))
+	m.set_shader_parameter("tint", om.get_shader_parameter("tint"))
+	m.set_shader_parameter("tile", om.get_shader_parameter("tile"))
+	m.set_shader_parameter("teal", float(EV.get("teal", "0.22")))
+	m.set_shader_parameter("amp", float(EV.get("tamp", "1.6")))
+	m.set_shader_parameter("node_y", node_y)
+	m.set_shader_parameter("sink", sink)
+	m.set_shader_parameter("dirt_amt", float(EV.get("tdirt", "1.0")))
+	m.set_shader_parameter("dry_amt", float(EV.get("tdry", "0.5")))
+	m.set_shader_parameter("path_amt", float(EV.get("tpath", "1.0")))
+	m.set_shader_parameter("hue_amt", float(EV.get("thue", "1.0")))
+	return m
+
+func _s233_terrain(st: Node, EV: Dictionary) -> void:
+	var old := st.find_child("Ground", true, false) as MeshInstance3D
+	if old == null:
+		print("s233 terrain: no Ground")
+		return
+	var om := old.material_override as ShaderMaterial
+	var sh := load("res://tests/s233_terrain.gdshader") as Shader
+	old.material_override = _s233_mat(sh, om, old.global_position.y, 0.08, EV)
+	old.extra_cull_margin = 80.0
+	var near := MeshInstance3D.new()
+	near.name = "S233Near"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(110, 90)
+	pm.subdivide_width = 274
+	pm.subdivide_depth = 224
+	near.mesh = pm
+	st.add_child(near)
+	near.global_position = Vector3(0, 0, -25)
+	near.material_override = _s233_mat(sh, om, 0.0, 0.0, EV)
+	near.extra_cull_margin = 80.0
+	print("s233 terrain: near mesh + far ground, amp ", EV.get("tamp", "1.6"))
+''')
+print('patched')

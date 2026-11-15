@@ -1,0 +1,75 @@
+// s233 sample (own code): rolling ground around the plaza. Height th() = shelf at the plaza rim + positive-only mounds
+// further out + the old plateau drop (r 20-45). th() is mirrored in tests/s226.gd _s233_th() - change both.
+shader_type spatial;
+render_mode specular_disabled;
+uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_enable;
+uniform vec3 tint = vec3(0.78, 0.8, 0.72);
+uniform float tile = 7.0;
+uniform float teal = 0.22;
+uniform float plaza_r = 11.7;
+uniform float amp = 1.6;
+uniform float node_y = -0.15;
+uniform float sink = 0.0;
+uniform vec3 dirt = vec3(0.45, 0.37, 0.27);
+uniform vec3 dry = vec3(0.78, 0.72, 0.45);
+uniform float dirt_amt = 1.0;
+uniform float dry_amt = 0.5;
+uniform float path_amt = 1.0;
+uniform float hue_amt = 1.0;
+varying vec3 wp;
+varying float roll;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+float fbm(vec2 p) { return vn(p) * 0.55 + vn(p * 2.03 + 5.1) * 0.3 + vn(p * 4.1 + 9.7) * 0.15; }
+float mound(vec2 p) {
+	float r = length(p) / plaza_r;
+	return amp * smoothstep(1.35, 2.8, r) * pow(fbm(p * 0.07), 1.3);
+}
+float th(vec2 p) {
+	float r = length(p) / plaza_r;
+	float shelf = -0.04 - 0.11 * smoothstep(1.15, 1.6, r);
+	float dr = length(vec2(p.x * 0.85, p.y + 2.0));
+	return shelf + mound(p) - 60.0 * smoothstep(20.0, 45.0, dr);
+}
+float path_px(float z) { return 1.0 + 0.32 * (-z - 11.0) + 1.2 * sin(z * 0.21); }
+void vertex() {
+	vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	float y = th(w.xz) - sink;
+	VERTEX.y = y - node_y;
+	float e = 0.4;
+	vec3 n = normalize(vec3(th(w.xz - vec2(e, 0.0)) - th(w.xz + vec2(e, 0.0)), 2.0 * e, th(w.xz - vec2(0.0, e)) - th(w.xz + vec2(0.0, e))));
+	NORMAL = n;
+	wp = vec3(w.x, y, w.z);
+	roll = mound(w.xz) / max(amp, 0.001);
+}
+void fragment() {
+	vec2 p = wp.xz / tile;
+	vec2 q = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * p * 0.61 + vec2(0.37, 0.11);
+	float m = smoothstep(0.3, 0.7, vn(wp.xz * 0.11));
+	vec3 c = mix(texture(tex, p).rgb, texture(tex, q).rgb, m);
+	float pa = vn(wp.xz * 0.045 + vec2(3.0, 7.0));
+	c *= mix(vec3(0.74, 0.82, 0.6), vec3(1.1, 1.05, 0.82), pa);
+	float l = dot(c, vec3(0.3, 0.59, 0.11));
+	c = mix(c, l * vec3(0.78, 1.32, 1.18), teal);
+	l = dot(c, vec3(0.3, 0.59, 0.11));
+	// hollows darker + bluer-green, crests warmer and lighter
+	c *= mix(vec3(1.0), mix(vec3(0.78, 0.9, 0.84), vec3(1.1, 1.06, 0.9), smoothstep(0.05, 0.7, roll)), hue_amt);
+	// dry grass patches
+	float dn = smoothstep(0.62, 0.78, fbm(wp.xz * 0.05 + vec2(17.0, 3.0)));
+	c = mix(c, l * dry * 1.6, dn * dry_amt);
+	// worn dirt under the ragged plaza edge + small bare spots
+	float r = length(wp.xz) / plaza_r;
+	float rn = vn(wp.xz * 0.55);
+	float ring = smoothstep(1.28, 1.0, r + (rn - 0.5) * 0.35);
+	float spots = smoothstep(0.8, 0.9, fbm(wp.xz * 0.12 + vec2(41.0, 9.0))) * smoothstep(1.1, 1.4, r);
+	// dirt track from the back of the plaza toward the arch (back-right)
+	float pd = abs(wp.x - path_px(wp.z)) - 0.7 - 0.35 * vn(wp.xz * 0.4);
+	float path = smoothstep(0.35, -0.1, pd) * smoothstep(-9.5, -13.0, wp.z) * (0.55 + 0.45 * vn(wp.xz * 1.3));
+	float dm = clamp(max(max(ring, spots), path * path_amt) * dirt_amt, 0.0, 1.0);
+	c = mix(c, dirt * (0.75 + 0.5 * vn(wp.xz * 2.1)), dm);
+	ALBEDO = c * tint;
+	ROUGHNESS = 1.0;
+}
