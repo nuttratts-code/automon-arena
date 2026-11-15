@@ -39,6 +39,7 @@ uniform sampler2D grass_mask : filter_linear;
 uniform float gm_ext = 16.0;
 uniform float gm_cut = 0.45;
 uniform vec3 soil = vec3(0.2, 0.15, 0.1);
+uniform float gm_shadow = 0.0; // s234 F2: >0 = soft contact shadow under the grass instead of soil
 varying vec3 wp;
 varying vec3 wn;
 void vertex() {
@@ -72,6 +73,9 @@ void fragment() {
 		ALBEDO = mix(b * tint, moss, m) * bright;
 		if (use_gmask) {
 			float gmv = texture(grass_mask, (wp.xz + gm_ext) / (2.0 * gm_ext)).r;
+			if (gm_shadow > 0.0) {
+				ALBEDO *= 1.0 - gm_shadow * smoothstep(0.0, 0.9, gmv);
+			} else {
 			float n4 = texture(noise_tex, wuv / 2.3 + vec2(0.11, 0.63)).r;
 			float cut = gmv + (n4 - 0.5) * 0.6 + j * 0.25 * step(0.05, gmv);
 			vec3 sc = soil * (0.75 + 0.5 * n4);
@@ -79,6 +83,7 @@ void fragment() {
 			float e = smoothstep(gm_cut - 0.18, gm_cut, cut); // dirty, mossy slab rim next to the soil
 			ALBEDO = mix(ALBEDO, mix(ALBEDO, sc, 0.55), e);
 			if (cut > gm_cut) { ALBEDO = sc; m = 1.0; }
+			}
 		}
 		if (use_shade) { ALBEDO *= texture(shade_tex, (wp.xz + shade_ext) / (2.0 * shade_ext)).rgb; }
 		ROUGHNESS = mix(texture(base_rough, wuv / tile).r, 0.95, m);

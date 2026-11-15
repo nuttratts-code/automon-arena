@@ -175,3 +175,7 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - F1 `--e:gmask=1` (`_s234_gmask` in s226.gd + `use_gmask` in s230_ground.gdshader): 512² top-down mask (±`gmext` 16 m) of every grass patch within 1.3 r of the plaza (ellipse × `gmk`, soft edge) → plaza shader: noise + joints break the cut, inside = soil (`gmsoil` #33261a, mossy speckle), a dirty slab rim just outside. Picked `gmk=1.5 gmcut=0.4` (gmk 1.0 = tufts still on slabs). Roots darker `pgroot=0.85`.
 - Bare soil now shows a bit past the corner grass — reads as worn earth; shrink with gmk 1.2–1.3 if the owner wants less.
 - Args: r21_args.txt (= r20 + gmask). Shader copy: s230_ground.gdshader.txt.
+
+## Round 22 (set 234) — owner: round 21 soil "not pretty at all — try shadow" (= F2)
+- Same mask, new mode `--e:gmsh=<k>` (`gm_shadow` in s230_ground.gdshader): slabs stay, ALBEDO × (1 − k·smoothstep(0, 0.9, mask)) = soft dark contact shade under every patch, no soil, no broken slab rim. Picked `gmk=1.25 gmsh=0.55` + `pgroot=0.85`. gmsh = 0 falls back to the round-21 soil mode.
+- Args: r22_args.txt.

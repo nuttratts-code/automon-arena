@@ -1676,6 +1676,7 @@ func _s234_gmask(g: MeshInstance3D, c: Vector2, r: float, centres: Array, EV: Di
 	m.set_shader_parameter("grass_mask", ImageTexture.create_from_image(img))
 	m.set_shader_parameter("gm_ext", ext)
 	m.set_shader_parameter("gm_cut", float(EV.get("gmcut", "0.45")))
+	m.set_shader_parameter("gm_shadow", float(EV.get("gmsh", "0")))
 	var sc := Color(EV.get("gmsoil", "#33261a"))
 	m.set_shader_parameter("soil", Vector3(sc.r, sc.g, sc.b))
 	print("s233 gmask patches ", n)
