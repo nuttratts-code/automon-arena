@@ -27,6 +27,10 @@ uniform float edge_from = 0.82;
 uniform float up_from = 0.55;
 uniform float stone_moss = 0.7;
 uniform float bright = 1.0;
+uniform bool ragged = false; // s233 A1: broken edge - warped outline, missing slabs near the rim, a few loose slabs outside
+uniform float rag_amp = 0.22;
+uniform float hole_amt = 0.5;
+uniform float loose_amt = 0.18;
 uniform bool use_shade = false; // s231: baked shade map sampled by world xz (the y 0.02 plane sits under the raised ground)
 uniform sampler2D shade_tex : filter_linear_mipmap;
 uniform float shade_ext = 26.0;
@@ -46,9 +50,20 @@ void fragment() {
 		vec3 b = texture(base_tex, wuv / tile).rgb;
 		float j = use_joint_tex ? smoothstep(joint_lo, joint_hi, texture(joint_tex, wuv / tile).r) : 1.0 - smoothstep(joint_lo, joint_hi, lum(b));
 		float d = length(wp.xz - centre.xz) / radius;
+		float bm = 0.0;
+		if (ragged) {
+			float n2 = texture(noise_tex, wuv / 9.0 + vec2(0.31, 0.77)).r;
+			float n3 = texture(noise_tex, wuv / 1.6 + vec2(0.53, 0.19)).r;
+			float dw = d + (n2 - 0.5) * rag_amp * 2.0;
+			float thr = 1.0 - hole_amt * smoothstep(0.78, 1.0, dw);
+			bool keep = dw < 1.0 && n3 < thr;
+			bool loose = d < 1.14 && n3 < loose_amt;
+			if (!(keep || loose)) { discard; }
+			bm = smoothstep(thr - 0.12, thr, n3) + smoothstep(0.92, 1.0, dw);
+		}
 		float edge = smoothstep(edge_from, 1.0, d) * smoothstep(0.35, 0.6, nz);
 		float pat = smoothstep(patch_cut, patch_cut + 0.12, nz) * patch_amt;
-		float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge, 0.0, 1.0);
+		float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge + bm * 0.6, 0.0, 1.0);
 		ALBEDO = mix(b * tint, moss, m) * bright;
 		if (use_shade) { ALBEDO *= texture(shade_tex, (wp.xz + shade_ext) / (2.0 * shade_ext)).rgb; }
 		ROUGHNESS = mix(texture(base_rough, wuv / tile).r, 0.95, m);

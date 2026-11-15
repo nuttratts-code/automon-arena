@@ -97,6 +97,11 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 3. Library first (art/library/README rule 2): originals + keyed copies in `art/library/pictures/<set>/` + INDEX rows, before the scratch copy `<g>/tests/s225/`.
 4. Build: `s226.gd _s231_patches` (SurfaceTool quads: random ⅓ slice + flip + lean 10–40°, normals UP, COLOR.r 0 root/1 tip; shader `s231_patch.gdshader` forces view-space UP normal — cull_disabled flipped back faces went black). Owner pick H1 args + flowers: notes round 6. Check: blades not black/grey, no magenta fringe, flowers ≈ 1 per 16 blades.
 
+### 8f. Terrain, sea, waterfall rounds (set 233, owner A2 — 8 rounds, 3 lessons)
+1. **HD stills only** (1920×1080 PNG, a before/after stack is fine) — no motion clips unless the owner asks for one that round (owner stopped a 34 MB clip render, set 233).
+2. **Far water colour vs fog:** at 60–200 m on a grazing angle, fog + tonemap lift the water to near white; light colours (#9fbccb) render pure white. Test by setting the water to pure red (pink on screen = it draws, fog washes it), then use darker inputs (`wskyc=#4f7f96 wdeep=#365e72`). Tint params on textured shaders are multipliers (plaza `ptint` base 1.25,1.22,1.15 — values < 1 go dark).
+3. **Every round saves its full arg list** in scratch `tools/rNN_args.txt` (run `sh shot233.sh <name> $(cat rNN_args.txt) <tweaks>`), and the closing round copies s226.gd + shaders + args to claude/preview-set230/*.txt — the scratch copy lives in a temp folder that can vanish. Low camera rule: sky only shows above the hill crests, so crests sit below the plateau; things placed on the "first shore" may sit in front of the visible sea — check what is actually on screen.
+
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 

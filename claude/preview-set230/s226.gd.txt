@@ -3,6 +3,7 @@ extends SceneTree
 #   godot --rendering-driver opengl3 --audio-driver Dummy --path <g> --resolution 844x390 -s res://tests/s225.gd -- --out <dir> --look A|B [--frames 16]
 var app: Node
 var shadows := []
+var cam233 := Transform3D()
 
 func _frames() -> void:
 	for k in 4:
@@ -182,7 +183,12 @@ func _initialize() -> void:
 		_g(st, cam, EV, sprs)
 	await _frames()
 	print("S225 look ", look, " wpp ", wpp, " cam ", cam.global_position)
+	if EV.get("anim", "0") == "1":
+		await _s233_anim(st, sprs, map, map_side, nf, out, EV)
+		quit()
+		return
 	for f in nf:
+		if EV.has("cpitch"): cam.transform = cam233
 		for s in sprs:
 			(s as Sprite3D).frame = ((s as Sprite3D).frame + (1 if f > 0 else 0)) % 8
 		for sd in shadows:
@@ -243,6 +249,8 @@ func _b6(st: Node, cam: Camera3D, EV: Dictionary) -> void:
 # set 226 look G: tune to the ref screenshot — darker cloud sky, warm key light (top-left, art-style §2), cooler shade,
 # teal haze, darker heavier vignette, blurred foreground grass strip, two soft light shafts. Scene only; sprites = warm tint.
 func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
+	if EV.get("ring", "0") == "1": _s233_ring(st, EV) # s233 R11: stones to the owner painting
+	if EV.has("cpitch"): _s233_cam(st, cam, sprs, EV) # s233 R11: lower camera (owner G2)
 	var e: Environment = st.env_node.environment
 	e.ambient_light_energy = e.ambient_light_energy * float(EV.get("ambk", "0.8"))
 	st.sun.light_color = Color(EV.get("sunc", "#ffe6bf"))
@@ -277,7 +285,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	var top_y := ro.y + rn.y * ((fz - ro.z) / rn.z)
 	print("G fg hz ", hz, " top_y ", top_y, " h ", h, " vp ", vp)
 	var fgt: Array = str(EV.get("fgtint", "0.5,0.58,0.46")).split_floats(",")
-	var x := -16.0
+	var x := -16.0 if EV.get("fgs", "1") == "1" else 99.0 # s233: fgs=0 = old strip out
 	var i := 0
 	while x < 16.0:
 		var sp := Sprite3D.new()
@@ -319,7 +327,14 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
-	if EV.get("pg", "0") == "1": _s231_patches(st, EV) # s231 B1: FF Re-style flat grass patches
+	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
+	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
+	if EV.has("rmid"): _s233_rocks(st, EV)
+	if EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off
+	if EV.has("rfront"): _s233_front(st, EV)
+	if EV.has("wl"): _s233_water(st, EV) # s233 R13: sea in the valley (owner W1)
+	if EV.has("ptint"): _s233_ptint(st, EV) # s233 R15 B2: plaza stones in the meadow tone
+	if EV.has("wfall") and EV.has("wl"): _s233_fall(st, EV) # s233 R15 A2: waterfall into the sea # s233 E1: owner rock meshes in the mid layer # s231 B1: FF Re-style flat grass patches
 	if EV.get("rg", "0") == "1": _s231_grass(st, EV) # s231: grass tufts on the ground rim + at stone bases (FF Re)
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
@@ -607,8 +622,13 @@ func _s230_ground(st: Node, EV: Dictionary) -> void:
 	var g := MeshInstance3D.new()
 	g.name = "S230Ground"
 	var cm := CylinderMesh.new()
-	cm.top_radius = r
-	cm.bottom_radius = r * 1.02
+	cm.top_radius = r * (1.18 if EV.get("rag", "0") == "1" else 1.0) # s233 A1: room for the warped edge + loose slabs
+	cm.bottom_radius = cm.top_radius * 1.02
+	if EV.get("rag", "0") == "1":
+		sm.set_shader_parameter("ragged", true)
+		sm.set_shader_parameter("rag_amp", float(EV.get("ragamp", "0.22")))
+		sm.set_shader_parameter("hole_amt", float(EV.get("raghole", "0.5")))
+		sm.set_shader_parameter("loose_amt", float(EV.get("ragloose", "0.18")))
 	cm.height = 0.3
 	cm.radial_segments = 96
 	g.mesh = cm
@@ -910,6 +930,28 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 				continue
 			var cc := Vector2(box.get_center().x, box.get_center().z)
 			centres.append([cc, box.size.x * 0.5 + pr * 0.5, box.size.z * 0.5 + pr * 0.4, 0.0])
+	for e in centres: e.append(1.0); e.append(1.0)
+	# s233: the old tuft ring (r 15-21 behind the plaza, tufts=) and the front strip go; same blade patches there instead
+	var n_far := int(EV.get("pgfar", "0"))
+	for i in n_far:
+		var a := rng.randf_range(PI * 0.92, PI * 2.08)
+		var rr := rng.randf_range(float(EV.get("pgfr0", "14")), float(EV.get("pgfr1", "21")))
+		centres.append([Vector2(cos(a) * rr * 1.12, sin(a) * rr - 1.5), pr * rng.randf_range(1.2, 2.2), pr * rng.randf_range(0.5, 0.9), a + PI * 0.5, float(EV.get("pgfarh", "1.5")) * rng.randf_range(0.8, 1.2), float(EV.get("pgfarf", "0.3"))])
+	var n_fg := int(EV.get("pgfg", "0"))
+	for i in n_fg:
+		var fx := lerpf(-9.0, 9.0, (float(i) + rng.randf_range(0.0, 0.8)) / maxf(n_fg, 1))
+		var fz := float(EV.get("pgfgz", "7.6")) + rng.randf_range(-0.4, 0.6) + 0.06 * absf(fx)
+		centres.append([Vector2(fx, fz), pr * rng.randf_range(0.9, 1.4), pr * rng.randf_range(0.35, 0.55), 0.0, float(EV.get("pgfgh", "1.6")) * (0.7 + 0.06 * absf(fx)), float(EV.get("pgfgf", "0.4"))])
+	var n_in := int(EV.get("pgin", "0")) # s233 D1: grass in the joints near the broken rim (outside the slot area)
+	for i in n_in:
+		var a := rng.randf_range(0.0, TAU)
+		var rr := r * rng.randf_range(0.8, 0.99)
+		centres.append([c + Vector2(cos(a), sin(a)) * rr, pr * rng.randf_range(0.25, 0.5), pr * rng.randf_range(0.15, 0.3), a + PI * 0.5, float(EV.get("pginh", "0.5")), 0.3])
+	var n_mid := int(EV.get("pgmid", "0")) # s233 E1: mid layer 22-60 m, back half, big low clumps on the terrain
+	for i in n_mid:
+		var a := rng.randf_range(PI * 0.95, PI * 2.05)
+		var rr := rng.randf_range(float(EV.get("pgm0", "22")), float(EV.get("pgm1", "60")))
+		centres.append([Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0), pr * rng.randf_range(1.6, 3.2), pr * rng.randf_range(0.6, 1.1), a + PI * 0.5, float(EV.get("pgmh", "2.2")) * rng.randf_range(0.7, 1.3), 0.15])
 	var n_bl := 0
 	# s231 flowers: owner sheet flowersA = 19 stems side by side (equal cells, stem bottom-centred)
 	var fl_p := float(EV.get("pgf", "0"))
@@ -929,6 +971,8 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		var rx: float = centres[ci][1]
 		var rz: float = centres[ci][2]
 		var yaw: float = centres[ci][3]
+		var hk: float = centres[ci][4]
+		var fk: float = centres[ci][5]
 		var stn := SurfaceTool.new()
 		stn.begin(Mesh.PRIMITIVE_TRIANGLES)
 		var cnt := int(clampf(dens * rx * rz, 6, 260))
@@ -944,8 +988,8 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 			var lx := cos(ang) * rad * rx
 			var lz := sin(ang) * rad * rz
 			var p := cen + Vector2(lx * ca - lz * sa, lx * sa + lz * ca)
-			var y := top if p.distance_to(c) < r else 0.0
-			var h := gh * rng.randf_range(0.55, 1.1) * (1.0 - 0.45 * rad)
+			var y := top if p.distance_to(c) < r * 0.9 else (_s233_th(p, EV) if EV.get("terr", "0") == "1" else (top if p.distance_to(c) < r else 0.0))
+			var h := gh * hk * rng.randf_range(0.55, 1.1) * (1.0 - 0.45 * rad)
 			var fy := rng.randf_range(0.0, TAU)
 			var d := Vector3(cos(fy), 0, sin(fy))
 			var nrm := Vector3(-d.z, 0, d.x)
@@ -966,8 +1010,8 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 				stn.set_uv(q[idx][1])
 				stn.add_vertex(q[idx][0])
 			n_bl += 1
-			if fl_mat != null and rng.randf() < fl_p:
-				var fh := gh * rng.randf_range(0.75, 1.05) * float(EV.get("pgfh", "1.0"))
+			if fl_mat != null and rng.randf() < fl_p * fk:
+				var fh := gh * hk * rng.randf_range(0.75, 1.05) * float(EV.get("pgfh", "1.0"))
 				var fw := fh * float(fl_mat.get_meta("aspect"))
 				var fyy := rng.randf_range(0.0, TAU)
 				var fd := Vector3(cos(fyy), 0, sin(fyy))
@@ -1085,3 +1129,429 @@ func _s232_sun(img: Image, flipped: bool, EV: Dictionary) -> Image:
 				r.a = c.a
 			out.set_pixel(x, y, r)
 	return out
+
+
+# s233: motion sample — the scene as it would play: grass wind (shader TIME), pollen, units breathe, the flyer hovers,
+# one unit at a time lunges at a foe, the foe flashes + shakes. Run with --fixed-fps so time is even. Own code.
+func _s233_anim(st: Node, sprs: Array, map: Dictionary, map_side: Dictionary, nf: int, out: String, EV: Dictionary) -> void:
+	var fps := float(EV.get("fps", "30"))
+	var ids: Array = map.keys()
+	var base := {}
+	var lean: Vector3 = st.lean()
+	for id in ids:
+		var s: Sprite3D = st.groups["battle"][id]["spr"]
+		var sh: MeshInstance3D = st.groups["battle"][id]["shadow"]
+		base[id] = [s.position, sh.position, s.modulate, sh.scale, s.pixel_size * float(s.texture.get_height()) * 0.5]
+	var fly := {}
+	for e in str(EV.get("fly", "")).split(",", false):
+		fly[e.split(":")[0]] = true
+	var beat := float(EV.get("beat", "0.9")) # seconds between attacks
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23301
+	var plan := [] # [start time, attacker, target]
+	var t0 := 0.4
+	var side := 0
+	while t0 < nf / fps:
+		var a: int = ids.filter(func(x): return map_side[x] == side)[rng.randi() % 6]
+		var b: int = ids.filter(func(x): return map_side[x] != side)[rng.randi() % 6]
+		plan.append([t0, a, b])
+		t0 += beat
+		side = 1 - side
+	for f in nf:
+		var t := float(f) / fps
+		for i in ids.size():
+			var id: int = ids[i]
+			var s: Sprite3D = st.groups["battle"][id]["spr"]
+			var sh: MeshInstance3D = st.groups["battle"][id]["shadow"]
+			var bp: Vector3 = base[id][0]
+			var hh: float = base[id][4]
+			var ph := float(i) * 1.7
+			var off := Vector3.ZERO
+			var mod: Color = base[id][2]
+			if fly.has(str(map[id])):
+				var bob := sin(t * 3.2 + ph) * 0.09
+				off.y += bob
+				sh.scale = base[id][3] * (1.0 - bob * 0.8)
+				s.scale = Vector3.ONE
+			else:
+				var br := sin(t * 2.4 + ph) * 0.022 # breathe: stretch up from the feet
+				s.scale = Vector3(1.0 - br * 0.5, 1.0 + br, 1.0)
+				off += lean * (br * hh)
+			for p in plan:
+				var dt: float = t - float(p[0])
+				if dt < 0.0 or dt > 0.6:
+					continue
+				if p[1] == id: # lunge: 0.12 s out, 0.28 s back
+					var tg: Vector3 = base[p[2]][0]
+					var dir := Vector3(tg.x - bp.x, 0, tg.z - bp.z).normalized()
+					var k := dt / 0.12 if dt < 0.12 else maxf(0.0, 1.0 - (dt - 0.12) / 0.28)
+					off += dir * 0.7 * k * k * (3.0 - 2.0 * k)
+				if p[2] == id and dt > 0.1 and dt < 0.4: # hit: flash + shake + small knock back
+					var hk := 1.0 - (dt - 0.1) / 0.3
+					mod = mod.lerp(Color(2.2, 2.0, 1.9), hk * 0.8)
+					off.x += sin(dt * 90.0) * 0.06 * hk
+					off.x += (0.12 if map_side[id] == 1 else -0.12) * hk
+			s.position = bp + off
+			sh.position = base[id][1] + Vector3(off.x, 0, off.z)
+			s.modulate = mod
+		for k in int(EV.get("fstep", "1")):
+			await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(out.path_join("A_f%03d.png" % f))
+
+
+# s233 B1: rolling ground - same th() as tests/s233_terrain.gdshader (change both). A fine near mesh over the arena +
+# the old far Ground gets the same shader, sunk a little so the near mesh wins where both exist.
+func _s233_h(p: Vector2) -> float:
+	return fposmod(sin(p.dot(Vector2(127.1, 311.7))) * 43758.5453, 1.0)
+func _s233_vn(p: Vector2) -> float:
+	var i := p.floor()
+	var f := p - i
+	f = f * f * (Vector2(3, 3) - 2.0 * f)
+	return lerpf(lerpf(_s233_h(i), _s233_h(i + Vector2(1, 0)), f.x), lerpf(_s233_h(i + Vector2(0, 1)), _s233_h(i + Vector2(1, 1)), f.x), f.y)
+func _s233_fbm(p: Vector2) -> float:
+	return _s233_vn(p) * 0.55 + _s233_vn(p * 2.03 + Vector2(5.1, 5.1)) * 0.3 + _s233_vn(p * 4.1 + Vector2(9.7, 9.7)) * 0.15
+func _s233_th(p: Vector2, EV: Dictionary) -> float:
+	var r := p.length() / 11.7
+	var shelf := -0.04 - 0.11 * smoothstep(1.15, 1.6, r)
+	var mound := float(EV.get("tamp", "1.6")) * smoothstep(1.35, 2.8, r) * pow(_s233_fbm(p * 0.07), 1.3)
+	var dr := Vector2(p.x * 0.85, p.y + 2.0).length()
+	var fall := float(EV.get("tfall", "0"))
+	if fall > 0.0:
+		var h1 := float(EV.get("thill1", "0"))
+		if h1 > 0.0:
+			var c1 := (dr - 95.0) / 26.0
+			var c2 := (dr - 190.0) / 42.0
+			var r1 := h1 * exp(-c1 * c1) * (0.45 + 0.55 * _s233_fbm(p * 0.016 + Vector2(3.3, 1.7)))
+			var r2 := float(EV.get("thill2", "0")) * exp(-c2 * c2) * (0.45 + 0.55 * _s233_fbm(p * 0.009 + Vector2(7.1, 2.9)))
+			var c3 := (dr - 140.0) / 22.0
+			var r3 := float(EV.get("thill3", "0")) * exp(-c3 * c3) * (0.4 + 0.6 * _s233_fbm(p * 0.013 + Vector2(5.2, 8.4)))
+			var vr := float(EV.get("tvroll", "0")) * smoothstep(38.0, 75.0, dr) * _s233_fbm(p * 0.022 + Vector2(1.9, 6.1))
+			return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) + r1 + r2 + r3 + vr - 30.0 * smoothstep(250.0, 330.0, dr)
+		return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) - 40.0 * smoothstep(90.0, 140.0, dr)
+	return shelf + mound - 60.0 * smoothstep(20.0, 45.0, dr)
+
+func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: Dictionary) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	m.set_shader_parameter("tex", om.get_shader_parameter("tex"))
+	m.set_shader_parameter("tint", om.get_shader_parameter("tint"))
+	m.set_shader_parameter("tile", om.get_shader_parameter("tile"))
+	m.set_shader_parameter("teal", float(EV.get("teal", "0.22")))
+	m.set_shader_parameter("amp", float(EV.get("tamp", "1.6")))
+	m.set_shader_parameter("node_y", node_y)
+	m.set_shader_parameter("sink", sink)
+	m.set_shader_parameter("dirt_amt", float(EV.get("tdirt", "1.0")))
+	m.set_shader_parameter("dry_amt", float(EV.get("tdry", "0.5")))
+	m.set_shader_parameter("path_amt", float(EV.get("tpath", "1.0")))
+	m.set_shader_parameter("hue_amt", float(EV.get("thue", "1.0")))
+	m.set_shader_parameter("fall", float(EV.get("tfall", "0")))
+	m.set_shader_parameter("fall_r0", float(EV.get("tf0", "16")))
+	m.set_shader_parameter("fall_r1", float(EV.get("tf1", "70")))
+	m.set_shader_parameter("hill1", float(EV.get("thill1", "0")))
+	m.set_shader_parameter("hill2", float(EV.get("thill2", "0")))
+	m.set_shader_parameter("haze_amt", float(EV.get("thaze", "0")))
+	m.set_shader_parameter("vroll", float(EV.get("tvroll", "0")))
+	m.set_shader_parameter("hill3", float(EV.get("thill3", "0")))
+	m.set_shader_parameter("clump_amt", float(EV.get("tclump", "0")))
+	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")
+	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))
+	if EV.has("thazec"):
+		var hz := Color(EV["thazec"])
+		m.set_shader_parameter("haze_col", Vector3(hz.r, hz.g, hz.b))
+	return m
+
+func _s233_terrain(st: Node, EV: Dictionary) -> void:
+	var old := st.find_child("Ground", true, false) as MeshInstance3D
+	if old == null:
+		print("s233 terrain: no Ground")
+		return
+	var om := old.material_override as ShaderMaterial
+	var sh := load("res://tests/s233_terrain.gdshader") as Shader
+	old.material_override = _s233_mat(sh, om, old.global_position.y, 0.08, EV)
+	old.extra_cull_margin = 80.0
+	var near := MeshInstance3D.new()
+	near.name = "S233Near"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(160, 130)
+	pm.subdivide_width = 319
+	pm.subdivide_depth = 259
+	near.mesh = pm
+	st.add_child(near)
+	near.global_position = Vector3(0, 0, -45)
+	near.material_override = _s233_mat(sh, om, 0.0, 0.0, EV)
+	near.extra_cull_margin = 80.0
+	print("s233 terrain: near mesh + far ground, amp ", EV.get("tamp", "1.6"))
+
+
+# s233 E1: owner's own rock / fallen-slab meshes (art/s217/3d, Hunyuan, placeholder) scattered 22-60 m behind, sat on th().
+func _s233_rocks(st: Node, EV: Dictionary) -> void:
+	var files := ["res://art/s217/3d/rock_cliff_hy.glb", "res://art/s217/3d/stone_fallen_hy.glb"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23302
+	var n := int(EV.get("rmid", "10"))
+	var tone: Array = str(EV.get("rmtone", "0.8,0.82,0.78")).split_floats(",")
+	for i in n:
+		var ps := load(files[i % files.size()]) as PackedScene
+		if ps == null:
+			continue
+		var r3 := ps.instantiate() as Node3D
+		var a := rng.randf_range(PI * 1.0, PI * 2.0)
+		var rr := rng.randf_range(float(EV.get("rm0", "24")), float(EV.get("rm1", "58")))
+		var p := Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0)
+		var s := rng.randf_range(0.6, 1.6) * (1.0 + rr / 40.0)
+		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.9), s)
+		r3.rotation.y = rng.randf_range(0.0, TAU)
+		st.add_child(r3)
+		r3.global_position = Vector3(p.x, _s233_th(p, EV) - 0.3 * s, p.y)
+		for mi in r3.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+			if src is StandardMaterial3D:
+				var d := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+				d.albedo_color = Color(tone[0], tone[1], tone[2])
+				m.material_override = d
+	print("s233 rocks: ", n)
+
+
+# s233 R11 (owner G2): lower camera like the owner painting. Sprites re-lean to the new pitch, feet stay put.
+func _s233_cam(st: Node, cam: Camera3D, sprs: Array, EV: Dictionary) -> void:
+	var p := deg_to_rad(float(EV["cpitch"]))
+	var cp: Array = str(EV.get("cpos", "0,6.0,29.4")).split_floats(",")
+	cam233 = Transform3D(Basis.from_euler(Vector3(-p, 0, 0)), Vector3(cp[0], cp[1], cp[2]))
+	cam.transform = cam233
+	var ol: Vector3 = st.lean()
+	var nl := Vector3(0.0, cos(p), -sin(p))
+	for s in sprs:
+		var sp := s as Sprite3D
+		var hh := sp.pixel_size * float(sp.texture.get_height()) * 0.5
+		var feet := sp.position - ol * hh
+		sp.position = feet + nl * hh
+		sp.rotation.x = -p
+	print("s233 cam pitch ", EV["cpitch"], " pos ", cam233.origin)
+
+# s233 R11 (owner H2): stand the owner's stones where the owner painting has them (sample only, .tscn untouched).
+# Their stage shadow cards ("Shadow" + name) move by the same amount.
+const RING233 := {
+	"StoneL": Vector2(-12.5, -9.5), "StoneBig": Vector2(-9.2, -12.4), "StoneBigSide": Vector2(-7.4, -13.8),
+	"StoneMid": Vector2(-4.5, -14.0), "StoneR": Vector2(10.0, -11.5), "StoneFrontR": Vector2(12.8, 5.0),
+	"StoneFrontL": Vector2(-12.9, 4.5), "StoneShortR": Vector2(-14.8, -2.5), "FallenSlab": Vector2(6.0, -15.0),
+	"FallenSlabR": Vector2(10.6, 9.6), "RockSlab": Vector2(3.4, -15.4), "RockFarR": Vector2(8.6, -14.6),
+	"RockFrontL": Vector2(-10.4, 8.2), "RockFarL": Vector2(-17.5, -8.0),
+}
+func _s233_ring(st: Node, EV: Dictionary) -> void:
+	var n_mv := 0
+	for nm in RING233.keys():
+		var n := st.find_child(nm, true, false) as Node3D
+		if n == null:
+			continue
+		var to: Vector2 = RING233[nm]
+		var d := Vector3(to.x - n.global_position.x, 0, to.y - n.global_position.z)
+		n.global_position += d
+		var sh := st.find_child("Shadow" + nm, true, false) as Node3D
+		if sh != null:
+			sh.global_position += d
+		n_mv += 1
+	print("s233 ring: moved ", n_mv)
+
+# s233 R11: the near hills card goes (3D ridges replace it); the arch stands on a ridge top right of centre.
+func _s233_far(st: Node, EV: Dictionary) -> void:
+	for mi in st.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).material_override as StandardMaterial3D
+		if m != null and m.albedo_texture != null and m.albedo_texture.resource_path.ends_with("far_hills_v3.png"):
+			var z := (mi as Node3D).global_position.z
+			if z > -150.0:
+				(mi as Node3D).visible = EV.get("hc1", "0") == "1"
+			else:
+				(mi as Node3D).global_position.y += float(EV.get("hc2y", "0"))
+				(mi as Node3D).visible = EV.get("hc2", "1") == "1"
+	var arch := st.find_child("LandmarkArch", true, false) as MeshInstance3D
+	if arch != null and EV.get("arch", "") == "0":
+		arch.visible = false
+	elif arch != null:
+		var ap: Array = str(EV.get("arch", "34,-125,9")).split_floats(",")
+		var bb := arch.mesh.get_aabb()
+		var ks: float = float(ap[2]) / maxf(bb.size.y, 0.01)
+		var y: float = _s233_th(Vector2(ap[0], ap[1]), EV)
+		var o := Vector3(ap[0], y - 0.6 - bb.position.y * ks, ap[1]) - Vector3(bb.get_center().x, 0, bb.get_center().z) * ks
+		arch.global_transform = Transform3D(Basis.from_scale(Vector3.ONE * ks), o) # global scale (the dressing node is scaled)
+		print("s233 arch at ", arch.global_position, " ground ", y)
+
+# s233 R11: small owner rocks scattered in the meadow in front of the plaza (painting foreground)
+func _s233_front(st: Node, EV: Dictionary) -> void:
+	var ps := load("res://art/s217/3d/rock_cliff_hy.glb") as PackedScene
+	if ps == null:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23303
+	for i in int(EV["rfront"]):
+		var r3 := ps.instantiate() as Node3D
+		var x := rng.randf_range(7.5, 15.0) * (1.0 if i % 2 == 0 else -1.0)
+		var z := rng.randf_range(4.0, 13.0)
+		var s := rng.randf_range(0.18, 0.45)
+		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.8), s)
+		r3.rotation.y = rng.randf_range(0.0, TAU)
+		st.add_child(r3)
+		r3.global_position = Vector3(x, _s233_th(Vector2(x, z), EV) - 0.1, z)
+
+
+# s233 R13 (owner W1): one flat sea sheet in the valley, like FF's water001 (a flat mesh below the field) [DATA];
+# the look (sky tint by angle, slow ripples, light shoreline) is ours [APPROX]. The shore needs the ground height, so the
+# water shader reuses the terrain shader's own uniforms + th() (taken from its code: one formula, no copy to drift).
+const WATER233 := """
+uniform float wl = -22.0;
+uniform vec3 deep = vec3(0.16, 0.36, 0.46);
+uniform vec3 skyc = vec3(0.66, 0.80, 0.90);
+uniform vec3 shore_c = vec3(0.78, 0.86, 0.80);
+uniform float shore_w = 2.2;
+varying vec3 wp2;
+void vertex() { wp2 = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	float g = th(wp2.xz);
+	float depth = wl - g;
+	if (depth < -0.05) { discard; }
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.2);
+	vec2 q = wp2.xz * 0.08;
+	float rip = vn(q + vec2(TIME * 0.05, TIME * 0.03)) * 0.6 + vn(q * 3.1 - vec2(TIME * 0.08, 0.0)) * 0.4;
+	vec3 c = mix(deep, skyc, clamp(fres + (rip - 0.5) * 0.25, 0.0, 1.0));
+	c += vec3(0.9, 0.85, 0.7) * smoothstep(0.82, 0.95, rip) * 0.12; // sparkles
+	float sh = 1.0 - smoothstep(0.0, shore_w, depth);
+	c = mix(c, shore_c, sh * 0.75);
+	ALBEDO = c;
+}
+"""
+func _s233_water(st: Node, EV: Dictionary) -> void:
+	var old := st.find_child("Ground", true, false) as MeshInstance3D
+	var tcode := (load("res://tests/s233_terrain.gdshader") as Shader).code
+	var cut := tcode.find("void vertex()")
+	var code := tcode.substr(0, cut).replace("render_mode specular_disabled;", "render_mode unshaded, cull_disabled;") + WATER233
+	var sh := Shader.new()
+	sh.code = code
+	var m := _s233_mat(sh, old.material_override as ShaderMaterial, 0.0, 0.0, EV)
+	var wl := float(EV["wl"])
+	m.set_shader_parameter("wl", wl)
+	for k in ["deep", "skyc", "shore_c"]:
+		if EV.has("w" + k):
+			var cc := Color(EV["w" + k])
+			m.set_shader_parameter(k, Vector3(cc.r, cc.g, cc.b))
+	var w := MeshInstance3D.new()
+	w.name = "S233Sea"
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(800, 520)
+	w.mesh = pm
+	w.material_override = m
+	w.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	st.add_child(w)
+	w.global_position = Vector3(0, wl, -280)
+	print("s233 sea at ", wl)
+
+
+# s233 R15 B2: the plaza used the cool teal ground tint; warm it toward the meadow tone (sample only)
+func _s233_ptint(st: Node, EV: Dictionary) -> void:
+	var g := st.find_child("S230Ground", true, false) as MeshInstance3D
+	if g == null:
+		return
+	var pt: Array = str(EV["ptint"]).split_floats(",")
+	(g.material_override as ShaderMaterial).set_shader_parameter("tint", Vector3(pt[0], pt[1], pt[2]))
+	print("s233 ptint ", pt)
+
+# s233 R15 A2 (owner): a waterfall into the sea. Our own look [APPROX]: an owner rock as the cliff, a scrolling
+# streak sheet, foam on the water and a mist card. Placed where the far ridge leaves the sea at x = wfall.
+const FALL_NOISE := """
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+"""
+const FALL_SHEET := """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+uniform vec3 c_deep = vec3(0.42, 0.62, 0.70);
+uniform vec3 c_foam = vec3(0.93, 0.97, 1.0);
+%s
+void fragment() {
+	vec2 uv = UV;
+	float wob = (vn(vec2(uv.y * 4.0, TIME * 0.5)) - 0.5) * 0.12;
+	float edge = smoothstep(0.0, 0.2, uv.x + wob) * smoothstep(1.0, 0.8, uv.x - wob);
+	float s = vn(vec2(uv.x * 22.0, uv.y * 2.5 - TIME * 1.6)) * 0.6 + vn(vec2(uv.x * 55.0, uv.y * 6.0 - TIME * 2.4)) * 0.4;
+	vec3 c = mix(c_deep, c_foam, smoothstep(0.3, 0.75, s));
+	c = mix(c, c_foam, smoothstep(0.65, 1.0, uv.y));
+	ALBEDO = c;
+	ALPHA = edge * smoothstep(0.0, 0.05, uv.y) * (0.7 + 0.3 * s);
+}
+"""
+const FALL_FOAM := """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never;
+uniform float k = 0.85;
+%s
+void fragment() {
+	float d = length((UV - 0.5) * 2.0);
+	float n = vn(UV * 9.0 + vec2(TIME * 0.4, -TIME * 0.3)) * 0.6 + vn(UV * 23.0 - TIME * 0.5) * 0.4;
+	ALBEDO = vec3(0.95, 0.98, 1.0);
+	ALPHA = smoothstep(1.0, 0.2, d + (n - 0.5) * 0.5) * k * (0.55 + 0.45 * n);
+}
+"""
+func _s233_fx_mesh(st: Node, code: String, size: Vector2, face_z: bool, pos: Vector3, k: float) -> MeshInstance3D:
+	var sh := Shader.new()
+	sh.code = code % FALL_NOISE
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	if k >= 0.0:
+		m.set_shader_parameter("k", k)
+	var pm := PlaneMesh.new()
+	pm.size = size
+	if face_z:
+		pm.orientation = PlaneMesh.FACE_Z
+	var mi := MeshInstance3D.new()
+	mi.mesh = pm
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	st.add_child(mi)
+	mi.global_position = pos
+	return mi
+
+func _s233_fall(st: Node, EV: Dictionary) -> void:
+	var wl := float(EV["wl"])
+	var x := float(EV["wfall"])
+	var zs := -95.0
+	var was_sea := false
+	var z := -25.0
+	while z > -220.0:
+		var g := _s233_th(Vector2(x, z), EV)
+		if g < wl - 0.3:
+			was_sea = true
+		elif was_sea and g > wl + 0.3:
+			zs = z # near side of the far ridge (hidden by the plateau)
+		if zs > -95.0 and z < zs and g < wl - 1.0:
+			zs = z - float(EV.get("wfoff", "18")) # R15: past the ridge, in the visible sea = a sea cliff
+			break
+		z -= 1.0
+	print("s233 fall: shore at z ", zs, " (sea seen ", was_sea, ")")
+	var H := float(EV.get("wfh", "11"))
+	var w := float(EV.get("wfw", "3.5"))
+	var ps := load("res://art/s217/3d/rock_cliff_hy.glb") as PackedScene
+	var r3 := ps.instantiate() as Node3D
+	st.add_child(r3)
+	var bb := AABB()
+	var first := true
+	for mi in r3.find_children("*", "MeshInstance3D", true, false):
+		var a: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).mesh.get_aabb()
+		bb = a if first else bb.merge(a)
+		first = false
+	var ks := H / maxf(bb.size.y, 0.01)
+	r3.scale = Vector3(ks * float(EV.get("wfrx", "1.4")), ks, ks)
+	r3.global_position = Vector3(x, wl - 2.5, zs - 4.0) - Vector3(bb.get_center().x * ks, bb.position.y * ks, bb.get_center().z * ks)
+	var tone: Array = str(EV.get("rmtone", "0.8,0.82,0.78")).split_floats(",")
+	for mi in r3.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh.get_surface_count() > 0 else null)
+		if src is StandardMaterial3D:
+			var d := (src as StandardMaterial3D).duplicate() as StandardMaterial3D
+			d.albedo_color = Color(tone[0], tone[1], tone[2])
+			m.material_override = d
+	var front := zs - 4.0 + bb.size.z * ks * 0.5 * float(EV.get("wffront", "0.6"))
+	var hf := H - 1.6
+	_s233_fx_mesh(st, FALL_SHEET, Vector2(w, hf), true, Vector3(x, wl - 1.0 + 0.6 + hf * 0.5, front), -1.0)
+	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 3.2, w * 2.0), false, Vector3(x, wl + 0.08, front + w * 0.4), 0.9)
+	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 2.6, hf * 0.45), true, Vector3(x, wl + hf * 0.18, front + 0.8), 0.45)
+	print("s233 fall at x ", x, " front z ", front, " top ", wl - 1.0 + H)
