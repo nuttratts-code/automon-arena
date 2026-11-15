@@ -1,0 +1,5 @@
+#!/bin/sh
+# shot231.sh <name> [extra --e: args] — set 230 round-2 base = shot.sh look G + best args + CC0 ground C + joint moss; extras last win
+T=$(dirname "$0")
+N=$1; shift
+S229_SMOOTH=1 sh $T/shot.sh $N G --e:lod=1.2 --e:stone_tone=0.88,0.86,0.8 --e:pzn=1 --e:ptex=plaza_T2048 --e:plaza=0.75,0.73,0.68 --e:gnd=1 --e:gtile=8 --e:gtint=1.25,1.22,1.15 --e:mtint=0.9,1.6,0.5 --e:smoss=0.6 --e:gbri=1.1 --e:jtex=1 --e:jlo=0.2 --e:jhi=0.6 --e:jamt=1 --e:pamt=0.15 --e:gedge=0.85 "$@"

@@ -27,6 +27,9 @@ uniform float edge_from = 0.82;
 uniform float up_from = 0.55;
 uniform float stone_moss = 0.7;
 uniform float bright = 1.0;
+uniform bool use_shade = false; // s231: baked shade map sampled by world xz (the y 0.02 plane sits under the raised ground)
+uniform sampler2D shade_tex : filter_linear_mipmap;
+uniform float shade_ext = 26.0;
 varying vec3 wp;
 varying vec3 wn;
 void vertex() {
@@ -47,6 +50,7 @@ void fragment() {
 		float pat = smoothstep(patch_cut, patch_cut + 0.12, nz) * patch_amt;
 		float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge, 0.0, 1.0);
 		ALBEDO = mix(b * tint, moss, m) * bright;
+		if (use_shade) { ALBEDO *= texture(shade_tex, (wp.xz + shade_ext) / (2.0 * shade_ext)).rgb; }
 		ROUGHNESS = mix(texture(base_rough, wuv / tile).r, 0.95, m);
 		NORMAL_MAP = mix(texture(base_nor, wuv / tile).rgb, texture(moss_nor, wuv / moss_tile).rgb, m);
 	} else {

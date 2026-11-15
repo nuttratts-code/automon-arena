@@ -679,6 +679,14 @@ func _s230_shade(st: Node, EV: Dictionary) -> void:
 						hmap[k] = p.y
 					n_v += 1
 	# fill small holes between sampled vertices (3x3 max)
+	var gnode := st.find_child("S230Ground", true, false) as MeshInstance3D
+	var gtop := 0.0
+	var gr := 0.0
+	var gc := Vector2.ZERO
+	if gnode != null:
+		gtop = gnode.global_position.y + 0.15
+		gr = (gnode.mesh as CylinderMesh).top_radius
+		gc = Vector2(gnode.global_position.x, gnode.global_position.z)
 	var h2 := hmap.duplicate()
 	for z in range(1, res - 1):
 		for x in range(1, res - 1):
@@ -702,7 +710,10 @@ func _s230_shade(st: Node, EV: Dictionary) -> void:
 	var cell := 2.0 * ext / res
 	for z in res:
 		for x in res:
-			var h := hmap[z * res + x]
+			var wx := (float(x) + 0.5) / res * 2.0 * ext - ext
+			var wz := (float(z) + 0.5) / res * 2.0 * ext - ext
+			var base := gtop if gnode != null and Vector2(wx, wz).distance_to(gc) < gr else 0.0
+			var h := hmap[z * res + x] - base # s231: height above the ground it stands on
 			if h <= 0.05:
 				continue
 			occ[z * res + x] = 1.0
@@ -734,6 +745,19 @@ func _s230_shade(st: Node, EV: Dictionary) -> void:
 			out.set_pixel(x, z, Color(f, f, f))
 	out.generate_mipmaps()
 	out.save_png(ProjectSettings.globalize_path("res://tests/s225/_s230_shade_dbg.png"))
+	if EV.get("sdbg", "0") == "1": # s231 find-cause: footprint red, shadow blue
+		for z in res:
+			for x in res:
+				var o := occ[z * res + x]
+				var sv := shadow[z * res + x]
+				out.set_pixel(x, z, Color(1.0, 1.0 - o, 1.0 - o) if o > 0.0 else (Color(0.3, 0.3, 1.0) if sv > 0.0 else Color(1, 1, 1)))
+		out.generate_mipmaps()
+	var shtex := ImageTexture.create_from_image(out)
+	if gnode != null and gnode.material_override is ShaderMaterial and EV.get("sgnd", "1") == "1": # s231 fix
+		var gm := gnode.material_override as ShaderMaterial
+		gm.set_shader_parameter("use_shade", true)
+		gm.set_shader_parameter("shade_tex", shtex)
+		gm.set_shader_parameter("shade_ext", ext)
 	var mi := MeshInstance3D.new()
 	mi.name = "S230Shade"
 	var pm := PlaneMesh.new()
@@ -747,10 +771,11 @@ void fragment() { ALBEDO = texture(shade, UV).rgb; }
 """
 	var mat := ShaderMaterial.new()
 	mat.shader = sh
-	mat.set_shader_parameter("shade", ImageTexture.create_from_image(out))
+	mat.set_shader_parameter("shade", shtex)
 	mi.material_override = mat
 	st.add_child(mi)
 	mi.global_position = Vector3(0.0, float(EV.get("sy", "0.02")), 0.0)
+	print("s230 plane xf ", mi.global_transform, " st ", (st as Node3D).global_transform)
 	print("s230 shade: verts ", n_v, " sun elev tan ", elev_tan, " dir ", horiz)
 
 
