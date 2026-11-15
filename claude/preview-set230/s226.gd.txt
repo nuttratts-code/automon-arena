@@ -187,6 +187,21 @@ func _initialize() -> void:
 		await _s233_anim(st, sprs, map, map_side, nf, out, EV)
 		quit()
 		return
+	if EV.get("noui", "0") == "1": # s234: clean scene for the owner's AI reference (no buttons/labels)
+		for cl in app.find_children("*", "CanvasLayer", true, false):
+			(cl as CanvasLayer).visible = false
+		for c in app.find_children("*", "Control", true, false):
+			if c is SubViewportContainer or not c.find_children("*", "SubViewport", true, false).is_empty(): continue
+			if c.get_viewport() != root: continue
+			(c as Control).self_modulate.a = 0.0
+			for ch in c.get_children():
+				if ch is CanvasItem and not (ch is Control): (ch as CanvasItem).visible = false
+			if c is Label or c is Button or c is RichTextLabel: (c as Control).visible = false
+	if EV.get("nounits", "0") == "1": # s234: empty plaza
+		for sp in sprs + shadows:
+			(sp as Node3D).visible = false
+		for mi in st.find_children("*", "MeshInstance3D", true, false):
+			if (mi as MeshInstance3D).mesh is PlaneMesh and ((mi as MeshInstance3D).mesh as PlaneMesh).size.x < 3.0: (mi as Node3D).visible = false
 	for f in nf:
 		if EV.has("cpitch"): cam.transform = cam233
 		for s in sprs:
@@ -330,6 +345,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
+	if EV.has("mist"): _s234_mist(st, EV) # s234 B3-like: low mist drifting on the back slope (owner AI ref picture)
 	if EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off
 	if EV.has("rfront"): _s233_front(st, EV)
 	if EV.has("wl"): _s233_water(st, EV) # s233 R13: sea in the valley (owner W1)
@@ -1287,6 +1303,7 @@ func _s233_terrain(st: Node, EV: Dictionary) -> void:
 # s233 E1: owner's own rock / fallen-slab meshes (art/s217/3d, Hunyuan, placeholder) scattered 22-60 m behind, sat on th().
 func _s233_rocks(st: Node, EV: Dictionary) -> void:
 	var files := ["res://art/s217/3d/rock_cliff_hy.glb", "res://art/s217/3d/stone_fallen_hy.glb"]
+	if EV.get("rmonly", "0") == "1": files = ["res://art/s217/3d/rock_cliff_hy.glb"] # s234 B1: natural rocks only
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 23302
 	var n := int(EV.get("rmid", "10"))
@@ -1299,8 +1316,8 @@ func _s233_rocks(st: Node, EV: Dictionary) -> void:
 		var a := rng.randf_range(PI * 1.0, PI * 2.0)
 		var rr := rng.randf_range(float(EV.get("rm0", "24")), float(EV.get("rm1", "58")))
 		var p := Vector2(cos(a) * rr * 1.15, sin(a) * rr - 2.0)
-		var s := rng.randf_range(0.6, 1.6) * (1.0 + rr / 40.0)
-		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.9), s)
+		var s := rng.randf_range(0.6, 1.6) * (1.0 + rr / 40.0) * float(EV.get("rmsc", "1.0"))
+		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.9) * float(EV.get("rmsy", "1.0")), s)
 		r3.rotation.y = rng.randf_range(0.0, TAU)
 		st.add_child(r3)
 		r3.global_position = Vector3(p.x, _s233_th(p, EV) - 0.3 * s, p.y)
@@ -1569,3 +1586,57 @@ func _s233_fall(st: Node, EV: Dictionary) -> void:
 	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 3.2, w * 2.0), false, Vector3(x, wl + 0.08, front + w * 0.4), 0.9)
 	_s233_fx_mesh(st, FALL_FOAM, Vector2(w * 2.6, hf * 0.45), true, Vector3(x, wl + hf * 0.18, front + 0.8), 0.45)
 	print("s233 fall at x ", x, " front z ", front, " top ", wl - 1.0 + H)
+
+
+# s234 (owner A1 = AI ref picture as target): soft low mist banks lying on the back slope, our own look [APPROX].
+# Big camera-facing quads (billboard Y) sat on th(); alpha = soft oval x two value noises, unshaded, no depth write.
+const MIST234 := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec4 col : source_color = vec4(0.95, 0.94, 0.88, 1.0);
+uniform float amt = 0.35;
+uniform float seed = 0.0;
+float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn2(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
+void fragment() {
+	vec2 q = UV * 2.0 - 1.0;
+	float oval = 1.0 - smoothstep(0.35, 1.0, length(q * vec2(1.0, 1.0)));
+	oval *= smoothstep(1.0, 0.2, q.y); // soft top, fuller bottom
+	vec2 n = UV * vec2(3.0, 1.5) + seed + vec2(TIME * 0.01, 0.0);
+	float k = vn2(n) * 0.6 + vn2(n * 2.7 + 3.1) * 0.4;
+	ALBEDO = col.rgb;
+	ALPHA = clamp(oval * smoothstep(0.25, 0.75, k) * amt, 0.0, 1.0);
+}
+"""
+func _s234_mist(st: Node, EV: Dictionary) -> void:
+	var sh := Shader.new()
+	sh.code = MIST234
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23401
+	var n := int(EV["mist"])
+	var c := Color(EV.get("mistc", "#f2efe0"))
+	for i in n:
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.set_shader_parameter("col", c)
+		m.set_shader_parameter("amt", float(EV.get("mista", "0.35")) * rng.randf_range(0.7, 1.2))
+		m.set_shader_parameter("seed", rng.randf_range(0.0, 50.0))
+		var q := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		var w := rng.randf_range(30.0, 60.0) * float(EV.get("mistw", "1.0"))
+		qm.size = Vector2(w, w * rng.randf_range(0.18, 0.3) * float(EV.get("mh", "1.0")))
+		q.mesh = qm
+		q.material_override = m
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var x := rng.randf_range(float(EV.get("mx0", "-40")), float(EV.get("mx1", "90")))
+		var z := -rng.randf_range(float(EV.get("mz0", "45")), float(EV.get("mz1", "110")))
+		st.add_child(q)
+		var y := _s233_th(Vector2(x, z), EV) + qm.size.y * 0.3
+		if EV.has("mty"): y = float(EV["mty"]) + rng.randf_range(-1.0, 1.0) # s234: mist rising out of the valley to a fixed height
+		q.global_position = Vector3(x, y, z)
+		q.rotation.y = atan2(0.0 - x, 29.4 - z) # face the sample camera (0, y, 29.4)
+	var prof := []
+	for d in [15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140]:
+		prof.append("%d:%.1f" % [d, _s233_th(Vector2(0, -d), EV)])
+	print("s233 mist: ", n, " th(z) ", " ".join(prof))
