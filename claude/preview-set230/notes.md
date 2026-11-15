@@ -32,3 +32,12 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Detail source: `--e:dnoise=1` = FastNoiseLite grain (`dcell=1` cellular, 0 = smooth mottling, `dfreq`), no picture, no repeat. Without it = high-pass crop of the fallen-stone atlas (`tests/s225/det_stone.png`) → reads as a grid even after rot/flip averaging (D) — dropped.
 - Sheet `s230-ffr-floor.png`: A tint 3 only · B `dnoise=1 damt=0.35 dsc=2` · C `dnoise=1 dcell=0 damt=0.5 dsc=2 mamt=0.7 mcut=0.5` · D picture detail. Owner picks.
 - Rendered plaza mean colour barely moves (A 133,125,109 → B/C ~126,123,103); the change is texture, not colour.
+- **Owner: B/C "worse than before"** → layered noise detail rejected. Owner asked what a full FF Re floor would need.
+
+## Full FF Re floor = what changes (answer to owner, hd-2d-ref scene-anatomy §3 arena 01Gra_67 + lighting §3–4)
+1. Floor = one big ground mesh + layered material from small TILEABLE painted textures (256–1024: flagstone · dirt · grass/moss) mixed by a painted mask (vertex colour), not one unique AI texture (our plaza_hy).
+2. Loose stones/gravel = separate small meshes on top (arena: templestone ×27, gravel ×22), same master material family as floor + rocks.
+3. Baked light (lightmap + sun shadow bake, all 234 pieces) = contact shade under every stone/rock → ties them to the floor. We have none (Compatibility: no live sun shadows; LightmapGI bake in Compatibility = to verify).
+4. Grass layer on top of rocks + grass cards at bases; paler, softer grade, cool shadows.
+- Needs: owner tileable textures (Gemini "seamless tileable" or CC0 with OK, HARD RULE 9 ②) · Blender ground mesh + mask paint · bake test · rule-change art-style §8 (set 217 plaza_hy + hand-placed stones, set 226 plaza tone).
+- Why the noise sample failed: FF Re detail comes from painted tile textures with real stone shapes; one-scale noise reads as dirt/static.
