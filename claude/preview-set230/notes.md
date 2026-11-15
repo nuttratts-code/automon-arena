@@ -81,3 +81,4 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Sheet: s231-flowers.png (H1 / H2 + `--e:pgf=0.06`). Waiting for owner pick.
 - **Owner pick (set 231): H1 + flowers** = C3 args + `--e:pg=1 --e:pgh=1.0 --e:pgd=40 --e:pgb=1.4 --e:pgroot=0.7 --e:pgt=0.95,1.2,0.75 --e:pgf=0.06`. Sheets stored in art/library/pictures/s231/ (INDEX rows).
 - Stand-in units (owner, set 231 B2): 4 creature renders from ANOTHER game/web (owl shaman, winged brute, axe ogre, stone golem) = look stand-ins for arena samples ONLY — scratchpad, never commit, never ship (HARD RULE 9 part 2). Old sample units (beetle, lizard) kept, not used in new shots.
+- Stand-in shot args: H1 args + `--e:ids=XO/XA/XD/XG/XA/XO --e:foe=XG/XD/XA/XO/XD/XG --e:hf=1`; `<g>/tests/s225/X?.png` = bbox crop, height 170/165/170/140 px (scratch only — the shot itself is never committed).
