@@ -41,3 +41,10 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 4. Grass layer on top of rocks + grass cards at bases; paler, softer grade, cool shadows.
 - Needs: owner tileable textures (Gemini "seamless tileable" or CC0 with OK, HARD RULE 9 ②) · Blender ground mesh + mask paint · bake test · rule-change art-style §8 (set 217 plaza_hy + hand-placed stones, set 226 plaza tone).
 - Why the noise sample failed: FF Re detail comes from painted tile textures with real stone shapes; one-scale noise reads as dirt/static.
+
+## Full FF Re rebuild — round 1 (owner A2 CC0 · B2 free flagstones · C1 keep stones · D1; art-style V2.2, plan-set230.md)
+- CC0 picks (Poly Haven, CC0, licence page checked; owner OK to download): `grey_stone_path` (Amal Kumar, 1.8 m real size) + `mossy_rock` (Rob Tuytel, 3 m), 1k diff + nor_gl + rough PNG, md5 = API. Kept in scratch `cc0/` + `<g>/tests/s225/`, NOT in the repo. Credit + art/PROVENANCE.csv row when anything ships. Thumbnails were ~250 KB each (told owner 0.5 MB total — wrong estimate, said so).
+- `--e:gnd=1` (s226.gd.txt `_s230_ground` + `s230_ground.gdshader.txt`): hides Plaza, adds a flat disc (CylinderMesh r = plaza box × `grs` 0.92 = 11.7 units) with world-xz flagstone (`gtile`, `gtint`), moss by joint luminance (linear `jlo` 0.03 / `jhi` 0.065) + noise patches (`pamt`, `pcut`) + rim band (`gedge`); stones keep own textures + same moss on up faces (`smoss`, `mtint`).
+- Scale: scene units ≠ metres — real-size tile 1.8 gives pebble-size slabs; `gtile=8` ≈ old slab size. mossy_rock is mostly grey lichen rock → needs `mtint` green (1.9 = neon, 0.9,1.6,0.5 ok).
+- Sheet `s230-cc0-ground.png`: A now · B `gtile=8 gtint=1.25,1.22,1.15` · C B + `mtint=0.9,1.6,0.5 jamt=1 jhi=0.09 pamt=0.3 gedge=0.78 smoss=0.6 gbri=1.1`.
+- Own read: photo flagstones read realistic next to painted stones/creatures; moss lands as scattered patches, not in joints (luminance mask catches dark spots). Not done yet: plan step 4 baked contact shade, grass cards at rim.

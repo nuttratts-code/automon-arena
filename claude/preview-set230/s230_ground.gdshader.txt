@@ -1,0 +1,57 @@
+// s230 sample: FF Re-style layered material (own code). Ground: tiled CC0 flagstone (world xz) + moss in joints/edge by mask.
+// Stones: own albedo/normal + the SAME moss texture on up-facing faces. Textures: Poly Haven CC0 (grey_stone_path, mossy_rock).
+shader_type spatial;
+uniform bool is_ground = true;
+uniform sampler2D base_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D base_nor : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D base_rough : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform bool has_base_nor = true;
+uniform vec3 tint = vec3(1.0);
+uniform float tile = 1.8;
+uniform sampler2D moss_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D moss_nor : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float moss_tile = 3.0;
+uniform vec3 moss_tint = vec3(1.0);
+uniform sampler2D noise_tex : filter_linear, repeat_enable;
+uniform float noise_scale = 4.0;
+uniform float joint_lo = 0.18;
+uniform float joint_hi = 0.30;
+uniform float joint_amt = 0.8;
+uniform float patch_amt = 0.35;
+uniform float patch_cut = 0.62;
+uniform vec3 centre = vec3(0.0);
+uniform float radius = 10.0;
+uniform float edge_from = 0.82;
+uniform float up_from = 0.55;
+uniform float stone_moss = 0.7;
+uniform float bright = 1.0;
+varying vec3 wp;
+varying vec3 wn;
+void vertex() {
+	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wn = normalize(MODEL_NORMAL_MATRIX * NORMAL);
+	if (is_ground) { TANGENT = vec3(1.0, 0.0, 0.0); BINORMAL = vec3(0.0, 0.0, -1.0); }
+}
+float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+void fragment() {
+	vec2 wuv = wp.xz;
+	vec3 moss = texture(moss_tex, wuv / moss_tile).rgb * moss_tint;
+	float nz = texture(noise_tex, wuv / noise_scale).r;
+	if (is_ground) {
+		vec3 b = texture(base_tex, wuv / tile).rgb;
+		float j = 1.0 - smoothstep(joint_lo, joint_hi, lum(b));
+		float d = length(wp.xz - centre.xz) / radius;
+		float edge = smoothstep(edge_from, 1.0, d) * smoothstep(0.35, 0.6, nz);
+		float pat = smoothstep(patch_cut, patch_cut + 0.12, nz) * patch_amt;
+		float m = clamp(j * joint_amt * smoothstep(0.3, 0.55, nz + 0.2) + pat + edge, 0.0, 1.0);
+		ALBEDO = mix(b * tint, moss, m) * bright;
+		ROUGHNESS = mix(texture(base_rough, wuv / tile).r, 0.95, m);
+		NORMAL_MAP = mix(texture(base_nor, wuv / tile).rgb, texture(moss_nor, wuv / moss_tile).rgb, m);
+	} else {
+		vec3 b = texture(base_tex, UV).rgb * tint;
+		float m = smoothstep(up_from, up_from + 0.25, wn.y) * smoothstep(0.3, 0.55, nz) * stone_moss;
+		ALBEDO = mix(b, moss, m) * bright;
+		ROUGHNESS = 0.9;
+		if (has_base_nor) { NORMAL_MAP = texture(base_nor, UV).rgb; }
+	}
+}

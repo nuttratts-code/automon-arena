@@ -315,6 +315,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("rim", "0") == "1": _rim(st, EV) # s229: tie the plaza edge to the grass
 	if EV.has("stone_tone"): _stone_tone(st, EV) # s229: stones vs plaza colour
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
+	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if lift > 0.0: # units stand on the raised top
 		for g in (st.groups.get("battle", {}) as Dictionary).values():
 			for k in ["spr", "shadow", "ring"]:
@@ -534,3 +535,101 @@ func _s230_floor(st: Node, EV: Dictionary) -> void:
 			m.material_override = sm
 			n_done += 1
 	print("s230 floor shader on ", n_done, " meshes")
+
+
+# s230 B2 (owner A2/B2/C1): hide the Hunyuan plaza, put a flat disc in its place with the layered CC0 shader;
+# stones keep their own textures + the same moss on top. Args: gtile flagstone metres (1.8 = real size) - gtint r,g,b -
+# mtint r,g,b moss - jamt joint moss - pamt/pcut slab patches - gedge rim start - smoss stone moss - gbri brightness - grs radius scale.
+func _s230_ground(st: Node, EV: Dictionary) -> void:
+	var box := AABB()
+	var first := true
+	var plazas: Array = []
+	for n in st.find_children("Plaza", "", true, false):
+		if not ("tone" in n):
+			continue
+		plazas.append(n)
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var b: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+	if first:
+		print("s230 ground: no plaza found")
+		return
+	var c := box.get_center()
+	var r := minf(box.size.x, box.size.z) * 0.5 * float(EV.get("grs", "0.92"))
+	var top := box.end.y
+	print("s230 ground centre ", c, " r ", r, " top ", top, " bottom ", box.position.y)
+	for n in plazas:
+		(n as Node3D).visible = false
+	var nt := NoiseTexture2D.new()
+	nt.width = 512
+	nt.height = 512
+	nt.seamless = true
+	var fn := FastNoiseLite.new()
+	fn.seed = 2302
+	fn.frequency = 0.01
+	fn.fractal_octaves = 4
+	nt.noise = fn
+	var sh := load("res://tests/s230_ground.gdshader") as Shader
+	var gt: Array = str(EV.get("gtint", "1,1,1")).split_floats(",")
+	var mt: Array = str(EV.get("mtint", "1,1,1")).split_floats(",")
+	var sm := ShaderMaterial.new()
+	sm.shader = sh
+	sm.set_shader_parameter("is_ground", true)
+	sm.set_shader_parameter("base_tex", _s230_tex("grey_stone_path_diff_1k", true))
+	sm.set_shader_parameter("base_nor", _s230_tex("grey_stone_path_nor_gl_1k", true))
+	sm.set_shader_parameter("base_rough", _s230_tex("grey_stone_path_rough_1k", true))
+	var moss := _s230_tex("mossy_rock_diff_1k", true)
+	var mossn := _s230_tex("mossy_rock_nor_gl_1k", true)
+	sm.set_shader_parameter("moss_tex", moss)
+	sm.set_shader_parameter("moss_nor", mossn)
+	sm.set_shader_parameter("noise_tex", nt)
+	sm.set_shader_parameter("tile", float(EV.get("gtile", "1.8")))
+	sm.set_shader_parameter("tint", Vector3(gt[0], gt[1], gt[2]))
+	sm.set_shader_parameter("moss_tint", Vector3(mt[0], mt[1], mt[2]))
+	sm.set_shader_parameter("joint_amt", float(EV.get("jamt", "0.8")))
+	sm.set_shader_parameter("joint_lo", float(EV.get("jlo", "0.03")))
+	sm.set_shader_parameter("joint_hi", float(EV.get("jhi", "0.065")))
+	sm.set_shader_parameter("patch_amt", float(EV.get("pamt", "0.35")))
+	sm.set_shader_parameter("patch_cut", float(EV.get("pcut", "0.62")))
+	sm.set_shader_parameter("edge_from", float(EV.get("gedge", "0.82")))
+	sm.set_shader_parameter("centre", c)
+	sm.set_shader_parameter("radius", r)
+	sm.set_shader_parameter("bright", float(EV.get("gbri", "1.0")))
+	var g := MeshInstance3D.new()
+	g.name = "S230Ground"
+	var cm := CylinderMesh.new()
+	cm.top_radius = r
+	cm.bottom_radius = r * 1.02
+	cm.height = 0.3
+	cm.radial_segments = 96
+	g.mesh = cm
+	g.material_override = sm
+	st.add_child(g)
+	g.global_position = Vector3(c.x, top - 0.15 + float(EV.get("glift", "0.0")), c.z)
+	var n_st := 0
+	for n in st.find_children("*", "", true, false):
+		var nm := String(n.name)
+		if not (nm.begins_with("Stone") or nm.begins_with("Fallen") or nm.begins_with("Rock")):
+			continue
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var src: Material = m.material_override if m.material_override != null else (m.mesh.surface_get_material(0) if m.mesh != null and m.mesh.get_surface_count() > 0 else null)
+			if not (src is StandardMaterial3D):
+				continue
+			var s3 := src as StandardMaterial3D
+			var ms := ShaderMaterial.new()
+			ms.shader = sh
+			ms.set_shader_parameter("is_ground", false)
+			ms.set_shader_parameter("base_tex", s3.albedo_texture)
+			ms.set_shader_parameter("has_base_nor", s3.normal_texture != null)
+			if s3.normal_texture != null:
+				ms.set_shader_parameter("base_nor", s3.normal_texture)
+			ms.set_shader_parameter("tint", Vector3(s3.albedo_color.r, s3.albedo_color.g, s3.albedo_color.b))
+			ms.set_shader_parameter("moss_tex", moss)
+			ms.set_shader_parameter("moss_tint", Vector3(mt[0], mt[1], mt[2]))
+			ms.set_shader_parameter("noise_tex", nt)
+			ms.set_shader_parameter("stone_moss", float(EV.get("smoss", "0.7")))
+			m.material_override = ms
+			n_st += 1
+	print("s230 ground: stones with moss ", n_st)
