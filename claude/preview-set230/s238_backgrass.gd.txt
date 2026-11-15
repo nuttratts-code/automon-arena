@@ -1,0 +1,37 @@
+extends SceneTree
+# set 238 (owner: "more grass here" = the plaza's back edge, like the picture): dense tall grass band behind the plaza,
+# copies of the rim grass patches (world-baked meshes -> node offset). Edits the saved arena_r38.tscn in place; re-run removes old S238BackGrass*.
+const P := "res://art/arena_r38/arena_r38.tscn"
+func _initialize() -> void:
+	var root: Node3D = (load(P) as PackedScene).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	await process_frame
+	for c in root.get_children():
+		if String(c.name).begins_with("S238BackGrass"): c.free()
+	var src: Array = []
+	for c in root.get_children():
+		if c is MeshInstance3D and String(c.name).begins_with("S231Patch") and c.visible:
+			var cc: Vector3 = (c as MeshInstance3D).mesh.get_aabb().get_center()
+			var r := Vector2(cc.x, cc.z).length()
+			if r > 11.5 and r < 17.0: src.append(c)
+	var rng := RandomNumberGenerator.new(); rng.seed = 2381
+	var n := 0
+	for i in 34:
+		var ang := deg_to_rad(rng.randf_range(-62.0, 62.0))      # 0 = straight behind the plaza (-z)
+		var rad := rng.randf_range(12.6, 16.5)
+		var tgt := Vector3(sin(ang) * rad, 0.0, -cos(ang) * rad)
+		var s: MeshInstance3D = src[rng.randi() % src.size()]
+		var bb: AABB = s.mesh.get_aabb()
+		var base := Vector3(bb.get_center().x, bb.position.y, bb.get_center().z)
+		var d := s.duplicate() as MeshInstance3D
+		d.name = "S238BackGrass%d" % i
+		var k := rng.randf_range(1.15, 1.5)
+		# scale around the patch base, then move the base to the target
+		d.transform = Transform3D(Basis().scaled(Vector3(1.0, k, 1.0)), Vector3.ZERO)
+		d.position = tgt - Vector3(base.x, base.y * k, base.z) + Vector3(0, base.y, 0)
+		root.add_child(d); d.owner = root; n += 1
+	get_root().remove_child(root)
+	var ps := PackedScene.new()
+	print("S238G sources ", src.size(), " added ", n, " pack ", ps.pack(root), " save ", ResourceSaver.save(ps, P))
+	quit()
