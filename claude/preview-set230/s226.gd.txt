@@ -2124,6 +2124,14 @@ func _s236_bake(st: Node, cam: Camera3D, EV: Dictionary) -> void:
 	rt.add_child(sun)
 	var gc := Camera3D.new(); gc.name = "GameCam"; gc.transform = st.global_transform.affine_inverse() * cam.global_transform; gc.fov = cam.fov; gc.near = cam.near; gc.far = cam.far; gc.keep_aspect = cam.keep_aspect
 	rt.add_child(gc)
+	var slots := Node3D.new(); slots.name = "Slots" # s236: where units stand ("S<side>_<row>_<lane>", feet; owner drags them)
+	rt.add_child(slots)
+	for sd in 2:
+		for row in 3:
+			for lane in 2:
+				var mk := Marker3D.new(); mk.name = "S%d_%d_%d" % [sd, row, lane]
+				mk.position = st.slot_pos(sd, row, lane)
+				slots.add_child(mk)
 	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
 	var post := {}
 	for pr in m3.get_property_list():
