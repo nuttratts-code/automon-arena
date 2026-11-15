@@ -201,6 +201,7 @@ func _initialize() -> void:
 		for sp in sprs + shadows:
 			(sp as Node3D).visible = false
 		for mi in st.find_children("*", "MeshInstance3D", true, false):
+			if (mi as MeshInstance3D).material_override is ShaderMaterial and ((mi as MeshInstance3D).material_override as ShaderMaterial).shader == _s238_sh: continue # s238: tree/bush cards are QuadMesh too
 			if (mi as MeshInstance3D).mesh is PlaneMesh and ((mi as MeshInstance3D).mesh as PlaneMesh).size.x < 3.0: (mi as Node3D).visible = false
 	if EV.has("bake"): # s236: save the arena as a real scene (plan-set236 step 2)
 		if EV.has("cpitch"): cam.transform = cam233
@@ -2640,18 +2641,26 @@ func _s238_ptree(st: Node, EV: Dictionary, at: Vector3, h: float, rng: RandomNum
 	_s238_mm(st, at, items, Color(lt[0], lt[1], lt[2]), _s238_sway, 1.2, "Leaves%d" % _s238_pt_n)
 	_s238_pt_n += 1
 
+# s238 6c fix (owner: "can't move the bushes"): a MultiMeshInstance3D cannot be clicked in the editor viewport, so each
+# bush is now a Node3D group (click selects the whole bush, _edit_group_) holding 3-5 ordinary sprig cards.
 func _s238_pbush(st: Node, at: Vector3, bh: float, tint: Color, rng: RandomNumberGenerator) -> void:
 	var k := rng.randi_range(3, 5)
-	var items := []
+	var g := Node3D.new()
+	g.name = "Bush%d" % _s238_pt_n
+	g.set_meta("_edit_group_", true)
+	st.add_child(g)
+	g.global_position = at
 	for i in k:
-		var cw := bh * rng.randf_range(1.0, 1.35) * (1.15 if i == 0 else 1.0)
-		var ch := cw * float(LEAF_CH) / float(LEAF_CW)
+		var hh := bh * rng.randf_range(0.58, 0.8) * (1.15 if i == 0 else 1.0) # = old atlas size (sprig ~0.83 of its cell)
 		var a := rng.randf() * TAU
 		var r := 0.0 if i == 0 else bh * rng.randf_range(0.25, 0.55)
-		var off := Vector3(cos(a) * r, -ch * 0.04, sin(a) * r * 0.6)
+		var off := Vector3(cos(a) * r, -hh * 0.04, sin(a) * r * 0.6)
 		var shade := lerpf(0.78, 1.05, clampf(0.5 + off.z / (bh * 0.66), 0.0, 1.0))
-		items.append([off, Vector2(cw, ch), float(rng.randi() % 12), 1.0 if rng.randf() < 0.5 else 0.0, shade, 1.0])
-	_s238_mm(st, at, items, tint, _s238_sway * 1.8, 1.6, "Bush%d" % _s238_pt_n)
+		var f := "res://tests/s238/sprig_A%d_key_2026-11-15.png" % (rng.randi() % 12)
+		var q := _s238_card(g, f, at + off, hh, Color(tint.r * shade, tint.g * shade, tint.b * shade), rng.randf() < 0.5)
+		if q != null:
+			q.name = "Sprig%d" % i
+			q.global_position = at + off # _s238_card sinks cards by 3 %; sprigs sit on the ground
 	_s238_pt_n += 1
 
 func _s238_in(p: Vector2, poly: Array) -> bool:
