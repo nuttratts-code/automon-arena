@@ -91,6 +91,12 @@ Claude does the work; the owner decides. Every **Gate** below = stop, show still
 5. Texel density check before blaming colour: `tests/s229_texel.gd` prints texture px per metre per prop (plaza 25 vs stones 74–89 at 1024 px). The library originals (`art/library/3d/originals/*.glb`) hold 4096 textures — prep scaled them down.
 6. Other games' pictures used only as look references stay in the scratchpad — never commit or ship (HARD RULE 9 ②).
 
+### 8e. Grass + flower patches from owner Gemini sheets (set 231, owner A2 — FF Re-style flat patches)
+1. Owner prompt: blades/stems on flat pure magenta (#FF00FF), no ground, nothing touching the edges; flowers white/yellow/pale blue only (pink/purple keys out). 1K is enough — a blade is ~60–100 px tall on screen; 2K only for close cameras.
+2. Keyer differs per sheet: **grass** = `claude/preview-set230/cut_magenta.py.txt` (scratch `tools/cut_magenta.py`) (alpha `min(R,B)−G` ramp + despill toward green) · **flowers** = `claude/preview-set230/key_flowers.py.txt` (colour distance to the sampled bg + edge despill; the grass despill kills blue/lilac). Flower keyer also splits stems by alpha column gaps and packs them into equal cells, bottom-aligned (`pgfn` = stem count).
+3. Library first (art/library/README rule 2): originals + keyed copies in `art/library/pictures/<set>/` + INDEX rows, before the scratch copy `<g>/tests/s225/`.
+4. Build: `s226.gd _s231_patches` (SurfaceTool quads: random ⅓ slice + flip + lean 10–40°, normals UP, COLOR.r 0 root/1 tip; shader `s231_patch.gdshader` forces view-space UP normal — cull_disabled flipped back faces went black). Owner pick H1 args + flowers: notes round 6. Check: blades not black/grey, no magenta fringe, flowers ≈ 1 per 16 blades.
+
 ### 8b. Camera / formation / far-layer lessons (set 217 R5–R14 + P1, moved from ui-preview §8 set 219 E1)
 → claude/workflow/art-look-ref.md (moved set 220 E1).
 
