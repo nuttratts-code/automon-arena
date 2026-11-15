@@ -246,3 +246,9 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Front corner bushes: new `bfront=<n>` (in `_s235_bushes`): big dark bushes alternating left/right at |x| `bfx0`–`bfx1`, z `bfz`, height `bfh`, tint `bft`. Trap: x 6.8–9.5 at z 8.2 = outside the frame; picked `bfront=8 bfz=7.8 bfx0=4.6 bfx1=6.6 bfh=1.8` — they overlap the feet of the front-row corner units a little (the AI picture does too).
 - Light rays to the right (`r1x=12 r2x=8 ray=0.22`) did not show — dropped.
 - Args: r34_args.txt.
+
+## Round 35 (set 235) — owner: "why is it all piled in front? the extras belong on the back of the plaza" + front as before round 34
+- Front corner bushes off (`bfront=0`) → front = round 33 (near grass + flowers).
+- New `bback=<n>` (in `_s235_bushes`): bushes alternating left/right of the back opening, |x| `bgap`–`bbx` (4.5–12), z −`bbz0`…−`bbz1` (12.5–18). Picked 30 → the back arc reads as a full hedge both sides of the gap; the small left stone (StoneMid) is half hidden.
+- Lesson: "add more like the picture" = more on the BACK of the plaza unless the owner names the front; ask before putting anything in the camera-near band.
+- Args: r35_args.txt.

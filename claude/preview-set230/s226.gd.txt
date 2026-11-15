@@ -1914,6 +1914,13 @@ func _s235_bushes(st: Node, EV: Dictionary) -> void:
 		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.65, 1.3)
 		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
 		made += 1
+	var nb := int(EV.get("bback", "0")) # s235 r35: owner "the extras belong on the back of the plaza" — fill the back arc beside the opening
+	for i in nb:
+		var x := (-1.0 if i % 2 == 0 else 1.0) * rng.randf_range(gap, float(EV.get("bbx", "12.0")))
+		var z := -rng.randf_range(float(EV.get("bbz0", "12.5")), float(EV.get("bbz1", "18.0")))
+		var h := float(EV.get("bushh", "1.6")) * rng.randf_range(0.7, 1.35)
+		_s235_tree_card(st, files[rng.randi() % files.size()], Vector3(x, _s233_th(Vector2(x, z), EV), z), h, Color(tn[0], tn[1], tn[2]), rng.randf() < 0.5)
+		made += 1
 	var nf := int(EV.get("bfront", "0")) # s235 r34: big dark bushes in the two front corners (owner AI picture 2)
 	for i in nf:
 		var sd := -1.0 if i % 2 == 0 else 1.0
