@@ -1,0 +1,17 @@
+# set 239 SAMPLE: blur by distance (F1 sharp, S2 light, S3 strong) from col.png + dep.png
+import sys, numpy as np
+from PIL import Image, ImageFilter
+col, dep, out, s2, s3 = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]), float(sys.argv[5])
+c = Image.open(col).convert('RGB'); d = np.asarray(Image.open(dep).convert('RGB')).astype(float) / 255
+dist = np.where(d[..., 0] < 0.995, d[..., 0] * 150, np.maximum(d[..., 1] * 600, 150))
+def ss(a, b, x): t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
+sig = s2 * ss(58, 72, dist) + (s3 - s2) * ss(110, 150, dist)
+sig[:110, :420] = 0; sig[:110, 1740:] = 0; sig[905:, :] = np.minimum(sig[905:, :], 0)  # HUD stays sharp
+lv = [0.0, s2, s3]; ims = [np.asarray(c).astype(float)] + [np.asarray(c.filter(ImageFilter.GaussianBlur(s))).astype(float) for s in lv[1:]]
+o = np.zeros_like(ims[0])
+for i in range(len(lv) - 1):
+    w = np.clip((sig - lv[i]) / (lv[i + 1] - lv[i]), 0, 1)
+    inb = (sig >= lv[i]) & (sig <= lv[i + 1])
+    o = np.where(inb[..., None], ims[i] * (1 - w[..., None]) + ims[i + 1] * w[..., None], o)
+Image.fromarray(o.clip(0, 255).astype(np.uint8)).save(out, quality=90)
+print('ok', round(float(sig.max()), 2))
