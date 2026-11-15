@@ -10,7 +10,7 @@ Security (HARD RULE 9): only the owner's own AI picture, plus art already in the
 3. [x] `_s238_trees` (`s238=1`): polygons measured in the picture — T2 left grove, T1 right lakeside grove, right forest from x 43 (owner green line), MM gap r 20, far trees only x > 60, groves 0.68× height + 2.8 m spacing, O1 clump of 7 bushes at (10.4,−31.5), 12 meadow shrubs.
 4. [x] `_s238_cards` (`mlpic=1`, replaces mlayers): S3/S2/S1 cut from the picture (`preview-set230/cards238.py.txt`: editor UI painted out, silhouettes snapped to the owner's lines, mirrored side pads), each facing the game camera at D 316/308/300 (z −290…−274), picture row 212 → water line, scale `mls=0.85`, `mlcon=1.18`, `mltint`.
 5. [x] Baked → `<g>/art/arena_r38/arena_r38.tscn` (891 nodes, 13 MB, self-contained, 3 S238Layer nodes). View check OK. Stills: claude/preview-set238/. Args: preview-set230/r38_args.txt.
-6. [ ] Owner looks at the stills → tweaks (sample loop) or OK.
+6. [~] Owner round 1 (Godot, 15 Nov): crossed out the right land behind the lake → `hrc=1` (both terrain copies: right hills fade out at z −185…−215, water there). Fixed in passing: trees were placed before the terrain options were read (lake shift/ridge/hrc now applied to trees too). Re-baked r38 (874 nodes), view check OK. Owner looks at the stills → tweaks (sample loop) or OK.
 7. [ ] rule-change art-style §8: r38 = the arena (was plan-set237 step 6) → plan-set236 step 4 ports `arena_r38`.
 
 ## Known gaps

@@ -357,7 +357,7 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
-	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0"))
+	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s238_hrc = float(EV.get("hrc", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0"))
 	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
@@ -1352,6 +1352,7 @@ func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: D
 	m.set_shader_parameter("mt_k", float(EV.get("mtk", "1.0")))
 	m.set_shader_parameter("rdg", float(EV.get("rdg", "1.0")))
 	m.set_shader_parameter("lkz", float(EV.get("lkz", "0.0")))
+	m.set_shader_parameter("hrc", float(EV.get("hrc", "0.0")))
 	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")
 	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))
 	if EV.has("thazec"):
@@ -2179,7 +2180,7 @@ func _s237_th(p: Vector2) -> float:
 	var ez := (p.y + 172.0 - _s238_lk) / 72.0
 	var e := ex * ex + ez * ez
 	var basin := -6.5 * (1.0 - smoothstep(0.5, 1.0, e))
-	var hr := 13.0 * smoothstep(18.0, 85.0, p.x) * smoothstep(-15.0, -45.0, p.y) * (0.55 + 0.45 * _s233_fbm(p * 0.02 + Vector2(4.2, 1.3))) * smoothstep(0.9, 1.4, e)
+	var hr := 13.0 * smoothstep(18.0, 85.0, p.x) * smoothstep(-15.0, -45.0, p.y) * (0.55 + 0.45 * _s233_fbm(p * 0.02 + Vector2(4.2, 1.3))) * smoothstep(0.9, 1.4, e) * (1.0 - _s238_hrc * smoothstep(-185.0, -215.0, p.y))
 	var a := Vector2(-16.0, -46.0)
 	var ab := Vector2(-62.0, -122.0) - a
 	var ap := p - a
@@ -2195,6 +2196,7 @@ func _s237_th(p: Vector2) -> float:
 
 # distance to the nearest dirt path edge (negative = on it); same paths as path237() in the shader (no noise here)
 var _s238_rdg := 1.0 # s238: ridge scale (rdg) - twin of the shader uniform rdg
+var _s238_hrc := 0.0 # s238: right hills cut behind the lake (hrc) - twin of the shader uniform hrc
 var _s238_lk := 0.0 # s238: lake shift in z (lkz) - twin of the shader uniform lkz
 var _s237_mtk := 1.0 # s237: terrain mountain scale (mtk); low when the silhouette layers stand behind
 var _s237_np := false # s237: owner removed the dirt paths (tpath=0) -> nothing avoids them
@@ -2386,6 +2388,7 @@ func _s238_in(p: Vector2, poly: Array) -> bool:
 	return c
 
 func _s238_trees(st: Node, EV: Dictionary) -> void:
+	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s238_hrc = float(EV.get("hrc", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0")) # trees run before the terrain
 	var d := "res://tests/s225/"
 	var H := float(EV.get("treeh", "11.0"))
 	var tn: Array = str(EV.get("treet", "0.6,0.74,0.6")).split_floats(",")
