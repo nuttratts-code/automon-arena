@@ -1,0 +1,42 @@
+extends SceneTree
+# set 238 cont.: one game stone (StoneMid, bake 2.5k + arena shader) vs the original Hunyuan file (50k, 4K PBR) vs full 50k + arena shader, same arena light. -- --out <png>
+func _fit(n: Node3D, h: float) -> void:
+	var mi: MeshInstance3D = n.find_children("*", "MeshInstance3D", true, false)[0]
+	var bb: AABB = mi.global_transform * mi.get_aabb()
+	var s: float = h / bb.size.y
+	n.scale *= s
+	bb = mi.global_transform * mi.get_aabb()
+	n.position -= Vector3(bb.get_center().x, bb.position.y, bb.get_center().z)
+func _initialize() -> void:
+	var out: String = OS.get_cmdline_user_args()[1]
+	var ar: Node3D = load("res://art/arena_r38/arena_r38.tscn").instantiate()
+	root.add_child(ar)
+	await process_frame
+	for nn in ["ArenaDressing"]: (ar.get_node(nn) as Node3D).visible = false
+	var sm: MeshInstance3D = ar.get_node("ArenaDressing/Near/StoneMid/stone_plain_hy")
+	var h: float = sm.get_aabb().size.y * sm.global_transform.basis.get_scale().y
+	var base := Vector3(0.0, 0.0, -4.0)
+	# A = game stone copy, upright
+	var a := Node3D.new(); root.add_child(a)
+	var am := MeshInstance3D.new(); am.mesh = sm.mesh; am.material_override = sm.material_override; a.add_child(am)
+	_fit(a, h); a.position += base + Vector3(-3.2, 0, 0)
+	# B = original file as-is
+	var b: Node3D = (load("res://art/cmp239/orig_plain.glb") as PackedScene).instantiate(); root.add_child(b)
+	_fit(b, h); b.position += base
+	# C = full 50k mesh + same arena shader
+	var c: Node3D = (load("res://art/arena_r38/3d/stone_plain_hyf.glb") as PackedScene).instantiate(); root.add_child(c)
+	var cm: MeshInstance3D = c.find_children("*", "MeshInstance3D", true, false)[0]
+	var mat: ShaderMaterial = sm.material_override.duplicate()
+	var sm2: BaseMaterial3D = cm.mesh.surface_get_material(0)
+	mat.set_shader_parameter("base_tex", sm2.albedo_texture); mat.set_shader_parameter("base_nor", sm2.normal_texture)
+	cm.material_override = mat
+	_fit(c, h); c.position += base + Vector3(3.2, 0, 0)
+	var cam := Camera3D.new(); root.add_child(cam)
+	cam.fov = 34.0
+	cam.look_at_from_position(base + Vector3(0, h * 0.7, 13.0), base + Vector3(0, h * 0.5, 0))
+	cam.make_current()
+	for k in 6: await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_viewport().get_texture().get_image().save_png(out)
+	print("CMP saved ", out, " h ", h)
+	quit()
