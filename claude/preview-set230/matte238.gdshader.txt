@@ -1,0 +1,5 @@
+// set 238 A1 (own code): S2/S3 picture layer cut from the owner's game-camera picture; faces the game camera, pre-blurred, colours pre-corrected for the post
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled;
+uniform sampler2D tex : source_color, filter_linear;
+void fragment() { vec4 c = texture(tex, UV); ALBEDO = c.rgb; ALPHA = c.a; ALPHA_SCISSOR_THRESHOLD = 0.5; }

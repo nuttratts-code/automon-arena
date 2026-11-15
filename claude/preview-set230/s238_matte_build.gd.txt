@@ -1,0 +1,56 @@
+extends SceneTree
+# set 238 A1 (owner: "Build it"): apply the picture-layer look to the owner's saved arena_r38.tscn IN PLACE (hand edits kept).
+# S2/S3 = 2 picture layers on GameCam · 3D beyond r 22 m hidden (kept, not deleted) · terrain beyond the rim sinks · sun back-right ·
+# warm ambient fill · warm distance haze on the plaza's back part · one sun glow · tilt-shift off (F1 all sharp).
+const P := "res://art/arena_r38/"
+func _quad(cam: Camera3D, root: Node, nm: String, mat: ShaderMaterial, dist: float, prio: int) -> void:
+	var h := 2.0 * dist * tan(deg_to_rad(cam.fov) * 0.5)
+	var q := MeshInstance3D.new(); q.name = nm
+	var qm := QuadMesh.new(); qm.size = Vector2(h * 1.86, h); q.mesh = qm  # 1.86 = a little wider than 16:9, no side gaps
+	mat.render_priority = prio; q.material_override = mat
+	q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; q.extra_cull_margin = 16384.0
+	cam.add_child(q); q.owner = root; q.position = Vector3(0, 0, -dist)
+func _initialize() -> void:
+	var root: Node3D = (load(P + "arena_r38.tscn") as PackedScene).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	await process_frame
+	var cam: Camera3D = root.get_node("GameCam")
+	for o in ["MatteS3", "MatteS2", "SunGlow"]:
+		if cam.has_node(o): cam.get_node(o).free()
+	var hid := 0
+	for c in root.find_children("*", "GeometryInstance3D", true, false):
+		var gi := c as GeometryInstance3D
+		var nm := String(gi.name)
+		if nm == "S233Near" or nm == "Ground" or nm.begins_with("S230") or gi.get_parent() == cam: continue
+		var p := gi.global_position
+		if gi is MeshInstance3D and (gi as MeshInstance3D).mesh and p.length() < 0.01:
+			p = (gi as MeshInstance3D).mesh.get_aabb().get_center()
+		if Vector2(p.x, p.z).length() > 22.0 and gi.visible:
+			gi.visible = false; hid += 1
+	var tsh: Shader = load(P + "shader/s233_terrain_m238.gdshader")
+	for t in ["S233Near", "ArenaDressing/Mid/Ground"]:
+		var m := (root.get_node(t) as MeshInstance3D).material_override as ShaderMaterial
+		m.shader = tsh; m.set_shader_parameter("pdrop", 60.0)
+	var sun: DirectionalLight3D = root.get_node("Sun")
+	sun.look_at_from_position(Vector3(45, 40, -90), Vector3.ZERO)
+	sun.position = Vector3.ZERO
+	var e: Environment = (root.get_node("Env") as WorldEnvironment).environment
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.88, 0.84, 0.76); e.ambient_light_energy = 0.7; e.ambient_light_sky_contribution = 0.0
+	e.fog_enabled = true; e.fog_mode = Environment.FOG_MODE_DEPTH
+	e.fog_light_color = Color(238 / 255.0, 230 / 255.0, 205 / 255.0); e.fog_density = 0.18
+	e.fog_depth_begin = 34.0; e.fog_depth_end = 62.0; e.fog_depth_curve = 1.0
+	var msh: Shader = load(P + "shader/matte238.gdshader")
+	for z in [["MatteS3", "tex/matte238_s3.png", 150.0], ["MatteS2", "tex/matte238_s2.png", 75.0]]:
+		var mm := ShaderMaterial.new(); mm.shader = msh; mm.set_shader_parameter("tex", load(P + String(z[1])))
+		_quad(cam, root, z[0], mm, z[2], 0)
+	var gm := ShaderMaterial.new(); gm.shader = load(P + "shader/glow238.gdshader")
+	_quad(cam, root, "SunGlow", gm, 1.0, 127)
+	var post: Dictionary = root.get_meta("post", {})
+	post["focus_top"] = -1.0; post["focus_bottom"] = 2.0
+	root.set_meta("post", post)
+	get_root().remove_child(root)
+	var ps := PackedScene.new()
+	print("S238M hidden ", hid, " pack ", ps.pack(root), " save ", ResourceSaver.save(ps, P + "arena_r38.tscn"))
+	quit()

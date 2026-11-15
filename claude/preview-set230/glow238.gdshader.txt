@@ -1,0 +1,12 @@
+// set 238 A1 (own code): one sun glow over the whole frame from the picture's sun (upper right) - ties the real plaza to the picture layers
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, depth_test_disabled, depth_draw_never;
+uniform vec3 col : source_color = vec3(1.0, 0.925, 0.77);
+uniform float amt = 0.32;
+uniform vec2 sun = vec2(0.86, -0.08);
+uniform float aspect = 1.7778;
+void fragment() {
+	float r = length(vec2(UV.x - sun.x, (UV.y - sun.y) / aspect));
+	ALBEDO = col;
+	ALPHA = amt * pow(clamp(1.0 - r / 0.95, 0.0, 1.0), 1.6);
+}
