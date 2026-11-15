@@ -83,6 +83,7 @@ func _initialize() -> void:
 					if c.a > 0.0:
 						var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
 						img.set_pixel(x, y, Color(lerpf(l, c.r, csat), lerpf(l, c.g, csat), lerpf(l, c.b, csat), c.a))
+		if EV.get("sm", "0") == "1": img = _s232_sun(img, map_side[id] == 0, EV) # s232: sprite takes the scene sun + colour
 		s.texture = ImageTexture.create_from_image(img)
 		s.hframes = int(EV.get("hf", "8"))
 		s.flip_h = map_side[id] == 0 # new set faces left (art-style V1.5)
@@ -113,6 +114,7 @@ func _initialize() -> void:
 			(sh.material_override as StandardMaterial3D).albedo_texture = t
 			sh.scale = Vector3(1.15 * float(EV.get("blob", "1.0")), 1.0, float(EV.get("blobd", EV.get("blob", "1.0"))))
 			sh.position.z += float(EV.get("blobz", "0.0")) # s226 R5: a bit in front of the feet so the body does not hide it
+			if EV.get("fs", "0") == "1": _s232_foot(s, sh, img, str(map[id]), EV) # s232: sharp dark foot shadow + flyers
 		sprs.append(s)
 		k += 1
 	if look != "A":
@@ -1001,3 +1003,85 @@ func _s231_patches(st: Node, EV: Dictionary) -> void:
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		st.add_child(mi)
 	print("s231 patches: ", centres.size(), " patches, ", n_bl, " blades, ", n_fl, " flowers")
+
+
+# s232 step 4c ①: contact shadow sized to the sprite's own feet — dark core, short hard edge (not the soft round blob).
+# Flyers (--e:fly=XA:0.45,…) are lifted; their shadow stays on the ground, smaller and lighter.
+# Args: fsa alpha · fsc colour · fsw width x foot span · fsd depth/width · fse edge (0 hard … 1 soft) · fsx shift right (sun from left)
+func _s232_foot(s: Sprite3D, sh: MeshInstance3D, img: Image, cid: String, EV: Dictionary) -> void:
+	var w := img.get_width(); var h := img.get_height()
+	var bottom := 0
+	for y in range(h - 1, -1, -1):
+		for x in w:
+			if img.get_pixel(x, y).a > 0.5: bottom = y; break
+		if bottom > 0: break
+	var x0 := w; var x1 := 0 # foot span = opaque columns in the lowest fsb (30 %) of the body, centre = their mean
+	var sx := 0.0; var nn := 0.0
+	for y in range(maxi(0, bottom - int(h * float(EV.get("fsb", "0.3")))), bottom + 1):
+		for x in w:
+			if img.get_pixel(x, y).a > 0.5:
+				x0 = mini(x0, x); x1 = maxi(x1, x); sx += x; nn += 1.0
+	var span := float(maxi(x1 - x0, int(w * 0.3))) * s.pixel_size
+	var cx := (sx / maxf(nn, 1.0) - float(w) * 0.5) * s.pixel_size * (-1.0 if s.flip_h else 1.0)
+	var fly := 0.0
+	for e in str(EV.get("fly", "")).split(",", false):
+		var kv := e.split(":")
+		if kv[0] == cid: fly = float(kv[1])
+	var a := float(EV.get("fsa", "0.8")) * (1.0 / (1.0 + fly * 0.9))
+	var edge := clampf(float(EV.get("fse", "0.25")) + fly * 0.5, 0.02, 1.0)
+	var c := Color(EV.get("fsc", "#10141c"))
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 1.0 - edge, 1.0])
+	g.colors = PackedColorArray([Color(c, a), Color(c, a * 0.85), Color(c, 0.0)])
+	var t := GradientTexture2D.new()
+	t.gradient = g; t.fill = GradientTexture2D.FILL_RADIAL
+	t.fill_from = Vector2(0.5, 0.5); t.fill_to = Vector2(1.0, 0.5); t.width = 128; t.height = 128
+	(sh.material_override as StandardMaterial3D).albedo_texture = t
+	var pm := PlaneMesh.new()
+	var wd := span * float(EV.get("fsw", "0.9")) * (1.0 / (1.0 + fly * 0.4))
+	pm.size = Vector2(wd, wd * float(EV.get("fsd", "0.32")))
+	sh.mesh = pm
+	sh.scale = Vector3.ONE
+	sh.position.x = s.position.x + cx + float(EV.get("fsx", "0.04"))
+	if fly > 0.0:
+		s.position.y += fly
+	if EV.get("fsdbg", "0") == "1": (sh.material_override as StandardMaterial3D).albedo_color = Color(1, 0, 0)
+
+# s232 step 4c ②: sun match on the picture itself — sun from screen-left (light side brighter, far side + feet darker,
+# thin warm rim on the lit edge) and loud colours pulled down (soft cap on saturation, so the red ogre stops popping).
+# Args: smsat global sat · smcap sat above this is squeezed · smk squeeze · smdir left/right light · smao feet dark · smrim rim
+func _s232_sun(img: Image, flipped: bool, EV: Dictionary) -> Image:
+	var w := img.get_width(); var h := img.get_height()
+	var gs := float(EV.get("smsat", "0.92")); var cap := float(EV.get("smcap", "0.35")); var sk := float(EV.get("smk", "0.45"))
+	var dr := float(EV.get("smdir", "0.16")); var ao := float(EV.get("smao", "0.22")); var rim := float(EV.get("smrim", "0.25"))
+	var rc := Color(EV.get("smrc", "#ffe2b0"))
+	var rw := int(EV.get("smrw", "3"))
+	var mc := Color(EV.get("smmc", "#8a8a78")); var mix := float(EV.get("smmix", "0.0"))
+	var out := img.duplicate() as Image
+	for y in h:
+		var v := float(y) / float(h)
+		for x in w:
+			var c := img.get_pixel(x, y)
+			if c.a <= 0.0: continue
+			var su := float(x) / float(w)
+			if flipped: su = 1.0 - su # screen-left fraction (0 = the sun side)
+			var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+			var sat := maxf(c.r, maxf(c.g, c.b)) - minf(c.r, minf(c.g, c.b))
+			var f := gs
+			if sat > cap: f *= (cap + (sat - cap) * sk) / sat
+			var r := Color(lerpf(l, c.r, f), lerpf(l, c.g, f), lerpf(l, c.b, f), c.a)
+			r = r.lerp(Color(mc.r * l * 2.0, mc.g * l * 2.0, mc.b * l * 2.0, c.a), mix) # bleed the floor colour in
+			var m := (1.0 + dr * (0.5 - su) * 2.0) * (1.0 - ao * smoothstep(0.7, 1.0, v))
+			r = Color(r.r * m, r.g * m, r.b * m, c.a)
+			# rim: transparent pixel within rw px toward the sun side = lit edge
+			var sx := -1 if not flipped else 1
+			var edge := false
+			for d in range(1, rw + 1):
+				var xx := x + sx * d
+				if xx < 0 or xx >= w or img.get_pixel(xx, y).a < 0.5:
+					edge = true; break
+			if edge and v < 0.85:
+				r = r.lerp(Color(rc.r * maxf(l, 0.6), rc.g * maxf(l, 0.6), rc.b * maxf(l, 0.6), c.a) * 1.25, rim)
+				r.a = c.a
+			out.set_pixel(x, y, r)
+	return out
