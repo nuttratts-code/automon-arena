@@ -1946,7 +1946,13 @@ func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip
 	q.global_position = at - Vector3(0, h * 0.03, 0)
 	return q
 
+var _s238_bpc := false # s238 6c (owner: "the sprig bushes are good, use them for the old bushes too"): every bush card -> sprig bush
 func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> void:
+	if _s238_bpc and file.get_file().begins_with("bush"):
+		var br := RandomNumberGenerator.new()
+		br.seed = hash(Vector3i(int(at.x * 10.0), int(at.y * 10.0), int(at.z * 10.0)))
+		_s238_pbush(st, at, h, tint, br)
+		return
 	if _s238_sway > 0.0:
 		_s238_card(st, file, at, h, tint, flip)
 		return
@@ -2007,6 +2013,7 @@ func _s235_bushes(st: Node, EV: Dictionary) -> void:
 	for i in 9: files.append("res://tests/s225/bushA%d.png" % i)
 	for i in 7: files.append("res://tests/s225/bushB%d.png" % i)
 	var tn: Array = str(EV.get("busht", "0.78,0.84,0.76")).split_floats(",")
+	_s238_bpc = str(EV.get("bpc", "0")) == "1"
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 23504
 	var n := int(EV["bushes"])
@@ -2698,7 +2705,7 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 			var f := ("treeC%d" % (n % 3)) if far else (("treeA%d" if n % 3 == 0 else "treeB%d") % (n % 3))
 			var tc := Color(ft[0], ft[1], ft[2]) if far else Color(tn[0], tn[1], tn[2])
 			var th: float = H * float(g[3]) * dk.call(p.y) * rng.randf_range(0.75, 1.25)
-			if tpc and not far: _s238_ptree(st, EV, Vector3(p.x, gy, p.y), th, rng)
+			if tpc and not far: _s238_ptree(st, EV, Vector3(p.x, gy, p.y), th * float(EV.get("tpk", "1.0")), rng) # tpk: owner 6c "trees a bit smaller"
 			else: _s235_tree_card(st, d + f + ".png", Vector3(p.x, gy, p.y), th, tc, rng.randf() < 0.5)
 			got += 1
 			n += 1
