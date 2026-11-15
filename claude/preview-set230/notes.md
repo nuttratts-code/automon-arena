@@ -163,3 +163,6 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 - Camera kept K2: the AI picture's stones, ring line and horizon land on the same screen rows as our K2 shot; a pulled-back camera (0,8,38 / pitch 10) was clearly worse. Width trap: at ~100 m the view is only ~±30 m wide, so mist at x 25–90 was off screen.
 - Still different from the picture: AI flagstones bigger with crisper joints · warmer orange clouds · AI mist softer and wider · fallen rune slab hidden in our grass.
 - Tool: cmp234.sh.txt (render + stack the AI ref over our shot). Args: r18_args.txt.
+
+## Round 19 (set 234) — owner: "grass a bit lower"
+- Ring/joint/corner grass ~25 % lower: `pgfarh=1.25 pginh=1.0 pgfgh=1.45` (was 1.7 / 1.4 / 1.9). The fallen rune slab on the right shows again. Args: r19_args.txt (= r18 + these).
