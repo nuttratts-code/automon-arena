@@ -1,0 +1,132 @@
+import sys, os
+T = sys.argv[1]
+def patch(p, pairs, tail=''):
+    p = os.path.join(T, p)
+    s = open(p, encoding='utf-8').read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (p, a[:70])
+        s = s.replace(a, b)
+    s += tail
+    open(p, 'w', encoding='utf-8').write(s)
+
+# 3D valley hills behind the plateau (owner painting, set 233 round 11)
+patch('s233_terrain.gdshader', [
+('uniform float fall_r1 = 70.0;', '''uniform float fall_r1 = 70.0;
+uniform float hill1 = 0.0; // s233 R11: ridge band rising again past the valley (m)
+uniform float hill2 = 0.0; // far ridge band (m)
+uniform vec3 haze_col = vec3(0.62, 0.74, 0.86);
+uniform float haze_amt = 0.0;'''),
+('	if (fall > 0.0) { return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) - 40.0 * smoothstep(90.0, 140.0, dr); }',
+ '''	if (fall > 0.0 && hill1 > 0.0) {
+		float r1 = hill1 * smoothstep(55.0, 125.0, dr) * (0.35 + 0.65 * fbm(p * 0.011 + vec2(3.3, 1.7)));
+		float r2 = hill2 * smoothstep(140.0, 280.0, dr) * (0.4 + 0.6 * fbm(p * 0.006 + vec2(7.1, 2.9)));
+		return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) + r1 + r2;
+	}
+	if (fall > 0.0) { return shelf + mound(p) - fall * smoothstep(fall_r0, fall_r1, dr) - 40.0 * smoothstep(90.0, 140.0, dr); }'''),
+('	ALBEDO = c * tint;\n	ROUGHNESS = 1.0;\n}',
+ '	float far = smoothstep(50.0, 260.0, length(vec2(wp.x * 0.85, wp.z + 2.0)));\n	c = mix(c * tint, haze_col, far * haze_amt);\n	ALBEDO = c;\n	ROUGHNESS = 1.0;\n}'),
+])
+patch('s226.gd', [
+('		return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) - 40.0 * smoothstep(90.0, 140.0, dr)',
+ '''		var h1 := float(EV.get("thill1", "0"))
+		if h1 > 0.0:
+			var r1 := h1 * smoothstep(55.0, 125.0, dr) * (0.35 + 0.65 * _s233_fbm(p * 0.011 + Vector2(3.3, 1.7)))
+			var r2 := float(EV.get("thill2", "0")) * smoothstep(140.0, 280.0, dr) * (0.4 + 0.6 * _s233_fbm(p * 0.006 + Vector2(7.1, 2.9)))
+			return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) + r1 + r2
+		return shelf + mound - fall * smoothstep(float(EV.get("tf0", "16")), float(EV.get("tf1", "70")), dr) - 40.0 * smoothstep(90.0, 140.0, dr)'''),
+('	m.set_shader_parameter("fall_r1", float(EV.get("tf1", "70")))',
+ '''	m.set_shader_parameter("fall_r1", float(EV.get("tf1", "70")))
+	m.set_shader_parameter("hill1", float(EV.get("thill1", "0")))
+	m.set_shader_parameter("hill2", float(EV.get("thill2", "0")))
+	m.set_shader_parameter("haze_amt", float(EV.get("thaze", "0")))
+	if EV.has("thazec"):
+		var hz := Color(EV["thazec"])
+		m.set_shader_parameter("haze_col", Vector3(hz.r, hz.g, hz.b))'''),
+('func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:\n',
+ 'func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:\n\tif EV.get("ring", "0") == "1": _s233_ring(st, EV) # s233 R11: stones to the owner painting\n\tif EV.has("cpitch"): _s233_cam(st, cam, sprs, EV) # s233 R11: lower camera (owner G2)\n'),
+('	if EV.has("rmid"): _s233_rocks(st, EV)',
+ '	if EV.has("rmid"): _s233_rocks(st, EV)\n\tif EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off\n\tif EV.has("rfront"): _s233_front(st, EV)'),
+('	for f in nf:\n		for s in sprs:',
+ '	for f in nf:\n		if EV.has("cpitch"): cam.transform = cam233\n		for s in sprs:'),
+('var shadows := []\n', 'var shadows := []\nvar cam233 := Transform3D()\n'),
+], '''
+
+# s233 R11 (owner G2): lower camera like the owner painting. Sprites re-lean to the new pitch, feet stay put.
+func _s233_cam(st: Node, cam: Camera3D, sprs: Array, EV: Dictionary) -> void:
+	var p := deg_to_rad(float(EV["cpitch"]))
+	var cp: Array = str(EV.get("cpos", "0,6.0,29.4")).split_floats(",")
+	cam233 = Transform3D(Basis.from_euler(Vector3(-p, 0, 0)), Vector3(cp[0], cp[1], cp[2]))
+	cam.transform = cam233
+	var ol: Vector3 = st.lean()
+	var nl := Vector3(0.0, cos(p), -sin(p))
+	for s in sprs:
+		var sp := s as Sprite3D
+		var hh := sp.pixel_size * float(sp.texture.get_height()) * 0.5
+		var feet := sp.position - ol * hh
+		sp.position = feet + nl * hh
+		sp.rotation.x = -p
+	print("s233 cam pitch ", EV["cpitch"], " pos ", cam233.origin)
+
+# s233 R11 (owner H2): stand the owner's stones where the owner painting has them (sample only, .tscn untouched).
+# Their stage shadow cards ("Shadow" + name) move by the same amount.
+const RING233 := {
+	"StoneL": Vector2(-12.5, -9.5), "StoneBig": Vector2(-9.2, -12.4), "StoneBigSide": Vector2(-7.4, -13.8),
+	"StoneMid": Vector2(-4.5, -14.0), "StoneR": Vector2(10.0, -11.5), "StoneFrontR": Vector2(12.8, 5.0),
+	"StoneFrontL": Vector2(-12.9, 4.5), "StoneShortR": Vector2(-14.8, -2.5), "FallenSlab": Vector2(6.0, -15.0),
+	"FallenSlabR": Vector2(10.6, 9.6), "RockSlab": Vector2(3.4, -15.4), "RockFarR": Vector2(8.6, -14.6),
+	"RockFrontL": Vector2(-10.4, 8.2), "RockFarL": Vector2(-17.5, -8.0),
+}
+func _s233_ring(st: Node, EV: Dictionary) -> void:
+	var n_mv := 0
+	for nm in RING233.keys():
+		var n := st.find_child(nm, true, false) as Node3D
+		if n == null:
+			continue
+		var to: Vector2 = RING233[nm]
+		var d := Vector3(to.x - n.global_position.x, 0, to.y - n.global_position.z)
+		n.global_position += d
+		var sh := st.find_child("Shadow" + nm, true, false) as Node3D
+		if sh != null:
+			sh.global_position += d
+		n_mv += 1
+	print("s233 ring: moved ", n_mv)
+
+# s233 R11: the near hills card goes (3D ridges replace it); the arch stands on a ridge top right of centre.
+func _s233_far(st: Node, EV: Dictionary) -> void:
+	for mi in st.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).material_override as StandardMaterial3D
+		if m != null and m.albedo_texture != null and m.albedo_texture.resource_path.ends_with("far_hills_v3.png"):
+			var z := (mi as Node3D).global_position.z
+			if z > -150.0:
+				(mi as Node3D).visible = EV.get("hc1", "0") == "1"
+			else:
+				(mi as Node3D).global_position.y += float(EV.get("hc2y", "0"))
+				(mi as Node3D).visible = EV.get("hc2", "1") == "1"
+	var arch := st.find_child("LandmarkArch", true, false) as MeshInstance3D
+	if arch != null:
+		var ap: Array = str(EV.get("arch", "34,-125,9")).split_floats(",")
+		var bb := arch.mesh.get_aabb()
+		var ks := ap[2] / maxf(bb.size.y, 0.01)
+		arch.scale = Vector3.ONE * ks
+		var y := _s233_th(Vector2(ap[0], ap[1]), EV)
+		arch.global_position = Vector3(ap[0], y - 0.6 - bb.position.y * ks, ap[1]) - Vector3(bb.get_center().x, 0, bb.get_center().z) * ks
+		print("s233 arch at ", arch.global_position, " ground ", y)
+
+# s233 R11: small owner rocks scattered in the meadow in front of the plaza (painting foreground)
+func _s233_front(st: Node, EV: Dictionary) -> void:
+	var ps := load("res://art/s217/3d/rock_cliff_hy.glb") as PackedScene
+	if ps == null:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23303
+	for i in int(EV["rfront"]):
+		var r3 := ps.instantiate() as Node3D
+		var x := rng.randf_range(7.5, 15.0) * (1.0 if i % 2 == 0 else -1.0)
+		var z := rng.randf_range(4.0, 13.0)
+		var s := rng.randf_range(0.18, 0.45)
+		r3.scale = Vector3(s, s * rng.randf_range(0.5, 0.8), s)
+		r3.rotation.y = rng.randf_range(0.0, TAU)
+		st.add_child(r3)
+		r3.global_position = Vector3(x, _s233_th(Vector2(x, z), EV) - 0.1, z)
+''')
+print('patched')
