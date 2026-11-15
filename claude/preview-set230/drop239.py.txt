@@ -1,0 +1,73 @@
+# set 239 sample: copy the owner's saved arena_r38.tscn, lower everything outside the plaza rim by D m.
+import re, sys, math, os
+src, dst, D, r0, r1 = sys.argv[1], sys.argv[2], float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
+tag = os.path.splitext(os.path.basename(dst))[0]
+txt = open(src, encoding='utf-8').read()
+adir = os.path.dirname(src)
+def ss(a, b, x):
+    t = min(max((x - a) / (b - a), 0.0), 1.0); return t * t * (3 - 2 * t)
+def drop(x, z): return D * ss(r0, r1, math.hypot(x, z))
+# 1) terrain shaders: copy with a drop term
+for sh in ['s233_terrain', 's_a9a41ec']:
+    s = open(f'{adir}/shader/{sh}.gdshader', encoding='utf-8').read()
+    s = s.replace('uniform float lkz', f'uniform float pdrop = {D};\nuniform float lkz', 1)
+    old = '\treturn shelf + mnd + plain + basin + hr + ridge + mt;'
+    assert s.count(old) == 1, sh
+    s = s.replace(old, f'\treturn shelf + mnd + plain + basin + hr + ridge + mt - pdrop * smoothstep({r0}, {r1}, length(p));')
+    s = s.replace('smoothstep(shore_y + 1.2, shore_y + 0.1, wp.y)', f'smoothstep(shore_y + 1.2, shore_y + 0.1, wp.y + pdrop * smoothstep({r0}, {r1}, length(wp.xz)))')
+    open(f'{adir}/shader/{sh}_{tag}.gdshader', 'w', encoding='utf-8', newline='\n').write(s)
+    txt = re.sub(r'\[ext_resource type="Shader" uid="[^"]*" path="res://art/arena_r38/shader/' + sh + r'\.gdshader"',
+                 f'[ext_resource type="Shader" path="res://art/arena_r38/shader/{sh}_{tag}.gdshader"', txt)
+for k in ('wl',):
+    txt = re.sub(r'(shader_parameter/%s = )(-?[\d.]+)' % k, lambda m: m[1] + repr(round(float(m[2]) - D, 4)), txt)
+# 2) node transforms
+lines = txt.split('\n')
+nodes = []  # (line_idx, name, parent, tline_idx)
+cur = None
+for i, l in enumerate(lines):
+    if l.startswith('['):
+        cur = None
+        m = re.match(r'\[node name="([^"]+)" type="([^"]+)"(?: parent="([^"]*)")?', l)
+        if m: cur = {'i': i, 'name': m[1], 'type': m[2], 'parent': m[3], 't': None}; nodes.append(cur)
+    elif cur is not None and l.startswith('transform = Transform3D('):
+        cur['t'] = i
+def parse(n):
+    if n['t'] is None: return [1,0,0,0,1,0,0,0,1,0,0,0]
+    return [float(v) for v in re.findall(r'-?[\d.e+-]+', lines[n['t']][len('transform = Transform3D('):])]
+path = {}; glob = {}
+for n in nodes:
+    p = n['parent']
+    full = '.' if p is None else (n['name'] if p == '.' else p + '/' + n['name'])
+    path[full] = n; n['full'] = full
+    t = parse(n)
+    if p is None: g = t
+    else:
+        pg = glob[p]
+        # basis columns: x=(t0,t1,t2) y=(t3,t4,t5) z=(t6,t7,t8) origin (t9..t11)
+        def mul(v):
+            return [pg[0]*v[0]+pg[3]*v[1]+pg[6]*v[2], pg[1]*v[0]+pg[4]*v[1]+pg[7]*v[2], pg[2]*v[0]+pg[5]*v[1]+pg[8]*v[2]]
+        o = mul(t[9:12]); o = [o[k] + pg[9+k] for k in range(3)]
+        g = mul(t[0:3]) + mul(t[3:6]) + mul(t[6:9]) + o
+    glob[full] = g; n['g'] = g
+haskids = {n['parent'] for n in nodes if n['parent']}
+def ident(g): return all(abs(a-b) < 1e-4 for a, b in zip(g, [1,0,0,0,1,0,0,0,1,0,0,0]))
+moved = 0; skipped = []
+for n in nodes:
+    p = n['parent']
+    if p is None or not ident(glob[p]): continue
+    if n['name'] in ('Ground','S233Near'): continue  # shader-displaced terrain
+    if n['type'] in ('Camera3D','Marker3D','DirectionalLight3D','CPUParticles3D','WorldEnvironment','OmniLight3D','SpotLight3D'): continue
+    key = n['full'] if p != '.' else n['name']
+    if ident(n['g']) and (n['full'] in haskids or n['name'] in haskids): continue  # container: its children handle it
+    x, y, z = n['g'][9:12]
+    if ident(n['g']) or (abs(x) < 1e-3 and abs(z) < 1e-3):
+        skipped.append(n['full'] + ':' + n['type']); continue
+    d = drop(x, z)
+    if d < 1e-4: continue
+    t = parse(n); t[10] -= d  # parent is identity -> world y = local y
+    lines[n['t']] = 'transform = Transform3D(' + ', '.join(repr(round(v, 6)) for v in t) + ')' if n['t'] is not None else lines[n['t']]
+    if n['t'] is None:
+        lines[n['i']] += '\ntransform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, %r, %r, %r)' % (x, -d, z)
+    moved += 1
+open(dst, 'w', encoding='utf-8', newline='\n').write('\n'.join(lines))
+print('moved', moved, 'skipped(origin)', len(skipped)); print('\n'.join(skipped))

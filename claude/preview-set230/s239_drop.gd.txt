@@ -1,0 +1,30 @@
+extends SceneTree
+# set 239 SAMPLE ONLY: lower world-baked grass/flower patch vertices outside the plaza rim (twin of drop.py)
+func _ss(a: float, b: float, x: float) -> float:
+	var t := clampf((x - a) / (b - a), 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
+func _init() -> void:
+	var a := OS.get_cmdline_user_args()
+	var src: String = a[0]; var dst: String = a[1]
+	var D := float(a[2]); var r0 := float(a[3]); var r1 := float(a[4])
+	var root: Node = (load(src) as PackedScene).instantiate()
+	var n := 0
+	for c in root.get_children():
+		if c is MeshInstance3D and (c.name.begins_with("S231Patch") or c.name.begins_with("S231Flowers")):
+			var m: Mesh = c.mesh
+			var nm := ArrayMesh.new()
+			for s in m.get_surface_count():
+				var arr := m.surface_get_arrays(s)
+				var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+				for i in v.size():
+					var p := v[i]
+					p.y -= D * _ss(r0, r1, Vector2(p.x, p.z).length())
+					v[i] = p
+				arr[Mesh.ARRAY_VERTEX] = v
+				nm.add_surface_from_arrays(m.surface_get_primitive_type(s), arr)
+				nm.surface_set_material(s, m.surface_get_material(s))
+			c.mesh = nm
+			n += 1
+	var ps := PackedScene.new()
+	print("S239 patches ", n, " pack ", ps.pack(root), " save ", ResourceSaver.save(ps, dst))
+	quit()
