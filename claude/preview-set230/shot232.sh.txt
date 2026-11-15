@@ -1,5 +1,5 @@
 #!/bin/sh
-# shot232.sh <name> [extra --e: args] — set 231 owner pick (C3 + H1 + flowers) + 4 stand-ins; extras last win
+# shot232.sh <name> [extra --e: args] — set 231 pick (C3 + H1 + flowers) + 4 stand-ins + set 232 pick F1 + S2; extras last win
 T=$(dirname "$0")
 N=$1; shift
-sh $T/shot231.sh $N --e:shade=1 --e:shd=0.55 --e:sao=0.8 --e:saor=14 --e:mtint=0.88,1.1,0.66 --e:pg=1 --e:pgh=1.0 --e:pgd=40 --e:pgb=1.4 --e:pgroot=0.7 --e:pgt=0.95,1.2,0.75 --e:pgf=0.06 --e:ids=XO/XA/XD/XG/XA/XO --e:foe=XG/XD/XA/XO/XD/XG --e:hf=1 "$@"
+sh $T/shot231.sh $N --e:shade=1 --e:shd=0.55 --e:sao=0.8 --e:saor=14 --e:mtint=0.88,1.1,0.66 --e:pg=1 --e:pgh=1.0 --e:pgd=40 --e:pgb=1.4 --e:pgroot=0.7 --e:pgt=0.95,1.2,0.75 --e:pgf=0.06 --e:ids=XO/XA/XD/XG/XA/XO --e:foe=XG/XD/XA/XO/XD/XG --e:hf=1 --e:fs=1 --e:fly=XD:0.45 --e:sm=1 --e:smsat=0.85 --e:smcap=0.3 --e:smk=0.35 --e:smdir=0.24 --e:smao=0.3 --e:smrim=0.35 --e:stint=0.92,0.9,0.86 "$@"
