@@ -166,3 +166,6 @@ A2 detail overlay (pillar-stone detail tiled ~1 m on the plaza, `detail_*` on St
 
 ## Round 19 (set 234) — owner: "grass a bit lower"
 - Ring/joint/corner grass ~25 % lower: `pgfarh=1.25 pginh=1.0 pgfgh=1.45` (was 1.7 / 1.4 / 1.9). The fallen rune slab on the right shows again. Args: r19_args.txt (= r18 + these).
+
+## Round 20 (set 234) — owner: "lower again"
+- `pgfarh=0.9 pginh=0.7 pgfgh=1.05` (~half of round 18). Ring now a low lawn edge; stones stand clear. Args: r20_args.txt.
