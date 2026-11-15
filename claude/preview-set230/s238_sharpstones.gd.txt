@@ -1,0 +1,35 @@
+extends SceneTree
+# set 238: owner "only one stone looks real" -> every soft (bake 2.5k) standing stone gets the decimate-12k model with the ORIGINAL texture (like the hero full1k).
+# Swaps by mesh, so owner copies/duplicates are caught too. Re-run safe.
+const MAP := {"res://art/arena_r38/mesh/stone_tall2_hyd.res": "stone_tall2_hyf", "res://art/arena_r38/mesh/stone_plain_hyd.res": "stone_plain_hyf", "res://art/arena_r38/mesh/stone_taper_hyd.res": "stone_taper_hyf", "res://art/arena_r38/mesh/stone_block_hyd.res": "stone_block_hyf"}  # round 2: decimate 12k still looked soft -> full 50k like the hero
+func _grab(nm: String) -> Array:
+	var sc: Node = (load("res://art/arena_r38/3d/%s.glb" % nm) as PackedScene).instantiate()
+	var mi: MeshInstance3D = sc.find_children("*", "MeshInstance3D", true, false)[0]
+	var sm: BaseMaterial3D = mi.mesh.surface_get_material(0)
+	var p := "res://art/arena_r38/mesh/%s.res" % nm
+	var m2: Mesh = mi.mesh.duplicate()
+	m2.surface_set_material(0, null)
+	ResourceSaver.save(m2, p)
+	return [load(p), sm.albedo_texture, sm.normal_texture]
+func _init():
+	var path := "res://art/arena_r38/arena_r38.tscn"
+	var root = load(path).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	var cache := {}
+	var n := 0
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null or not MAP.has(mi.mesh.resource_path): continue
+		var nm: String = MAP[mi.mesh.resource_path]
+		if not cache.has(nm): cache[nm] = _grab(nm)
+		var r: Array = cache[nm]
+		var mat: ShaderMaterial = (mi.material_override as ShaderMaterial).duplicate()
+		mat.set_shader_parameter("base_tex", r[1])
+		mat.set_shader_parameter("base_nor", r[2])
+		mat.set_shader_parameter("has_base_nor", r[2] != null)
+		mi.mesh = r[0]; mi.material_override = mat
+		print("SHARP ", mi.get_parent().name, "/", mi.name, " -> ", nm)
+		n += 1
+	var ps := PackedScene.new()
+	print("SHARP swapped ", n, " pack ", ps.pack(root), " save ", ResourceSaver.save(ps, path))
+	quit()

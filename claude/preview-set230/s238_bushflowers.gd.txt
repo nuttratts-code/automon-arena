@@ -1,0 +1,50 @@
+extends SceneTree
+# set 238: (1) tall bushes at the back rim hide the picture's hill rocks (they clash with the new 3D stones); (2) flowers mixed into the back grass clumps.
+# Re-run safe: frees old S238CoverBush* / S238GrassFlower* first.
+const BUSH := [["Bush46", -4.0, -18.0, 2.4], ["Bush19", -2.8, -18.6, 2.1], ["Bush72", -1.1, -17.9, 1.7], ["Bush46", 0.4, -18.5, 1.6]]
+func _c(n: Node) -> Vector3:
+	var ab := AABB(); var first := true
+	for m in ([n] if n is GeometryInstance3D else []) + n.find_children("*", "GeometryInstance3D", true, false):
+		var a: AABB = m.global_transform * m.get_aabb()
+		ab = a if first else ab.merge(a); first = false
+	return ab.get_center()
+func _init():
+	var path := "res://art/arena_r38/arena_r38.tscn"
+	var root = load(path).instantiate()
+	get_root().add_child(root)
+	await process_frame
+	await process_frame
+	for n in root.find_children("S238CoverBush*", "", true, false) + root.find_children("S238GrassFlower*", "", true, false):
+		n.get_parent().remove_child(n); n.free()
+	var rng := RandomNumberGenerator.new(); rng.seed = 2382
+	var i := 0
+	for b in BUSH:
+		var src: Node3D = root.find_child(b[0], true, false)
+		var d: Node3D = src.duplicate()
+		src.get_parent().add_child(d)
+		d.name = "S238CoverBush%d" % i
+		d.global_position = Vector3(b[1], src.global_position.y, b[2])
+		d.scale = src.scale * b[3]
+		for k in d.find_children("*", "", true, false): k.owner = root
+		d.owner = root
+		i += 1
+	var fl: Array = []
+	for f in root.find_children("S231Flowers*", "GeometryInstance3D", true, false):
+		if not f.is_visible_in_tree(): continue
+		var c: Vector3 = _c(f); var r := Vector2(c.x, c.z).length()
+		if r > 11.5 and r < 17.0: fl.append([f, c])
+	var j := 0
+	for g in root.find_children("S238BackGrass*", "GeometryInstance3D", true, false):
+		if rng.randf() > 0.7: continue
+		var gc: Vector3 = _c(g)
+		var pick: Array = fl[rng.randi() % fl.size()]
+		var d: GeometryInstance3D = pick[0].duplicate()
+		root.add_child(d); d.owner = root
+		d.name = "S238GrassFlower%d" % j
+		var tgt := Vector3(gc.x + rng.randf_range(-0.8, 0.8), 0, gc.z + rng.randf_range(-0.6, 0.6))
+		d.position = pick[0].position + Vector3(tgt.x - pick[1].x, 0, tgt.z - pick[1].z)
+		j += 1
+	print("BF bushes ", i, " flower sources ", fl.size(), " flowers ", j)
+	var ps := PackedScene.new()
+	print("BF pack ", ps.pack(root), " save ", ResourceSaver.save(ps, path))
+	quit()
