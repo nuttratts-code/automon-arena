@@ -1946,8 +1946,16 @@ func _s238_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip
 	q.global_position = at - Vector3(0, h * 0.03, 0)
 	return q
 
+var _s238_tset := "" # s238 6c-3: owner tree sheets D (full) / E (with gaps), e.g. "D,E"
+var _s238_tsk := 1.0
 var _s238_bpc := false # s238 6c (owner: "the sprig bushes are good, use them for the old bushes too"): every bush card -> sprig bush
 func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color, flip: bool) -> void:
+	if _s238_tset != "" and file.get_file().begins_with("tree"): # s238 6c-3 (owner: "take all trees out, use these instead")
+		var tr := RandomNumberGenerator.new()
+		tr.seed = hash(Vector3i(int(at.x * 10.0), 7, int(at.z * 10.0)))
+		var sets := _s238_tset.split(",")
+		file = "res://tests/s238/tree%s%d_key_2026-11-15.png" % [sets[tr.randi() % sets.size()], tr.randi() % 3]
+		h *= _s238_tsk
 	if _s238_bpc and file.get_file().begins_with("bush"):
 		var br := RandomNumberGenerator.new()
 		br.seed = hash(Vector3i(int(at.x * 10.0), int(at.y * 10.0), int(at.z * 10.0)))
@@ -2676,6 +2684,7 @@ func _s238_trees(st: Node, EV: Dictionary) -> void:
 		["righthill", [Vector2(72, -60), Vector2(140, -60), Vector2(140, -210), Vector2(72, -210)], 30, gk, 3.0],
 		["leftlake", [Vector2(-130, -110), Vector2(-60, -110), Vector2(-60, -185), Vector2(-130, -185)], 18, gk, 3.0],
 		["far", [Vector2(60, -262), Vector2(130, -262), Vector2(130, -330), Vector2(60, -330)], 16, gk, 3.0]]
+	_s238_tset = str(EV.get("tset", "")); _s238_tsk = float(EV.get("tsk", "1.0"))
 	var tpc: bool = str(EV.get("tpc", "0")) == "1" # s238 6c: near trees from trunk + leaf pieces
 	var bpc: bool = str(EV.get("bpc", "0")) == "1" # s238 6c: bushes from 3-5 sprigs
 	var placed: Array[Vector2] = []
