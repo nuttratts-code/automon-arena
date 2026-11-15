@@ -3,7 +3,7 @@
 Owner picks (15 Nov, set 236): **A1** bake the r36 sample into a real editable scene (.tscn — every tree/bush/rock/grass patch a node the owner drags in the Godot editor; mist/fog/sun/colours as Inspector values) · **B** the latest camera = r36 (`cpitch=8.5`, `cpos=0,6.8,29.4`) · **C1** only the files the scene really uses, compressed (~5–8 MB, not the ~140 MB of test copies) · **D1** the 4 stand-in creatures (from another game) live in `godot/local_standins/` = gitignored + excluded from every export; the game falls back to our own sprites when the folder is missing. **Delete the folder + the loader the day the owner's own creatures arrive** (owner rule set 236 D).
 Owner then tunes the scene himself in the Godot editor.
 
-Source of the look: scratch Godot copy `%TEMP%/claude/6778d44212994c0a/e44da554-341a-472f-839e-ef20a29a07a0/scratchpad/g` (set 217 branch `ccr-882ceb4b-0ewtk1` + sample code `tests/s226.gd` = repo copy `claude/preview-set230/s226.gd.txt`) · args `claude/preview-set230/r36_args.txt` via `tools/shot233.sh`.
+Source of the look: scratch Godot copy `…/GitHub/automon-scratch/g` (moved out of %TEMP% 16 Nov, owner C1 — Temp gets wiped; outside git, never commit it) (set 217 branch `ccr-882ceb4b-0ewtk1` + sample code `tests/s226.gd` = repo copy `claude/preview-set230/s226.gd.txt`) · args `claude/preview-set230/r36_args.txt` via `tools/shot233.sh`.
 
 Security line (HARD RULE 9): stand-ins never in git/exports (.gitignore + export exclude filter + secret/asset grep before each commit) · every shipped asset gets a PROVENANCE row (Poly Haven CC0 credit; owner AI trees/bushes = set 219 D) · no load() of player files.
 

@@ -8,7 +8,7 @@ When the owner wants to arrange the scene themselves, point to **Godot** (give t
 |---|---|
 | move / turn / scale stones, grass, far backdrop; add a prop; look through the game camera | **Godot** `scenes/arena_dressing_r6.tscn` (no export loop, game camera built in; `Slots` markers move where units stand) |
 | change a prop's shape or paint | Blender → this skill §4 again |
-| change the plaza floor (`art/arena/runeplaza.glb`) | Blender `art/scene/runeplaza-v5.blend` → Claude exports with `art/blender/export_godot.py` (edits made on the imported glb in Godot are lost) |
+| change the plaza floor (`art/arena/runeplaza.glb`) | Blender `art/scene/runeplaza-v5.blend` (DELETED 16 Nov, owner B2: the r6 plaza can no longer be re-exported; the arena is r38 now) → Claude exports with `art/blender/export_godot.py` (edits made on the imported glb in Godot are lost) |
 Steps for the owner: open the editor (§0) → double-click `scenes/arena_dressing_r6.tscn` → pick a node under `Near` / `Mid` / `Slots` → **W** move · **E** turn · **R** scale → game view: select `GameCam`, tick **Preview** (untick to keep editing) → new prop: drag a glb from `art/s217/3d/` onto `Near` → **Ctrl+S** → tell Claude to commit.
 Owner rules: `Guides` (slot rings, plaza disc, ground) are editor-only helpers — do not move them, real slots live in stage3d.gd · keep props in the back half / away from the camera side so nothing hides the units.
 Claude after the owner saves: `git diff godot/scenes/arena_dressing_r6.tscn` → game shot (§6.3) → commit the scene as the owner's work.
