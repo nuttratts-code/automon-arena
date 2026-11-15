@@ -1,0 +1,71 @@
+import numpy as np, cv2
+from PIL import Image
+from scipy.ndimage import median_filter, uniform_filter1d
+src=np.asarray(Image.open('../images/2.jpg').convert('RGB'))
+ann=np.asarray(Image.open('../images/1.webp').convert('RGB')).astype(int)
+H=250; W=2000
+img=src[:H].copy()
+# 1) paint over the editor UI that sits on the backdrop
+m=np.zeros((H,W),np.uint8)
+for x0,y0,x1,y1 in [(0,0,275,28),(0,24,58,195),(940,0,1058,28),(1608,0,2000,28),(1900,34,1990,112),(1912,114,1972,140)]:
+    m[y0:y1,x0:x1]=255
+img=cv2.inpaint(img,m,9,cv2.INPAINT_TELEA)
+L=cv2.GaussianBlur(cv2.cvtColor(img,cv2.COLOR_RGB2LAB)[...,0].astype(float),(5,5),0)
+gy=np.zeros_like(L); gy[2:-2]=L[:-4]-L[4:]   # + where brighter above (sky/haze above a darker ridge)
+r,g,b=ann[:H,:,0],ann[:H,:,1],ann[:H,:,2]
+def line(mask,use_min=False):
+    ys=np.full(W,np.nan)
+    for x in range(W):
+        c=np.nonzero(mask[:,x])[0]
+        if len(c): ys[x]=c.min() if use_min else np.median(c)
+    ok=~np.isnan(ys); xs=np.arange(W)
+    return np.interp(xs,xs[ok],ys[ok]), ok
+def snap(guide,rng,lo=0):
+    out=np.zeros(W)
+    for x in range(W):
+        a=int(max(lo,guide[x]-rng)); bb=int(min(H-3,guide[x]+rng))
+        col=np.abs(gy[a:bb,x]); out[x]=a+np.argmax(col)
+    return median_filter(out,15)
+gm=(g>150)&(r<90)&(b<90); gm[75:]=False
+green,_=line(gm)
+yel,yok=line((r>200)&(g>200)&(b<80))
+blu,bok=line((b>200)&(r<80)&(g>100)&(g<200),use_min=True)
+s3=snap(green,10)
+s3[1600:]=np.maximum(s3[1600:],48) # under the painted-out editor toolbar
+s2=snap(yel,16)
+s1=snap(blu,14)
+s1[1490:1680]=np.minimum(s1[1490:1680],blu[1490:1680]) # keep the spire the owner traced
+xs=np.arange(W)
+x2a,x2b=xs[yok].min(),xs[yok].max(); x1a=xs[bok].min()
+print('S2 x',x2a,x2b,'S1 from',x1a)
+def card(top,xa,xb,fade_l,fade_r):
+    a=np.zeros((H,W),np.float32)
+    yy=np.arange(H)[:,None]
+    a[:]=np.clip((yy-top[None,:]+1.0)/2.0,0,1)
+    w=np.ones(W,np.float32)
+    w[:xa]=0; w[xb+1:]=0
+    if fade_l: w[xa:xa+fade_l]=np.linspace(0,1,fade_l)
+    if fade_r: w[xb-fade_r+1:xb+1]=np.linspace(1,0,fade_r)
+    a*=w[None,:]
+    return np.dstack([img,(a*255).astype(np.uint8)])
+c3=card(s3,0,W-1,0,0)
+# S2: left part (owner yellow from x~200; left of it follow the rock peaks up to the S3 line), soft right end under S1
+s2f=s2.copy(); s2f[:x2a]=np.maximum(snap(np.full(W,95.0),40,lo=50)[:x2a], s3[:x2a])
+c2=card(s2f,60,min(W-1,x2b+40),60,80)
+c1=card(s1,max(0,x1a-60),W-1,120,0)
+PAD=300
+def pad(c):  # mirror the side columns so the card reaches past the frame edges
+    l=c[:,60:60+PAD][:,::-1].copy(); c=c.copy(); c[:,:60]=c[:,120:60:-1]
+    return np.concatenate([l,c,c[:,-2:-PAD-2:-1]],axis=1)
+import os; os.makedirs('cards',exist_ok=True)
+for n,c in (('s3',pad(c3)),('s2',np.pad(c2,((0,0),(PAD,PAD),(0,0)))),('s1',np.concatenate([np.zeros((H,PAD,4),np.uint8),c1,c1[:,-2:-PAD-2:-1]],axis=1))):
+    Image.fromarray(c).save(f'cards/{n}.png')
+# preview: layers over magenta + the traced lines
+pv=img.copy()
+for arr,col in ((s3,(0,255,0)),(s2,(255,255,0)),(s1,(0,120,255))):
+    for x in range(W): pv[int(np.clip(arr[x],0,H-1)),x]=col
+Image.fromarray(pv).save('cards/lines.png')
+bg=np.zeros((H,W+2*PAD,3),np.float32); bg[:]=(30,30,90)
+for n in ('s3','s2','s1'):
+    c=np.asarray(Image.open(f'cards/{n}.png')).astype(np.float32); a=c[...,3:]/255; bg=bg*(1-a)+c[...,:3]*a
+Image.fromarray(bg.astype(np.uint8)).save('cards/stack.png')

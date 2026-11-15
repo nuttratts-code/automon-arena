@@ -1,0 +1,19 @@
+# Plan set 238 — r37 reshaped to the owner's marked picture → arena_r38
+
+Owner (15 Nov): marked the AI overhead picture — blue = game camera, red line = real ground ends at the lake's far shore, S1–S3 = mountain layers behind it, S4 = sky, W1 = water, T1/T2 = tree groups to add, O1 = bush clump to add, red scribbles = remove. Work from the picture's high angle; the game camera stays (pitch 8.5, pos 0,6.8,29.4, FOV 19.2).
+Picks: **A1** lake further back (the measurement says z −118, so `lkz=-13`; the −160 shown when asking ignored the water level — corrected) · **B2** remove the left bank that juts into the lake (nothing there after the lake move) · **C1** no trees at MM (90,−132) · **D** cut S1–S3 straight from the owner's picture.
+Security (HARD RULE 9): only the owner's own AI picture, plus art already in the scratch copy. Layer PNGs + arena_r38 stay local (stand-ins local, set 236 D1). Nothing new from outside.
+
+## Steps
+1. [x] Reference view = the picture's own camera, fit from the plaza size (pos 0,19.5,38.4 · pitch 17.2 · FOV 46.8; option `cfov`). It matches the picture's plaza size and position.
+2. [x] Terrain twins (`rdg`, `lkz` in shader + `_s238_rdg/_s238_lk`): ridge off (`rdg=0`, ridge rocks + ridge-top row off), lake + plain 13 m further back.
+3. [x] `_s238_trees` (`s238=1`): polygons measured in the picture — T2 left grove, T1 right lakeside grove, right forest from x 43 (owner green line), MM gap r 20, far trees only x > 60, groves 0.68× height + 2.8 m spacing, O1 clump of 7 bushes at (10.4,−31.5), 12 meadow shrubs.
+4. [x] `_s238_cards` (`mlpic=1`, replaces mlayers): S3/S2/S1 cut from the picture (`preview-set230/cards238.py.txt`: editor UI painted out, silhouettes snapped to the owner's lines, mirrored side pads), each facing the game camera at D 316/308/300 (z −290…−274), picture row 212 → water line, scale `mls=0.85`, `mlcon=1.18`, `mltint`.
+5. [x] Baked → `<g>/art/arena_r38/arena_r38.tscn` (891 nodes, 13 MB, self-contained, 3 S238Layer nodes). View check OK. Stills: claude/preview-set238/. Args: preview-set230/r38_args.txt.
+6. [ ] Owner looks at the stills → tweaks (sample loop) or OK.
+7. [ ] rule-change art-style §8: r38 = the arena (was plan-set237 step 6) → plan-set236 step 4 ports `arena_r38`.
+
+## Known gaps
+- At 8.5° pitch the top ~25 picture rows (spire tip, far peaks) sit above the frame.
+- The left mirrored pad shows a mirrored rock peak (mostly behind the T2 trees).
+- Sun glow + mist wash out the middle of the backdrop. Contrast/tint can be tuned (`mlcon`, `mltint`, `mista`).

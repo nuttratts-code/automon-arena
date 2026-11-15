@@ -357,11 +357,13 @@ func _g(st: Node, cam: Camera3D, EV: Dictionary, sprs: Array) -> void:
 	if EV.get("ffr", "0") == "1": _s230_floor(st, EV) # s230: FF Re-style shared layers on plaza + stones
 	if EV.get("gnd", "0") == "1": _s230_ground(st, EV) # s230 B2: flat ground, CC0 flagstones + shared moss
 	if EV.get("shade", "0") == "1": _s230_shade(st, EV) # s230: baked contact shade + sun shadow map
+	_s238_rdg = float(EV.get("rdg", "1.0")); _s238_lk = float(EV.get("lkz", "0.0")); _s237_mtk = float(EV.get("mtk", "1.0"))
 	if EV.get("terr", "0") == "1": _s233_terrain(st, EV) # s233 B1: rolling ground
 	if EV.get("pg", "0") == "1": _s231_patches(st, EV)
 	if EV.has("rmid"): _s233_rocks(st, EV)
-	if EV.get("meadow", "0") == "1": _s237_ridge_rocks(st, EV)
-	if EV.has("mlayers"): _s237_layers(st, EV)
+	if EV.get("meadow", "0") == "1" and _s238_rdg > 0.01: _s237_ridge_rocks(st, EV)
+	if EV.has("mlpic"): _s238_cards(st, EV) # s238: owner picture S1-S3 cut into layers
+	elif EV.has("mlayers"): _s237_layers(st, EV)
 	if EV.has("mist"): _s234_mist(st, EV) # s234 B3-like: low mist drifting on the back slope (owner AI ref picture)
 	if EV.get("terr", "0") == "1" and EV.has("thill1"): _s233_far(st, EV) # s233 R11: arch on a hill, near hills card off
 	if EV.has("rfront"): _s233_front(st, EV)
@@ -1348,6 +1350,8 @@ func _s233_mat(sh: Shader, om: ShaderMaterial, node_y: float, sink: float, EV: D
 	m.set_shader_parameter("meadow", 1.0 if EV.get("meadow", "0") == "1" else 0.0)
 	m.set_shader_parameter("shore_y", float(EV.get("wl", "-5.2")))
 	m.set_shader_parameter("mt_k", float(EV.get("mtk", "1.0")))
+	m.set_shader_parameter("rdg", float(EV.get("rdg", "1.0")))
+	m.set_shader_parameter("lkz", float(EV.get("lkz", "0.0")))
 	var gr: Array = str(EV.get("tgrade", "1,1,1")).split_floats(",")
 	m.set_shader_parameter("grade", Vector3(gr[0], gr[1], gr[2]))
 	if EV.has("thazec"):
@@ -1417,6 +1421,7 @@ func _s233_cam(st: Node, cam: Camera3D, sprs: Array, EV: Dictionary) -> void:
 	var cp: Array = str(EV.get("cpos", "0,6.0,29.4")).split_floats(",")
 	cam233 = Transform3D(Basis.from_euler(Vector3(-p, 0, 0)), Vector3(cp[0], cp[1], cp[2]))
 	cam.transform = cam233
+	if EV.has("cfov"): cam.fov = float(EV["cfov"]) # s238: owner-picture reference view
 	var ol: Vector3 = st.lean()
 	var nl := Vector3(0.0, cos(p), -sin(p))
 	for s in sprs:
@@ -1877,7 +1882,8 @@ func _s235_tree_card(st: Node, file: String, at: Vector3, h: float, tint: Color,
 
 func _s235_trees(st: Node, EV: Dictionary) -> void:
 	if EV.get("meadow", "0") == "1":
-		_s237_trees(st, EV)
+		if EV.has("s238"): _s238_trees(st, EV)
+		else: _s237_trees(st, EV)
 		return
 	var d := "res://tests/s225/"
 	var H := float(EV.get("treeh", "9.0"))
@@ -2167,10 +2173,10 @@ func _s237_th(p: Vector2) -> float:
 	var r := p.length() / 11.7
 	var shelf := -0.04 - 0.11 * smoothstep(1.15, 1.6, r)
 	var mnd := 1.0 * smoothstep(1.35, 2.8, r) * pow(_s233_fbm(p * 0.07), 1.3)
-	var zf := -105.0 - 15.0 * _s233_fbm(Vector2(p.x * 0.03, 3.1))
+	var zf := -105.0 + _s238_lk - 15.0 * _s233_fbm(Vector2(p.x * 0.03, 3.1))
 	var plain := -0.3 * smoothstep(-14.0, -60.0, p.y) - 2.4 * smoothstep(-60.0, zf, p.y)
 	var ex := (p.x + 15.0) / 150.0
-	var ez := (p.y + 172.0) / 72.0
+	var ez := (p.y + 172.0 - _s238_lk) / 72.0
 	var e := ex * ex + ez * ez
 	var basin := -6.5 * (1.0 - smoothstep(0.5, 1.0, e))
 	var hr := 13.0 * smoothstep(18.0, 85.0, p.x) * smoothstep(-15.0, -45.0, p.y) * (0.55 + 0.45 * _s233_fbm(p * 0.02 + Vector2(4.2, 1.3))) * smoothstep(0.9, 1.4, e)
@@ -2181,13 +2187,15 @@ func _s237_th(p: Vector2) -> float:
 	var d := (ap - ab * t).length()
 	var sd := ab.x * ap.y - ab.y * ap.x
 	var w := 11.0 if (sd > 0.0 or t < 0.05) else 26.0
-	var ridge := (4.5 + 2.5 * _s233_fbm(p * 0.05 + Vector2(8.8, 2.2))) * (1.0 - smoothstep(2.5, w, d)) * (1.0 - 0.6 * smoothstep(0.75, 1.0, t)) * smoothstep(0.0, 0.06, t + 0.02)
-	var dm := Vector2((p.x + 15.0) * 0.8, p.y + 172.0).length()
+	var ridge := _s238_rdg * (4.5 + 2.5 * _s233_fbm(p * 0.05 + Vector2(8.8, 2.2))) * (1.0 - smoothstep(2.5, w, d)) * (1.0 - 0.6 * smoothstep(0.75, 1.0, t)) * smoothstep(0.0, 0.06, t + 0.02)
+	var dm := Vector2((p.x + 15.0) * 0.8, p.y + 172.0 - _s238_lk).length()
 	var back := smoothstep(-40.0, -110.0, p.y) * _s237_mtk
 	var mt := (60.0 * smoothstep(150.0, 270.0, dm) * (0.35 + 0.65 * _s233_fbm(p * 0.011 + Vector2(2.7, 9.1))) + 25.0 * smoothstep(110.0, 200.0, dm) * _s233_fbm(p * 0.025 + Vector2(6.3, 1.1))) * back
 	return shelf + mnd + plain + basin + hr + ridge + mt
 
 # distance to the nearest dirt path edge (negative = on it); same paths as path237() in the shader (no noise here)
+var _s238_rdg := 1.0 # s238: ridge scale (rdg) - twin of the shader uniform rdg
+var _s238_lk := 0.0 # s238: lake shift in z (lkz) - twin of the shader uniform lkz
 var _s237_mtk := 1.0 # s237: terrain mountain scale (mtk); low when the silhouette layers stand behind
 var _s237_np := false # s237: owner removed the dirt paths (tpath=0) -> nothing avoids them
 func _s237_path(p: Vector2) -> float:
@@ -2361,3 +2369,156 @@ func _s237_layers(st: Node, EV: Dictionary) -> void:
 		q.global_position = Vector3(-15.0, foot + h * 0.5, l[0])
 		n += 1
 	print("s237 layers ", n)
+
+
+# ---- s238 (owner marked the AI picture, 15 Nov): tree groups measured in the picture's own camera
+# (fit from the plaza size: pos 0,19.5,38.4 · pitch 17.2 · fov 46.8). Polygons in world x,z.
+# T2 = left grove from the plaza side to the lake · T1 = right lakeside grove · right forest past the green line (x >= 43)
+# · MM = owner crossed out -> no trees around (90,-132) · O1 = a bush clump at (10.4,-31.5). Ridge + its rocks are gone (rdg=0).
+func _s238_in(p: Vector2, poly: Array) -> bool:
+	var c := false
+	var j := poly.size() - 1
+	for i in poly.size():
+		var a: Vector2 = poly[i]
+		var b: Vector2 = poly[j]
+		if ((a.y > p.y) != (b.y > p.y)) and (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x): c = not c
+		j = i
+	return c
+
+func _s238_trees(st: Node, EV: Dictionary) -> void:
+	var d := "res://tests/s225/"
+	var H := float(EV.get("treeh", "11.0"))
+	var tn: Array = str(EV.get("treet", "0.6,0.74,0.6")).split_floats(",")
+	var ft: Array = str(EV.get("tft", "0.66,0.8,0.7")).split_floats(",")
+	var wl := float(EV.get("wl", "-5.2"))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23801
+	var k := float(EV.get("tdens", "1.0"))
+	var mm := Vector2(90.0, -132.0)
+	# [name, polygon, count]
+	var gk := float(EV.get("grovek", "0.68")) # owner picture: grove trees ~6-7 m, packed tight
+	# [name, polygon, count, height scale, min spacing]
+	var G := [
+		["T2", [Vector2(-28, -38), Vector2(-12, -84), Vector2(-36, -122), Vector2(-60, -114), Vector2(-46, -60)], 48, gk, 2.8],
+		["T1", [Vector2(18, -141), Vector2(33, -63), Vector2(45, -62), Vector2(70, -100), Vector2(70, -150), Vector2(50, -162)], 50, gk, 2.8],
+		["left", [Vector2(-62, -16), Vector2(-30, -16), Vector2(-30, -60), Vector2(-62, -60)], 18, gk, 3.0],
+		["leftfront", [Vector2(-40, 6), Vector2(-16, 6), Vector2(-16, -16), Vector2(-40, -16)], 10, 1.0, 3.6],
+		["rightfront", [Vector2(18, 8), Vector2(40, 8), Vector2(40, 0), Vector2(18, 0)], 4, 1.0, 3.6],
+		["right", [Vector2(43, 10), Vector2(90, 10), Vector2(90, -62), Vector2(43, -62)], 26, gk, 3.0],
+		["righthill", [Vector2(72, -60), Vector2(140, -60), Vector2(140, -210), Vector2(72, -210)], 30, gk, 3.0],
+		["leftlake", [Vector2(-130, -110), Vector2(-60, -110), Vector2(-60, -185), Vector2(-130, -185)], 18, gk, 3.0],
+		["far", [Vector2(60, -262), Vector2(130, -262), Vector2(130, -330), Vector2(60, -330)], 16, gk, 3.0]]
+	var placed: Array[Vector2] = []
+	var n := 0
+	var cnt := {}
+	for g in G:
+		var poly: Array = g[1]
+		var lo := Vector2(1e9, 1e9)
+		var hi := Vector2(-1e9, -1e9)
+		for q in poly:
+			lo = Vector2(minf(lo.x, q.x), minf(lo.y, q.y)); hi = Vector2(maxf(hi.x, q.x), maxf(hi.y, q.y))
+		var want := int(float(g[2]) * k)
+		var got := 0
+		var tries := 0
+		while got < want and tries < want * 40:
+			tries += 1
+			var p := Vector2(rng.randf_range(lo.x, hi.x), rng.randf_range(lo.y, hi.y))
+			if not _s238_in(p, poly) or p.length() < 17.5 or p.distance_to(mm) < 20.0: continue
+			var gy := _s237_th(p)
+			if gy < wl + 0.5: continue
+			var ok := true
+			for q in placed:
+				if q.distance_to(p) < float(g[4]): ok = false; break
+			if not ok: continue
+			placed.append(p)
+			var far := p.y < -170.0
+			var f := ("treeC%d" % (n % 3)) if far else (("treeA%d" if n % 3 == 0 else "treeB%d") % (n % 3))
+			var tc := Color(ft[0], ft[1], ft[2]) if far else Color(tn[0], tn[1], tn[2])
+			_s235_tree_card(st, d + f + ".png", Vector3(p.x, gy, p.y), H * float(g[3]) * rng.randf_range(0.75, 1.25), tc, rng.randf() < 0.5)
+			got += 1
+			n += 1
+		cnt[g[0]] = got
+	# shrubs: a few over the back meadow + the O1 clump the owner circled
+	var bf := []
+	for i in 9: bf.append("res://tests/s225/bushA%d.png" % i)
+	var bt: Array = str(EV.get("busht", "0.52,0.68,0.5")).split_floats(",")
+	var bh := float(EV.get("bushh", "2.0"))
+	var nb := int(EV.get("mbush", "12"))
+	var mb := 0
+	var tr := 0
+	while mb < nb and tr < nb * 30:
+		tr += 1
+		var p := Vector2(rng.randf_range(-28.0, 40.0), rng.randf_range(-100.0, -24.0))
+		if absf(p.x) < 7.0 and p.y > -40.0: continue # keep the view behind the plaza open
+		if _s238_in(p, G[0][1]) or _s238_in(p, G[1][1]): continue
+		var gy := _s237_th(p)
+		if gy < wl + 0.4: continue
+		_s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, gy, p.y), bh * rng.randf_range(0.6, 1.4), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
+		mb += 1
+	var o1: Array = str(EV.get("o1", "10.4,-31.5")).split_floats(",")
+	var no1 := int(EV.get("o1n", "7"))
+	for i in no1:
+		var a := TAU * float(i) / float(no1) + rng.randf_range(-0.3, 0.3)
+		var p := Vector2(o1[0], o1[1]) + Vector2(cos(a), sin(a)) * (0.0 if i == 0 else rng.randf_range(1.4, 2.8))
+		_s235_tree_card(st, bf[rng.randi() % bf.size()], Vector3(p.x, _s237_th(p), p.y), bh * rng.randf_range(0.9, 1.5), Color(bt[0], bt[1], bt[2]), rng.randf() < 0.5)
+	print("s238 trees ", n, " ", cnt, " meadow bushes ", mb, " O1 ", no1)
+
+
+# ---- s238 D (owner: "the picture already has them, use it"): S1 near-right hill + spire, S2 left range, S3 far range,
+# cut from the owner's AI picture (art/s238/s1..s3.png, 300 px mirrored side pads, picture rows 0-249, editor UI painted out).
+# Each card faces the GAME camera and is sized so the picture maps 1:1 onto the frame: picture x u0 -> screen centre,
+# picture row 212 (lake far shore = owner red line) -> the water line, scale s game px per picture px. The water hides the feet.
+const CARD238 := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, shadows_disabled, fog_disabled, depth_draw_never;
+uniform sampler2D tex : source_color, filter_linear_mipmap;
+uniform vec3 tint = vec3(1.0);
+uniform float con = 1.0;
+void fragment() { vec4 c = texture(tex, UV); ALBEDO = clamp((c.rgb - 0.5) * con + 0.5, 0.0, 1.0) * tint; ALPHA = c.a; }
+"""
+func _s238_cards(st: Node, EV: Dictionary) -> void:
+	var gc: Array = str(EV.get("gcam", "0,6.8,29.4,8.5,19.2")).split_floats(",")
+	var cp := Vector3(gc[0], gc[1], gc[2])
+	var pr := deg_to_rad(float(gc[3]))
+	var B := Basis.from_euler(Vector3(-pr, 0, 0))
+	var fwd := -B.z
+	var thf := tan(deg_to_rad(float(gc[4])) * 0.5)
+	var sc := float(EV.get("mls", "0.85"))
+	var u0 := float(EV.get("mlu0", "1037"))
+	var vs := float(EV.get("mlv0", "212"))
+	var wl := float(EV.get("wl", "-5.2"))
+	var tn: Array = str(EV.get("mltint", "1,1,1")).split_floats(",")
+	var PAD := 300.0
+	# one shared shore row so the layers line up exactly as in the picture
+	var rel := Vector3(0, wl, cp.z - 300.0 * cos(pr)) - cp
+	var ys := 540.0 - rel.dot(B.y) / rel.dot(fwd) * (540.0 / thf) + float(EV.get("mldy", "0"))
+	var sh := Shader.new()
+	sh.code = CARD238
+	var n := 0
+	for c in [["s3", 316.0], ["s2", 308.0], ["s1", 300.0]]:
+		var img := Image.load_from_file(ProjectSettings.globalize_path("res://art/s238/%s.png" % c[0]))
+		if img == null: continue
+		img.generate_mipmaps()
+		var D: float = c[1]
+		var mpp := 2.0 * D * thf / 1080.0
+		var x0 := 960.0 + (-PAD - u0) * sc
+		var x1 := 960.0 + (float(img.get_width()) - PAD - u0) * sc
+		var y0 := ys + (0.0 - vs) * sc
+		var y1 := ys + (float(img.get_height()) - vs) * sc
+		var q := MeshInstance3D.new()
+		q.name = "S238Layer_" + str(c[0]).to_upper()
+		var qm := QuadMesh.new()
+		qm.size = Vector2((x1 - x0) * mpp, (y1 - y0) * mpp)
+		q.mesh = qm
+		var m := ShaderMaterial.new()
+		m.shader = sh
+		m.set_shader_parameter("tex", ImageTexture.create_from_image(img))
+		m.set_shader_parameter("tint", Vector3(tn[0], tn[1], tn[2]))
+		m.set_shader_parameter("con", float(EV.get("mlcon", "1.0")))
+		q.material_override = m
+		q.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		st.add_child(q)
+		q.global_transform = Transform3D(B, cp + fwd * D + B.x * ((x0 + x1) * 0.5 - 960.0) * mpp - B.y * ((y0 + y1) * 0.5 - 540.0) * mpp)
+		n += 1
+		print("s238 card ", c[0], " D ", D, " size ", qm.size, " at ", q.global_position)
+	print("s238 cards ", n, " shore row ", ys)
