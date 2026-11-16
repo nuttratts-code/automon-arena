@@ -111,6 +111,35 @@ func _initialize() -> void:
 	gc.transform = st.cam.transform
 	print("S239 prepA pos ", pos, " battle pos ", base.origin)
 	await _shot(out, "2_prepA_slide")
+	# prepD (owner A2): zoom IN on your half (same angle, cards ride on GameCam); foe hidden like the real prep screen
+	var foe_nodes := []
+	for id in st.groups["battle"].keys():
+		var u: Dictionary = st.groups["battle"][id]
+		if int(id) > 9006:
+			for kx in ["spr", "shadow"]:
+				if u.has(kx) and u[kx] is Node3D: (u[kx] as Node3D).visible = false; foe_nodes.append(u[kx])
+	for zz in [["5_prepD_zoom70", 0.70], ["6_prepD_zoom88", 0.88]]:
+		var wfrac: float = zz[1]
+		var tw := vp.x * wfrac
+		var tgt := Rect2(Vector2((vp.x - tw) / 2.0, vp.y * 0.30), Vector2(tw, vp.y * 0.50))
+		pos = base.origin
+		for i in 80:
+			st.cam.transform = Transform3D(b, pos)
+			var r := Rect2(st.cam.unproject_position(pts[0]), Vector2.ZERO)
+			for q in pts: r = r.expand(st.cam.unproject_position(q))
+			var d := (c0 - pos).dot(fwd)
+			var w := 2.0 * d * tan(deg_to_rad(gc.fov) / 2.0) / vp.y
+			var dc := tgt.get_center() - r.get_center()
+			pos += b.x * (-dc.x * w) + b.y * (dc.y * w)
+			var sc := maxf(r.size.x / tgt.size.x, r.size.y / tgt.size.y)
+			pos += fwd * (d - d * sc) * 0.5
+		st.cam.transform = Transform3D(b, pos)
+		gc.transform = st.cam.transform
+		var dd := (c0 - pos).dot(fwd); var db := (c0 - base.origin).dot(fwd)
+		print("S239 ", zz[0], " pos ", pos, " unit size x", db / dd)
+		await _shot(out, zz[0])
+	for nd in foe_nodes: (nd as Node3D).visible = true
+	gc.transform = base
 	# prepB: stay at the GameCam spot, turn (yaw) to look at your half's centre; background cards stay where the game has them
 	gc.transform = base
 	await _frames()
