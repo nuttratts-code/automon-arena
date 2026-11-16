@@ -3,7 +3,7 @@
 import numpy as np, cv2
 from PIL import Image
 from scipy.ndimage import median_filter
-im=np.asarray(Image.open(r'C:/Users/nuttr/OneDrive/Documents/GitHub/automon-arena/art/library/pictures/s217/far_hills_v3.png').convert('RGBA')).copy()
+im=np.asarray(Image.open(r'D:/GitHub/automon-arena/art/library/pictures/s217/far_hills_v3.png').convert('RGBA')).copy()
 Y0=250; im=im[Y0:]; H,W=im.shape[:2]
 rgb=im[...,:3].copy(); A=im[...,3].astype(np.float32)/255
 L=cv2.GaussianBlur(cv2.cvtColor(rgb,cv2.COLOR_RGB2LAB)[...,0].astype(float),(5,5),0)

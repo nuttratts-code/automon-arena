@@ -105,7 +105,7 @@ It prints grid, still-camera range, loop + frame numbers, outline colour. `--fra
 - camera still < 3 s, or no loop found (script stops) · seam change > 25% (visible jump) · the character is redrawn (different shape/details from the still) · background not flat magenta.
 - Shimmer of ~15% of pixels per frame is normal for AI video — the owner accepted it (set 222). Do NOT clean it (palette lock, temporal median, optical flow, hysteresis all made it worse in set 222).
 
-**B5. Owner touch-up in Pixelorama** (free, installed at `C:\Users\nuttr\OneDrive\Documents\GitHub\Pixelorama-Windows-64bit\Pixelorama-Windows-64bit\Pixelorama.exe`; Claude can open a file with PowerShell `Start-Process <exe> -ArgumentList '"<file>"'`):
+**B5. Owner touch-up in Pixelorama** (free, installed at `D:\GitHub\Pixelorama-Windows-64bit\Pixelorama-Windows-64bit\Pixelorama.exe`; Claude can open a file with PowerShell `Start-Process <exe> -ArgumentList '"<file>"'`):
 - open **`anim.png` (APNG)** — it opens as 8 frames. A plain PNG sheet opens as ONE picture (set 222 trap);
 - outline colour: type the hex printed in B3 into the colour box; Pencil (P); click frames in the timeline;
 - save: File → Export → Spritesheet, 8 columns × 1 row, over the sheet file → tell Claude. Claude splits the sheet back into `idle_0..7.png` + `anim.png` (crop by width/8).

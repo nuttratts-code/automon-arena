@@ -14,7 +14,7 @@ Deleting is permanent → the owner approves ONE list first (AskUserQuestion, A1
 ```bash
 du -sh /c/Users/nuttr/AppData/Local/Temp/claude/* | sort -h | tail -10
 du -sh /c/Users/nuttr/AppData/Local/Temp/claude/6778d44212994c0a/*/ | sort -h | tail -10
-du -sh /c/Users/nuttr/OneDrive/Documents/GitHub/* | sort -h
+du -sh /d/GitHub/* | sort -h
 git status --porcelain --ignored | awk '{print $2}' | xargs -r du -sh 2>/dev/null | sort -h | tail -10
 du -sh .git; git count-objects -vH; git worktree list
 ```
