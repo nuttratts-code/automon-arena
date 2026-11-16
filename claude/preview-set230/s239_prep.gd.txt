@@ -147,8 +147,21 @@ func _initialize() -> void:
 		var foe_spr := []
 		for id in st.groups["battle"].keys():
 			if int(id) > 9006: foe_spr.append(st.groups["battle"][id])
+		# owner (set 239): the background must not ride on the lens. Picture cards move to the world: depth fixed (they grow a
+		# little on zoom-in like real far hills), sideways/up they follow the camera by PARF (0 = fully world, 1 = glued)
+		var parf := float(OS.get_environment("PARF")) if OS.get_environment("PARF") != "" else 1.0
+		var cards := []
+		if parf < 1.0:
+			gc.transform = base
+			await process_frame
+			for nm2 in ["MatteS3", "MatteS2"]:
+				var cn: Node3D = gc.get_node(nm2)
+				var g2 := cn.global_transform
+				gc.remove_child(cn); ar.add_child(cn); cn.global_transform = g2
+				cards.append([cn, g2])
 		var fps := 30
-		var plan := [[0.0, 0.0, 30], [0.0, 1.0, 24], [1.0, 1.0, 45], [1.0, 0.0, 24], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
+		var mf := int(OS.get_environment("MOVEF")) if OS.get_environment("MOVEF") != "" else 24
+		var plan := [[0.0, 0.0, 30], [0.0, 1.0, mf], [1.0, 1.0, 45], [1.0, 0.0, mf], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
 		var f := 0
 		for seg in plan:
 			for i in int(seg[2]):
@@ -157,6 +170,10 @@ func _initialize() -> void:
 				e = (4.0 * t * t * t) if t < 0.5 else (1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0)
 				var kk: float = lerpf(seg[0], seg[1], e)
 				gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
+				var dcam := gc.transform.origin - base.origin
+				for cc in cards:
+					var g3: Transform3D = cc[1]
+					(cc[0] as Node3D).global_transform = Transform3D(g3.basis, g3.origin + Vector3(dcam.x, dcam.y, 0.0) * parf)
 				var rr := clampf((kk - 0.5) / 0.5, 0.0, 1.0) # foe appear in the second half of the way out
 				for u in foe_spr:
 					for kx in ["spr", "shadow"]:
