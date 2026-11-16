@@ -112,6 +112,7 @@ func _initialize() -> void:
 	print("S239 prepA pos ", pos, " battle pos ", base.origin)
 	await _shot(out, "2_prepA_slide")
 	# prepD (owner A2): zoom IN on your half (same angle, cards ride on GameCam); foe hidden like the real prep screen
+	var zoom_pos := Vector3.INF
 	var foe_nodes := []
 	for id in st.groups["battle"].keys():
 		var u: Dictionary = st.groups["battle"][id]
@@ -138,8 +139,38 @@ func _initialize() -> void:
 		var dd := (c0 - pos).dot(fwd); var db := (c0 - base.origin).dot(fwd)
 		print("S239 ", zz[0], " pos ", pos, " unit size x", db / dd)
 		await _shot(out, zz[0])
+		if zoom_pos == Vector3.INF: zoom_pos = pos
 	for nd in foe_nodes: (nd as Node3D).visible = true
 	gc.transform = base
+	if args.has("--clip"): # owner asked for a video: prep (zoom) -> battle -> prep, the game's cubic in-out dolly
+		var cd := out.path_join("clip"); DirAccess.make_dir_recursive_absolute(cd)
+		var foe_spr := []
+		for id in st.groups["battle"].keys():
+			if int(id) > 9006: foe_spr.append(st.groups["battle"][id])
+		var fps := 30
+		var plan := [[0.0, 0.0, 30], [0.0, 1.0, 24], [1.0, 1.0, 45], [1.0, 0.0, 24], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
+		var f := 0
+		for seg in plan:
+			for i in int(seg[2]):
+				var t := float(i) / float(maxi(1, int(seg[2]) - 1))
+				var e := t * t * (3.0 - 2.0 * t) if true else t
+				e = (4.0 * t * t * t) if t < 0.5 else (1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0)
+				var kk: float = lerpf(seg[0], seg[1], e)
+				gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
+				var rr := clampf((kk - 0.5) / 0.5, 0.0, 1.0) # foe appear in the second half of the way out
+				for u in foe_spr:
+					for kx in ["spr", "shadow"]:
+						if u.has(kx) and u[kx] is Node3D:
+							(u[kx] as Node3D).visible = rr > 0.01
+							(u[kx] as Node3D).scale = Vector3.ONE * maxf(0.01, rr)
+				await process_frame
+				await RenderingServer.frame_post_draw
+				root.get_texture().get_image().save_png(cd.path_join("f%03d.png" % f)); f += 1
+		print("S239 clip frames ", f)
+		for u in foe_spr:
+			for kx in ["spr", "shadow"]:
+				if u.has(kx) and u[kx] is Node3D: (u[kx] as Node3D).scale = Vector3.ONE; (u[kx] as Node3D).visible = true
+		gc.transform = base
 	# prepB: stay at the GameCam spot, turn (yaw) to look at your half's centre; background cards stay where the game has them
 	gc.transform = base
 	await _frames()
