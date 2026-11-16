@@ -159,6 +159,8 @@ func _initialize() -> void:
 				var g2 := cn.global_transform
 				gc.remove_child(cn); ar.add_child(cn); cn.global_transform = g2
 				cards.append([cn, g2])
+		if OS.get_environment("NOS2") == "1": # owner (set 239): drop the middle picture layer, the far card carries the trees
+			(gc.get_node("MatteS2") if gc.has_node("MatteS2") else ar.get_node("MatteS2")).visible = false
 		var fps := 30
 		var mf := int(OS.get_environment("MOVEF")) if OS.get_environment("MOVEF") != "" else 24
 		var plan := [[0.0, 0.0, 30], [0.0, 1.0, mf], [1.0, 1.0, 45], [1.0, 0.0, mf], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
