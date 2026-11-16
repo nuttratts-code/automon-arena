@@ -1,0 +1,64 @@
+# set 239 SAMPLE (owner C1): recut S2 top edge along the real tree crowns by colour (trees vs sky), rebuild S2 rgb from the
+# source picture (lut + blur 1.4), and fill the trees out of S3 so the far layer has no ghost copy when parallax shifts.
+import sys, numpy as np, cv2
+from PIL import Image, ImageFilter
+from scipy import ndimage
+src, s2p, s3p, outdir, XMAX = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5])
+lut = np.load(sys.argv[6])
+a = np.array(Image.open(src).convert('RGB').resize((2000, 1116), Image.LANCZOS))
+for c in range(3): a[..., c] = lut[c][a[..., c]].astype(np.uint8)
+s2 = np.array(Image.open(s2p)); s3 = np.array(Image.open(s3p))
+H, W = s2.shape[:2]
+rgb = Image.fromarray(a).filter(ImageFilter.GaussianBlur(1.4))
+# the picture's own runestones were painted out of S3 (nostones.py): use S3 colours where S3 differs from the plain blurred picture
+ref = np.array(Image.fromarray(a).filter(ImageFilter.GaussianBlur(3.1))).astype(float)
+pnt = (np.abs(ref - s3[..., :3].astype(float)).sum(-1) > 45) & (s3[..., 3] > 200)
+pnt = ndimage.binary_dilation(ndimage.binary_opening(pnt, iterations=2), iterations=8)
+pw = np.array(Image.fromarray((pnt * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5))).astype(float)[..., None] / 255
+rgb = Image.fromarray((np.array(rgb).astype(float) * (1 - pw) + s3[..., :3].astype(float) * pw).astype(np.uint8))
+print('painted-out px', int(pnt.sum()))
+f = np.array(rgb).astype(float); r, g, b = f[..., 0], f[..., 1], f[..., 2]
+lum = 0.3 * r + 0.59 * g + 0.11 * b
+# sky / haze / far hills: bluish or grey and fairly bright; foliage: green clearly above blue, or dark
+skyish = ((b > g - 12) & (lum > 95)) | (lum > 185)
+skyish = ndimage.binary_opening(skyish, iterations=1)
+lab, n = ndimage.label(skyish)
+top = set(np.unique(lab[0, :])) - {0}
+sky = np.isin(lab, list(top))
+sky = ndimage.binary_closing(sky, iterations=2)
+old = s2[..., 3] > 127
+lowest = np.zeros(W, int)  # S2 lower bound = S3 bottom (plaza rim)
+for x in range(W):
+    idx = np.nonzero(s3[:, x, 3] > 127)[0]; lowest[x] = idx.max() if idx.size else 0
+rows = np.arange(H)[:, None]
+band = (rows <= lowest[None, :]) & (np.arange(W)[None, :] < XMAX)
+trees = band & ~sky
+# keep only foliage connected to the old S2 blobs (no far hills)
+lab2, n2 = ndimage.label(trees)
+keep = set(np.unique(lab2[old & trees])) - {0}
+trees = np.isin(lab2, list(keep))
+trees = ndimage.binary_fill_holes(trees)
+new = (old & (np.arange(W)[None, :] >= XMAX)) | trees | (old & ~sky)
+new = ndimage.binary_opening(new, iterations=2)
+al = Image.fromarray((new * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6))
+o2 = np.dstack([np.array(rgb), np.array(al)])
+Image.fromarray(o2).save(f'{outdir}/matte238_s2.png')
+# S3: inpaint the S2-tree area so the far layer is sky/hills there (only the left tree mass; rest unchanged)
+s3rgb = np.ascontiguousarray(s3[..., :3]).copy()
+fr = s3rgb.astype(float)
+line = (fr[..., 0] > fr[..., 1] + 6) & (fr[..., 2] > fr[..., 1] + 6) & (s3[..., 3] > 0) & (rows < 600) & (np.arange(W)[None, :] < 900)
+line = ndimage.binary_dilation(line, iterations=3)
+s3rgb = cv2.inpaint(s3rgb, (line * 255).astype(np.uint8), 5, cv2.INPAINT_TELEA)
+dd = ndimage.distance_transform_edt(trees)
+hole = trees & (rows < lowest[None, :] - 60)
+fill = cv2.inpaint(s3rgb, (hole * 255).astype(np.uint8), 15, cv2.INPAINT_TELEA)
+fill = np.array(Image.fromarray(fill).filter(ImageFilter.GaussianBlur(8)))
+w = np.clip(1 - (dd - 70) / 40, 0, 1) * hole
+w = np.array(Image.fromarray((w * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5))).astype(float)[..., None] / 255
+o3 = s3.copy(); o3[..., :3] = (s3rgb * (1 - w) + fill * w).astype(np.uint8)
+print('line px', int(line.sum()))
+Image.fromarray(o3).save(f'{outdir}/matte238_s3.png')
+for nm, im in [('s2', o2), ('s3', o3)]:
+    bg = Image.new('RGBA', (W, H), (255, 0, 255, 255)); bg.alpha_composite(Image.fromarray(im))
+    bg.convert('RGB').crop((0, 0, 1400, 600)).save(f'{outdir}/look_{nm}.jpg', quality=85)
+print('old px', int(old.sum()), 'new px', int(new.sum()), 'hole', int(hole.sum()))
