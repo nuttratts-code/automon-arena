@@ -1,0 +1,130 @@
+extends SceneTree
+# s239 (sample, scratch only): arena r38 + 4 stand-ins (XO/XA/XD/XG) in the real app stage -> stills of
+#   battle = GameCam as baked · prepA = the game's own way (same angle, dolly + slide until your half fills the prep field)
+#   prepB = turn (yaw) from the GameCam spot toward your half, sprites unchanged · prepC = prepB + sprites turned to face it
+# -- --out <dir>
+var app: Node
+func _frames() -> void:
+	for k in 4: await process_frame
+	await RenderingServer.frame_post_draw
+
+func _shot(dir: String, nm: String) -> void:
+	for k in 3: await _frames()
+	root.get_texture().get_image().save_png(dir.path_join(nm + ".png"))
+	print("S239 saved ", nm)
+
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	var out: String = args[args.find("--out") + 1]
+	DirAccess.make_dir_recursive_absolute(out)
+	await process_frame
+	app = load("res://scenes/main.tscn").instantiate()
+	app.set_meta("no_boot", true); app.set_meta("force_light", true)
+	root.add_child(app)
+	app.zoom_s = 0.0
+	await _frames()
+	app.name_scr.visible = false
+	app.start_new_run(4242)
+	app.do_buy(0, null)
+	app.do_move({"at": "bench", "i": 0.0}, {"at": "board", "row": 0.0, "lane": 0.0})
+	app.set_speed(1, false); app._on_fight()
+	await _frames()
+	app.battle.view.advance(1500.0)
+	await _frames()
+	var st: Node = app.stage
+	# the app's own prep framing: where your half lands on screen in the prep pose (kept for prepA)
+	var prep_rect: Rect2 = st.rect_of(st.side_points([0]), st.pose_prep, st.vp)
+	var vp: Vector2 = st.vp # the 3D view renders at the app canvas size, so unproject_position is in these units too
+	print("S239 prep rect ", prep_rect, " vp ", vp, " cam vp ", st.cam.get_viewport().get_visible_rect().size)
+	for c in st.get_children():
+		if c == st.cam or c == st.env_node or c == st.sun: continue
+		var nm := String(c.name)
+		if nm.begins_with("Tile") or nm.begins_with("Rim") or nm.begins_with("U"): continue
+		if c is Node3D: (c as Node3D).visible = false
+	var ar: Node3D = load("res://art/arena_r38/arena_r38.tscn").instantiate()
+	st.add_child(ar)
+	st.env_node.environment = (ar.get_node("Env") as WorldEnvironment).environment
+	ar.get_node("Env").queue_free()
+	var bs: DirectionalLight3D = ar.get_node("Sun")
+	for pr in ["transform", "light_color", "light_energy", "light_indirect_energy", "shadow_enabled"]: st.sun.set(pr, bs.get(pr))
+	bs.queue_free()
+	var gc: Camera3D = ar.get_node("GameCam")
+	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
+	var post: Dictionary = ar.get_meta("post", {})
+	for k in post.keys(): m3.set_shader_parameter(k, post[k])
+	for cl in app.find_children("*", "CanvasLayer", true, false): (cl as CanvasLayer).visible = false
+	st.cam.fov = gc.fov
+	# --- stand-ins: same ids/sides as the set 232 shots, one screen pixel per sprite pixel at the board centre ---
+	for id in (st.groups.get("battle", {}) as Dictionary).keys(): st.remove_unit("battle", id)
+	var ids := ["XO", "XA", "XD", "XG", "XA", "XO"]
+	var foe := ["XG", "XD", "XA", "XO", "XD", "XG"]
+	var p := -gc.rotation.x # GameCam pitch in radians (looks down)
+	print("S239 GameCam pitch deg ", rad_to_deg(p), " fov ", gc.fov, " pos ", gc.position)
+	var nl := Vector3(0.0, cos(p), -sin(p))
+	var d0: float = (Vector3.ZERO - gc.global_position).dot(-gc.global_transform.basis.z)
+	var wpp: float = 2.0 * d0 * tan(deg_to_rad(gc.fov) / 2.0) / float(DisplayServer.window_get_size().y)
+	var sprs := []
+	var n := 9000
+	for s in 2:
+		for row in 3:
+			for lane in 2:
+				n += 1
+				st.add_unit("battle", {"id": n, "side": s, "row": row, "lane": lane, "c": {"id": "HL-1", "tribe": ""}})
+				var cid: String = (ids if s == 0 else foe)[row * 2 + lane]
+				var sp: Sprite3D = st.groups["battle"][n]["spr"]
+				var feet: Vector3 = sp.position - st.lean() * (sp.pixel_size * float(sp.texture.get_height()) * 0.5)
+				var img := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s225/%s.png" % cid))
+				sp.texture = ImageTexture.create_from_image(img)
+				sp.hframes = 1; sp.vframes = 1; sp.frame = 0
+				sp.flip_h = s == 0
+				sp.pixel_size = wpp
+				sp.modulate = Color(0.97, 0.96, 0.93)
+				var hh := wpp * float(img.get_height()) * 0.5
+				if cid == "XD": feet.y += 0.45 # the flyer hovers (set 232 F1)
+				sp.position = feet + nl * hh
+				sp.rotation = Vector3(-p, 0, 0)
+				sprs.append(sp)
+	st.show_group("battle")
+	var base := gc.transform
+	# battle = as baked
+	st.cam.transform = base
+	await _shot(out, "1_battle")
+	# prepA: same basis as GameCam, dolly + slide until your half's points fill the app's prep rect (cards ride on GameCam)
+	var b := base.basis
+	var fwd := -b.z
+	var pts: Array = st.side_points([0])
+	var c0 := Vector3.ZERO
+	for q in pts: c0 += q
+	c0 /= float(pts.size())
+	var pos := base.origin
+	for i in 60:
+		st.cam.transform = Transform3D(b, pos)
+		var r := Rect2(st.cam.unproject_position(pts[0]), Vector2.ZERO)
+		for q in pts: r = r.expand(st.cam.unproject_position(q))
+		var d := (c0 - pos).dot(fwd)
+		var w := 2.0 * d * tan(deg_to_rad(gc.fov) / 2.0) / vp.y
+		var dc := prep_rect.get_center() - r.get_center()
+		pos += b.x * (-dc.x * w) + b.y * (dc.y * w)
+		var sc := maxf(r.size.x / prep_rect.size.x, r.size.y / prep_rect.size.y)
+		pos += fwd * (d - d * sc)
+	st.cam.transform = Transform3D(b, pos)
+	gc.transform = st.cam.transform
+	print("S239 prepA pos ", pos, " battle pos ", base.origin)
+	await _shot(out, "2_prepA_slide")
+	# prepB: stay at the GameCam spot, turn (yaw) to look at your half's centre; background cards stay where the game has them
+	gc.transform = base
+	await _frames()
+	for ch in gc.get_children(): # the picture cards stop riding on the camera: they stay where the battle view has them
+		if ch is Node3D:
+			var g := (ch as Node3D).global_transform
+			gc.remove_child(ch); ar.add_child(ch); (ch as Node3D).global_transform = g
+	var yaw := atan2(-(c0.x - base.origin.x), -(c0.z - base.origin.z))
+	st.cam.transform = Transform3D(Basis.from_euler(Vector3(-p, yaw, 0)), base.origin)
+	gc.transform = st.cam.transform
+	print("S239 current cam is gc: ", root.get_viewport().get_camera_3d() == gc)
+	print("S239 prepB yaw deg ", rad_to_deg(yaw))
+	await _shot(out, "3_prepB_turn")
+	# prepC: same turn, sprites turned to face the camera again
+	for sp in sprs: (sp as Sprite3D).rotation = Vector3(-p, yaw, 0)
+	await _shot(out, "4_prepC_turn_face")
+	quit()
