@@ -31,6 +31,7 @@ func _initialize() -> void:
 	await _frames()
 	app.battle.view.advance(1500.0)
 	await _frames()
+	if OS.get_environment("BHOLD") != "": app.battle.view.pause() # long clips: freeze the fight so the result sheet never pops up
 	var st: Node = app.stage
 	# the app's own prep framing: where your half lands on screen in the prep pose (kept for prepA)
 	var prep_rect: Rect2 = st.rect_of(st.side_points([0]), st.pose_prep, st.vp)
@@ -49,6 +50,55 @@ func _initialize() -> void:
 	for pr in ["transform", "light_color", "light_energy", "light_indirect_energy", "shadow_enabled"]: st.sun.set(pr, bs.get(pr))
 	bs.queue_free()
 	var gc: Camera3D = ar.get_node("GameCam")
+	# set 239 tone round: S3TEX = picture-card png loaded at run time (no import) · RAYR=1 light shafts mirrored to the right · NOS2=1 hide S2
+	if OS.get_environment("S3TEX") != "":
+		var timg := Image.load_from_file(OS.get_environment("S3TEX"))
+		((gc.get_node("MatteS3") as MeshInstance3D).material_override as ShaderMaterial).set_shader_parameter("tex", ImageTexture.create_from_image(timg))
+	if OS.get_environment("NOS2") == "1": (gc.get_node("MatteS2") as Node3D).visible = false
+	# LIVEMAT = mask png (R trees, G lake, B crown height): the picture card swaps to the live shader (trees sway, lake glints)
+	var livemat: ShaderMaterial = null
+	if OS.get_environment("LIVEMAT") != "":
+		livemat = ShaderMaterial.new(); livemat.shader = load("res://tests/s239_livematte.gdshader")
+		livemat.set_shader_parameter("tex", ((gc.get_node("MatteS3") as MeshInstance3D).material_override as ShaderMaterial).get_shader_parameter("tex"))
+		livemat.set_shader_parameter("mask", ImageTexture.create_from_image(Image.load_from_file(OS.get_environment("LIVEMAT"))))
+		if OS.get_environment("SWAY") != "": livemat.set_shader_parameter("sway", float(OS.get_environment("SWAY")))
+		(gc.get_node("MatteS3") as MeshInstance3D).material_override = livemat
+	# LAYERS = folder with l1/l2/l3.png (+ l1_mask / l2_mask): owner's 3-depth picture - L3 hills on the old card (150 m),
+	# L2 lake water (135 m) and L1 trees (120 m) as copies of the card, scaled so they line up exactly from the battle camera
+	var livemats := []
+	if OS.get_environment("LAYERS") != "":
+		var ld := OS.get_environment("LAYERS")
+		var c3: MeshInstance3D = gc.get_node("MatteS3")
+		var tx := func(fn: String) -> ImageTexture: return ImageTexture.create_from_image(Image.load_from_file(ld.path_join(fn)))
+		(c3.material_override as ShaderMaterial).set_shader_parameter("tex", tx.call("l3.png"))
+		for ldef in [["MatteL2", "l2", 135.0], ["MatteL1", "l1", 120.0]]:
+			var cn := c3.duplicate() as MeshInstance3D
+			cn.name = ldef[0]
+			var qm := (c3.mesh as QuadMesh).duplicate() as QuadMesh
+			qm.size = (c3.mesh as QuadMesh).size * (float(ldef[2]) / 150.0)
+			cn.mesh = qm
+			cn.position = Vector3(0, 0, -float(ldef[2]))
+			var lm := ShaderMaterial.new(); lm.shader = load("res://tests/s239_livematte.gdshader")
+			lm.set_shader_parameter("tex", tx.call(ldef[1] + ".png")); lm.set_shader_parameter("mask", tx.call(ldef[1] + "_mask.png"))
+			if OS.get_environment("SWAY") != "": lm.set_shader_parameter("sway", float(OS.get_environment("SWAY")))
+			cn.material_override = lm
+			gc.add_child(cn)
+			livemats.append(lm)
+		print("S239 layers L1/L2/L3 on")
+	# OVC=1: overcast foreground to match the cloudy picture - soft cool-white sun, cool fog/ambient, no sun glow, no light shafts
+	if OS.get_environment("OVC") == "1":
+		st.sun.light_color = Color(0.93, 0.96, 1.0); st.sun.light_energy = 0.95
+		var en: Environment = st.env_node.environment
+		en.fog_light_color = Color(0.80, 0.85, 0.88); en.ambient_light_color = Color(0.80, 0.84, 0.88)
+		(gc.get_node("SunGlow") as Node3D).visible = false
+		for ch in ar.get_children():
+			if ch is MeshInstance3D and (ch as MeshInstance3D).mesh is QuadMesh and is_equal_approx(((ch as MeshInstance3D).mesh as QuadMesh).size.y, 40.0): (ch as Node3D).visible = false
+	if OS.get_environment("RAYR") == "1":
+		for ch in ar.get_children():
+			if ch is MeshInstance3D and (ch as MeshInstance3D).mesh is QuadMesh and is_equal_approx(((ch as MeshInstance3D).mesh as QuadMesh).size.y, 40.0):
+				var mi := ch as MeshInstance3D
+				mi.position.x = -mi.position.x; mi.rotation.z = -mi.rotation.z
+				print("S239 ray mirrored ", mi.name, " -> ", mi.position)
 	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
 	var post: Dictionary = ar.get_meta("post", {})
 	for k in post.keys(): m3.set_shader_parameter(k, post[k])
@@ -154,37 +204,128 @@ func _initialize() -> void:
 		if parf < 1.0:
 			gc.transform = base
 			await process_frame
-			for nm2 in ["MatteS3", "MatteS2"]:
+			for nm2 in ["MatteS3", "MatteS2", "MatteL2", "MatteL1"]:
+				if not gc.has_node(nm2): continue
 				var cn: Node3D = gc.get_node(nm2)
 				var g2 := cn.global_transform
 				gc.remove_child(cn); ar.add_child(cn); cn.global_transform = g2
 				cards.append([cn, g2])
 		if OS.get_environment("NOS2") == "1": # owner (set 239): drop the middle picture layer, the far card carries the trees
 			(gc.get_node("MatteS2") if gc.has_node("MatteS2") else ar.get_node("MatteS2")).visible = false
+		# BIRDS=1: the picture's flock (painted out of the card) as flapping billboards at its old screen spot, flying off to the right at the start
+		var birds := []
+		var bird_tex := []
+		if OS.get_environment("BIRDS") != "":
+			for k in 4: bird_tex.append(ImageTexture.create_from_image(Image.load_from_file(ProjectSettings.globalize_path("res://tests/s239_bird%d.png" % k))))
+			var keep_cam := gc.transform
+			gc.transform = base
+			var rng := RandomNumberGenerator.new(); rng.seed = 239
+			var bush := OS.get_environment("BIRDS") == "bush" # owner round 3: the flock bursts out of the right-hand bushes/trees and climbs out the top
+			var spots := []
+			if bush:
+				for k in (int(OS.get_environment("NB")) if OS.get_environment("NB") != "" else 22): spots.append(Vector2(rng.randf_range(1500.0, 1820.0) / 1920.0 * vp.x, rng.randf_range(335.0, 405.0) / 1061.0 * vp.y))
+			else:
+				for ln in FileAccess.get_file_as_string("res://tests/s239_birdpos.txt").split("\n", false):
+					var xy := ln.split(" ", false)
+					spots.append(Vector2(float(xy[0]) / 2000.0 * vp.x, float(xy[1]) / 1116.0 * vp.y))
+			for sp2 in spots:
+				var bm := StandardMaterial3D.new()
+				bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				bm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; bm.disable_fog = true; bm.albedo_texture = bird_tex[0]
+				var q := QuadMesh.new(); q.size = Vector2(0.5, 0.25) * rng.randf_range(0.85, 1.15) * (1.4 * 1.3 if OS.get_environment("BIRDS") == "bush" else 1.0)
+				var mi := MeshInstance3D.new(); mi.mesh = q; mi.material_override = bm; mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				ar.add_child(mi)
+				mi.global_position = gc.project_position(sp2, 140.0 if OS.get_environment("BIRDS") == "bush" else 100.0)
+				var bd0 := {"n": mi, "m": bm, "p0": mi.global_position, "ph": rng.randf() * 4.0, "rate": rng.randf_range(7.0, 10.0), "v": rng.randf_range(0.85, 1.15)}
+				if bush:
+					bd0["t0"] = rng.randf_range(0.15, 1.1); bd0["up"] = rng.randf_range(9.0, 12.5); bd0["dx"] = rng.randf_range(-2.0, 4.0); bd0["rate"] = rng.randf_range(10.0, 13.0)
+					mi.visible = false
+				birds.append(bd0)
+			gc.transform = keep_cam
+			print("S239 birds ", birds.size())
+		# LFX=1: light shafts breathe (slow brightness swell) and sway a little - HD-2D god rays stay put but never sit dead still
+		var shafts := []
+		if OS.get_environment("LFX") == "1":
+			var ki := 0
+			for ch in ar.get_children():
+				if ch is MeshInstance3D and (ch as MeshInstance3D).mesh is QuadMesh and is_equal_approx(((ch as MeshInstance3D).mesh as QuadMesh).size.y, 40.0):
+					var sm := ((ch as MeshInstance3D).material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+					(ch as MeshInstance3D).material_override = sm
+					shafts.append([ch, sm, (ch as Node3D).rotation.z, float(ki) * 2.1]); ki += 1
+		# MIST=1: two drifting mist bands in front of the background card (valley + behind the right trees), fixed in the world
+		var mists := []
+		if OS.get_environment("MIST") == "1":
+			var keep2 := gc.transform
+			gc.transform = base
+			var msh: Shader = load("res://tests/s239_mist.gdshader")
+			var mdefs := [[Vector2(0.45, 0.33), 135.0, Vector2(130.0, 20.0), 0.55, 0.010, Vector2(5.0, 2.0)], [Vector2(0.62, 0.40), 128.0, Vector2(110.0, 14.0), 0.40, -0.016, Vector2(7.0, 2.4)]]
+			if OS.get_environment("LAYERS") != "": # no-mist picture: our own mist along the foot of the hills, between the hill and water layers
+				mdefs = [[Vector2(0.40, 0.235), 145.0, Vector2(120.0, 13.0), 0.50, 0.010, Vector2(5.0, 2.0)], [Vector2(0.78, 0.20), 145.0, Vector2(100.0, 12.0), 0.45, -0.014, Vector2(6.0, 2.2)]]
+			elif OS.get_environment("OVC") == "1": # cloudy picture: valley mist behind the lake + the bank under the ruin hill
+				mdefs = [[Vector2(0.42, 0.23), 140.0, Vector2(120.0, 16.0), 0.55, 0.010, Vector2(5.0, 2.0)], [Vector2(0.80, 0.18), 140.0, Vector2(90.0, 12.0), 0.45, -0.014, Vector2(6.0, 2.2)]]
+			for mdef in mdefs:
+				var mm := ShaderMaterial.new(); mm.shader = msh
+				mm.set_shader_parameter("amt", mdef[3]); mm.set_shader_parameter("speed", mdef[4]); mm.set_shader_parameter("scale", mdef[5])
+				var mq := QuadMesh.new(); mq.size = mdef[2]
+				var mn := MeshInstance3D.new(); mn.mesh = mq; mn.material_override = mm; mn.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				ar.add_child(mn)
+				mn.global_transform = Transform3D(base.basis, gc.project_position(Vector2(mdef[0].x * vp.x, mdef[0].y * vp.y), mdef[1]))
+				mists.append(mm)
+			gc.transform = keep2
 		var fps := 30
-		var mf := int(OS.get_environment("MOVEF")) if OS.get_environment("MOVEF") != "" else 24
-		var plan := [[0.0, 0.0, 30], [0.0, 1.0, mf], [1.0, 1.0, 45], [1.0, 0.0, mf], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
+		var mf :=int(OS.get_environment("MOVEF")) if OS.get_environment("MOVEF") != "" else 24
+		var plan := [[0.0, 0.0, 30], [0.0, 1.0, mf], [1.0, 1.0, int(OS.get_environment("BHOLD")) if OS.get_environment("BHOLD") != "" else 45], [1.0, 0.0, mf], [0.0, 0.0, 30]] # k from, k to, frames (k 0 = prep, 1 = battle)
 		var f := 0
-		for seg in plan:
-			for i in int(seg[2]):
-				var t := float(i) / float(maxi(1, int(seg[2]) - 1))
-				var e := t * t * (3.0 - 2.0 * t) if true else t
-				e = (4.0 * t * t * t) if t < 0.5 else (1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0)
-				var kk: float = lerpf(seg[0], seg[1], e)
-				gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
-				var dcam := gc.transform.origin - base.origin
-				for cc in cards:
-					var g3: Transform3D = cc[1]
-					(cc[0] as Node3D).global_transform = Transform3D(g3.basis, g3.origin + Vector3(dcam.x, dcam.y, 0.0) * parf)
-				var rr := clampf((kk - 0.5) / 0.5, 0.0, 1.0) # foe appear in the second half of the way out
-				for u in foe_spr:
-					for kx in ["spr", "shadow"]:
-						if u.has(kx) and u[kx] is Node3D:
-							(u[kx] as Node3D).visible = rr > 0.01
-							(u[kx] as Node3D).scale = Vector3.ONE * maxf(0.01, rr)
-				await process_frame
-				await RenderingServer.frame_post_draw
-				root.get_texture().get_image().save_png(cd.path_join("f%03d.png" % f)); f += 1
+		var live := OS.get_environment("LIVE") == "1" # owner: watch it in a Godot window - same clip, real time, loops forever (birds replay each loop)
+		if live: Engine.max_fps = fps; DisplayServer.window_set_title("set 239 sample - loops, close the window to stop")
+		for loop_i in (100000 if live else 1):
+			f = 0
+			for seg in plan:
+				for i in int(seg[2]):
+					var t := float(i) / float(maxi(1, int(seg[2]) - 1))
+					var e := t * t * (3.0 - 2.0 * t) if true else t
+					e = (4.0 * t * t * t) if t < 0.5 else (1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0)
+					var kk: float = lerpf(seg[0], seg[1], e)
+					gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
+					var dcam := gc.transform.origin - base.origin
+					for cc in cards:
+						var g3: Transform3D = cc[1]
+						(cc[0] as Node3D).global_transform = Transform3D(g3.basis, g3.origin + Vector3(dcam.x, dcam.y, 0.0) * parf)
+					var tsec := float(f) / float(fps)
+					for sh in shafts:
+						var br := 1.0 + 0.28 * sin(tsec * 1.1 + float(sh[3])) + 0.10 * sin(tsec * 2.9 + float(sh[3]) * 1.7)
+						(sh[1] as StandardMaterial3D).albedo_color = Color(br, br, br, 1.0)
+						(sh[0] as Node3D).rotation.z = float(sh[2]) + deg_to_rad(1.3) * sin(tsec * 0.6 + float(sh[3]))
+					for mm in mists: (mm as ShaderMaterial).set_shader_parameter("t", tsec * 10.0)
+					if livemat: livemat.set_shader_parameter("t", tsec)
+					for lmx in livemats: (lmx as ShaderMaterial).set_shader_parameter("t", tsec)
+					var tb := float(f) / float(fps) - 0.2 # flock takes off 0.2 s in, eases up to speed, leaves the frame right/up
+					for bd in birds:
+						if bd.has("t0"): # burst: hidden in the foliage until its take-off time, fades in, climbs (fast at first), drifts sideways
+							var tu := float(f) / float(fps) - float(bd["t0"])
+							var bn: MeshInstance3D = bd["n"]
+							bn.visible = tu > 0.0
+							if tu <= 0.0: continue
+							(bd["m"] as StandardMaterial3D).albedo_color.a = clampf(tu / 0.2, 0.0, 1.0)
+							var climb := float(bd["up"]) * tu + 2.0 * (1.0 - exp(-tu * 4.0))
+							bn.global_position = (bd["p0"] as Vector3) + base.basis.y * climb + base.basis.x * (float(bd["dx"]) * tu + sin(tu * 2.5 + float(bd["ph"])) * 0.3)
+							(bd["m"] as StandardMaterial3D).albedo_texture = bird_tex[int(floor(tu * float(bd["rate"]) + float(bd["ph"]))) % 4]
+							continue
+						var tt := maxf(0.0, tb)
+						var dist := (9.0 * float(bd["v"])) * (tt - (1.0 - exp(-tt * 2.5)) / 2.5)
+						var ofs := base.basis.x * dist + base.basis.y * dist * 0.22 + base.basis.y * sin(tt * 3.0 + float(bd["ph"])) * 0.25
+						(bd["n"] as Node3D).global_position = (bd["p0"] as Vector3) + ofs
+						(bd["m"] as StandardMaterial3D).albedo_texture = bird_tex[int(floor(float(f) / float(fps) * float(bd["rate"]) + float(bd["ph"]))) % 4]
+					var rr := clampf((kk - 0.5) / 0.5, 0.0, 1.0) # foe appear in the second half of the way out
+					for u in foe_spr:
+						for kx in ["spr", "shadow"]:
+							if u.has(kx) and u[kx] is Node3D:
+								(u[kx] as Node3D).visible = rr > 0.01
+								(u[kx] as Node3D).scale = Vector3.ONE * maxf(0.01, rr)
+					await process_frame
+					await RenderingServer.frame_post_draw
+					if not live: root.get_texture().get_image().save_png(cd.path_join("f%03d.png" % f))
+					f += 1
 		print("S239 clip frames ", f)
 		for u in foe_spr:
 			for kx in ["spr", "shadow"]:

@@ -1,0 +1,64 @@
+# set 239 owner cut: 3 pieces from the owner's sketch (1 left trees, 2 lake, 3 right trees+slope) -> masks + magenta pieces for AI video
+import numpy as np, cv2, os
+from PIL import Image
+from scipy import ndimage
+a=np.array(Image.open('clean.jpg').convert('RGB')); H,W=a.shape[:2]
+top=np.load('top.npy'); top[1325:1385]=np.linspace(top[1324],top[1385],60)
+Y,X=np.mgrid[0:H,0:W]; xs=np.arange(W)
+def poly(pts): p=np.array(pts,float); return np.interp(xs,p[:,0],p[:,1])
+red=poly([(0,318),(50,325),(110,355),(160,365),(200,400),(240,440),(290,430),(330,415),(370,385),(420,375),(445,395),(520,400),(550,398),(600,395),(650,392),(700,390),(712,388)])
+bot3=poly([(1060,340),(1062,375),(1080,400),(1120,425),(1160,445),(1200,465),(1240,490),(1275,470),(1300,460),(1340,480),(1380,500),(1420,505),(1470,505),(1475,460),(1500,440),(1530,415),(1580,420),(1640,415),(1700,420),(1780,430),(2000,440)])
+f=cv2.GaussianBlur(a,(0,0),0.8).astype(float); r,g,bb=f[...,0],f[...,1],f[...,2]
+lum=0.3*r+0.59*g+0.11*bb
+tree=np.where(X<700,(lum<132)&(g>=bb-3),(lum<175)&(bb<g+8))
+def grow(x0,x1,bottom):
+    cols=(X>=x0)&(X<x1)
+    core_top=ndimage.grey_dilation(top,size=31)+12          # a line safely inside the crowns
+    core=cols&(Y>=core_top[None,:])&(Y<bottom[None,:])
+    band=cols&(Y>=(ndimage.grey_erosion(top,size=15)-35)[None,:])&(Y<core_top[None,:]+2)&tree
+    lab,n=ndimage.label(band|core)
+    keep=np.unique(lab[core]); keep=keep[keep>0]
+    m=np.isin(lab,keep)
+    m=ndimage.binary_closing(m,structure=np.ones((3,3)),iterations=2)
+    m=ndimage.binary_opening(m,structure=np.ones((3,3)),iterations=1)
+    m=ndimage.binary_fill_holes(m)
+    return m&(Y<bottom[None,:])
+m1=grow(0,712,red)
+m3=grow(1060,W,bot3)
+m2=(X>=585)&(X<1185)&(Y>=288)&(Y<366)
+def soft(m,top_sig,bot_sig,glare=None):
+    m=m.astype(np.float32)
+    s=cv2.GaussianBlur(m,(0,0),top_sig)
+    if glare is not None:
+        g=cv2.GaussianBlur(m,(0,0),9.0); w=((X>=glare[0])&(X<glare[1])).astype(np.float32); w=cv2.GaussianBlur(w,(0,0),15)
+        s=s*(1-w)+g*w
+    return np.clip(s,0,1)
+A1=soft(m1,1.0,3.0); A3=soft(m3,1.0,3.0,glare=(1640,1890)); A2=soft(m2,6.0,6.0)
+# bottom edges (into the foreground) get a wider feather: blend in a 3 px blur of the hard mask under the top edge
+os.makedirs('pieces',exist_ok=True)
+MAG=np.array([255,0,255],np.float32)
+info=[]
+for k,(nm,A) in enumerate([('1_left_trees',A1),('2_lake',A2),('3_right_trees',A3)],1):
+    Image.fromarray((A*255).astype(np.uint8)).save(f'pieces/mask{k}.png')
+    ys,xs2=np.nonzero(A>0.02); x0,x1,y0,y1=xs2.min(),xs2.max()+1,ys.min(),ys.max()+1
+    pad=12; x0=max(0,x0-pad); y0=max(0,y0-pad); x1=min(W,x1+pad); y1=min(H,y1+pad)
+    crop=a[y0:y1,x0:x1].astype(np.float32); al=A[y0:y1,x0:x1,None]
+    mag=crop*al+MAG*(1-al)
+    Image.fromarray(np.dstack([a[y0:y1,x0:x1],(A[y0:y1,x0:x1]*255).astype(np.uint8)])).save(f'pieces/piece{k}_{nm}_cut.png')
+    # pad to 16:9 with magenta, then upscale to 1920x1080 for the video AI
+    h,w=mag.shape[:2]; 
+    if w/h>16/9: H2,W2=int(round(w*9/16)),w
+    else: H2,W2=h,int(round(h*16/9))
+    can=np.zeros((H2,W2,3),np.float32)+MAG; oy=(H2-h)//2; ox=(W2-w)//2; can[oy:oy+h,ox:ox+w]=mag
+    Image.fromarray(can.astype(np.uint8)).resize((1920,1080),Image.LANCZOS).save(f'pieces/piece{k}_{nm}_magenta_1920x1080.png')
+    info.append(f'piece{k} {nm}: source box x{x0}-{x1} y{y0}-{y1} ({w}x{h}) -> canvas {W2}x{H2} offset ({ox},{oy}) -> 1920x1080')
+open('pieces/placement.txt','w').write('\n'.join(info)+'\n')
+print('\n'.join(info))
+# overview: each piece tinted on the picture
+ov=a.astype(np.float32)*0.45
+for A,c in [(A1,(255,80,200)),(A2,(0,220,255)),(A3,(255,210,0))]:
+    ov=ov*(1-A[...,None]*0.0)+ (a.astype(np.float32)*A[...,None])*1.0*(1) *0 + 0
+out=a.astype(np.float32)*0.35
+for A,c in [(A1,(255,80,200)),(A2,(0,220,255)),(A3,(255,210,0))]:
+    out=out*(1-A[...,None])+(a.astype(np.float32)*0.75+np.array(c)*0.25)*A[...,None]
+Image.fromarray(out.astype(np.uint8)).crop((0,60,2000,600)).save('pieces/pieces_overview.jpg',quality=90)

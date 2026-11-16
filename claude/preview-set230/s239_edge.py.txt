@@ -1,0 +1,38 @@
+# set 239 owner cut: treetop edge per column, guided by the owner's rough sketch lines (lines.npy / guides.npy)
+import numpy as np, cv2
+from PIL import Image
+from scipy import ndimage
+a=np.array(Image.open('clean.jpg').convert('RGB')); H,W=a.shape[:2]
+f=cv2.GaussianBlur(a,(0,0),1.0).astype(float); r,g,b=f[...,0],f[...,1],f[...,2]
+lum=0.3*r+0.59*g+0.11*b
+treeL=(lum<128)&(g>=b-2); treeR=(lum<172)&(b<g+6)
+gL,gR=np.load('guides.npy')
+def walk(tree,gy,x0,x1,start=25,down=70):
+    top=np.full(W,np.nan)
+    for x in range(x0,x1):
+        y=int(gy[x])+start
+        if not tree[y,x]:
+            ys=np.nonzero(tree[y:y+down,x])[0]
+            if ys.size==0: top[x]=y; continue
+            y=y+ys[0]
+        miss=0; yy=y
+        while yy>95:
+            if tree[yy-1,x]: miss=0
+            else:
+                miss+=1
+                if miss>2: break
+            yy-=1
+        top[x]=yy+miss
+    return top
+top=np.full(W,400.0)
+top[0:700]=walk(treeL,gL,0,700)[0:700]
+top[1060:1800]=walk(treeR,gR,1060,1800,start=20)[1060:1800]
+top[1800:W]=walk(treeR,np.full(W,300.0),1800,W,start=40)[1800:W]
+top=ndimage.median_filter(top,3)
+# glare stretch: bright sunlit crowns fail the colour test -> straight bridge between the good tops either side
+x0,x1=1735,1885
+top[x0:x1]=np.minimum(top[x0:x1],np.linspace(top[x0-1],top[x1],x1-x0))
+np.save('top.npy',top)
+dbg=a.copy()
+for x in list(range(0,700))+list(range(1060,W)): dbg[int(top[x])-1:int(top[x])+1,x]=(255,0,255)
+im=Image.fromarray(dbg).crop((0,80,2000,560)); im.crop((0,0,1000,480)).save('tc_left.png'); im.crop((1000,0,2000,480)).save('tc_right.png')
