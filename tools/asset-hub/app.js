@@ -32,8 +32,12 @@ const STILL_CHECKS = [
 ];
 // game numbers mirrored from godot/scripts/ui/stage3d.gd (TILE, SPR_H) — preview only
 const TILE = 1.8, SPR_H = 1.7, RING_R = 0.84;
-const SUN = (() => { const x = 0.55, z = -0.42, l = Math.hypot(x, z); return { x: x / l, z: z / l, reach: Math.min(l / 0.72, 1.4) }; })();
-const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5 } };
+// sun: stage3d.gd sun (0.55, -0.72, -0.42) -> ground direction + shadow length per unit of height; the direction is one value for
+// every creature (hub.settings.sunAngle, degrees, x right / z toward the camera) because there is one sun.
+const SUN_DEFAULT_ANGLE = +(Math.atan2(-0.42, 0.55) * 180 / Math.PI).toFixed(1);
+const SUN_REACH = Math.min(Math.hypot(0.55, 0.42) / 0.72, 1.4);
+const sunDir = () => { const a = (hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE) * Math.PI / 180; return { x: Math.cos(a), z: Math.sin(a) }; };
+const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0 } };
 
 let hub = null;
 const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
@@ -550,10 +554,12 @@ function renderShadow(m, it) {
   const work = h('div', { class: 'work' });
   const left = h('div', { class: 'shadow-ed' });
   const cv = h('canvas', { width: 900, height: 560, 'aria-label': 'ตัวแก้เงา: ลากตัวละครเพื่อวางเท้าบนจุดกลางช่อง ลากวงเงาเพื่อย้าย ลากจุดขอบเพื่อปรับขนาด' });
-  left.append(cv, h('p', { class: 'small faint' }, 'ลากตัวละครให้เท้าแตะกากบาทกลางช่อง · ลากวงเงาเพื่อย้าย · ลากจุดขวาหรือล่างของวงเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
+  left.append(cv, h('p', { class: 'small faint' }, 'เงาตามตัว: ลากจุดสีส้มที่ปลายเงาเพื่อปรับทิศและความยาว · ลากตัวเงาเพื่อเลื่อน · ลากตัวละครให้เท้าแตะกากบาท (เงาเริ่มที่เท้า) · วงเงาใต้เท้า: ลากจุดขาวเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
   const right = h('div', {});
   work.append(left, right);
   m.append(work);
+  const hit = document.createElement('canvas'); hit.width = cv.width; hit.height = cv.height;
+  const hitG = hit.getContext('2d', { willReadFrequently: true });
   let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null;
   let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
   const pitch = () => hub.settings.camPitch || 40;
@@ -567,11 +573,12 @@ function renderShadow(m, it) {
     vals[label] = () => { r.value = get(); out.textContent = fmt(get()); };
     sl.append(h('label', { class: 'small' }, label), r, out);
   };
-  slider('ความเข้มวงเงา', () => s.oval.a, (v) => { s.oval.a = v; }, 0, 1, 0.01);
+  slider('ความยาวเงาตามตัว', () => s.cast.len, (v) => { s.cast.len = v; }, 0, 2, 0.01);
+  slider('ความเข้มเงาตามตัว', () => s.cast.str, (v) => { s.cast.str = v; }, 0, 1, 0.01);
+  slider('ทิศแดด (ใช้ร่วมทุกตัว)', () => hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE, (v) => { hub.settings.sunAngle = v; }, -180, 180, 0.5, (v) => v.toFixed(0) + '°');
+  slider('ความเข้มวงใต้เท้า', () => s.oval.a, (v) => { s.oval.a = v; }, 0, 1, 0.01);
   slider('ความกว้างวง', () => s.oval.w, (v) => { s.oval.w = v; }, 0.1, 2, 0.01);
   slider('ความสูงวง', () => s.oval.h, (v) => { s.oval.h = v; }, 0.05, 2, 0.01);
-  slider('ความยาวเงาแดด', () => s.cast.len, (v) => { s.cast.len = v; }, 0, 2, 0.01);
-  slider('ความเข้มเงาแดด', () => s.cast.str, (v) => { s.cast.str = v; }, 0, 1, 0.01);
   const pitchSel = h('select', { onchange: (e) => { hub.settings.camPitch = Number(e.target.value); saveSoon(); draw(); } },
     [[40, 'กล้องเกมตอนนี้ (ก้ม 40°)'], [14, 'กล้อง FF Re (ก้ม 14°)'], [8.5, 'กล้อง r36 (ก้ม 8.5°)']].map(([v, t]) => h('option', { value: v, selected: pitch() === v }, t)));
   const feetOut = h('div', { class: 'small dim' });
@@ -579,6 +586,7 @@ function renderShadow(m, it) {
     h('h3', {}, 'จุดเท้า'), feetOut,
     h('div', { class: 'tools' },
       h('button', { onclick: () => { if (!frames[0]) return; s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
+      h('button', { class: 'ghost', onclick: () => { s.cast.ox = 0; s.cast.oy = 0; commit(); draw(); } }, 'เงากลับมาเริ่มที่เท้า'),
       h('button', { class: 'ghost', onclick: () => { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : null,
@@ -602,15 +610,18 @@ function renderShadow(m, it) {
     g.strokeStyle = 'rgba(150,200,255,.55)'; g.lineWidth = 3; g.beginPath(); g.ellipse(C.x, C.y, rr, rr * k, 0, 0, Math.PI * 2); g.stroke();
     if (!f) return;
     const fx = s.feet[0] * sw, fy = s.feet[1] * sh; // feet inside the drawn sprite
-    // sun-cast silhouette (image up → sun ground direction, laid flat)
-    if (s.cast.str > 0 && s.cast.len > 0) {
-      const sil = document.createElement('canvas'); sil.width = f.width; sil.height = f.height;
-      const sg = sil.getContext('2d'); sg.drawImage(f, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = 'rgb(13,18,33)'; sg.fillRect(0, 0, sil.width, sil.height);
-      const L = s.cast.len * SUN.reach * sh;
-      const up = { x: SUN.x * L, y: SUN.z * L * k }, side = { x: SUN.z * sw * -1, y: -SUN.x * sw * k * -1 };
-      const a = side.x / f.width, b = side.y / f.width, c = -up.x / f.height, d = -up.y / f.height;
-      const ex = C.x - a * s.feet[0] * f.width - c * s.feet[1] * f.height, ey = C.y - b * s.feet[0] * f.width - d * s.feet[1] * f.height;
-      g.globalAlpha = s.cast.str; g.setTransform(a, b, c, d, ex, ey); g.drawImage(sil, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+    // shadow that follows the body: every picture point above the ground line is projected along the sun
+    // (x stays x, height -> ground vector), so it starts at the feet and keeps left/right like a real cast shadow
+    const cg = castGeo();
+    hitG.setTransform(1, 0, 0, 1, 0, 0); hitG.clearRect(0, 0, W, H);
+    if (s.cast.len > 0 && cg.silH > 0) {
+      const sil = document.createElement('canvas'); sil.width = f.width; sil.height = cg.silH;
+      const sg = sil.getContext('2d'); sg.drawImage(f, 0, 0, f.width, cg.silH, 0, 0, f.width, cg.silH);
+      sg.globalCompositeOperation = 'source-in'; sg.fillStyle = 'rgb(13,18,33)'; sg.fillRect(0, 0, sil.width, sil.height);
+      sg.globalCompositeOperation = 'destination-in'; const fd = sg.createLinearGradient(0, cg.silH, 0, 0); fd.addColorStop(0, '#000'); fd.addColorStop(1, 'rgba(0,0,0,.35)'); sg.fillStyle = fd; sg.fillRect(0, 0, sil.width, sil.height);
+      g.imageSmoothingEnabled = true;
+      g.globalAlpha = Math.max(0.05, s.cast.str); g.setTransform(cg.a, 0, cg.c, cg.d, cg.e, cg.f); g.drawImage(sil, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+      hitG.setTransform(cg.a, 0, cg.c, cg.d, cg.e, cg.f); hitG.drawImage(sil, 0, 0); hitG.setTransform(1, 0, 0, 1, 0, 0);
     }
     // oval
     const o = s.oval, ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
@@ -624,7 +635,20 @@ function renderShadow(m, it) {
     g.strokeStyle = 'rgba(255,230,120,.8)'; g.setLineDash([6, 5]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0 - 20, C.y); g.lineTo(x0 + sw + 20, C.y); g.stroke(); g.setLineDash([]);
     g.strokeStyle = '#ffe678'; g.lineWidth = 2; g.beginPath(); g.moveTo(C.x - 10, C.y); g.lineTo(C.x + 10, C.y); g.moveTo(C.x, C.y - 10); g.lineTo(C.x, C.y + 10); g.stroke();
     g.fillStyle = '#fff'; g.strokeStyle = '#000';
-    for (const [hx, hy] of [[ox + rw, oy], [ox, oy + rh]]) { g.beginPath(); g.arc(hx, hy, 7, 0, Math.PI * 2); g.fill(); g.stroke(); }
+    for (const [hx, hy] of [[ox + rw, oy], [ox, oy + rh]]) { g.beginPath(); g.arc(hx, hy, 6, 0, Math.PI * 2); g.fill(); g.stroke(); }
+    // cast-shadow tip handle (orange) on a dashed line from where the shadow starts
+    g.strokeStyle = 'rgba(255,160,60,.9)'; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(cg.bx, cg.by); g.lineTo(cg.tip.x, cg.tip.y); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#ff9a3c'; g.strokeStyle = '#000'; g.beginPath(); g.arc(cg.tip.x, cg.tip.y, 9, 0, Math.PI * 2); g.fill(); g.stroke();
+  }
+  // cast geometry: image (u, v) -> canvas = (a*u + c*v + e, d*v + f)
+  function castGeo() {
+    const { T, k, C, sh, sw, f } = geo(), D = sunDir(), m = s.cast.len * SUN_REACH;
+    const fw = f ? f.width : 1, fh = f ? f.height : 1;
+    const bx = C.x + (s.cast.ox || 0) * T, by = C.y + (s.cast.oy || 0) * T * k;
+    const a = sw / fw, c = -(sh / fh) * m * D.x, d = -(sh / fh) * m * D.z * k;
+    const hgt = Math.max(1, s.feet[1] * sh);
+    return { a, c, d, e: bx - a * s.feet[0] * fw - c * s.feet[1] * fh, f: by - d * s.feet[1] * fh, bx, by, hgt,
+      silH: Math.round(s.feet[1] * fh), tip: { x: bx + hgt * m * D.x, y: by + hgt * m * D.z * k } };
   }
   // dragging
   let drag = null;
@@ -635,22 +659,33 @@ function renderShadow(m, it) {
     const ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
     const near = (x, y) => Math.hypot(p.x - x, p.y - y) < 14;
     const x0 = C.x - s.feet[0] * sw, y0 = C.y - s.feet[1] * sh;
-    if (near(ox + rw, oy)) drag = { t: 'w' };
+    const cg = castGeo();
+    const onSil = hitG.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data[3] > 20;
+    if (Math.hypot(p.x - cg.tip.x, p.y - cg.tip.y) < 16) drag = { t: 'tip' };
+    else if (near(ox + rw, oy)) drag = { t: 'w' };
     else if (near(ox, oy + rh)) drag = { t: 'h' };
-    else if (((p.x - ox) / rw) ** 2 + ((p.y - oy) / rh) ** 2 <= 1 && !(p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < C.y - 12)) drag = { t: 'oval', sx: p.x, sy: p.y, dx: o.dx, dy: o.dy };
+    else if (p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < C.y - 6) drag = { t: 'feet', sx: p.x, sy: p.y, f: [...s.feet] };
+    else if (onSil) drag = { t: 'cast', sx: p.x, sy: p.y, ox: s.cast.ox || 0, oy: s.cast.oy || 0 };
+    else if (((p.x - ox) / rw) ** 2 + ((p.y - oy) / rh) ** 2 <= 1) drag = { t: 'oval', sx: p.x, sy: p.y, dx: o.dx, dy: o.dy };
     else if (p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < y0 + sh) drag = { t: 'feet', sx: p.x, sy: p.y, f: [...s.feet] };
     if (drag) { try { cv.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ } cv.style.cursor = 'grabbing'; }
   });
   cv.addEventListener('pointermove', (e) => {
     if (!drag) return;
     const p = pos(e), { T, k, C, sh, sw } = geo(), o = s.oval;
+    if (drag.t === 'tip') {
+      const cg = castGeo(), vx = p.x - cg.bx, vz = (p.y - cg.by) / k;
+      s.cast.len = Math.max(0, Math.min(2, Math.hypot(vx, vz) / cg.hgt / SUN_REACH));
+      hub.settings.sunAngle = +(Math.atan2(vz, vx) * 180 / Math.PI).toFixed(1);
+    }
+    if (drag.t === 'cast') { s.cast.ox = Math.max(-1, Math.min(1, drag.ox + (p.x - drag.sx) / T)); s.cast.oy = Math.max(-1, Math.min(1, drag.oy + (p.y - drag.sy) / (T * k))); }
     if (drag.t === 'w') o.w = Math.max(0.1, Math.min(2, Math.abs(p.x - (C.x + o.dx * T)) * 2 / T));
     if (drag.t === 'h') o.h = Math.max(0.05, Math.min(2, Math.abs(p.y - (C.y + o.dy * T * k)) * 2 / (T * k)));
     if (drag.t === 'oval') { o.dx = Math.max(-1, Math.min(1, drag.dx + (p.x - drag.sx) / T)); o.dy = Math.max(-1, Math.min(1, drag.dy + (p.y - drag.sy) / (T * k))); }
     if (drag.t === 'feet') { s.feet = [Math.max(0, Math.min(1, drag.f[0] - (p.x - drag.sx) / sw)), Math.max(0, Math.min(1, drag.f[1] - (p.y - drag.sy) / sh))]; }
     sync(); draw();
   });
-  const end = () => { if (drag) { drag = null; cv.style.cursor = ''; s.feet = s.feet.map((v) => +v.toFixed(4)); for (const kk of ['dx', 'dy', 'w', 'h']) s.oval[kk] = +s.oval[kk].toFixed(3); commit(); sync(); } };
+  const end = () => { if (drag) { drag = null; cv.style.cursor = ''; s.feet = s.feet.map((v) => +v.toFixed(4)); for (const kk of ['dx', 'dy', 'w', 'h']) s.oval[kk] = +s.oval[kk].toFixed(3); for (const kk of ['len', 'ox', 'oy']) s.cast[kk] = +(s.cast[kk] || 0).toFixed(3); commit(); sync(); } };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   // load pictures
   (async () => {

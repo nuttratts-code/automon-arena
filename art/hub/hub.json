@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 7,
+ "rev": 15,
  "settings": {
   "moves": [
    "idle",
@@ -130,7 +130,8 @@
      "form": 1,
      "slot": "still",
      "tool": "Gemini",
-     "library": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg"
+     "library": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg",
+     "check": {}
     },
     {
      "id": "rEtMTQucG5n",
@@ -148,7 +149,30 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4586,
+     0.9877
+    ],
+    "oval": {
+     "dx": -0.916,
+     "dy": -1,
+     "w": 1.106,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0
+    },
+    "size": [
+     96,
+     81
+    ],
+    "round": "rF92Mi5wbmc"
+   }
   },
   "HL-2": {
    "id": "HL-2",
