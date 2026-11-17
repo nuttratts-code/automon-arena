@@ -1,0 +1,26 @@
+// set 239 v26 sample (own code): faint cloud shadows drifting over the ground. Multiply overlay just above the plaza
+// (Compatibility has no Decal / directional-light cookie). Same noise as the picture card (s239_mattesoft2) so they line up.
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mul, depth_draw_never;
+uniform float t = 0.0;
+uniform float dark = 0.12;            // how much a full cloud shadow darkens
+uniform vec2 wind = vec2(-1.1, 0.2);   // m/s - v27 owner video: slow drift to the LEFT (was 1.4, 0.5)
+uniform float scale = 18.0;           // cloud size (m) - v27 bigger patches (was 38)
+varying vec3 wp;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p), f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y);
+}
+float cloud(vec2 xz) {
+	vec2 q = (xz - wind * t) / scale;
+	float n = vn(q) * 0.55 + vn(q * 2.1 + 7.3) * 0.3 + vn(q * 4.3 + 1.7) * 0.15;
+	return smoothstep(0.34, 0.64, n);   // v28: more cover so the plaza actually gets shadows (v27 0.40-0.76 left it clear for minutes)
+}
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec2 e = abs(UV - 0.5) * 2.0;
+	float fade = 1.0 - smoothstep(0.75, 1.0, max(e.x, e.y));   // soft border of the overlay
+	ALBEDO = vec3(1.0 - dark * cloud(wp.xz) * fade);
+}

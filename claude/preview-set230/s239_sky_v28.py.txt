@@ -1,0 +1,36 @@
+# set 239 v28: sky as its own layer so the clouds can drift. Card keeps hills/ruin; sky texture = sky continued down behind
+# the hills (inpaint) and made seamless sideways (mirror) for scrolling.
+import numpy as np, cv2
+from PIL import Image
+from scipy import ndimage
+im=np.array(Image.open('one_v19/one.png')); rgb=im[...,:3]; a=im[...,3].astype(np.float32)/255
+H,W=a.shape
+f=cv2.GaussianBlur(rgb,(0,0),1.2).astype(np.int16); r,g,b=f[...,0],f[...,1],f[...,2]
+lum=(0.3*r+0.59*g+0.11*b)
+sky=(b>=226)|(lum>200)   # v28: hazy hills are blue too (b ~180-220); sky = b>=226 or white cloud
+hill_line=np.zeros(W,int)
+for x in range(W):
+    col=~sky[:,x]; run=0; y0=H
+    for y in range(0,320):
+        run=run+1 if col[y] else 0
+        if run>=5: y0=y-4; break
+    hill_line[x]=min(y0,320)
+hill_line=ndimage.median_filter(hill_line,9)
+Y=np.mgrid[0:H,0:W][0]
+skym=(Y<hill_line[None,:]).astype(np.float32)
+skym=cv2.GaussianBlur(cv2.erode(skym,np.ones((3,3),np.uint8)),(0,0),1.5)   # soft hill silhouette, 1 px inside the hills
+# sky texture: rows 0..Hs, fill everything under the hill line from the sky above (half-res inpaint)
+Hs=int(hill_line.max())+60
+top=rgb[:Hs].copy(); hole=(skym[:Hs]<0.98).astype(np.uint8)*255
+sm=cv2.resize(top,(W//2,Hs//2),interpolation=cv2.INTER_AREA); hs=cv2.dilate(cv2.resize(hole,(W//2,Hs//2),interpolation=cv2.INTER_NEAREST),np.ones((3,3),np.uint8))
+fill=cv2.resize(cv2.inpaint(sm,hs,9,cv2.INPAINT_TELEA),(W,Hs),interpolation=cv2.INTER_CUBIC)
+hw=(hole>0)[...,None]; skytex=np.where(hw,fill,top)
+seam=np.concatenate([skytex,skytex[:,::-1]],1)   # mirror -> wraps without a seam
+Image.fromarray(seam).save('one_v19/sky_tex.png')
+card=im.copy(); card[...,3]=(a*(1-skym)*255).astype(np.uint8)
+Image.fromarray(card).save('one_v19/one_nosky.png')
+open('one_v19/sky.txt','w').write(f"{Hs}\n")
+v=rgb.copy(); v[skym>0.5]=(v[skym>0.5]*0.4+np.array([255,0,255])*0.6).astype(np.uint8)
+Image.fromarray(v[:420]).resize((1000,210)).save('one_v19/sky_check.jpg',quality=85)
+Image.fromarray(seam).resize((1000,int(1000*Hs/4000))).save('one_v19/sky_tex_look.jpg',quality=85)
+print('Hs',Hs,'hill line range',hill_line.min(),hill_line.max())

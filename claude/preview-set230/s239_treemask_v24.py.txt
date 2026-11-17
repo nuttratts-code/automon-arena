@@ -1,0 +1,24 @@
+# set 239 v24: tree mask for the one-picture card (gentle random sway). R = foliage, B = how close to the crown edge (edges move more)
+import numpy as np, cv2
+from PIL import Image
+from scipy import ndimage
+im=np.array(Image.open('one_v19/one.png')); rgb=im[...,:3].astype(np.float32); a=im[...,3]
+H,W=a.shape; Y,X=np.mgrid[0:H,0:W]
+f=cv2.GaussianBlur(rgb,(0,0),1.0); r,g,b=f[...,0],f[...,1],f[...,2]; lum=0.3*r+0.59*g+0.11*b
+tree=(((lum<150)&(g>b+3))|((X>1150)&(lum<195)&(g>=b-2)&(g>r+4)))&(g>=r-4)&(a>250)&(Y<560)   # right side: hazy trees
+tree=ndimage.binary_opening(tree,np.ones((3,3))); tree=ndimage.binary_closing(tree,np.ones((5,5)))
+lab,n=ndimage.label(tree); sz=ndimage.sum(tree,lab,range(1,n+1)); tree=np.isin(lab,[i+1 for i in range(n) if sz[i]>400])
+d=ndimage.distance_transform_edt(tree); edge=np.clip(1-d/60,0,1)*tree
+# stones/rock faces are grey (g~b) so they stay out; keep the lowest band (meadow) still
+still=np.clip((Y-430)/80,0,1); m=tree*(1-still)
+# v26 G = open ground (meadow, slopes) for cloud shadows: grassy colour below the far shore, not trees/water/sky
+grass=(Y>300)&(a>250)&(m<0.3)&(b<g+16)&(lum>80)   # everything solid below the far shore that is not tree (hazy valley is blue-grey, lake is a hole)
+grass=ndimage.binary_opening(grass,np.ones((3,3)))
+G=cv2.GaussianBlur(grass.astype(np.float32),(0,0),6)*np.clip((Y-300)/40,0,1).astype(np.float32)
+M=np.dstack([cv2.GaussianBlur(m.astype(np.float32),(0,0),2),G,cv2.GaussianBlur((edge*(1-still)).astype(np.float32),(0,0),3)])
+Image.fromarray((np.clip(M,0,1)*255).astype(np.uint8)).save('one_v19/tree_mask.png')
+v=rgb.copy(); k_=m>0.5; v[k_]=v[k_]*0.4+np.array([255,0,255],np.float32)*0.6
+Image.fromarray(v.astype(np.uint8)).resize((1000,558)).save('one_v19/tree_mask_check.jpg',quality=85)
+v2=rgb.copy(); v2=v2*(1-G[...,None]*0.6)+np.array([0,255,255],np.float32)*G[...,None]*0.6
+Image.fromarray(np.clip(v2,0,255).astype(np.uint8)).resize((1000,558)).save('one_v19/ground_mask_check.jpg',quality=85)
+print('ok', (m>0.5).sum())

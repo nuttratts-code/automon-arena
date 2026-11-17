@@ -13,6 +13,121 @@ func _shot(dir: String, nm: String) -> void:
 	root.get_texture().get_image().save_png(dir.path_join(nm + ".png"))
 	print("S239 saved ", nm)
 
+# WATER=<water.txt>: rows top/bot + x left/right of the lake on the 2000x1116 picture, far + near colours.
+# A flat (world-level) plane, camera child like the cards: near edge 124 m deep (behind the 120 m trees), straight shore lines.
+var WNEAR := 124.0
+# v32 paper-scene life: petals in the gust + backdrop breathing (driven by _fx(t) from the clip/LIVE loop)
+var fx_petals := []      # [node, material, depth, v0, dur, delay, spin, tumble]
+var fx_breath := []      # [node, base global transform]
+var fx_base: Transform3D
+var fx_bfly := []        # v33: [node, mat, anchor, ax, ay, fx, fy, ph, flap rate]
+var fx_archb := []       # v33: [node, mat, center, rx, ry, speed, ph, tex frames]
+var fx_fov := 19.2
+var fx_st: Node = null   # v44: stage, for unit sun shadows
+var fx_fg := []          # v36: foreground grass/bush materials that follow the gust clock
+var fx_aspect := 1.81
+const GUST_P := 15.0
+var GUST_X := 1.6   # v38: sweep seconds (env GUSTX), petals + card + fg follow it
+var GUST_W := 0.07
+func _fx(tv: float) -> void:
+	var b := fx_base.basis; var o := fx_base.origin
+	for fm in fx_fg: (fm as ShaderMaterial).set_shader_parameter("gt", tv)
+	if fx_st != null and OS.get_environment("USHADOW") != "": _unit_shadows()
+	var fwd := -b.z
+	var br := 0.6 * (0.5 + 0.5 * sin(TAU * tv / 11.0))   # backdrop drifts up to 0.6 m toward the lens (~0.4 % bigger), 11 s cycle
+	for e in fx_breath:
+		var g: Transform3D = e[1]
+		(e[0] as Node3D).global_transform = Transform3D(g.basis, g.origin - fwd * br)
+	for e in fx_bfly: # v33 butterflies: wandering Lissajous loops over the bushes, flap fast with short glides
+		var a: Vector3 = e[2]
+		var ph: float = e[7]
+		var dx := sin(tv * float(e[5]) + ph) + 0.35 * sin(tv * float(e[5]) * 2.3 + ph * 1.7)
+		var dy := sin(tv * float(e[6]) + ph * 0.6) * 0.7 + 0.3 * sin(tv * 3.1 + ph)
+		(e[0] as Node3D).global_position = a + b.x * (dx * float(e[3])) + b.y * (dy * float(e[4]))
+		var glide := smoothstep(0.6, 0.9, sin(tv * 0.7 + ph * 2.0))
+		(e[1] as ShaderMaterial).set_shader_parameter("flap", lerpf(0.15 + 0.85 * absf(sin(tv * float(e[8]) + ph)), 0.85, glide))
+		(e[1] as ShaderMaterial).set_shader_parameter("tilt", 0.35 * cos(tv * float(e[5]) + ph))
+	for e in fx_archb: # v33 birds circling the ruin arch (slow ellipse, flap now and then, a little smaller on the far side)
+		var a2: float = tv * float(e[5]) + float(e[6])
+		var c2: Vector3 = e[2]
+		(e[0] as Node3D).global_position = c2 + b.x * (cos(a2) * float(e[3])) + b.y * (sin(a2) * float(e[4]) + 0.15 * sin(tv * 0.9 + float(e[6])))
+		var fr: Array = e[7]
+		var flapping := sin(tv * 0.8 + float(e[6]) * 3.0) > -0.2
+		var fi := int(floor(tv * 9.0 + float(e[6]) * 5.0)) % 4 if flapping else 1
+		var bm: StandardMaterial3D = e[1]
+		bm.albedo_texture = fr[fi]
+		bm.uv1_scale = Vector3(-1.0 if sin(a2) * float(e[5]) > 0.0 else 1.0, 1.0, 1.0)   # face the way it flies
+		(e[0] as Node3D).scale = Vector3.ONE * (1.0 - 0.18 * (0.5 + 0.5 * cos(a2 + 1.57)))
+		if OS.get_environment("DBGA") == "1" and int(tv * 30.0) % 30 == 0: print("ARCHB ", tv, " ", (e[0] as Node3D).global_position, " vis ", (e[0] as Node3D).is_visible_in_tree(), " scr ", (e[0] as Node3D).get_viewport().get_camera_3d().unproject_position((e[0] as Node3D).global_position))
+	# gust k peaks on the right edge at k*P + 0.25*P - 1.6 (same as gust_at() in s239_mattesoft2)
+	var k := floorf((tv + GUST_X - 0.25 * GUST_P + 2.0) / GUST_P)
+	var t0 := k * GUST_P + 0.25 * GUST_P - GUST_X - 0.8
+	for e in fx_petals:
+		var nd: Node3D = e[0]; var mat: ShaderMaterial = e[1]
+		var d: float = e[2]; var dur: float = e[4]
+		var pr: float = (tv - t0 - float(e[5])) / dur
+		if pr < 0.0 or pr > 1.0: nd.visible = false; continue
+		nd.visible = true
+		var hh := d * tan(deg_to_rad(fx_fov) * 0.5); var hw := hh * fx_aspect
+		var u := lerpf(1.06, -0.06, pr)
+		var v: float = e[3] - 0.10 * pr + 0.035 * sin(tv * 2.3 + float(e[6]) * 3.0)
+		nd.global_position = o + fwd * d + b.x * ((u - 0.5) * 2.0 * hw) + b.y * ((0.5 - v) * 2.0 * hh)
+		mat.set_shader_parameter("ang", tv * float(e[6]))
+		mat.set_shader_parameter("flip", 0.3 + 0.7 * absf(cos(tv * float(e[7]))))
+		mat.set_shader_parameter("alpha", smoothstep(0.0, 0.08, pr) * (1.0 - smoothstep(0.92, 1.0, pr)))
+
+func _add_water(gc: Camera3D, c3: MeshInstance3D, fn: String) -> void:
+	var ln := FileAccess.get_file_as_string(fn).split("
+", false)
+	var rr := ln[0].split(" ", false)
+	var top := float(rr[0]); var bot := float(rr[1]); var xl := float(rr[2]); var xr := float(rr[3])
+	var top0 := top   # v33: far bank row (mirror line for the reflection)
+	if OS.get_environment("WPAD") != "": # v22: water reaches well past the hole so the camera move (cards fixed in the world) never opens a gap
+		var wp := float(OS.get_environment("WPAD")); top -= wp; bot += wp * 0.6; xl -= wp * 1.6; xr += wp * 1.6
+	var S: Vector2 = (c3.mesh as QuadMesh).size
+	var D := -c3.position.z
+	var pic := func(px: float, py: float) -> Vector3: return Vector3((px / 2000.0 - 0.5) * S.x, (0.5 - py / 1116.0) * S.y, -D)
+	var up: Vector3 = gc.global_transform.basis.inverse() * Vector3.UP
+	var hn: float = (pic.call(1000.0, bot) * (WNEAR / D)).dot(up)
+	var hit := func(px: float, py: float) -> Vector3:
+		var P: Vector3 = pic.call(px, py)
+		return P * (hn / P.dot(up))
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var N := 24
+	for i in N:
+		for k in [[0, 0], [1, 0], [1, 1], [0, 0], [1, 1], [0, 1]]:
+			var u := float(i + k[0]) / N; var v := float(k[1])
+			var vx: Vector3 = hit.call(lerpf(xl, xr, u), lerpf(top, bot, v))
+			if OS.get_environment("WFLAT") == "1": # v23 owner: water slid against the picture on zoom -> sheet just behind the card (same parallax)
+				vx = pic.call(lerpf(xl, xr, u), lerpf(top, bot, v)) * ((D + 0.5) / D)
+			st.set_uv(Vector2(u, v)); st.add_vertex(vx)
+	var mi := MeshInstance3D.new(); mi.name = "MatteW"; mi.mesh = st.commit()
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; mi.extra_cull_margin = 16384.0
+	var wm := ShaderMaterial.new()
+	if OS.get_environment("WSTYLE") == "2": # v20: owner reference look (teal water, flowing streaks, glowing sparkles)
+		wm.shader = load("res://tests/s239_water2.gdshader")
+		wm.set_shader_parameter("px", Vector2(xr - xl, bot - top))
+		wm.set_shader_parameter("card", (c3.material_override as ShaderMaterial).get_shader_parameter("tex")) # v33 reflection + foam
+		wm.set_shader_parameter("rect_o", Vector2(xl, top)); wm.set_shader_parameter("shore", top0)
+		if OS.get_environment("PAPER33") != "1": wm.set_shader_parameter("refl", 0.0); wm.set_shader_parameter("foam", 0.0); wm.set_shader_parameter("sun_amp", 0.0)
+		if OS.get_environment("WBLUE") != "": # v38: owner: water bluer (picks a blue mix 0..1 toward a clear sky-blue lake)
+			var kb := float(OS.get_environment("WBLUE"))
+			wm.set_shader_parameter("base_col", Vector3(0.47, 0.56, 0.62).lerp(Vector3(0.36, 0.55, 0.74), kb))
+			wm.set_shader_parameter("streak_col", Vector3(0.72, 0.79, 0.83).lerp(Vector3(0.64, 0.80, 0.93), kb))
+			wm.set_shader_parameter("spark_col", Vector3(0.86, 0.93, 0.96).lerp(Vector3(0.84, 0.94, 1.0), kb))
+		if OS.get_environment("NOREFL") == "1": wm.set_shader_parameter("refl", 0.0); wm.set_shader_parameter("foam", 0.0)   # v34: owner: water back to the v32 look
+		mi.material_override = wm
+		gc.add_child(mi)
+		print("S239 water2 on: far depth ", -hit.call(1000.0, top).z, " near ", -hit.call(1000.0, bot).z)
+		return
+	wm.shader = load("res://tests/s239_water.gdshader")
+	var fc := ln[1].split(" ", false); var nc := ln[2].split(" ", false)
+	wm.set_shader_parameter("far_col", Vector3(float(fc[0]), float(fc[1]), float(fc[2])))
+	wm.set_shader_parameter("near_col", Vector3(float(nc[0]), float(nc[1]), float(nc[2])))
+	mi.material_override = wm
+	gc.add_child(mi)
+	print("S239 water on: far depth ", -hit.call(1000.0, top).z, " near ", -hit.call(1000.0, bot).z, " level ", hn)
+
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out: String = args[args.find("--out") + 1]
@@ -33,6 +148,7 @@ func _initialize() -> void:
 	await _frames()
 	if OS.get_environment("BHOLD") != "": app.battle.view.pause() # long clips: freeze the fight so the result sheet never pops up
 	var st: Node = app.stage
+	fx_st = st
 	# the app's own prep framing: where your half lands on screen in the prep pose (kept for prepA)
 	var prep_rect: Rect2 = st.rect_of(st.side_points([0]), st.pose_prep, st.vp)
 	var vp: Vector2 = st.vp # the 3D view renders at the app canvas size, so unproject_position is in these units too
@@ -44,6 +160,17 @@ func _initialize() -> void:
 		if c is Node3D: (c as Node3D).visible = false
 	var ar: Node3D = load("res://art/arena_r38/arena_r38.tscn").instantiate()
 	st.add_child(ar)
+	if OS.get_environment("FGWIND") != "" or OS.get_environment("FGTONE") != "": _fg_setup(ar)   # v36
+	if OS.get_environment("HAZE") != "": # v41: scale the white haze ovals (s_ba0048e3, set 237 mist) - 0 hides them
+		var hz := float(OS.get_environment("HAZE")); var nh := 0
+		for mi2 in ar.find_children("*", "MeshInstance3D", true, false):
+			var mm2 = (mi2 as MeshInstance3D).material_override
+			if mm2 == null and (mi2 as MeshInstance3D).mesh: mm2 = (mi2 as MeshInstance3D).mesh.surface_get_material(0)
+			if mm2 is ShaderMaterial and String((mm2 as ShaderMaterial).shader.resource_path).ends_with("s_ba0048e3.gdshader"):
+				if hz <= 0.0: (mi2 as Node3D).visible = false
+				else: (mm2 as ShaderMaterial).set_shader_parameter("amt", float((mm2 as ShaderMaterial).get_shader_parameter("amt")) * hz)
+				nh += 1
+		print("S239 paper33 haze ovals ", nh, " x", hz)
 	st.env_node.environment = (ar.get_node("Env") as WorldEnvironment).environment
 	ar.get_node("Env").queue_free()
 	var bs: DirectionalLight3D = ar.get_node("Sun")
@@ -71,7 +198,8 @@ func _initialize() -> void:
 		var c3: MeshInstance3D = gc.get_node("MatteS3")
 		var tx := func(fn: String) -> ImageTexture: return ImageTexture.create_from_image(Image.load_from_file(ld.path_join(fn)))
 		(c3.material_override as ShaderMaterial).set_shader_parameter("tex", tx.call("l3.png"))
-		for ldef in [["MatteL2", "l2", 135.0], ["MatteL1", "l1", 120.0]]:
+		var wat := OS.get_environment("WATER") # v15: real water plane replaces the picture L2
+		for ldef in ([["MatteL1", "l1", float(OS.get_environment("L1D")) if OS.get_environment("L1D") != "" else 120.0]] if wat != "" else [["MatteL2", "l2", 135.0], ["MatteL1", "l1", 120.0]]):
 			var cn := c3.duplicate() as MeshInstance3D
 			cn.name = ldef[0]
 			var qm := (c3.mesh as QuadMesh).duplicate() as QuadMesh
@@ -85,6 +213,47 @@ func _initialize() -> void:
 			gc.add_child(cn)
 			livemats.append(lm)
 		print("S239 layers L1/L2/L3 on")
+		if wat != "":
+			WNEAR = (float(OS.get_environment("L1D")) if OS.get_environment("L1D") != "" else 120.0) + 7.0
+			_add_water(gc, c3, wat)
+	if OS.get_environment("SKYTEX") != "": # v28: drifting sky sheet behind the card (card picture has the sky cut out)
+		var c3k: MeshInstance3D = gc.get_node("MatteS3")
+		var Sk: Vector2 = (c3k.mesh as QuadMesh).size
+		var Dk := -c3k.position.z
+		var hs := float(OS.get_environment("SKYH")) if OS.get_environment("SKYH") != "" else 185.0
+		var sq := MeshInstance3D.new(); sq.name = "MatteSky"
+		var qm := QuadMesh.new(); var kk := (Dk + 2.0) / Dk
+		qm.size = Vector2(Sk.x, Sk.y * hs / 1116.0) * kk
+		sq.mesh = qm
+		sq.position = Vector3(0, (Sk.y * 0.5 - Sk.y * hs / 1116.0 * 0.5) * kk, -(Dk + 2.0))
+		sq.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; sq.extra_cull_margin = 16384.0
+		var skm := ShaderMaterial.new(); skm.shader = load("res://tests/s239_sky.gdshader")
+		skm.set_shader_parameter("tex", ImageTexture.create_from_image(Image.load_from_file(OS.get_environment("SKYTEX"))))
+		sq.material_override = skm; sq.sorting_offset = -200.0
+		if OS.get_environment("PAPER33") != "1": skm.set_shader_parameter("sun_amp", 0.0)
+		gc.add_child(sq)
+		livemats.append(skm)
+	if OS.get_environment("NOGLOW") == "1": (gc.get_node("SunGlow") as Node3D).visible = false
+	# v16: one picture with a lake hole (S3TEX) + real water BEHIND the card (WNEAR > 150), no extra layers
+	if OS.get_environment("LAYERS") == "" and OS.get_environment("WATER") != "":
+		WNEAR = float(OS.get_environment("WNEAR")) if OS.get_environment("WNEAR") != "" else 152.0
+		_add_water(gc, gc.get_node("MatteS3"), OS.get_environment("WATER"))
+		if OS.get_environment("SOFT") == "1": # v18: soft hole edge - card blends over the water (water drawn first: farther)
+			var c3s: MeshInstance3D = gc.get_node("MatteS3")
+			var sm := ShaderMaterial.new()
+			sm.shader = load("res://tests/s239_mattesoft2.gdshader" if OS.get_environment("TREEMASK") != "" else "res://tests/s239_mattesoft.gdshader")
+			if OS.get_environment("TREEMASK") != "": # v24: gentle random tree sway on the one picture
+				sm.set_shader_parameter("mask", ImageTexture.create_from_image(Image.load_from_file(OS.get_environment("TREEMASK"))))
+				if OS.get_environment("GUSTX") != "": GUST_X = float(OS.get_environment("GUSTX")); GUST_W = float(OS.get_environment("GUSTW")) if OS.get_environment("GUSTW") != "" else GUST_W
+				sm.set_shader_parameter("gust_cross", GUST_X); sm.set_shader_parameter("gust_w", GUST_W)   # v38
+				if OS.get_environment("CARDG") != "": var cg := OS.get_environment("CARDG").split(","); sm.set_shader_parameter("card_gamma", float(cg[0])); sm.set_shader_parameter("card_sat", float(cg[1]))   # v41
+				if OS.get_environment("SWAY") != "": sm.set_shader_parameter("sway", float(OS.get_environment("SWAY")))
+				livemats.append(sm)
+				if OS.get_environment("PAPER33") != "1":
+					for pz in ["sun_amp", "dew", "shimmer"]: sm.set_shader_parameter(pz, 0.0)
+			sm.set_shader_parameter("tex", (c3s.material_override as ShaderMaterial).get_shader_parameter("tex"))
+			c3s.material_override = sm
+			(gc.get_node("MatteW") as MeshInstance3D).sorting_offset = -100.0
 	# OVC=1: overcast foreground to match the cloudy picture - soft cool-white sun, cool fog/ambient, no sun glow, no light shafts
 	if OS.get_environment("OVC") == "1":
 		st.sun.light_color = Color(0.93, 0.96, 1.0); st.sun.light_energy = 0.95
@@ -102,6 +271,20 @@ func _initialize() -> void:
 	var m3: ShaderMaterial = (app.get_node("HD2D") as ColorRect).material
 	var post: Dictionary = ar.get_meta("post", {})
 	for k in post.keys(): m3.set_shader_parameter(k, post[k])
+	if OS.get_environment("NOPOST") == "1": (app.get_node("HD2D") as CanvasItem).visible = false   # v41 debug
+	if OS.get_environment("TMAP") != "": st.env_node.environment.tonemap_mode = int(OS.get_environment("TMAP"))   # v41 debug
+	if OS.get_environment("TONE") != "": # v38: whole-scene tone (owner picked A5 = blue shadows, light stays warm); 3D only - the post rect sits under the game UI
+		var tv5 := OS.get_environment("TONE").split(",")   # sat, gainR, gainG, gainB, shadowR, shadowG, shadowB
+		var sh5 := Shader.new()
+		sh5.code = m3.shader.code.replace("	COLOR = vec4(c, 1.0);", "	float tl = clamp(dot(c, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+	c = mix(vec3(tl), c, tone_sat) * tone_gain + (1.0 - tl) * (1.0 - tl) * tone_shadow;
+	COLOR = vec4(c, 1.0);").replace("uniform float bloom_all", "uniform float tone_sat = 1.0;
+uniform vec3 tone_gain = vec3(1.0);
+uniform vec3 tone_shadow = vec3(0.0);
+uniform float bloom_all")
+		m3.shader = sh5
+		m3.set_shader_parameter("tone_sat", float(tv5[0])); m3.set_shader_parameter("tone_gain", Vector3(float(tv5[1]), float(tv5[2]), float(tv5[3]))); m3.set_shader_parameter("tone_shadow", Vector3(float(tv5[4]), float(tv5[5]), float(tv5[6])))
+		print("S239 paper33 tone ", OS.get_environment("TONE"))
 	for cl in app.find_children("*", "CanvasLayer", true, false): (cl as CanvasLayer).visible = false
 	st.cam.fov = gc.fov
 	# --- stand-ins: same ids/sides as the set 232 shots, one screen pixel per sprite pixel at the board centre ---
@@ -135,10 +318,42 @@ func _initialize() -> void:
 				sp.rotation = Vector3(-p, 0, 0)
 				sprs.append(sp)
 	st.show_group("battle")
+	if OS.get_environment("CLOUDS") != "": # v26: faint cloud shadows on the ground (overlay) + the same on the picture card's meadow
+		var cdk := float(OS.get_environment("CLOUDS"))
+		var cq := MeshInstance3D.new(); cq.name = "CloudShade"
+		var pm := PlaneMesh.new(); pm.size = Vector2(90, 70); cq.mesh = pm
+		cq.position = Vector3(0, float(OS.get_environment("CLOUDY")) if OS.get_environment("CLOUDY") != "" else 0.06, -10)
+		cq.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var cm := ShaderMaterial.new(); cm.shader = load("res://tests/s239_cloud.gdshader"); cm.set_shader_parameter("dark", cdk)
+		cq.material_override = cm
+		ar.add_child(cq)
+		livemats.append(cm)
+		var c3m = (gc.get_node("MatteS3") as MeshInstance3D).material_override
+		if c3m is ShaderMaterial and (c3m as ShaderMaterial).shader.resource_path.ends_with("s239_mattesoft2.gdshader"):
+			(c3m as ShaderMaterial).set_shader_parameter("cloud_dark", cdk)
+		if OS.get_environment("CLOUDT") != "": # stills: pick a moment of the drift
+			cm.set_shader_parameter("t", float(OS.get_environment("CLOUDT")))
+			if c3m is ShaderMaterial: (c3m as ShaderMaterial).set_shader_parameter("t", float(OS.get_environment("CLOUDT")))
+		print("S239 clouds on ", cdk)
 	var base := gc.transform
 	# battle = as baked
 	st.cam.transform = base
+	if OS.get_environment("USHADOW") != "": _unit_shadows()   # v44: stills too
 	await _shot(out, "1_battle")
+	if OS.get_environment("CLOUDSEQ") != "" and ar.has_node("CloudShade"): # v28 check: battle stills at cloud times 0, step, 2*step ...
+		var cs := (ar.get_node("CloudShade") as MeshInstance3D).material_override as ShaderMaterial
+		var c3x = (gc.get_node("MatteS3") as MeshInstance3D).material_override
+		for k in 6:
+			var tc := float(OS.get_environment("CLOUDSEQ")) * k
+			cs.set_shader_parameter("t", tc)
+			if c3x is ShaderMaterial: (c3x as ShaderMaterial).set_shader_parameter("t", tc)
+			await _shot(out, "c_t%02d" % k)
+	if OS.get_environment("WTSEQ") == "1" and gc.has_node("MatteW"):
+		var mwm := (gc.get_node("MatteW") as MeshInstance3D).material_override as ShaderMaterial
+		for k in 8:
+			mwm.set_shader_parameter("t", 3.0 + 0.3 * k)
+			await _shot(out, "w_t%02d" % k)
+		mwm.set_shader_parameter("t", 3.0)
 	# prepA: same basis as GameCam, dolly + slide until your half's points fill the app's prep rect (cards ride on GameCam)
 	var b := base.basis
 	var fwd := -b.z
@@ -190,6 +405,38 @@ func _initialize() -> void:
 		print("S239 ", zz[0], " pos ", pos, " unit size x", db / dd)
 		await _shot(out, zz[0])
 		if zoom_pos == Vector3.INF: zoom_pos = pos
+	var lens_s := 1.0; var lens_c := vp / 2.0
+	var hyb := float(OS.get_environment("HYBZ")) if OS.get_environment("HYBZ") != "" else -1.0   # v47 (owner D1): dolly this share of the way, lens-zoom the rest
+	var hyb_pos := base.origin
+	if hyb >= 0.0 and zoom_pos != Vector3.INF:
+		hyb_pos = base.origin.lerp(zoom_pos, hyb)
+		gc.transform = Transform3D(b, hyb_pos); st.cam.transform = gc.transform
+		var tw3 := vp.x * 0.70
+		var tgt3 := Rect2(Vector2((vp.x - tw3) / 2.0, vp.y * 0.30), Vector2(tw3, vp.y * 0.50))
+		var r3 := Rect2(st.cam.unproject_position(pts[0]), Vector2.ZERO)
+		for q in pts: r3 = r3.expand(st.cam.unproject_position(q))
+		lens_s = minf(tgt3.size.x / r3.size.x, tgt3.size.y / r3.size.y)
+		lens_c = r3.get_center() + (vp / 2.0 - tgt3.get_center()) / lens_s
+		var hw3 := vp / (2.0 * lens_s)
+		lens_c = Vector2(clampf(lens_c.x, hw3.x, vp.x - hw3.x), clampf(lens_c.y, hw3.y, vp.y - hw3.y))   # crop stays inside the view (no card edge)
+		_lens(gc, vp, 1.0, lens_s, lens_c)
+		print("S239 hybrid dolly ", hyb, " lens x", lens_s)
+		await _shot(out, "8_prepH_hybrid")
+		_lens(gc, vp, 0.0, lens_s, lens_c)
+		gc.transform = base; st.cam.transform = base
+	if OS.get_environment("LENSZ") == "1": # v46 (owner B1): prep = lens zoom from the battle spot (crop of the battle view, no dolly) so the backdrop grows with the units
+		gc.transform = base; st.cam.transform = base
+		var tw2 := vp.x * 0.70
+		var lb := (OS.get_environment("LENSB") if OS.get_environment("LENSB") != "" else "0.30,0.80").split(",")   # band (top, bottom) your half fills
+		var tgt2 := Rect2(Vector2((vp.x - tw2) / 2.0, vp.y * float(lb[0])), Vector2(tw2, vp.y * (float(lb[1]) - float(lb[0]))))
+		var r2 := Rect2(st.cam.unproject_position(pts[0]), Vector2.ZERO)
+		for q in pts: r2 = r2.expand(st.cam.unproject_position(q))
+		lens_s = minf(tgt2.size.x / r2.size.x, tgt2.size.y / r2.size.y)
+		lens_c = r2.get_center() + (vp / 2.0 - tgt2.get_center()) / lens_s
+		_lens(gc, vp, 1.0, lens_s, lens_c)
+		print("S239 lens zoom x", lens_s, " centre ", lens_c)
+		await _shot(out, "7_prepL_lens70")
+		_lens(gc, vp, 0.0, lens_s, lens_c)
 	for nd in foe_nodes: (nd as Node3D).visible = true
 	gc.transform = base
 	if args.has("--clip"): # owner asked for a video: prep (zoom) -> battle -> prep, the game's cubic in-out dolly
@@ -204,12 +451,25 @@ func _initialize() -> void:
 		if parf < 1.0:
 			gc.transform = base
 			await process_frame
-			for nm2 in ["MatteS3", "MatteS2", "MatteL2", "MatteL1"]:
+			for nm2 in ["MatteS3", "MatteS2", "MatteL2", "MatteL1", "MatteW", "MatteSky"]:
 				if not gc.has_node(nm2): continue
 				var cn: Node3D = gc.get_node(nm2)
 				var g2 := cn.global_transform
 				gc.remove_child(cn); ar.add_child(cn); cn.global_transform = g2
 				cards.append([cn, g2])
+				if OS.get_environment("BREATH") == "1" and nm2 in ["MatteS3", "MatteW", "MatteSky"]: fx_breath.append([cn, g2])
+		fx_base = base; fx_fov = gc.fov; fx_aspect = vp.x / vp.y
+		if OS.get_environment("PETALS") != "": # v32: petals / small leaves blown across the paper scene in each gust
+			var rngp := RandomNumberGenerator.new(); rngp.seed = 2391
+			var cols := [Color(1.0, 0.88, 0.92), Color(1.0, 0.97, 0.9), Color(1.0, 0.93, 0.6), Color(0.62, 0.78, 0.42)]
+			for i in int(OS.get_environment("PETALS")):
+				var pm2 := MeshInstance3D.new(); var q2 := QuadMesh.new(); q2.size = Vector2(0.48, 0.34); pm2.mesh = q2
+				pm2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; pm2.extra_cull_margin = 64.0
+				var m2 := ShaderMaterial.new(); m2.shader = load("res://tests/s239_petal.gdshader")
+				var cc: Color = cols[rngp.randi_range(0, cols.size() - 1)]
+				m2.set_shader_parameter("col", Vector3(cc.r, cc.g, cc.b)); pm2.material_override = m2
+				pm2.visible = false; ar.add_child(pm2)
+				fx_petals.append([pm2, m2, rngp.randf_range(55.0, 115.0), rngp.randf_range(0.18, 0.62), rngp.randf_range(3.4, 5.2), rngp.randf_range(0.0, 1.6), rngp.randf_range(2.0, 6.0) * (1.0 if rngp.randf() < 0.5 else -1.0), rngp.randf_range(2.5, 7.0)])
 		if OS.get_environment("NOS2") == "1": # owner (set 239): drop the middle picture layer, the far card carries the trees
 			(gc.get_node("MatteS2") if gc.has_node("MatteS2") else ar.get_node("MatteS2")).visible = false
 		# BIRDS=1: the picture's flock (painted out of the card) as flapping billboards at its old screen spot, flying off to the right at the start
@@ -243,6 +503,39 @@ func _initialize() -> void:
 				birds.append(bd0)
 			gc.transform = keep_cam
 			print("S239 birds ", birds.size())
+		if OS.get_environment("PAPER33") == "1": # v33: butterflies over the bottom bushes + birds circling the ruin arch
+			var keep3 := gc.transform
+			gc.transform = base
+			var rb := RandomNumberGenerator.new(); rb.seed = 2393
+			var bcols := [Color(1.0, 0.97, 0.88), Color(1.0, 0.86, 0.45), Color(0.95, 0.75, 0.85)]
+			var bsp := [Vector2(640.0, 490.0), Vector2(1150.0, 500.0), Vector2(1500.0, 482.0)]   # over the bushes behind the plaza (wide view)
+			if OS.get_environment("NOBFLY") == "1": bsp = []   # v34: owner removed the butterflies
+			for i in bsp.size():
+				var sp3: Vector2 = bsp[i]
+				var dep := float(OS.get_environment("BFD")) if OS.get_environment("BFD") != "" else 38.0
+				var bn2 := MeshInstance3D.new(); var bq := QuadMesh.new(); bq.size = Vector2(1.0, 0.8) * dep * 0.008; bn2.mesh = bq   # ~18 px
+				bn2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; bn2.extra_cull_margin = 64.0
+				var bmt := ShaderMaterial.new(); bmt.shader = load("res://tests/s239_bfly.gdshader")
+				var bc: Color = bcols[i]; bmt.set_shader_parameter("col", Vector3(bc.r, bc.g, bc.b)); bn2.material_override = bmt
+				ar.add_child(bn2)
+				fx_bfly.append([bn2, bmt, gc.project_position(Vector2(sp3.x / 2000.0 * vp.x, sp3.y / 1116.0 * vp.y), dep), rb.randf_range(0.6, 1.0) * dep / 38.0, rb.randf_range(0.25, 0.4) * dep / 38.0, rb.randf_range(0.35, 0.6), rb.randf_range(0.5, 0.9), rb.randf() * 6.28, rb.randf_range(16.0, 22.0)])
+			var atex := [] # far birds: lighter grey-blue copies of the flock frames so they sit in the haze
+			for k in 4:
+				var ai := Image.load_from_file(ProjectSettings.globalize_path("res://tests/s239_bird%d.png" % k)); ai.convert(Image.FORMAT_RGBA8)
+				for yy in ai.get_height():
+					for xx in ai.get_width():
+						var pc := ai.get_pixel(xx, yy); ai.set_pixel(xx, yy, Color(0.27, 0.28, 0.32, pc.a * 0.9))
+				atex.append(ImageTexture.create_from_image(ai))
+			var ac := gc.project_position(Vector2(1835.0 / 2000.0 * vp.x, 62.0 / 1116.0 * vp.y), 146.0)
+			for i in (0 if OS.get_environment("NOARCHB") == "1" else 3):   # v40: owner removed the birds circling up top
+				var am := StandardMaterial3D.new()
+				am.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; am.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				am.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; am.disable_fog = true; am.albedo_texture = atex[0]
+				var aq := QuadMesh.new(); aq.size = Vector2(1.5, 0.75); var an := MeshInstance3D.new(); an.mesh = aq; an.material_override = am
+				an.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; an.sorting_offset = 30.0; ar.add_child(an)   # off-axis they sort as farther than the card centre -> drawn first and hidden
+				fx_archb.append([an, am, ac, rb.randf_range(2.4, 3.3), rb.randf_range(0.7, 1.1), rb.randf_range(0.28, 0.4) * (1.0 if i != 1 else -1.0), float(i) * 2.1, atex])
+			gc.transform = keep3
+			print("S239 paper33 butterflies ", fx_bfly.size(), " arch birds ", fx_archb.size())
 		# LFX=1: light shafts breathe (slow brightness swell) and sway a little - HD-2D god rays stay put but never sit dead still
 		var shafts := []
 		if OS.get_environment("LFX") == "1":
@@ -286,19 +579,25 @@ func _initialize() -> void:
 					var e := t * t * (3.0 - 2.0 * t) if true else t
 					e = (4.0 * t * t * t) if t < 0.5 else (1.0 - pow(-2.0 * t + 2.0, 3.0) / 2.0)
 					var kk: float = lerpf(seg[0], seg[1], e)
-					gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
+					if hyb >= 0.0: gc.transform = Transform3D(b, hyb_pos.lerp(base.origin, kk)); _lens(gc, vp, 1.0 - kk, lens_s, lens_c)   # v47
+					elif OS.get_environment("LENSZ") == "1": gc.transform = base; _lens(gc, vp, 1.0 - kk, lens_s, lens_c)   # v46
+					else: gc.transform = Transform3D(b, zoom_pos.lerp(base.origin, kk))
 					var dcam := gc.transform.origin - base.origin
 					for cc in cards:
 						var g3: Transform3D = cc[1]
 						(cc[0] as Node3D).global_transform = Transform3D(g3.basis, g3.origin + Vector3(dcam.x, dcam.y, 0.0) * parf)
-					var tsec := float(f) / float(fps)
+					var tsec := float(f) / float(fps) + (float(OS.get_environment("TOFF")) if OS.get_environment("TOFF") != "" else 0.0) # TOFF: start the clip clock later (checks)
 					for sh in shafts:
 						var br := 1.0 + 0.28 * sin(tsec * 1.1 + float(sh[3])) + 0.10 * sin(tsec * 2.9 + float(sh[3]) * 1.7)
 						(sh[1] as StandardMaterial3D).albedo_color = Color(br, br, br, 1.0)
 						(sh[0] as Node3D).rotation.z = float(sh[2]) + deg_to_rad(1.3) * sin(tsec * 0.6 + float(sh[3]))
 					for mm in mists: (mm as ShaderMaterial).set_shader_parameter("t", tsec * 10.0)
 					if livemat: livemat.set_shader_parameter("t", tsec)
-					for lmx in livemats: (lmx as ShaderMaterial).set_shader_parameter("t", tsec)
+					for lmx in livemats: (lmx as ShaderMaterial).set_shader_parameter("t", (float(Time.get_ticks_msec()) / 1000.0) if live else tsec) # v24: no jump on loop
+					_fx((float(Time.get_ticks_msec()) / 1000.0) if live else tsec)
+					if gc.has_node("MatteW") or ar.has_node("MatteW"): # v21: water moves with time too
+						var mw: MeshInstance3D = gc.get_node("MatteW") if gc.has_node("MatteW") else ar.get_node("MatteW")
+						(mw.material_override as ShaderMaterial).set_shader_parameter("t", (float(Time.get_ticks_msec()) / 1000.0) if live else tsec) # v22: no jump when the clip loops
 					var tb := float(f) / float(fps) - 0.2 # flock takes off 0.2 s in, eases up to speed, leaves the frame right/up
 					for bd in birds:
 						if bd.has("t0"): # burst: hidden in the foliage until its take-off time, fades in, climbs (fast at first), drifts sideways
@@ -348,3 +647,70 @@ func _initialize() -> void:
 	for sp in sprs: (sp as Sprite3D).rotation = Vector3(-p, yaw, 0)
 	await _shot(out, "4_prepC_turn_face")
 	quit()
+
+func _fg_setup(root: Node) -> void: # v36: foreground grass patches (s231_patch) + bush cards (s_eb88c55) lean with the gust and take the backdrop tone
+	var w := OS.get_environment("FGWIND").split(",")   # lean_grass_m, lean_bush_frac, flutter_amp
+	var tn := OS.get_environment("FGTONE").split(",")  # sat, r, g, b
+	var seen := {}
+	var stack: Array = [root]
+	while stack.size() > 0:
+		var n: Node = stack.pop_back()
+		stack.append_array(n.get_children())
+		if not (n is MeshInstance3D): continue
+		var mi := n as MeshInstance3D
+		var mats: Array = [mi.material_override]
+		if mi.mesh: for si in mi.mesh.get_surface_count(): mats.append(mi.get_active_material(si))
+		for m in mats:
+			if not (m is ShaderMaterial) or seen.has(m): continue
+			var path := String((m as ShaderMaterial).shader.resource_path)
+			var grass := path.ends_with("s231_patch.gdshader")
+			if not grass and not path.ends_with("s_eb88c55.gdshader"): continue
+			seen[m] = true
+			var sm := m as ShaderMaterial
+			if w.size() >= 3:
+				sm.set_shader_parameter("gust_lean", float(w[0]) if grass else float(w[1]))
+				sm.set_shader_parameter("gust_amp", float(w[2]))
+				var gx := float(OS.get_environment("GUSTX")) if OS.get_environment("GUSTX") != "" else 1.6
+				sm.set_shader_parameter("gust_cross", gx); sm.set_shader_parameter("gust_w", float(OS.get_environment("GUSTW")) if OS.get_environment("GUSTW") != "" else 0.07)   # v38
+			if tn.size() >= 4:
+				sm.set_shader_parameter("fg_sat", float(tn[0])); sm.set_shader_parameter("fg_tone", Vector3(float(tn[1]), float(tn[2]), float(tn[3])))
+			fx_fg.append(sm)
+	print("S239 paper33 fg mats ", fx_fg.size())
+
+func _unit_shadows() -> void: # v44: silhouette shadow per unit, cast away from the sun (owner A2); made once per blob, follows it
+	var cfg := OS.get_environment("USHADOW").split(",")   # strength, max length (x unit height)
+	var sun: DirectionalLight3D = fx_st.sun
+	var sd := -sun.global_transform.basis.z   # direction the light travels
+	var g2 := Vector3(sd.x, 0.0, sd.z)
+	var reach := g2.length() / maxf(0.15, -sd.y)
+	g2 = g2.normalized()
+	for gname in (fx_st.groups as Dictionary).keys():
+		for id in (fx_st.groups[gname] as Dictionary).keys():
+			var u: Dictionary = fx_st.groups[gname][id]
+			var blob: Node3D = u.get("shadow")
+			var spr: Sprite3D = u.get("spr")
+			if blob == null or spr == null or not is_instance_valid(blob) or blob.has_node("SunShadow"): continue
+			var tall := float(spr.texture.get_height()) * spr.pixel_size
+			var wide := float(spr.texture.get_width()) * spr.pixel_size
+			var mi := MeshInstance3D.new(); mi.name = "SunShadow"
+			var q := QuadMesh.new(); q.size = Vector2(1.0, 1.0); mi.mesh = q
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF; mi.extra_cull_margin = 8.0
+			var m := ShaderMaterial.new(); m.shader = load("res://tests/s239_unitshadow.gdshader")
+			m.set_shader_parameter("tex", spr.texture); m.set_shader_parameter("flip", 1.0 if spr.flip_h else 0.0)
+			m.set_shader_parameter("width", wide); m.set_shader_parameter("strength", float(cfg[0]))
+			m.set_shader_parameter("dir", g2 * tall * minf(reach, float(cfg[1])))
+			mi.material_override = m
+			mi.position = Vector3(0.0, float(cfg[2]) if cfg.size() > 2 else 0.15, 0.0)   # lift above the plaza floor (the blob at y 0.065 sits under it)
+			blob.add_child(mi)
+			if OS.get_environment("USDBG") == "1": print("USH ", gname, " ", id, " blobvis ", blob.is_visible_in_tree(), " pos ", blob.global_position, " dir ", g2 * tall * minf(reach, float(cfg[1])), " w ", wide)
+
+func _lens(cam: Camera3D, vp: Vector2, amt: float, s_full: float, c_full: Vector2) -> void: # v46: amt 0 = battle view, 1 = full lens crop
+	if amt <= 0.0001:
+		cam.projection = Camera3D.PROJECTION_PERSPECTIVE
+		return
+	var s := pow(s_full, amt)   # even zoom speed
+	var c := vp / 2.0 + (c_full - vp / 2.0) * ((1.0 - 1.0 / s) / (1.0 - 1.0 / s_full))   # centre slides so the crop stays inside the battle view
+	var hh := 2.0 * cam.near * tan(deg_to_rad(cam.fov) / 2.0)
+	cam.projection = Camera3D.PROJECTION_FRUSTUM
+	cam.size = hh / s
+	cam.frustum_offset = Vector2((c.x / vp.x - 0.5) * hh * vp.x / vp.y, -(c.y / vp.y - 0.5) * hh)

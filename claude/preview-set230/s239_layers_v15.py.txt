@@ -1,0 +1,52 @@
+# set 239 v15: owner's 2 new pictures -> L1 = fg_magenta (magenta keyed out), L3 = bg (birds painted out); L2 = real 3D water (Godot, WATER=1)
+import numpy as np, cv2, os
+from PIL import Image
+fg=np.array(Image.open('src15/fg_magenta.jpg').convert('RGB')); bg=np.array(Image.open('src15/bg.jpg').convert('RGB'))
+H,W=bg.shape[:2]; Y,X=np.mgrid[0:H,0:W]
+# key: distance to the magenta, soft over a small band; edge colours taken from just inside (no pink fringe)
+f=fg.astype(float); d=np.sqrt(((f-[254,57,137])**2).sum(-1))
+a=np.clip((d-70)/60,0,1)
+solid=(a>0.99).astype(np.uint8)
+a=cv2.GaussianBlur(a.astype(np.float32),(0,0),0.6)
+edge=((a>0.01)&(cv2.erode(solid,np.ones((5,5),np.uint8))==0)).astype(np.uint8)*255
+fgc=cv2.inpaint(fg,edge,3,cv2.INPAINT_TELEA)
+# despill: within 4 px of the cut, leaves are never redder/bluer than green (JPEG magenta bleed)
+near=cv2.dilate((a<0.5).astype(np.uint8),np.ones((9,9),np.uint8))>0
+fi=fgc.astype(int); g_=fi[...,1]
+fi[...,0]=np.where(near,np.minimum(fi[...,0],g_+4),fi[...,0]); fi[...,2]=np.where(near,np.minimum(fi[...,2],g_-4),fi[...,2])
+fgc=np.clip(fi,0,255).astype(np.uint8)
+# magenta seen through leaf gaps (inside the crowns, tree band only - flowers lower down keep their pinks)
+fi=fgc.astype(int); r_,g_,b_=fi[...,0],fi[...,1],fi[...,2]
+pk=(Y<470)&(r_>g_+3)&(b_>g_-12)
+fi[...,0]=np.where(pk,np.minimum(r_,g_-2),r_); fi[...,2]=np.where(pk,np.minimum(b_,g_-14),b_)
+fgc=np.clip(fi,0,255).astype(np.uint8)
+# L3: paint out the flock
+g8=cv2.cvtColor(bg,cv2.COLOR_RGB2GRAY).astype(float); med=cv2.medianBlur(g8.astype(np.uint8),15).astype(float)
+birds=np.zeros((H,W),np.uint8); birds[100:240,1150:1450]=((med-g8)[100:240,1150:1450]>22)
+birds=cv2.dilate(birds*255,np.ones((5,5),np.uint8)); l3=cv2.inpaint(bg,birds,6,cv2.INPAINT_TELEA)
+# lake rows for the water plane (straight band): far shore / near shore over the open part
+fb=bg.astype(int); wet=(fb[...,2]>fb[...,1]+6)&(fb[...,2]>185)&(Y>270)&(Y<380)
+cols=[x for x in range(650,1250) if wet[:,x].any()]
+top=int(np.median([np.nonzero(wet[:,x])[0].min() for x in cols])); bot=int(np.median([np.nonzero(wet[:,x])[0].max() for x in cols]))
+xs=np.nonzero(wet[300:345].any(0))[0]; xl,xr=int(np.percentile(xs,0.5)),int(np.percentile(xs,99.5))
+lake=l3[top+3:bot-2, 700:1200].reshape(-1,3); far=l3[top+2:top+10,700:1200].reshape(-1,3)
+lut=np.load(r'..\s239\lut.npy')
+def tone(x):
+    o=x.copy()
+    for c in range(3): o[...,c]=lut[c][x[...,c]].astype(np.uint8)
+    return np.clip(o.astype(float)*[0.94,0.99,1.07],0,255).astype(np.uint8)
+rim=np.array(Image.open(r'..\backup239\matte238_s3_v6_lut_blur31.png'))[...,3]
+rim=cv2.resize(rim,(W,H),interpolation=cv2.INTER_LINEAR).astype(np.float32)/255
+_low=np.array([(np.nonzero(rim[:,x]>0.5)[0].max() if (rim[:,x]>0.5).any() else 0) for x in range(W)])
+rim=cv2.GaussianBlur((Y<=_low[None,:]).astype(np.float32),(0,0),1.2)
+os.makedirs('layers_v15',exist_ok=True)
+def save(nm,img,al):
+    Image.fromarray(np.dstack([tone(img),(np.clip(al,0,1)*255).astype(np.uint8)])).save(f'layers_v15/{nm}.png')
+    Image.fromarray(np.zeros((H,W),np.uint8)).save(f'layers_v15/{nm}_mask.png')
+save('l1',fgc,a*rim); save('l3',l3,rim)
+tc=lambda v: tone(np.array(v,np.uint8).reshape(1,1,3))[0,0]/255
+with open('layers_v15/water.txt','w') as fo:
+    fo.write(f"{top} {bot} {xl} {xr}\n"); fo.write(" ".join(f"{v:.3f}" for v in tc(np.median(far,0)))+"\n"); fo.write(" ".join(f"{v:.3f}" for v in tc(np.median(lake,0)))+"\n")
+print('rows',top,bot,'x',xl,xr, open('layers_v15/water.txt').read())
+for nm in ['l1','l3']:
+    im=Image.open(f'layers_v15/{nm}.png'); b2=Image.new('RGBA',im.size,(255,0,255,255)); b2.alpha_composite(im); b2.convert('RGB').resize((1000,558)).save(f'layers_v15/{nm}_look.jpg',quality=85)

@@ -1,0 +1,29 @@
+// set 239 v15 sample (own code): real water for the middle layer - a flat 3D plane between the tree card and the far card.
+// colour from the picture's own lake (far rim a touch darker = hill reflection), slow ripples + sun glints in world space.
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_never;
+uniform vec3 far_col = vec3(0.56, 0.69, 0.88);
+uniform vec3 near_col = vec3(0.57, 0.73, 0.92);
+uniform float t = 3.0;
+uniform float glint = 0.9;
+varying vec3 wp;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p), f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y);
+}
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	float v = UV.y; // 0 far shore, 1 near shore
+	vec3 c = mix(far_col * vec3(0.90, 0.95, 0.95), near_col, smoothstep(0.0, 0.35, v));
+	c = mix(c, near_col * 1.04, smoothstep(0.5, 1.0, v) * 0.5);
+	vec2 q = wp.xz;
+	float r = vn(q * vec2(0.35, 2.2) + vec2(t * 0.25, t * 0.4)) * 0.6 + vn(q * vec2(0.9, 5.0) - vec2(t * 0.5, t * 0.2)) * 0.4;
+	c *= 0.965 + 0.07 * r;
+	float g = vn(q * vec2(1.6, 9.0) + vec2(t * 0.9, 0.0)) * vn(q * vec2(1.1, 6.0) - vec2(t * 0.6, t * 0.3));
+	float sunside = smoothstep(0.2, 1.0, UV.x); // light comes from the right of the picture
+	c += vec3(1.0, 0.98, 0.92) * smoothstep(0.45, 0.62, g) * glint * (0.35 + 0.65 * sunside) * smoothstep(0.08, 0.3, v);
+	ALBEDO = c;
+	ALPHA = smoothstep(0.0, 0.03, v) * smoothstep(1.0, 0.96, v) * smoothstep(0.0, 0.02, UV.x) * smoothstep(1.0, 0.98, UV.x);
+}

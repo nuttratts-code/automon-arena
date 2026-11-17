@@ -1,0 +1,29 @@
+# set 239 v29: owner's new sky picture (src15/sky_new.jpg) -> drifting sky texture. Flock painted out, T2 tone like the card,
+# scaled 0.45 (sky strip is only ~185 px of the card), 4 tiles [A, mirror A, A, mirror A] = seamless 4000 px wrap.
+import numpy as np, cv2
+from PIL import Image
+im=np.array(Image.open('src15/sky_new.jpg').convert('RGB').resize((2000,1116),Image.LANCZOS))
+H,W=im.shape[:2]
+g8=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY).astype(np.float32); med=cv2.medianBlur(g8.astype(np.uint8),15).astype(np.float32)
+birds=np.zeros((H,W),np.uint8); birds[100:240,1150:1450]=((med-g8)[100:240,1150:1450]>18)
+birds=cv2.dilate(birds*255,np.ones((5,5),np.uint8))
+im=cv2.inpaint(im,birds,6,cv2.INPAINT_TELEA)
+sky=im[:460]
+lut=np.load(r'..\s239\lut.npy')
+def tone(x):
+    o=x.copy()
+    for c in range(3): o[...,c]=lut[c][x[...,c]].astype(np.uint8)
+    return np.clip(o.astype(np.float32)*np.array([0.94,0.99,1.07],np.float32),0,255).astype(np.uint8)
+sky=tone(sky)
+# owner check: mirrored tiles read as symmetric clouds -> one wide tile that loops by cross-fading its ends
+sv,sh,ov=0.55,1.1,200
+A=cv2.resize(sky,(int(W*sh),int(460*sv)),interpolation=cv2.INTER_AREA)[20:20+185].astype(np.float32)   # 2200 x 185
+w=A.shape[1]-ov                                     # 2000 px period
+wt=np.linspace(0,1,ov,dtype=np.float32)[None,:,None]
+T=A[:,:w].copy(); T[:,:ov]=A[:,w:]*(1-wt)+A[:,:ov]*wt   # tail fades into the head -> seamless at the wrap
+T=T.astype(np.uint8)
+tex=np.concatenate([T,T],1)                         # 4000 px (shader shows half the texture across the card)
+Image.fromarray(tex).save('one_v19/sky_tex_v29.png')
+Image.fromarray(tex).resize((2000,92)).save('one_v19/sky_tex_v29_look.jpg',quality=88)
+Image.fromarray(im[60:260,1100:1500]).save('one_v19/sky_birds_check.png')
+print(tex.shape, birds.sum()//255)

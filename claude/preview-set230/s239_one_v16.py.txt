@@ -1,0 +1,33 @@
+# set 239 v16: owner's ONE picture; a hole cut only where the lake is, real 3D water behind it (WATER + S3TEX)
+import numpy as np, cv2, os
+from PIL import Image
+from scipy import ndimage
+im=np.array(Image.open('src15/one.jpg').convert('RGB').resize((2000,1116),Image.LANCZOS)); H,W=im.shape[:2]; Y,X=np.mgrid[0:H,0:W]
+g8=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY).astype(float); med=cv2.medianBlur(g8.astype(np.uint8),15).astype(float)
+birds=np.zeros((H,W),np.uint8); birds[100:240,1150:1450]=((med-g8)[100:240,1150:1450]>22)
+im=cv2.inpaint(im,cv2.dilate(birds*255,np.ones((5,5),np.uint8)),6,cv2.INPAINT_TELEA)
+f=cv2.GaussianBlur(im,(0,0),1.0).astype(int)
+wet=(f[...,2]>f[...,1]+5)&(f[...,2]>188)&(f[...,1]>175)&(Y>285)&(Y<372)&(X>560)&(X<1200)
+lab,n=ndimage.label(wet); sz=ndimage.sum(wet,lab,range(1,n+1)); lake=lab==(int(np.argmax(sz))+1)
+lake=ndimage.binary_closing(lake,np.ones((5,5)),iterations=2); lake=ndimage.binary_fill_holes(lake)
+lake=ndimage.binary_opening(lake,np.ones((3,3)))
+hole=ndimage.binary_dilation(lake,np.ones((3,3)),iterations=1)   # v16 owner check: eroded hole left a white rim -> cut 1 px past the lake
+ys,xs=np.nonzero(hole); top,bot,xl,xr=ys.min()-4,ys.max()+4,xs.min()-6,xs.max()+6
+lut=np.load(r'..\s239\lut.npy')
+def tone(x):
+    o=x.copy()
+    for c in range(3): o[...,c]=lut[c][x[...,c]].astype(np.uint8)
+    return np.clip(o.astype(float)*[0.94,0.99,1.07],0,255).astype(np.uint8)
+rim=np.array(Image.open(r'..\backup239\matte238_s3_v6_lut_blur31.png'))[...,3]
+rim=cv2.resize(rim,(W,H),interpolation=cv2.INTER_LINEAR).astype(np.float32)/255
+_low=np.array([(np.nonzero(rim[:,x]>0.5)[0].max() if (rim[:,x]>0.5).any() else 0) for x in range(W)])
+rim=cv2.GaussianBlur((Y<=_low[None,:]).astype(np.float32),(0,0),1.2)
+os.makedirs('one_v16',exist_ok=True)
+t=tone(im); al=rim*(1-hole)
+Image.fromarray(np.dstack([t,(np.clip(al,0,1)*255).astype(np.uint8)])).save('one_v16/one.png')
+far=t[top+4:top+12][hole[top+4:top+12]]; near=t[bot-14:bot-4][hole[bot-14:bot-4]]
+with open('one_v16/water.txt','w') as fo:
+    fo.write(f"{top} {bot} {xl} {xr}\n")
+    for c in (far,near): fo.write(" ".join(f"{v/255:.3f}" for v in np.median(c,0))+"\n")
+look=t.copy(); look[hole]=[255,0,255]; Image.fromarray(look[240:420,520:1260]).save('one_v16/hole_check.png')
+print(open('one_v16/water.txt').read(), hole.sum())

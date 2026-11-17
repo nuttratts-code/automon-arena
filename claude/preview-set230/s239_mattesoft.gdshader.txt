@@ -1,0 +1,6 @@
+// set 239 v18 sample (own code): the picture card with a SOFT alpha edge (blended, no scissor) so the lake hole fades into
+// the real water behind it instead of a hard cut line. The card is the farthest blended object except the water (drawn first).
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_opaque;
+uniform sampler2D tex : source_color, filter_linear;
+void fragment() { vec4 c = texture(tex, UV); ALBEDO = c.rgb; ALPHA = c.a; }

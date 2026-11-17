@@ -1,0 +1,20 @@
+// set 239 v32 sample (own code): one petal / small leaf blown across in a gust. Billboard, spins and tumbles (fake 3D flip).
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_never;
+uniform vec3 col = vec3(1.0, 0.86, 0.9);
+uniform float ang = 0.0;     // spin (rad)
+uniform float flip = 1.0;    // 0..1 width while tumbling
+uniform float alpha = 1.0;
+void vertex() {
+	vec2 v = VERTEX.xy * vec2(flip, 1.0);
+	float c = cos(ang), s = sin(ang);
+	v = vec2(c * v.x - s * v.y, s * v.x + c * v.y);
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]);
+	VERTEX = vec3(v, 0.0);
+}
+void fragment() {
+	vec2 p = UV * 2.0 - 1.0;
+	float e = 1.0 - smoothstep(0.75, 1.0, length(p * vec2(1.0, 1.0 + 0.6 * p.y)));   // teardrop-ish petal
+	ALBEDO = col * (0.85 + 0.15 * (1.0 - p.y));
+	ALPHA = e * alpha;
+}

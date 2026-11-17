@@ -1,0 +1,84 @@
+// set 239 v20/v21 sample (own code): water look after the owner's reference - teal-blue water, pale flowing streaks,
+// soft round glowing sparkles (bright core + blue halo) that twinkle. Cells are in picture pixels so the sparkle size
+// stays the same on screen (the plane is very foreshortened at 150-200 m).
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_never;
+uniform vec3 base_col = vec3(0.47, 0.56, 0.62);   // v22: toned toward the scene haze (was 0.37 0.49 0.57)
+uniform vec3 streak_col = vec3(0.72, 0.79, 0.83);
+uniform vec3 spark_col = vec3(0.86, 0.93, 0.96);
+uniform vec2 px = vec2(790.0, 77.0);   // water rect size in picture pixels
+uniform float t = 3.0;
+uniform float cell = 11.0;             // sparkle spacing (px)
+uniform float density = 0.26;          // share of cells that hold a sparkle
+uniform float spark = 0.65;   // v24 owner: a little less (was 0.85, density 0.35)
+uniform vec2 flow = vec2(-7.0, 2.2);   // v22: current, picture px per second (sideways + toward the near shore)
+// v33 paper-scene life: mirror of the far bank in the water + foam lapping at the shore + sun breathing
+uniform sampler2D card : source_color, filter_linear;   // the picture card (alpha 0 = hole / sky)
+uniform vec2 rect_o = vec2(458.0, 285.0);   // picture px of UV (0,0) (after the pad)
+uniform float shore = 285.0;                // far bank row (mirror line)
+uniform float refl = 0.72;
+uniform vec3 sky_refl = vec3(0.70, 0.78, 0.86);
+uniform float foam = 0.55;
+uniform float sun_amp = 0.035;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec2 h2(vec2 p) { return vec2(h(p), h(p + 17.3)); }
+float vn(vec2 p) {
+	vec2 i = floor(p), f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y);
+}
+void fragment() {
+	vec2 p = UV * px;                       // picture pixels across the water
+	float v = UV.y;
+	vec3 c = mix(base_col * 0.92, base_col * 1.06, v);
+	// v22 owner: waves should FLOW - the streak pattern rides a slow current, broad soft swell bands roll toward the near shore
+	vec2 q = p - flow * t;
+	float s1 = vn(q * vec2(0.045, 0.55)) * vn(q * vec2(0.09, 0.9) + vec2(3.7, t * 0.12));
+	float s2 = vn((p - flow * 0.6 * t) * vec2(0.05, 0.6) + vec2(11.0, 0.0)) * vn((p - flow * 0.6 * t) * vec2(0.08, 0.85) + vec2(7.1, -t * 0.1));
+	float s = mix(s1, s2, 0.5 + 0.5 * sin(t * 0.5));
+	c = mix(c, streak_col, smoothstep(0.30, 0.62, s) * 0.45);
+	float swell = sin((p.y - t * 3.0) * 0.55 + vn(vec2(p.x * 0.02, t * 0.1)) * 4.0);
+	c *= 0.97 + 0.045 * swell;
+	// sparkles: each cell lights up now and then at a NEW random spot, fades in and out (~0.6-1.4 s on, like the reference)
+	float g = 0.0;
+	vec2 cp = p / cell;
+	for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+		vec2 cc = floor(cp) + vec2(float(i), float(j));
+		float per = 1.8 + 2.4 * h(cc + 5.3);            // seconds between flashes of this cell
+		float tt = t / per + h(cc + 1.9);               // random start
+		float cyc = floor(tt); float u = fract(tt);
+		vec2 key = cc + cyc * 13.17;
+		if (h(key + 0.7) > density * 1.6) continue;
+		float on = (0.6 + 0.8 * h(key + 2.2)) / per;    // share of the cycle it is lit
+		float tw = smoothstep(0.0, on * 0.4, u) * (1.0 - smoothstep(on * 0.5, on, u));
+		if (tw <= 0.0) continue;
+		vec2 pos = (cc + 0.15 + 0.7 * h2(key + 3.1)) * cell + flow * 0.5 * u * per;   // drifts with the current while lit
+		float d = length((p - pos) * vec2(1.0, 1.25));
+		float sz = 0.7 + 1.1 * h(key + 9.7);
+		g += (exp(-d * d / (0.9 * sz * sz)) * 1.2 + exp(-d * d / (9.0 * sz * sz)) * 0.35) * tw;
+	}
+	float edge = smoothstep(0.0, 0.12, v) * smoothstep(1.0, 0.85, v);
+	c += spark_col * g * spark * (0.4 + 0.6 * edge);
+	// v33 reflection: the card above the far bank, mirrored down, squashed a little and broken up by the ripples
+	vec2 ab = rect_o + p;   // picture px
+	float dy = max(ab.y - shore, 0.0);
+	float rip = (vn(vec2(ab.x * 0.05, ab.y * 0.6 - t * 1.6)) - 0.5) * 6.0 + sin(ab.y * 0.9 - t * 2.4) * 1.2;
+	vec2 suv = vec2((ab.x + rip * (0.4 + dy * 0.02)) / 2000.0, (shore - dy * 0.85 - 2.0) / 1116.0);
+	vec4 rc = texture(card, suv);
+	vec3 rcol = mix(sky_refl, rc.rgb, rc.a);
+	rcol = mix(vec3(dot(rcol, vec3(0.333))), rcol, 1.35) * 0.55 + base_col * 0.12;   // reflections read a little darker than the bank
+	float rk = refl * (1.0 - smoothstep(0.0, 110.0, dy) * 0.45) * (0.85 + 0.15 * swell);
+	c = mix(c, rcol, rk * step(shore - 1.0, ab.y));
+	c *= 1.0 - step(0.001, refl) * 0.13 * exp(-max(dy - 2.0, 0.0) / 9.0) * (0.8 + 0.2 * sin(ab.x * 0.08 + rip));   // the far bank's dark mirrored edge (what is above it is mostly haze)
+	// v33 shore lapping: thin pale foam along the bank (where the card turns solid a few px further), slowly breathing in and out
+	float lap = 0.5 + 0.5 * sin(t * 0.9 + ab.x * 0.031 + vn(vec2(ab.x * 0.02, t * 0.2)) * 3.0);
+	float wdt = 2.0 + 3.5 * lap;
+	float a1 = texture(card, (ab + vec2(0.0, wdt)) / vec2(2000.0, 1116.0)).a;
+	float a2 = texture(card, (ab + vec2(0.0, wdt * 0.45)) / vec2(2000.0, 1116.0)).a;
+	float near = smoothstep(shore + 25.0, shore + 45.0, ab.y);   // near shore only
+	float fm = max(a1 * 0.6, a2) * near * (0.55 + 0.45 * vn(vec2(ab.x * 0.12 - t * 0.5, t * 0.3)));
+	c = mix(c, vec3(0.90, 0.94, 0.95), clamp(fm, 0.0, 1.0) * foam);
+	c *= 1.0 + sun_amp * (sin(t * 0.21) + 0.6 * sin(t * 0.13 + 1.7)) / 1.6;
+	ALBEDO = c;
+	ALPHA = 1.0;   // v22: plane is padded past the hole, its edges always sit behind the card
+}

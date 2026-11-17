@@ -1,0 +1,38 @@
+
+shader_type spatial;
+render_mode unshaded, cull_disabled, shadows_disabled, depth_prepass_alpha;
+uniform sampler2D tex : source_color, filter_linear_mipmap;
+uniform vec3 tint = vec3(1.0);
+uniform float flip = 0.0;
+uniform float h = 10.0;
+uniform float amp = 0.02;
+uniform float spd = 1.2;
+uniform float bias = -1.0;
+uniform float base = 0.4; // s238 r6 (owner): the trunk stays still, only the part above this height fraction sways // s238 r5: sharper mip pick (owner: bushes blurry next to the grass)
+uniform float gt = 0.0;          // v36: shared gust clock (same as the backdrop card / petals)
+uniform float gust_period = 15.0;
+uniform float gust_cross = 1.6;   // v38: seconds for the gust to sweep right -> left
+uniform float gust_w = 0.07;       // v38: swell width (share of the period)
+uniform float gust_lean = 0.0;   // v36: lean to screen-left at the gust peak (0 = off)
+uniform float gust_amp = 0.0;    // v36: extra flutter at the gust peak
+uniform float fg_sat = 1.0;      // v36: tone toward the backdrop
+uniform vec3 fg_tone = vec3(1.0);
+float gust_at(float x) { float ph = fract((gt + x * gust_cross) / gust_period); return exp(-((ph - 0.25) / gust_w) * ((ph - 0.25) / gust_w)); }
+vec3 fg_grade(vec3 c) { return mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, fg_sat) * fg_tone; }
+void vertex() {
+	vec3 o = MODEL_MATRIX[3].xyz;
+	float t = clamp((VERTEX.y / h - base) / (1.0 - base), 0.0, 1.0);
+	float ph = o.x * 0.31 + o.z * 0.17;
+	vec4 cp = PROJECTION_MATRIX * (VIEW_MATRIX * vec4(o, 1.0));
+	float big = gust_at(clamp(cp.x / cp.w * 0.5 + 0.5, 0.0, 1.0));
+	VERTEX.x += (sin(TIME * spd + ph) + 0.35 * sin(TIME * spd * 2.3 + ph * 1.7)) * amp * (1.0 + gust_amp * big) * h * t * t;
+	VERTEX.x -= gust_lean * big * h * t * t;   // v36: lean screen-left with the gust (billboard x = camera right)
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0), vec4(0.0, 1.0, 0.0, 0.0), vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0), MODEL_MATRIX[3]);
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+}
+void fragment() {
+	vec4 c = texture(tex, vec2(mix(UV.x, 1.0 - UV.x, flip), UV.y), bias);
+	ALBEDO = fg_grade(c.rgb * tint);
+	ALPHA = c.a;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
+}

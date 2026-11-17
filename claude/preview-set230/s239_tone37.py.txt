@@ -1,0 +1,28 @@
+# v37 tone samples: whole-scene blue grades on the v36 battle still (preview only; real version = Godot colour grade)
+import sys, numpy as np, cv2
+im = cv2.imread(sys.argv[1]).astype(np.float32) / 255.0   # BGR
+lum = (im @ np.array([0.114, 0.587, 0.299], np.float32))[..., None]
+def grade(gain, sat=1.0, shadow=(0, 0, 0), lift=0.0):
+    o = lum + (im - lum) * sat
+    o = o * np.array(gain, np.float32)
+    sh = (1.0 - lum) ** 2   # blue only in the darks
+    o = o + sh * np.array(shadow, np.float32) + lift
+    return np.clip(o, 0, 1)
+V = {
+ 'A0 เดิม (v36)':        grade((1, 1, 1)),
+ 'A1 ฟ้าอ่อน':            grade((1.05, 1.0, 0.96), 0.95),
+ 'A2 ฟ้าใส':              grade((1.10, 1.0, 0.92), 0.90),
+ 'A3 ฟ้าเขียว (teal)':     grade((1.08, 1.03, 0.88), 0.88),
+ 'A4 ฟ้าเช้าหมอก':         grade((1.12, 1.01, 0.90), 0.78, lift=0.03),
+ 'A5 เงาฟ้า แสงอุ่นเดิม':   grade((1.0, 1.0, 0.98), 0.92, shadow=(0.10, 0.03, -0.02)),
+}
+names = {'A0 เดิม (v36)': 'A0', 'A1 ฟ้าอ่อน': 'A1', 'A2 ฟ้าใส': 'A2', 'A3 ฟ้าเขียว (teal)': 'A3', 'A4 ฟ้าเช้าหมอก': 'A4', 'A5 เงาฟ้า แสงอุ่นเดิม': 'A5'}
+tiles = []
+for k, v in V.items():
+    out = (v * 255).astype(np.uint8)
+    cv2.imwrite(f'out/s239tone37/{names[k]}.png', out)
+    t = cv2.resize(out, (960, 530), interpolation=cv2.INTER_AREA)
+    cv2.rectangle(t, (0, 0), (80, 44), (0, 0, 0), -1); cv2.putText(t, names[k], (8, 34), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (255, 255, 255), 2)
+    tiles.append(t)
+sheet = np.vstack([np.hstack(tiles[i:i + 2]) for i in range(0, 6, 2)])
+cv2.imwrite('out/s239tone37/sheet.jpg', sheet, [cv2.IMWRITE_JPEG_QUALITY, 88])

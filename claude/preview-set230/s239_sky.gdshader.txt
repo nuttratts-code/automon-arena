@@ -1,0 +1,12 @@
+// set 239 v28 sample (own code): the picture's sky on its own sheet just behind the card, drifting slowly to the left.
+// Texture is the sky + its mirror (seamless), so it wraps forever.
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_never;
+uniform sampler2D tex : source_color, filter_linear, repeat_enable;
+uniform float t = 0.0;
+uniform float sun_amp = 0.035;
+uniform float speed = 0.00055;   // texture widths per second (~2.2 picture px/s)
+void fragment() {
+	ALBEDO = texture(tex, vec2(UV.x * 0.5 + t * speed, UV.y)).rgb * (1.0 + sun_amp * (sin(t * 0.21) + 0.6 * sin(t * 0.13 + 1.7)) / 1.6);   // v33 sun breathing
+	ALPHA = 1.0;
+}

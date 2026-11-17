@@ -1,0 +1,85 @@
+# set 239 owner plan: 3 picture layers from base4 (no mist) + the owner's red line (sketch3)
+#   L1 trees/near (below the red line) · L2 lake water · L3 hills/sky (trees + birds painted out)
+import numpy as np, cv2
+from PIL import Image
+from scipy import ndimage
+base=np.array(Image.open('base4.jpg').convert('RGB')); H,W=base.shape[:2]
+s3=np.array(Image.open('sketch3.jpg').convert('RGB')).astype(int); s2=np.array(Image.open('sketch.jpg').convert('RGB')).astype(int)
+Y,X=np.mgrid[0:H,0:W]
+line=(np.abs(s3-s2).sum(-1)>40)&((s3[...,0]-s3[...,1])>15)&(Y<430)
+lab,n=ndimage.label(ndimage.binary_dilation(line,iterations=2)); sz=ndimage.sum(line,lab,range(1,n+1))
+line&=np.isin(lab,[i+1 for i in range(n) if sz[i]>30])
+ly=np.full(W,np.nan)
+for x in range(W):
+    ys=np.nonzero(line[:,x])[0]
+    if ys.size: ly[x]=ys.min()
+ok=~np.isnan(ly); ly=np.interp(np.arange(W),np.nonzero(ok)[0],ly[ok])
+# refine: grow leaves out of a core just under the line, by colour, inside a +-14 px band (the owner's line is already close)
+f=cv2.GaussianBlur(base,(0,0),0.8).astype(float); r,g,b=f[...,0],f[...,1],f[...,2]
+lum=0.3*r+0.59*g+0.11*b
+tree=((X<=1250)&(lum<128)&(g>b+2))|((X>1250)&(lum<172)&(b<g+4))
+core=Y>=(ly+8)[None,:]
+band=(Y>=(ly-14)[None,:])&(Y<(ly+10)[None,:])&tree
+lab,n=ndimage.label(band|core); keep=np.unique(lab[core]); keep=keep[keep>0]
+m1=np.isin(lab,keep)
+m1=ndimage.binary_closing(m1,structure=np.ones((3,3)),iterations=1); m1=ndimage.binary_opening(m1,structure=np.ones((3,3)))
+m1=ndimage.binary_fill_holes(m1)
+m1=ndimage.binary_erosion(m1,structure=np.ones((3,3)),iterations=2)|(Y>=(ly+30)[None,:])  # pull the crown edge in 2 px (soft halo stays on the far layer)
+A1=cv2.GaussianBlur(m1.astype(np.float32),(0,0),0.9)
+# L3: paint out everything under the line (trees/meadow) and the birds, at quarter size then up (hidden behind L1 except at the edge)
+g8=cv2.cvtColor(base,cv2.COLOR_RGB2GRAY).astype(float); med=cv2.medianBlur(g8.astype(np.uint8),15).astype(float)
+birds=np.zeros((H,W),np.uint8); birds[100:240,1150:1450]=((med-g8)[100:240,1150:1450]>22)
+birds=cv2.dilate(birds*255,np.ones((5,5),np.uint8))
+l3=cv2.inpaint(base,birds,6,cv2.INPAINT_TELEA)
+hole=cv2.erode((m1*255).astype(np.uint8),np.ones((9,9),np.uint8))   # fill starts 4 px INSIDE the crowns: the picture's own soft tree edge stays behind L1 (no light halo)
+sm=cv2.resize(l3,(W//2,H//2),interpolation=cv2.INTER_AREA); hs=cv2.resize(hole,(W//2,H//2),interpolation=cv2.INTER_NEAREST)
+hs=cv2.dilate(hs,np.ones((3,3),np.uint8))
+fill=cv2.resize(cv2.inpaint(sm,hs,12,cv2.INPAINT_TELEA),(W,H),interpolation=cv2.INTER_CUBIC)
+hw=cv2.GaussianBlur(hole.astype(np.float32)/255,(0,0),1.2)[...,None]
+l3=(l3*(1-hw)+fill*hw).astype(np.uint8)
+# L2 water: the lake from the base, continued under the trees (from the filled L3) - alpha = lake box, soft
+water=(X>=560)&(X<1215)&(Y>=280)&(Y<380)
+wet=(lum>150)&(b>=g-6)&water&~m1
+shore=np.full(W,999.0)
+for x in range(560,1215):
+    ys=np.nonzero(wet[:,x])[0]
+    if ys.size: shore[x]=ys.min()
+ok=shore<999; shore=np.interp(np.arange(W),np.nonzero(ok)[0],shore[ok]); shore=ndimage.median_filter(shore,25)
+wmask=water&(Y>=shore[None,:]-1)
+A2=cv2.GaussianBlur(wmask.astype(np.float32),(0,0),1.5)*cv2.GaussianBlur(((X>=575)&(X<1200)).astype(np.float32),(0,0),8)
+lakeonly=(lum>150)&(b>=g-6)&water&~m1
+l2=l3.copy(); l2[lakeonly]=base[lakeonly]
+# sparkle/sway masks for the live shader: R foliage near the top edge, G water surface, B how high in the crown
+dist=ndimage.distance_transform_edt(m1)
+foliage=(m1&(dist<260)&tree).astype(np.float32)
+up=np.clip(1.0-dist/160.0,0,1)*m1
+M1=np.dstack([cv2.GaussianBlur(foliage,(0,0),2),np.zeros((H,W),np.float32),cv2.GaussianBlur(up.astype(np.float32),(0,0),3)])
+shoredist=(Y-shore[None,:]).astype(np.float32)
+quiet=np.clip((shoredist-6)/10,0,1)   # no glints on the first ~10 px of water under the far shore (they lined up as white dots)
+M2=np.dstack([np.zeros((H,W),np.float32),cv2.GaussianBlur(lakeonly.astype(np.float32),(0,0),1.5)*0+cv2.GaussianBlur(((lum>150)&(b>=g-6)&water).astype(np.float32),(0,0),1.5)*quiet,np.zeros((H,W),np.float32)])
+# tone T2 (LUT + cooler) for all layers; card alpha from the game cut (plaza rim) so the 3D ground keeps its edge
+lut=np.load(r'..\s239\lut.npy')
+def tone(x):
+    o=x.copy()
+    for c in range(3): o[...,c]=lut[c][x[...,c]].astype(np.uint8)
+    return np.clip(o.astype(float)*[0.94,0.99,1.07],0,255).astype(np.uint8)
+rim=np.array(Image.open(r'..\backup239\matte238_s3_v6_lut_blur31.png'))[...,3]
+rim=cv2.resize(rim,(W,H),interpolation=cv2.INTER_LINEAR).astype(np.float32)/255
+_low=np.array([ (np.nonzero(rim[:,x]>0.5)[0].max() if (rim[:,x]>0.5).any() else 0) for x in range(W)])
+rim=cv2.GaussianBlur((Y<=_low[None,:]).astype(np.float32),(0,0),1.2)   # solid down to the plaza rim (old S2/S3 dip removed)
+import os; os.makedirs('layers_v14',exist_ok=True)
+def save(nm,img,al,mask=None):
+    im=Image.fromarray(np.dstack([tone(img),(np.clip(al,0,1)*255).astype(np.uint8)])).resize((2000,1116),Image.LANCZOS); im.save(f'layers_v14/{nm}.png')
+    if mask is not None: Image.fromarray((np.clip(mask,0,1)*255).astype(np.uint8)).resize((2000,1116),Image.LANCZOS).save(f'layers_v14/{nm}_mask.png')
+# L1 owner round: trees read blurry (the picture itself is soft) -> unsharp mask; edge pixels take the crown's own colour
+# (no sky-coloured fringe), so the cut-out does not glow against the far layers
+from PIL import ImageFilter
+bsh=base.copy()  # v14 owner: no sharpening
+inner=cv2.erode(m1.astype(np.uint8),np.ones((7,7),np.uint8))
+edge=(cv2.dilate(m1.astype(np.uint8),np.ones((5,5),np.uint8))>0)&(inner==0)
+bsh=cv2.inpaint(bsh,(edge*255).astype(np.uint8),3,cv2.INPAINT_TELEA)
+save('l1',bsh,A1*rim,M1); save('l2',l2,A2*rim,M2); save('l3',l3,rim)
+# preview: each layer on its own over grey + stacked
+for nm in ['l1','l2','l3']:
+    im=Image.open(f'layers_v14/{nm}.png'); bg=Image.new('RGBA',im.size,(255,0,255,255)); bg.alpha_composite(im); bg.convert('RGB').crop((0,0,2000,620)).resize((1000,310)).save(f'layers_v14/{nm}_look.jpg',quality=85)
+print('ok')

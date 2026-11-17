@@ -1,0 +1,98 @@
+// set 239 v24 sample (own code): soft-edged picture card (as s239_mattesoft) + trees that sway gently at random.
+// mask R = tree foliage, B = near the crown edge (edges move more, trunks/insides barely). Alpha is read unshifted,
+// so the lake hole never moves.
+shader_type spatial;
+render_mode unshaded, cull_disabled, fog_disabled, shadows_disabled, blend_mix, depth_draw_opaque;
+uniform sampler2D tex : source_color, filter_linear;
+uniform sampler2D mask : filter_linear;
+uniform float card_gamma = 1.0;   // v41: pre-darken the picture against the Filmic tonemap + glow (owner: far meadow washed out)
+uniform float card_sat = 1.0;
+uniform float t = 0.0;
+uniform float sway = 0.0009;   // max UV shift (~1.8 px on the 2000 px picture)
+// v32 wind: a gust every gust_period s rolls across the picture from the right (same formula as the petals in s239_prep.gd)
+uniform float gust_period = 15.0;
+uniform float gust_cross = 1.6;   // v38: seconds for the gust to sweep right -> left
+uniform float gust_w = 0.07;       // v38: swell width (share of the period)
+uniform float gust_amp = 2.2;      // extra sway at the gust peak (x base)
+uniform float grass_sway = 0.0007; // low grass / bushes (mask G)
+// v33 paper-scene life: sun breathing, dew twinkles in the grass, heat shimmer over the far meadow
+uniform float sun_amp = 0.035;
+uniform float dew = 1.0;
+uniform float dew_cell = 14.0;     // picture px
+uniform float dew_density = 0.3;
+uniform float shimmer = 0.00035;   // UV shift (~0.7 px)
+uniform vec4 shim_box = vec4(0.42, 0.27, 0.78, 0.43);   // x0 y0 x1 y1 (UV)
+// v26 cloud shadows: same noise as s239_cloud, looked up where the view ray through this card pixel meets the ground
+uniform float cloud_dark = 0.0;
+uniform vec2 wind = vec2(-1.1, 0.2);   // v27: as s239_cloud
+uniform float cscale = 18.0;
+uniform float ground_y = 0.0;
+uniform float eye_d = 150.0;   // v30: rays start at the BATTLE camera spot (card-local (0,0,eye_d)), so the shadows stay painted on the picture while the camera zooms
+varying vec3 eye;
+varying vec3 wp;
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; eye = (MODEL_MATRIX * vec4(0.0, 0.0, eye_d, 1.0)).xyz; }
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) {
+	vec2 i = floor(p), f = fract(p);
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y);
+}
+float cloud(vec2 xz) {
+	vec2 q = (xz - wind * t) / cscale;
+	float n = vn(q) * 0.55 + vn(q * 2.1 + 7.3) * 0.3 + vn(q * 4.3 + 1.7) * 0.15;
+	return smoothstep(0.34, 0.64, n);   // v28: more cover so the plaza actually gets shadows (v27 0.40-0.76 left it clear for minutes)
+}
+float gust_at(float x) {
+	float ph = fract((t + x * gust_cross) / gust_period);   // right side first, ~1.6 s to cross
+	return exp(-((ph - 0.25) / gust_w) * ((ph - 0.25) / gust_w));                 // ~2 s swell
+}
+void fragment() {
+	vec3 m = texture(mask, UV).rgb;
+	// random gusts: slow noise over the picture (each tree clump gets its own timing), plus a small leaf flutter
+	float gust = smoothstep(0.35, 0.85, vn(UV * vec2(9.0, 5.0) + vec2(t * 0.22, t * 0.07)));
+	float big = gust_at(UV.x);
+	float wob = sin(t * 1.3 + vn(UV * vec2(14.0, 9.0)) * 6.283) * 0.7 + sin(t * 2.7 + vn(UV * vec2(11.0, 7.0)) * 6.283) * 0.45 * big + (vn(UV * vec2(80.0, 50.0) + vec2(t * 0.6, 0.0)) - 0.5) * 0.6;
+	float amt = m.r * (0.3 + 0.7 * m.b) * (0.25 + 0.75 * gust) * (1.0 + gust_amp * big);
+	vec2 uv = UV + vec2(wob, wob * 0.3) * sway * amt + vec2(-big * 0.0012, 0.0) * m.r * (0.3 + 0.7 * m.b);   // gust leans the crowns to the left
+	// low grass: quick small ripple + lean in the gust
+	float gw = sin(t * 3.1 + UV.x * 90.0 + vn(UV * vec2(40.0, 30.0)) * 6.283) * 0.6 + (vn(UV * vec2(160.0, 90.0) + vec2(t * 1.4, 0.0)) - 0.5);
+	uv += vec2(gw * grass_sway * (0.4 + 1.6 * big) - big * 0.0010, 0.0) * m.g;
+	// v33 heat shimmer: tiny wavy sideways shift in thin rows over the far meadow (not the trees)
+	float sb = smoothstep(shim_box.x, shim_box.x + 0.05, UV.x) * smoothstep(shim_box.z, shim_box.z - 0.05, UV.x) * smoothstep(shim_box.y, shim_box.y + 0.03, UV.y) * smoothstep(shim_box.w, shim_box.w - 0.03, UV.y);
+	uv.x += sin(UV.y * 1116.0 * 0.55 - t * 5.0 + sin(UV.x * 40.0 + t * 0.7) * 2.0) * shimmer * sb * (1.0 - m.r) * (0.6 + 0.4 * sin(t * 0.37));
+	uv = mix(UV, uv, texture(mask, UV).a);   // v35: mask alpha 0 = still (rocks never sway or shimmer)
+	vec3 col = texture(tex, uv).rgb;
+	col = pow(max(col, vec3(0.0)), vec3(card_gamma));
+	col = max(mix(vec3(dot(col, vec3(0.299, 0.587, 0.114))), col, card_sat), vec3(0.0));
+	// v33 dew: now and then a single tiny glint on the green ground (colour test - mask G only covers the strip under the 3D plaza), each lasts ~0.5 s
+	float grassy = smoothstep(0.015, 0.07, col.g - max(col.r, col.b)) * (1.0 - smoothstep(0.2, 0.5, m.r)) * smoothstep(0.26, 0.30, UV.y);   // green ground, not tree crowns
+	if (dew > 0.0 && grassy > 0.2) {
+		vec2 pp = UV * vec2(2000.0, 1116.0);
+		vec2 cc = floor(pp / dew_cell);
+		float per = 2.5 + 4.0 * h(cc + 3.1);
+		float tt = t / per + h(cc + 8.7);
+		vec2 key = cc + floor(tt) * 19.3;
+		if (h(key + 0.4) < dew_density) {
+			float u = fract(tt) * per;   // seconds into this cycle
+			float tw = smoothstep(0.0, 0.12, u) * (1.0 - smoothstep(0.18, 0.55, u));
+			vec2 pos = (cc + 0.2 + 0.6 * vec2(h(key + 1.3), h(key + 2.9))) * dew_cell;
+			vec2 dd = pp - pos;
+			float g = 1.3 * exp(-dot(dd, dd) / 1.6) + 0.4 * exp(-dot(dd, dd) / 6.0) + 0.25 * exp(-dd.x * dd.x / 0.5 - dd.y * dd.y / 30.0) + 0.25 * exp(-dd.y * dd.y / 0.5 - dd.x * dd.x / 30.0);
+			col += vec3(1.0, 0.98, 0.9) * g * tw * dew * grassy;
+		}
+	}
+	col *= 1.0 + sun_amp * (sin(t * 0.21) + 0.6 * sin(t * 0.13 + 1.7)) / 1.6;   // v33 sun breathing
+	if (cloud_dark > 0.0) {
+		vec3 cam = eye;
+		vec3 d = wp - cam;
+		if (d.y < -0.001) {
+			float k = (ground_y - cam.y) / d.y;
+			vec2 xz = cam.xz + d.xz * k;
+			float dist = length(xz - cam.xz);
+			float fade = 1.0 - smoothstep(110.0, 240.0, dist);   // v30: far ground fades sooner - there the shadows squash into thin dark bands
+			col *= 1.0 - cloud_dark * cloud(xz) * fade * m.g;   // G = open ground in the picture (no sky/hills/trees)
+		}
+	}
+	ALBEDO = col;
+	ALPHA = texture(tex, UV).a;
+}

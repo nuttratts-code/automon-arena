@@ -1,6 +1,6 @@
 # workflow · GDScript notes for the Godot port
 
-V1.1 · 13 Nov 2026 (set 219 F1: §7 Running Godot = the one place for the engine binary; skills point here) · V1.0 · 12 Nov 2026 (set 209, user C2a: our own short file instead of an outside Godot skill — review-2026-11-12-skills.md). Only what this project learned in sets 192–208; each line names where it came from. Generic Godot patterns (gameplay autoloads, event bus, object pools, component nodes) are NOT our structure — do not introduce them without a rule-change round.
+V1.2 · 17 Nov 2026 (set 239: §8 shader traps) · V1.1 · 13 Nov 2026 (set 219 F1: §7 Running Godot = the one place for the engine binary; skills point here) · V1.0 · 12 Nov 2026 (set 209, user C2a: our own short file instead of an outside Godot skill — review-2026-11-12-skills.md). Only what this project learned in sets 192–208; each line names where it came from. Generic Godot patterns (gameplay autoloads, event bus, object pools, component nodes) are NOT our structure — do not introduce them without a rule-change round.
 
 ## 1. The port (plan-godot-migration §2–§3)
 - The JS core is the reference. A src/core file with a "change both" comment has a twin in godot/scripts — edit both in one commit, then skill `port-parity`.
@@ -50,3 +50,9 @@ V1.1 · 13 Nov 2026 (set 219 F1: §7 Running Godot = the one place for the engin
 - **Fresh copy / checkout:** `<godot> --headless --import --path <dir>` before the first shot or test (set 215 import trap, set 216 MCP addon parse errors).
 - **Tests:** `TESTS_ONLY=ui,project <godot> --headless --path godot -s res://tests/run.gd` while developing; CI runs all.
 - The owner's PC is in dark mode → plain shots are dark; add `--light` for the light theme (set 212).
+
+## 8. Shader traps (gl_compatibility, set 239)
+- `pow(x, 2.0)` with x < 0 is undefined in GLSL → NaN. In a vertex shader the mesh vanishes (set 239 v36: grass gone until each gust peak). Square by hand: `x * x`.
+- `render_mode blend_mul` drew nothing on a transparent quad in Compatibility (set 239 v44 unit shadows). Use `blend_mix` with a dark colour + ALPHA.
+- The Environment Filmic tonemap (tonemap_mode 2) is global and also hits unshaded picture cards: a 150 m backdrop card at ~150/255 rendered ~220 (washed out). Pre-darken the card in its own shader (set 239 v41 `card_gamma` / `card_sat`), never by changing the tonemap for one object.
+- A picture card that stops above the screen bottom shows the sky wherever the 3D ground ends at the frame edge (set 239 v43): make the card solid to its bottom edge.

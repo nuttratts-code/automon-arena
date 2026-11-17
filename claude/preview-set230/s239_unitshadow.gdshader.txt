@@ -1,0 +1,23 @@
+// v44 (own code): HD-2D style unit shadow - the unit's sprite silhouette laid flat on the ground, cast away from the sun.
+// Child of the unit blob node (follows the unit). Mix blend with a dark blue-grey (blend_mul drew nothing in Compatibility).
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled, fog_disabled;
+uniform sampler2D tex : source_color, filter_nearest;
+uniform vec3 dir = vec3(-0.5, 0.0, -0.5);   // ground shadow vector, feet -> head tip (local = world axes)
+uniform float width = 1.4;
+uniform float flip = 0.0;
+uniform float strength = 0.5;
+uniform vec3 tint = vec3(0.05, 0.07, 0.13);  // A5: shadows lean blue
+void vertex() {
+	vec3 side = normalize(vec3(dir.z, 0.0, -dir.x));   // v45: sprite right stays on screen right (was mirrored)
+	float u = VERTEX.x;            // -0.5..0.5 across the sprite
+	float v = VERTEX.y + 0.5;      // 0 = feet, 1 = head
+	VERTEX = side * u * width + dir * v;
+}
+void fragment() {
+	vec2 uv = vec2(mix(UV.x, 1.0 - UV.x, flip), UV.y);
+	float a = step(0.5, texture(tex, uv).a);
+	float fade = mix(1.0, 0.35, 1.0 - UV.y);   // fainter toward the head tip
+	ALBEDO = tint;
+	ALPHA = a * strength * fade;
+}
