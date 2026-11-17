@@ -173,3 +173,4 @@ a.btn { display: inline-flex; align-items: center; background: var(--panel2); bo
 a.btn.primary { background: var(--tribe); color: #15181d; border-color: var(--tribe); font-weight: 600; }
 a.btn:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 button.danger:not(:disabled) { color: #ff8a80; }
+.flipx { transform: scaleX(-1); }

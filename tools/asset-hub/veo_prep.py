@@ -91,6 +91,7 @@ def add_round(hub, it, item, slot, form, data, note, src_id):
         prompts = [p for p in it['prompts'] if (p.get('form') or 1) == form and p.get('kind') != 'veo']
         it['rounds'].append({'id': rid, 'slot': slot, 'form': form, 'file': f'hub/{item}/{name}', 'orig': name, 't': now(),
                              'by': 'claude', 'note': note, 'star': False, 'archived': False, 'from': src_id,
+                             **({'flip': True} if next((r for r in it['rounds'] if r['id'] == src_id), {}).get('flip') else {}),  # ⇋ กลับข้าง follows the still
                              'licence': hub['settings'].get('licences', ['AI placeholder - UNVERIFIED'])[0],
                              'promptId': prompts[-1]['id'] if prompts else None})
     return rid

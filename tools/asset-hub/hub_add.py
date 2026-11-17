@@ -41,6 +41,7 @@ def main():
     ap.add_argument('item'); ap.add_argument('sheet'); ap.add_argument('ms', type=int)
     ap.add_argument('--form', type=int, default=1, choices=[1, 3]); ap.add_argument('--move', default='idle')
     ap.add_argument('--note', default='')
+    ap.add_argument('--flip', action='store_true', help='source video was flipped (⇋ กลับข้าง) → frames round flip too')
     o = ap.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,39}', o.item) or not re.fullmatch(r'[A-Za-z0-9_-]{1,40}', o.move):
         sys.exit('bad item or move')
@@ -72,7 +73,7 @@ def main():
             'by': 'claude', 'note': o.note, 'star': False, 'archived': False,
             'licence': hub['settings'].get('licences', ['AI placeholder - UNVERIFIED'])[0],
             'promptId': prompts[-1]['id'] if prompts else None,
-            'meta': {'cols': cols, 'rows': rows, 'fw': fw, 'fh': fh, 'n': cols * rows, 'ms': o.ms}})
+            'meta': {'cols': cols, 'rows': rows, 'fw': fw, 'fh': fh, 'n': cols * rows, 'ms': o.ms}, **({'flip': True} if o.flip else {})})
     feet = guess_feet(img.crop((0, 0, fw, fh)))
     old = it.get('shadow') or {}
     it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {}), 'on': False},  # under-feet oval always off (owner rule)

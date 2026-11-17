@@ -84,7 +84,7 @@ async function runFrames(id, rid, form, move) {
     const warn = clipWarnings(out + ' ' + sheet);
     job.step = 'กำลังใส่เฟรมและตั้งเงา';
     const addOut = await runPy([ADD_PY, id, path.join(tmp, 'out', sheet), String(ms), '--form', String(form), '--move', move,
-      '--note', `จากวิดีโอ ${rid} · ลูป ${loopLen} วิ${warn.length ? ' · มีคำเตือน' : ''}`], process.env.HUB_ROOT ? { HUB_ROOT: ROOT } : {});
+      '--note', `จากวิดีโอ ${rid} · ลูป ${loopLen} วิ${warn.length ? ' · มีคำเตือน' : ''}`, ...(readHub().items[id]?.rounds.find((x) => x.id === rid)?.flip ? ['--flip'] : [])], process.env.HUB_ROOT ? { HUB_ROOT: ROOT } : {});
     const newRound = (addOut.match(/frames round (r[0-9a-f]+)/) || [])[1];
     const [fw, fh] = sheet.match(/(\d+)x(\d+)\.png$/).slice(1);
     const reply = [`ตัดแล้ว 32 เฟรม (${fw}×${fh}) ลูป ${loopLen} วิ · ${ms} ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)`,
@@ -145,7 +145,9 @@ export function validateHub(h) {
     for (const r of it.rounds || []) {
       if (!SLOTS.includes(r.slot)) err.push(`${id}: bad slot ${r.slot}`);
       if (typeof r.file !== 'string' || !/^(hub|lib)\//.test(r.file) || r.file.includes('..')) err.push(`${id}: bad file ${r.file}`);
+      if (r.flip != null && typeof r.flip !== 'boolean') err.push(`${id}: flip must be true/false`);
     }
+    if (it.thumb != null && (typeof it.thumb !== 'string' || !ID_RE.test(it.thumb))) err.push(`${id}: bad thumb`);
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
   }
@@ -180,6 +182,13 @@ function doExport(hub) {
   const out = shadowExport(hub);
   fs.writeFileSync(SHADOW_OUT, JSON.stringify(out, null, 1) + '\n');
   return { file: path.relative(ROOT, SHADOW_OUT).replaceAll('\\', '/'), units: Object.keys(out.units).length };
+}
+
+// ---------- one ★ per slot (owner set 241) ----------
+// rounds of the same slot + form + move share one ★; "file" (other files) keeps several
+function starOnly(it, r) {
+  if (r.slot === 'file') return;
+  for (const x of it.rounds) if (x !== r && x.slot === r.slot && (x.form || 1) === (r.form || 1) && (x.move || '') === (r.move || '')) x.star = false;
 }
 
 // ---------- library (star → copy, never overwrite) ----------
@@ -338,6 +347,7 @@ async function handle(req, res) {
       promptId: it.prompts.length ? it.prompts[it.prompts.length - 1].id : undefined,
       from: from && it.rounds.some((x) => x.id === from) ? from : undefined, // cut made from this still (ตัดพื้น button)
     };
+    if (slot !== 'file') { starOnly(it, r); r.star = true; } // owner A1 (set 241): newest upload = ★ used; art/library copy waits for a manual ★ or the Godot export
     it.rounds.push(r);
     hub.rev += 1;
     writeHub(hub);
@@ -369,13 +379,20 @@ async function handle(req, res) {
     const r = it?.rounds.find((x) => x.id === u.searchParams.get('round'));
     if (!r) return send(res, 404, { error: 'no such round' });
     r.star = u.searchParams.get('on') !== '0';
+    if (r.star) starOnly(it, r);
     if (r.star && !r.library) r.library = starToLibrary(hub, it, r);
     hub.rev += 1;
     writeHub(hub);
     return send(res, 200, hub);
   }
 
-  if (req.method === 'POST' && u.pathname === '/api/export') return send(res, 200, doExport(readHub()));
+  if (req.method === 'POST' && u.pathname === '/api/export') { // also files every ★ round not yet in art/library (auto ★ after upload, owner A1 set 241)
+    const hub = readHub();
+    let n = 0;
+    for (const it of Object.values(hub.items)) for (const r of it.rounds) if (r.star && !r.archived && !r.library) { r.library = starToLibrary(hub, it, r); n++; }
+    if (n) { hub.rev += 1; writeHub(hub); }
+    return send(res, 200, { ...doExport(hub), library: n });
+  }
   send(res, 404, { error: 'not found' });
 }
 

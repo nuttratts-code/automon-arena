@@ -124,6 +124,7 @@ async function api(path, opts = {}) {
   const r = await fetch(path, opts);
   const j = await r.json().catch(() => ({}));
   if (r.status === 409) { hub = j.hub; render(); throw new Error('ไฟล์ถูกแก้จากที่อื่น โหลดข้อมูลล่าสุดแล้ว ลองอีกครั้ง'); }
+  if (r.status === 404 && j.error === 'not found') throw new Error('เซิร์ฟเวอร์คลังงานยังเป็นรุ่นเก่า ปิดแล้วเปิดใหม่ (npm run assets)');
   if (!r.ok) throw new Error(j.error || r.statusText);
   return j;
 }
@@ -155,12 +156,19 @@ function status(it) {
   if (it.prompts.length) return 'wait-still';
   return 'none';
 }
-// board picture = the newest starred picture (still / cut / idle frames, form 1), so a new ★ shows on the board at once
+// board picture (owner set 241): the round the owner picked ("ใช้เป็นภาพหน้าภาพรวม"), else the cut (★ first, form 1),
+// else the newest starred still / idle frames, so a new ★ shows on the board at once
 function thumbRound(it) {
-  const pics = it.rounds.filter((r) => !r.archived && ['still', 'cut', 'frames'].includes(r.slot) && (r.form || 1) === 1 && (!r.move || r.move === 'idle') && isImage(r.file));
+  const own = it.thumb && it.rounds.find((r) => r.id === it.thumb && !r.archived && isImage(r.file));
+  if (own) return own;
   const byTime = (a, b) => (a.t || '').localeCompare(b.t || '');
+  const cuts = it.rounds.filter((r) => !r.archived && r.slot === 'cut' && (r.form || 1) === 1 && isImage(r.file)).sort(byTime);
+  if (cuts.length) return cuts.filter((r) => r.star).pop() || cuts.pop();
+  const pics = it.rounds.filter((r) => !r.archived && ['still', 'frames'].includes(r.slot) && (r.form || 1) === 1 && (!r.move || r.move === 'idle') && isImage(r.file));
   return pics.filter((r) => r.star).sort(byTime).pop() || pics.sort(byTime).pop() || it.rounds.find((r) => !r.archived && isImage(r.file));
 }
+// ⇋ กลับข้าง (owner set 241): r.flip = this picture is shown mirrored; the game uses it the way it looks here
+const flipped = (el, r) => { if (r && r.flip) el.classList.add('flipx'); return el; };
 function stepHas(it, step) {
   if (step === 'still') return it.rounds.some((r) => ['still', 'cut'].includes(r.slot) && r.star && !r.archived);
   if (step === 'prompt') return it.prompts.length > 0;
@@ -255,8 +263,8 @@ async function makeCut(it, st) {
     const q = new URLSearchParams({ item: it.id, slot: 'cut', name: (st.orig || 'still').replace(/\.\w+$/, '') + '_cut.png', from: st.id });
     if (it.kind === 'character') q.set('form', String(st.form || ui.form));
     hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
-    const cut = hub.items[it.id].rounds.at(-1);
-    if (st.star && cut) hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(cut.id)}&on=1`, { method: 'POST' });
+    const nc = hub.items[it.id].rounds.at(-1), src = hub.items[it.id].rounds.find((x) => x.id === st.id);
+    if (src?.flip && nc) { nc.flip = true; await save(); }
     ui.cutView = 'both'; toast('ตัดพื้นแล้ว ภาพต้นฉบับยังอยู่');
   } catch (e) { toast('ตัดพื้นไม่ได้: ' + e.message); }
   render();
@@ -387,9 +395,9 @@ function renderBoard(m) {
 
 function thumbInto(box, r, max) {
   if (r.slot === 'frames' && r.meta) {
-    loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const c = keyed(img, sx, sy, sw, sh); box.append(c); }).catch(() => {});
-  } else if (isImage(r.file)) box.append(h('img', { src: fileUrl(r.file), alt: '', loading: 'lazy' }));
-  else if (isVideo(r.file)) box.append(h('video', { src: fileUrl(r.file) + '#t=0.5', muted: true, preload: 'metadata' }));
+    loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const c = keyed(img, sx, sy, sw, sh); box.append(flipped(c, r)); }).catch(() => {});
+  } else if (isImage(r.file)) box.append(flipped(h('img', { src: fileUrl(r.file), alt: '', loading: 'lazy' }), r));
+  else if (isVideo(r.file)) box.append(flipped(h('video', { src: fileUrl(r.file) + '#t=0.5', muted: true, preload: 'metadata' }), r));
   else box.append(h('span', { class: 'small faint' }, r.file.split('.').pop().toUpperCase()));
 }
 
@@ -487,7 +495,9 @@ function renderSlot(m, it, slot) {
     rs = [...rs, ...slotRounds(it, 'cut').filter((c) => !owned.has(c.id) && !mine.has(c.from) && !rs.some((r) => fileHash(r.file) && fileHash(r.file) === fileHash(c.file)))]
       .sort((a, b) => (a.t || '').localeCompare(b.t || ''));
   }
-  let sel = rs.find((r) => r.id === ui.sel) || rs.filter((r) => r.star).pop() || rs[rs.length - 1];
+  // open a still first (it carries the ตัดพื้น button); a lone cut row only when there is no still
+  const stills = rs.filter((r) => r.slot !== 'cut');
+  let sel = rs.find((r) => r.id === ui.sel) || stills.filter((r) => r.star).pop() || stills[stills.length - 1] || rs.filter((r) => r.star).pop() || rs[rs.length - 1];
   const work = h('div', { class: 'work' });
   const left = h('div', {});
   // viewer
@@ -497,6 +507,15 @@ function renderSlot(m, it, slot) {
     if (canCut) {
       if (cut) tools.append(h('span', { class: 'seg' }, [['both', 'คู่กัน'], ['orig', 'ต้นฉบับ'], ['cut', 'ตัดพื้น']].map(([k, v]) => h('button', { class: ui.cutView === k ? 'on' : '', onclick: () => { ui.cutView = k; render(); } }, v))));
       tools.append(h('button', { class: cut ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้', onclick: () => makeCut(it, sel) }, cut ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
+    } else if (sel.slot === 'cut') tools.append(h('span', { class: 'small dim' }, 'รอบนี้เป็นภาพตัดพื้นที่ไม่มีภาพนิ่งต้นทาง กดแถวภาพนิ่งเพื่อตัดพื้นใหม่'));
+    if (isImage(sel.file) || isVideo(sel.file)) {
+      tools.append(h('button', { class: sel.flip ? 'on' : '', title: 'กลับข้างซ้าย-ขวา เลือกว่าจะให้ฝั่งไหนเป็นด้านหน้า (เกมใช้ตามที่เห็นตรงนี้)', onclick: () => {
+        sel.flip = !sel.flip; if (cut && cut !== sel) cut.flip = sel.flip; save().then(render); } }, sel.flip ? '⇋ กลับข้างแล้ว' : '⇋ กลับข้าง'));
+    }
+    if (isImage(sel.file) && slot !== 'veoin') {
+      const pickR = canCut && cut ? cut : sel, isOn = thumbRound(it) === pickR && it.thumb === pickR.id;
+      tools.append(h('button', { class: isOn ? 'on' : '', title: 'ใช้ภาพนี้แสดงในหน้าภาพรวม (ถ้ามีภาพตัดพื้น ใช้ภาพตัดพื้น)', onclick: () => {
+        it.thumb = isOn ? undefined : pickR.id; save().then(render); } }, isOn ? '✓ ภาพหน้าภาพรวม' : 'ใช้เป็นภาพหน้าภาพรวม'));
     }
     const view = canCut && cut ? ui.cutView : 'orig';
     const stage = h('div', { class: 'stage bg-' + ui.bg + (view === 'both' ? ' pair' : '') });
@@ -535,7 +554,7 @@ function viewer(stage, left, r) {
   if (isImage(r.file)) {
     loadImg(r.file).then((img) => {
       const keyNeeded = ui.bg !== 'checker' || r.slot !== 'still';
-      stage.append(keyNeeded ? keyed(img) : img.cloneNode());
+      stage.append(flipped(keyNeeded ? keyed(img) : img.cloneNode(), r));
     }).catch(() => stage.append(h('p', { class: 'dim' }, 'เปิดไฟล์ไม่ได้')));
     return;
   }
@@ -543,7 +562,7 @@ function viewer(stage, left, r) {
 }
 
 function sheetPlayer(stage, left, r) {
-  const c = document.createElement('canvas'); stage.append(c);
+  const c = document.createElement('canvas'); stage.append(flipped(c, r));
   let i = 0, playing = true;
   const msIn = h('input', { type: 'number', min: 30, max: 1000, step: 1, value: r.meta.ms || 190, style: 'width:80px', onchange: (e) => { r.meta.ms = Math.max(30, Math.min(1000, Number(e.target.value) || 190)); saveSoon(); } });
   const info = h('span', { class: 'small dim' });
@@ -569,7 +588,7 @@ function sheetPlayer(stage, left, r) {
 
 function videoTools(stage, left, r) {
   const v = h('video', { src: fileUrl(r.file), controls: true, loop: true, muted: true, autoplay: true, playsinline: true });
-  stage.append(v);
+  stage.append(flipped(v, r));
   const out = h('div', { class: 'auto' });
   const step = (d) => { v.pause(); v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + d / 24)); };
   left.append(h('div', { class: 'tools' },
@@ -647,6 +666,7 @@ function roundRow(it, r, isSel) {
       h('input', { type: 'text', value: r.note || '', placeholder: 'โน้ต เช่น หน้าดุไป', oninput: (e) => { r.note = e.target.value; saveSoon(); } }),
       lic,
       p ? h('span', { class: 'faint', title: p.text }, `พรอมต์ ${fmtDate(p.t)}`) : null,
+      r.star && !r.library && !String(r.file).startsWith('lib/') ? h('span', { class: 'faint', title: 'จะคัดลอกเข้าคลังถาวรตอนกด "ส่งค่าเข้าเกม Godot"' }, 'ยังไม่เข้าคลังถาวร') : null,
       h('div', { class: 'acts' },
         h('button', { class: r.star ? 'starred' : '', title: 'เลือกรอบนี้เป็นตัวที่ใช้ (คัดลอกเข้าคลังถาวร)', onclick: () => star(it, r) }, r.star ? '★ ใช้รอบนี้' : '☆ เลือก'),
         h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: ui.cmp.includes(r.id), onchange: (e) => { ui.cmp = e.target.checked ? [...ui.cmp, r.id].slice(-2) : ui.cmp.filter((x) => x !== r.id); render(); } }), ' เทียบ'),
@@ -675,9 +695,9 @@ async function star(it, r) {
 }
 
 function mediaEl(r, cls) {
-  if (r.slot === 'frames' && r.meta) { const c = h('canvas', { class: cls }); loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const k = keyed(img, sx, sy, sw, sh); c.width = sw; c.height = sh; c.getContext('2d').drawImage(k, 0, 0); }); return c; }
-  if (isVideo(r.file)) return h('video', { class: cls, src: fileUrl(r.file), autoplay: true, loop: true, muted: true, playsinline: true });
-  return h('img', { class: cls, src: fileUrl(r.file), alt: '' });
+  if (r.slot === 'frames' && r.meta) { const c = flipped(h('canvas', { class: cls }), r); loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const k = keyed(img, sx, sy, sw, sh); c.width = sw; c.height = sh; c.getContext('2d').drawImage(k, 0, 0); }); return c; }
+  if (isVideo(r.file)) return flipped(h('video', { class: cls, src: fileUrl(r.file), autoplay: true, loop: true, muted: true, playsinline: true }), r);
+  return flipped(h('img', { class: cls, src: fileUrl(r.file), alt: '' }), r);
 }
 function compareDialog(it) {
   const [a, b] = ui.cmp.map((id) => it.rounds.find((r) => r.id === id));
@@ -1000,6 +1020,6 @@ document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('cli
 $('search').addEventListener('input', (e) => { ui.q = e.target.value; render(); });
 $('statusFilter').addEventListener('change', (e) => { ui.status = e.target.value; render(); });
 $('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
-$('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)`); } catch (e) { toast(e.message); } });
+$('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); if (r.library) { hub = await api('/api/hub'); render(); } toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)${r.library ? ` · เก็บเข้าคลังถาวร ${r.library} ไฟล์` : ''}`); } catch (e) { toast(e.message); } });
 $('dlg').addEventListener('click', (e) => { if (e.target === $('dlg')) $('dlg').close(); });
 api('/api/hub').then((j) => { hub = j; render(); pollJob(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });
