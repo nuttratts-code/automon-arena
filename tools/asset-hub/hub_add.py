@@ -19,7 +19,8 @@ DEFAULT = {'oval': {'on': True, 'dx': 0, 'dy': 0, 'w': 0.8, 'h': 0.45, 'a': 1},
 
 
 def guess_feet(frame):
-    """Same rule as the page's guessFeet: lowest solid row = ground line, x = mean of solid pixels in the bottom 6 %."""
+    """Same rule as the page's guessFeet: lowest solid row = ground line; x = middle between the leftmost and rightmost
+    solid pixel in the bottom 12 % (a mean got pulled onto one big fist / tail, WN-1 set 240)."""
     a = frame.getchannel('A')
     w, h = frame.size
     px = a.load()
@@ -30,14 +31,9 @@ def guess_feet(frame):
             break
     if bottom < 0:
         return [0.5, 1.0]
-    band = max(2, round(h * 0.06))
-    sx = n = 0
-    for y in range(max(0, bottom - band), bottom + 1):
-        for x in range(w):
-            if px[x, y] > 128:
-                sx += x
-                n += 1
-    return [round(sx / n / w if n else 0.5, 4), round((bottom + 1) / h, 4)]
+    band = max(2, round(h * 0.12))
+    xs = [x for y in range(max(0, bottom - band), bottom + 1) for x in range(w) if px[x, y] > 128]
+    return [round((min(xs) + max(xs) + 1) / 2 / w, 4), round((bottom + 1) / h, 4)]
 
 
 def main():

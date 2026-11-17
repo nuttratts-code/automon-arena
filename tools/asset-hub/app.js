@@ -16,13 +16,37 @@ const taskTh = (q) => TASK_TH[q.task] || 'งานอื่น';
 // what the owner does once Claude has finished, per task
 const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ' };
 const openJobs = (id) => (hub.queue || []).filter((q) => q.item === id && q.state === 'open');
+// owner A1: "ตัดเฟรม + สร้างเงา" runs on this computer right away (server calls Claude's scripts), no chat needed
+let job = {};
+async function pollJob() {
+  const was = job.state;
+  try { job = await api('/api/job'); } catch { return; }
+  if (job.state === 'run') { if (was !== 'run') render(); else { const st = document.getElementById('jobStep'); if (st) st.textContent = job.step || ''; } setTimeout(pollJob, 1000); return; }
+  if (was === 'run') {
+    try { hub = await api('/api/hub'); } catch {}
+    if (job.state === 'done') { ui.item = job.item; ui.step = 'frames'; ui.form = job.form || 1; ui.move = job.move || 'idle'; ui.sel = job.round || null; toast(job.warn ? 'ตัดเฟรมเสร็จ มีคำเตือน ดูแถบด้านบน' : 'ตัดเฟรมเสร็จ'); }
+    else toast('ตัดเฟรมไม่สำเร็จ: ' + job.msg);
+    render();
+  }
+}
+async function startFrames(it, vid) {
+  try { job = await api(`/api/frames?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(vid.id)}&form=${ui.form}&move=${encodeURIComponent(ui.move)}`, { method: 'POST' }); }
+  catch (e) { toast(e.message); return; }
+  render(); setTimeout(pollJob, 1000);
+}
+function autoFramesBar(it) {
+  const vid = pick(it, 'video', ui.form, ui.move), busy = job.state === 'run';
+  return h('div', { class: 'tools' },
+    h('button', { class: 'primary', disabled: !vid || busy, onclick: () => startFrames(it, vid) }, 'ตัดเฟรม + สร้างเงา'),
+    h('span', { class: 'small dim' }, busy ? 'กำลังทำงานอยู่ รอสักครู่' : vid ? `โปรแกรมจะแตกวิดีโอที่ติดดาว (ร่าง ${ui.form} ท่า${moveTh(ui.move)}) เป็น 32 เฟรม แล้ววางเงาบนเฟรมชุดใหม่ให้เอง ~10–60 วิ` : 'ติดดาววิดีโอของร่าง/ท่านี้ในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้'));
+}
 const STEPS = [
   ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
   ['still', 'ภาพนิ่ง', 'คุณวางภาพที่เจน'],
   ['cut', 'ตัดพื้น', 'Claude ทำ'],
   ['veoin', 'ภาพส่ง Veo', 'Claude ทำ'],
   ['video', 'วิดีโอ', 'คุณวางวิดีโอ'],
-  ['frames', 'เฟรม', 'Claude ทำ'],
+  ['frames', 'เฟรม', 'กดปุ่ม โปรแกรมทำ'],
   ['shadow', 'เงา', 'คุณปรับ'],
   ['file', 'ไฟล์อื่น', '.pxo ฯลฯ'],
 ];
@@ -286,9 +310,11 @@ function renderItem(m, it) {
   for (const q of openJobs(it.id)) m.append(h('div', { class: 'job' },
     h('b', {}, `รอ Claude: ${taskTh(q)}`), h('span', { class: 'small dim' }, `ส่งเมื่อ ${fmtDate(q.t)} · พิมพ์ "ดูคิว" ในแชทเพื่อให้ Claude เริ่มทำ`),
     h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้')));
+  if (job.state === 'run' && job.item === it.id) m.append(h('div', { class: 'job' }, h('b', {}, 'โปรแกรมกำลังตัดเฟรม + สร้างเงา'), h('span', { class: 'small', id: 'jobStep' }, job.step || ''), h('span', { class: 'spin' })));
+  if (job.state === 'error' && job.item === it.id) m.append(h('div', { class: 'job bad-job' }, h('b', {}, 'ตัดเฟรมไม่สำเร็จ'), h('span', { class: 'small' }, job.msg), h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { job = {}; render(); } }, 'ปิด')));
   const lastDone = (hub.queue || []).filter((q) => q.item === it.id && q.state === 'done' && !q.seen).pop();
-  if (lastDone) m.append(h('div', { class: 'job done' }, h('b', {}, `Claude ทำเสร็จแล้ว: ${taskTh(lastDone)}`),
-    h('span', { class: 'small' }, NEXT_TH[lastDone.task] || lastDone.reply || ''), h('span', { class: 'sp' }),
+  if (lastDone) m.append(h('div', { class: 'job done' }, h('b', {}, `${lastDone.by === 'auto' ? 'โปรแกรม' : 'Claude'}ทำเสร็จแล้ว: ${taskTh(lastDone)}`),
+    h('span', { class: 'small', style: 'white-space:pre-wrap' }, (lastDone.by === 'auto' ? lastDone.reply + '\n' : '') + (NEXT_TH[lastDone.task] || lastDone.reply || '')), h('span', { class: 'sp' }),
     h('button', { class: 'ghost', onclick: () => { lastDone.seen = true; save().then(render); } }, 'รับทราบ')));
   const steps = isChar ? STEPS : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
   const labels = isChar ? null : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
@@ -303,6 +329,7 @@ function renderItem(m, it) {
     if (['video', 'frames', 'file'].includes(ui.step)) bar.append(h('span', { class: 'seg' }, hub.settings.moves.map((mv) => h('button', { class: ui.move === mv ? 'on' : '', onclick: () => { ui.move = mv; ui.sel = null; render(); } }, moveTh(mv)))));
     m.append(bar);
   }
+  if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
   if (ui.step === 'prompt') return renderPrompt(m, it);
   if (ui.step === 'shadow') return renderShadow(m, it);
   renderSlot(m, it, ui.step);
@@ -563,10 +590,11 @@ function guessFeet(k) {
   let bottom = -1;
   for (let y = H - 1; y >= 0 && bottom < 0; y--) for (let x = 0; x < W; x++) if (p[(y * W + x) * 4 + 3] > 128) { bottom = y; break; }
   if (bottom < 0) return [0.5, 1];
-  const band = Math.max(2, Math.round(H * 0.06));
-  let sx = 0, n = 0;
-  for (let y = bottom - band; y <= bottom; y++) for (let x = 0; x < W; x++) if (y >= 0 && p[(y * W + x) * 4 + 3] > 128) { sx += x; n++; }
-  return [+(n ? sx / n / W : 0.5).toFixed(4), +((bottom + 1) / H).toFixed(4)];
+  // x = middle between leftmost and rightmost solid pixel of the bottom 12 % (a mean got pulled onto one big fist)
+  const band = Math.max(2, Math.round(H * 0.12));
+  let x0 = W, x1 = -1;
+  for (let y = Math.max(0, bottom - band); y <= bottom; y++) for (let x = 0; x < W; x++) if (p[(y * W + x) * 4 + 3] > 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; }
+  return [+(x1 >= 0 ? (x0 + x1 + 1) / 2 / W : 0.5).toFixed(4), +((bottom + 1) / H).toFixed(4)];
 }
 function renderShadow(m, it) {
   const src = shadowSource(it);
@@ -770,12 +798,9 @@ function queueDialog(it) {
   const step = STEPS.find(([k]) => k === ui.step);
   let task = '';
   const vid = it.kind === 'character' ? pick(it, 'video', ui.form, ui.move) : null;
-  const preset = h('button', { class: 'primary', disabled: !vid, title: vid ? '' : 'ต้องติดดาววิดีโอของร่าง/ท่านี้ก่อน', onclick: () => {
-    task = 'frames+shadow';
-    ta.value = `ตัดเฟรม + สร้างเงา: ร่าง ${ui.form} ท่า${moveTh(ui.move)} จากวิดีโอที่ติดดาว (${vid ? fmtDate(vid.t) : ''})`;
-  } }, 'ตัดเฟรม + สร้างเงา');
+  const preset = h('button', { class: 'primary', disabled: !vid || job.state === 'run', title: vid ? '' : 'ต้องติดดาววิดีโอของร่าง/ท่านี้ก่อน', onclick: () => { $('dlg').close(); startFrames(it, vid); } }, 'ตัดเฟรม + สร้างเงา (ทำเลย)');
   body.replaceChildren(h('h3', { style: 'margin-top:0' }, `ส่งงานให้ Claude: ${it.id} ${it.name || ''}`),
-    it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'Claude จะแตกเฟรมจากวิดีโอที่ติดดาว แล้ววางเงาเริ่มต้นบนเฟรมชุดใหม่ให้' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
+    it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'โปรแกรมทำเองทันที ไม่ต้องรอ Claude · ช่องข้อความด้านล่างไว้สำหรับงานอื่นที่ต้องให้ Claude คิด' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
     h('p', { class: 'small dim' }, `งานจะเข้าคิว พอคุณบอก Claude ว่า "ดูคิว" Claude จะทำทุกงานที่รออยู่ (ตอนนี้อยู่ขั้น: ${step ? step[1] : ''} ร่าง ${ui.form})`), ta,
     h('div', { class: 'tools' }, h('button', {
       class: 'primary', onclick: () => {
@@ -795,14 +820,14 @@ function renderQueue(m) {
   const go = (q, step) => { const it = hub.items[q.item]; ui.tab = it?.kind === 'character' ? 'chars' : 'other'; ui.step = step; ui.form = q.form || 1; if (q.move) ui.move = q.move; openItem(q.item); };
   const card = (q) => {
     const it = hub.items[q.item];
-    const state = q.state === 'open' ? ['รอ Claude', 'wait'] : q.state === 'done' ? ['เสร็จแล้ว', 'ok'] : ['ยกเลิกแล้ว', 'off'];
+    const state = q.state === 'open' ? ['รอ Claude', 'wait'] : q.state === 'done' ? [q.by === 'auto' ? 'โปรแกรมทำเสร็จ' : 'เสร็จแล้ว', 'ok'] : ['ยกเลิกแล้ว', 'off'];
     return h('div', { class: 'q q-' + state[1], style: `--c: ${tribeVar(it?.tribe)}` },
       h('div', { class: 'row' }, h('b', { style: 'font-size:17px' }, `${q.item} ${it?.name || ''}`), h('span', { class: 'pill' }, taskTh(q)),
         h('span', { class: 'sp' }), h('span', { class: 'pill st' }, state[0])),
       h('div', { class: 'small dim' }, `ร่าง ${q.form || 1}${q.move ? ' · ท่า' + moveTh(q.move) : ''} · ส่งเมื่อ ${fmtDate(q.t)}`),
       q.task ? null : h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, q.text),
       q.state === 'open' ? h('div', { class: 'small', style: 'margin-top:6px' }, q.task === 'frames+shadow' ? 'Claude จะ: แตกวิดีโอที่ติดดาวเป็น 32 เฟรม → ใส่ในขั้น "เฟรม" → วางเงาเริ่มต้นบนเฟรมชุดใหม่' : 'Claude จะทำตามข้อความด้านบน') : null,
-      q.reply ? h('div', { class: 'small', style: 'margin-top:6px;white-space:pre-wrap' }, 'Claude: ' + q.reply) : null,
+      q.reply ? h('div', { class: 'small', style: 'margin-top:6px;white-space:pre-wrap' }, (q.by === 'auto' ? 'โปรแกรม: ' : 'Claude: ') + q.reply) : null,
       q.state === 'done' && NEXT_TH[q.task] ? h('div', { class: 'small next' }, NEXT_TH[q.task]) : null,
       h('div', { class: 'tools' },
         q.state === 'done' && q.task === 'frames+shadow' ? [h('button', { class: 'primary', onclick: () => go(q, 'frames') }, 'เปิดขั้นเฟรม'), h('button', { onclick: () => go(q, 'shadow') }, 'เปิดขั้นเงา')] : h('button', { class: 'ghost', onclick: () => go(q, q.step || 'still') }, 'เปิดตัวนี้'),
@@ -853,4 +878,4 @@ $('statusFilter').addEventListener('change', (e) => { ui.status = e.target.value
 $('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
 $('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)`); } catch (e) { toast(e.message); } });
 $('dlg').addEventListener('click', (e) => { if (e.target === $('dlg')) $('dlg').close(); });
-api('/api/hub').then((j) => { hub = j; render(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });
+api('/api/hub').then((j) => { hub = j; render(); pollJob(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });

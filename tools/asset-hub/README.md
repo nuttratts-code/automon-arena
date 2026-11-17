@@ -18,6 +18,9 @@ Local web page where the owner keeps every art round per creature (prompt → st
 
 Round fields: `slot` still · cut · veoin · video · frames · file — `form` 1/3 — `move` idle/attack/hit/die — `star` = the one in use — `archived` = hidden, file kept — `licence` (default AI placeholder - UNVERIFIED) — `promptId` = the prompt version it was made from — frames add `meta {cols, rows, fw, fh, n, ms}`.
 
+## Auto frames + shadow (owner A1, set 240 follow-up)
+The page button "ตัดเฟรม + สร้างเงา" (video and frames steps, also in the "ส่งงานให้ Claude" dialog) runs step 2b + 2c below on this computer, no chat: `POST /api/frames?item&round&form&move` (needs the page's exact Origin) → server spawns `python -I painted_idle.py <video> <tmp> 32 150 --bg=auto` then `hub_add.py` (fixed args, no shell, one job at a time, 10 min cap, tmp dir removed) → a done queue entry `by: "auto"` with the numbers + warnings (`clipWarnings`: feet drift > 2 px on the sheet, body touching a video edge, loop seam diff > 3). The page polls `GET /api/job`. Needs `python` (or env `PYTHON`) with opencv, numpy, scipy, pillow. The owner judges the look from the frames player; Claude's eyes only when the owner sends the item to the queue.
+
 ## Claude's queue ("ดูคิว" / "ดูคิว asset hub")
 1. Read `art/hub/hub.json` → `queue` items with `state: "open"` (each names `item`, `task`, `video`, `form`, `move`, `text`).
 2. **`task: "frames+shadow"` (owner flow set 240: the owner presses "ส่งงานให้ Claude" → "ตัดเฟรม + สร้างเงา") = the default job:**

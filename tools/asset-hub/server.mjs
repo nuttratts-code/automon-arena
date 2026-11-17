@@ -8,6 +8,8 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import os from 'node:os';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +31,76 @@ const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css'
 const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file'];
 const MAX_UPLOAD = 600 * 1024 * 1024;
 const LICENCE_DEFAULT = 'AI placeholder - UNVERIFIED';
+// owner A1 (set 240 follow-up): the "ตัดเฟรม + สร้างเงา" button runs Claude's two scripts here, no chat needed.
+// Scripts come from the repo next to this file (never from ROOT / art data); fixed argument lists, no shell.
+const IDLE_PY = path.resolve(HERE, '..', '..', '.claude', 'skills', 'char-idle', 'painted_idle.py');
+const ADD_PY = path.join(HERE, 'hub_add.py');
+const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+
+// ---------- auto frames + shadow (one job at a time) ----------
+let job = null; // { item, round, state: 'run' | 'done' | 'error', step, msg, t }
+
+function runPy(args, env) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(PYTHON, ['-I', ...args], { windowsHide: true, env: { ...process.env, ...env, PYTHONIOENCODING: 'utf-8' } });
+    let out = '', err = '';
+    const kill = setTimeout(() => p.kill(), 10 * 60 * 1000);
+    p.stdout.on('data', (d) => { out += d; });
+    p.stderr.on('data', (d) => { err += d; });
+    p.on('error', (e) => { clearTimeout(kill); reject(new Error('เรียก python ไม่ได้: ' + e.message)); });
+    p.on('close', (code) => { clearTimeout(kill); code === 0 ? resolve(out) : reject(new Error((err || out).trim().split('\n').slice(-3).join(' ') || 'exit ' + code)); });
+  });
+}
+
+// what the numbers from painted_idle.py say about the clip (owner reads these instead of Claude looking)
+export function clipWarnings(out) {
+  const w = [];
+  const shape = out.match(/frames \d+ \((\d+), (\d+)/), feet = out.match(/feet row min\/max (\d+) (\d+) union \((-?\d+), (-?\d+), (\d+), (\d+)\)/);
+  const sheet = out.match(/sheet_\d+x1_(\d+)x(\d+)/) || out.match(/sheet \((\d+), (\d+)\)/), loop = out.match(/diff ([\d.]+) len ([\d.]+)s/);
+  if (shape && feet) {
+    const [H, W] = [+shape[1], +shape[2]], [fmin, fmax, x0, y0, x1, y1] = feet.slice(1).map(Number);
+    const sh = sheet ? +sheet[2] : 150, scale = sh / Math.max(1, y1 - y0), drift = (fmax - fmin) * scale;
+    if (drift > 2) w.push(`เท้าขยับขึ้นลง ~${drift.toFixed(1)} px ในเฟรม (ตัวอาจลอย/จม) ดูใน GIF ว่ารับได้ไหม`);
+    if (x0 + 6 <= 1 || x1 - 6 >= W - 1) w.push('ตัวชนขอบซ้าย/ขวาของวิดีโอ อาจโดนตัดขาด');
+    if (y0 + 6 <= 1) w.push('หัวชนขอบบนของวิดีโอ อาจโดนตัดขาด');
+    if (y1 - 2 >= H - 1) w.push('เท้าชนขอบล่างของวิดีโอ อาจโดนตัดขาด');
+  }
+  if (loop && +loop[1] > 3) w.push(`ต้นกับท้ายลูปต่างกันพอควร (${loop[1]}) ตอนวนอาจกระตุก`);
+  return w;
+}
+
+async function runFrames(id, rid, form, move) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'asset-hub-'));
+  try {
+    const it = readHub().items[id], r = it?.rounds.find((x) => x.id === rid);
+    const video = r && resolveFile(r.file);
+    if (!video) throw new Error('หาไฟล์วิดีโอไม่เจอ');
+    job.step = 'กำลังแตกวิดีโอเป็น 32 เฟรม (10–60 วิ)';
+    const out = await runPy([IDLE_PY, video, path.join(tmp, 'out'), '32', '150', '--bg=auto']);
+    const sheet = fs.readdirSync(path.join(tmp, 'out')).find((f) => /^sheet_32x1_\d+x\d+\.png$/.test(f));
+    const ms = Number((out.match(/ms per frame (\d+)/) || [])[1]);
+    const loopLen = (out.match(/len ([\d.]+)s/) || [])[1];
+    if (!sheet || !ms) throw new Error('สคริปต์ตัดเฟรมไม่ได้ผลลัพธ์ครบ');
+    const warn = clipWarnings(out + ' ' + sheet);
+    job.step = 'กำลังใส่เฟรมและตั้งเงา';
+    const addOut = await runPy([ADD_PY, id, path.join(tmp, 'out', sheet), String(ms), '--form', String(form), '--move', move,
+      '--note', `จากวิดีโอ ${rid} · ลูป ${loopLen} วิ${warn.length ? ' · มีคำเตือน' : ''}`], process.env.HUB_ROOT ? { HUB_ROOT: ROOT } : {});
+    const newRound = (addOut.match(/frames round (r[0-9a-f]+)/) || [])[1];
+    const [fw, fh] = sheet.match(/(\d+)x(\d+)\.png$/).slice(1);
+    const reply = [`ตัดแล้ว 32 เฟรม (${fw}×${fh}) ลูป ${loopLen} วิ · ${ms} ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)`,
+      ...(warn.length ? warn.map((x) => '⚠ ' + x) : ['ไม่พบปัญหาจากตัวเลข (เท้าไม่ขยับ ตัวไม่ชนขอบ) — ยังควรเปิดดูด้วยตา'])].join('\n');
+    const hub = readHub();
+    hub.queue.push({ id: 'q' + crypto.randomBytes(4).toString('hex'), item: id, task: 'frames+shadow', by: 'auto', video: rid, round: newRound, step: 'frames', form, move,
+      t: job.t, done: today(), text: `ตัดเฟรม + สร้างเงา: ร่าง ${form} (โปรแกรมทำเอง)`, state: 'done', reply });
+    hub.rev += 1;
+    writeHub(hub);
+    Object.assign(job, { state: 'done', step: '', msg: reply, round: newRound, warn: warn.length });
+  } catch (e) {
+    Object.assign(job, { state: 'error', step: '', msg: String(e.message || e).slice(0, 400) });
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
 
 // ---------- hub file ----------
 export function emptyHub() {
@@ -213,6 +285,20 @@ async function handle(req, res) {
   }
   if (req.method === 'GET' && u.pathname === '/api/hub') return send(res, 200, readHub());
   if (req.method === 'GET' && u.pathname === '/api/library') return send(res, 200, libraryList());
+  if (req.method === 'GET' && u.pathname === '/api/job') return send(res, 200, job || {});
+
+  if (req.method === 'POST' && u.pathname === '/api/frames') {
+    // runs local programs: demand our own page's Origin (a POST with no Origin is refused here, unlike the file APIs)
+    if (req.headers.origin !== `http://127.0.0.1:${PORT}` && req.headers.origin !== `http://localhost:${PORT}`) return send(res, 403, { error: 'origin' });
+    if (job?.state === 'run') return send(res, 409, { error: 'มีงานตัดเฟรมทำอยู่แล้ว รอให้เสร็จก่อน' });
+    const id = u.searchParams.get('item') || '', rid = u.searchParams.get('round') || '', form = Number(u.searchParams.get('form') || 1), move = u.searchParams.get('move') || 'idle';
+    if (!ID_RE.test(id) || !ID_RE.test(rid) || ![1, 3].includes(form) || !ID_RE.test(move)) return send(res, 400, { error: 'bad fields' });
+    const r = readHub().items[id]?.rounds.find((x) => x.id === rid);
+    if (!r || r.slot !== 'video' || !String(r.file).startsWith('hub/')) return send(res, 404, { error: 'ไม่มีวิดีโอนี้' });
+    job = { item: id, round: rid, form, move, state: 'run', step: 'เริ่ม', msg: '', t: new Date().toISOString() };
+    runFrames(id, rid, form, move);
+    return send(res, 202, job);
+  }
 
   if (req.method === 'POST' && u.pathname === '/api/hub') {
     const next = JSON.parse((await readBody(req, 8e6)).toString('utf8'));

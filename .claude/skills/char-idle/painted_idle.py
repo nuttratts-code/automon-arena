@@ -1,9 +1,9 @@
-# painted_idle.py <video.mp4> <out_dir> [n=32] [height=150] [--bg=m]  (set 227: painted creature; green bg, --bg=m = magenta bg for green creatures)
+# painted_idle.py <video.mp4> <out_dir> [n=32] [height=150] [--bg=m|--bg=auto]  (set 227: painted creature; green bg, --bg=m = magenta bg for green creatures)
 # loop = most alike frame pair 1.2-3.0 s apart; n frames evenly between; green key + largest blob; union crop
 import sys, os, cv2, numpy as np
 from PIL import Image, ImageFilter, ImageDraw, ImageFont
 from scipy import ndimage
-MAG = '--bg=m' in sys.argv; sys.argv = [a for a in sys.argv if a != '--bg=m']
+MAG = '--bg=m' in sys.argv; AUTO = '--bg=auto' in sys.argv; sys.argv = [a for a in sys.argv if a not in ('--bg=m', '--bg=auto')]
 vid, out = sys.argv[1], sys.argv[2]
 N = int(sys.argv[3]) if len(sys.argv) > 3 else 32
 HT = int(sys.argv[4]) if len(sys.argv) > 4 else 150
@@ -14,6 +14,9 @@ while True:
     if not ok: break
     F.append(cv2.cvtColor(f, cv2.COLOR_BGR2RGB))
 print('fps', fps, 'frames', len(F), F[0].shape)
+if AUTO:  # --bg=auto (asset hub button): border pixels of frame 1 decide green vs magenta background
+    e = np.concatenate([F[0][:8].reshape(-1, 3), F[0][-8:].reshape(-1, 3), F[0][:, :8].reshape(-1, 3), F[0][:, -8:].reshape(-1, 3)]).astype(float)
+    r_, g_, b_ = np.median(e, axis=0); MAG = g_ < min(r_, b_); print('bg', 'magenta' if MAG else 'green')
 sm = [cv2.resize(f, (240, 135), interpolation=cv2.INTER_AREA).astype(float) for f in F]
 lo, hi = int(1.2 * fps), int(3.0 * fps)
 best = min((np.abs(sm[a] - sm[b]).mean(), a, b) for a in range(len(F)) for b in range(a + lo, min(len(F), a + hi + 1)))
