@@ -89,7 +89,7 @@ export function shadowExport(hub) {
     units[it.id] = {
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
-      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: num(o.a, 0, 1, 1) },
+      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: o.on === false ? 0 : num(o.a, 0, 1, 1) }, // oval off = strength 0 in the game
       cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0) },
     };
   }

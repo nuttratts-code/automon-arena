@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 15,
+ "rev": 55,
  "settings": {
   "moves": [
    "idle",
@@ -24,7 +24,8 @@
   "arenaBg": "",
   "camPitch": 40,
   "starter": "",
-  "shadowLift": 0.065
+  "shadowLift": 0.065,
+  "sunAngle": -100
  },
  "items": {
   "HL-1": {
@@ -1198,7 +1199,7 @@
      "t": "2026-11-15T00:00:00.000Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
@@ -1219,11 +1220,67 @@
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "cut"
+    },
+    {
+     "id": "r51ebe2a9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-17_3c6df7e3.jpg",
+     "orig": "Demon_boar_charging_stance_bce22b42_2K.jpg",
+     "t": "2026-11-17T13:25:28.273Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "owner-made",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-17_3c6df7e3.jpg",
+     "check": {}
+    },
+    {
+     "id": "rf70d253f",
+     "slot": "video",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/video_idle_f1_2026-11-17_520f5900.mp4",
+     "orig": "Demon_boar_breathing_loop_animation_b260c5c9_1080p.mp4",
+     "t": "2026-11-17T13:26:23.709Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_video_idle_f1_2026-11-17_520f5900.mp4"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4744,
+     1
+    ],
+    "oval": {
+     "on": true,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": -0.069,
+     "oy": -0.089
+    },
+    "size": [
+     236,
+     153
+    ],
+    "round": "rEtMTUucG5n"
+   }
   },
   "WN-2": {
    "id": "WN-2",
