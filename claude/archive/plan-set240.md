@@ -8,4 +8,4 @@ Security line (HARD RULE 9): Node built-ins only (no packages), server binds 127
 4. [x] Export `godot/data/unit_shadows.json` (oval in tile units, feet as image fraction + the image size it was set on, cast len/strength for the r38 port, global lift).
 5. [x] `godot/scripts/ui/stage3d.gd` — read unit_shadows.json (validated), oval size/offset per unit, feet shift only when the texture size matches; test in tests/test_stage.gd.
 6. [x] Docs: art/library/README.md (characters/ folder), char-idle skill pointer, CLAUDE.md topic row, package.json script `assets`. Ripple grep.
-7. [ ] Merge gate (setup → gate) → merge → Relay + close-out.
+7. [x] Merge gate (setup → gate) → merge → Relay + close-out.
