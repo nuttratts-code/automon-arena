@@ -167,3 +167,6 @@ dialog::backdrop { background: #000a; }
 .spin { width: 14px; height: 14px; border: 2px solid var(--warn); border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+a.btn { display: inline-flex; align-items: center; background: var(--panel2); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 12px; min-height: 32px; text-decoration: none; color: inherit; }
+a.btn.primary { background: var(--tribe); color: #15181d; border-color: var(--tribe); font-weight: 600; }
+a.btn:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

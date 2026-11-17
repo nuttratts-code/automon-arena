@@ -11,10 +11,37 @@ const STATUS = [
   ['claude', 'รอ Claude ทำเฟรม'], ['done', 'เฟรมเสร็จ'], ['ingame', 'อยู่ในเกมแล้ว'],
 ];
 const STATUS_TH = Object.fromEntries(STATUS);
-const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเงา' };
+const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเงา', 'check+veo': 'ตรวจภาพ + เขียนพรอมต์วิดีโอ' };
 const taskTh = (q) => TASK_TH[q.task] || 'งานอื่น';
 // what the owner does once Claude has finished, per task
-const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ' };
+const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ',
+  'check+veo:pass': 'ถึงตาคุณ: เปิดช่อง 4 "ภาพส่ง Veo" ดาวน์โหลดภาพ + คัดลอกพรอมต์วิดีโอ ไปเจนใน Veo แล้ววางวิดีโอในขั้น "วิดีโอ" ติดดาว แล้วกด "ตัดเฟรม + สร้างเงา"',
+  'check+veo:fail': 'ถึงตาคุณ: เปิดขั้น "พรอมต์" คัดลอกรุ่นที่ Claude แก้ไปเจนภาพใหม่ วางในขั้น "ภาพนิ่ง" แล้วส่งตรวจอีกครั้ง' };
+const nextTh = (q) => NEXT_TH[q.task === 'check+veo' ? `${q.task}:${q.result || 'pass'}` : q.task] || '';
+const veoPrompt = (it, form) => it.prompts.filter((p) => p.kind === 'veo' && (p.form || 1) === form).pop();
+// owner flow (set 240): still → "ส่งให้ Claude ตรวจ" → Claude checks the rules → pass: cut (3) + Veo input (4) + Veo prompt · fail: reasons + fixed Gemini prompt
+function sendCheck(it, still) {
+  hub.queue.push({ id: uid('q'), item: it.id, task: 'check+veo', still: still.id, step: 'still', form: ui.form, t: new Date().toISOString(),
+    text: `ตรวจภาพนิ่งร่าง ${ui.form} (${fmtDate(still.t)}) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ`, state: 'open', reply: '' });
+  save().then(() => { toast('ส่งแล้ว พิมพ์ "ดูคิว" ในแชทให้ Claude ตรวจ'); render(); });
+}
+function checkBar(it) {
+  const st = pick(it, 'still', ui.form) || latest(it, 'still', ui.form), waiting = openJobs(it.id).some((q) => q.task === 'check+veo');
+  return h('div', { class: 'tools' },
+    h('button', { class: 'primary', disabled: !st || waiting, onclick: () => sendCheck(it, st) }, 'ส่งให้ Claude ตรวจ + เขียนพรอมต์วิดีโอ'),
+    h('span', { class: 'small dim' }, waiting ? 'ส่งแล้ว รอ Claude (พิมพ์ "ดูคิว" ในแชท)' : st ? `จะส่งภาพ${st.star ? 'ที่ติดดาว' : 'ล่าสุด'} (${fmtDate(st.t)}) · ผ่าน = ได้ภาพช่อง 3–4 + พรอมต์วิดีโอ · ไม่ผ่าน = เหตุผล + พรอมต์ Gemini รุ่นแก้` : 'วางภาพนิ่งก่อน ปุ่มนี้จึงจะกดได้'));
+}
+function veoPanel(it) {
+  const p = veoPrompt(it, ui.form), pic = pick(it, 'veoin', ui.form) || latest(it, 'veoin', ui.form);
+  const box = h('div', { class: 'panel', style: 'margin-bottom:12px' }, h('h3', { style: 'margin-top:0' }, `พรอมต์วิดีโอ (Veo) ร่าง ${ui.form}`));
+  if (!p && !pic) { box.append(h('p', { class: 'dim small' }, 'ยังไม่มี — วางภาพนิ่งแล้วกด "ส่งให้ Claude ตรวจ + เขียนพรอมต์วิดีโอ" ในขั้นภาพนิ่ง')); return box; }
+  box.append(h('div', { class: 'tools' },
+    pic ? h('a', { class: 'btn primary', href: fileUrl(pic.file), download: `${it.id}_veo_input_f${ui.form}.png` }, 'ดาวน์โหลดภาพส่ง Veo') : null,
+    p ? h('button', { class: 'primary', onclick: () => copy(p.text) }, 'คัดลอกพรอมต์วิดีโอ') : null,
+    h('span', { class: 'small dim' }, 'ตั้งค่า Veo: 3.1 · Frames · 16:9 · 1080p · อัปโหลดภาพนี้ ไม่ใช่ภาพต้นฉบับ')));
+  if (p) box.append(h('pre', { class: 'prompt' }, p.text), h('p', { class: 'small faint' }, `Claude เขียน ${fmtDate(p.t)} จากภาพนิ่งที่ตรวจผ่าน`));
+  return box;
+}
 const openJobs = (id) => (hub.queue || []).filter((q) => q.item === id && q.state === 'open');
 // owner A1: "ตัดเฟรม + สร้างเงา" runs on this computer right away (server calls Claude's scripts), no chat needed
 let job = {};
@@ -43,8 +70,8 @@ function autoFramesBar(it) {
 const STEPS = [
   ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
   ['still', 'ภาพนิ่ง', 'คุณวางภาพที่เจน'],
-  ['cut', 'ตัดพื้น', 'Claude ทำ'],
-  ['veoin', 'ภาพส่ง Veo', 'Claude ทำ'],
+  ['cut', 'ตัดพื้น', 'Claude ทำตอนตรวจผ่าน'],
+  ['veoin', 'ภาพส่ง Veo', 'Claude ทำตอนตรวจผ่าน'],
   ['video', 'วิดีโอ', 'คุณวางวิดีโอ'],
   ['frames', 'เฟรม', 'กดปุ่ม โปรแกรมทำ'],
   ['shadow', 'เงา', 'คุณปรับ'],
@@ -313,8 +340,8 @@ function renderItem(m, it) {
   if (job.state === 'run' && job.item === it.id) m.append(h('div', { class: 'job' }, h('b', {}, 'โปรแกรมกำลังตัดเฟรม + สร้างเงา'), h('span', { class: 'small', id: 'jobStep' }, job.step || ''), h('span', { class: 'spin' })));
   if (job.state === 'error' && job.item === it.id) m.append(h('div', { class: 'job bad-job' }, h('b', {}, 'ตัดเฟรมไม่สำเร็จ'), h('span', { class: 'small' }, job.msg), h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { job = {}; render(); } }, 'ปิด')));
   const lastDone = (hub.queue || []).filter((q) => q.item === it.id && q.state === 'done' && !q.seen).pop();
-  if (lastDone) m.append(h('div', { class: 'job done' }, h('b', {}, `${lastDone.by === 'auto' ? 'โปรแกรม' : 'Claude'}ทำเสร็จแล้ว: ${taskTh(lastDone)}`),
-    h('span', { class: 'small', style: 'white-space:pre-wrap' }, (lastDone.by === 'auto' ? lastDone.reply + '\n' : '') + (NEXT_TH[lastDone.task] || lastDone.reply || '')), h('span', { class: 'sp' }),
+  if (lastDone) m.append(h('div', { class: 'job done' }, h('b', {}, `${lastDone.by === 'auto' ? 'โปรแกรม' : 'Claude '}ทำเสร็จแล้ว: ${taskTh(lastDone)}`),
+    h('span', { class: 'small', style: 'white-space:pre-wrap' }, [lastDone.result === 'fail' ? 'ไม่ผ่าน' : '', lastDone.reply, nextTh(lastDone)].filter(Boolean).join('\n')), h('span', { class: 'sp' }),
     h('button', { class: 'ghost', onclick: () => { lastDone.seen = true; save().then(render); } }, 'รับทราบ')));
   const steps = isChar ? STEPS : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
   const labels = isChar ? null : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
@@ -330,6 +357,8 @@ function renderItem(m, it) {
     m.append(bar);
   }
   if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
+  if (isChar && ui.step === 'still') m.append(checkBar(it));
+  if (isChar && ui.step === 'veoin') m.append(veoPanel(it));
   if (ui.step === 'prompt') return renderPrompt(m, it);
   if (ui.step === 'shadow') return renderShadow(m, it);
   renderSlot(m, it, ui.step);
@@ -337,7 +366,7 @@ function renderItem(m, it) {
 const moveTh = (mv) => ({ idle: 'หายใจ', attack: 'โจมตี', hit: 'โดนตี', die: 'ล้ม' }[mv] || mv);
 
 function renderPrompt(m, it) {
-  const mine = it.prompts.filter((p) => (p.form || 1) === ui.form);
+  const mine = it.prompts.filter((p) => (p.form || 1) === ui.form && p.kind !== 'veo');
   const cur = mine[mine.length - 1];
   const work = h('div', { class: 'work' });
   const left = h('div', {});
@@ -799,7 +828,9 @@ function queueDialog(it) {
   let task = '';
   const vid = it.kind === 'character' ? pick(it, 'video', ui.form, ui.move) : null;
   const preset = h('button', { class: 'primary', disabled: !vid || job.state === 'run', title: vid ? '' : 'ต้องติดดาววิดีโอของร่าง/ท่านี้ก่อน', onclick: () => { $('dlg').close(); startFrames(it, vid); } }, 'ตัดเฟรม + สร้างเงา (ทำเลย)');
+  const stl = it.kind === 'character' ? pick(it, 'still', ui.form) || latest(it, 'still', ui.form) : null;
   body.replaceChildren(h('h3', { style: 'margin-top:0' }, `ส่งงานให้ Claude: ${it.id} ${it.name || ''}`),
+    it.kind === 'character' ? h('div', { class: 'tools' }, h('button', { class: 'primary', disabled: !stl, onclick: () => { $('dlg').close(); sendCheck(it, stl); } }, 'ตรวจภาพ + เขียนพรอมต์วิดีโอ'), h('span', { class: 'small dim' }, stl ? `ภาพนิ่งร่าง ${ui.form} ${stl.star ? 'ที่ติดดาว' : 'ล่าสุด'}` : 'วางภาพนิ่งก่อน')) : null,
     it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'โปรแกรมทำเองทันที ไม่ต้องรอ Claude · ช่องข้อความด้านล่างไว้สำหรับงานอื่นที่ต้องให้ Claude คิด' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
     h('p', { class: 'small dim' }, `งานจะเข้าคิว พอคุณบอก Claude ว่า "ดูคิว" Claude จะทำทุกงานที่รออยู่ (ตอนนี้อยู่ขั้น: ${step ? step[1] : ''} ร่าง ${ui.form})`), ta,
     h('div', { class: 'tools' }, h('button', {
@@ -820,17 +851,18 @@ function renderQueue(m) {
   const go = (q, step) => { const it = hub.items[q.item]; ui.tab = it?.kind === 'character' ? 'chars' : 'other'; ui.step = step; ui.form = q.form || 1; if (q.move) ui.move = q.move; openItem(q.item); };
   const card = (q) => {
     const it = hub.items[q.item];
-    const state = q.state === 'open' ? ['รอ Claude', 'wait'] : q.state === 'done' ? [q.by === 'auto' ? 'โปรแกรมทำเสร็จ' : 'เสร็จแล้ว', 'ok'] : ['ยกเลิกแล้ว', 'off'];
+    const state = q.state === 'open' ? ['รอ Claude', 'wait'] : q.state === 'done' ? [q.by === 'auto' ? 'โปรแกรมทำเสร็จ' : q.result === 'fail' ? 'ตรวจไม่ผ่าน' : q.task === 'check+veo' ? 'ตรวจผ่าน' : 'เสร็จแล้ว', q.result === 'fail' ? 'wait' : 'ok'] : ['ยกเลิกแล้ว', 'off'];
     return h('div', { class: 'q q-' + state[1], style: `--c: ${tribeVar(it?.tribe)}` },
       h('div', { class: 'row' }, h('b', { style: 'font-size:17px' }, `${q.item} ${it?.name || ''}`), h('span', { class: 'pill' }, taskTh(q)),
         h('span', { class: 'sp' }), h('span', { class: 'pill st' }, state[0])),
       h('div', { class: 'small dim' }, `ร่าง ${q.form || 1}${q.move ? ' · ท่า' + moveTh(q.move) : ''} · ส่งเมื่อ ${fmtDate(q.t)}`),
       q.task ? null : h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, q.text),
-      q.state === 'open' ? h('div', { class: 'small', style: 'margin-top:6px' }, q.task === 'frames+shadow' ? 'Claude จะ: แตกวิดีโอที่ติดดาวเป็น 32 เฟรม → ใส่ในขั้น "เฟรม" → วางเงาเริ่มต้นบนเฟรมชุดใหม่' : 'Claude จะทำตามข้อความด้านบน') : null,
+      q.state === 'open' ? h('div', { class: 'small', style: 'margin-top:6px' }, q.task === 'frames+shadow' ? 'Claude จะ: แตกวิดีโอที่ติดดาวเป็น 32 เฟรม → ใส่ในขั้น "เฟรม" → วางเงาเริ่มต้นบนเฟรมชุดใหม่' : q.task === 'check+veo' ? 'Claude จะ: ตรวจภาพตามกฎ (เผ่าดูออก แฟนตาซี หน้าไม่ดุเกิน ไม่มีชมพู พื้นเขียวตัดได้) → ผ่าน: ตัดพื้น + ภาพส่ง Veo + พรอมต์วิดีโอ · ไม่ผ่าน: เหตุผล + พรอมต์ Gemini รุ่นแก้' : 'Claude จะทำตามข้อความด้านบน') : null,
       q.reply ? h('div', { class: 'small', style: 'margin-top:6px;white-space:pre-wrap' }, (q.by === 'auto' ? 'โปรแกรม: ' : 'Claude: ') + q.reply) : null,
-      q.state === 'done' && NEXT_TH[q.task] ? h('div', { class: 'small next' }, NEXT_TH[q.task]) : null,
+      q.state === 'done' && nextTh(q) ? h('div', { class: 'small next' }, nextTh(q)) : null,
       h('div', { class: 'tools' },
-        q.state === 'done' && q.task === 'frames+shadow' ? [h('button', { class: 'primary', onclick: () => go(q, 'frames') }, 'เปิดขั้นเฟรม'), h('button', { onclick: () => go(q, 'shadow') }, 'เปิดขั้นเงา')] : h('button', { class: 'ghost', onclick: () => go(q, q.step || 'still') }, 'เปิดตัวนี้'),
+        q.state === 'done' && q.task === 'check+veo' ? (q.result === 'fail' ? h('button', { class: 'primary', onclick: () => go(q, 'prompt') }, 'เปิดขั้นพรอมต์') : h('button', { class: 'primary', onclick: () => go(q, 'veoin') }, 'เปิดช่อง 4 ภาพส่ง Veo'))
+          : q.state === 'done' && q.task === 'frames+shadow' ? [h('button', { class: 'primary', onclick: () => go(q, 'frames') }, 'เปิดขั้นเฟรม'), h('button', { onclick: () => go(q, 'shadow') }, 'เปิดขั้นเงา')] : h('button', { class: 'ghost', onclick: () => go(q, q.step || 'still') }, 'เปิดตัวนี้'),
         q.state === 'open' ? h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้') : null));
   };
   const section = (title, list) => { if (list.length) m.append(h('h3', {}, `${title} (${list.length})`), ...list.map(card)); };
