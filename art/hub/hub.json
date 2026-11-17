@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 94,
+ "rev": 96,
  "settings": {
   "moves": [
    "idle",
@@ -1252,14 +1252,37 @@
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
      "library": "lib/characters/WN-1/WN-1_video_idle_f1_2026-11-17_520f5900.mp4"
+    },
+    {
+     "id": "r40c6fbea",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-17_40c6fbea.png",
+     "orig": "sheet_32x1_165x156.png",
+     "t": "2026-11-17T14:04:11.895Z",
+     "by": "claude",
+     "note": "จากวิดีโอ rf70d253f · loop 1.83 s",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 32,
+      "rows": 1,
+      "fw": 165,
+      "fh": 156,
+      "n": 32,
+      "ms": 57
+     }
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4251,
-     1
+     0.49,
+     0.9936
     ],
     "oval": {
      "on": false,
@@ -1295,10 +1318,10 @@
      }
     },
     "size": [
-     236,
-     153
+     165,
+     156
     ],
-    "round": "rEtMTUucG5n"
+    "round": "r40c6fbea"
    }
   },
   "WN-2": {
@@ -1404,8 +1427,9 @@
    "move": "idle",
    "t": "2026-11-17T13:57:58.291Z",
    "text": "ตัดเฟรม + สร้างเงา: ร่าง 1 ท่าหายใจ จากวิดีโอที่ติดดาว (2026-11-17)",
-   "state": "open",
-   "reply": ""
+   "state": "done",
+   "reply": "ตัดแล้ว 32 เฟรม (165×156) วนลูป 1.83 วิ · 57 ms ต่อเฟรม · ขอบเขียวไม่มี หัวไม่ขาด\nแถวเท้าขยับ ~1 px (หมัดแกว่งตามหายใจ) ยอมรับได้\nตั้งเงาบนเฟรมชุดใหม่แล้ว: จุดเท้ากลางตัว (เดาเองจับไปโดนหมัดซ้าย เลยย้ายมากลาง) · ค่าวงเงา/เงาตามตัวเดิมของคุณเก็บไว้\nเฟรมชุดใหม่ยังไม่ติดดาว — ติดดาวถ้าโอเค แล้วเปิดขั้นเงาปรับต่อ",
+   "done": "2026-11-17"
   }
  ]
 }
