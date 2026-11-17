@@ -161,7 +161,7 @@ export function shadowExport(hub) {
     units[it.id] = {
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
-      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: o.on === false ? 0 : num(o.a, 0, 1, 1) }, // oval off = strength 0 in the game
+      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game
       cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0), blur: num(c.blur, 0, 1, 0.3),
         k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(c.k?.[q]) ? [num(c.k[q][0], -3, 3, 0), num(c.k[q][1], -3, 3, 0)] : [0, 0]])) },
     };
@@ -171,7 +171,7 @@ export function shadowExport(hub) {
     note: 'Written by tools/asset-hub (set 240). feet = image fraction (0..1, y down) of the sprite picture the owner set it on; size = that picture in px (the game applies feet only when its texture has the same size). oval = tile units around the feet. cast = shadow that follows the body: len (x height x sun reach), str, ox/oy start offset in tile units; blur = softness (x 0.12 of the picture height, blurred once); k = per-corner offsets [x, z] in tile units of the shadow quad (tl/tr = head end, bl/br = feet end); sun = ground direction [x, z] shared by every unit (r38 port).',
     lift: num(hub.settings?.shadowLift, 0, 0.5, 0.065),
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
-    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
+    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 0 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
   };
 }
@@ -317,7 +317,8 @@ async function handle(req, res) {
     const ext = (u.searchParams.get('name') || '').split('.').pop().toLowerCase();
     const form = Number(u.searchParams.get('form') || 0);
     const move = u.searchParams.get('move') || '';
-    if (!ID_RE.test(id) || !SLOTS.includes(slot) || !EXT[ext] || ![0, 1, 3].includes(form) || (move && !ID_RE.test(move))) return send(res, 400, { error: 'bad upload fields' });
+    const from = u.searchParams.get('from') || '';
+    if ((from && !ID_RE.test(from)) || !ID_RE.test(id) || !SLOTS.includes(slot) || !EXT[ext] || ![0, 1, 3].includes(form) || (move && !ID_RE.test(move))) return send(res, 400, { error: 'bad upload fields' });
     const hub = readHub();
     const it = hub.items[id];
     if (!it) return send(res, 404, { error: 'no such item' });
@@ -335,8 +336,28 @@ async function handle(req, res) {
       by: u.searchParams.get('by') === 'claude' ? 'claude' : 'owner', note: '', star: false, archived: false,
       licence: hub.settings.licences?.[0] || LICENCE_DEFAULT,
       promptId: it.prompts.length ? it.prompts[it.prompts.length - 1].id : undefined,
+      from: from && it.rounds.some((x) => x.id === from) ? from : undefined, // cut made from this still (ตัดพื้น button)
     };
     it.rounds.push(r);
+    hub.rev += 1;
+    writeHub(hub);
+    return send(res, 200, hub);
+  }
+
+  // owner "ลบ" button: drop an unstarred round and its hub file; art/library copies are never deleted (set 221)
+  if (req.method === 'POST' && u.pathname === '/api/delete') {
+    const hub = readHub();
+    const it = hub.items[u.searchParams.get('item') || ''];
+    const i = it ? it.rounds.findIndex((x) => x.id === u.searchParams.get('round')) : -1;
+    if (i < 0) return send(res, 404, { error: 'no such round' });
+    const r = it.rounds[i];
+    if (r.star) return send(res, 400, { error: 'รอบที่เลือก ★ อยู่ลบไม่ได้ เลิกเลือกก่อน' });
+    it.rounds.splice(i, 1);
+    const shared = Object.values(hub.items).some((x) => x.rounds.some((y) => y.file === r.file));
+    if (!shared && String(r.file).startsWith('hub/')) {
+      const f = path.resolve(FILES, r.file.slice(4));
+      if (f.startsWith(path.resolve(FILES) + path.sep) && fs.existsSync(f)) fs.unlinkSync(f);
+    }
     hub.rev += 1;
     writeHub(hub);
     return send(res, 200, hub);

@@ -14,7 +14,7 @@ from PIL import Image
 ROOT = os.environ.get('HUB_ROOT') or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))  # HUB_ROOT = test copy only
 HUB = os.path.join(ROOT, 'art', 'hub', 'hub.json')
 FILES = os.path.join(ROOT, 'art', 'hub', 'files')
-DEFAULT = {'oval': {'on': True, 'dx': 0, 'dy': 0, 'w': 0.8, 'h': 0.45, 'a': 1},
+DEFAULT = {'oval': {'on': False, 'dx': 0, 'dy': 0, 'w': 0.8, 'h': 0.45, 'a': 1},
            'cast': {'len': 1, 'str': 0.5, 'ox': 0, 'oy': 0, 'blur': 0.3, 'k': None}}
 
 
@@ -75,7 +75,7 @@ def main():
             'meta': {'cols': cols, 'rows': rows, 'fw': fw, 'fh': fh, 'n': cols * rows, 'ms': o.ms}})
     feet = guess_feet(img.crop((0, 0, fw, fh)))
     old = it.get('shadow') or {}
-    it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {})},
+    it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {}), 'on': False},  # under-feet oval always off (owner rule)
                     'cast': {**DEFAULT['cast'], **(old.get('cast') or {})}, 'size': [fw, fh], 'round': rid}
     hub['rev'] = hub.get('rev', 0) + 1
     tmp = HUB + '.tmp'

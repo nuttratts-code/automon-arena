@@ -29,7 +29,7 @@ function checkBar(it) {
   const st = pick(it, 'still', ui.form) || latest(it, 'still', ui.form), waiting = openJobs(it.id).some((q) => q.task === 'check+veo');
   return h('div', { class: 'tools' },
     h('button', { class: 'primary', disabled: !st || waiting, onclick: () => sendCheck(it, st) }, 'ส่งให้ Claude ตรวจ + เขียนพรอมต์วิดีโอ'),
-    h('span', { class: 'small dim' }, waiting ? 'ส่งแล้ว รอ Claude (พิมพ์ "ดูคิว" ในแชท)' : st ? `จะส่งภาพ${st.star ? 'ที่ติดดาว' : 'ล่าสุด'} (${fmtDate(st.t)}) · ผ่าน = ได้ภาพช่อง 3–4 + พรอมต์วิดีโอ · ไม่ผ่าน = เหตุผล + พรอมต์ Gemini รุ่นแก้` : 'วางภาพนิ่งก่อน ปุ่มนี้จึงจะกดได้'));
+    h('span', { class: 'small dim' }, waiting ? 'ส่งแล้ว รอ Claude (พิมพ์ "ดูคิว" ในแชท)' : st ? `จะส่งภาพ${st.star ? 'ที่ติดดาว' : 'ล่าสุด'} (${fmtDate(st.t)}) · ผ่าน = ได้ภาพตัดพื้น + ภาพส่ง Veo + พรอมต์วิดีโอ · ไม่ผ่าน = เหตุผล + พรอมต์ Gemini รุ่นแก้` : 'วางภาพนิ่งก่อน ปุ่มนี้จึงจะกดได้'));
 }
 function veoPanel(it) {
   const p = veoPrompt(it, ui.form), pic = pick(it, 'veoin', ui.form) || latest(it, 'veoin', ui.form);
@@ -69,8 +69,7 @@ function autoFramesBar(it) {
 }
 const STEPS = [
   ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
-  ['still', 'ภาพนิ่ง', 'คุณวางภาพที่เจน'],
-  ['cut', 'ตัดพื้น', 'Claude ทำตอนตรวจผ่าน'],
+  ['still', 'ภาพนิ่ง + ตัดพื้น', 'คุณวางภาพ · กดตัดพื้น'],
   ['veoin', 'ภาพส่ง Veo', 'Claude ทำตอนตรวจผ่าน'],
   ['video', 'วิดีโอ', 'คุณวางวิดีโอ'],
   ['frames', 'เฟรม', 'กดปุ่ม โปรแกรมทำ'],
@@ -93,10 +92,10 @@ const TILE = 1.8, SPR_H = 1.7, RING_R = 0.84;
 const SUN_DEFAULT_ANGLE = +(Math.atan2(-0.42, 0.55) * 180 / Math.PI).toFixed(1);
 const SUN_REACH = Math.min(Math.hypot(0.55, 0.42) / 0.72, 1.4);
 const sunDir = () => { const a = (hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE) * Math.PI / 180; return { x: Math.cos(a), z: Math.sin(a) }; };
-const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: true, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: null } };
+const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: false, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: null } };
 
 let hub = null;
-const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
+const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', cutView: 'both', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
 
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -163,6 +162,7 @@ function thumbRound(it) {
   return pics.filter((r) => r.star).sort(byTime).pop() || pics.sort(byTime).pop() || it.rounds.find((r) => !r.archived && isImage(r.file));
 }
 function stepHas(it, step) {
+  if (step === 'still') return it.rounds.some((r) => ['still', 'cut'].includes(r.slot) && r.star && !r.archived);
   if (step === 'prompt') return it.prompts.length > 0;
   if (step === 'shadow') return !!it.shadow;
   return it.rounds.some((r) => r.slot === step && r.star && !r.archived);
@@ -174,22 +174,92 @@ function loadImg(rel) {
   if (!imgCache.has(rel)) imgCache.set(rel, new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = fileUrl(rel); }));
   return imgCache.get(rel);
 }
-// a picture with a flat green (or magenta) background → transparent canvas; pictures with alpha pass through
+// a picture with a flat green (or magenta) background → transparent canvas; pictures with alpha pass through.
+// Same rule as key_alpha() in veo_prep.py — change both: only background touching the picture edge is removed, plus
+// enclosed gaps whose colour is mostly close to the background; key-coloured paint inside the body (runes, stripes) stays.
+function keyAlpha(p, w, hh) {
+  const N = w * hh, bd = [[], [], []];
+  const take = (x, y) => { const i = (y * w + x) * 4; bd[0].push(p[i]); bd[1].push(p[i + 1]); bd[2].push(p[i + 2]); };
+  for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) { if (y < 4 || y >= hh - 4 || x < 4 || x >= w - 4) take(x, y); else x = w - 5; }
+  const med = bd.map((a) => a.sort((u, v) => u - v)[a.length >> 1]);
+  const mag = med[1] < Math.min(med[0], med[2]);
+  const [lo, hi] = mag ? [40, 110] : [24, 70];
+  if ((mag ? Math.min(med[0], med[2]) - med[1] : med[1] - Math.max(med[0], med[2])) <= lo) return null; // border is not a key colour
+  const k = new Int16Array(N);
+  for (let j = 0, i = 0; j < N; j++, i += 4) k[j] = mag ? Math.min(p[i], p[i + 2]) - p[i + 1] : p[i + 1] - Math.max(p[i], p[i + 2]);
+  const lab = new Int32Array(N), stack = new Int32Array(N), bgComp = [0];
+  let n = 0;
+  for (let s0 = 0; s0 < N; s0++) {
+    if (lab[s0] || k[s0] <= lo) continue;
+    n++; let top = 0, size = 0, close = 0, edge = false; stack[top++] = s0; lab[s0] = n;
+    while (top) {
+      const j = stack[--top], x = j % w, y = (j / w) | 0, i = j * 4; size++;
+      if (Math.hypot(p[i] - med[0], p[i + 1] - med[1], p[i + 2] - med[2]) < 65) close++;
+      if (x === 0 || y === 0 || x === w - 1 || y === hh - 1) edge = true;
+      if (x > 0 && !lab[j - 1] && k[j - 1] > lo) { lab[j - 1] = n; stack[top++] = j - 1; }
+      if (x < w - 1 && !lab[j + 1] && k[j + 1] > lo) { lab[j + 1] = n; stack[top++] = j + 1; }
+      if (y > 0 && !lab[j - w] && k[j - w] > lo) { lab[j - w] = n; stack[top++] = j - w; }
+      if (y < hh - 1 && !lab[j + w] && k[j + w] > lo) { lab[j + w] = n; stack[top++] = j + w; }
+    }
+    bgComp[n] = edge || (close * 2 > size && size >= 20) ? 1 : 0;
+  }
+  const a = new Uint8ClampedArray(N).fill(255), bg = new Uint8Array(N);
+  for (let j = 0; j < N; j++) if (bgComp[lab[j]]) { bg[j] = 1; a[j] = Math.round(255 * Math.min(1, Math.max(0, (hi - k[j]) / (hi - lo)))); }
+  let ring = bg; // despill ring = background grown by 2 px
+  for (let it = 0; it < 2; it++) {
+    const nx = ring.slice();
+    for (let j = 0; j < N; j++) if (!ring[j]) { const x = j % w; if ((x > 0 && ring[j - 1]) || (x < w - 1 && ring[j + 1]) || (j >= w && ring[j - w]) || (j < N - w && ring[j + w])) nx[j] = 1; }
+    ring = nx;
+  }
+  return { a, ring, mag };
+}
 function keyed(img, sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight) {
   const c = document.createElement('canvas'); c.width = sw; c.height = sh;
   const g = c.getContext('2d', { willReadFrequently: true });
   g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   const d = g.getImageData(0, 0, sw, sh), p = d.data;
   if (p[3] < 250) return c; // already transparent
-  for (let i = 0; i < p.length; i += 4) {
+  const ka = keyAlpha(p, sw, sh);
+  if (!ka) return c;
+  for (let j = 0, i = 0; j < ka.a.length; j++, i += 4) {
+    p[i + 3] = ka.a[j];
+    if (!ka.ring[j]) continue;
     const r = p[i], gg = p[i + 1], b = p[i + 2];
-    const gk = gg - Math.max(r, b), mk = Math.min(r, b) - gg;
-    if (gk > 28) p[i + 3] = Math.max(0, 255 - (gk - 28) * 12);
-    else if (mk > 60) p[i + 3] = 0;
-    if (gk > 0 && p[i + 3] > 0) p[i + 1] = Math.min(gg, Math.max(r, b) * 1.05); // despill
+    if (ka.mag) { p[i] = Math.min(r, Math.max(gg, b) * 1.05); p[i + 2] = Math.min(b, Math.max(gg, r) * 1.05); }
+    else p[i + 1] = Math.min(gg, Math.max(r, b) * 1.05);
   }
   g.putImageData(d, 0, 0);
   return c;
+}
+// the cut made from a still: cuts carry `from`; older owner uploads share the still's file hash
+const fileHash = (f) => (String(f).match(/_([0-9a-f]{8})\.\w+$/) || [])[1];
+function cutOf(it, st) {
+  if (!st || st.slot !== 'still') return null;
+  const hs = fileHash(st.file);
+  const cs = it.rounds.filter((r) => r.slot === 'cut' && !r.archived && (r.form || 1) === (st.form || 1) && (r.from === st.id || (!r.from && hs && fileHash(r.file) === hs)));
+  return cs.filter((r) => r.star).pop() || cs[cs.length - 1] || null;
+}
+// ตัดพื้น button: cut the still in the page, save it as a new "cut" round linked to the still (the still is kept)
+async function makeCut(it, st) {
+  toast('กำลังตัดพื้น…');
+  try {
+    const img = await loadImg(st.file), c = keyed(img);
+    const p = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    if (p[3] > 8 && p[p.length - 1] > 8) { toast('ตัดไม่ได้: ขอบภาพไม่ใช่พื้นเขียวหรือม่วงแดงเรียบ'); return; }
+    let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (p[(y * c.width + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0) { toast('ตัดไม่ได้: ไม่เหลือตัวละครหลังตัดพื้น'); return; }
+    const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+    o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+    const blob = await new Promise((ok) => o.toBlob(ok, 'image/png'));
+    const q = new URLSearchParams({ item: it.id, slot: 'cut', name: (st.orig || 'still').replace(/\.\w+$/, '') + '_cut.png', from: st.id });
+    if (it.kind === 'character') q.set('form', String(st.form || ui.form));
+    hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
+    const cut = hub.items[it.id].rounds.at(-1);
+    if (st.star && cut) hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(cut.id)}&on=1`, { method: 'POST' });
+    ui.cutView = 'both'; toast('ตัดพื้นแล้ว ภาพต้นฉบับยังอยู่');
+  } catch (e) { toast('ตัดพื้นไม่ได้: ' + e.message); }
+  render();
 }
 function sheetFrame(img, meta, i) {
   const n = meta.n || meta.cols * meta.rows, k = i % n;
@@ -348,6 +418,7 @@ function renderItem(m, it) {
   m.append(h('nav', { class: 'pipe' }, steps.map(([k, label, sub], i) => h('button', {
     class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); },
   }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, sub)))));
+  if (ui.step === 'cut') ui.step = 'still'; // step merged into ภาพนิ่ง
   if (!steps.some(([k]) => k === ui.step)) ui.step = steps[0][0];
   // form + move switches (F1 / F3, idle / attack …)
   if (isChar && ui.step !== 'shadow') {
@@ -409,17 +480,30 @@ function slotRounds(it, slot) {
 }
 
 function renderSlot(m, it, slot) {
-  const rs = slotRounds(it, slot);
+  let rs = slotRounds(it, slot);
+  if (slot === 'still') { // cuts with no still in this list (old uploads) still show, labelled ตัดพื้น
+    const owned = new Set(rs.map((r) => cutOf(it, r)?.id).filter(Boolean));
+    const mine = new Set(rs.map((r) => r.id));
+    rs = [...rs, ...slotRounds(it, 'cut').filter((c) => !owned.has(c.id) && !mine.has(c.from) && !rs.some((r) => fileHash(r.file) && fileHash(r.file) === fileHash(c.file)))]
+      .sort((a, b) => (a.t || '').localeCompare(b.t || ''));
+  }
   let sel = rs.find((r) => r.id === ui.sel) || rs.filter((r) => r.star).pop() || rs[rs.length - 1];
   const work = h('div', { class: 'work' });
   const left = h('div', {});
   // viewer
   if (sel) {
     const tools = h('div', { class: 'tools' }, h('span', { class: 'seg' }, BGS.map(([k, v]) => h('button', { class: ui.bg === k ? 'on' : '', onclick: () => { ui.bg = k; render(); } }, v))));
-    const stage = h('div', { class: 'stage bg-' + ui.bg });
+    const cut = cutOf(it, sel), canCut = sel.slot === 'still' && isImage(sel.file);
+    if (canCut) {
+      if (cut) tools.append(h('span', { class: 'seg' }, [['both', 'คู่กัน'], ['orig', 'ต้นฉบับ'], ['cut', 'ตัดพื้น']].map(([k, v]) => h('button', { class: ui.cutView === k ? 'on' : '', onclick: () => { ui.cutView = k; render(); } }, v))));
+      tools.append(h('button', { class: cut ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้', onclick: () => makeCut(it, sel) }, cut ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
+    }
+    const view = canCut && cut ? ui.cutView : 'orig';
+    const stage = h('div', { class: 'stage bg-' + ui.bg + (view === 'both' ? ' pair' : '') });
     if (ui.bg === 'arena' && hub.settings.arenaBg) stage.style.backgroundImage = `url("${fileUrl(hub.settings.arenaBg)}")`;
     left.append(tools, stage);
-    viewer(stage, left, sel);
+    if (view === 'both') { viewer(stage, left, sel); viewer(stage, left, cut); }
+    else viewer(stage, left, view === 'cut' ? cut : sel);
     if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
     else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
     if (slot === 'still') left.append(stillChecks(it, sel));
@@ -438,7 +522,6 @@ function renderSlot(m, it, slot) {
 function emptyText(slot) {
   return {
     still: 'ยังไม่มีภาพนิ่ง ลากภาพที่เจนจาก Gemini มาวางที่ช่องด้านขวา',
-    cut: 'ยังไม่มีภาพตัดพื้น Claude จะทำให้หลังจากคุณกดดาวภาพนิ่ง แล้วส่งงานให้ Claude',
     veoin: 'ยังไม่มีภาพเตรียมส่ง Veo Claude จะทำจากภาพตัดพื้น',
     video: 'ยังไม่มีวิดีโอ ลากไฟล์ .mp4 จาก Veo มาวางที่ช่องด้านขวา',
     frames: 'ยังไม่มีเฟรม Claude จะแตกเฟรมจากวิดีโอที่ติดดาว',
@@ -560,18 +643,32 @@ function roundRow(it, r, isSel) {
   const p = it.prompts.find((x) => x.id === r.promptId);
   return h('div', { class: `round${isSel ? ' sel' : ''}${r.star ? ' star' : ''}${r.archived ? ' arch' : ''}` }, th,
     h('div', { class: 'info' },
-      h('div', { class: 'row' }, h('b', {}, fmtDate(r.t) || 'ไม่มีวันที่'), h('span', { class: 'faint' }, r.by === 'claude' ? 'Claude' : 'คุณ'), r.meta ? h('span', { class: 'faint' }, `${r.meta.n} เฟรม`) : null),
+      h('div', { class: 'row' }, h('b', {}, fmtDate(r.t) || 'ไม่มีวันที่'), h('span', { class: 'faint' }, r.by === 'claude' ? 'Claude' : 'คุณ'), r.slot === 'cut' && ui.step === 'still' ? h('span', { class: 'pill' }, 'ตัดพื้น') : cutOf(it, r) ? h('span', { class: 'faint' }, '· มีภาพตัดพื้น') : null, r.meta ? h('span', { class: 'faint' }, `${r.meta.n} เฟรม`) : null),
       h('input', { type: 'text', value: r.note || '', placeholder: 'โน้ต เช่น หน้าดุไป', oninput: (e) => { r.note = e.target.value; saveSoon(); } }),
       lic,
       p ? h('span', { class: 'faint', title: p.text }, `พรอมต์ ${fmtDate(p.t)}`) : null,
       h('div', { class: 'acts' },
         h('button', { class: r.star ? 'starred' : '', title: 'เลือกรอบนี้เป็นตัวที่ใช้ (คัดลอกเข้าคลังถาวร)', onclick: () => star(it, r) }, r.star ? '★ ใช้รอบนี้' : '☆ เลือก'),
         h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: ui.cmp.includes(r.id), onchange: (e) => { ui.cmp = e.target.checked ? [...ui.cmp, r.id].slice(-2) : ui.cmp.filter((x) => x !== r.id); render(); } }), ' เทียบ'),
-        h('button', { class: 'ghost', title: r.archived ? 'แสดงอีกครั้ง' : 'ซ่อนรอบนี้ (ไฟล์ไม่ถูกลบ)', onclick: () => { r.archived = !r.archived; save().then(render); } }, r.archived ? 'เลิกซ่อน' : 'ซ่อน'))));
+        h('button', { class: 'ghost', title: r.archived ? 'แสดงอีกครั้ง' : 'ซ่อนรอบนี้ (ไฟล์ไม่ถูกลบ)', onclick: () => { r.archived = !r.archived; save().then(render); } }, r.archived ? 'เลิกซ่อน' : 'ซ่อน'),
+        h('button', { class: 'ghost danger', disabled: r.star, title: r.star ? 'รอบที่เลือก ★ อยู่ลบไม่ได้ เลิกเลือกก่อน' : 'ลบรอบนี้ออกจากคลังงาน', onclick: () => delRound(it, r) }, 'ลบ'))));
+}
+// ลบ: removes an unstarred round + its file in art/hub/files (a still takes its unstarred cut with it).
+// The permanent copy in art/library (made when a round was starred) is never deleted (set 221).
+async function delRound(it, r) {
+  const cut = cutOf(it, r), withCut = cut && !cut.star;
+  if (!confirm(`ลบรอบ ${fmtDate(r.t)} ถาวร?${withCut ? '\nภาพตัดพื้นของภาพนี้จะถูกลบด้วย' : ''}\nไฟล์ในคลังงานจะหายและกู้คืนไม่ได้ (สำเนาในคลังถาวร art/library ถ้ามี ยังอยู่)`)) return;
+  try {
+    for (const x of withCut ? [cut, r] : [r]) hub = await api(`/api/delete?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(x.id)}`, { method: 'POST' });
+    ui.sel = null; ui.cmp = ui.cmp.filter((x) => x !== r.id); toast('ลบแล้ว');
+  } catch (e) { toast('ลบไม่ได้: ' + e.message); }
+  render();
 }
 async function star(it, r) {
   try {
-    hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=${r.star ? 0 : 1}`, { method: 'POST' });
+    const on = r.star ? 0 : 1, cut = cutOf(it, r); // a still's cut follows its star (the shadow editor uses the starred cut)
+    hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=${on}`, { method: 'POST' });
+    if (cut && !!cut.star !== !!on) hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(cut.id)}&on=${on}`, { method: 'POST' });
     toast(r.star ? 'เลิกเลือกแล้ว' : 'เลือกแล้ว และเก็บเข้าคลังถาวร');
   } catch (e) { toast(e.message); }
   render();
@@ -631,7 +728,7 @@ function renderShadow(m, it) {
   const work = h('div', { class: 'work' });
   const left = h('div', { class: 'shadow-ed' });
   const cv = h('canvas', { width: 900, height: 560, 'aria-label': 'ตัวแก้เงา: ลากตัวละครเพื่อวางเท้าบนจุดกลางช่อง ลากวงเงาเพื่อย้าย ลากจุดขอบเพื่อปรับขนาด' });
-  left.append(cv, h('p', { class: 'small faint' }, 'เงาตามตัว: ลากจุดส้มกลมที่ปลายเงาเพื่อปรับทิศและความยาว · ลากสี่เหลี่ยมส้มที่มุมเพื่อยืด/ให้ฐานชนเท้าหน้าและเท้าหลัง · ลากตัวเงาเพื่อเลื่อน · ลากตัวละครให้เท้าแตะกากบาท (เงาเริ่มที่เท้า) · วงเงาใต้เท้า: ลากจุดขาวเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
+  left.append(cv, h('p', { class: 'small faint' }, 'เงาตามตัว: ลากจุดส้มกลมที่ปลายเงาเพื่อปรับทิศและความยาว · ลากสี่เหลี่ยมส้มที่มุมเพื่อยืด/ให้ฐานชนเท้าหน้าและเท้าหลัง · ลากตัวเงาเพื่อเลื่อน · ลากตัวละครให้เท้าแตะกากบาท (เงาเริ่มที่เท้า) · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
   const right = h('div', {});
   work.append(left, right);
   m.append(work);
@@ -654,15 +751,10 @@ function renderShadow(m, it) {
   slider('ความเข้มเงาตามตัว', () => s.cast.str, (v) => { s.cast.str = v; }, 0, 1, 0.01);
   slider('ความฟุ้งเงาตามตัว', () => s.cast.blur ?? 0.3, (v) => { s.cast.blur = v; }, 0, 1, 0.01);
   slider('ทิศแดด (ใช้ร่วมทุกตัว)', () => hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE, (v) => { hub.settings.sunAngle = v; }, -180, 180, 0.5, (v) => v.toFixed(0) + '°');
-  slider('ความเข้มวงใต้เท้า', () => s.oval.a, (v) => { s.oval.a = v; }, 0, 1, 0.01);
-  slider('ความกว้างวง', () => s.oval.w, (v) => { s.oval.w = v; }, 0.1, 2, 0.01);
-  slider('ความสูงวง', () => s.oval.h, (v) => { s.oval.h = v; }, 0.05, 2, 0.01);
   const pitchSel = h('select', { onchange: (e) => { hub.settings.camPitch = Number(e.target.value); saveSoon(); draw(); } },
     [[40, 'กล้องเกมตอนนี้ (ก้ม 40°)'], [14, 'กล้อง FF Re (ก้ม 14°)'], [8.5, 'กล้อง r36 (ก้ม 8.5°)']].map(([v, t]) => h('option', { value: v, selected: pitch() === v }, t)));
   const feetOut = h('div', { class: 'small dim' });
-  const ovBtn = h('button', { onclick: () => { s.oval.on = s.oval.on === false; commit(); syncOv(); draw(); } });
-  const syncOv = () => { ovBtn.textContent = s && s.oval.on === false ? 'เปิดวงเงาใต้เท้า' : 'ปิดวงเงาใต้เท้า'; ovBtn.classList.toggle('on', !!s && s.oval.on === false); };
-  right.append(h('h3', {}, 'ค่าเงาของตัวนี้'), h('div', { class: 'tools' }, ovBtn), sl,
+  right.append(h('h3', {}, 'ค่าเงาของตัวนี้'), sl,
     h('h3', {}, 'จุดเท้า'), feetOut,
     h('div', { class: 'tools' },
       h('button', { onclick: () => { if (!frames[0]) return; s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
@@ -671,7 +763,7 @@ function renderShadow(m, it) {
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : null,
     h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
-  function sync() { syncOv(); for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(s.feet[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
+  function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(s.feet[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
   // geometry (canvas px)
   const geo = () => {
     const W = cv.width, H = cv.height, T = 300, k = Math.sin(pitch() * Math.PI / 180);
@@ -812,7 +904,7 @@ function renderShadow(m, it) {
     if (src.slot === 'frames' && src.meta) { for (let i = 0; i < (src.meta.n || 1); i++) frames.push(keyed(img, ...sheetFrame(img, src.meta, i))); size = [src.meta.fw, src.meta.fh]; }
     else { frames = [keyed(img)]; size = [img.naturalWidth, img.naturalHeight]; }
     if (!s) { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
-    s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
+    s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval, on: false }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
     sync(); draw();
     let last = 0; const ms = src.meta?.ms || 190;
     const tick = (t) => { if (!cv.isConnected) return; if (playing && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); } requestAnimationFrame(tick); };

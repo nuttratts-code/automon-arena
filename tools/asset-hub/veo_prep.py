@@ -2,7 +2,7 @@
 
 Claude looks at the still first (art-style rules, char-idle P1). Then:
   pass:  python -I tools/asset-hub/veo_prep.py pass <queue-id> --veo-prompt <file> --reply <file> [--dry <out_dir>]
-         cut the still (char-idle P2 key, green or magenta picked from the border) → round slot "cut";
+         cut the still (key_alpha: edge-connected green/magenta background only) → round slot "cut";
          cut × (0.55 · 720 px tall) centred on 1280×720 flat green/magenta → round slot "veoin";
          Veo prompt → items[ID].prompts (kind "veo", form) — the page shows it in step 4 next to the picture;
          queue item → done, result "pass", reply.
@@ -26,26 +26,41 @@ def now():
     return datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
 
-def cut(img):
-    """char-idle P2: key alpha from how 'background' a pixel is, keep the largest blob, despill, 3 px min-filter, crop."""
-    x = np.asarray(img.convert('RGB')).astype(float)
-    border = np.concatenate([x[:8].reshape(-1, 3), x[-8:].reshape(-1, 3), x[:, :8].reshape(-1, 3), x[:, -8:].reshape(-1, 3)])
-    r_, g_, b_ = np.median(border, axis=0)
-    mag = g_ < min(r_, b_)
+def key_alpha(x):
+    """Background alpha for a flat green/magenta still (same rule as keyed() in app.js — change both).
+    Only background that touches the picture edge is removed, plus enclosed gaps whose colour is close to the
+    background (between legs); key-coloured paint inside the body (glowing runes, purple stripes) stays."""
     r, g, b = x[..., 0], x[..., 1], x[..., 2]
-    gx = (np.minimum(r, b) - g) if mag else (g - np.maximum(r, b))
-    al = np.clip(1 - (gx - 8) / 20, 0, 1)
-    lab, n = ndimage.label(al > 0.5)
+    H, W = r.shape
+    bd = np.concatenate([x[:4].reshape(-1, 3), x[-4:].reshape(-1, 3), x[:, :4].reshape(-1, 3), x[:, -4:].reshape(-1, 3)])
+    med = np.median(bd, axis=0)
+    mag = med[1] < min(med[0], med[2])
+    k = (np.minimum(r, b) - g) if mag else (g - np.maximum(r, b))
+    lo, hi = (40, 110) if mag else (24, 70)
+    lab, n = ndimage.label(k > lo)
     if n == 0:
-        sys.exit('cut: nothing left after keying')
-    s = ndimage.sum(np.ones_like(al), lab, range(1, n + 1))
-    al = al * ndimage.binary_dilation(lab == 1 + int(np.argmax(s)), iterations=3)
+        sys.exit('cut: no key-coloured background found')
+    edge = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
+    idx = np.arange(1, n + 1)
+    size = ndimage.sum(np.ones_like(k), lab, idx)
+    close = ndimage.sum(np.sqrt(((x - med) ** 2).sum(-1)) < 65, lab, idx)  # median distance < 65 ⇔ over half the pixels close
+    bgl = idx[np.isin(idx, edge) | ((close * 2 > size) & (size >= 20))]
+    bg = np.isin(lab, bgl)
+    al = np.ones((H, W))
+    al[bg] = np.clip((hi - k[bg]) / (hi - lo), 0, 1)
+    return al, ndimage.binary_dilation(bg, iterations=2), mag
+
+
+def cut(img):
+    """char-idle P2: key alpha (edge-connected background only), despill the edge ring, crop."""
+    x = np.asarray(img.convert('RGB')).astype(float)
+    al, ring, mag = key_alpha(x)
+    r, g, b = x[..., 0], x[..., 1], x[..., 2]
     if mag:
-        x[..., 0] = np.minimum(r, np.maximum(g, b) * 1.05); x[..., 2] = np.minimum(b, np.maximum(g, r) * 1.05)
+        x[..., 0] = np.where(ring, np.minimum(r, np.maximum(g, b) * 1.05), r); x[..., 2] = np.where(ring, np.minimum(b, np.maximum(g, r) * 1.05), b)
     else:
-        x[..., 1] = np.minimum(g, np.maximum(r, b) * 1.05)
-    A = Image.fromarray((al * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(3))
-    o = Image.fromarray(x.astype(np.uint8)); o.putalpha(A)
+        x[..., 1] = np.where(ring, np.minimum(g, np.maximum(r, b) * 1.05), g)
+    o = Image.fromarray(x.astype(np.uint8)); o.putalpha(Image.fromarray((al * 255).astype(np.uint8)))
     return o.crop(o.getbbox()), mag
 
 

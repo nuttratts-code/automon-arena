@@ -387,7 +387,7 @@ func _rim_show(rk: String) -> void:
 # oval = one blob under the feet (tile units) · feet = the picture point that stands on the slot (fraction, y down),
 # applied only when the unit texture has the size the owner set it on · cast = sun-shadow numbers for the r38 port.
 const SHADOW_FILE := "res://data/unit_shadows.json"
-const SHADOW_DEF := {"feet": Vector2(0.5, 1.0), "size": Vector2i.ZERO, "dx": 0.0, "dy": 0.0, "w": 0.8, "h": 0.45, "a": 1.0, "len": 1.0, "str": 0.5}
+const SHADOW_DEF := {"feet": Vector2(0.5, 1.0), "size": Vector2i.ZERO, "dx": 0.0, "dy": 0.0, "w": 0.8, "h": 0.45, "a": 0.0, "len": 1.0, "str": 0.5}
 static var _shadows := {}
 static var _shadow_lift := 0.065
 static var _shadows_loaded := false
@@ -421,7 +421,7 @@ static func load_shadows(d: Variant = null) -> void: # d = parsed JSON (tests pa
 			s["dy"] = _fnum(o.get("dy"), -1.0, 1.0, 0.0)
 			s["w"] = _fnum(o.get("w"), 0.1, 2.0, 0.8)
 			s["h"] = _fnum(o.get("h"), 0.05, 2.0, 0.45)
-			s["a"] = _fnum(o.get("a"), 0.0, 1.0, 1.0)
+			s["a"] = 0.0 # under-feet oval always off (owner rule)
 		var c: Variant = u.get("cast")
 		if c is Dictionary:
 			s["len"] = _fnum(c.get("len"), 0.0, 2.0, 1.0)
