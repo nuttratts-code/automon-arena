@@ -90,15 +90,16 @@ export function shadowExport(hub) {
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
       oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: o.on === false ? 0 : num(o.a, 0, 1, 1) }, // oval off = strength 0 in the game
-      cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0) },
+      cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0), blur: num(c.blur, 0, 1, 0.3),
+        k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(c.k?.[q]) ? [num(c.k[q][0], -3, 3, 0), num(c.k[q][1], -3, 3, 0)] : [0, 0]])) },
     };
   }
   return {
     v: 1,
-    note: 'Written by tools/asset-hub (set 240). feet = image fraction (0..1, y down) of the sprite picture the owner set it on; size = that picture in px (the game applies feet only when its texture has the same size). oval = tile units around the feet. cast = shadow that follows the body: len (x height x sun reach), str, ox/oy start offset in tile units; sun = ground direction [x, z] shared by every unit (r38 port).',
+    note: 'Written by tools/asset-hub (set 240). feet = image fraction (0..1, y down) of the sprite picture the owner set it on; size = that picture in px (the game applies feet only when its texture has the same size). oval = tile units around the feet. cast = shadow that follows the body: len (x height x sun reach), str, ox/oy start offset in tile units; blur = softness (x 0.12 of the picture height, blurred once); k = per-corner offsets [x, z] in tile units of the shadow quad (tl/tr = head end, bl/br = feet end); sun = ground direction [x, z] shared by every unit (r38 port).',
     lift: num(hub.settings?.shadowLift, 0, 0.5, 0.065),
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
-    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0 } },
+    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
   };
 }

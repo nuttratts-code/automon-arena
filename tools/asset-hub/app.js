@@ -37,7 +37,7 @@ const TILE = 1.8, SPR_H = 1.7, RING_R = 0.84;
 const SUN_DEFAULT_ANGLE = +(Math.atan2(-0.42, 0.55) * 180 / Math.PI).toFixed(1);
 const SUN_REACH = Math.min(Math.hypot(0.55, 0.42) / 0.72, 1.4);
 const sunDir = () => { const a = (hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE) * Math.PI / 180; return { x: Math.cos(a), z: Math.sin(a) }; };
-const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: true, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0 } };
+const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: true, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: null } };
 
 let hub = null;
 const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
@@ -100,8 +100,11 @@ function status(it) {
   if (it.prompts.length) return 'wait-still';
   return 'none';
 }
+// board picture = the newest starred picture (still / cut / idle frames, form 1), so a new ★ shows on the board at once
 function thumbRound(it) {
-  return latest(it, 'frames', 1, 'idle') || latest(it, 'cut', 1) || latest(it, 'still', 1) || it.rounds.find((r) => !r.archived && isImage(r.file));
+  const pics = it.rounds.filter((r) => !r.archived && ['still', 'cut', 'frames'].includes(r.slot) && (r.form || 1) === 1 && (!r.move || r.move === 'idle') && isImage(r.file));
+  const byTime = (a, b) => (a.t || '').localeCompare(b.t || '');
+  return pics.filter((r) => r.star).sort(byTime).pop() || pics.sort(byTime).pop() || it.rounds.find((r) => !r.archived && isImage(r.file));
 }
 function stepHas(it, step) {
   if (step === 'prompt') return it.prompts.length > 0;
@@ -555,7 +558,7 @@ function renderShadow(m, it) {
   const work = h('div', { class: 'work' });
   const left = h('div', { class: 'shadow-ed' });
   const cv = h('canvas', { width: 900, height: 560, 'aria-label': 'ตัวแก้เงา: ลากตัวละครเพื่อวางเท้าบนจุดกลางช่อง ลากวงเงาเพื่อย้าย ลากจุดขอบเพื่อปรับขนาด' });
-  left.append(cv, h('p', { class: 'small faint' }, 'เงาตามตัว: ลากจุดสีส้มที่ปลายเงาเพื่อปรับทิศและความยาว · ลากตัวเงาเพื่อเลื่อน · ลากตัวละครให้เท้าแตะกากบาท (เงาเริ่มที่เท้า) · วงเงาใต้เท้า: ลากจุดขาวเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
+  left.append(cv, h('p', { class: 'small faint' }, 'เงาตามตัว: ลากจุดส้มกลมที่ปลายเงาเพื่อปรับทิศและความยาว · ลากสี่เหลี่ยมส้มที่มุมเพื่อยืด/ให้ฐานชนเท้าหน้าและเท้าหลัง · ลากตัวเงาเพื่อเลื่อน · ลากตัวละครให้เท้าแตะกากบาท (เงาเริ่มที่เท้า) · วงเงาใต้เท้า: ลากจุดขาวเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
   const right = h('div', {});
   work.append(left, right);
   m.append(work);
@@ -576,6 +579,7 @@ function renderShadow(m, it) {
   };
   slider('ความยาวเงาตามตัว', () => s.cast.len, (v) => { s.cast.len = v; }, 0, 2, 0.01);
   slider('ความเข้มเงาตามตัว', () => s.cast.str, (v) => { s.cast.str = v; }, 0, 1, 0.01);
+  slider('ความฟุ้งเงาตามตัว', () => s.cast.blur ?? 0.3, (v) => { s.cast.blur = v; }, 0, 1, 0.01);
   slider('ทิศแดด (ใช้ร่วมทุกตัว)', () => hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE, (v) => { hub.settings.sunAngle = v; }, -180, 180, 0.5, (v) => v.toFixed(0) + '°');
   slider('ความเข้มวงใต้เท้า', () => s.oval.a, (v) => { s.oval.a = v; }, 0, 1, 0.01);
   slider('ความกว้างวง', () => s.oval.w, (v) => { s.oval.w = v; }, 0.1, 2, 0.01);
@@ -589,7 +593,7 @@ function renderShadow(m, it) {
     h('h3', {}, 'จุดเท้า'), feetOut,
     h('div', { class: 'tools' },
       h('button', { onclick: () => { if (!frames[0]) return; s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
-      h('button', { class: 'ghost', onclick: () => { s.cast.ox = 0; s.cast.oy = 0; commit(); draw(); } }, 'เงากลับมาเริ่มที่เท้า'),
+      h('button', { class: 'ghost', onclick: () => { s.cast.ox = 0; s.cast.oy = 0; s.cast.k = null; commit(); draw(); } }, 'คืนรูปเงาตามตัว'),
       h('button', { class: 'ghost', onclick: () => { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : null,
@@ -613,18 +617,14 @@ function renderShadow(m, it) {
     g.strokeStyle = 'rgba(150,200,255,.55)'; g.lineWidth = 3; g.beginPath(); g.ellipse(C.x, C.y, rr, rr * k, 0, 0, Math.PI * 2); g.stroke();
     if (!f) return;
     const fx = s.feet[0] * sw, fy = s.feet[1] * sh; // feet inside the drawn sprite
-    // shadow that follows the body: every picture point above the ground line is projected along the sun
-    // (x stays x, height -> ground vector), so it starts at the feet and keeps left/right like a real cast shadow
+    // shadow that follows the body (owner F1): the picture rows above the ground line, darkened, faded to the head,
+    // blurred (softness), then warped onto 4 ground corners — start = sun projection, each corner can be dragged
     const cg = castGeo();
     hitG.setTransform(1, 0, 0, 1, 0, 0); hitG.clearRect(0, 0, W, H);
     if (s.cast.len > 0 && cg.silH > 0) {
-      const sil = document.createElement('canvas'); sil.width = f.width; sil.height = cg.silH;
-      const sg = sil.getContext('2d'); sg.drawImage(f, 0, 0, f.width, cg.silH, 0, 0, f.width, cg.silH);
-      sg.globalCompositeOperation = 'source-in'; sg.fillStyle = 'rgb(13,18,33)'; sg.fillRect(0, 0, sil.width, sil.height);
-      sg.globalCompositeOperation = 'destination-in'; const fd = sg.createLinearGradient(0, cg.silH, 0, 0); fd.addColorStop(0, '#000'); fd.addColorStop(1, 'rgba(0,0,0,.35)'); sg.fillStyle = fd; sg.fillRect(0, 0, sil.width, sil.height);
-      g.imageSmoothingEnabled = true;
-      g.globalAlpha = Math.max(0.05, s.cast.str); g.setTransform(cg.a, 0, cg.c, cg.d, cg.e, cg.f); g.drawImage(sil, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
-      hitG.setTransform(cg.a, 0, cg.c, cg.d, cg.e, cg.f); hitG.drawImage(sil, 0, 0); hitG.setTransform(1, 0, 0, 1, 0, 0);
+      const sil = silCanvas(f, cg.silH);
+      g.globalAlpha = Math.max(0.05, s.cast.str); warp(g, sil, cg); g.globalAlpha = 1;
+      warp(hitG, sil, cg);
     }
     // oval
     const o = s.oval, ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
@@ -643,6 +643,38 @@ function renderShadow(m, it) {
     // cast-shadow tip handle (orange) on a dashed line from where the shadow starts
     g.strokeStyle = 'rgba(255,160,60,.9)'; g.setLineDash([5, 4]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(cg.bx, cg.by); g.lineTo(cg.tip.x, cg.tip.y); g.stroke(); g.setLineDash([]);
     g.fillStyle = '#ff9a3c'; g.strokeStyle = '#000'; g.beginPath(); g.arc(cg.tip.x, cg.tip.y, 9, 0, Math.PI * 2); g.fill(); g.stroke();
+    // 4 corner handles (orange squares): base corners meet the front / back feet, top corners stretch or tilt the tip
+    g.strokeStyle = 'rgba(255,160,60,.5)'; g.lineWidth = 1; g.beginPath();
+    g.moveTo(cg.q.bl.x, cg.q.bl.y); g.lineTo(cg.q.br.x, cg.q.br.y); g.lineTo(cg.q.tr.x, cg.q.tr.y); g.lineTo(cg.q.tl.x, cg.q.tl.y); g.closePath(); g.stroke();
+    for (const c of Object.values(cg.q)) { g.fillStyle = '#ffb35c'; g.strokeStyle = '#000'; g.fillRect(c.x - 6, c.y - 6, 12, 12); g.strokeRect(c.x - 6, c.y - 6, 12, 12); }
+  }
+  // dark, faded, blurred silhouette of the rows above the ground line (padding = room for the blur)
+  function silCanvas(f, silH) {
+    const bl = Math.round((s.cast.blur ?? 0.3) * 0.12 * f.height), pad = bl * 2 + 1;
+    const base = document.createElement('canvas'); base.width = f.width; base.height = silH;
+    const bg2 = base.getContext('2d'); bg2.drawImage(f, 0, 0, f.width, silH, 0, 0, f.width, silH);
+    bg2.globalCompositeOperation = 'source-in'; bg2.fillStyle = 'rgb(13,18,33)'; bg2.fillRect(0, 0, f.width, silH);
+    bg2.globalCompositeOperation = 'destination-in'; const fd = bg2.createLinearGradient(0, silH, 0, 0); fd.addColorStop(0, '#000'); fd.addColorStop(1, 'rgba(0,0,0,.35)'); bg2.fillStyle = fd; bg2.fillRect(0, 0, f.width, silH);
+    const c = document.createElement('canvas'); c.width = f.width + pad * 2; c.height = silH + pad * 2;
+    const cg2 = c.getContext('2d'); if (bl > 0) cg2.filter = `blur(${bl}px)`; cg2.drawImage(base, pad, pad);
+    c.pad = pad; c.fw = f.width; c.fh = silH;
+    return c;
+  }
+  // draw sil onto the quad cg.q in thin horizontal strips (each strip = one affine piece of the bilinear warp)
+  function warp(ctx, sil, cg) {
+    const { tl, tr, bl, br } = cg.q, pad = sil.pad, fw = sil.fw, fh = sil.fh;
+    const L = (u, t) => ({ x: (tl.x + (tr.x - tl.x) * u) * (1 - t) + (bl.x + (br.x - bl.x) * u) * t, y: (tl.y + (tr.y - tl.y) * u) * (1 - t) + (bl.y + (br.y - bl.y) * u) * t });
+    const N = 40, u0 = -pad / fw, u1 = (fw + pad) / fw;
+    ctx.imageSmoothingEnabled = true;
+    for (let i = 0; i < N; i++) {
+      const y0 = (sil.height * i) / N, y1 = (sil.height * (i + 1)) / N;
+      const t0 = (y0 - pad) / fh, t1 = (y1 - pad) / fh;
+      const A = L(u0, t0), B = L(u1, t0), Cc = L(u0, t1);
+      const a = (B.x - A.x) / sil.width, b = (B.y - A.y) / sil.width, c = (Cc.x - A.x) / (y1 - y0), d = (Cc.y - A.y) / (y1 - y0);
+      ctx.setTransform(a, b, c, d, A.x - c * y0, A.y - d * y0);
+      ctx.drawImage(sil, 0, y0, sil.width, Math.min(sil.height - y0, y1 - y0 + 1), 0, y0, sil.width, Math.min(sil.height - y0, y1 - y0 + 1));
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
   // cast geometry: image (u, v) -> canvas = (a*u + c*v + e, d*v + f)
   function castGeo() {
@@ -651,8 +683,13 @@ function renderShadow(m, it) {
     const bx = C.x + (s.cast.ox || 0) * T, by = C.y + (s.cast.oy || 0) * T * k;
     const a = sw / fw, c = -(sh / fh) * m * D.x, d = -(sh / fh) * m * D.z * k;
     const hgt = Math.max(1, s.feet[1] * sh);
-    return { a, c, d, e: bx - a * s.feet[0] * fw - c * s.feet[1] * fh, f: by - d * s.feet[1] * fh, bx, by, hgt,
-      silH: Math.round(s.feet[1] * fh), tip: { x: bx + hgt * m * D.x, y: by + hgt * m * D.z * k } };
+    const e = bx - a * s.feet[0] * fw - c * s.feet[1] * fh, ff = by - d * s.feet[1] * fh, silH = Math.max(1, Math.round(s.feet[1] * fh));
+    const P = (u, v) => ({ x: a * u + c * v + e, y: d * v + ff });
+    const K = s.cast.k || {}, off = (pt, kk) => ({ x: pt.x + ((K[kk] || [0, 0])[0]) * T, y: pt.y + ((K[kk] || [0, 0])[1]) * T * k });
+    const q = { tl: off(P(0, 0), 'tl'), tr: off(P(fw, 0), 'tr'), bl: off(P(0, silH), 'bl'), br: off(P(fw, silH), 'br') };
+    const tip = { x: (q.tl.x + q.tr.x) / 2, y: (q.tl.y + q.tr.y) / 2 };
+    const base0 = P(s.feet[0] * fw, silH);
+    return { a, c, d, e, f: ff, bx: base0.x, by: base0.y, hgt, silH, q, tip, def: { tl: P(0, 0), tr: P(fw, 0), bl: P(0, silH), br: P(fw, silH) } };
   }
   // dragging
   let drag = null;
@@ -665,7 +702,9 @@ function renderShadow(m, it) {
     const x0 = C.x - s.feet[0] * sw, y0 = C.y - s.feet[1] * sh;
     const cg = castGeo();
     const onSil = hitG.getImageData(Math.round(p.x), Math.round(p.y), 1, 1).data[3] > 20;
-    if (Math.hypot(p.x - cg.tip.x, p.y - cg.tip.y) < 16) drag = { t: 'tip' };
+    const corner = Object.entries(cg.q).find(([, c]) => Math.abs(p.x - c.x) < 10 && Math.abs(p.y - c.y) < 10);
+    if (corner) drag = { t: 'corner', kk: corner[0], sx: p.x, sy: p.y, o: [...((s.cast.k || {})[corner[0]] || [0, 0])] };
+    else if (Math.hypot(p.x - cg.tip.x, p.y - cg.tip.y) < 16) drag = { t: 'tip' };
     else if (o.on !== false && near(ox + rw, oy)) drag = { t: 'w' };
     else if (o.on !== false && near(ox, oy + rh)) drag = { t: 'h' };
     else if (p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < C.y - 6) drag = { t: 'feet', sx: p.x, sy: p.y, f: [...s.feet] };
@@ -678,10 +717,12 @@ function renderShadow(m, it) {
     if (!drag) return;
     const p = pos(e), { T, k, C, sh, sw } = geo(), o = s.oval;
     if (drag.t === 'tip') {
-      const cg = castGeo(), vx = p.x - cg.bx, vz = (p.y - cg.by) / k;
+      const cg = castGeo(), kt = s.cast.k || {}, tdx = (((kt.tl || [0, 0])[0]) + ((kt.tr || [0, 0])[0])) / 2 * T, tdz = (((kt.tl || [0, 0])[1]) + ((kt.tr || [0, 0])[1])) / 2 * T;
+      const vx = p.x - tdx - cg.bx, vz = (p.y - tdz * k - cg.by) / k;
       s.cast.len = Math.max(0, Math.min(2, Math.hypot(vx, vz) / cg.hgt / SUN_REACH));
       hub.settings.sunAngle = +(Math.atan2(vz, vx) * 180 / Math.PI).toFixed(1);
     }
+    if (drag.t === 'corner') { s.cast.k = { ...(s.cast.k || {}) }; s.cast.k[drag.kk] = [Math.max(-3, Math.min(3, drag.o[0] + (p.x - drag.sx) / T)), Math.max(-3, Math.min(3, drag.o[1] + (p.y - drag.sy) / (T * k)))]; }
     if (drag.t === 'cast') { s.cast.ox = Math.max(-1, Math.min(1, drag.ox + (p.x - drag.sx) / T)); s.cast.oy = Math.max(-1, Math.min(1, drag.oy + (p.y - drag.sy) / (T * k))); }
     if (drag.t === 'w') o.w = Math.max(0.1, Math.min(2, Math.abs(p.x - (C.x + o.dx * T)) * 2 / T));
     if (drag.t === 'h') o.h = Math.max(0.05, Math.min(2, Math.abs(p.y - (C.y + o.dy * T * k)) * 2 / (T * k)));
@@ -689,7 +730,7 @@ function renderShadow(m, it) {
     if (drag.t === 'feet') { s.feet = [Math.max(0, Math.min(1, drag.f[0] - (p.x - drag.sx) / sw)), Math.max(0, Math.min(1, drag.f[1] - (p.y - drag.sy) / sh))]; }
     sync(); draw();
   });
-  const end = () => { if (drag) { drag = null; cv.style.cursor = ''; s.feet = s.feet.map((v) => +v.toFixed(4)); for (const kk of ['dx', 'dy', 'w', 'h']) s.oval[kk] = +s.oval[kk].toFixed(3); for (const kk of ['len', 'ox', 'oy']) s.cast[kk] = +(s.cast[kk] || 0).toFixed(3); commit(); sync(); } };
+  const end = () => { if (drag) { drag = null; cv.style.cursor = ''; s.feet = s.feet.map((v) => +v.toFixed(4)); for (const kk of ['dx', 'dy', 'w', 'h']) s.oval[kk] = +s.oval[kk].toFixed(3); for (const kk of ['len', 'ox', 'oy']) s.cast[kk] = +(s.cast[kk] || 0).toFixed(3); if (s.cast.k) for (const kk in s.cast.k) s.cast.k[kk] = s.cast.k[kk].map((v) => +v.toFixed(3)); commit(); sync(); } };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   // load pictures
   (async () => {
@@ -744,10 +785,11 @@ async function renderLibrary(m) {
   const tb = h('table', { class: 'lib' }, h('tr', {}, ['', 'ไฟล์', 'คืออะไร', 'ที่มา', 'สิทธิ์', ''].map((t) => h('th', {}, t))));
   for (const r of libCache) {
     const rel = 'lib/' + r.file;
+    const pic = isImage(r.file) && !/[[\]*]| \/ /.test(r.file); // INDEX rows that name a group of files (tree_[ABC]…) have no single picture
     const isBg = hub.settings.arenaBg === rel;
-    tb.append(h('tr', {}, h('td', {}, isImage(r.file) ? h('img', { src: fileUrl(rel), alt: '', loading: 'lazy' }) : h('span', { class: 'faint small' }, r.file.split('.').pop())),
+    tb.append(h('tr', {}, h('td', {}, pic ? h('img', { src: fileUrl(rel), alt: '', loading: 'lazy' }) : h('span', { class: 'faint small' }, r.file.split('.').pop())),
       h('td', { class: 'small' }, r.file), h('td', { class: 'small dim' }, r.what), h('td', { class: 'small' }, `${r.source || ''} ${r.date || ''}`), h('td', { class: 'small faint' }, r['licence-status'] || ''),
-      h('td', {}, isImage(r.file) ? h('button', { class: isBg ? 'on' : 'ghost', onclick: () => { hub.settings.arenaBg = isBg ? '' : rel; save().then(render); } }, isBg ? 'พื้นฉากอยู่' : 'ใช้เป็นพื้นฉาก') : null)));
+      h('td', {}, pic ? h('button', { class: isBg ? 'on' : 'ghost', onclick: () => { hub.settings.arenaBg = isBg ? '' : rel; save().then(render); } }, isBg ? 'พื้นฉากอยู่' : 'ใช้เป็นพื้นฉาก') : null)));
   }
   box.append(tb);
 }
