@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 116,
+ "rev": 117,
  "settings": {
   "moves": [
    "idle",
@@ -843,8 +843,8 @@
      "t": "2026-11-17T15:48:25.000Z",
      "by": "claude",
      "form": 1,
-     "text": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: WY-1 — young wind gliding skink, a small quick lizard with glide flaps, holding one leaf in its mouth (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, rounded skin glide flaps along both sides spread like a small cloak or wings, a soft feather-like frill behind the head, mint green and off-white scales\nFantasy features: swirl-shaped wind marks on the glide flaps · one mint-green leaf held in its mouth, the leaf edges curling as if in a breeze · small mint crystal on the forehead\nFace: curious, quick and playful — not scary\nEffect spots: the swirl marks on the glide flaps + the forehead crystal\nPose: standing on four legs, front raised a little, glide flaps half open and lifted, tail short and curled close to the body so the creature is about as wide as it is tall; head turned forward\nBackground: magenta #FF00FF",
-     "note": "quiz: owner changed species small hawk -> gliding skink holding a leaf"
+     "text": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: WY-1 — young wind skink scout, a small lizard standing up on its hind legs, holding one leaf in its mouth (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, a soft feather-like frill behind the head, a short cloak-like skin fold over the shoulders that flutters, mint green and off-white scales\nFantasy features: swirl-shaped wind marks on the shoulder cloak · one mint-green leaf held in its mouth, the leaf edges curling as if in a breeze · small mint crystal on the forehead\nFace: curious, alert and playful — not scary\nEffect spots: the swirl marks on the shoulder cloak + the forehead crystal\nPose: standing upright on both hind legs, small front paws held up in front of the chest, tail short and curled on the ground for balance so the creature is about as wide as it is tall; head turned forward\nBackground: magenta #FF00FF",
+     "note": "quiz: owner changed species small hawk -> standing skink holding a leaf (fixed: not a gliding skink)"
     }
    ],
    "rounds": [
