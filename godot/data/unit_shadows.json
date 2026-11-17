@@ -1,0 +1,23 @@
+{
+ "v": 1,
+ "note": "Written by tools/asset-hub (set 240). feet = image fraction (0..1, y down) of the sprite picture the owner set it on; size = that picture in px (the game applies feet only when its texture has the same size). oval = tile units around the feet. cast = sun-shadow length/strength for the r38 port.",
+ "lift": 0.065,
+ "default": {
+  "feet": [
+   0.5,
+   1
+  ],
+  "oval": {
+   "dx": 0,
+   "dy": 0,
+   "w": 0.8,
+   "h": 0.45,
+   "a": 1
+  },
+  "cast": {
+   "len": 1,
+   "str": 0.5
+  }
+ },
+ "units": {}
+}

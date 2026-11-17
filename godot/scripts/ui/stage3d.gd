@@ -383,6 +383,65 @@ func _rim_show(rk: String) -> void:
 	m.visible = on
 
 # ---------- units ----------
+# set 240 (owner E1 + A1): per-creature shadow from the asset hub (tools/asset-hub → data/unit_shadows.json).
+# oval = one blob under the feet (tile units) · feet = the picture point that stands on the slot (fraction, y down),
+# applied only when the unit texture has the size the owner set it on · cast = sun-shadow numbers for the r38 port.
+const SHADOW_FILE := "res://data/unit_shadows.json"
+const SHADOW_DEF := {"feet": Vector2(0.5, 1.0), "size": Vector2i.ZERO, "dx": 0.0, "dy": 0.0, "w": 0.8, "h": 0.45, "a": 1.0, "len": 1.0, "str": 0.5}
+static var _shadows := {}
+static var _shadow_lift := 0.065
+static var _shadows_loaded := false
+
+static func _fnum(v: Variant, lo: float, hi: float, d: float) -> float:
+	return clampf(float(v), lo, hi) if (v is float or v is int) else d
+
+static func load_shadows(d: Variant = null) -> void: # d = parsed JSON (tests pass one); null = read the data file
+	_shadows = {}
+	_shadow_lift = 0.065
+	_shadows_loaded = true
+	if d == null:
+		d = TH._json(SHADOW_FILE)
+	if not (d is Dictionary) or not (d.get("units") is Dictionary):
+		return
+	_shadow_lift = _fnum(d.get("lift"), 0.0, 0.5, 0.065)
+	for id in d["units"]:
+		var u: Variant = d["units"][id]
+		if not (id is String) or id.length() > 40 or not (u is Dictionary):
+			continue
+		var s := SHADOW_DEF.duplicate()
+		var f: Variant = u.get("feet")
+		if f is Array and f.size() == 2:
+			s["feet"] = Vector2(_fnum(f[0], 0.0, 1.0, 0.5), _fnum(f[1], 0.0, 1.0, 1.0))
+		var z: Variant = u.get("size")
+		if z is Array and z.size() == 2:
+			s["size"] = Vector2i(int(_fnum(z[0], 0.0, 8192.0, 0.0)), int(_fnum(z[1], 0.0, 8192.0, 0.0)))
+		var o: Variant = u.get("oval")
+		if o is Dictionary:
+			s["dx"] = _fnum(o.get("dx"), -1.0, 1.0, 0.0)
+			s["dy"] = _fnum(o.get("dy"), -1.0, 1.0, 0.0)
+			s["w"] = _fnum(o.get("w"), 0.1, 2.0, 0.8)
+			s["h"] = _fnum(o.get("h"), 0.05, 2.0, 0.45)
+			s["a"] = _fnum(o.get("a"), 0.0, 1.0, 1.0)
+		var c: Variant = u.get("cast")
+		if c is Dictionary:
+			s["len"] = _fnum(c.get("len"), 0.0, 2.0, 1.0)
+			s["str"] = _fnum(c.get("str"), 0.0, 1.0, 0.5)
+		_shadows[id] = s
+
+static func unit_shadow(id: String) -> Dictionary:
+	if not _shadows_loaded:
+		load_shadows()
+	return _shadows.get(id, SHADOW_DEF)
+
+# sprite centre offset (world) that puts the feet point on the slot; zero unless the texture matches the size it was set on
+static func feet_shift(s: Dictionary, tex_size: Vector2i, tall: float, flip: bool) -> Vector3:
+	if s["size"] != tex_size or tex_size.y <= 0:
+		return Vector3.ZERO
+	var wide := tall * float(tex_size.x) / float(tex_size.y)
+	var f: Vector2 = s["feet"]
+	var x := (0.5 - f.x) * wide * (-1.0 if flip else 1.0)
+	return Vector3(x, 0, 0) - lean() * ((1.0 - f.y) * tall)
+
 static func blob_tex() -> Texture2D:
 	var g := Gradient.new()
 	g.set_color(0, Color(0, 0, 0, 0.42))
@@ -446,20 +505,23 @@ func add_unit(group: String, u: Dictionary) -> void:
 	s.flip_h = side == 1 # the sprites face right (art-style §2): the enemy turns to face you
 	s.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	s.rotation = Vector3(deg_to_rad(-PITCH), 0, 0)
-	var home := feet + lean() * (tall / 2.0) + Vector3(0, 0.05, 0)
+	var us := unit_shadow(str(c.get("id"))) # set 240: per-creature feet + oval from the asset hub
+	var home := feet + lean() * (tall / 2.0) + Vector3(0, 0.05, 0) + feet_shift(us, Vector2i(tex.get_width(), tex.get_height()), tall, side == 1)
 	s.position = home
 	add_child(s)
 	var sh := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
-	pm.size = Vector2(TILE * 0.8, TILE * 0.45) * (1.4 if big else 1.0)
+	pm.size = Vector2(TILE * float(us["w"]), TILE * float(us["h"])) * (1.4 if big else 1.0)
 	sh.mesh = pm
 	var sm := StandardMaterial3D.new()
 	sm.albedo_texture = _blob
+	sm.albedo_color = Color(1, 1, 1, float(us["a"]))
 	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	sh.material_override = sm
 	sh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	sh.position = feet + Vector3(0, 0.065, 0)
+	var odx := float(us["dx"]) * TILE * (-1.0 if side == 1 else 1.0) # the enemy faces the other way: mirror the oval offset
+	sh.position = feet + Vector3(odx, _shadow_lift, float(us["dy"]) * TILE)
 	add_child(sh)
 	var ring: MeshInstance3D = null
 	var rt := UV.rarity_token(c)

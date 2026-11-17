@@ -22,3 +22,7 @@ art/scene/
 .mcp.json
 godot/addons/.godot_mcp_toolkit_update/
 godot/addons/.godot_mcp_toolkit_recovery/
+
+# set 240: asset hub uploads = local working files (starred rounds are copied into art/library)
+art/hub/files/
+art/hub/hub.json.tmp

@@ -1,0 +1,741 @@
+// Automon asset hub page (set 240). Plain DOM, textContent only (HARD RULE 7), no outside scripts.
+'use strict';
+
+const TRIBES = [
+  ['steel', 'เหล็กกล้า'], ['fire', 'เพลิงเผา'], ['storm', 'สายฟ้า'], ['wind', 'วายุ'], ['spirit', 'ภูติ'], ['demon', 'อสูร'],
+];
+const TRIBE_TH = Object.fromEntries(TRIBES);
+const KIND_TH = { character: 'ตัวละคร', scene: 'ฉาก', prop3d: 'โมเดล 3D', effect: 'เอฟเฟกต์', ui: 'UI' };
+const STATUS = [
+  ['none', 'ยังไม่เริ่ม'], ['wait-still', 'รอภาพนิ่ง'], ['pick', 'รอเลือกภาพ'], ['wait-video', 'รอวิดีโอ'],
+  ['claude', 'รอ Claude ทำเฟรม'], ['done', 'เฟรมเสร็จ'], ['ingame', 'อยู่ในเกมแล้ว'],
+];
+const STATUS_TH = Object.fromEntries(STATUS);
+const STEPS = [
+  ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
+  ['still', 'ภาพนิ่ง', 'คุณวางภาพที่เจน'],
+  ['cut', 'ตัดพื้น', 'Claude ทำ'],
+  ['veoin', 'ภาพส่ง Veo', 'Claude ทำ'],
+  ['video', 'วิดีโอ', 'คุณวางวิดีโอ'],
+  ['frames', 'เฟรม', 'Claude ทำ'],
+  ['shadow', 'เงา', 'คุณปรับ'],
+  ['file', 'ไฟล์อื่น', '.pxo ฯลฯ'],
+];
+const BGS = [['checker', 'ตาราง'], ['magenta', 'ม่วงแดง'], ['black', 'ดำ'], ['white', 'ขาว'], ['arena', 'ฉาก']];
+const STILL_CHECKS = [
+  'อ่านออกว่าเผ่าอะไรจากสีและรูปทรง',
+  'ดูเป็นสัตว์แฟนตาซี ไม่ใช่สัตว์ธรรมดา',
+  'หน้าไม่ดุเกินไป',
+  'ไม่มีสีชมพูบนตัว',
+  'เห็นเต็มตัว หันซ้าย เท้าแตะพื้น (ภูติลอยได้)',
+  'ไม่มีกรอบ เงา หรือพื้นติดมา',
+];
+// game numbers mirrored from godot/scripts/ui/stage3d.gd (TILE, SPR_H) — preview only
+const TILE = 1.8, SPR_H = 1.7, RING_R = 0.84;
+const SUN = (() => { const x = 0.55, z = -0.42, l = Math.hypot(x, z); return { x: x / l, z: z / l, reach: Math.min(l / 0.72, 1.4) }; })();
+const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5 } };
+
+let hub = null;
+const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
+
+// ---------- helpers ----------
+const $ = (id) => document.getElementById(id);
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k === 'text') e.textContent = v;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : document.createTextNode(String(k)));
+  return e;
+}
+const fileUrl = (rel) => '/f/' + rel.split('/').map(encodeURIComponent).join('/');
+const isVideo = (f) => /\.(mp4|webm|mov)$/i.test(f);
+const isImage = (f) => /\.(png|jpe?g|webp|gif)$/i.test(f);
+const fmtDate = (t) => (t ? t.slice(0, 10) : '');
+const uid = (p) => p + Math.random().toString(36).slice(2, 10);
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.k); toast.k = setTimeout(() => t.classList.remove('show'), 2200); }
+const tribeVar = (t) => (t ? `var(--${t})` : 'var(--dim)');
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 409) { hub = j.hub; render(); throw new Error('ไฟล์ถูกแก้จากที่อื่น โหลดข้อมูลล่าสุดแล้ว ลองอีกครั้ง'); }
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+async function save() {
+  try { hub = await api('/api/hub', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(hub) }); }
+  catch (e) { toast(e.message); }
+}
+let saveT = 0;
+function saveSoon() { clearTimeout(saveT); saveT = setTimeout(save, 600); }
+
+// ---------- model ----------
+const live = (it, slot) => it.rounds.filter((r) => r.slot === slot && !r.archived);
+function pick(it, slot, form, move) {
+  const rs = live(it, slot).filter((r) => (!form || (r.form || 1) === form) && (!move || !r.move || r.move === move));
+  return rs.filter((r) => r.star).pop() || null;
+}
+function latest(it, slot, form, move) {
+  const rs = live(it, slot).filter((r) => (!form || (r.form || 1) === form) && (!move || !r.move || r.move === move));
+  return rs.filter((r) => r.star).pop() || rs[rs.length - 1] || null;
+}
+function status(it) {
+  if (it.inGame) return 'ingame';
+  if (it.kind !== 'character') return it.rounds.some((r) => !r.archived) ? 'done' : 'none';
+  if (pick(it, 'frames', 1, 'idle')) return 'done';
+  if (live(it, 'video').length) return 'claude';
+  if (pick(it, 'still', 1)) return 'wait-video';
+  if (live(it, 'still').length) return 'pick';
+  if (it.prompts.length) return 'wait-still';
+  return 'none';
+}
+function thumbRound(it) {
+  return latest(it, 'frames', 1, 'idle') || latest(it, 'cut', 1) || latest(it, 'still', 1) || it.rounds.find((r) => !r.archived && isImage(r.file));
+}
+function stepHas(it, step) {
+  if (step === 'prompt') return it.prompts.length > 0;
+  if (step === 'shadow') return !!it.shadow;
+  return it.rounds.some((r) => r.slot === step && r.star && !r.archived);
+}
+
+// ---------- images ----------
+const imgCache = new Map();
+function loadImg(rel) {
+  if (!imgCache.has(rel)) imgCache.set(rel, new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = fileUrl(rel); }));
+  return imgCache.get(rel);
+}
+// a picture with a flat green (or magenta) background → transparent canvas; pictures with alpha pass through
+function keyed(img, sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight) {
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const d = g.getImageData(0, 0, sw, sh), p = d.data;
+  if (p[3] < 250) return c; // already transparent
+  for (let i = 0; i < p.length; i += 4) {
+    const r = p[i], gg = p[i + 1], b = p[i + 2];
+    const gk = gg - Math.max(r, b), mk = Math.min(r, b) - gg;
+    if (gk > 28) p[i + 3] = Math.max(0, 255 - (gk - 28) * 12);
+    else if (mk > 60) p[i + 3] = 0;
+    if (gk > 0 && p[i + 3] > 0) p[i + 1] = Math.min(gg, Math.max(r, b) * 1.05); // despill
+  }
+  g.putImageData(d, 0, 0);
+  return c;
+}
+function sheetFrame(img, meta, i) {
+  const n = meta.n || meta.cols * meta.rows, k = i % n;
+  return [(k % meta.cols) * meta.fw, Math.floor(k / meta.cols) * meta.fh, meta.fw, meta.fh];
+}
+// auto check of a still (feature 5): background colour, body inside the middle 80 %, pink on the body
+function analyse(img) {
+  const W = 256, s = W / img.naturalWidth, H = Math.max(1, Math.round(img.naturalHeight * s));
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, W, H);
+  const p = g.getImageData(0, 0, W, H).data;
+  const px = (x, y) => { const i = (y * W + x) * 4; return [p[i], p[i + 1], p[i + 2], p[i + 3]]; };
+  // border pixels (2 px inside, so a thin painted frame shows up as "not flat")
+  const edge = [];
+  for (let x = 0; x < W; x += 2) for (const y of [2, H - 3]) edge.push(px(x, y));
+  for (let y = 0; y < H; y += 2) for (const x of [2, W - 3]) edge.push(px(x, y));
+  const out = [];
+  const med = (k) => edge.map((e) => e[k]).sort((a, b) => a - b)[edge.length >> 1];
+  const bgc = [med(0), med(1), med(2), med(3)];
+  const dist = (q) => Math.abs(q[0] - bgc[0]) + Math.abs(q[1] - bgc[1]) + Math.abs(q[2] - bgc[2]);
+  const flat = edge.filter((e) => (bgc[3] < 20 ? e[3] < 20 : dist(e) < 60)).length / edge.length;
+  const [R, G, B] = bgc;
+  if (bgc[3] < 20) out.push(['ok', 'พื้นโปร่งใสแล้ว']);
+  else if (flat < .85) out.push(['bad', 'พื้นไม่เรียบ หรือมีกรอบ/เงา/พื้นติดมา']);
+  else if (G > 220 && R < 60 && B < 60) out.push(['ok', 'พื้นเขียว #00FF00 สะอาด']);
+  else if (G - Math.max(R, B) > 40) out.push(['warn', 'พื้นเขียวแต่ไม่ใช่ #00FF00 แท้ (ตัดได้ ระวังขอบ)']);
+  else if (Math.min(R, B) - G > 60) out.push([R > 230 && B > 230 && G < 40 ? 'ok' : 'warn', R > 230 && B > 230 && G < 40 ? 'พื้นม่วงแดง #FF00FF สะอาด' : 'พื้นม่วงแดงแต่ไม่ใช่ #FF00FF แท้']);
+  else out.push(['warn', 'พื้นเป็นสีเรียบ แต่ไม่ใช่เขียวหรือม่วงแดง']);
+  let x0 = W, y0 = H, x1 = -1, y1 = -1, pink = 0, body = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const q = px(x, y), [r, gg, b, a] = q;
+    const bg = a < 20 || (bgc[3] >= 20 && dist(q) < 90);
+    if (bg) continue;
+    body++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    if (r > 200 && b > 140 && gg < 150 && r - gg > 70) pink++;
+  }
+  if (x1 >= 0) {
+    const m = Math.min(x0 / W, (W - 1 - x1) / W, y0 / H, (H - 1 - y1) / H);
+    out.push(m >= .08 ? ['ok', `ตัวอยู่ในกรอบกลาง เหลือขอบ ${Math.round(m * 100)}%`] : ['warn', `ตัวชิดขอบ (เหลือ ${Math.round(m * 100)}%) อาจโดนตัดตอนทำวิดีโอ`]);
+    const pr = pink / Math.max(1, body);
+    out.push(pr < .002 ? ['ok', 'ไม่เจอสีชมพูบนตัว'] : ['warn', `เจอสีชมพู ${(pr * 100).toFixed(1)}% ของตัว`]);
+  }
+  return out;
+}
+
+// ---------- rail ----------
+function renderRail() {
+  const chips = $('tribeChips'); chips.replaceChildren();
+  chips.append(h('button', { class: ui.tribe ? '' : 'on', style: '--c: var(--dim)', onclick: () => { ui.tribe = ''; render(); } }, 'ทุกเผ่า'));
+  for (const [t, th] of TRIBES) chips.append(h('button', { class: ui.tribe === t ? 'on' : '', style: `--c: ${tribeVar(t)}`, onclick: () => { ui.tribe = ui.tribe === t ? '' : t; render(); } }, th));
+  const sf = $('statusFilter');
+  if (!sf.options.length) { sf.append(h('option', { value: '' }, 'ทุกสถานะ')); for (const [k, v] of STATUS) sf.append(h('option', { value: k }, v)); }
+  sf.value = ui.status;
+  const list = $('list'); list.replaceChildren();
+  const items = filtered(ui.tab === 'other' ? (it) => it.kind !== 'character' : (it) => it.kind === 'character');
+  const groups = ui.tab === 'other' ? Object.keys(KIND_TH).filter((k) => k !== 'character').map((k) => [k, KIND_TH[k], 'var(--dim)']) : TRIBES.map(([t, th]) => [t, th, tribeVar(t)]);
+  for (const [g, label, c] of groups) {
+    const rows = items.filter((it) => (ui.tab === 'other' ? it.kind : it.tribe) === g);
+    if (!rows.length) continue;
+    list.append(h('div', { class: 'grp', style: `--c: ${c}` }, label));
+    for (const it of rows) {
+      const st = status(it);
+      list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: STATUS_TH[st], onclick: () => openItem(it.id) },
+        h('span', { class: 'dot st-' + st }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || '')));
+    }
+  }
+  if (ui.tab === 'other') list.append(h('button', { class: 'ghost', onclick: newItemDialog }, '+ เพิ่มรายการใหม่'));
+}
+function filtered(kindOk) {
+  const q = ui.q.trim().toLowerCase();
+  return Object.values(hub.items).filter((it) => kindOk(it)
+    && (!ui.tribe || it.tribe === ui.tribe || it.tribe2 === ui.tribe)
+    && (!ui.status || status(it) === ui.status)
+    && (!q || it.id.toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q)));
+}
+function openItem(id) { ui.item = id; ui.sel = null; ui.cmp = []; const it = hub.items[id]; if (it.kind !== 'character' && ['prompt', 'shadow', 'cut', 'veoin', 'frames'].includes(ui.step)) ui.step = 'file'; render(); window.scrollTo(0, 0); }
+
+// ---------- main views ----------
+function render() {
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === ui.tab));
+  const open = hub.queue.filter((q) => q.state === 'open').length;
+  $('qCount').textContent = open ? String(open) : '';
+  $('rail').hidden = ui.tab === 'library' || ui.tab === 'queue';
+  document.querySelector('.shell').style.gridTemplateColumns = $('rail').hidden ? '1fr' : '';
+  renderRail();
+  const m = $('main'); m.replaceChildren();
+  const it = ui.item && hub.items[ui.item];
+  document.documentElement.style.setProperty('--tribe', it && it.kind === 'character' ? tribeVar(it.tribe) : 'var(--dim)');
+  if (ui.tab === 'library') return renderLibrary(m);
+  if (ui.tab === 'queue') return renderQueue(m);
+  if (it && (ui.tab === 'other') === (it.kind !== 'character')) return renderItem(m, it);
+  renderBoard(m);
+}
+
+function renderBoard(m) {
+  const other = ui.tab === 'other';
+  const items = filtered(other ? (it) => it.kind !== 'character' : (it) => it.kind === 'character');
+  const counts = {}; for (const it of items) counts[status(it)] = (counts[status(it)] || 0) + 1;
+  const unverified = Object.values(hub.items).filter((it) => it.inGame && it.rounds.some((r) => r.star && /UNVERIFIED/.test(r.licence || ''))).length;
+  m.append(h('div', { class: 'row' }, h('h2', {}, other ? 'ฉาก โมเดล 3D เอฟเฟกต์ และ UI' : 'ภาพรวมตัวละคร'), h('span', { class: 'sp' }),
+    other ? h('button', { onclick: newItemDialog }, '+ เพิ่มรายการใหม่') : null));
+  m.append(h('div', { class: 'legend' }, STATUS.map(([k, v]) => h('span', {}, h('i', { class: 'dot st-' + k }), `${v} ${counts[k] || 0}`)),
+    unverified ? h('span', { class: 'warn' }, `ในเกมแต่ยังเป็นภาพ AI ไม่ยืนยันสิทธิ์: ${unverified} ตัว`) : null));
+  const groups = other ? Object.keys(KIND_TH).filter((k) => k !== 'character').map((k) => [k, KIND_TH[k], 'var(--dim)', (it) => it.kind === k])
+    : TRIBES.map(([t, th]) => [t, th, tribeVar(t), (it) => it.tribe === t]);
+  for (const [, label, c, ok] of groups) {
+    const rows = items.filter(ok);
+    if (!rows.length) continue;
+    const tiles = h('div', { class: 'tiles' });
+    for (const it of rows) {
+      const th = h('div', { class: 'th' });
+      const r = thumbRound(it);
+      if (r) thumbInto(th, r, 96);
+      const st = status(it);
+      tiles.append(h('button', { class: 'tile', style: `--tribe: ${tribeVar(it.tribe)}`, onclick: () => openItem(it.id) }, th,
+        h('div', { class: 'row' }, h('span', { class: 'dot st-' + st }), h('b', {}, it.id), h('span', { class: 'dim small' }, it.name || '')),
+        h('div', { class: 'small faint' }, STATUS_TH[st] + (it.shadow ? ' · ตั้งเงาแล้ว' : ''))));
+    }
+    m.append(h('section', { class: 'board-grp', style: `--c: ${c}` }, h('h3', {}, `${label} (${rows.length})`), tiles));
+  }
+  if (!items.length) m.append(h('p', { class: 'dim' }, other ? 'ยังไม่มีรายการ กด "เพิ่มรายการใหม่" เพื่อเริ่ม' : 'ไม่มีตัวที่ตรงกับตัวกรอง'));
+}
+
+function thumbInto(box, r, max) {
+  if (r.slot === 'frames' && r.meta) {
+    loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const c = keyed(img, sx, sy, sw, sh); box.append(c); }).catch(() => {});
+  } else if (isImage(r.file)) box.append(h('img', { src: fileUrl(r.file), alt: '', loading: 'lazy' }));
+  else if (isVideo(r.file)) box.append(h('video', { src: fileUrl(r.file) + '#t=0.5', muted: true, preload: 'metadata' }));
+  else box.append(h('span', { class: 'small faint' }, r.file.split('.').pop().toUpperCase()));
+}
+
+// ---------- item ----------
+function renderItem(m, it) {
+  const st = status(it);
+  const isChar = it.kind === 'character';
+  m.append(h('div', { class: 'head' },
+    h('div', {}, h('div', { class: 'meta' }, isChar ? `${TRIBE_TH[it.tribe] || ''}${it.tribe2 ? ' + ' + TRIBE_TH[it.tribe2] : ''} · ${it.rarity || ''}` : KIND_TH[it.kind]),
+      h('h2', {}, `${it.id}  ${it.name || ''}`)),
+    h('span', { class: 'pill' }, h('span', { class: 'dot st-' + st }), STATUS_TH[st]),
+    h('span', { class: 'sp' }),
+    h('label', { class: 'pill' }, h('input', { type: 'checkbox', checked: it.inGame, onchange: (e) => { it.inGame = e.target.checked; save().then(render); } }), 'อยู่ในเกมแล้ว'),
+    h('button', { onclick: () => queueDialog(it) }, 'ส่งงานให้ Claude')));
+  const steps = isChar ? STEPS : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
+  const labels = isChar ? null : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
+  m.append(h('nav', { class: 'pipe' }, steps.map(([k, label, sub], i) => h('button', {
+    class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); },
+  }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, sub)))));
+  if (!steps.some(([k]) => k === ui.step)) ui.step = steps[0][0];
+  // form + move switches (F1 / F3, idle / attack …)
+  if (isChar && ui.step !== 'shadow') {
+    const bar = h('div', { class: 'tools' });
+    if (ui.step !== 'prompt' || true) bar.append(h('span', { class: 'seg' }, [1, 3].map((f) => h('button', { class: ui.form === f ? 'on' : '', onclick: () => { ui.form = f; ui.sel = null; render(); } }, `ร่าง ${f}`))));
+    if (['video', 'frames', 'file'].includes(ui.step)) bar.append(h('span', { class: 'seg' }, hub.settings.moves.map((mv) => h('button', { class: ui.move === mv ? 'on' : '', onclick: () => { ui.move = mv; ui.sel = null; render(); } }, moveTh(mv)))));
+    m.append(bar);
+  }
+  if (ui.step === 'prompt') return renderPrompt(m, it);
+  if (ui.step === 'shadow') return renderShadow(m, it);
+  renderSlot(m, it, ui.step);
+}
+const moveTh = (mv) => ({ idle: 'หายใจ', attack: 'โจมตี', hit: 'โดนตี', die: 'ล้ม' }[mv] || mv);
+
+function renderPrompt(m, it) {
+  const mine = it.prompts.filter((p) => (p.form || 1) === ui.form);
+  const cur = mine[mine.length - 1];
+  const work = h('div', { class: 'work' });
+  const left = h('div', {});
+  left.append(h('div', { class: 'row' }, h('h3', {}, `พรอมต์ร่าง ${ui.form} ล่าสุด`), h('span', { class: 'sp' }),
+    cur ? h('button', { class: 'primary', onclick: () => copy(cur.text) }, 'คัดลอกพรอมต์') : null));
+  if (cur) left.append(h('pre', { class: 'prompt' }, cur.text), h('p', { class: 'small faint' }, `${cur.by === 'claude' ? 'Claude เขียน' : 'คุณเขียน'} · ${fmtDate(cur.t)} · ภาพที่วางหลังจากนี้จะผูกกับพรอมต์นี้`));
+  else left.append(h('p', { class: 'dim' }, 'ยังไม่มีพรอมต์สำหรับร่างนี้ กด "ส่งงานให้ Claude" เพื่อขอให้เขียน หรือพิมพ์เองด้านล่าง'));
+  const ta = h('textarea', { placeholder: 'พิมพ์พรอมต์ใหม่ของคุณ (จะเก็บเป็นรุ่นใหม่ รุ่นเก่ายังอยู่)', rows: 5 });
+  left.append(h('h3', {}, 'เพิ่มรุ่นใหม่'), ta, h('div', { class: 'tools' }, h('button', {
+    onclick: () => { const t = ta.value.trim(); if (!t) return; it.prompts.push({ id: uid('p'), t: new Date().toISOString(), by: 'owner', form: ui.form, text: t }); save().then(render); },
+  }, 'บันทึกเป็นรุ่นใหม่')));
+  if (hub.settings.starter) {
+    left.append(h('details', {}, h('summary', {}, 'ข้อความเริ่มต้นสำหรับ Gemini (ส่งครั้งแรกของแชท พร้อมแนบภาพฉาก)'),
+      h('div', { class: 'tools' }, h('button', { onclick: () => copy(hub.settings.starter) }, 'คัดลอกข้อความเริ่มต้น')), h('pre', { class: 'prompt' }, hub.settings.starter)));
+  }
+  const right = h('div', {});
+  right.append(h('h3', {}, 'ประวัติพรอมต์'));
+  if (!mine.length) right.append(h('p', { class: 'dim small' }, 'ยังไม่มี'));
+  for (const p of mine.slice().reverse()) {
+    const used = it.rounds.filter((r) => r.promptId === p.id);
+    right.append(h('div', { class: 'panel', style: 'margin-bottom:8px' },
+      h('div', { class: 'row small' }, h('b', {}, p.by === 'claude' ? 'Claude' : 'คุณ'), h('span', { class: 'faint' }, fmtDate(p.t)), h('span', { class: 'sp' }),
+        h('span', { class: 'faint' }, `ใช้กับ ${used.length} รอบ${used.some((r) => r.star) ? ' · มีรอบที่เลือก ★' : ''}`)),
+      h('div', { class: 'small dim', style: 'white-space:pre-wrap;max-height:90px;overflow:hidden' }, p.text),
+      h('button', { class: 'ghost', style: 'margin-top:4px', onclick: () => copy(p.text) }, 'คัดลอก')));
+  }
+  if (it.notes != null) {
+    right.append(h('h3', {}, 'โน้ตของตัวนี้'));
+    right.append(h('textarea', { placeholder: 'เช่น ชอบหน้าแบบรอบ 2 แต่สีรอบ 3', oninput: (e) => { it.notes = e.target.value; saveSoon(); } }, it.notes || ''));
+  }
+  work.append(left, right);
+  m.append(work);
+}
+async function copy(t) { try { await navigator.clipboard.writeText(t); toast('คัดลอกแล้ว'); } catch { toast('คัดลอกไม่ได้ เลือกข้อความแล้วกด Ctrl+C'); } }
+
+function slotRounds(it, slot) {
+  return it.rounds.filter((r) => r.slot === slot && (it.kind !== 'character' || (r.form || 1) === ui.form)
+    && (!['video', 'frames', 'file'].includes(slot) || it.kind !== 'character' || !r.move || r.move === ui.move)
+    && (ui.showArch || !r.archived));
+}
+
+function renderSlot(m, it, slot) {
+  const rs = slotRounds(it, slot);
+  let sel = rs.find((r) => r.id === ui.sel) || rs.filter((r) => r.star).pop() || rs[rs.length - 1];
+  const work = h('div', { class: 'work' });
+  const left = h('div', {});
+  // viewer
+  if (sel) {
+    const tools = h('div', { class: 'tools' }, h('span', { class: 'seg' }, BGS.map(([k, v]) => h('button', { class: ui.bg === k ? 'on' : '', onclick: () => { ui.bg = k; render(); } }, v))));
+    const stage = h('div', { class: 'stage bg-' + ui.bg });
+    if (ui.bg === 'arena' && hub.settings.arenaBg) stage.style.backgroundImage = `url("${fileUrl(hub.settings.arenaBg)}")`;
+    left.append(tools, stage);
+    viewer(stage, left, sel);
+    if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
+    else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
+    if (slot === 'still') left.append(stillChecks(it, sel));
+  } else left.append(h('p', { class: 'dim' }, emptyText(slot)));
+  // drop zone + rounds
+  const right = h('div', {});
+  right.append(dropZone(it, slot));
+  right.append(h('div', { class: 'row small', style: 'margin:10px 0 6px' }, h('b', {}, `${rs.length} รอบ`), h('span', { class: 'sp' }),
+    h('label', {}, h('input', { type: 'checkbox', checked: ui.showArch, onchange: (e) => { ui.showArch = e.target.checked; render(); } }), ' แสดงรอบที่ซ่อน')));
+  const list = h('div', { class: 'rounds' });
+  for (const r of rs.slice().reverse()) list.append(roundRow(it, r, r === sel));
+  right.append(list);
+  work.append(left, right);
+  m.append(work);
+}
+function emptyText(slot) {
+  return {
+    still: 'ยังไม่มีภาพนิ่ง ลากภาพที่เจนจาก Gemini มาวางที่ช่องด้านขวา',
+    cut: 'ยังไม่มีภาพตัดพื้น Claude จะทำให้หลังจากคุณกดดาวภาพนิ่ง แล้วส่งงานให้ Claude',
+    veoin: 'ยังไม่มีภาพเตรียมส่ง Veo Claude จะทำจากภาพตัดพื้น',
+    video: 'ยังไม่มีวิดีโอ ลากไฟล์ .mp4 จาก Veo มาวางที่ช่องด้านขวา',
+    frames: 'ยังไม่มีเฟรม Claude จะแตกเฟรมจากวิดีโอที่ติดดาว',
+    file: 'ยังไม่มีไฟล์ วางไฟล์อื่นที่เกี่ยวข้องได้ เช่น .pxo หรือ .glb',
+  }[slot];
+}
+
+function viewer(stage, left, r) {
+  if (r.slot === 'frames' && r.meta) return sheetPlayer(stage, left, r);
+  if (isVideo(r.file)) return videoTools(stage, left, r);
+  if (isImage(r.file)) {
+    loadImg(r.file).then((img) => {
+      const keyNeeded = ui.bg !== 'checker' || r.slot !== 'still';
+      stage.append(keyNeeded ? keyed(img) : img.cloneNode());
+    }).catch(() => stage.append(h('p', { class: 'dim' }, 'เปิดไฟล์ไม่ได้')));
+    return;
+  }
+  stage.append(h('p', { class: 'dim' }, `ไฟล์ ${r.file.split('/').pop()} — เปิดดูด้วยโปรแกรมของมัน`));
+}
+
+function sheetPlayer(stage, left, r) {
+  const c = document.createElement('canvas'); stage.append(c);
+  let i = 0, playing = true;
+  const msIn = h('input', { type: 'number', min: 30, max: 1000, step: 1, value: r.meta.ms || 190, style: 'width:80px', onchange: (e) => { r.meta.ms = Math.max(30, Math.min(1000, Number(e.target.value) || 190)); saveSoon(); } });
+  const info = h('span', { class: 'small dim' });
+  left.append(h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุด'),
+    h('button', { onclick: () => { playing = false; i = (i + (r.meta.n || 1) - 1) % (r.meta.n || 1); draw(); } }, '◀ เฟรม'),
+    h('button', { onclick: () => { playing = false; i = (i + 1) % (r.meta.n || 1); draw(); } }, 'เฟรม ▶'),
+    h('label', { class: 'small' }, 'มิลลิวินาที/เฟรม ', msIn), info));
+  let img = null;
+  const scale = () => Math.max(1, Math.floor(Math.min(560 / r.meta.fw, 420 / r.meta.fh)));
+  function draw() {
+    if (!img) return;
+    const [sx, sy, sw, sh] = sheetFrame(img, r.meta, i);
+    const k = keyed(img, sx, sy, sw, sh), s = scale();
+    c.width = sw * s; c.height = sh * s;
+    const g = c.getContext('2d'); g.imageSmoothingEnabled = r.meta.n < 32 ? false : true; g.drawImage(k, 0, 0, c.width, c.height);
+    info.textContent = `เฟรม ${i + 1}/${r.meta.n} · ${r.meta.fw}×${r.meta.fh} px`;
+  }
+  loadImg(r.file).then((im) => { img = im; draw(); });
+  let last = 0;
+  const tick = (t) => { if (!c.isConnected) return; if (playing && img && t - last >= (r.meta.ms || 190)) { last = t; i = (i + 1) % (r.meta.n || 1); draw(); } requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+
+function videoTools(stage, left, r) {
+  const v = h('video', { src: fileUrl(r.file), controls: true, loop: true, muted: true, autoplay: true, playsinline: true });
+  stage.append(v);
+  const out = h('div', { class: 'auto' });
+  const step = (d) => { v.pause(); v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + d / 24)); };
+  left.append(h('div', { class: 'tools' },
+    h('button', { onclick: () => step(-1) }, '◀ เฟรม'), h('button', { onclick: () => step(1) }, 'เฟรม ▶'),
+    h('span', { class: 'seg' }, [0.25, 0.5, 1].map((s) => h('button', { onclick: (e) => { v.playbackRate = s; e.target.parentNode.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === e.target)); } }, `×${s}`))),
+    h('button', { onclick: () => { v.currentTime = Math.max(0, (v.duration || 0) - 0.4); v.play(); } }, 'ดูรอยต่อตอนวน'),
+    h('button', { onclick: () => driftCheck(v, out) }, 'ตรวจกล้องขยับ/ซูม')), out);
+}
+// sample 6 moments, find the creature box on the green background, report zoom (height change) and pan (centre move)
+async function driftCheck(v, out) {
+  out.replaceChildren(h('span', { class: 'dim' }, 'กำลังตรวจ…'));
+  v.pause();
+  const W = 320, H = Math.round(W * (v.videoHeight / v.videoWidth || 9 / 16));
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  const boxes = [];
+  for (const f of [0.02, 0.2, 0.4, 0.6, 0.8, 0.98]) {
+    v.currentTime = f * v.duration;
+    await new Promise((ok) => v.addEventListener('seeked', ok, { once: true }));
+    g.drawImage(v, 0, 0, W, H);
+    const p = g.getImageData(0, 0, W, H).data;
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; if (p[i + 1] - Math.max(p[i], p[i + 2]) < 30) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    if (x1 >= 0) boxes.push({ h: (y1 - y0) / H, cx: (x0 + x1) / 2 / W, by: y1 / H });
+  }
+  out.replaceChildren();
+  if (boxes.length < 2) { out.append(h('span', { class: 'warn' }, 'หาตัวบนพื้นเขียวไม่เจอ (พื้นไม่ใช่สีเขียว?)')); return; }
+  const hs = boxes.map((b) => b.h), zoom = (Math.max(...hs) - Math.min(...hs)) / Math.max(...hs);
+  const pan = Math.max(...boxes.map((b) => b.cx)) - Math.min(...boxes.map((b) => b.cx));
+  const feet = Math.max(...boxes.map((b) => b.by)) - Math.min(...boxes.map((b) => b.by));
+  out.append(h('span', { class: zoom < 0.04 ? 'ok' : 'bad' }, `ขนาดตัวเปลี่ยน ${(zoom * 100).toFixed(1)}% ${zoom < 0.04 ? '(ปกติ หายใจ)' : '(กล้องน่าจะซูม)'}`),
+    h('span', { class: pan < 0.02 ? 'ok' : 'bad' }, `ตัวเลื่อนซ้ายขวา ${(pan * 100).toFixed(1)}% ${pan < 0.02 ? '' : '(กล้องน่าจะแพน)'}`),
+    h('span', { class: feet < 0.015 ? 'ok' : 'warn' }, `เท้าขยับขึ้นลง ${(feet * 100).toFixed(1)}%`));
+}
+
+function stillChecks(it, r) {
+  r.check = r.check || {};
+  const box = h('div', { class: 'panel', style: 'margin-top:12px' }, h('b', {}, 'ตรวจภาพนิ่ง (ข้อ P1)'));
+  const checks = h('div', { class: 'checks' });
+  STILL_CHECKS.forEach((t, i) => checks.append(h('label', {}, h('input', { type: 'checkbox', checked: !!r.check[i], onchange: (e) => { r.check[i] = e.target.checked; saveSoon(); } }), t)));
+  const auto = h('div', { class: 'auto' }, h('span', { class: 'dim' }, 'ตรวจอัตโนมัติ…'));
+  box.append(checks, auto);
+  loadImg(r.file).then((img) => { auto.replaceChildren(h('b', { class: 'small' }, 'ตรวจอัตโนมัติ'), ...analyse(img).map(([k, t]) => h('span', { class: k }, (k === 'ok' ? '✓ ' : '! ') + t))); }).catch(() => auto.replaceChildren());
+  return box;
+}
+
+function dropZone(it, slot) {
+  const inp = h('input', { type: 'file', multiple: true, hidden: true, accept: slot === 'video' ? 'video/*' : slot === 'file' ? '' : 'image/*', onchange: (e) => upload(it, slot, [...e.target.files]) });
+  const z = h('div', { class: 'drop', tabindex: 0, role: 'button', onclick: () => inp.click(), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') inp.click(); } },
+    h('b', {}, slot === 'video' ? 'ลากวิดีโอมาวาง' : slot === 'file' ? 'ลากไฟล์มาวาง' : 'ลากภาพมาวาง'), h('div', { class: 'small' }, 'หรือคลิกเพื่อเลือกไฟล์'), inp);
+  z.addEventListener('dragover', (e) => { e.preventDefault(); z.classList.add('over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('over'));
+  z.addEventListener('drop', (e) => { e.preventDefault(); z.classList.remove('over'); upload(it, slot, [...e.dataTransfer.files]); });
+  return z;
+}
+async function upload(it, slot, files) {
+  for (const f of files) {
+    toast(`กำลังอัปโหลด ${f.name}…`);
+    const q = new URLSearchParams({ item: it.id, slot, name: f.name });
+    if (it.kind === 'character') { q.set('form', String(ui.form)); if (['video', 'frames', 'file'].includes(slot)) q.set('move', ui.move); }
+    try { hub = await api('/api/upload?' + q, { method: 'POST', body: f }); ui.sel = it.rounds.length ? hub.items[it.id].rounds.at(-1).id : null; }
+    catch (e) { toast('อัปโหลดไม่ได้: ' + e.message); return; }
+  }
+  toast('เก็บแล้ว'); render();
+}
+
+function roundRow(it, r, isSel) {
+  const th = h('button', { class: 'th', title: 'ดูรอบนี้', onclick: () => { ui.sel = r.id; render(); } });
+  thumbInto(th, r, 72);
+  const lic = h('select', { onchange: (e) => { r.licence = e.target.value; saveSoon(); }, 'aria-label': 'สถานะสิทธิ์' }, hub.settings.licences.map((l) => h('option', { value: l, selected: r.licence === l }, l)));
+  const p = it.prompts.find((x) => x.id === r.promptId);
+  return h('div', { class: `round${isSel ? ' sel' : ''}${r.star ? ' star' : ''}${r.archived ? ' arch' : ''}` }, th,
+    h('div', { class: 'info' },
+      h('div', { class: 'row' }, h('b', {}, fmtDate(r.t) || 'ไม่มีวันที่'), h('span', { class: 'faint' }, r.by === 'claude' ? 'Claude' : 'คุณ'), r.meta ? h('span', { class: 'faint' }, `${r.meta.n} เฟรม`) : null),
+      h('input', { type: 'text', value: r.note || '', placeholder: 'โน้ต เช่น หน้าดุไป', oninput: (e) => { r.note = e.target.value; saveSoon(); } }),
+      lic,
+      p ? h('span', { class: 'faint', title: p.text }, `พรอมต์ ${fmtDate(p.t)}`) : null,
+      h('div', { class: 'acts' },
+        h('button', { class: r.star ? 'starred' : '', title: 'เลือกรอบนี้เป็นตัวที่ใช้ (คัดลอกเข้าคลังถาวร)', onclick: () => star(it, r) }, r.star ? '★ ใช้รอบนี้' : '☆ เลือก'),
+        h('label', { class: 'small' }, h('input', { type: 'checkbox', checked: ui.cmp.includes(r.id), onchange: (e) => { ui.cmp = e.target.checked ? [...ui.cmp, r.id].slice(-2) : ui.cmp.filter((x) => x !== r.id); render(); } }), ' เทียบ'),
+        h('button', { class: 'ghost', title: r.archived ? 'แสดงอีกครั้ง' : 'ซ่อนรอบนี้ (ไฟล์ไม่ถูกลบ)', onclick: () => { r.archived = !r.archived; save().then(render); } }, r.archived ? 'เลิกซ่อน' : 'ซ่อน'))));
+}
+async function star(it, r) {
+  try {
+    hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=${r.star ? 0 : 1}`, { method: 'POST' });
+    toast(r.star ? 'เลิกเลือกแล้ว' : 'เลือกแล้ว และเก็บเข้าคลังถาวร');
+  } catch (e) { toast(e.message); }
+  render();
+}
+
+function mediaEl(r, cls) {
+  if (r.slot === 'frames' && r.meta) { const c = h('canvas', { class: cls }); loadImg(r.file).then((img) => { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, 0); const k = keyed(img, sx, sy, sw, sh); c.width = sw; c.height = sh; c.getContext('2d').drawImage(k, 0, 0); }); return c; }
+  if (isVideo(r.file)) return h('video', { class: cls, src: fileUrl(r.file), autoplay: true, loop: true, muted: true, playsinline: true });
+  return h('img', { class: cls, src: fileUrl(r.file), alt: '' });
+}
+function compareDialog(it) {
+  const [a, b] = ui.cmp.map((id) => it.rounds.find((r) => r.id === id));
+  if (!a || !b) return;
+  let mode = 'side';
+  const body = $('dlgBody');
+  const draw = () => {
+    body.replaceChildren();
+    const bar = h('div', { class: 'tools' }, h('span', { class: 'seg' },
+      h('button', { class: mode === 'side' ? 'on' : '', onclick: () => { mode = 'side'; draw(); } }, 'วางคู่กัน'),
+      h('button', { class: mode === 'slide' ? 'on' : '', onclick: () => { mode = 'slide'; draw(); } }, 'เลื่อนแถบทับกัน')),
+    h('span', { class: 'sp' }), h('button', { onclick: () => $('dlg').close() }, 'ปิด'));
+    body.append(bar);
+    const cap = (r) => `${fmtDate(r.t)} ${r.note || ''}`;
+    if (mode === 'side') body.append(h('div', { class: 'cmp-side' }, [a, b].map((r) => h('div', {}, mediaEl(r), h('div', { class: 'small dim' }, cap(r))))));
+    else {
+      const top = mediaEl(b, 'layer');
+      const rng = h('input', { type: 'range', min: 0, max: 100, value: 50, style: 'width:100%', oninput: (e) => { top.style.clipPath = `inset(0 0 0 ${e.target.value}%)`; } });
+      top.style.clipPath = 'inset(0 0 0 50%)';
+      body.append(h('div', { class: 'cmp bg-checker' }, mediaEl(a, 'layer'), top), rng, h('div', { class: 'row small dim' }, h('span', {}, 'ซ้าย: ' + cap(a)), h('span', { class: 'sp' }), h('span', {}, 'ขวา: ' + cap(b))));
+    }
+  };
+  draw();
+  $('dlg').showModal();
+}
+
+// ---------- shadow editor (E1: feet + ground line + one oval + sun-cast) ----------
+function shadowSource(it) {
+  return pick(it, 'frames', 1, 'idle') || pick(it, 'cut', 1) || pick(it, 'still', 1) || latest(it, 'frames', 1, 'idle') || latest(it, 'cut', 1) || latest(it, 'still', 1);
+}
+function guessFeet(k) {
+  const g = k.getContext('2d', { willReadFrequently: true }), W = k.width, H = k.height;
+  const p = g.getImageData(0, 0, W, H).data;
+  let bottom = -1;
+  for (let y = H - 1; y >= 0 && bottom < 0; y--) for (let x = 0; x < W; x++) if (p[(y * W + x) * 4 + 3] > 128) { bottom = y; break; }
+  if (bottom < 0) return [0.5, 1];
+  const band = Math.max(2, Math.round(H * 0.06));
+  let sx = 0, n = 0;
+  for (let y = bottom - band; y <= bottom; y++) for (let x = 0; x < W; x++) if (y >= 0 && p[(y * W + x) * 4 + 3] > 128) { sx += x; n++; }
+  return [+(n ? sx / n / W : 0.5).toFixed(4), +((bottom + 1) / H).toFixed(4)];
+}
+function renderShadow(m, it) {
+  const src = shadowSource(it);
+  if (!src) { m.append(h('p', { class: 'dim' }, 'ต้องมีภาพนิ่ง ภาพตัดพื้น หรือเฟรมก่อน จึงจะตั้งเงาได้')); return; }
+  const work = h('div', { class: 'work' });
+  const left = h('div', { class: 'shadow-ed' });
+  const cv = h('canvas', { width: 900, height: 560, 'aria-label': 'ตัวแก้เงา: ลากตัวละครเพื่อวางเท้าบนจุดกลางช่อง ลากวงเงาเพื่อย้าย ลากจุดขอบเพื่อปรับขนาด' });
+  left.append(cv, h('p', { class: 'small faint' }, 'ลากตัวละครให้เท้าแตะกากบาทกลางช่อง · ลากวงเงาเพื่อย้าย · ลากจุดขวาหรือล่างของวงเพื่อปรับขนาด · ภาพนี้คือตัวอย่างโดยประมาณ ของจริงให้ดูในเกม'));
+  const right = h('div', {});
+  work.append(left, right);
+  m.append(work);
+  let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null;
+  let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
+  const pitch = () => hub.settings.camPitch || 40;
+  const commit = () => { it.shadow = { ...s, size, round: src.id }; saveSoon(); };
+  // sliders
+  const sl = h('div', { class: 'sliders' });
+  const vals = {};
+  const slider = (label, get, set, min, max, stepv, fmt = (v) => v.toFixed(2)) => {
+    const out = h('span', { class: 'small dim' });
+    const r = h('input', { type: 'range', min, max, step: stepv, oninput: (e) => { set(Number(e.target.value)); out.textContent = fmt(Number(e.target.value)); commit(); draw(); } });
+    vals[label] = () => { r.value = get(); out.textContent = fmt(get()); };
+    sl.append(h('label', { class: 'small' }, label), r, out);
+  };
+  slider('ความเข้มวงเงา', () => s.oval.a, (v) => { s.oval.a = v; }, 0, 1, 0.01);
+  slider('ความกว้างวง', () => s.oval.w, (v) => { s.oval.w = v; }, 0.1, 2, 0.01);
+  slider('ความสูงวง', () => s.oval.h, (v) => { s.oval.h = v; }, 0.05, 2, 0.01);
+  slider('ความยาวเงาแดด', () => s.cast.len, (v) => { s.cast.len = v; }, 0, 2, 0.01);
+  slider('ความเข้มเงาแดด', () => s.cast.str, (v) => { s.cast.str = v; }, 0, 1, 0.01);
+  const pitchSel = h('select', { onchange: (e) => { hub.settings.camPitch = Number(e.target.value); saveSoon(); draw(); } },
+    [[40, 'กล้องเกมตอนนี้ (ก้ม 40°)'], [14, 'กล้อง FF Re (ก้ม 14°)'], [8.5, 'กล้อง r36 (ก้ม 8.5°)']].map(([v, t]) => h('option', { value: v, selected: pitch() === v }, t)));
+  const feetOut = h('div', { class: 'small dim' });
+  right.append(h('h3', {}, 'ค่าเงาของตัวนี้'), sl,
+    h('h3', {}, 'จุดเท้า'), feetOut,
+    h('div', { class: 'tools' },
+      h('button', { onclick: () => { if (!frames[0]) return; s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
+      h('button', { class: 'ghost', onclick: () => { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
+    h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
+    frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : null,
+    h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
+  function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(s.feet[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
+  // geometry (canvas px)
+  const geo = () => {
+    const W = cv.width, H = cv.height, T = 300, k = Math.sin(pitch() * Math.PI / 180);
+    const C = { x: W * 0.5, y: H * 0.74 };
+    const f = frames[fi] || frames[0];
+    const sh = SPR_H / TILE * T, sw = f ? sh * f.width / f.height : sh;
+    return { W, H, T, k, C, sh, sw, f };
+  };
+  function draw() {
+    const g = cv.getContext('2d'); const { W, H, T, k, C, sh, sw, f } = geo();
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
+    if (bg) { const r = Math.max(W / bg.width, H / bg.height); g.globalAlpha = 0.85; g.drawImage(bg, (W - bg.width * r) / 2, (H - bg.height * r) * 0.7, bg.width * r, bg.height * r); g.globalAlpha = 1; }
+    else { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#2f3a33'); gr.addColorStop(1, '#4a5a44'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+    // slot ring
+    const rr = RING_R / TILE * T;
+    g.strokeStyle = 'rgba(150,200,255,.55)'; g.lineWidth = 3; g.beginPath(); g.ellipse(C.x, C.y, rr, rr * k, 0, 0, Math.PI * 2); g.stroke();
+    if (!f) return;
+    const fx = s.feet[0] * sw, fy = s.feet[1] * sh; // feet inside the drawn sprite
+    // sun-cast silhouette (image up → sun ground direction, laid flat)
+    if (s.cast.str > 0 && s.cast.len > 0) {
+      const sil = document.createElement('canvas'); sil.width = f.width; sil.height = f.height;
+      const sg = sil.getContext('2d'); sg.drawImage(f, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = 'rgb(13,18,33)'; sg.fillRect(0, 0, sil.width, sil.height);
+      const L = s.cast.len * SUN.reach * sh;
+      const up = { x: SUN.x * L, y: SUN.z * L * k }, side = { x: SUN.z * sw * -1, y: -SUN.x * sw * k * -1 };
+      const a = side.x / f.width, b = side.y / f.width, c = -up.x / f.height, d = -up.y / f.height;
+      const ex = C.x - a * s.feet[0] * f.width - c * s.feet[1] * f.height, ey = C.y - b * s.feet[0] * f.width - d * s.feet[1] * f.height;
+      g.globalAlpha = s.cast.str; g.setTransform(a, b, c, d, ex, ey); g.drawImage(sil, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+    }
+    // oval
+    const o = s.oval, ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
+    g.save(); g.translate(ox, oy); g.scale(1, rh / rw);
+    const rg = g.createRadialGradient(0, 0, 0, 0, 0, rw); rg.addColorStop(0, `rgba(0,0,0,${0.55 * o.a})`); rg.addColorStop(0.6, `rgba(0,0,0,${0.35 * o.a})`); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(0, 0, rw, 0, Math.PI * 2); g.fill(); g.restore();
+    // sprite
+    const x0 = C.x - fx, y0 = C.y - fy;
+    g.imageSmoothingEnabled = f.width > 300; g.drawImage(f, x0, y0, sw, sh);
+    // ground line + feet cross + oval handles
+    g.strokeStyle = 'rgba(255,230,120,.8)'; g.setLineDash([6, 5]); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0 - 20, C.y); g.lineTo(x0 + sw + 20, C.y); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = '#ffe678'; g.lineWidth = 2; g.beginPath(); g.moveTo(C.x - 10, C.y); g.lineTo(C.x + 10, C.y); g.moveTo(C.x, C.y - 10); g.lineTo(C.x, C.y + 10); g.stroke();
+    g.fillStyle = '#fff'; g.strokeStyle = '#000';
+    for (const [hx, hy] of [[ox + rw, oy], [ox, oy + rh]]) { g.beginPath(); g.arc(hx, hy, 7, 0, Math.PI * 2); g.fill(); g.stroke(); }
+  }
+  // dragging
+  let drag = null;
+  const pos = (e) => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; };
+  cv.addEventListener('pointerdown', (e) => {
+    if (!s) return;
+    const p = pos(e), { T, k, C, sh, sw } = geo(), o = s.oval;
+    const ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
+    const near = (x, y) => Math.hypot(p.x - x, p.y - y) < 14;
+    const x0 = C.x - s.feet[0] * sw, y0 = C.y - s.feet[1] * sh;
+    if (near(ox + rw, oy)) drag = { t: 'w' };
+    else if (near(ox, oy + rh)) drag = { t: 'h' };
+    else if (((p.x - ox) / rw) ** 2 + ((p.y - oy) / rh) ** 2 <= 1 && !(p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < C.y - 12)) drag = { t: 'oval', sx: p.x, sy: p.y, dx: o.dx, dy: o.dy };
+    else if (p.x > x0 && p.x < x0 + sw && p.y > y0 && p.y < y0 + sh) drag = { t: 'feet', sx: p.x, sy: p.y, f: [...s.feet] };
+    if (drag) { try { cv.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ } cv.style.cursor = 'grabbing'; }
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const p = pos(e), { T, k, C, sh, sw } = geo(), o = s.oval;
+    if (drag.t === 'w') o.w = Math.max(0.1, Math.min(2, Math.abs(p.x - (C.x + o.dx * T)) * 2 / T));
+    if (drag.t === 'h') o.h = Math.max(0.05, Math.min(2, Math.abs(p.y - (C.y + o.dy * T * k)) * 2 / (T * k)));
+    if (drag.t === 'oval') { o.dx = Math.max(-1, Math.min(1, drag.dx + (p.x - drag.sx) / T)); o.dy = Math.max(-1, Math.min(1, drag.dy + (p.y - drag.sy) / (T * k))); }
+    if (drag.t === 'feet') { s.feet = [Math.max(0, Math.min(1, drag.f[0] - (p.x - drag.sx) / sw)), Math.max(0, Math.min(1, drag.f[1] - (p.y - drag.sy) / sh))]; }
+    sync(); draw();
+  });
+  const end = () => { if (drag) { drag = null; cv.style.cursor = ''; s.feet = s.feet.map((v) => +v.toFixed(4)); for (const kk of ['dx', 'dy', 'w', 'h']) s.oval[kk] = +s.oval[kk].toFixed(3); commit(); sync(); } };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  // load pictures
+  (async () => {
+    if (hub.settings.arenaBg) bg = await loadImg(hub.settings.arenaBg).catch(() => null);
+    const img = await loadImg(src.file);
+    if (src.slot === 'frames' && src.meta) { for (let i = 0; i < (src.meta.n || 1); i++) frames.push(keyed(img, ...sheetFrame(img, src.meta, i))); size = [src.meta.fw, src.meta.fh]; }
+    else { frames = [keyed(img)]; size = [img.naturalWidth, img.naturalHeight]; }
+    if (!s) { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
+    s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
+    sync(); draw();
+    let last = 0; const ms = src.meta?.ms || 190;
+    const tick = (t) => { if (!cv.isConnected) return; if (playing && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); } requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  })().catch(() => left.append(h('p', { class: 'bad' }, 'เปิดภาพไม่ได้')));
+}
+
+// ---------- queue / library / new item ----------
+function queueDialog(it) {
+  const body = $('dlgBody');
+  const ta = h('textarea', { rows: 5, placeholder: 'เช่น เขียนพรอมต์ร่าง 1 ให้ตัวนี้ · ตัดพื้นภาพที่ติดดาว · วิดีโอมาแล้ว แตกเฟรมให้หน่อย' });
+  const step = STEPS.find(([k]) => k === ui.step);
+  body.replaceChildren(h('h3', { style: 'margin-top:0' }, `ส่งงานให้ Claude: ${it.id} ${it.name || ''}`),
+    h('p', { class: 'small dim' }, `งานจะเข้าคิว พอคุณบอก Claude ว่า "ดูคิว" Claude จะทำทุกงานที่รออยู่ (ตอนนี้อยู่ขั้น: ${step ? step[1] : ''} ร่าง ${ui.form})`), ta,
+    h('div', { class: 'tools' }, h('button', {
+      class: 'primary', onclick: () => {
+        const t = ta.value.trim(); if (!t) return;
+        hub.queue.push({ id: uid('q'), item: it.id, step: ui.step, form: ui.form, move: ui.move, t: new Date().toISOString(), text: t, state: 'open', reply: '' });
+        $('dlg').close(); save().then(() => { toast('ส่งเข้าคิวแล้ว'); render(); });
+      },
+    }, 'ส่งเข้าคิว'), h('button', { onclick: () => $('dlg').close() }, 'ยกเลิก')));
+  $('dlg').showModal(); ta.focus();
+}
+function renderQueue(m) {
+  m.append(h('h2', {}, 'งานที่ส่งถึง Claude'), h('p', { class: 'dim' }, 'บอก Claude ในแชทว่า "ดูคิว asset hub" แล้ว Claude จะทำงานที่รออยู่และเขียนผลกลับมาที่นี่'));
+  const open = hub.queue.filter((q) => q.state === 'open'), done = hub.queue.filter((q) => q.state !== 'open');
+  if (!hub.queue.length) m.append(h('p', { class: 'faint' }, 'ยังไม่มีงาน เปิดตัวละครแล้วกด "ส่งงานให้ Claude"'));
+  for (const q of [...open, ...done.slice().reverse()]) {
+    const it = hub.items[q.item];
+    m.append(h('div', { class: 'q' + (q.state !== 'open' ? ' done' : ''), style: `--c: ${tribeVar(it?.tribe)}` },
+      h('div', { class: 'row' }, h('button', { class: 'ghost', onclick: () => { ui.tab = it?.kind === 'character' ? 'chars' : 'other'; ui.step = q.step || 'still'; ui.form = q.form || 1; openItem(q.item); } }, `${q.item} ${it?.name || ''}`),
+        h('span', { class: 'faint small' }, fmtDate(q.t)), h('span', { class: 'sp' }), h('span', { class: 'pill' }, q.state === 'open' ? 'รอ Claude' : q.state === 'done' ? 'เสร็จแล้ว' : 'ยกเลิก')),
+      h('div', { style: 'white-space:pre-wrap' }, q.text),
+      q.reply ? h('div', { class: 'small dim', style: 'margin-top:6px;white-space:pre-wrap' }, 'Claude: ' + q.reply) : null,
+      q.state === 'open' ? h('div', { class: 'tools' }, h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้')) : null));
+  }
+}
+let libCache = null;
+async function renderLibrary(m) {
+  m.append(h('h2', {}, 'คลังเดิม (art/library)'), h('p', { class: 'dim' }, 'ไฟล์ทุกชิ้นที่อยู่ในคลังถาวร อ่านอย่างเดียว ไฟล์ที่นี่ไม่ถูกลบหรือเขียนทับ · เลือกภาพฉากเพื่อใช้เป็นพื้นหลังตอนดูตัวละครในฉากและตอนตั้งเงา'));
+  const box = h('div', {}); m.append(box);
+  if (!libCache) libCache = await api('/api/library').catch(() => []);
+  const tb = h('table', { class: 'lib' }, h('tr', {}, ['', 'ไฟล์', 'คืออะไร', 'ที่มา', 'สิทธิ์', ''].map((t) => h('th', {}, t))));
+  for (const r of libCache) {
+    const rel = 'lib/' + r.file;
+    const isBg = hub.settings.arenaBg === rel;
+    tb.append(h('tr', {}, h('td', {}, isImage(r.file) ? h('img', { src: fileUrl(rel), alt: '', loading: 'lazy' }) : h('span', { class: 'faint small' }, r.file.split('.').pop())),
+      h('td', { class: 'small' }, r.file), h('td', { class: 'small dim' }, r.what), h('td', { class: 'small' }, `${r.source || ''} ${r.date || ''}`), h('td', { class: 'small faint' }, r['licence-status'] || ''),
+      h('td', {}, isImage(r.file) ? h('button', { class: isBg ? 'on' : 'ghost', onclick: () => { hub.settings.arenaBg = isBg ? '' : rel; save().then(render); } }, isBg ? 'พื้นฉากอยู่' : 'ใช้เป็นพื้นฉาก') : null)));
+  }
+  box.append(tb);
+}
+function newItemDialog() {
+  const body = $('dlgBody');
+  const kind = h('select', {}, Object.entries(KIND_TH).filter(([k]) => k !== 'character').map(([k, v]) => h('option', { value: k }, v)));
+  const id = h('input', { type: 'text', placeholder: 'รหัสภาษาอังกฤษ เช่น stone-runes', maxlength: 40 });
+  const nm = h('input', { type: 'text', placeholder: 'ชื่อที่อ่านง่าย เช่น เสาหินรูน' });
+  const err = h('p', { class: 'small bad' });
+  body.replaceChildren(h('h3', { style: 'margin-top:0' }, 'เพิ่มรายการใหม่'), h('div', { class: 'checks' }, h('label', {}, 'ประเภท ', kind), h('label', {}, 'รหัส ', id), h('label', {}, 'ชื่อ ', nm)), err,
+    h('div', { class: 'tools' }, h('button', {
+      class: 'primary', onclick: () => {
+        const v = id.value.trim();
+        if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(v)) { err.textContent = 'รหัสใช้ได้เฉพาะ a-z 0-9 - _ ไม่เกิน 40 ตัว'; return; }
+        if (hub.items[v]) { err.textContent = 'มีรหัสนี้อยู่แล้ว'; return; }
+        hub.items[v] = { id: v, kind: kind.value, name: nm.value.trim(), tribe: '', prompts: [], rounds: [], notes: '', inGame: false, shadow: null };
+        $('dlg').close(); ui.step = 'still'; save().then(() => openItem(v));
+      },
+    }, 'เพิ่ม'), h('button', { onclick: () => $('dlg').close() }, 'ยกเลิก')));
+  $('dlg').showModal(); id.focus();
+}
+
+// ---------- boot ----------
+document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => { ui.tab = b.dataset.tab; if (ui.tab === 'chars' || ui.tab === 'other') { const it = hub.items[ui.item]; if (it && (it.kind !== 'character') !== (ui.tab === 'other')) ui.item = null; } render(); }));
+$('search').addEventListener('input', (e) => { ui.q = e.target.value; render(); });
+$('statusFilter').addEventListener('change', (e) => { ui.status = e.target.value; render(); });
+$('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
+$('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)`); } catch (e) { toast(e.message); } });
+$('dlg').addEventListener('click', (e) => { if (e.target === $('dlg')) $('dlg').close(); });
+api('/api/hub').then((j) => { hub = j; render(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });

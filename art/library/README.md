@@ -14,6 +14,7 @@ Every **usable** picture and model the owner gives (Gemini pictures, Hunyuan3D d
 ## Folders
 - `3d/originals/` — raw downloads from the AI 3D site (full 50k, 4096 textures), untouched.
 - `3d/prepared/` — Claude's Blender-prepared versions (decimated, baked, scaled), with their texture files.
+- `characters/<ID>/` — rounds the owner starred (★) in the asset hub (tools/asset-hub, set 240); the hub copies them here and adds the INDEX.csv row itself.
 - `pictures/<set>/` — owner pictures (Gemini cards, sheets, views, sky, hills, ground) and Claude's cut-outs of them.
 
 Index of every file: INDEX.csv.

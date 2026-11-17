@@ -1049,6 +1049,27 @@ func test_arena_move() -> String:
 
 # set 206 (user A2/C1): the 3D arena — projection = Camera3D math, the fitted camera frames the board inside its target,
 # prep pose shows your half (enemy off to the right), battle pose shows both; units become sprites; cells sit on projected slots
+func test_unit_shadows() -> String: # set 240: asset-hub shadow file — validated, clamped, feet only on the matching texture size
+	var ST := load("res://scripts/ui/stage3d.gd")
+	ST.load_shadows({"lift": 9, "units": {"WN-1": {"feet": [0.25, 0.8], "size": [200, 100], "oval": {"dx": 5, "w": 0.5, "h": "x", "a": 0.4}, "cast": {"len": 1.2}}, "BAD": "nope"}})
+	var s: Dictionary = ST.unit_shadow("WN-1")
+	if not (is_equal_approx(s["dx"], 1.0) and is_equal_approx(s["w"], 0.5) and is_equal_approx(s["h"], 0.45) and is_equal_approx(s["a"], 0.4) and is_equal_approx(s["len"], 1.2)):
+		return "oval/cast values must be clamped, bad ones fall back to defaults: %s" % str(s)
+	if ST.unit_shadow("BAD") != ST.SHADOW_DEF or ST.unit_shadow("HL-1") != ST.SHADOW_DEF:
+		return "a broken or missing unit entry must use the default shadow"
+	if ST.feet_shift(s, Vector2i(32, 32), 1.7, false) != Vector3.ZERO:
+		return "feet must not move a sprite whose texture size differs from the one the owner set it on"
+	var sh: Vector3 = ST.feet_shift(s, Vector2i(200, 100), 1.7, false)
+	if not (is_equal_approx(sh.x, 0.25 * 3.4) and sh.y < 0.0):
+		return "feet at x 25 %% must shift the sprite right by a quarter of its width and down to the ground line: %s" % str(sh)
+	if not is_equal_approx(ST.feet_shift(s, Vector2i(200, 100), 1.7, true).x, -sh.x):
+		return "the flipped (enemy) sprite must mirror the feet shift"
+	ST.load_shadows({})
+	if ST.unit_shadow("WN-1") != ST.SHADOW_DEF:
+		return "an empty file must reset to defaults"
+	ST.load_shadows() # back to the real data file for the tests that follow
+	return "ok"
+
 func test_stage3d() -> String:
 	var ST := load("res://scripts/ui/stage3d.gd")
 	var vp := Vector2(854, 480)

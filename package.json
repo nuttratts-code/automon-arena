@@ -1,1 +1,1 @@
-{ "name": "automon-arena", "private": true, "type": "module" }
+{ "name": "automon-arena", "private": true, "type": "module", "scripts": { "assets": "node tools/asset-hub/server.mjs" } }

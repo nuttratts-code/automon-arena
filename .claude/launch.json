@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "asset-hub", "runtimeExecutable": "node", "runtimeArgs": ["tools/asset-hub/server.mjs"], "port": 5177 }
+  ]
+}
