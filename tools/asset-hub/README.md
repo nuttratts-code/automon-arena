@@ -19,11 +19,14 @@ Local web page where the owner keeps every art round per creature (prompt → st
 Round fields: `slot` still · cut · veoin · video · frames · file — `form` 1/3 — `move` idle/attack/hit/die — `star` = the one in use — `archived` = hidden, file kept — `licence` (default AI placeholder - UNVERIFIED) — `promptId` = the prompt version it was made from — frames add `meta {cols, rows, fw, fh, n, ms}`.
 
 ## Claude's queue ("ดูคิว" / "ดูคิว asset hub")
-1. Read `art/hub/hub.json` → `queue` items with `state: "open"` (each names `item`, `step`, `form`, `move`, `text`).
-2. Do the work with the usual runbook (skill `char-idle` route P: cut, padded Veo input, frames; art-style §5–6 for prompts).
-3. Put results back: server running → `POST /api/upload?item=ID&slot=cut&form=1&by=claude&name=x.png` (body = file, header `Origin: http://127.0.0.1:5177`); otherwise copy the file into `art/hub/files/<ID>/` and append a round to hub.json by hand (unique `id`, `by: "claude"`, bump `rev`). New prompt = append to `items[ID].prompts` (`by: "claude"`, `form`). A frames round needs `meta`.
-4. Set the queue item `state: "done"` + a short Thai `reply`, bump `rev`, commit hub.json (+ library files if starred).
-Never star for the owner — the owner picks.
+1. Read `art/hub/hub.json` → `queue` items with `state: "open"` (each names `item`, `task`, `video`, `form`, `move`, `text`).
+2. **`task: "frames+shadow"` (owner flow set 240: the owner presses "ส่งงานให้ Claude" → "ตัดเฟรม + สร้างเงา") = the default job:**
+   a. Video = the round id in `video` (the owner's starred video for that form + move); file = `art/hub/files/<item>/…` (`file` field minus `hub/`).
+   b. Frames: skill `char-idle` route P step P4 — `python -I .claude/skills/char-idle/painted_idle.py <video> <scratch>/out 32 150` (writes `sheet_32x1_<W>x<H>.png` + `preview.gif`, prints ms per frame and feet row min/max — must be equal). Check one GIF frame on a flat colour (no green rim). A bad clip (camera moved, cut-off body) → do not add; answer the item with the reason instead.
+   c. Add + shadow: `python -I tools/asset-hub/hub_add.py <item> <sheet.png> <ms> --form <f> --move <m>` → frames round (by: claude, not starred) + the creature's shadow set on it (feet guessed from frame 1, size = one frame, owner's oval / body-shadow numbers kept, defaults for a new one).
+   d. Answer: queue item `state: "done"` + Thai `reply` (loop length, ms, feet row check, "ติดดาวเฟรมถ้าโอเค แล้วเปิดขั้นเงาปรับต่อ"), bump `rev`. Commit hub.json (uploads stay local). Send the GIF to the owner.
+3. Other tasks (free text): do them with the usual runbook (char-idle P2 cut / padded Veo input, art-style §5–6 prompts). Put results back with `POST /api/upload?item=ID&slot=cut&form=1&by=claude&name=x.png` (server running, header `Origin: http://127.0.0.1:5177`) or copy into `art/hub/files/<ID>/` + append a round by hand (unique `id`, `by: "claude"`, bump `rev`). New prompt = append to `items[ID].prompts` (`by: "claude"`, `form`). Then step 2d.
+Never star for the owner — the owner picks. The page notices the new rev on its next save (it reloads); tell the owner to press F5.
 
 ## Shadow numbers (E1)
 `feet` = picture point on the slot (fraction, y down) + `size` = that picture in px; the game shifts the sprite only when its texture has the same size (main still shows the old placeholder tiles, so feet wait for the real art at the r38 port). `oval` dx/dy/w/h in tile units (game default 0.8 × 0.45), `a` strength.

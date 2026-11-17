@@ -539,6 +539,8 @@ function compareDialog(it) {
 
 // ---------- shadow editor (E1: feet + ground line + one oval + sun-cast) ----------
 function shadowSource(it) {
+  const set = it.shadow?.round && it.rounds.find((r) => r.id === it.shadow.round && !r.archived); // the picture the shadow was set on (Claude sets it on new frames)
+  if (set) return set;
   return pick(it, 'frames', 1, 'idle') || pick(it, 'cut', 1) || pick(it, 'still', 1) || latest(it, 'frames', 1, 'idle') || latest(it, 'cut', 1) || latest(it, 'still', 1);
 }
 function guessFeet(k) {
@@ -752,12 +754,19 @@ function queueDialog(it) {
   const body = $('dlgBody');
   const ta = h('textarea', { rows: 5, placeholder: 'เช่น เขียนพรอมต์ร่าง 1 ให้ตัวนี้ · ตัดพื้นภาพที่ติดดาว · วิดีโอมาแล้ว แตกเฟรมให้หน่อย' });
   const step = STEPS.find(([k]) => k === ui.step);
+  let task = '';
+  const vid = it.kind === 'character' ? pick(it, 'video', ui.form, ui.move) : null;
+  const preset = h('button', { class: 'primary', disabled: !vid, title: vid ? '' : 'ต้องติดดาววิดีโอของร่าง/ท่านี้ก่อน', onclick: () => {
+    task = 'frames+shadow';
+    ta.value = `ตัดเฟรม + สร้างเงา: ร่าง ${ui.form} ท่า${moveTh(ui.move)} จากวิดีโอที่ติดดาว (${vid ? fmtDate(vid.t) : ''})`;
+  } }, 'ตัดเฟรม + สร้างเงา');
   body.replaceChildren(h('h3', { style: 'margin-top:0' }, `ส่งงานให้ Claude: ${it.id} ${it.name || ''}`),
+    it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'Claude จะแตกเฟรมจากวิดีโอที่ติดดาว แล้ววางเงาเริ่มต้นบนเฟรมชุดใหม่ให้' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
     h('p', { class: 'small dim' }, `งานจะเข้าคิว พอคุณบอก Claude ว่า "ดูคิว" Claude จะทำทุกงานที่รออยู่ (ตอนนี้อยู่ขั้น: ${step ? step[1] : ''} ร่าง ${ui.form})`), ta,
     h('div', { class: 'tools' }, h('button', {
       class: 'primary', onclick: () => {
         const t = ta.value.trim(); if (!t) return;
-        hub.queue.push({ id: uid('q'), item: it.id, step: ui.step, form: ui.form, move: ui.move, t: new Date().toISOString(), text: t, state: 'open', reply: '' });
+        hub.queue.push({ id: uid('q'), item: it.id, task: task || undefined, video: task && vid ? vid.id : undefined, step: ui.step, form: ui.form, move: ui.move, t: new Date().toISOString(), text: t, state: 'open', reply: '' });
         $('dlg').close(); save().then(() => { toast('ส่งเข้าคิวแล้ว'); render(); });
       },
     }, 'ส่งเข้าคิว'), h('button', { onclick: () => $('dlg').close() }, 'ยกเลิก')));

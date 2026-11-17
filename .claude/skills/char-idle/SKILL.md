@@ -6,7 +6,7 @@ description: Character still → idle — PAINTED creatures first (route P, art-
 
 > Owner rules: set 222 L1 = **video first (route B), code idle (route A) only when the video fails** · set 221 = never apply a code variant silently, the owner picks per character · set 222 = **minimal processing** ("the more it is cleaned, the worse it looks"). Rules: claude/art-style.md §2 · art store: art/library/README.md (usable pieces only, never delete) · licence: AI art = placeholder, UNVERIFIED (set 219 D).
 
-> Set 240: stills and videos now arrive through the asset hub (tools/asset-hub/README.md — files in art/hub/files/<ID>/, queue in art/hub/hub.json); put every cut / Veo input / frames sheet back there as a round (by: claude) and answer the queue item.
+> Set 240: stills and videos now arrive through the asset hub (tools/asset-hub/README.md — files in art/hub/files/<ID>/, queue in art/hub/hub.json); put every cut / Veo input / frames sheet back there as a round (by: claude) and answer the queue item. Owner's default queue job "ตัดเฟรม + สร้างเงา" (task `frames+shadow`) = P4 frames → `tools/asset-hub/hub_add.py` (adds the round + first shadow) — steps in tools/asset-hub/README.md.
 
 Scripts here (`painted_idle.py` = route P, set 227; the rest = pixel routes) (Python 3 + numpy + Pillow (+ opencv-python for video); run with `python -I`):
 - `snap.py <in.jpg> <out.png> <block_px> <offset_px> <grid_n>` — AI "fake pixel" still → real-pixel RGBA, magenta bg → transparent, trimmed.
