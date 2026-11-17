@@ -151,3 +151,15 @@ dialog::backdrop { background: #000a; }
   .forms, .cmp-side { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+/* set 240: hidden rail must really hide (display:flex beat the hidden attribute → queue tab showed only the list) */
+.rail[hidden] { display: none; }
+/* waiting / finished job banners + badges */
+.badge { margin-left: auto; font-size: 11px; background: var(--warn); color: #15181d; border-radius: 10px; padding: 0 7px; font-weight: 600; flex: none; }
+.badge-line { color: var(--warn); }
+.job { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #e2b34f1a; border: 1px solid var(--warn); border-radius: var(--r); padding: 10px 12px; margin: 12px 0 0; }
+.job.done { background: #7fbf7a1a; border-color: var(--ok); }
+.q-wait .pill.st { background: var(--warn); color: #15181d; border-color: var(--warn); font-weight: 600; }
+.q-ok .pill.st { background: var(--ok); color: #15181d; border-color: var(--ok); font-weight: 600; }
+.q-off { opacity: .55; }
+.q .next { margin-top: 6px; color: var(--ok); }

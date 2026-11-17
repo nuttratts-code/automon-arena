@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 93,
+ "rev": 94,
  "settings": {
   "moves": [
    "idle",
@@ -1393,5 +1393,19 @@
    "shadow": null
   }
  },
- "queue": []
+ "queue": [
+  {
+   "id": "qi2pm5q61",
+   "item": "WN-1",
+   "task": "frames+shadow",
+   "video": "rf70d253f",
+   "step": "still",
+   "form": 1,
+   "move": "idle",
+   "t": "2026-11-17T13:57:58.291Z",
+   "text": "ตัดเฟรม + สร้างเงา: ร่าง 1 ท่าหายใจ จากวิดีโอที่ติดดาว (2026-11-17)",
+   "state": "open",
+   "reply": ""
+  }
+ ]
 }

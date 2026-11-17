@@ -11,6 +11,11 @@ const STATUS = [
   ['claude', 'รอ Claude ทำเฟรม'], ['done', 'เฟรมเสร็จ'], ['ingame', 'อยู่ในเกมแล้ว'],
 ];
 const STATUS_TH = Object.fromEntries(STATUS);
+const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเงา' };
+const taskTh = (q) => TASK_TH[q.task] || 'งานอื่น';
+// what the owner does once Claude has finished, per task
+const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ' };
+const openJobs = (id) => (hub.queue || []).filter((q) => q.item === id && q.state === 'open');
 const STEPS = [
   ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
   ['still', 'ภาพนิ่ง', 'คุณวางภาพที่เจน'],
@@ -197,7 +202,8 @@ function renderRail() {
     for (const it of rows) {
       const st = status(it);
       list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: STATUS_TH[st], onclick: () => openItem(it.id) },
-        h('span', { class: 'dot st-' + st }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || '')));
+        h('span', { class: 'dot st-' + st }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || ''),
+        openJobs(it.id).length ? h('span', { class: 'badge', title: openJobs(it.id).map(taskTh).join(', ') }, 'รอ Claude') : null));
     }
   }
   if (ui.tab === 'other') list.append(h('button', { class: 'ghost', onclick: newItemDialog }, '+ เพิ่มรายการใหม่'));
@@ -250,7 +256,8 @@ function renderBoard(m) {
       const st = status(it);
       tiles.append(h('button', { class: 'tile', style: `--tribe: ${tribeVar(it.tribe)}`, onclick: () => openItem(it.id) }, th,
         h('div', { class: 'row' }, h('span', { class: 'dot st-' + st }), h('b', {}, it.id), h('span', { class: 'dim small' }, it.name || '')),
-        h('div', { class: 'small faint' }, STATUS_TH[st] + (it.shadow ? ' · ตั้งเงาแล้ว' : ''))));
+        h('div', { class: 'small faint' }, STATUS_TH[st] + (it.shadow ? ' · ตั้งเงาแล้ว' : '')),
+        openJobs(it.id).length ? h('div', { class: 'small badge-line' }, 'รอ Claude: ' + openJobs(it.id).map(taskTh).join(', ')) : null));
     }
     m.append(h('section', { class: 'board-grp', style: `--c: ${c}` }, h('h3', {}, `${label} (${rows.length})`), tiles));
   }
@@ -276,6 +283,13 @@ function renderItem(m, it) {
     h('span', { class: 'sp' }),
     h('label', { class: 'pill' }, h('input', { type: 'checkbox', checked: it.inGame, onchange: (e) => { it.inGame = e.target.checked; save().then(render); } }), 'อยู่ในเกมแล้ว'),
     h('button', { onclick: () => queueDialog(it) }, 'ส่งงานให้ Claude')));
+  for (const q of openJobs(it.id)) m.append(h('div', { class: 'job' },
+    h('b', {}, `รอ Claude: ${taskTh(q)}`), h('span', { class: 'small dim' }, `ส่งเมื่อ ${fmtDate(q.t)} · พิมพ์ "ดูคิว" ในแชทเพื่อให้ Claude เริ่มทำ`),
+    h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้')));
+  const lastDone = (hub.queue || []).filter((q) => q.item === it.id && q.state === 'done' && !q.seen).pop();
+  if (lastDone) m.append(h('div', { class: 'job done' }, h('b', {}, `Claude ทำเสร็จแล้ว: ${taskTh(lastDone)}`),
+    h('span', { class: 'small' }, NEXT_TH[lastDone.task] || lastDone.reply || ''), h('span', { class: 'sp' }),
+    h('button', { class: 'ghost', onclick: () => { lastDone.seen = true; save().then(render); } }, 'รับทราบ')));
   const steps = isChar ? STEPS : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
   const labels = isChar ? null : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
   m.append(h('nav', { class: 'pipe' }, steps.map(([k, label, sub], i) => h('button', {
@@ -773,18 +787,29 @@ function queueDialog(it) {
   $('dlg').showModal(); ta.focus();
 }
 function renderQueue(m) {
-  m.append(h('h2', {}, 'งานที่ส่งถึง Claude'), h('p', { class: 'dim' }, 'บอก Claude ในแชทว่า "ดูคิว asset hub" แล้ว Claude จะทำงานที่รออยู่และเขียนผลกลับมาที่นี่'));
-  const open = hub.queue.filter((q) => q.state === 'open'), done = hub.queue.filter((q) => q.state !== 'open');
-  if (!hub.queue.length) m.append(h('p', { class: 'faint' }, 'ยังไม่มีงาน เปิดตัวละครแล้วกด "ส่งงานให้ Claude"'));
-  for (const q of [...open, ...done.slice().reverse()]) {
+  const open = hub.queue.filter((q) => q.state === 'open'), done = hub.queue.filter((q) => q.state === 'done').reverse(), cancel = hub.queue.filter((q) => q.state === 'cancel').reverse();
+  m.append(h('h2', {}, 'งานที่ส่งถึง Claude'));
+  m.append(h('div', { class: 'job' + (open.length ? '' : ' done') }, open.length
+    ? [h('b', {}, `มี ${open.length} งานรอ Claude`), h('span', { class: 'small' }, 'พิมพ์ "ดูคิว" ในแชท Claude จะทำทุกงานที่รอ แล้วเขียนผลกลับมาที่นี่')]
+    : [h('b', {}, 'ไม่มีงานค้าง'), h('span', { class: 'small' }, 'เปิดตัวละคร แล้วกด "ส่งงานให้ Claude"')]));
+  const go = (q, step) => { const it = hub.items[q.item]; ui.tab = it?.kind === 'character' ? 'chars' : 'other'; ui.step = step; ui.form = q.form || 1; if (q.move) ui.move = q.move; openItem(q.item); };
+  const card = (q) => {
     const it = hub.items[q.item];
-    m.append(h('div', { class: 'q' + (q.state !== 'open' ? ' done' : ''), style: `--c: ${tribeVar(it?.tribe)}` },
-      h('div', { class: 'row' }, h('button', { class: 'ghost', onclick: () => { ui.tab = it?.kind === 'character' ? 'chars' : 'other'; ui.step = q.step || 'still'; ui.form = q.form || 1; openItem(q.item); } }, `${q.item} ${it?.name || ''}`),
-        h('span', { class: 'faint small' }, fmtDate(q.t)), h('span', { class: 'sp' }), h('span', { class: 'pill' }, q.state === 'open' ? 'รอ Claude' : q.state === 'done' ? 'เสร็จแล้ว' : 'ยกเลิก')),
-      h('div', { style: 'white-space:pre-wrap' }, q.text),
-      q.reply ? h('div', { class: 'small dim', style: 'margin-top:6px;white-space:pre-wrap' }, 'Claude: ' + q.reply) : null,
-      q.state === 'open' ? h('div', { class: 'tools' }, h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้')) : null));
-  }
+    const state = q.state === 'open' ? ['รอ Claude', 'wait'] : q.state === 'done' ? ['เสร็จแล้ว', 'ok'] : ['ยกเลิกแล้ว', 'off'];
+    return h('div', { class: 'q q-' + state[1], style: `--c: ${tribeVar(it?.tribe)}` },
+      h('div', { class: 'row' }, h('b', { style: 'font-size:17px' }, `${q.item} ${it?.name || ''}`), h('span', { class: 'pill' }, taskTh(q)),
+        h('span', { class: 'sp' }), h('span', { class: 'pill st' }, state[0])),
+      h('div', { class: 'small dim' }, `ร่าง ${q.form || 1}${q.move ? ' · ท่า' + moveTh(q.move) : ''} · ส่งเมื่อ ${fmtDate(q.t)}`),
+      q.task ? null : h('div', { style: 'white-space:pre-wrap;margin-top:4px' }, q.text),
+      q.state === 'open' ? h('div', { class: 'small', style: 'margin-top:6px' }, q.task === 'frames+shadow' ? 'Claude จะ: แตกวิดีโอที่ติดดาวเป็น 32 เฟรม → ใส่ในขั้น "เฟรม" → วางเงาเริ่มต้นบนเฟรมชุดใหม่' : 'Claude จะทำตามข้อความด้านบน') : null,
+      q.reply ? h('div', { class: 'small', style: 'margin-top:6px;white-space:pre-wrap' }, 'Claude: ' + q.reply) : null,
+      q.state === 'done' && NEXT_TH[q.task] ? h('div', { class: 'small next' }, NEXT_TH[q.task]) : null,
+      h('div', { class: 'tools' },
+        q.state === 'done' && q.task === 'frames+shadow' ? [h('button', { class: 'primary', onclick: () => go(q, 'frames') }, 'เปิดขั้นเฟรม'), h('button', { onclick: () => go(q, 'shadow') }, 'เปิดขั้นเงา')] : h('button', { class: 'ghost', onclick: () => go(q, q.step || 'still') }, 'เปิดตัวนี้'),
+        q.state === 'open' ? h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้') : null));
+  };
+  const section = (title, list) => { if (list.length) m.append(h('h3', {}, `${title} (${list.length})`), ...list.map(card)); };
+  section('รอ Claude', open); section('เสร็จแล้ว', done); section('ยกเลิก', cancel);
 }
 let libCache = null;
 async function renderLibrary(m) {
