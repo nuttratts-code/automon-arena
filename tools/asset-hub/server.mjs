@@ -178,7 +178,9 @@ export function shadowExport(hub) {
     }
     if (it.kind !== 'character' || !it.shadow) continue;
     const s = it.shadow, o = s.oval || {}, c = s.cast || {};
+    const sr = it.rounds.find((x) => x.id === s.round);
     units[it.id] = {
+      mirror: !sr?.flip, // set 248: true = the picture faces left, the game mirrors it so our side faces right (enemy = the other way); cast ox / k are in that facing-right view
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
       oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game

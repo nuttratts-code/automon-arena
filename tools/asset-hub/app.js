@@ -181,8 +181,18 @@ function thumbRound(it) {
   const pics = it.rounds.filter((r) => !r.archived && ['still', 'frames'].includes(r.slot) && (r.form || 1) === 1 && (!r.move || r.move === 'idle') && isImage(r.file));
   return pics.filter((r) => r.star).sort(byTime).pop() || pics.sort(byTime).pop() || it.rounds.find((r) => !r.archived && isImage(r.file));
 }
-// ⇋ กลับข้าง (owner set 241): r.flip = this picture is shown mirrored; the game uses it the way it looks here
-const flipped = (el, r) => { if (r && r.flip) el.classList.add('flipx'); return el; };
+// Facing (owner set 248): our side ALWAYS faces right, on every page, the way the game shows it (stage3d: sprites face right,
+// the enemy is mirrored). Creature pictures are drawn facing left (art-style prompt), so a creature picture is shown mirrored
+// unless ⇋ กลับข้าง is on (r.flip = this file already faces right). Pictures of scenes / props / UI are never mirrored.
+function isCharRound(r) { for (const it of Object.values(hub.items)) if (it.rounds.includes(r)) return it.kind === 'character'; return false; }
+const mirrorOf = (r) => !!r && !r.flip && isCharRound(r);
+const flipped = (el, r) => { if (mirrorOf(r)) el.classList.add('flipx'); return el; };
+// cast offsets set on the old left-facing view -> the facing-right view (sideways values flip, left/right corners swap)
+function faceRightCast(c) {
+  const k = c.k, m = (v) => (Array.isArray(v) ? [+(-v[0]).toFixed(3), v[1]] : v);
+  return { ...c, ox: +(-(c.ox || 0)).toFixed(3), k: k ? { tl: m(k.tr), tr: m(k.tl), bl: m(k.br), br: m(k.bl) } : k };
+}
+function mirrorCanvas(c) { const o = document.createElement('canvas'); o.width = c.width; o.height = c.height; const g = o.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return o; }
 function stepHas(it, step) {
   if (step === 'still') return it.rounds.some((r) => ['still', 'cut'].includes(r.slot) && r.star && !r.archived);
   if (step === 'prompt') return it.prompts.length > 0;
@@ -560,7 +570,7 @@ function renderSlot(m, it, slot) {
       actbar.append(h('button', { title: 'แก้เม็ดพิกเซลง่ายๆ บนเว็บ (ภาพไม่เกิน 256 px) บันทึกเป็นรอบใหม่', onclick: () => pixelEditor(it, target) }, target.slot === 'cut' ? 'แก้พิกเซล (ภาพตัดพื้น)' : 'แก้พิกเซล'));
     }
     const sw = (on, label, title, fn) => h('button', { class: 'switch' + (on ? ' is-on' : ''), role: 'switch', 'aria-checked': String(on), title, onclick: fn }, h('span', { class: 'knob' }), label);
-    if (isImage(sel.file) || isVideo(sel.file)) actbar.append(sw(!!sel.flip, 'กลับข้างซ้าย-ขวา', 'เลือกว่าจะให้ฝั่งไหนเป็นด้านหน้า (เกมใช้ตามที่เห็นตรงนี้)', () => {
+    if (isImage(sel.file) || isVideo(sel.file)) actbar.append(sw(!!sel.flip, 'กลับข้างซ้าย-ขวา', it.kind === 'character' ? 'ฝั่งเราต้องหันไปทางขวาเสมอ ถ้าตัวนี้หันซ้ายอยู่ให้กดสลับ (เกมใช้ตามที่เห็นตรงนี้ ศัตรูจะกลับด้านเอง)' : 'กลับภาพซ้าย-ขวา', () => {
       sel.flip = !sel.flip; if (cut && cut !== sel) cut.flip = sel.flip; save().then(render); }));
     if (isImage(sel.file) && slot !== 'veoin') {
       const pickR = canCut && cut ? cut : sel, isOn = thumbRound(it) === pickR && it.thumb === pickR.id;
@@ -824,7 +834,9 @@ function renderShadow(m, it) {
   let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null;
   let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
   const pitch = () => hub.settings.camPitch || 40;
-  const commit = () => { it.shadow = { ...s, size, round: src.id }; saveSoon(); };
+  const mir = mirrorOf(src); // the editor shows the creature facing right (owner set 248); s.feet below is in that view
+  const feetPic = () => [mir ? +(1 - s.feet[0]).toFixed(4) : s.feet[0], s.feet[1]];
+  const commit = () => { it.shadow = { ...s, feet: feetPic(), size, round: src.id, face: 'right' }; saveSoon(); };
   // sliders
   const sl = h('div', { class: 'sliders' });
   const vals = {};
@@ -850,7 +862,7 @@ function renderShadow(m, it) {
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : '', // '' not null: DOM append prints null
     h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
-  function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(s.feet[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
+  function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(feetPic()[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
   // geometry (canvas px)
   const geo = () => {
     const W = cv.width, H = cv.height, T = 300, k = Math.sin(pitch() * Math.PI / 180);
@@ -990,7 +1002,10 @@ function renderShadow(m, it) {
     const img = await loadImg(src.file);
     if (src.slot === 'frames' && src.meta) { for (let i = 0; i < (src.meta.n || 1); i++) frames.push(keyed(img, ...sheetFrame(img, src.meta, i))); size = [src.meta.fw, src.meta.fh]; }
     else { frames = [keyed(img)]; size = [img.naturalWidth, img.naturalHeight]; }
+    if (mir) frames = frames.map(mirrorCanvas);
     if (!s) { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
+    else if (mir) s.feet = [+(1 - s.feet[0]).toFixed(4), s.feet[1]];
+    if (s && mir && s.face !== 'right') s.cast = faceRightCast(s.cast || {}); // tuned before set 248 on the left-facing view
     s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval, on: false }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
     sync(); draw();
     let last = 0; const ms = src.meta?.ms || 190;
@@ -1008,7 +1023,7 @@ function renderShadow(m, it) {
     const img = stripSame ? srcImg : await loadImg(fr.file).catch(() => null);
     if (!img) return;
     const n = fr.meta.n || 1, cells = [];
-    for (let i = 0; i < n; i++) cells.push(stripSame ? frames[i] : keyed(img, ...sheetFrame(img, fr.meta, i)));
+    for (let i = 0; i < n; i++) cells.push(keyed(img, ...sheetFrame(img, fr.meta, i))); // the file's own pixels (the editor's frames may be mirrored)
     const useBtn = h('button', { class: 'primary', onclick: () => useFrame(fr, cells[stripSel], stripSel) });
     const info = h('span', { class: 'small dim' });
     const mark = () => { useBtn.textContent = `ใช้เฟรม ${stripSel + 1} เป็นภาพนิ่ง`; info.textContent = stripSame ? 'คลิกเฟรมเพื่อหยุดดูเฟรมนั้นในตัวแก้เงา' : 'เงาตั้งไว้กับภาพนิ่ง เฟรมเหล่านี้มาจากวิดีโอท่าหายใจที่ติดดาว'; stripBtns.forEach((b, j) => b.classList.toggle('on', j === stripSel)); };
@@ -1093,7 +1108,8 @@ async function iconEditor(it) {
   function setN(v) { const c = [x + n / 2, y + n / 2]; n = Math.max(8, Math.min(256, Math.round(v / 2) * 2)); x = Math.round(c[0] - n / 2); y = Math.round(c[1] - n / 2); clamp(); draw(); }
   function clamp() { x = Math.max(-n + 4, Math.min(W - 4, x)); y = Math.max(-n + 4, Math.min(H - 4, y)); }
   let drag = null;
-  const at = (e) => { const rc = cv.getBoundingClientRect(); return [(e.clientX - rc.left) / rc.width * cv.width / z - pad, (e.clientY - rc.top) / rc.height * cv.height / z - pad]; };
+  const mirI = mirrorOf(src); if (mirI) cv.classList.add('flipx'); // facing right like the game; crop numbers stay in file pixels
+  const at = (e) => { const rc = cv.getBoundingClientRect(); return [(mirI ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * cv.width / z - pad, (e.clientY - rc.top) / rc.height * cv.height / z - pad]; };
   cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.focus(); const p = at(e); drag = { p, x0: x, y0: y }; if (!(p[0] >= x && p[0] <= x + n && p[1] >= y && p[1] <= y + n)) { x = Math.round(p[0] - n / 2); y = Math.round(p[1] - n / 2); clamp(); drag = { p, x0: x, y0: y }; draw(); } cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', (e) => { if (!drag) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
   const end = () => { drag = null; };
@@ -1101,7 +1117,7 @@ async function iconEditor(it) {
   cv.addEventListener('wheel', (e) => { e.preventDefault(); setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
   cv.addEventListener('keydown', (e) => {
     const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-    if (d) { e.preventDefault(); const k = e.shiftKey ? 10 : 1; x += d[0] * k; y += d[1] * k; clamp(); draw(); }
+    if (d) { e.preventDefault(); const k = e.shiftKey ? 10 : 1; x += d[0] * k * (mirI ? -1 : 1); y += d[1] * k; clamp(); draw(); }
     else if (e.key === '+' || e.key === '=') { e.preventDefault(); setN(n + 2); } else if (e.key === '-') { e.preventDefault(); setN(n - 2); }
   });
   const dlg = $('dlg');
@@ -1205,7 +1221,8 @@ async function pixelEditor(it, r) {
       g.strokeStyle = '#000'; g.lineWidth = 1; g.strokeRect(hover[0] * z - 0.5, hover[1] * z - 0.5, z + 1, z + 1);
     }
   }
-  const at = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; };
+  const mirX = mirrorOf(r); if (mirX) cv.classList.add('flipx'); // shown facing right like everywhere else; the file itself is not mirrored
+  const at = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((mirX ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; };
   const px = (x, y) => (y * W + x) * 4;
   function setPx(x, y, c) { const i = px(x, y); data.data[i] = c[0]; data.data[i + 1] = c[1]; data.data[i + 2] = c[2]; data.data[i + 3] = c[3]; }
   function line(a, b, c) { // every pixel between two pointer samples, so a fast drag leaves no gaps

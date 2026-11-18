@@ -118,7 +118,8 @@ def main():
     kept = keep_feet(it, old, f1)
     feet = kept or guess_feet(f1)
     it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {}), 'on': False},  # under-feet oval always off (owner rule)
-                    'cast': {**DEFAULT['cast'], **(old.get('cast') or {})}, 'size': [fw, fh], 'round': rid}
+                    'cast': {**DEFAULT['cast'], **(old.get('cast') or {})}, 'size': [fw, fh], 'round': rid,
+                    **({'face': old['face']} if old.get('face') else {})}  # set 248: cast offsets already in the facing-right view
     how = f"kept from {old.get('round')}" if kept else 'guessed'
     hub['rev'] = hub.get('rev', 0) + 1
     tmp = HUB + '.tmp'
