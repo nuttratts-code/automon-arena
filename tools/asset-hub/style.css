@@ -350,3 +350,12 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .pxed-selrow, .pxed-float { flex-wrap: wrap; gap: 6px; }
 .pxed-selrow button, .pxed-float button { padding: 4px 10px; }
 .pxed-float { padding: 8px; border-radius: 8px; background: rgba(140,200,255,.10); border: 1px solid rgba(140,200,255,.4); }
+/* set 248 round 5: copied-piece tab */
+.pxed-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
+.pxed-main .pxed-stage { flex: 1; }
+.pxed-tabs { align-self: flex-start; }
+.pxed-tabs button[hidden], .pxed-piecebar[hidden] { display: none; }
+.pxed-piecebar { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 8px; background: rgba(255,211,77,.08); border: 2px solid #ffd34d; }
+.pxed-rot { flex-wrap: wrap; gap: 6px; }
+.pxed-rot input[type=range] { flex: 1; min-width: 90px; }
+.pxed-rot .pxed-rotnum { width: 4.2em; }

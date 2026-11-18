@@ -97,7 +97,7 @@ with sync_playwright() as p:
     opq = pg.evaluate(f"(()=>{{const c=document.querySelector('.pxed-cv'),g=c.getContext('2d');for(let y=0;y<c.height/{z};y++)for(let x=0;x<c.width/{z};x++){{const d=g.getImageData(x*{z}+{z}/2|0,y*{z}+{z}/2|0,1,1).data;if(d[3]===255)return [x,y,d[0],d[1],d[2]]}}}})()")
     pg.mouse.click(SX(opq[0]), cvb["y"] + opq[1] * z + z / 2, button="right"); pg.wait_for_timeout(150)
     pg.keyboard.up("Space"); pg.wait_for_timeout(100)
-    cur = pg.locator(".pxed-side .small.dim").first.text_content()
+    cur = pg.locator(".pxed-side .pxed-cur + .small").first.text_content()
     exp = "#%02x%02x%02x" % tuple(opq[2:5])
     check("picked colour", cur == exp, (cur, exp))
     check("space up = normal mode", pg.locator(".pxed-mode.picking").count() == 0)

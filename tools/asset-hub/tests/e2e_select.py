@@ -49,8 +49,9 @@ with sync_playwright() as p:
     drag([sa, sb])
     check("selection made -> copy enabled", not pg.locator(".pxed-selrow button", has_text="คัดลอก").is_disabled())
     pg.keyboard.press("Control+c"); pg.wait_for_timeout(200)
-    pg.keyboard.press("Control+v"); pg.wait_for_timeout(200)
-    check("paste = floating piece with place/flip buttons", pg.locator(".pxed-float").is_visible())
+    check("copy opens the piece tab (A1 + B1)", pg.locator(".pxed-tabs button", has_text="ชิ้นที่ก๊อป 12×12").is_visible() and pg.locator(".pxed-piecebar").is_visible())
+    pg.keyboard.press("Enter"); pg.wait_for_timeout(200)
+    check("Enter on the piece tab = floating piece on the real picture", pg.locator(".pxed-float").is_visible() and not pg.locator(".pxed-piecebar").is_visible())
     # move the piece so it overlaps the creature edge (part over transparent, part over opaque)
     dx = 9
     for _ in range(dx): pg.keyboard.press("ArrowRight")
@@ -74,8 +75,61 @@ with sync_playwright() as p:
     check("nothing outside the pasted box changed", outside == 0, outside)
     pg.keyboard.press("Control+z"); pg.wait_for_timeout(150)
     check("undo removes the paste", grabAll() == A0)
+    # 1c) edit the piece first, the real picture stays untouched until it is placed (owner set 248 round 5)
+    drag([sa, sb]); pg.keyboard.press("Control+c"); pg.wait_for_timeout(200)
+    bb = pg.locator(".pxed-cv").bounding_box(); ps = bb["width"] / 12
+    check("piece tab canvas = the 12x12 piece, zoomed", abs(bb["width"] - bb["height"]) < 2 and ps >= info["z"])
+    pg.locator(".pxed-side .seg button", has_text="ดินสอ").click()
+    hexc = pg.locator(".pxed-side input[type=color]").input_value(); col = [int(hexc[i:i + 2], 16) for i in (1, 3, 5)] + [255]
+    px0 = (bb["x"] + bb["width"] - ps * 0.5) if MIR else (bb["x"] + ps * 0.5)
+    pg.mouse.click(px0, bb["y"] + ps * 0.5); pg.wait_for_timeout(100)
+    pg.locator(".pxed-tabs button", has_text="ภาพจริง").click(); pg.wait_for_timeout(150)
+    check("painting on the piece does not touch the real picture", grabAll() == A0)
+    pg.locator(".pxed-tabs button", has_text="ชิ้นที่ก๊อป").click(); pg.wait_for_timeout(150)
+    pg.locator(".pxed-piecebar button", has_text="เอาไปวางบนภาพจริง").click(); pg.wait_for_timeout(150)
+    check("send button floats the piece on the real picture", pg.locator(".pxed-float").is_visible())
+    pg.keyboard.press("Enter"); pg.wait_for_timeout(150)
+    A1c = grabAll()
+    rest = all(A1c[(sa[1] + yy) * W + sa[0] + xx] == A0[(sa[1] + yy) * W + sa[0] + xx] for yy in range(12) for xx in range(12) if (xx, yy) != (0, 0))
+    check("placed piece carries the edit at the copy spot", A1c[sa[1] * W + sa[0]] == col and rest, (A1c[sa[1] * W + sa[0]], col))
+    pg.keyboard.press("Control+z"); pg.wait_for_timeout(150)
+    check("one undo on the real picture removes it", grabAll() == A0)
+    pg.keyboard.press("Control+v"); pg.wait_for_timeout(150)
+    check("Ctrl+V afterwards gives the edited piece", pg.locator(".pxed-float").is_visible())
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
+    # 1d) turn the piece: 90° exact, any angle grows the box, back to 0 = the original
+    ra, rb = (cx - 6, cy - 3), (cx + 5, cy + 2)  # 12 wide x 6 tall
+    pg.locator(".pxed-side .seg button", has_text="เลือก ▭").click()
+    drag([ra, rb]); pg.keyboard.press("Control+c"); pg.wait_for_timeout(200)
+    pd = lambda: pg.evaluate("(()=>{const c=document.querySelector('.pxed-cv');return [c.width,c.height]})()")
+    w0, h0 = pd()
+    pg.locator(".pxed-piecebar button", has_text="⟳ 90°").click(); pg.wait_for_timeout(150)
+    w1, h1 = pd()
+    check("turn 90° swaps the piece size", w0 == 2 * h0 and w1 == h0 and h1 == w0, (w0, h0, w1, h1))
+    sl = pg.locator(".pxed-rot input[type=range]")
+    sl.fill("45"); pg.wait_for_timeout(150)
+    w2, h2 = pd()
+    check("45° turn grows the box to fit", w2 > w1 and h2 > w1, (w2, h2))
+    check("angle shows 45", pg.locator(".pxed-rot input[type=number]").input_value() == "45")
+    sl.fill("0"); pg.wait_for_timeout(150)
+    check("back to 0° = the original size (drawn from the start, no build-up)", pd() == [w0, h0])
+    pg.locator(".pxed-piecebar button", has_text="⟳ 90°").click(); pg.wait_for_timeout(100)
+    pg.keyboard.press("Enter"); pg.wait_for_timeout(150)
+    pg.keyboard.press("Enter"); pg.wait_for_timeout(150)
+    A1d = grabAll()
+    # the turned piece (6 wide x 12 tall) lands centred on the copied 12x6 box: top left = (cx-3, cy-6)
+    okr = True
+    for yy in range(12):
+        for xx in range(6):
+            # clockwise 90 in file pixels: new(x, y) = old(y, H-1-x) with old H = 6 -> old x = yy, old y = 5 - xx
+            o = A0[(ra[1] + 5 - xx) * W + ra[0] + yy]; t = (cy - 6 + yy) * W + cx - 3 + xx
+            if o[3] > 0 and A1d[t] != o: okr = False
+    check("90° piece placed centred on the copy spot, pixels exact", okr)
+    pg.keyboard.press("Control+z"); pg.wait_for_timeout(150)
+    check("undo removes the turned piece", grabAll() == A0)
+    pg.locator(".pxed-side .seg button", has_text="เลือก ▭").click()
     # B1 on the outline: piece with see-through pixels pasted 2px down over the creature
-    drag([(ex - 5, ey - 5), (ex + 6, ey + 6)]); pg.keyboard.press("Control+c"); pg.keyboard.press("Control+v")
+    drag([(ex - 5, ey - 5), (ex + 6, ey + 6)]); pg.keyboard.press("Control+c"); pg.wait_for_timeout(150); pg.keyboard.press("Enter"); pg.wait_for_timeout(150)
     pg.keyboard.press("ArrowDown"); pg.keyboard.press("ArrowDown"); pg.keyboard.press("Enter"); pg.wait_for_timeout(150)
     B = grabAll(); bad = kept = 0
     for yy in range(12):
@@ -107,6 +161,8 @@ with sync_playwright() as p:
         for t in range(8): pts.append((round(a[0] + (bq[0] - a[0]) * t / 8), round(a[1] + (bq[1] - a[1]) * t / 8)))
     drag(pts)
     pg.keyboard.press("Control+x"); pg.wait_for_timeout(150)
+    check("cut also opens the piece tab; Esc goes back to the real picture", pg.locator(".pxed-piecebar").is_visible())
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
     A3 = grabAll()
     check("lasso + Ctrl+X clears inside the loop", A3[(cy - 4) * W + cx][3] == 0 and A3[cy * W + cx][3] == 0, (A0[cy * W + cx], A3[cy * W + cx]))
     check("lasso leaves outside alone", A3[(cy + 8) * W + cx - 8] == A0[(cy + 8) * W + cx - 8] and A3[(cy - 9) * W + cx] == A0[(cy - 9) * W + cx])

@@ -1245,17 +1245,19 @@ let pxClip = null;
 async function pixelEditor(it, r) {
   let img;
   try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
-  const W = img.naturalWidth, H = img.naturalHeight;
+  let W = img.naturalWidth, H = img.naturalHeight; // let: the copied-piece tab swaps in its own size (owner set 248 round 5)
   if (W > PXED_MAX || H > PXED_MAX) { toast(`ภาพนี้ ${W}×${H} ใหญ่เกินไปสำหรับตัวแก้บนเว็บ (สูงสุด ${PXED_MAX} px) ใช้ Pixelorama แทน`); return; }
   const src = document.createElement('canvas'); src.width = W; src.height = H;
   const sg = src.getContext('2d', { willReadFrequently: true }); sg.drawImage(img, 0, 0);
   let data = sg.getImageData(0, 0, W, H);
-  const undoS = [], redoS = [];
+  let undoS = [], redoS = [];
   let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null, lastDown = 0;
   // selection (owner set 248 A1: rectangle + freehand lasso, Shift adds) and a floating piece (paste / dragged-out copy) that is placed with Enter
   let sel = null, selEdges = null, rectD = null, lassoD = null, float = null, fdrag = null;
+  // owner set 248 round 5 (A1 + B1): every copy opens a 2nd tab with just the copied piece; edit it there, then it floats onto the real picture
+  const docs = { main: {}, piece: null }; let cur = 'main';
   let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap2') === '1'; } catch { /* storage off */ }
-  const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
+  const fitZ = (mx = 16) => Math.max(2, Math.min(mx, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
   let z = fitZ();
   const cv = h('canvas', { class: 'pxed-cv', tabindex: 0, 'aria-label': 'ตัวแก้พิกเซล คลิกซ้ายใส่สี คลิกขวาลบ กด Space ค้างแล้วคลิกเพื่อดูดสี' });
   const hex = (c) => '#' + c.slice(0, 3).map((v) => v.toString(16).padStart(2, '0')).join('');
@@ -1281,6 +1283,60 @@ async function pixelEditor(it, r) {
   const flipHB = h('button', { onclick: () => flipFloat(true) }, 'กลับซ้าย-ขวา'), flipVB = h('button', { onclick: () => flipFloat(false) }, 'กลับบน-ล่าง');
   const floatRow = h('div', { class: 'row pxed-float' }, placeB, dropB, flipHB, flipVB);
   const closeB = h('button', { onclick: () => close() }, 'ปิด');
+  const mainTab = h('button', { 'data-k': 'main', onclick: () => switchTo('main') }, 'ภาพจริง'), pieceTab = h('button', { 'data-k': 'piece', onclick: () => switchTo('piece') }, 'ชิ้นที่ก๊อป');
+  const tabSeg = h('span', { class: 'seg pxed-tabs', role: 'tablist' }, mainTab, pieceTab);
+  const sendB = h('button', { class: 'primary', title: 'Enter', onclick: () => sendPiece() }, 'เอาไปวางบนภาพจริง');
+  // owner set 248 round 5: turn the piece. Every angle is drawn from the piece as it was when turning started (no blur build-up); 90° steps are exact
+  let rot = null; // { base: ImageData, deg } while turning; any other edit ends it
+  const rotIn = h('input', { type: 'range', min: -180, max: 180, step: 1, value: 0, 'aria-label': 'หมุนองศา', oninput: (e) => rotateTo(+e.target.value) });
+  const rotNum = h('input', { type: 'number', min: -180, max: 180, step: 1, value: 0, class: 'pxed-rotnum', 'aria-label': 'องศา', onchange: (e) => rotateTo(Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)))) });
+  const rotL = h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotateTo((rot ? rot.deg : 0) - 90) }, '⟲ 90°'), rotR = h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotateTo((rot ? rot.deg : 0) + 90) }, '⟳ 90°');
+  const rotRow = h('div', { class: 'row pxed-rot' }, h('span', { class: 'lbl' }, 'หมุน'), rotL, rotR, rotIn, rotNum, h('span', { class: 'small dim' }, '°'));
+  const pieceBar = h('div', { class: 'pxed-piecebar' }, h('strong', {}, 'หน้าชิ้นที่ก๊อป'), h('span', { class: 'small dim' }, 'แก้ชิ้นนี้ก่อนได้ทุกเครื่องมือ หมุนได้ ภาพจริงยังไม่เปลี่ยน · Enter = เอาไปลอยบนภาพจริงที่จุดเดิม แล้วลาก/ขยับก่อนวาง · Esc = กลับภาพจริง (ไม่วาง)'), rotRow, sendB);
+  function rotImg(img, deg) { // nearest pixel, the box grows to fit; deg = clockwise in file pixels
+    const a = deg * Math.PI / 180; let c = Math.cos(a), sn = Math.sin(a);
+    if (Math.abs(c) < 1e-9) c = 0; if (Math.abs(sn) < 1e-9) sn = 0;
+    const w = img.width, hh = img.height, nw = Math.max(1, Math.round(Math.abs(w * c) + Math.abs(hh * sn))), nh = Math.max(1, Math.round(Math.abs(w * sn) + Math.abs(hh * c)));
+    const out = new ImageData(nw, nh), s0 = img.data, d = out.data;
+    for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
+      const dx = x + 0.5 - nw / 2, dy = y + 0.5 - nh / 2;
+      const sx = Math.floor(dx * c + dy * sn + w / 2 + 1e-6), sy = Math.floor(-dx * sn + dy * c + hh / 2 + 1e-6);
+      if (sx < 0 || sy < 0 || sx >= w || sy >= hh) continue;
+      const i = (sy * w + sx) * 4, o = (y * nw + x) * 4; d[o] = s0[i]; d[o + 1] = s0[i + 1]; d[o + 2] = s0[i + 2]; d[o + 3] = s0[i + 3];
+    }
+    return out;
+  }
+  function setData(d) { data = d; if (d.width !== W || d.height !== H) { W = d.width; H = d.height; src.width = W; src.height = H; sel = null; selEdges = null; } }
+  function rotateTo(deg) {
+    if (cur !== 'piece') return;
+    commitFloat(); setSel(null);
+    deg = ((Math.round(deg) + 540) % 360) - 180; if (deg === -180) deg = 180;
+    if (!rot) { snapshot(); rot = { base: data, deg: 0 }; }
+    rot.deg = deg; setData(deg ? rotImg(rot.base, mirX ? -deg : deg) : rot.base); // the piece is shown mirrored when the picture is: turn the way it looks
+    rotIn.value = String(deg); rotNum.value = String(deg); syncUi(); paint();
+  }
+  function rotReset() { rot = null; rotIn.value = '0'; rotNum.value = '0'; }
+  const mainDirty = () => (cur === 'main' ? dirty : !!docs.main.dirty);
+  function stash() { Object.assign(docs[cur], { W, H, data, undoS, redoS, dirty, z }); }
+  function load(k) {
+    const d = docs[k]; W = d.W; H = d.H; data = d.data; undoS = d.undoS; redoS = d.redoS; dirty = d.dirty; z = d.z; cur = k;
+    sel = null; selEdges = null; float = null; fdrag = null; rectD = null; lassoD = null; stroke = null; hover = null;
+    src.width = W; src.height = H;
+  }
+  function pieceClip() { const P = docs.piece; pxClip = { x: P.ox + Math.round((P.ow - W) / 2), y: P.oy + Math.round((P.oh - H) / 2), w: W, h: H, d: new Uint8ClampedArray(data.data) }; } // only while the piece tab is loaded; a turned piece stays centred on the copy spot
+  function switchTo(k) {
+    if (k === cur || (k === 'piece' && !docs.piece)) return;
+    commitFloat();
+    if (cur === 'piece') pieceClip(); // the edited piece is what Ctrl+V gives from now on
+    stash(); load(k); rotReset(); palette(); syncUi(); paint(); stageEl.scrollTo(0, 0); cv.focus();
+  }
+  function openPiece(g) {
+    stash();
+    docs.piece = { W: g.w, H: g.h, data: new ImageData(new Uint8ClampedArray(g.d), g.w, g.h), undoS: [], redoS: [], dirty: false, z: 1, ox: g.x, oy: g.y, ow: g.w, oh: g.h }; rotReset();
+    load('piece'); z = docs.piece.z = fitZ(32); tool = 'pen';
+    palette(); syncUi(); paint(); stageEl.scrollTo(0, 0); cv.focus();
+  }
+  function sendPiece() { if (cur !== 'piece') return; commitFloat(); switchTo('main'); paste(); }
   function setColour(c) { colour = c; syncUi(); }
   function setTool(k) { // owner set 248: changing tool places a floating piece and drops the selection (no marks left behind)
     if (k === tool) return;
@@ -1288,16 +1344,17 @@ async function pixelEditor(it, r) {
   }
   function palette() { // the picture's own colours, most used first
     const n = new Map();
-    for (let i = 0; i < data.data.length; i += 4) { if (data.data[i + 3] < 128) continue; const k = (data.data[i] << 16) | (data.data[i + 1] << 8) | data.data[i + 2]; n.set(k, (n.get(k) || 0) + 1); }
+    const pd = cur === 'main' ? data.data : docs.main.data.data; // the real picture's colours, also on the piece tab
+    for (let i = 0; i < pd.length; i += 4) { if (pd[i + 3] < 128) continue; const k = (pd[i] << 16) | (pd[i + 1] << 8) | pd[i + 2]; n.set(k, (n.get(k) || 0) + 1); }
     const top = [...n.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([k]) => [(k >> 16) & 255, (k >> 8) & 255, k & 255, 255]);
     pal.replaceChildren(...top.map((c) => h('button', { class: 'pxed-sw', title: hex(c), 'aria-label': 'สี ' + hex(c), style: `--sw:${hex(c)}`, onclick: () => setColour(c) })));
-    if (!data.data.some((v, i) => i % 4 === 3 && v > 0)) pal.append(h('span', { class: 'small faint' }, 'ภาพว่าง'));
+    if (!pd.some((v, i) => i % 4 === 3 && v > 0)) pal.append(h('span', { class: 'small faint' }, 'ภาพว่าง'));
   }
   function syncUi() {
     curSw.style.setProperty('--sw', hex(colour)); curTxt.textContent = hex(colour); colIn.value = hex(colour);
     toolSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
-    zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
+    zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !mainDirty();
     const [pb, eb] = swapBtn ? ['คลิกขวา', 'คลิกซ้าย'] : ['คลิกซ้าย', 'คลิกขวา'];
     modeEl.textContent = picking ? 'โหมดดูดสี · ชี้เม็ดไหนก็ได้สีนั้นทันที · ปล่อย Space เพื่อกลับ'
       : float ? 'ลากชิ้นที่วางไปตำแหน่งที่ต้องการ · ลูกศรขยับทีละ 1 เม็ด · Enter หรือคลิกข้างนอก = วางลง · Esc = ยกเลิก'
@@ -1310,6 +1367,10 @@ async function pixelEditor(it, r) {
     modeEl.classList.toggle('picking', picking); cv.classList.toggle('picking', picking); cv.classList.toggle('selecting', isSel() || !!float);
     for (const b of [copyB, cutB, delB, noneB]) b.disabled = !sel;
     pasteB.disabled = !pxClip; floatRow.hidden = !float;
+    pieceTab.hidden = !docs.piece; if (docs.piece) pieceTab.textContent = cur === 'piece' ? `ชิ้นที่ก๊อป ${W}×${H}` : `ชิ้นที่ก๊อป ${docs.piece.W}×${docs.piece.H}`;
+    for (const b of [mainTab, pieceTab]) { const on = b.dataset.k === cur; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); }
+    pieceBar.hidden = cur !== 'piece'; sendB.disabled = !!float;
+    if (!rot && rotIn.value !== '0') { rotIn.value = '0'; rotNum.value = '0'; } // another edit ended the turning
   }
   function paint() {
     cv.width = W * z; cv.height = H * z;
@@ -1395,14 +1456,24 @@ async function pixelEditor(it, r) {
     return { x: x0, y: y0, w, h: hh, d };
   }
   function clearSel() { for (let i = 0; i < W * H; i++) if (sel[i]) data.data.fill(0, i * 4, i * 4 + 4); }
-  function copySel() { if (!sel) { toast('เลือกส่วนที่จะคัดลอกก่อน'); return false; } pxClip = grab(sel); toast(`คัดลอกแล้ว ${pxClip.w}×${pxClip.h} เม็ด กด Ctrl+V เพื่อวาง`); syncUi(); return true; }
-  function cutSel() { if (!copySel()) return; snapshot(); clearSel(); dirty = true; palette(); syncUi(); paint(); }
+  function copySel() {
+    if (!sel) { toast('เลือกส่วนที่จะคัดลอกก่อน'); return false; }
+    const g = grab(sel);
+    if (cur === 'piece') { pxClip = { ...g, x: g.x + docs.piece.ox, y: g.y + docs.piece.oy }; toast(`คัดลอกแล้ว ${g.w}×${g.h} เม็ด กด Ctrl+V เพื่อวาง`); syncUi(); return true; }
+    pxClip = g; openPiece(g); return true; // owner A1: every copy opens the piece tab
+  }
+  function cutSel() {
+    if (!sel) { toast('เลือกส่วนที่จะตัดก่อน'); return; }
+    const g = grab(sel); snapshot(); clearSel(); dirty = true;
+    if (cur === 'piece') { pxClip = { ...g, x: g.x + docs.piece.ox, y: g.y + docs.piece.oy }; setSel(null); palette(); syncUi(); paint(); return; }
+    pxClip = g; openPiece(g);
+  }
   function delSel() { if (!sel) return; snapshot(); clearSel(); dirty = true; palette(); syncUi(); paint(); }
   function paste() {
     if (!pxClip) { toast('ยังไม่ได้คัดลอกอะไร'); return; }
     commitFloat();
-    const c = pxClip; // same spot it was copied from, kept inside the picture
-    float = { x: Math.max(0, Math.min(c.x, W - c.w)), y: Math.max(0, Math.min(c.y, H - c.h)), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
+    const c = pxClip, bx = cur === 'piece' ? 0 : c.x, by = cur === 'piece' ? 0 : c.y; // same spot it was copied from (piece tab: top left), kept inside the picture
+    float = { x: Math.max(0, Math.min(bx, W - c.w)), y: Math.max(0, Math.min(by, H - c.h)), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
     setSel(null); if (!isSel()) tool = 'rect'; syncUi(); paint(); cv.focus();
   }
   function dupe() { float = grab(sel); setSel(null); } // owner set 248: selecting is for copying — dragging pulls out a copy, the original stays
@@ -1423,9 +1494,9 @@ async function pixelEditor(it, r) {
     for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const sx = hz ? f.w - 1 - x : x, sy = hz ? y : f.h - 1 - y; d.set(f.d.subarray((sy * f.w + sx) * 4, (sy * f.w + sx) * 4 + 4), (y * f.w + x) * 4); }
     f.d = d; paint();
   }
-  function snapshot() { undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
-  function undo() { if (float) { cancelFloat(); return; } if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
-  function redo() { if (float) commitFloat(); if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
+  function snapshot() { rot = null; undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
+  function undo() { if (float) { cancelFloat(); return; } if (!undoS.length) return; redoS.push(data); setData(undoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
+  function redo() { if (float) commitFloat(); if (!redoS.length) return; undoS.push(data); setData(redoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
   function pick(p, quiet) { const i = px(...p); if (data.data[i + 3] === 0) { if (!quiet) toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
   cv.addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -1493,16 +1564,18 @@ async function pixelEditor(it, r) {
     else if (mod && k === 'KeyA') { e.preventDefault(); commitFloat(); if (!isSel()) tool = 'rect'; setSel(new Uint8Array(W * H).fill(1)); paint(); }
     else if ((k === 'Delete' || k === 'Backspace') && !float && sel) { e.preventDefault(); delSel(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && float) { e.preventDefault(); commitFloat(); }
+    else if ((k === 'Enter' || k === 'NumpadEnter') && cur === 'piece') { e.preventDefault(); sendPiece(); }
     else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; float.x += d[0] * n * (mirX ? -1 : 1); float.y += d[1] * n; paint(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
   const dlg = $('dlg');
   function cleanup() { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
-  function close(force) { if (!force && dirty && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
-  function onCancel(e) { e.preventDefault(); if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } close(); } // Esc: drop the floating piece, then the selection, then close (asks when there are changes)
+  function close(force) { if (!force && mainDirty() && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
+  function onCancel(e) { e.preventDefault(); if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } if (cur === 'piece') { switchTo('main'); return; } close(); } // Esc: drop the floating piece, then the selection, then leave the piece tab, then close (asks when there are changes)
   async function saveEdit() {
     saveB.disabled = true;
+    switchTo('main'); // the piece tab is never saved by itself
     commitFloat();
     try {
       sg.putImageData(data, 0, 0);
@@ -1526,9 +1599,9 @@ async function pixelEditor(it, r) {
   $('dlgBody').replaceChildren(
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'หันตามที่เห็นในขั้นภาพนิ่ง · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },
-      stageEl,
+      h('div', { class: 'pxed-main' }, tabSeg, stageEl),
       h('div', { class: 'pxed-side' },
-        modeEl,
+        pieceBar, modeEl,
         h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
         h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
         h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg,
