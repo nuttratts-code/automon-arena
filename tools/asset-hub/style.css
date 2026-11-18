@@ -297,3 +297,34 @@ dialog.pxed-dlg[open] #dlgBody { display: flex; flex-direction: column; min-heig
 .pxed-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--sw); border: 1px solid #fff8; margin-right: 4px; vertical-align: -1px; }
 .pxed-side .seg button { padding-left: 6px; padding-right: 6px; font-size: 13px; }
 .pxed { grid-template-columns: minmax(0, 1fr) 290px; }
+h3.sect { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); }
+/* set 246 shadow tab: every frame as small pictures */
+.fstrip-wrap { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.fstrip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; }
+.fcell { flex: none; position: relative; padding: 4px; min-width: 64px; height: 76px; display: grid; place-items: center; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 10px 10px; }
+.fcell canvas { max-height: 64px; max-width: 90px; image-rendering: pixelated; }
+.fcell .n { position: absolute; left: 4px; top: 2px; font-size: 12px; color: #fff; text-shadow: 0 0 3px #000; }
+.fcell.on { outline: 3px solid #ffd34d; outline-offset: -1px; }
+/* set 246 icon (diamond crop) */
+.iconbox { margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; gap: 8px; }
+.iconrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.iconpick { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 10px 10px; }
+.iconpick.on { outline: 2px solid #ffd34d; }
+.iconthumb { width: 72px; height: 72px; image-rendering: pixelated; object-fit: contain; }
+dialog.icon-dlg { width: fit-content; max-width: 96vw; }
+.icon-ed { display: grid; grid-template-columns: auto 300px; gap: 14px; margin-top: 10px; align-items: start; }
+.icon-stage { overflow: auto; max-height: calc(92vh - 120px); max-width: calc(96vw - 380px); background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; }
+.icon-cv { display: block; image-rendering: pixelated; cursor: move; touch-action: none; }
+.icon-side { display: flex; flex-direction: column; gap: 8px; }
+.icon-prev { display: grid; place-items: center; padding: 8px; border-radius: 8px; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 12px 12px; }
+.icon-prev canvas { image-rendering: pixelated; }
+@media (max-width: 900px) { .icon-ed { grid-template-columns: 1fr; } .icon-stage { max-width: 92vw; } }
+/* set 247 big save notice (owner D1) */
+#saveFlash { position: fixed; left: 50%; bottom: 72px; transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 1000;
+  display: flex; align-items: center; gap: 12px; padding: 14px 26px; border-radius: 12px; font-size: 20px; font-weight: 700;
+  background: #1f7a45; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.45); transition: opacity .18s, transform .18s; }
+#saveFlash.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#saveFlash.bad { background: #b3261e; }
+#saveFlash .ic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.22); font-size: 18px; }
+#saveFlash button { color: #fff; font-size: 20px; padding: 0 6px; }
+@media (prefers-reduced-motion: reduce) { #saveFlash { transition: none; } }

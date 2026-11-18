@@ -15,7 +15,7 @@ const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเ�
 const taskTh = (q) => TASK_TH[q.task] || 'งานอื่น';
 // what the owner does once Claude has finished, per task
 const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ',
-  'check+veo:pass': 'ถึงตาคุณ: เปิดช่อง 4 "ภาพส่ง Veo" ดาวน์โหลดภาพ + คัดลอกพรอมต์วิดีโอ ไปเจนใน Veo แล้ววางวิดีโอในขั้น "วิดีโอ" ติดดาว แล้วกด "ตัดเฟรม + สร้างเงา"',
+  'check+veo:pass': 'ถึงตาคุณ: เปิดแท็บ "พรอมต์" ส่วน "ภาพส่ง Veo" ดาวน์โหลดภาพ + คัดลอกพรอมต์วิดีโอ ไปเจนใน Veo แล้ววางวิดีโอในขั้น "วิดีโอ" ติดดาว แล้วกด "ตัดเฟรม + สร้างเงา"',
   'check+veo:fail': 'ถึงตาคุณ: เปิดขั้น "พรอมต์" คัดลอกรุ่นที่ Claude แก้ไปเจนภาพใหม่ วางในขั้น "ภาพนิ่ง" แล้วส่งตรวจอีกครั้ง' };
 const nextTh = (q) => NEXT_TH[q.task === 'check+veo' ? `${q.task}:${q.result || 'pass'}` : q.task] || '';
 const veoPrompt = (it, form) => it.prompts.filter((p) => p.kind === 'veo' && (p.form || 1) === form).pop();
@@ -67,14 +67,14 @@ function autoFramesBar(it) {
     h('button', { class: 'primary', disabled: !vid || busy, onclick: () => startFrames(it, vid) }, 'ตัดเฟรม + สร้างเงา'),
     h('span', { class: 'small dim' }, busy ? 'กำลังทำงานอยู่ รอสักครู่' : vid ? `โปรแกรมจะแตกวิดีโอที่ติดดาว (ร่าง ${ui.form} ท่า${moveTh(ui.move)}) เป็น 32 เฟรม แล้ววางเงาบนเฟรมชุดใหม่ให้เอง ~10–60 วิ` : 'ติดดาววิดีโอของร่าง/ท่านี้ในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้'));
 }
+// owner C1 (set 246): the rarely used prompt + Veo-input steps are one "พรอมต์" tab at the end (ui.step 'veoin' opens it)
 const STEPS = [
-  ['prompt', 'พรอมต์', 'คุณคัดลอกไปเจน'],
-  ['still', 'ภาพนิ่ง + ตัดพื้น', 'คุณวางภาพ · กดตัดพื้น'],
-  ['veoin', 'ภาพส่ง Veo', 'Claude ทำตอนตรวจผ่าน'],
+  ['still', 'ภาพนิ่ง + ตัดพื้น', 'คุณวางภาพ · ตัดพื้น · ไอคอน'],
   ['video', 'วิดีโอ', 'คุณวางวิดีโอ'],
   ['frames', 'เฟรม', 'กดปุ่ม โปรแกรมทำ'],
-  ['shadow', 'เงา', 'คุณปรับ'],
+  ['shadow', 'เงา', 'คุณปรับ · เลือกเฟรม'],
   ['file', 'ไฟล์อื่น', '.pxo ฯลฯ'],
+  ['prompt', 'พรอมต์', 'ภาพ + ภาพส่ง Veo'],
 ];
 const BGS = [['checker', 'ตาราง'], ['magenta', 'ม่วงแดง'], ['black', 'ดำ'], ['white', 'ขาว'], ['arena', 'ฉาก']];
 const STILL_CHECKS = [
@@ -125,8 +125,19 @@ async function api(path, opts = {}) {
   const j = await r.json().catch(() => ({}));
   if (r.status === 409) { hub = j.hub; render(); throw new Error('ไฟล์ถูกแก้จากที่อื่น โหลดข้อมูลล่าสุดแล้ว ลองอีกครั้ง'); }
   if (r.status === 404 && j.error === 'not found') throw new Error('เซิร์ฟเวอร์คลังงานยังเป็นรุ่นเก่า ปิดแล้วเปิดใหม่ (npm run assets)');
-  if (!r.ok) throw new Error(j.error || r.statusText);
+  if (!r.ok) { if (opts.method === 'POST') saveFlash('บันทึกไม่สำเร็จ: ' + (j.error || r.statusText), true); throw new Error(j.error || r.statusText); }
+  if (opts.method === 'POST') saveFlash(FLASH_TH[path.split('?')[0]] || 'บันทึกแล้ว');
   return j;
+}
+// big save notice (owner D1, set 247): green "✓ saved" at the bottom centre for 1.5 s after every write; a failure stays red until closed
+const FLASH_TH = { '/api/frames': 'เริ่มทำเฟรมแล้ว', '/api/export': 'ส่งเข้า Godot แล้ว', '/api/star': 'บันทึกแล้ว · ใช้อันนี้' };
+function saveFlash(msg, bad) {
+  let el = $('saveFlash');
+  if (!el) { el = h('div', { id: 'saveFlash', role: 'status', 'aria-live': 'polite' }); document.body.append(el); }
+  clearTimeout(saveFlash.k);
+  el.className = 'show' + (bad ? ' bad' : '');
+  el.replaceChildren(...[h('span', { class: 'ic' }, bad ? '!' : '✓'), h('span', {}, msg), bad ? h('button', { class: 'ghost', 'aria-label': 'ปิด', onclick: () => el.classList.remove('show') }, '×') : null].filter(Boolean));
+  if (!bad) saveFlash.k = setTimeout(() => el.classList.remove('show'), 1500);
 }
 // header save light (set 246 UI pass): the owner sees every change land
 function saveState(t, cls) { const s = $('saveState'); if (s) { s.textContent = t; s.className = 'small ' + (cls || 'faint'); } }
@@ -458,6 +469,7 @@ function renderItem(m, it) {
     class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); },
   }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, sub)))));
   if (ui.step === 'cut') ui.step = 'still'; // step merged into ภาพนิ่ง
+  if (ui.step === 'veoin') ui.step = 'prompt'; // merged into the พรอมต์ tab (owner C1)
   if (!steps.some(([k]) => k === ui.step)) ui.step = steps[0][0];
   // form + move switches (F1 / F3, idle / attack …)
   if (isChar && ui.step !== 'shadow') {
@@ -468,8 +480,11 @@ function renderItem(m, it) {
   }
   if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
   if (isChar && ui.step === 'still') m.append(checkBar(it));
-  if (isChar && ui.step === 'veoin') m.append(veoPanel(it));
-  if (ui.step === 'prompt') return renderPrompt(m, it);
+  if (ui.step === 'prompt') { // image prompt, then the Veo input picture + video prompt underneath
+    renderPrompt(m, it);
+    if (isChar) { m.append(h('h3', { class: 'sect' }, 'ภาพส่ง Veo + พรอมต์วิดีโอ')); m.append(veoPanel(it)); renderSlot(m, it, 'veoin'); }
+    return;
+  }
   if (ui.step === 'shadow') return renderShadow(m, it);
   renderSlot(m, it, ui.step);
 }
@@ -559,6 +574,7 @@ function renderSlot(m, it, slot) {
     else viewer(stage, left, view === 'cut' ? cut : sel);
     if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
     else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
+    if (slot === 'still' && it.kind === 'character') left.append(iconBox(it));
     if (slot === 'still') left.append(stillChecks(it, sel));
   } else left.append(h('p', { class: 'dim' }, emptyText(slot)));
   // drop zone + rounds
@@ -832,7 +848,7 @@ function renderShadow(m, it) {
       h('button', { class: 'ghost', onclick: () => { s.cast.ox = 0; s.cast.oy = 0; s.cast.k = null; commit(); draw(); } }, 'คืนรูปเงาตามตัว'),
       h('button', { class: 'ghost', onclick: () => { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
-    frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : null,
+    frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : '', // '' not null: DOM append prints null
     h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
   function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(s.feet[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
   // geometry (canvas px)
@@ -978,9 +994,141 @@ function renderShadow(m, it) {
     s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval, on: false }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
     sync(); draw();
     let last = 0; const ms = src.meta?.ms || 190;
-    const tick = (t) => { if (!cv.isConnected) return; if (playing && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); } requestAnimationFrame(tick); };
+    const tick = (t) => { if (!cv.isConnected) return; if (playing && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); stripMark(); } requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
+    await frameStrip(img);
   })().catch(() => left.append(h('p', { class: 'bad' }, 'เปิดภาพไม่ได้')));
+  // owner (set 246): every frame of the idle video as small pictures under the editor; pick one → use it as the still
+  let stripBtns = [], stripSel = 0, stripSame = false;
+  function stripMark() { if (stripSame) { stripSel = fi; stripBtns.forEach((b, j) => b.classList.toggle('on', j === fi)); } }
+  async function frameStrip(srcImg) {
+    const fr = src.slot === 'frames' && src.meta ? src : pick(it, 'frames', 1, 'idle') || latest(it, 'frames', 1, 'idle');
+    if (!fr?.meta) return;
+    stripSame = fr === src;
+    const img = stripSame ? srcImg : await loadImg(fr.file).catch(() => null);
+    if (!img) return;
+    const n = fr.meta.n || 1, cells = [];
+    for (let i = 0; i < n; i++) cells.push(stripSame ? frames[i] : keyed(img, ...sheetFrame(img, fr.meta, i)));
+    const useBtn = h('button', { class: 'primary', onclick: () => useFrame(fr, cells[stripSel], stripSel) });
+    const info = h('span', { class: 'small dim' });
+    const mark = () => { useBtn.textContent = `ใช้เฟรม ${stripSel + 1} เป็นภาพนิ่ง`; info.textContent = stripSame ? 'คลิกเฟรมเพื่อหยุดดูเฟรมนั้นในตัวแก้เงา' : 'เงาตั้งไว้กับภาพนิ่ง เฟรมเหล่านี้มาจากวิดีโอท่าหายใจที่ติดดาว'; stripBtns.forEach((b, j) => b.classList.toggle('on', j === stripSel)); };
+    stripBtns = cells.map((c, i) => {
+      const t = flipped(h('canvas', { width: c.width, height: c.height }), fr); t.getContext('2d').drawImage(c, 0, 0);
+      return h('button', { class: 'fcell', title: `เฟรม ${i + 1}`, 'aria-label': `เฟรม ${i + 1}`, onclick: () => { stripSel = i; if (stripSame) { playing = false; fi = i; draw(); } mark(); } }, t, h('span', { class: 'n' }, String(i + 1)));
+    });
+    left.append(h('div', { class: 'fstrip-wrap' }, h('div', { class: 'row' }, h('b', {}, `ทุกเฟรม (${n})`), info, h('span', { class: 'sp' }), useBtn), h('div', { class: 'fstrip' }, stripBtns)));
+    mark();
+  }
+  async function useFrame(fr, c, i) {
+    if (!c) return;
+    try {
+      const blob = await new Promise((ok) => c.toBlob(ok, 'image/png'));
+      const q = new URLSearchParams({ item: it.id, slot: 'still', name: `${it.id}_frame${i + 1}.png`, form: String(fr.form || 1) });
+      hub = await api('/api/upload?' + q, { method: 'POST', body: blob }); // newest upload = ★ used (owner A1)
+      const nr = hub.items[it.id].rounds.at(-1);
+      if (nr) { nr.note = `เฟรม ${i + 1} จากวิดีโอ ${fmtDate(fr.t)}`; if (fr.flip) nr.flip = true; await save(); }
+      toast(`ใช้เฟรม ${i + 1} เป็นภาพนิ่งแล้ว (ภาพนิ่งเดิมยังอยู่ในขั้นภาพนิ่ง)`);
+    } catch (e) { toast('ทำไม่ได้: ' + e.message); }
+  }
+}
+
+// ---------- icon: diamond crop for the shop / bench screens (set 246, owner B1) ----------
+// Real pixels, no scaling: an N×N square of the picture the game uses (★ cut, else ★ still), pixels outside the diamond made
+// transparent, no border (the game draws its own). Saved as an "icon" round (newest = ★ used); the crop is remembered in it.iconCrop.
+function iconBox(it) {
+  const icons = slotRounds(it, 'icon').filter((r) => !r.archived);
+  const cur = icons.filter((r) => r.star).pop() || icons[icons.length - 1];
+  const box = h('div', { class: 'iconbox' });
+  const head = h('div', { class: 'row' }, h('b', {}, 'ไอคอน (กรอบข้าวหลามตัด)'), h('span', { class: 'small dim' }, 'ใช้ในหน้าร้านค้า / ม้านั่ง'), h('span', { class: 'sp' }),
+    h('button', { class: cur ? '' : 'primary', onclick: () => iconEditor(it) }, cur ? 'ตัดกรอบใหม่' : 'ตัดกรอบไอคอน'));
+  box.append(head);
+  if (!icons.length) { box.append(h('p', { class: 'small faint' }, 'ยังไม่มีไอคอน กดปุ่มด้านบนแล้วเลือกส่วนที่จะอยู่ในกรอบ')); return box; }
+  const row = h('div', { class: 'iconrow' });
+  for (const r of icons.slice().reverse()) {
+    const c = h('canvas', { class: 'iconthumb' + (r.star ? ' on' : '') });
+    loadImg(r.file).then((img) => { c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); }).catch(() => c.classList.add('broken'));
+    row.append(h('button', { class: 'iconpick' + (r.star ? ' on' : ''), title: r.star ? 'ใช้อยู่' : 'คลิกเพื่อใช้ไอคอนนี้', 'aria-pressed': String(!!r.star),
+      onclick: async () => { if (r.star) return; try { hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=1`, { method: 'POST' }); render(); } catch (e) { toast(e.message); } } },
+    flipped(c, r), h('span', { class: 'small' }, r.star ? '★ ใช้อยู่' : fmtDate(r.t))));
+  }
+  box.append(row);
+  return box;
+}
+async function iconEditor(it) {
+  const src = teamRound(it);
+  if (!src || !isImage(src.file)) { toast('ต้องมีภาพนิ่งก่อน'); return; }
+  let img; try { img = await loadImg(src.file); } catch { toast('เปิดภาพไม่ได้'); return; }
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const pic = keyed(img); // green/magenta background removed, same as the game picture
+  const prev = it.iconCrop && it.iconCrop.round === src.id ? it.iconCrop : null;
+  let n = prev ? prev.n : Math.max(8, Math.round(Math.min(W, H) * 0.7 / 2) * 2), x = prev ? prev.x : Math.round((W - n) / 2), y = prev ? prev.y : Math.round((H - n) / 3);
+  const pad = 24; // picture px of room around the picture, so the frame can hang over an edge
+  const z = Math.max(2, Math.min(10, Math.floor(Math.min((window.innerWidth * 0.96 - 420) / (W + pad * 2), (window.innerHeight * 0.92 - 170) / (H + pad * 2)))));
+  const cv = h('canvas', { class: 'icon-cv', width: (W + pad * 2) * z, height: (H + pad * 2) * z, tabindex: 0, 'aria-label': 'ลากกรอบข้าวหลามตัดไปวางบนส่วนที่ต้องการ ล้อเมาส์หรือแถบเลื่อนเพื่อปรับขนาด ปุ่มลูกศรขยับทีละ 1 เม็ด' });
+  const out = h('canvas', { class: 'icon-out' }), out1 = h('canvas', { class: 'icon-out1' });
+  const sizeIn = h('input', { type: 'range', min: 8, max: Math.max(16, Math.min(256, Math.max(W, H) + 16)), step: 2, value: n, 'aria-label': 'ขนาดกรอบ', oninput: (e) => setN(Number(e.target.value)) });
+  const sizeTxt = h('b', {});
+  const inside = (i, j, N) => Math.abs(i + 0.5 - N / 2) + Math.abs(j + 0.5 - N / 2) <= N / 2;
+  function result() { // N×N real pixels, outside the diamond transparent
+    const o = document.createElement('canvas'); o.width = n; o.height = n;
+    const g = o.getContext('2d'); g.drawImage(pic, -x, -y);
+    const d = g.getImageData(0, 0, n, n);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if (!inside(i, j, n)) d.data[(j * n + i) * 4 + 3] = 0;
+    g.putImageData(d, 0, 0); return o;
+  }
+  function draw() {
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, cv.width, cv.height);
+    g.drawImage(pic, pad * z, pad * z, W * z, H * z);
+    // dim everything outside the diamond
+    const cx = (pad + x + n / 2) * z, cy = (pad + y + n / 2) * z, r = n / 2 * z;
+    g.save(); g.fillStyle = 'rgba(10,12,16,0.62)'; g.beginPath(); g.rect(0, 0, cv.width, cv.height);
+    g.moveTo(cx, cy - r); g.lineTo(cx - r, cy); g.lineTo(cx, cy + r); g.lineTo(cx + r, cy); g.closePath(); g.fill('evenodd');
+    g.strokeStyle = '#ffd34d'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); g.stroke();
+    g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,211,77,0.45)'; g.strokeRect((pad + x) * z, (pad + y) * z, n * z, n * z); g.restore();
+    const o = result();
+    for (const [c, k] of [[out, Math.max(1, Math.floor(200 / n))], [out1, 1]]) { c.width = n * k; c.height = n * k; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.drawImage(o, 0, 0, n * k, n * k); }
+    sizeTxt.textContent = `${n}×${n} px`; sizeIn.value = String(n);
+  }
+  function setN(v) { const c = [x + n / 2, y + n / 2]; n = Math.max(8, Math.min(256, Math.round(v / 2) * 2)); x = Math.round(c[0] - n / 2); y = Math.round(c[1] - n / 2); clamp(); draw(); }
+  function clamp() { x = Math.max(-n + 4, Math.min(W - 4, x)); y = Math.max(-n + 4, Math.min(H - 4, y)); }
+  let drag = null;
+  const at = (e) => { const rc = cv.getBoundingClientRect(); return [(e.clientX - rc.left) / rc.width * cv.width / z - pad, (e.clientY - rc.top) / rc.height * cv.height / z - pad]; };
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.focus(); const p = at(e); drag = { p, x0: x, y0: y }; if (!(p[0] >= x && p[0] <= x + n && p[1] >= y && p[1] <= y + n)) { x = Math.round(p[0] - n / 2); y = Math.round(p[1] - n / 2); clamp(); drag = { p, x0: x, y0: y }; draw(); } cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { if (!drag) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
+  const end = () => { drag = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  cv.addEventListener('wheel', (e) => { e.preventDefault(); setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  cv.addEventListener('keydown', (e) => {
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (d) { e.preventDefault(); const k = e.shiftKey ? 10 : 1; x += d[0] * k; y += d[1] * k; clamp(); draw(); }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); setN(n + 2); } else if (e.key === '-') { e.preventDefault(); setN(n - 2); }
+  });
+  const dlg = $('dlg');
+  const close = () => { dlg.classList.remove('icon-dlg'); dlg.close(); };
+  const saveB = h('button', { class: 'primary', onclick: async () => {
+    saveB.disabled = true;
+    try {
+      const blob = await new Promise((ok) => result().toBlob(ok, 'image/png'));
+      const q = new URLSearchParams({ item: it.id, slot: 'icon', name: `${it.id}_icon_${n}.png`, form: String(src.form || ui.form) });
+      hub = await api('/api/upload?' + q, { method: 'POST', body: blob }); // newest = ★ used
+      const nit = hub.items[it.id], nr = nit.rounds.at(-1);
+      nit.iconCrop = { round: src.id, x, y, n };
+      if (nr) { nr.note = `ไอคอน ${n}×${n} จาก${src.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพนิ่ง'} ${fmtDate(src.t)}`; if (src.flip) nr.flip = true; }
+      await save(); toast('บันทึกไอคอนแล้ว ใช้อันนี้แล้ว'); close(); render();
+    } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
+  } }, 'บันทึกและใช้เลย');
+  $('dlgBody').replaceChildren(
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
+    h('div', { class: 'icon-ed' },
+      h('div', { class: 'icon-stage' }, cv),
+      h('div', { class: 'icon-side' },
+        h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาดกรอบ'), h('span', { class: 'sp' }), sizeTxt), sizeIn,
+        h('div', { class: 'lbl' }, 'ผลลัพธ์ (ขยายให้ดู)'), h('div', { class: 'icon-prev' }, flipped(out, src)),
+        h('div', { class: 'lbl' }, 'ขนาดจริง'), h('div', { class: 'icon-prev small' }, flipped(out1, src)),
+        h('p', { class: 'small faint' }, 'พิกเซลจริงไม่ย่อไม่ขยาย · นอกกรอบโปร่งใส · ไม่มีขอบ (ให้เกมวาดเอง) · หันข้างตามสวิตช์กลับข้างของภาพ'))));
+  dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });
+  draw(); dlg.showModal(); cv.focus();
 }
 
 // ---------- pixel editor (set 246, owner spec) ----------
@@ -1197,7 +1345,7 @@ function renderQueue(m) {
       q.reply ? h('div', { class: 'small', style: 'margin-top:6px;white-space:pre-wrap' }, (q.by === 'auto' ? 'โปรแกรม: ' : 'Claude: ') + q.reply) : null,
       q.state === 'done' && nextTh(q) ? h('div', { class: 'small next' }, nextTh(q)) : null,
       h('div', { class: 'tools' },
-        q.state === 'done' && q.task === 'check+veo' ? (q.result === 'fail' ? h('button', { class: 'primary', onclick: () => go(q, 'prompt') }, 'เปิดขั้นพรอมต์') : h('button', { class: 'primary', onclick: () => go(q, 'veoin') }, 'เปิดช่อง 4 ภาพส่ง Veo'))
+        q.state === 'done' && q.task === 'check+veo' ? (q.result === 'fail' ? h('button', { class: 'primary', onclick: () => go(q, 'prompt') }, 'เปิดขั้นพรอมต์') : h('button', { class: 'primary', onclick: () => go(q, 'veoin') }, 'เปิดภาพส่ง Veo (แท็บพรอมต์)'))
           : q.state === 'done' && q.task === 'frames+shadow' ? [h('button', { class: 'primary', onclick: () => go(q, 'frames') }, 'เปิดขั้นเฟรม'), h('button', { onclick: () => go(q, 'shadow') }, 'เปิดขั้นเงา')] : h('button', { class: 'ghost', onclick: () => go(q, q.step || 'still') }, 'เปิดตัวนี้'),
         q.state === 'open' ? h('button', { class: 'ghost', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้') : null));
   };
@@ -1254,9 +1402,9 @@ const teamUndo = [], teamRedo = [];
 let teamApi = null; // keyboard hooks of the open team tab
 function teamSnap() {
   const t = teamCfg(), ids = new Set(t.ids.filter(Boolean));
-  for (const it of Object.values(hub.items)) if (it.scale || it.offset || it.free || it.shadow) ids.add(it.id);
+  for (const it of Object.values(hub.items)) if (it.scale || it.offset || it.rot || it.free || it.shadow) ids.add(it.id);
   const items = {};
-  for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, offset: it.offset || null, free: !!it.free, shadow: it.shadow || null }; }
+  for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, offset: it.offset || null, rot: it.rot || 0, free: !!it.free, shadow: it.shadow || null }; }
   return JSON.stringify({ ids: t.ids.slice(), items });
 }
 function teamPush() { const s = teamSnap(); if (teamUndo[teamUndo.length - 1] !== s) teamUndo.push(s); if (teamUndo.length > 60) teamUndo.shift(); teamRedo.length = 0; }
@@ -1264,7 +1412,8 @@ function teamRestore(s) {
   const o = JSON.parse(s), t = teamCfg(); t.ids = o.ids;
   for (const it of Object.values(hub.items)) {
     const v = o.items[it.id];
-    if (!v) { delete it.scale; delete it.offset; delete it.free; continue; }
+    if (!v) { delete it.scale; delete it.offset; delete it.rot; delete it.free; continue; }
+    if (v.rot) it.rot = v.rot; else delete it.rot;
     for (const key of ['scale', 'offset', 'shadow']) { if (v[key]) it[key] = v[key]; else delete it[key]; }
     if (v.free) it.free = true; else delete it.free;
   }
@@ -1282,6 +1431,7 @@ function renderTeam(m) {
   let bg = null;
   const stale = (it, s) => !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
   const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' && !stale(it, s) ? it.scale.k : teamDefaultK(s ? s.h : 180));
+  const rotOf = (it) => (it?.free && Number.isFinite(it.rot) ? it.rot : 0); // degrees clockwise on screen, around the feet (owner B1/C1 set 247: unlocked only)
   const offOf = (it) => (it?.free && it.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
   // feet from the shadow tab count only when they were set on this same picture (same round, or same pixel size)
   const feetLinked = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && s && r && (it.shadow.round === r.id || (Array.isArray(it.shadow.size) && it.shadow.size[0] === s.w && it.shadow.size[1] === s.h)));
@@ -1325,12 +1475,12 @@ function renderTeam(m) {
         g.beginPath(); g.moveTo(sx, sy); g.lineTo(p.feet[0], p.feet[1]); g.stroke(); g.restore();
       }
       if (swapping && drag.k === k) continue; // drawn under the pointer below
-      paint(g, p.s, p.r, ...p.box);
+      g.save(); turn(g, p); paint(g, p.s, p.r, ...p.box); g.restore();
     }
     const b = boxes[ui.teamSel];
     if (b && !swapping) {
       const free = hub.items[t.ids[ui.teamSel]]?.free;
-      g.save(); g.strokeStyle = free ? '#8cc8ff' : '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10); g.restore();
+      g.save(); const ps = place(ui.teamSel); if (ps) turn(g, ps); g.strokeStyle = free ? '#8cc8ff' : '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10); g.restore();
     }
     if (ui.teamFeet && anchors[ui.teamSel]) { // feet mode: a cross where the feet meet the ground
       const [x, y] = anchors[ui.teamSel];
@@ -1350,6 +1500,7 @@ function renderTeam(m) {
       g.save(); g.globalAlpha = 0.85; paint(g, sprs[drag.k], teamRound(it), Math.round(x + drag.cur[0] - drag.p0[0]), Math.round(y + drag.cur[1] - drag.p0[1]), w, hh); g.restore();
     }
   }
+  function turn(g, p) { const a = rotOf(p.it); if (!a) return; g.translate(p.feet[0], p.feet[1]); g.rotate(a * Math.PI / 180); g.translate(-p.feet[0], -p.feet[1]); }
   function paint(g, s, r, x, y, w, hh) {
     g.save();
     if (!r.flip) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // our side faces right: pictures face left, flip ones are already mirrored
@@ -1431,7 +1582,7 @@ function renderTeam(m) {
   function after(msg) { Promise.all([0, 1, 2, 3, 4, 5].map(loadSlot)).then(() => { sync(); draw(); }); sync(); saveSoon(); toast(msg); }
   function undo() { if (!teamUndo.length) { toast('ไม่มีอะไรให้ย้อนกลับ'); return; } teamRedo.push(teamSnap()); teamRestore(teamUndo.pop()); after('ย้อนกลับแล้ว'); }
   function redo() { if (!teamRedo.length) { toast('ไม่มีอะไรให้ทำซ้ำ'); return; } teamUndo.push(teamSnap()); teamRestore(teamRedo.pop()); after('ทำซ้ำแล้ว'); }
-  teamApi = { undo, redo, nudge };
+  teamApi = { undo, redo, nudge, rotate: (d) => rotate(d) }; // rotate is defined with the panel below
   // ---- side panel ----
   const formation = h('div', { class: 'formation', role: 'group', 'aria-label': 'เลือกช่อง ลากปุ่มไปวางบนปุ่มอื่นเพื่อสลับ' });
   const slotBtns = [];
@@ -1458,13 +1609,22 @@ function renderTeam(m) {
   const undoBtn = h('button', { onclick: () => undo(), title: 'Ctrl+Z' }, 'ย้อนกลับ'), redoBtn = h('button', { onclick: () => redo(), title: 'Ctrl+Y' }, 'ทำซ้ำ');
   const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.scale) change(() => { delete it.scale; }); } }, 'คืนขนาดเริ่มต้น');
   // position: lock switch (on = locked to the slot centre)
-  const lockSw = h('button', { class: 'switch', role: 'switch', onclick: () => { const it = cur(); if (!it) return; change(() => { if (it.free) delete it.free; else it.free = true; }); } }, h('span', { class: 'knob' }), 'ล็อคตำแหน่ง');
+  const lockSw = h('button', { class: 'switch', role: 'switch', onclick: () => { const it = cur(); if (!it) return; change(() => { if (it.free) { delete it.free; delete it.offset; delete it.rot; } else it.free = true; }); } }, h('span', { class: 'knob' }), 'ล็อคตำแหน่ง'); // lock = back to the slot centre, upright (owner A1 set 247; Ctrl+Z brings it back)
   const posInfo = h('div', { class: 'small dim' });
   const pad = h('div', { class: 'pad' },
     h('span', {}), h('button', { 'aria-label': 'ขยับขึ้น', onclick: () => nudge(0, -1) }, '↑'), h('span', {}),
     h('button', { 'aria-label': 'ขยับไปทางหลัง', onclick: () => nudge(-1, 0) }, '←'), h('button', { 'aria-label': 'ขยับลง', onclick: () => nudge(0, 1) }, '↓'), h('button', { 'aria-label': 'ขยับไปทางหน้า', onclick: () => nudge(1, 0) }, '→'));
   const resetO = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.offset) change(() => { delete it.offset; }); } }, 'กลับกลางช่อง');
-  const freeBox = h('div', { class: 'freebox' }, h('div', { class: 'row nowrap' }, pad, posInfo), resetO);
+  function setRot(v, coalesce) { const it = cur(); if (!it?.free) return false; let a = Math.round(v); a = ((a + 180) % 360 + 360) % 360 - 180; change(() => { if (a) it.rot = a; else delete it.rot; }, coalesce); return true; }
+  const rotate = (d) => setRot(rotOf(cur()) + d, true);
+  const rotVal = h('b', { class: 'kval' });
+  const rotRange = h('input', { type: 'range', min: -180, max: 180, step: 1, 'aria-label': 'องศาการหมุน', oninput: (e) => setRot(Number(e.target.value), true) });
+  const rotL = h('button', { class: 'pm', title: 'หมุนทวนเข็ม 1° (Q · Shift = 15°)', 'aria-label': 'หมุนทวนเข็ม', onclick: (e) => rotate(e.shiftKey ? -15 : -1) }, '⟲');
+  const rotR = h('button', { class: 'pm', title: 'หมุนตามเข็ม 1° (E · Shift = 15°)', 'aria-label': 'หมุนตามเข็ม', onclick: (e) => rotate(e.shiftKey ? 15 : 1) }, '⟳');
+  const rotReset = h('button', { class: 'ghost', onclick: () => setRot(0) }, 'กลับ 0°');
+  const freeBox = h('div', { class: 'freebox' }, h('div', { class: 'row nowrap' }, pad, posInfo), resetO,
+    h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'หมุน'), h('span', { class: 'sp' }), rotVal),
+    h('div', { class: 'row nowrap' }, rotL, rotRange, rotR), h('div', { class: 'row' }, h('span', { class: 'small dim' }, 'หมุนรอบจุดเท้า · Q / E ทีละ 1° · Shift = 15°'), h('span', { class: 'sp' }), rotReset));
   // feet point
   const feetBtn = h('button', { onclick: () => {
     const it = cur(), p = place(ui.teamSel); if (!it || !p) return;
@@ -1507,6 +1667,7 @@ function renderTeam(m) {
     lockInfo.textContent = !s ? '' : locked ? 'ยืนกลางช่อง · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับ' : 'ปลดล็อคแล้ว · ลากตัวบนภาพเพื่อขยับหรือให้ลอย · สลับช่องให้ลากปุ่มช่องด้านบน';
     posInfo.textContent = !s ? '' : ox || oy ? `${ox ? `${ox > 0 ? 'ไปหน้า' : 'ไปหลัง'} ${Math.abs(ox)}` : ''}${ox && oy ? ' · ' : ''}${oy ? `${oy > 0 ? 'ลง' : 'ลอยขึ้น'} ${Math.abs(oy)}` : ''} px` : 'กลางช่อง';
     resetO.disabled = !s || !it.offset;
+    const ra = rotOf(it); rotRange.value = String(ra); rotVal.textContent = `${ra}°`; rotReset.disabled = !s || !ra;
     feetBtn.classList.toggle('on', ui.teamFeet); feetBtn.setAttribute('aria-pressed', String(!!ui.teamFeet));
     feetBtn.textContent = ui.teamFeet ? 'เสร็จ' : 'ปรับจุดเท้า';
     feetInfo.textContent = !s ? '' : ui.teamFeet ? 'ลากตัวละครให้เท้าแตะกากบาทชมพู · ปุ่มลูกศรขยับทีละ 1 เม็ด · ใช้ค่าเดียวกับแท็บเงา'
@@ -1522,7 +1683,7 @@ function renderTeam(m) {
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
     undoBtn, redoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Q/E หมุน · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
@@ -1533,7 +1694,8 @@ document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey) { e.preventDefault(); teamApi.undo(); return; } // physical keys: Thai layout types ผ / ั
   if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey))) { e.preventDefault(); teamApi.redo(); return; }
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-  if (d) { const n = e.shiftKey ? 10 : 1; if (teamApi.nudge(d[0] * n, d[1] * n)) e.preventDefault(); }
+  if (d) { const n = e.shiftKey ? 10 : 1; if (teamApi.nudge(d[0] * n, d[1] * n)) e.preventDefault(); return; }
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyQ' || e.code === 'KeyE')) { if (teamApi.rotate((e.code === 'KeyQ' ? -1 : 1) * (e.shiftKey ? 15 : 1))) e.preventDefault(); } // physical keys (Thai layout)
 });
 
 let libCache = null;

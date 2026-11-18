@@ -28,7 +28,7 @@ const EXT = {
   glb: 'model/gltf-binary', pxo: 'application/octet-stream', txt: 'text/plain; charset=utf-8',
 };
 const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css' };
-const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file'];
+const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file', 'icon']; // icon = diamond crop for the shop / bench (set 246)
 const MAX_UPLOAD = 600 * 1024 * 1024;
 const LICENCE_DEFAULT = 'AI placeholder - UNVERIFIED';
 // owner A1 (set 240 follow-up): the "ตัดเฟรม + สร้างเงา" button runs Claude's two scripts here, no chat needed.
@@ -154,6 +154,7 @@ export function validateHub(h) {
     if (it.free != null && typeof it.free !== 'boolean') err.push(`${id}: free must be true/false`);
     const of = it.offset;
     if (of != null && (typeof of !== 'object' || !Number.isFinite(of.x) || !Number.isFinite(of.y))) err.push(`${id}: offset must be {x, y}`);
+    if (it.rot != null && (!Number.isFinite(it.rot) || it.rot < -180 || it.rot > 180)) err.push(`${id}: rot must be a number -180..180`);
     if (sc != null && (typeof sc !== 'object' || typeof sc.k !== 'number' || !Number.isFinite(sc.k) || sc.k <= 0 || sc.k > 8)) err.push(`${id}: scale.k must be a number 0..8`);
   }
   const tm = h.settings?.team;
@@ -172,6 +173,9 @@ export function shadowExport(hub) {
     if (it.kind === 'character' && it.free === true && it.offset && typeof it.offset === 'object') { // unlocked creature (owner A1): screen px in the 1920x1061 view, x toward the foe, y down (up = floating)
       (scale[it.id] ||= { k: 0, size: [0, 0] }).offset = [Math.round(num(it.offset.x, -400, 400, 0)), Math.round(num(it.offset.y, -300, 300, 0))];
     }
+    if (it.kind === 'character' && it.free === true && Number.isFinite(it.rot) && it.rot) { // unlocked creature turned (owner B1/C1 set 247): degrees clockwise on screen, around the feet
+      (scale[it.id] ||= { k: 0, size: [0, 0] }).rot = Math.round(num(it.rot, -180, 180, 0));
+    }
     if (it.kind !== 'character' || !it.shadow) continue;
     const s = it.shadow, o = s.oval || {}, c = s.cast || {};
     units[it.id] = {
@@ -189,7 +193,7 @@ export function shadowExport(hub) {
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
     default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 0 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
-    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) unless unlocked; offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating). Not read by the game yet (r38 port).',
+    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) unless unlocked; offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
     scale,
   };
 }
