@@ -1223,7 +1223,7 @@ async function pixelEditor(it, r) {
   let data = sg.getImageData(0, 0, W, H);
   const undoS = [], redoS = [];
   let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null, lastDown = 0;
-  // selection (owner set 248 A1: rectangle + freehand lasso, Shift adds) and a floating piece (paste / lifted) that is placed with Enter
+  // selection (owner set 248 A1: rectangle + freehand lasso, Shift adds) and a floating piece (paste / dragged-out copy) that is placed with Enter
   let sel = null, selEdges = null, rectD = null, lassoD = null, float = null, fdrag = null;
   let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap2') === '1'; } catch { /* storage off */ }
   const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
@@ -1242,7 +1242,7 @@ async function pixelEditor(it, r) {
   const stageEl = h('div', { class: 'pxed-stage' }, cv);
   const bgSeg = h('span', { class: 'seg' }, PXBG.map(([k, l, c]) => h('button', { 'data-k': k, onclick: () => { bgK = k; try { localStorage.setItem('pxedBg', k); } catch { /* storage off */ } syncUi(); paint(); } }, c ? [h('i', { class: 'pxed-dot', style: `--sw:${c}` }), l] : l)));
   const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap2', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกขวา = ใส่สี');
-  const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท'], ['rect', 'เลือก ▭'], ['lasso', 'เลือกวาดเอง']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
+  const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท'], ['rect', 'เลือก ▭'], ['lasso', 'เลือกวาดเอง']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => setTool(k) }, l)));
   const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
   const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกและใช้เลย');
   const copyB = h('button', { title: 'Ctrl+C', onclick: () => copySel() }, 'คัดลอก'), cutB = h('button', { title: 'Ctrl+X', onclick: () => cutSel() }, 'ตัด');
@@ -1253,6 +1253,10 @@ async function pixelEditor(it, r) {
   const floatRow = h('div', { class: 'row pxed-float' }, placeB, dropB, flipHB, flipVB);
   const closeB = h('button', { onclick: () => close() }, 'ปิด');
   function setColour(c) { colour = c; syncUi(); }
+  function setTool(k) { // owner set 248: changing tool places a floating piece and drops the selection (no marks left behind)
+    if (k === tool) return;
+    commitFloat(); rectD = null; lassoD = null; tool = k; setSel(null); paint();
+  }
   function palette() { // the picture's own colours, most used first
     const n = new Map();
     for (let i = 0; i < data.data.length; i += 4) { if (data.data[i + 3] < 128) continue; const k = (data.data[i] << 16) | (data.data[i + 1] << 8) | data.data[i + 2]; n.set(k, (n.get(k) || 0) + 1); }
@@ -1268,7 +1272,7 @@ async function pixelEditor(it, r) {
     const [pb, eb] = swapBtn ? ['คลิกขวา', 'คลิกซ้าย'] : ['คลิกซ้าย', 'คลิกขวา'];
     modeEl.textContent = picking ? 'โหมดดูดสี · ชี้เม็ดไหนก็ได้สีนั้นทันที · ปล่อย Space เพื่อกลับ'
       : float ? 'ลากชิ้นที่วางไปตำแหน่งที่ต้องการ · ลูกศรขยับทีละ 1 เม็ด · Enter หรือคลิกข้างนอก = วางลง · Esc = ยกเลิก'
-      : isSel() ? `${tool === 'rect' ? 'ลากเป็นกรอบ' : 'ลากวาดเส้นรอบส่วนที่ต้องการ'}เพื่อเลือก · Shift = เลือกเพิ่ม · ลากในส่วนที่เลือก = ย้าย · Ctrl+C คัดลอก · Ctrl+X ตัด · Ctrl+V วาง · Delete ลบ · Esc ยกเลิกเลือก`
+      : isSel() ? `${tool === 'rect' ? 'ลากเป็นกรอบ' : 'ลากวาดเส้นรอบส่วนที่ต้องการ'}เพื่อเลือก · Shift = เลือกเพิ่ม · ลากในส่วนที่เลือก = ลากสำเนาออกมา (ภาพเดิมอยู่ที่เดิม) · Ctrl+C คัดลอก · Ctrl+X ตัด · Ctrl+V วาง · Delete ลบ · Esc ยกเลิกเลือก`
       : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ชี้ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ชี้ดูดสี`;
     const bc = (PXBG.find((x) => x[0] === bgK) || PXBG[0])[2];
     stageEl.style.background = bc || ''; stageEl.classList.toggle('plain', !!bc);
@@ -1372,11 +1376,11 @@ async function pixelEditor(it, r) {
     float = { x: Math.max(0, Math.min(c.x, W - c.w)), y: Math.max(0, Math.min(c.y, H - c.h)), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
     setSel(null); if (!isSel()) tool = 'rect'; syncUi(); paint(); cv.focus();
   }
-  function lift() { const g0 = grab(sel); snapshot(); clearSel(); float = { ...g0, lifted: true }; setSel(null); dirty = true; }
+  function dupe() { float = grab(sel); setSel(null); } // owner set 248: selecting is for copying — dragging pulls out a copy, the original stays
   function commitFloat() { // place the floating piece; its transparent pixels keep what is underneath (owner B1)
     if (!float) return;
     const f = float; float = null; fdrag = null;
-    if (!f.lifted) snapshot();
+    snapshot();
     for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) {
       const o = (y * f.w + x) * 4, tx = f.x + x, ty = f.y + y;
       if (f.d[o + 3] === 0 || tx < 0 || ty < 0 || tx >= W || ty >= H) continue;
@@ -1384,7 +1388,7 @@ async function pixelEditor(it, r) {
     }
     dirty = true; palette(); syncUi(); paint();
   }
-  function cancelFloat() { if (!float) return; const f = float; float = null; fdrag = null; if (f.lifted && undoS.length) data = undoS.pop(); syncUi(); paint(); } // a lifted piece goes back where it was
+  function cancelFloat() { if (!float) return; float = null; fdrag = null; syncUi(); paint(); } // the picture was not touched yet
   function flipFloat(hz) {
     if (!float) return; const f = float, d = new Uint8ClampedArray(f.d.length);
     for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const sx = hz ? f.w - 1 - x : x, sy = hz ? y : f.h - 1 - y; d.set(f.d.subarray((sy * f.w + sx) * 4, (sy * f.w + sx) * 4 + 4), (y * f.w + x) * 4); }
@@ -1416,7 +1420,7 @@ async function pixelEditor(it, r) {
     if (isSel()) {
       if (e.button === 2) { setSel(null); paint(); return; }
       if (e.button !== 0) return;
-      if (sel && sel[p[1] * W + p[0]] && !e.shiftKey) { lift(); fdrag = { p, x0: float.x, y0: float.y }; cv.setPointerCapture(e.pointerId); syncUi(); paint(); return; } // drag inside the selection = move it
+      if (sel && sel[p[1] * W + p[0]] && !e.shiftKey) { dupe(); fdrag = { p, x0: float.x, y0: float.y }; cv.setPointerCapture(e.pointerId); syncUi(); paint(); return; } // drag inside the selection = drag out a copy
       if (tool === 'rect') rectD = { a: p, b: p, add: e.shiftKey }; else lassoD = { pts: [p], add: e.shiftKey };
       cv.setPointerCapture(e.pointerId); paint(); return;
     }
