@@ -1211,6 +1211,8 @@ async function iconEditor(it) {
 // Hold Space = colour picker: the colour under the pointer is picked as you point (no click); let go of Space = back to normal. Saved as a NEW round
 // (the original stays) and starred = used right away (owner); the old round can be starred back from the list.
 const PXED_MAX = 256;
+// copied pixels (owner set 248): kept between editors, so a piece of one picture can be pasted into another
+let pxClip = null;
 async function pixelEditor(it, r) {
   let img;
   try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
@@ -1221,6 +1223,8 @@ async function pixelEditor(it, r) {
   let data = sg.getImageData(0, 0, W, H);
   const undoS = [], redoS = [];
   let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null, lastDown = 0;
+  // selection (owner set 248 A1: rectangle + freehand lasso, Shift adds) and a floating piece (paste / lifted) that is placed with Enter
+  let sel = null, selEdges = null, rectD = null, lassoD = null, float = null, fdrag = null;
   let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap2') === '1'; } catch { /* storage off */ }
   const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
   let z = fitZ();
@@ -1238,9 +1242,15 @@ async function pixelEditor(it, r) {
   const stageEl = h('div', { class: 'pxed-stage' }, cv);
   const bgSeg = h('span', { class: 'seg' }, PXBG.map(([k, l, c]) => h('button', { 'data-k': k, onclick: () => { bgK = k; try { localStorage.setItem('pxedBg', k); } catch { /* storage off */ } syncUi(); paint(); } }, c ? [h('i', { class: 'pxed-dot', style: `--sw:${c}` }), l] : l)));
   const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap2', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกขวา = ใส่สี');
-  const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
+  const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท'], ['rect', 'เลือก ▭'], ['lasso', 'เลือกวาดเอง']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
   const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
   const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกและใช้เลย');
+  const copyB = h('button', { title: 'Ctrl+C', onclick: () => copySel() }, 'คัดลอก'), cutB = h('button', { title: 'Ctrl+X', onclick: () => cutSel() }, 'ตัด');
+  const pasteB = h('button', { title: 'Ctrl+V', onclick: () => paste() }, 'วาง'), delB = h('button', { title: 'Delete', onclick: () => delSel() }, 'ลบที่เลือก');
+  const noneB = h('button', { class: 'ghost', title: 'Esc', onclick: () => { setSel(null); paint(); } }, 'ยกเลิกเลือก');
+  const placeB = h('button', { class: 'primary', title: 'Enter', onclick: () => commitFloat() }, 'วางลง'), dropB = h('button', { class: 'ghost', title: 'Esc', onclick: () => cancelFloat() }, 'ยกเลิก');
+  const flipHB = h('button', { onclick: () => flipFloat(true) }, 'กลับซ้าย-ขวา'), flipVB = h('button', { onclick: () => flipFloat(false) }, 'กลับบน-ล่าง');
+  const floatRow = h('div', { class: 'row pxed-float' }, placeB, dropB, flipHB, flipVB);
   const closeB = h('button', { onclick: () => close() }, 'ปิด');
   function setColour(c) { colour = c; syncUi(); }
   function palette() { // the picture's own colours, most used first
@@ -1256,12 +1266,17 @@ async function pixelEditor(it, r) {
     gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
     zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
     const [pb, eb] = swapBtn ? ['คลิกขวา', 'คลิกซ้าย'] : ['คลิกซ้าย', 'คลิกขวา'];
-    modeEl.textContent = picking ? 'โหมดดูดสี · ชี้เม็ดไหนก็ได้สีนั้นทันที · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ชี้ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ชี้ดูดสี`;
+    modeEl.textContent = picking ? 'โหมดดูดสี · ชี้เม็ดไหนก็ได้สีนั้นทันที · ปล่อย Space เพื่อกลับ'
+      : float ? 'ลากชิ้นที่วางไปตำแหน่งที่ต้องการ · ลูกศรขยับทีละ 1 เม็ด · Enter หรือคลิกข้างนอก = วางลง · Esc = ยกเลิก'
+      : isSel() ? `${tool === 'rect' ? 'ลากเป็นกรอบ' : 'ลากวาดเส้นรอบส่วนที่ต้องการ'}เพื่อเลือก · Shift = เลือกเพิ่ม · ลากในส่วนที่เลือก = ย้าย · Ctrl+C คัดลอก · Ctrl+X ตัด · Ctrl+V วาง · Delete ลบ · Esc ยกเลิกเลือก`
+      : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ชี้ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ชี้ดูดสี`;
     const bc = (PXBG.find((x) => x[0] === bgK) || PXBG[0])[2];
     stageEl.style.background = bc || ''; stageEl.classList.toggle('plain', !!bc);
     bgSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === bgK; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     swapSw.classList.toggle('is-on', swapBtn); swapSw.setAttribute('aria-checked', String(swapBtn));
-    modeEl.classList.toggle('picking', picking); cv.classList.toggle('picking', picking);
+    modeEl.classList.toggle('picking', picking); cv.classList.toggle('picking', picking); cv.classList.toggle('selecting', isSel() || !!float);
+    for (const b of [copyB, cutB, delB, noneB]) b.disabled = !sel;
+    pasteB.disabled = !pxClip; floatRow.hidden = !float;
   }
   function paint() {
     cv.width = W * z; cv.height = H * z;
@@ -1274,8 +1289,17 @@ async function pixelEditor(it, r) {
       for (let y = 1; y < H; y++) { g.moveTo(0, y * z + 0.5); g.lineTo(W * z, y * z + 0.5); }
       g.stroke();
     }
+    if (float) { // the floating piece over the picture
+      const t = document.createElement('canvas'); t.width = float.w; t.height = float.h; t.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(float.d), float.w, float.h), 0, 0);
+      g.drawImage(t, float.x * z, float.y * z, float.w * z, float.h * z);
+      ants(g, () => g.rect(float.x * z + 0.5, float.y * z + 0.5, float.w * z - 1, float.h * z - 1), '#8cc8ff');
+    }
+    const ed = edges();
+    if (ed) ants(g, () => { for (const [a, b, c, d] of ed) { g.moveTo(a * z, b * z); g.lineTo(c * z, d * z); } });
+    if (rectD) { const x0 = Math.min(rectD.a[0], rectD.b[0]), y0 = Math.min(rectD.a[1], rectD.b[1]), x1 = Math.max(rectD.a[0], rectD.b[0]) + 1, y1 = Math.max(rectD.a[1], rectD.b[1]) + 1; ants(g, () => g.rect(x0 * z, y0 * z, (x1 - x0) * z, (y1 - y0) * z)); }
+    if (lassoD) ants(g, () => { lassoD.pts.forEach(([x, y], i) => (i ? g.lineTo : g.moveTo).call(g, (x + 0.5) * z, (y + 0.5) * z)); });
     if (hover) {
-      if (!picking && !stroke) { g.fillStyle = hex(colour); g.fillRect(hover[0] * z, hover[1] * z, z, z); } // preview of the paint colour under the pointer
+      if (!picking && !stroke && !isSel() && !float) { g.fillStyle = hex(colour); g.fillRect(hover[0] * z, hover[1] * z, z, z); } // preview of the paint colour under the pointer
       g.strokeStyle = picking ? '#ff5ad1' : '#fff'; g.lineWidth = 2; g.strokeRect(hover[0] * z + 1, hover[1] * z + 1, z - 2, z - 2);
       g.strokeStyle = '#000'; g.lineWidth = 1; g.strokeRect(hover[0] * z - 0.5, hover[1] * z - 0.5, z + 1, z + 1);
     }
@@ -1284,11 +1308,12 @@ async function pixelEditor(it, r) {
   const at = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((mirX ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; };
   const px = (x, y) => (y * W + x) * 4;
   function setPx(x, y, c) { const i = px(x, y); data.data[i] = c[0]; data.data[i + 1] = c[1]; data.data[i + 2] = c[2]; data.data[i + 3] = c[3]; }
-  function line(a, b, c) { // every pixel between two pointer samples, so a fast drag leaves no gaps
+  function walk(a, b, fn) { // every pixel between two points (Bresenham)
     let [x0, y0] = a; const [x1, y1] = b, dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
     let err = dx + dy;
-    for (;;) { setPx(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
+    for (;;) { fn(x0, y0); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
   }
+  function line(a, b, c) { walk(a, b, (x, y) => setPx(x, y, c)); } // a fast drag leaves no gaps
   function fill(x, y, c) { // flood fill of the touching area with the same colour
     const i0 = px(x, y), t = [data.data[i0], data.data[i0 + 1], data.data[i0 + 2], data.data[i0 + 3]];
     if (t.every((v, j) => v === c[j])) return;
@@ -1296,14 +1321,84 @@ async function pixelEditor(it, r) {
     const st = [[x, y]], seen = new Uint8Array(W * H);
     while (st.length) { const [a, b] = st.pop(); if (a < 0 || b < 0 || a >= W || b >= H || seen[b * W + a] || !same(px(a, b))) continue; seen[b * W + a] = 1; setPx(a, b, c); st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]); }
   }
+  function ants(g, path, col = '#fff') { g.save(); g.beginPath(); path(); g.lineWidth = 3; g.strokeStyle = '#000'; g.stroke(); g.lineWidth = 1.5; g.setLineDash([4, 4]); g.strokeStyle = col; g.stroke(); g.restore(); }
+  // ---- selection / copy / paste ----
+  function isSel() { return tool === 'rect' || tool === 'lasso'; }
+  const atC = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((mirX ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return [Math.max(0, Math.min(W - 1, x)), Math.max(0, Math.min(H - 1, y))]; };
+  function setSel(m) { sel = m && m.some((v) => v) ? m : null; selEdges = null; syncUi(); }
+  function edges() { // outline of the selection in pixel units, rebuilt only when it changes
+    if (!sel) return null; if (selEdges) return selEdges;
+    const e = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (!sel[y * W + x]) continue;
+      if (y === 0 || !sel[(y - 1) * W + x]) e.push([x, y, x + 1, y]);
+      if (y === H - 1 || !sel[(y + 1) * W + x]) e.push([x, y + 1, x + 1, y + 1]);
+      if (x === 0 || !sel[y * W + x - 1]) e.push([x, y, x, y + 1]);
+      if (x === W - 1 || !sel[y * W + x + 1]) e.push([x + 1, y, x + 1, y + 1]);
+    }
+    return (selEdges = e);
+  }
+  function rectMask(a, b, add) {
+    const m = add && sel ? sel.slice() : new Uint8Array(W * H);
+    for (let y = Math.min(a[1], b[1]); y <= Math.max(a[1], b[1]); y++) for (let x = Math.min(a[0], b[0]); x <= Math.max(a[0], b[0]); x++) m[y * W + x] = 1;
+    return m;
+  }
+  function lassoMask(pts, add) { // pixels whose centre is inside the drawn loop, plus the line itself
+    const m = add && sel ? sel.slice() : new Uint8Array(W * H);
+    let x0 = W, x1 = 0, y0 = H, y1 = 0; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      let inside = false;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside; }
+      if (inside) m[y * W + x] = 1;
+    }
+    for (let i = 0; i < pts.length; i++) walk(pts[i], pts[(i + 1) % pts.length], (x, y) => { m[y * W + x] = 1; });
+    return m;
+  }
+  function grab(m) { // the selected pixels as a tight box; outside the selection = transparent
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y * W + x]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const w = x1 - x0 + 1, hh = y1 - y0 + 1, d = new Uint8ClampedArray(w * hh * 4);
+    for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) if (m[(y0 + y) * W + x0 + x]) { const i = px(x0 + x, y0 + y); d.set(data.data.subarray(i, i + 4), (y * w + x) * 4); }
+    return { x: x0, y: y0, w, h: hh, d };
+  }
+  function clearSel() { for (let i = 0; i < W * H; i++) if (sel[i]) data.data.fill(0, i * 4, i * 4 + 4); }
+  function copySel() { if (!sel) { toast('เลือกส่วนที่จะคัดลอกก่อน'); return false; } pxClip = grab(sel); toast(`คัดลอกแล้ว ${pxClip.w}×${pxClip.h} เม็ด กด Ctrl+V เพื่อวาง`); syncUi(); return true; }
+  function cutSel() { if (!copySel()) return; snapshot(); clearSel(); dirty = true; palette(); syncUi(); paint(); }
+  function delSel() { if (!sel) return; snapshot(); clearSel(); dirty = true; palette(); syncUi(); paint(); }
+  function paste() {
+    if (!pxClip) { toast('ยังไม่ได้คัดลอกอะไร'); return; }
+    commitFloat();
+    const c = pxClip; // same spot it was copied from, kept inside the picture
+    float = { x: Math.max(0, Math.min(c.x, W - c.w)), y: Math.max(0, Math.min(c.y, H - c.h)), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
+    setSel(null); if (!isSel()) tool = 'rect'; syncUi(); paint(); cv.focus();
+  }
+  function lift() { const g0 = grab(sel); snapshot(); clearSel(); float = { ...g0, lifted: true }; setSel(null); dirty = true; }
+  function commitFloat() { // place the floating piece; its transparent pixels keep what is underneath (owner B1)
+    if (!float) return;
+    const f = float; float = null; fdrag = null;
+    if (!f.lifted) snapshot();
+    for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) {
+      const o = (y * f.w + x) * 4, tx = f.x + x, ty = f.y + y;
+      if (f.d[o + 3] === 0 || tx < 0 || ty < 0 || tx >= W || ty >= H) continue;
+      setPx(tx, ty, [f.d[o], f.d[o + 1], f.d[o + 2], f.d[o + 3]]);
+    }
+    dirty = true; palette(); syncUi(); paint();
+  }
+  function cancelFloat() { if (!float) return; const f = float; float = null; fdrag = null; if (f.lifted && undoS.length) data = undoS.pop(); syncUi(); paint(); } // a lifted piece goes back where it was
+  function flipFloat(hz) {
+    if (!float) return; const f = float, d = new Uint8ClampedArray(f.d.length);
+    for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const sx = hz ? f.w - 1 - x : x, sy = hz ? y : f.h - 1 - y; d.set(f.d.subarray((sy * f.w + sx) * 4, (sy * f.w + sx) * 4 + 4), (y * f.w + x) * 4); }
+    f.d = d; paint();
+  }
   function snapshot() { undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
-  function undo() { if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
-  function redo() { if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
+  function undo() { if (float) { cancelFloat(); return; } if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
+  function redo() { if (float) commitFloat(); if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
   function pick(p, quiet) { const i = px(...p); if (data.data[i + 3] === 0) { if (!quiet) toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
   cv.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     if (Date.now() - lastDown < 400) return; // a real right press was already handled
     const p = at(e); if (!p) return;
+    if (isSel() || float) return; // right button deselects in the select tools (pointerdown)
     if (picking) { pick(p); return; }
     const c = swapBtn ? colour : [0, 0, 0, 0]; // a lone context menu = right button = erase (paint when swapped)
     snapshot(); if (swapBtn && tool === 'fill') fill(p[0], p[1], c); else setPx(p[0], p[1], c);
@@ -1313,6 +1408,18 @@ async function pixelEditor(it, r) {
     const p = at(e); if (!p) return;
     e.preventDefault(); cv.focus(); lastDown = Date.now();
     if (picking) { pick(p); return; }
+    if (float) {
+      const inF = p[0] >= float.x && p[0] < float.x + float.w && p[1] >= float.y && p[1] < float.y + float.h;
+      if (inF && e.button === 0) { fdrag = { p, x0: float.x, y0: float.y }; cv.setPointerCapture(e.pointerId); return; }
+      commitFloat(); return; // a click outside places it
+    }
+    if (isSel()) {
+      if (e.button === 2) { setSel(null); paint(); return; }
+      if (e.button !== 0) return;
+      if (sel && sel[p[1] * W + p[0]] && !e.shiftKey) { lift(); fdrag = { p, x0: float.x, y0: float.y }; cv.setPointerCapture(e.pointerId); syncUi(); paint(); return; } // drag inside the selection = move it
+      if (tool === 'rect') rectD = { a: p, b: p, add: e.shiftKey }; else lassoD = { pts: [p], add: e.shiftKey };
+      cv.setPointerCapture(e.pointerId); paint(); return;
+    }
     if (e.button !== 0 && e.button !== 2) return;
     const erase = (e.button === 2) !== swapBtn, c = erase ? [0, 0, 0, 0] : colour;
     snapshot();
@@ -1324,27 +1431,46 @@ async function pixelEditor(it, r) {
     const p = at(e); hover = p; posEl.textContent = p ? `x ${p[0]}, y ${p[1]}` : '';
     if (picking && p) pick(p, true); // Space held: the colour under the pointer is taken right away (owner: no click needed)
     if (stroke && p) { line(stroke.last, p, stroke.c); stroke.last = p; }
+    if (fdrag && float) { const q = atC(e); float.x = fdrag.x0 + q[0] - fdrag.p[0]; float.y = fdrag.y0 + q[1] - fdrag.p[1]; }
+    if (rectD) rectD.b = atC(e);
+    if (lassoD) { const q = atC(e), l = lassoD.pts[lassoD.pts.length - 1]; if (q[0] !== l[0] || q[1] !== l[1]) lassoD.pts.push(q); }
     paint();
   });
-  const endStroke = () => { if (stroke) { stroke = null; palette(); } };
+  const endStroke = () => {
+    if (stroke) { stroke = null; palette(); }
+    fdrag = null;
+    if (rectD) { const d = rectD; rectD = null; setSel(d.a[0] === d.b[0] && d.a[1] === d.b[1] && !d.add ? null : rectMask(d.a, d.b, d.add)); paint(); } // a click = deselect
+    if (lassoD) { const d = lassoD; lassoD = null; setSel(d.pts.length > 2 ? lassoMask(d.pts, d.add) : d.add ? sel : null); paint(); }
+  };
   cv.addEventListener('pointerup', endStroke); cv.addEventListener('pointercancel', endStroke);
   cv.addEventListener('pointerleave', () => { hover = null; posEl.textContent = ''; paint(); });
   function onKey(e) {
+    // Esc handled here: Chrome lets a dialog's cancel event block Esc only once per click, so a 2nd Esc would close the editor (and skip the unsaved-work question)
+    if (e.type === 'keydown' && e.code === 'Escape') { onCancel(e); return; }
     if (e.target.closest?.('input, select, textarea')) return;
     if (e.code === 'Space') { e.preventDefault(); if (e.type === 'keydown' && !picking) { picking = true; if (hover) pick(hover, true); syncUi(); paint(); } if (e.type === 'keyup') { picking = false; syncUi(); paint(); } return; }
     if (e.type !== 'keydown') return;
     const k = e.code; // physical key: a Thai keyboard layout types ผ / ั on Z / Y
-    if ((e.ctrlKey || e.metaKey) && k === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
-    else if ((e.ctrlKey || e.metaKey) && (k === 'KeyY' || (k === 'KeyZ' && e.shiftKey))) { e.preventDefault(); redo(); }
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && k === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if (mod && (k === 'KeyY' || (k === 'KeyZ' && e.shiftKey))) { e.preventDefault(); redo(); }
+    else if (mod && k === 'KeyC') { e.preventDefault(); copySel(); }
+    else if (mod && k === 'KeyX') { e.preventDefault(); cutSel(); }
+    else if (mod && k === 'KeyV') { e.preventDefault(); paste(); }
+    else if (mod && k === 'KeyA') { e.preventDefault(); commitFloat(); if (!isSel()) tool = 'rect'; setSel(new Uint8Array(W * H).fill(1)); paint(); }
+    else if ((k === 'Delete' || k === 'Backspace') && !float && sel) { e.preventDefault(); delSel(); }
+    else if ((k === 'Enter' || k === 'NumpadEnter') && float) { e.preventDefault(); commitFloat(); }
+    else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; float.x += d[0] * n * (mirX ? -1 : 1); float.y += d[1] * n; paint(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
   const dlg = $('dlg');
   function cleanup() { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
   function close(force) { if (!force && dirty && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
-  function onCancel(e) { e.preventDefault(); close(); } // Esc asks first when there are changes
+  function onCancel(e) { e.preventDefault(); if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } close(); } // Esc: drop the floating piece, then the selection, then close (asks when there are changes)
   async function saveEdit() {
     saveB.disabled = true;
+    commitFloat();
     try {
       sg.putImageData(data, 0, 0);
       const blob = await new Promise((ok) => src.toBlob(ok, 'image/png'));
@@ -1365,7 +1491,7 @@ async function pixelEditor(it, r) {
   }
   const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => zoomTo(z - 1) }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => zoomTo(z + 1) }, '+'));
   $('dlgBody').replaceChildren(
-    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'แก้ภาพตามไฟล์จริง (หันซ้าย) · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'หันตามที่เห็นในขั้นภาพนิ่ง · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },
       stageEl,
       h('div', { class: 'pxed-side' },
@@ -1373,7 +1499,8 @@ async function pixelEditor(it, r) {
         h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
         h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
         h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg,
-        h('div', { class: 'lbl' }, 'เครื่องมือใส่สี'), toolSeg, swapSw,
+        h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg, swapSw,
+        h('div', { class: 'lbl' }, 'ส่วนที่เลือก'), h('div', { class: 'row pxed-selrow' }, copyB, cutB, pasteB, delB, noneB), floatRow,
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
         h('div', { class: 'row' }, undoB, redoB, posEl))));
   dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);

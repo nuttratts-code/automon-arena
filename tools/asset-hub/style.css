@@ -340,3 +340,8 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .fcell.own .dot { display: block; }
 .fcell.fall { min-width: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .editinfo { color: var(--ink); }
+/* set 248 pixel editor selection */
+.pxed-cv.selecting { cursor: crosshair; }
+.pxed-selrow, .pxed-float { flex-wrap: wrap; gap: 6px; }
+.pxed-selrow button, .pxed-float button { padding: 4px 10px; }
+.pxed-float { padding: 8px; border-radius: 8px; background: rgba(140,200,255,.10); border: 1px solid rgba(140,200,255,.4); }
