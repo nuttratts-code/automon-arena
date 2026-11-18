@@ -984,7 +984,7 @@ function renderShadow(m, it) {
 }
 
 // ---------- pixel editor (set 246, owner spec) ----------
-// Small pictures only (≤ 256 px). Right click = paint, left click = erase, hold + drag = keep painting/erasing along the path.
+// Small pictures only (≤ 256 px). Left click = paint, right click = erase (owner swapped it), hold + drag = keep painting/erasing along the path.
 // Hold Space = colour picker: click picks the colour under the pointer; let go of Space = back to normal. Saved as a NEW round
 // (the original stays); the new round is not starred — the owner presses "ใช้รอบนี้" when happy.
 const PXED_MAX = 256;
@@ -998,10 +998,10 @@ async function pixelEditor(it, r) {
   let data = sg.getImageData(0, 0, W, H);
   const undoS = [], redoS = [];
   let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null, lastDown = 0;
-  let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap') === '1'; } catch { /* storage off */ }
+  let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap2') === '1'; } catch { /* storage off */ }
   const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
   let z = fitZ();
-  const cv = h('canvas', { class: 'pxed-cv', tabindex: 0, 'aria-label': 'ตัวแก้พิกเซล คลิกขวาใส่สี คลิกซ้ายลบ กด Space ค้างแล้วคลิกเพื่อดูดสี' });
+  const cv = h('canvas', { class: 'pxed-cv', tabindex: 0, 'aria-label': 'ตัวแก้พิกเซล คลิกซ้ายใส่สี คลิกขวาลบ กด Space ค้างแล้วคลิกเพื่อดูดสี' });
   const hex = (c) => '#' + c.slice(0, 3).map((v) => v.toString(16).padStart(2, '0')).join('');
   const curSw = h('span', { class: 'pxed-cur' }), curTxt = h('span', { class: 'small dim' });
   const colIn = h('input', { type: 'color', 'aria-label': 'เลือกสีเอง', oninput: (e) => { const v = e.target.value; setColour([parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16), 255]); } });
@@ -1014,7 +1014,7 @@ async function pixelEditor(it, r) {
   let bgK = 'checker'; try { bgK = localStorage.getItem('pxedBg') || 'checker'; } catch { /* storage off */ }
   const stageEl = h('div', { class: 'pxed-stage' }, cv);
   const bgSeg = h('span', { class: 'seg' }, PXBG.map(([k, l, c]) => h('button', { 'data-k': k, onclick: () => { bgK = k; try { localStorage.setItem('pxedBg', k); } catch { /* storage off */ } syncUi(); paint(); } }, c ? [h('i', { class: 'pxed-dot', style: `--sw:${c}` }), l] : l)));
-  const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกซ้าย = ใส่สี');
+  const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap2', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกขวา = ใส่สี');
   const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
   const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
   const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกเป็นรอบใหม่');
@@ -1032,7 +1032,7 @@ async function pixelEditor(it, r) {
     toolSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
     zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
-    const [pb, eb] = swapBtn ? ['คลิกซ้าย', 'คลิกขวา'] : ['คลิกขวา', 'คลิกซ้าย'];
+    const [pb, eb] = swapBtn ? ['คลิกขวา', 'คลิกซ้าย'] : ['คลิกซ้าย', 'คลิกขวา'];
     modeEl.textContent = picking ? 'โหมดดูดสี · คลิกที่เม็ดสีที่ต้องการ · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ดูดสี`;
     const bc = (PXBG.find((x) => x[0] === bgK) || PXBG[0])[2];
     stageEl.style.background = bc || ''; stageEl.classList.toggle('plain', !!bc);
@@ -1078,11 +1078,11 @@ async function pixelEditor(it, r) {
   function pick(p) { const i = px(...p); if (data.data[i + 3] === 0) { toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
   cv.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    if (Date.now() - lastDown < 400) return; // a real right press already painted
+    if (Date.now() - lastDown < 400) return; // a real right press was already handled
     const p = at(e); if (!p) return;
     if (picking) { pick(p); return; }
-    const c = swapBtn ? [0, 0, 0, 0] : colour;
-    snapshot(); if (!swapBtn && tool === 'fill') fill(p[0], p[1], c); else setPx(p[0], p[1], c);
+    const c = swapBtn ? colour : [0, 0, 0, 0]; // a lone context menu = right button = erase (paint when swapped)
+    snapshot(); if (swapBtn && tool === 'fill') fill(p[0], p[1], c); else setPx(p[0], p[1], c);
     dirty = true; palette(); syncUi(); paint();
   });
   cv.addEventListener('pointerdown', (e) => {
@@ -1090,7 +1090,7 @@ async function pixelEditor(it, r) {
     e.preventDefault(); cv.focus(); lastDown = Date.now();
     if (picking) { pick(p); return; }
     if (e.button !== 0 && e.button !== 2) return;
-    const erase = (e.button === 0) !== swapBtn, c = erase ? [0, 0, 0, 0] : colour;
+    const erase = (e.button === 2) !== swapBtn, c = erase ? [0, 0, 0, 0] : colour;
     snapshot();
     if (!erase && tool === 'fill') { fill(p[0], p[1], c); dirty = true; palette(); syncUi(); paint(); return; }
     stroke = { c, last: p }; setPx(p[0], p[1], c); dirty = true;
@@ -1133,7 +1133,12 @@ async function pixelEditor(it, r) {
       dirty = false; toast('บันทึกเป็นรอบใหม่แล้ว (ยังไม่ได้ติดดาว กด "ใช้รอบนี้" เมื่อพอใจ)'); close(true); render();
     } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
   }
-  const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => { z = Math.max(1, z - 1); syncUi(); paint(); } }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => { z = Math.min(24, z + 1); syncUi(); paint(); } }, '+'));
+  function zoomTo(nz) { // keep the middle of what you were looking at in the middle
+    const st = stageEl, cx = (st.scrollLeft + st.clientWidth / 2) / (st.scrollWidth || 1), cy = (st.scrollTop + st.clientHeight / 2) / (st.scrollHeight || 1);
+    z = Math.max(1, Math.min(24, nz)); syncUi(); paint();
+    st.scrollLeft = cx * st.scrollWidth - st.clientWidth / 2; st.scrollTop = cy * st.scrollHeight - st.clientHeight / 2;
+  }
+  const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => zoomTo(z - 1) }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => zoomTo(z + 1) }, '+'));
   $('dlgBody').replaceChildren(
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'แก้ภาพตามไฟล์จริง (หันซ้าย) · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },

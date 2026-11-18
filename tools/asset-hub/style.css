@@ -279,12 +279,13 @@ details.qfold > summary { cursor: pointer; padding: 6px 0; }
 .pad button { padding: 0; min-height: 32px; }
 @media (max-width: 1100px) { .team-layout { grid-template-columns: 1fr; } .insp { position: static; } }
 /* set 246 pixel editor */
-dialog.pxed-dlg { width: fit-content; max-width: 96vw; }
-.pxed { display: grid; grid-template-columns: 1fr 260px; gap: 14px; margin-top: 10px; align-items: start; }
-.pxed-stage { overflow: auto; max-height: calc(92vh - 120px); background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; padding: 10px; }
+dialog.pxed-dlg { width: 96vw; max-width: 96vw; height: 92vh; max-height: 92vh; display: flex; flex-direction: column; } /* fixed size: zooming scrolls the picture, the side menu stays put */
+dialog.pxed-dlg[open] #dlgBody { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.pxed { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; margin-top: 10px; align-items: stretch; flex: 1; min-height: 0; }
+.pxed-stage { overflow: auto; min-width: 0; min-height: 0; height: 100%; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: safe center; padding: 10px; }
 .pxed-cv { image-rendering: pixelated; cursor: crosshair; touch-action: none; display: block; }
 .pxed-cv.picking { cursor: copy; }
-.pxed-side { display: flex; flex-direction: column; gap: 8px; }
+.pxed-side { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; }
 .pxed-mode { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: #ffffff0d; border: 1px solid var(--line); }
 .pxed-mode.picking { border-color: #ff5ad1; background: #ff5ad11f; color: #ffc4ef; }
 .pxed-cur { width: 34px; height: 34px; border-radius: 6px; border: 2px solid #fff; background: var(--sw); flex: none; }
@@ -295,4 +296,4 @@ dialog.pxed-dlg { width: fit-content; max-width: 96vw; }
 @media (max-width: 900px) { .pxed { grid-template-columns: 1fr; } }
 .pxed-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--sw); border: 1px solid #fff8; margin-right: 4px; vertical-align: -1px; }
 .pxed-side .seg button { padding-left: 6px; padding-right: 6px; font-size: 13px; }
-.pxed { grid-template-columns: 1fr 290px; }
+.pxed { grid-template-columns: minmax(0, 1fr) 290px; }
