@@ -985,7 +985,7 @@ function renderShadow(m, it) {
 
 // ---------- pixel editor (set 246, owner spec) ----------
 // Small pictures only (≤ 256 px). Left click = paint, right click = erase (owner swapped it), hold + drag = keep painting/erasing along the path.
-// Hold Space = colour picker: click picks the colour under the pointer; let go of Space = back to normal. Saved as a NEW round
+// Hold Space = colour picker: the colour under the pointer is picked as you point (no click); let go of Space = back to normal. Saved as a NEW round
 // (the original stays); the new round is not starred — the owner presses "ใช้รอบนี้" when happy.
 const PXED_MAX = 256;
 async function pixelEditor(it, r) {
@@ -1033,7 +1033,7 @@ async function pixelEditor(it, r) {
     gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
     zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
     const [pb, eb] = swapBtn ? ['คลิกขวา', 'คลิกซ้าย'] : ['คลิกซ้าย', 'คลิกขวา'];
-    modeEl.textContent = picking ? 'โหมดดูดสี · คลิกที่เม็ดสีที่ต้องการ · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ดูดสี`;
+    modeEl.textContent = picking ? 'โหมดดูดสี · ชี้เม็ดไหนก็ได้สีนั้นทันที · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ชี้ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ชี้ดูดสี`;
     const bc = (PXBG.find((x) => x[0] === bgK) || PXBG[0])[2];
     stageEl.style.background = bc || ''; stageEl.classList.toggle('plain', !!bc);
     bgSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === bgK; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
@@ -1075,7 +1075,7 @@ async function pixelEditor(it, r) {
   function snapshot() { undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
   function undo() { if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
   function redo() { if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
-  function pick(p) { const i = px(...p); if (data.data[i + 3] === 0) { toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
+  function pick(p, quiet) { const i = px(...p); if (data.data[i + 3] === 0) { if (!quiet) toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
   cv.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     if (Date.now() - lastDown < 400) return; // a real right press was already handled
@@ -1098,6 +1098,7 @@ async function pixelEditor(it, r) {
   });
   cv.addEventListener('pointermove', (e) => {
     const p = at(e); hover = p; posEl.textContent = p ? `x ${p[0]}, y ${p[1]}` : '';
+    if (picking && p) pick(p, true); // Space held: the colour under the pointer is taken right away (owner: no click needed)
     if (stroke && p) { line(stroke.last, p, stroke.c); stroke.last = p; }
     paint();
   });
@@ -1106,7 +1107,7 @@ async function pixelEditor(it, r) {
   cv.addEventListener('pointerleave', () => { hover = null; posEl.textContent = ''; paint(); });
   function onKey(e) {
     if (e.target.closest?.('input, select, textarea')) return;
-    if (e.code === 'Space') { e.preventDefault(); if (e.type === 'keydown' && !picking) { picking = true; syncUi(); paint(); } if (e.type === 'keyup') { picking = false; syncUi(); paint(); } return; }
+    if (e.code === 'Space') { e.preventDefault(); if (e.type === 'keydown' && !picking) { picking = true; if (hover) pick(hover, true); syncUi(); paint(); } if (e.type === 'keyup') { picking = false; syncUi(); paint(); } return; }
     if (e.type !== 'keydown') return;
     const k = e.code; // physical key: a Thai keyboard layout types ผ / ั on Z / Y
     if ((e.ctrlKey || e.metaKey) && k === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
