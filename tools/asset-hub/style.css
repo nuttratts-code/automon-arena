@@ -254,6 +254,11 @@ details.qfold > summary { cursor: pointer; padding: 6px 0; }
 .fslot .n { position: absolute; top: 2px; left: 5px; color: var(--faint); font-size: 12px; }
 .fslot .fthumb { max-width: 100%; height: 34px; object-fit: contain; image-rendering: pixelated; }
 .fslot.on { border-color: #ffd34d; background: #ffd34d1f; }
+.fslot { cursor: grab; }
+.fslot.dragging { opacity: 0.45; }
+.fslot.dropto { border-color: #8cc8ff; background: #8cc8ff26; outline: 2px dashed #8cc8ff; outline-offset: 1px; }
+.fslot .freetag { position: absolute; top: 2px; right: 4px; font-size: 12px; color: #8cc8ff; }
+.freebox { display: flex; flex-direction: column; gap: 6px; }
 .insp-name { font-weight: 700; font-size: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
 .insp-name.dup::after { content: " · อยู่หลายช่อง"; color: var(--warn); font-weight: 400; font-size: 13px; }
 .insp-body { display: flex; flex-direction: column; gap: 14px; }
@@ -273,3 +278,18 @@ details.qfold > summary { cursor: pointer; padding: 6px 0; }
 .pad { display: grid; grid-template-columns: repeat(3, 36px); gap: 4px; flex: none; }
 .pad button { padding: 0; min-height: 32px; }
 @media (max-width: 1100px) { .team-layout { grid-template-columns: 1fr; } .insp { position: static; } }
+/* set 246 pixel editor */
+dialog.pxed-dlg { width: fit-content; max-width: 96vw; }
+.pxed { display: grid; grid-template-columns: 1fr 260px; gap: 14px; margin-top: 10px; align-items: start; }
+.pxed-stage { overflow: auto; max-height: calc(92vh - 120px); background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; padding: 10px; }
+.pxed-cv { image-rendering: pixelated; cursor: crosshair; touch-action: none; display: block; }
+.pxed-cv.picking { cursor: copy; }
+.pxed-side { display: flex; flex-direction: column; gap: 8px; }
+.pxed-mode { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: #ffffff0d; border: 1px solid var(--line); }
+.pxed-mode.picking { border-color: #ff5ad1; background: #ff5ad11f; color: #ffc4ef; }
+.pxed-cur { width: 34px; height: 34px; border-radius: 6px; border: 2px solid #fff; background: var(--sw); flex: none; }
+.pxed-pal { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+.pxed-sw { aspect-ratio: 1; min-height: 26px; padding: 0; border-radius: 4px; background: var(--sw); border: 1px solid #0006; }
+.pxed-sw:hover { outline: 2px solid #fff; }
+.pxed-side input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line); background: none; }
+@media (max-width: 900px) { .pxed { grid-template-columns: 1fr; } }

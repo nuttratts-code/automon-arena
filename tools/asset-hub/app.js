@@ -540,6 +540,10 @@ function renderSlot(m, it, slot) {
     const actbar = h('div', { class: 'actbar' });
     if (canCut) actbar.append(h('button', { class: cut ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้', onclick: () => makeCut(it, sel) }, cut ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
     else if (sel.slot === 'cut') actbar.append(h('span', { class: 'small dim' }, 'รอบนี้เป็นภาพตัดพื้นที่ไม่มีภาพนิ่งต้นทาง กดแถวภาพนิ่งเพื่อตัดพื้นใหม่'));
+    if (isImage(sel.file) && slot !== 'veoin') { // web pixel editor (small pictures; edits the cut when the cut is what you are looking at)
+      const target = canCut && cut && ui.cutView !== 'orig' ? cut : sel;
+      actbar.append(h('button', { title: 'แก้เม็ดพิกเซลง่ายๆ บนเว็บ (ภาพไม่เกิน 256 px) บันทึกเป็นรอบใหม่', onclick: () => pixelEditor(it, target) }, target.slot === 'cut' ? 'แก้พิกเซล (ภาพตัดพื้น)' : 'แก้พิกเซล'));
+    }
     const sw = (on, label, title, fn) => h('button', { class: 'switch' + (on ? ' is-on' : ''), role: 'switch', 'aria-checked': String(on), title, onclick: fn }, h('span', { class: 'knob' }), label);
     if (isImage(sel.file) || isVideo(sel.file)) actbar.append(sw(!!sel.flip, 'กลับข้างซ้าย-ขวา', 'เลือกว่าจะให้ฝั่งไหนเป็นด้านหน้า (เกมใช้ตามที่เห็นตรงนี้)', () => {
       sel.flip = !sel.flip; if (cut && cut !== sel) cut.flip = sel.flip; save().then(render); }));
@@ -979,6 +983,149 @@ function renderShadow(m, it) {
   })().catch(() => left.append(h('p', { class: 'bad' }, 'เปิดภาพไม่ได้')));
 }
 
+// ---------- pixel editor (set 246, owner spec) ----------
+// Small pictures only (≤ 256 px). Right click = paint, left click = erase, hold + drag = keep painting/erasing along the path.
+// Hold Space = colour picker: click picks the colour under the pointer; let go of Space = back to normal. Saved as a NEW round
+// (the original stays); the new round is not starred — the owner presses "ใช้รอบนี้" when happy.
+const PXED_MAX = 256;
+async function pixelEditor(it, r) {
+  let img;
+  try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
+  const W = img.naturalWidth, H = img.naturalHeight;
+  if (W > PXED_MAX || H > PXED_MAX) { toast(`ภาพนี้ ${W}×${H} ใหญ่เกินไปสำหรับตัวแก้บนเว็บ (สูงสุด ${PXED_MAX} px) ใช้ Pixelorama แทน`); return; }
+  const src = document.createElement('canvas'); src.width = W; src.height = H;
+  const sg = src.getContext('2d', { willReadFrequently: true }); sg.drawImage(img, 0, 0);
+  let data = sg.getImageData(0, 0, W, H);
+  const undoS = [], redoS = [];
+  let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null;
+  const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
+  let z = fitZ();
+  const cv = h('canvas', { class: 'pxed-cv', tabindex: 0, 'aria-label': 'ตัวแก้พิกเซล คลิกขวาใส่สี คลิกซ้ายลบ กด Space ค้างแล้วคลิกเพื่อดูดสี' });
+  const hex = (c) => '#' + c.slice(0, 3).map((v) => v.toString(16).padStart(2, '0')).join('');
+  const curSw = h('span', { class: 'pxed-cur' }), curTxt = h('span', { class: 'small dim' });
+  const colIn = h('input', { type: 'color', 'aria-label': 'เลือกสีเอง', oninput: (e) => { const v = e.target.value; setColour([parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16), 255]); } });
+  const pal = h('div', { class: 'pxed-pal', role: 'group', 'aria-label': 'สีในภาพ' });
+  const modeEl = h('div', { class: 'pxed-mode' }), posEl = h('span', { class: 'small dim' });
+  const zEl = h('b', {});
+  const undoB = h('button', { title: 'Ctrl+Z', onclick: () => undo() }, 'ย้อน'), redoB = h('button', { title: 'Ctrl+Y', onclick: () => redo() }, 'ทำซ้ำ');
+  const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
+  const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
+  const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกเป็นรอบใหม่');
+  const closeB = h('button', { onclick: () => close() }, 'ปิด');
+  function setColour(c) { colour = c; syncUi(); }
+  function palette() { // the picture's own colours, most used first
+    const n = new Map();
+    for (let i = 0; i < data.data.length; i += 4) { if (data.data[i + 3] < 128) continue; const k = (data.data[i] << 16) | (data.data[i + 1] << 8) | data.data[i + 2]; n.set(k, (n.get(k) || 0) + 1); }
+    const top = [...n.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([k]) => [(k >> 16) & 255, (k >> 8) & 255, k & 255, 255]);
+    pal.replaceChildren(...top.map((c) => h('button', { class: 'pxed-sw', title: hex(c), 'aria-label': 'สี ' + hex(c), style: `--sw:${hex(c)}`, onclick: () => setColour(c) })));
+    if (!data.data.some((v, i) => i % 4 === 3 && v > 0)) pal.append(h('span', { class: 'small faint' }, 'ภาพว่าง'));
+  }
+  function syncUi() {
+    curSw.style.setProperty('--sw', hex(colour)); curTxt.textContent = hex(colour); colIn.value = hex(colour);
+    toolSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
+    zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
+    modeEl.textContent = picking ? 'โหมดดูดสี · คลิกที่เม็ดสีที่ต้องการ · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? 'คลิกขวา = เทสีพื้นที่ติดกัน · คลิกซ้าย = ลบ · Space ค้าง = ดูดสี' : 'คลิกขวา = ใส่สี · คลิกซ้าย = ลบ · ลากค้างได้ · Space ค้าง = ดูดสี';
+    modeEl.classList.toggle('picking', picking); cv.classList.toggle('picking', picking);
+  }
+  function paint() {
+    cv.width = W * z; cv.height = H * z;
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, cv.width, cv.height);
+    sg.putImageData(data, 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
+    if (grid && z >= 4) {
+      g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 1; g.beginPath();
+      for (let x = 1; x < W; x++) { g.moveTo(x * z + 0.5, 0); g.lineTo(x * z + 0.5, H * z); }
+      for (let y = 1; y < H; y++) { g.moveTo(0, y * z + 0.5); g.lineTo(W * z, y * z + 0.5); }
+      g.stroke();
+    }
+    if (hover) { g.strokeStyle = picking ? '#ff5ad1' : '#ffd34d'; g.lineWidth = 2; g.strokeRect(hover[0] * z + 1, hover[1] * z + 1, z - 2, z - 2); }
+  }
+  const at = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; };
+  const px = (x, y) => (y * W + x) * 4;
+  function setPx(x, y, c) { const i = px(x, y); data.data[i] = c[0]; data.data[i + 1] = c[1]; data.data[i + 2] = c[2]; data.data[i + 3] = c[3]; }
+  function line(a, b, c) { // every pixel between two pointer samples, so a fast drag leaves no gaps
+    let [x0, y0] = a; const [x1, y1] = b, dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    for (;;) { setPx(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
+  }
+  function fill(x, y, c) { // flood fill of the touching area with the same colour
+    const i0 = px(x, y), t = [data.data[i0], data.data[i0 + 1], data.data[i0 + 2], data.data[i0 + 3]];
+    if (t.every((v, j) => v === c[j])) return;
+    const same = (i) => (t[3] === 0 ? data.data[i + 3] === 0 : data.data[i] === t[0] && data.data[i + 1] === t[1] && data.data[i + 2] === t[2] && data.data[i + 3] === t[3]);
+    const st = [[x, y]], seen = new Uint8Array(W * H);
+    while (st.length) { const [a, b] = st.pop(); if (a < 0 || b < 0 || a >= W || b >= H || seen[b * W + a] || !same(px(a, b))) continue; seen[b * W + a] = 1; setPx(a, b, c); st.push([a + 1, b], [a - 1, b], [a, b + 1], [a, b - 1]); }
+  }
+  function snapshot() { undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
+  function undo() { if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
+  function redo() { if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
+  function pick(p) { const i = px(...p); if (data.data[i + 3] === 0) { toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('pointerdown', (e) => {
+    const p = at(e); if (!p) return;
+    e.preventDefault(); cv.focus();
+    if (picking) { pick(p); return; }
+    if (e.button !== 0 && e.button !== 2) return;
+    const erase = e.button === 0, c = erase ? [0, 0, 0, 0] : colour;
+    snapshot();
+    if (!erase && tool === 'fill') { fill(p[0], p[1], c); dirty = true; palette(); syncUi(); paint(); return; }
+    stroke = { c, last: p }; setPx(p[0], p[1], c); dirty = true;
+    cv.setPointerCapture(e.pointerId); syncUi(); paint();
+  });
+  cv.addEventListener('pointermove', (e) => {
+    const p = at(e); hover = p; posEl.textContent = p ? `x ${p[0]}, y ${p[1]}` : '';
+    if (stroke && p) { line(stroke.last, p, stroke.c); stroke.last = p; }
+    paint();
+  });
+  const endStroke = () => { if (stroke) { stroke = null; palette(); } };
+  cv.addEventListener('pointerup', endStroke); cv.addEventListener('pointercancel', endStroke);
+  cv.addEventListener('pointerleave', () => { hover = null; posEl.textContent = ''; paint(); });
+  function onKey(e) {
+    if (e.target.closest?.('input, select, textarea')) return;
+    if (e.code === 'Space') { e.preventDefault(); if (e.type === 'keydown' && !picking) { picking = true; syncUi(); paint(); } if (e.type === 'keyup') { picking = false; syncUi(); paint(); } return; }
+    if (e.type !== 'keydown') return;
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+  }
+  const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
+  document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
+  const dlg = $('dlg');
+  function cleanup() { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
+  function close(force) { if (!force && dirty && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
+  function onCancel(e) { e.preventDefault(); close(); } // Esc asks first when there are changes
+  async function saveEdit() {
+    saveB.disabled = true;
+    try {
+      sg.putImageData(data, 0, 0);
+      const blob = await new Promise((ok) => src.toBlob(ok, 'image/png'));
+      const q = new URLSearchParams({ item: it.id, slot: r.slot, name: (r.orig || r.slot).replace(/\.\w+$/, '') + '_edit.png', nostar: '1' });
+      if (it.kind === 'character') q.set('form', String(r.form || ui.form));
+      if (r.slot === 'cut' && r.from) q.set('from', r.from);
+      if (r.move) q.set('move', r.move);
+      hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
+      const nr = hub.items[it.id].rounds.at(-1);
+      if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; await save(); ui.sel = r.slot === 'cut' ? ui.sel : nr.id; }
+      dirty = false; toast('บันทึกเป็นรอบใหม่แล้ว (ยังไม่ได้ติดดาว กด "ใช้รอบนี้" เมื่อพอใจ)'); close(true); render();
+    } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
+  }
+  const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => { z = Math.max(1, z - 1); syncUi(); paint(); } }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => { z = Math.min(24, z + 1); syncUi(); paint(); } }, '+'));
+  $('dlgBody').replaceChildren(
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'แก้ภาพตามไฟล์จริง (หันซ้าย) · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
+    h('div', { class: 'pxed' },
+      h('div', { class: 'pxed-stage' }, cv),
+      h('div', { class: 'pxed-side' },
+        modeEl,
+        h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
+        h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
+        h('div', { class: 'lbl' }, 'เครื่องมือคลิกขวา'), toolSeg,
+        h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
+        h('div', { class: 'row' }, undoB, redoB, posEl))));
+  dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);
+  palette(); { const f = pal.querySelector('.pxed-sw'); if (f) f.click(); } syncUi(); paint();
+  dlg.showModal(); cv.focus();
+}
+
 // ---------- queue / library / new item ----------
 function queueDialog(it) {
   const body = $('dlgBody');
@@ -1063,19 +1210,22 @@ function teamSprite(r) {
     if (x1 < 0) return null;
     const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
     o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
-    return { c: o, w: img.naturalWidth, h: img.naturalHeight };
+    return { c: o, w: img.naturalWidth, h: img.naturalHeight, x0, y0 }; // x0/y0 = where the trimmed sprite sits in the whole picture
   }).catch(() => null));
   return teamSprCache.get(r.id);
 }
-// set 246 UI pass: big canvas cropped to our half + one side panel for the picked creature (mini formation, size).
-// Positions are locked to the slot centres (owner pick A1): drag a creature onto another slot to swap the two. No wheel sizing; Ctrl+Z undo.
+// set 246 UI pass: big canvas cropped to our half + one side panel for the picked creature (mini formation, size, position, feet).
+// Owner picks: creatures are LOCKED to their slot (drag on the picture = swap slots); a creature can be unlocked (items[ID].free) and
+// then dragged freely, even floating; slot buttons in the panel swap by drag for every creature. The feet point is the SAME value
+// as the shadow tab (items[ID].shadow.feet, owner B1), so the shadow keeps matching the feet. No wheel sizing; Ctrl+Z undo.
 const TEAM_CROP = { x: 0, y: 330, w: 1100, h: 731 }; // our half of the 1920×1061 battle view
 const teamUndo = [];
 let teamApi = null; // keyboard hooks of the open team tab
 function teamSnap() {
   const t = teamCfg(), ids = new Set(t.ids.filter(Boolean));
-  for (const it of Object.values(hub.items)) if (it.scale || it.offset) ids.add(it.id);
-  const items = {}; for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale ? { ...it.scale } : null, offset: it.offset ? { ...it.offset } : null }; }
+  for (const it of Object.values(hub.items)) if (it.scale || it.offset || it.free || it.shadow) ids.add(it.id);
+  const items = {};
+  for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, offset: it.offset || null, free: !!it.free, shadow: it.shadow || null }; }
   return JSON.stringify({ ids: t.ids.slice(), items });
 }
 function teamPush() { const s = teamSnap(); if (teamUndo[teamUndo.length - 1] !== s) teamUndo.push(s); if (teamUndo.length > 60) teamUndo.shift(); }
@@ -1083,25 +1233,40 @@ function teamRestore(s) {
   const o = JSON.parse(s), t = teamCfg(); t.ids = o.ids;
   for (const it of Object.values(hub.items)) {
     const v = o.items[it.id];
-    if (!v) { if (it.scale || it.offset) { delete it.scale; delete it.offset; } continue; }
-    if (v.scale) it.scale = v.scale; else delete it.scale;
-    if (v.offset) it.offset = v.offset; else delete it.offset;
+    if (!v) { delete it.scale; delete it.offset; delete it.free; continue; }
+    for (const key of ['scale', 'offset', 'shadow']) { if (v[key]) it[key] = v[key]; else delete it[key]; }
+    if (v.free) it.free = true; else delete it.free;
   }
 }
 function renderTeam(m) {
   const t = teamCfg();
   if (ui.teamSel == null) ui.teamSel = 1;
   if (ui.teamWhole == null) ui.teamWhole = false;
+  ui.teamFeet = false; // feet mode never survives a re-render
   const chars = Object.values(hub.items).filter((it) => it.kind === 'character');
   const crop = ui.teamWhole ? { x: 0, y: 0, w: TEAM_W, h: TEAM_H } : TEAM_CROP;
-  const cv = h('canvas', { width: crop.w, height: crop.h, class: 'team-cv', tabindex: 0, 'aria-label': 'ทีมจำลอง 6 ช่องบนฉากต่อสู้ คลิกเพื่อเลือก ลากเพื่อย้าย' });
-  const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null);
+  const cv = h('canvas', { width: crop.w, height: crop.h, class: 'team-cv', tabindex: 0, 'aria-label': 'ทีมจำลอง 6 ช่องบนฉากต่อสู้ คลิกเพื่อเลือก ลากเพื่อสลับหรือย้าย' });
+  const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null), anchors = new Array(6).fill(null);
   let drag = null;
   let bg = null;
   const stale = (it, s) => !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
   const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' && !stale(it, s) ? it.scale.k : teamDefaultK(s ? s.h : 180));
+  const offOf = (it) => (it?.free && it.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
+  // feet from the shadow tab count only when they were set on this same picture (same round, or same pixel size)
+  const feetLinked = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && s && r && (it.shadow.round === r.id || (Array.isArray(it.shadow.size) && it.shadow.size[0] === s.w && it.shadow.size[1] === s.h)));
+  const feetOther = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && !feetLinked(it, s, r));
+  const anchorOf = (it, s, r) => (feetLinked(it, s, r) ? [it.shadow.feet[0] * s.w - s.x0, it.shadow.feet[1] * s.h - s.y0] : [s.c.width / 2, s.c.height]); // picture px of the trimmed sprite, unmirrored
   const slotXY = (k) => [TEAM_SLOTS[k][0] * TEAM_W - crop.x, TEAM_SLOTS[k][1] * TEAM_H - crop.y];
   const byDepth = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[a][1] - TEAM_SLOTS[b][1]); // back row first
+  function place(k) { // where slot k's creature is drawn: box [x, y, w, h] + the feet point on screen
+    const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
+    if (!s || !it || !r) return null;
+    const kk = kOf(it, s), [ax, ay] = anchorOf(it, s, r), mir = !r.flip;
+    const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk);
+    const [sx, sy] = slotXY(k), [ox, oy] = offOf(it), fx = sx + ox, fy = sy + oy;
+    const adx = (mir ? s.c.width - ax : ax) * kk;
+    return { box: [Math.round(fx - adx), Math.round(fy - ay * kk), w, hh], feet: [fx, fy], s, r, it, kk, mir };
+  }
   function draw() {
     const g = cv.getContext('2d');
     g.imageSmoothingEnabled = true;
@@ -1119,19 +1284,30 @@ function renderTeam(m) {
       if (!hub.items[t.ids[k]]) { g.fillStyle = 'rgba(255,255,255,0.6)'; g.font = '600 22px "Leelawadee UI", sans-serif'; g.textAlign = 'center'; g.fillText(`ช่อง ${k + 1} ว่าง`, x, y - 22); }
     }
     g.imageSmoothingEnabled = false;
+    const swapping = drag?.moved && drag.kind === 'swap';
     for (const k of byDepth) {
-      const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
-      boxes[k] = null;
-      if (!s || !it || !r) continue;
-      const [sx, sy] = slotXY(k), kk = kOf(it, s);
-      const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk), x = Math.round(sx - w / 2), y = Math.round(sy - hh);
-      boxes[k] = [x, y, w, hh];
-      if (drag?.moved && drag.k === k) continue; // drawn under the pointer below
-      paint(g, s, r, x, y, w, hh);
+      const p = place(k);
+      boxes[k] = p ? p.box : null; anchors[k] = p ? p.feet : null;
+      if (!p) continue;
+      if (p.it.free && (p.feet[0] !== slotXY(k)[0] || p.feet[1] !== slotXY(k)[1])) { // unlocked + moved: dotted line from the slot to the feet
+        const [sx, sy] = slotXY(k); g.save(); g.strokeStyle = 'rgba(140,200,255,0.8)'; g.lineWidth = 2; g.setLineDash([4, 4]);
+        g.beginPath(); g.moveTo(sx, sy); g.lineTo(p.feet[0], p.feet[1]); g.stroke(); g.restore();
+      }
+      if (swapping && drag.k === k) continue; // drawn under the pointer below
+      paint(g, p.s, p.r, ...p.box);
     }
     const b = boxes[ui.teamSel];
-    if (b && !drag?.moved) { g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10); g.restore(); }
-    if (drag?.moved && boxes[drag.k]) { // the dragged creature follows the pointer; the slot it would land on lights up
+    if (b && !swapping) {
+      const free = hub.items[t.ids[ui.teamSel]]?.free;
+      g.save(); g.strokeStyle = free ? '#8cc8ff' : '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10); g.restore();
+    }
+    if (ui.teamFeet && anchors[ui.teamSel]) { // feet mode: a cross where the feet meet the ground
+      const [x, y] = anchors[ui.teamSel];
+      g.save(); g.strokeStyle = '#000'; g.lineWidth = 5;
+      for (const c of ['#000', '#ff5ad1']) { g.strokeStyle = c; g.lineWidth = c === '#000' ? 5 : 2; g.beginPath(); g.moveTo(x - 22, y); g.lineTo(x + 22, y); g.moveTo(x, y - 22); g.lineTo(x, y + 22); g.stroke(); }
+      g.restore();
+    }
+    if (swapping && boxes[drag.k]) { // the dragged creature follows the pointer; the slot it would land on lights up
       const tk = dropSlot();
       if (tk != null && tk !== drag.k) {
         const [tx, ty] = slotXY(tk); g.save(); g.fillStyle = 'rgba(255,211,77,0.25)'; g.strokeStyle = '#ffd34d'; g.lineWidth = 4;
@@ -1150,7 +1326,7 @@ function renderTeam(m) {
     g.restore();
   }
   function dropSlot() { // nearest slot to where the dragged creature's feet are now (within reach)
-    const [fx, fy] = slotXY(drag.k), px = fx + drag.cur[0] - drag.p0[0], py = fy + drag.cur[1] - drag.p0[1];
+    const [fx, fy] = anchors[drag.k] || slotXY(drag.k), px = fx + drag.cur[0] - drag.p0[0], py = fy + drag.cur[1] - drag.p0[1];
     let best = null, bd = 170;
     for (let k = 0; k < 6; k++) { const [x, y] = slotXY(k), d = Math.hypot(x - px, (y - py) * 1.6); if (d < bd) { bd = d; best = k; } }
     return best;
@@ -1160,27 +1336,49 @@ function renderTeam(m) {
     const [x, y] = toCv(e);
     return byDepth.slice().reverse().find((k) => boxes[k] && x >= boxes[k][0] && x <= boxes[k][0] + boxes[k][2] && y >= boxes[k][1] && y <= boxes[k][1] + boxes[k][3]);
   };
-  function pickSlot(k) { ui.teamSel = k; sync(); draw(); }
+  function pickSlot(k) { if (ui.teamSel !== k) ui.teamFeet = false; ui.teamSel = k; sync(); draw(); }
+  function swapSlots(a, b) {
+    if (a === b) return;
+    change(() => { [t.ids[a], t.ids[b]] = [t.ids[b], t.ids[a]]; [sprs[a], sprs[b]] = [sprs[b], sprs[a]]; ui.teamSel = b; ui.teamFeet = false; });
+    toast(hub.items[t.ids[a]] ? `สลับช่อง ${a + 1} กับช่อง ${b + 1} แล้ว` : `ย้ายไปช่อง ${b + 1} แล้ว`);
+  }
+  // feet point (shared with the shadow tab): stored as fractions of the whole picture, like the shadow editor
+  function setFeet(it, s, r, ax, ay) {
+    const fx = +Math.min(1, Math.max(0, (ax + s.x0) / s.w)).toFixed(4), fy = +Math.min(1, Math.max(0, (ay + s.y0) / s.h)).toFixed(4);
+    const base = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : JSON.parse(JSON.stringify(SHADOW_DEFAULT));
+    it.shadow = { ...base, feet: [fx, fy], size: [s.w, s.h], round: r.id };
+  }
   cv.addEventListener('pointerdown', (e) => {
     const k = hit(e); if (k == null) return;
     e.preventDefault(); cv.focus();
     const it = hub.items[t.ids[k]];
-    drag = { k, it, c0: [e.clientX, e.clientY], p0: toCv(e), cur: toCv(e), moved: false };
+    if (ui.teamFeet && k !== ui.teamSel) ui.teamFeet = false;
+    const kind = ui.teamFeet ? 'feet' : it?.free ? 'move' : 'swap';
+    const p = place(k);
+    drag = { k, it, kind, c0: [e.clientX, e.clientY], p0: toCv(e), cur: toCv(e), moved: false, o0: offOf(it), a0: p ? anchorOf(it, p.s, p.r) : null, p };
     cv.setPointerCapture(e.pointerId); cv.classList.add('grabbing'); pickSlot(k);
   });
   cv.addEventListener('pointermove', (e) => {
     if (!drag) { cv.classList.toggle('over', hit(e) != null); return; }
     if (!drag.it) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.c0[0], e.clientY - drag.c0[1]) < 6) return; // a click is not a move
-    drag.moved = true; drag.cur = toCv(e); draw();
+    if (!drag.moved && drag.kind !== 'swap') teamPush();
+    drag.moved = true; drag.cur = toCv(e);
+    const dx = drag.cur[0] - drag.p0[0], dy = drag.cur[1] - drag.p0[1];
+    if (drag.kind === 'move') drag.it.offset = { x: Math.max(-400, Math.min(400, Math.round(drag.o0[0] + dx))), y: Math.max(-300, Math.min(300, Math.round(drag.o0[1] + dy))) };
+    if (drag.kind === 'feet' && drag.p) { // the picture follows the pointer, the feet cross stays on the ground
+      const { s, r, kk, mir } = drag.p;
+      setFeet(drag.it, s, r, drag.a0[0] - (mir ? -dx : dx) / kk, drag.a0[1] - dy / kk);
+    }
+    if (drag.kind === 'swap') draw(); else { sync(); draw(); }
   });
   const endDrag = () => {
     const d = drag; if (!d) return;
-    const tk = d.moved ? dropSlot() : null; drag = null; cv.classList.remove('grabbing');
-    if (tk != null && tk !== d.k) { // swap the two slots (an empty slot = just move there)
-      change(() => { [t.ids[d.k], t.ids[tk]] = [t.ids[tk], t.ids[d.k]]; [sprs[d.k], sprs[tk]] = [sprs[tk], sprs[d.k]]; ui.teamSel = tk; });
-      toast(hub.items[t.ids[d.k]] ? `สลับช่อง ${d.k + 1} กับช่อง ${tk + 1} แล้ว` : `ย้ายไปช่อง ${tk + 1} แล้ว`);
-    } else draw();
+    const tk = d.kind === 'swap' && d.moved ? dropSlot() : null; // reads the drag still in progress
+    drag = null; cv.classList.remove('grabbing');
+    if (d.kind === 'swap') { if (tk != null && tk !== d.k) swapSlots(d.k, tk); else draw(); return; }
+    if (d.moved) saveSoon();
+    sync(); draw();
   };
   cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
   // ---- changes (all go through here: undo snapshot, redraw, save) ----
@@ -1191,18 +1389,34 @@ function renderTeam(m) {
     const it = cur(), s = sprs[ui.teamSel], r = teamRound(it); if (!it || !s) return;
     change(() => { it.scale = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id }; }, coalesce);
   }
+  function nudge(dx, dy) { // arrows: feet mode = move the picture 1 picture px; unlocked = move 1 screen px
+    const it = cur(), p = place(ui.teamSel); if (!it || !p) return false;
+    if (ui.teamFeet) { const [ax, ay] = anchorOf(it, p.s, p.r); change(() => setFeet(it, p.s, p.r, ax - (p.mir ? -dx : dx), ay - dy), true); return true; }
+    if (!it.free) return false;
+    const [ox, oy] = offOf(it);
+    change(() => { it.offset = { x: Math.max(-400, Math.min(400, ox + dx)), y: Math.max(-300, Math.min(300, oy + dy)) }; }, true);
+    return true;
+  }
   function undo() { if (!teamUndo.length) { toast('ไม่มีอะไรให้ย้อนกลับ'); return; } teamRestore(teamUndo.pop()); Promise.all([0, 1, 2, 3, 4, 5].map(loadSlot)).then(() => { sync(); draw(); }); saveSoon(); toast('ย้อนกลับแล้ว'); }
-  teamApi = { undo };
+  teamApi = { undo, nudge };
   // ---- side panel ----
-  const formation = h('div', { class: 'formation', role: 'group', 'aria-label': 'เลือกช่อง' });
+  const formation = h('div', { class: 'formation', role: 'group', 'aria-label': 'เลือกช่อง ลากปุ่มไปวางบนปุ่มอื่นเพื่อสลับ' });
   const slotBtns = [];
   for (const [ri, row] of TEAM_GRID.entries()) {
     formation.append(h('span', { class: 'frow' }, ri ? 'แถวหน้า' : 'แถวหลัง'));
-    for (const k of row) { const b = h('button', { class: 'fslot', onclick: () => pickSlot(k) }); slotBtns[k] = b; formation.append(b); }
+    for (const k of row) {
+      const b = h('button', { class: 'fslot', draggable: 'true', title: 'คลิกเพื่อเลือก · ลากไปวางบนช่องอื่นเพื่อสลับ', onclick: () => pickSlot(k) });
+      b.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', String(k)); e.dataTransfer.effectAllowed = 'move'; b.classList.add('dragging'); });
+      b.addEventListener('dragend', () => { b.classList.remove('dragging'); slotBtns.forEach((x) => x.classList.remove('dropto')); });
+      b.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; b.classList.add('dropto'); });
+      b.addEventListener('dragleave', () => b.classList.remove('dropto'));
+      b.addEventListener('drop', (e) => { e.preventDefault(); b.classList.remove('dropto'); const a = Number(e.dataTransfer.getData('text/plain')); if (Number.isInteger(a) && a >= 0 && a < 6) swapSlots(a, k); });
+      slotBtns[k] = b; formation.append(b);
+    }
   }
-  formation.append(h('span', {}), h('span', { class: 'small faint toward' }, 'ศัตรูอยู่ทางขวา →'));
+  formation.append(h('span', {}), h('span', { class: 'small faint toward' }, 'ลากปุ่มเพื่อสลับช่อง · ศัตรูอยู่ทางขวา →'));
   const nameEl = h('div', { class: 'insp-name' });
-  const sel = h('select', { 'aria-label': 'เปลี่ยนตัวละครในช่องนี้', onchange: (e) => { const k = ui.teamSel; change(() => { t.ids[k] = e.target.value; sprs[k] = null; }); loadSlot(k).then(() => { sync(); draw(); }); } },
+  const sel = h('select', { 'aria-label': 'เปลี่ยนตัวละครในช่องนี้', onchange: (e) => { const k = ui.teamSel; ui.teamFeet = false; change(() => { t.ids[k] = e.target.value; sprs[k] = null; }); loadSlot(k).then(() => { sync(); draw(); }); } },
     h('option', { value: '' }, '— ว่าง —'), chars.map((it) => h('option', { value: it.id }, `${it.id} ${it.name || ''}`)));
   const kVal = h('b', { class: 'kval' }), kInfo = h('div', { class: 'small dim' }), kWarn = h('div', { class: 'small warn' });
   const range = h('input', { type: 'range', min: 0.25, max: 4, step: 0.01, 'aria-label': 'ขนาด', oninput: (e) => setK(Number(e.target.value), true) });
@@ -1210,29 +1424,61 @@ function renderTeam(m) {
   const step = (d) => { const it = cur(); setK(+(kOf(it, sprs[ui.teamSel]) + d).toFixed(2), true); };
   const undoBtn = h('button', { onclick: undo, title: 'Ctrl+Z' }, 'ย้อนกลับ');
   const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.scale) change(() => { delete it.scale; }); } }, 'คืนขนาดเริ่มต้น');
+  // position: lock switch (on = locked to the slot centre)
+  const lockSw = h('button', { class: 'switch', role: 'switch', onclick: () => { const it = cur(); if (!it) return; change(() => { if (it.free) delete it.free; else it.free = true; }); } }, h('span', { class: 'knob' }), 'ล็อคตำแหน่ง');
+  const posInfo = h('div', { class: 'small dim' });
+  const pad = h('div', { class: 'pad' },
+    h('span', {}), h('button', { 'aria-label': 'ขยับขึ้น', onclick: () => nudge(0, -1) }, '↑'), h('span', {}),
+    h('button', { 'aria-label': 'ขยับไปทางหลัง', onclick: () => nudge(-1, 0) }, '←'), h('button', { 'aria-label': 'ขยับลง', onclick: () => nudge(0, 1) }, '↓'), h('button', { 'aria-label': 'ขยับไปทางหน้า', onclick: () => nudge(1, 0) }, '→'));
+  const resetO = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.offset) change(() => { delete it.offset; }); } }, 'กลับกลางช่อง');
+  const freeBox = h('div', { class: 'freebox' }, h('div', { class: 'row nowrap' }, pad, posInfo), resetO);
+  // feet point
+  const feetBtn = h('button', { onclick: () => {
+    const it = cur(), p = place(ui.teamSel); if (!it || !p) return;
+    if (!ui.teamFeet && feetOther(it, p.s, p.r) && !confirm('จุดเท้าในแท็บเงาของตัวนี้ตั้งไว้กับภาพอื่น (เช่นเฟรม) ถ้าปรับที่นี่ เงาจะเปลี่ยนไปใช้ภาพนิ่งนี้แทน ทำต่อไหม')) return;
+    ui.teamFeet = !ui.teamFeet; sync(); draw(); cv.focus();
+  } }, 'ปรับจุดเท้า');
+  const feetInfo = h('div', { class: 'small dim' });
+  const feetReset = h('button', { class: 'ghost', onclick: () => {
+    const it = cur(), p = place(ui.teamSel); if (!it || !p) return;
+    const g = guessFeet(p.s.c); change(() => setFeet(it, p.s, p.r, g[0] * p.s.c.width, g[1] * p.s.c.height));
+  } }, 'หาจุดเท้าอัตโนมัติ');
   const body = h('div', { class: 'insp-body' },
     h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตัวละครในช่องนี้'), sel),
     h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาด'), h('span', { class: 'sp' }), kVal),
       h('div', { class: 'row nowrap' }, h('button', { class: 'pm', 'aria-label': 'เล็กลง', onclick: () => step(-0.05) }, '−'), range, h('button', { class: 'pm', 'aria-label': 'ใหญ่ขึ้น', onclick: () => step(0.05) }, '+')),
       h('div', { class: 'seg snaps' }, snaps.map((x) => x[1])), kInfo, kWarn, resetK),
-    h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตำแหน่ง'), h('div', { class: 'small dim' }, 'ทุกตัวยืนกลางช่องเสมอ · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับกัน (ช่องว่าง = ย้ายไปเลย)')));
+    h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ตำแหน่ง'), h('span', { class: 'sp' }), lockSw), freeBox, h('div', { class: 'small dim lockinfo' })),
+    h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'จุดเท้า'), h('span', { class: 'sp' }), feetBtn), feetInfo, feetReset));
+  const lockInfo = body.querySelector('.lockinfo');
   const panel = h('aside', { class: 'panel insp' }, formation, nameEl, body);
   function sync() {
-    const k = ui.teamSel, it = cur(), s = sprs[k];
+    const k = ui.teamSel, it = cur(), s = sprs[k], r = teamRound(it);
     slotBtns.forEach((b, j) => {
       const x = hub.items[t.ids[j]]; b.classList.toggle('on', j === k); b.setAttribute('aria-pressed', String(j === k));
-      b.replaceChildren(h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'));
-      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (!teamRound(x)?.flip) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; b.prepend(c); }
+      b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x?.free ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
+      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (!teamRound(x)?.flip) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
     });
     nameEl.textContent = it ? `ช่อง ${k + 1} · ${it.id} ${it.name || ''}` : `ช่อง ${k + 1} · ว่าง`;
     sel.value = t.ids[k] || '';
-    const kk = kOf(it, s);
-    for (const el of [range, ...snaps.map((x) => x[1]), resetK, ...body.querySelectorAll('.pm')]) el.disabled = !s;
+    const kk = kOf(it, s), [ox, oy] = offOf(it);
+    for (const el of [range, ...snaps.map((x) => x[1]), resetK, lockSw, feetBtn, feetReset, ...body.querySelectorAll('.pm')]) el.disabled = !s;
     range.value = String(kk); kVal.textContent = s ? `×${kk.toFixed(2)}` : '—';
     kInfo.textContent = !it ? 'เลือกตัวละครจากเมนูด้านบน' : !s ? 'ตัวนี้ยังไม่มีภาพนิ่ง วางภาพในหน้าตัวละครก่อน' : `สูง ${Math.round(s.c.height * kk)} px บนจอ · 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด${it.scale ? '' : ' · ยังเป็นขนาดเริ่มต้น'}`;
     kWarn.textContent = stale(it, s) ? `ขนาดที่ตั้งไว้ (×${it.scale.k}) เป็นของภาพเก่า ${it.scale.size[0]}×${it.scale.size[1]} ตอนนี้ใช้ขนาดเริ่มต้นแทน ปรับใหม่ได้เลย` : '';
     snaps.forEach(([v, bt]) => { const on = !!s && Math.abs(kk - v) < 0.005; bt.classList.toggle('on', on); bt.setAttribute('aria-pressed', String(on)); });
     resetK.disabled = !s || !it.scale;
+    const locked = !it?.free;
+    lockSw.classList.toggle('is-on', !!s && locked); lockSw.setAttribute('aria-checked', String(!!s && locked));
+    freeBox.hidden = !s || locked;
+    lockInfo.textContent = !s ? '' : locked ? 'ยืนกลางช่อง · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับ' : 'ปลดล็อคแล้ว · ลากตัวบนภาพเพื่อขยับหรือให้ลอย · สลับช่องให้ลากปุ่มช่องด้านบน';
+    posInfo.textContent = !s ? '' : ox || oy ? `${ox ? `${ox > 0 ? 'ไปหน้า' : 'ไปหลัง'} ${Math.abs(ox)}` : ''}${ox && oy ? ' · ' : ''}${oy ? `${oy > 0 ? 'ลง' : 'ลอยขึ้น'} ${Math.abs(oy)}` : ''} px` : 'กลางช่อง';
+    resetO.disabled = !s || !it.offset;
+    feetBtn.classList.toggle('on', ui.teamFeet); feetBtn.setAttribute('aria-pressed', String(!!ui.teamFeet));
+    feetBtn.textContent = ui.teamFeet ? 'เสร็จ' : 'ปรับจุดเท้า';
+    feetInfo.textContent = !s ? '' : ui.teamFeet ? 'ลากตัวละครให้เท้าแตะกากบาทชมพู · ปุ่มลูกศรขยับทีละ 1 เม็ด · ใช้ค่าเดียวกับแท็บเงา'
+      : feetLinked(it, s, r) ? `ใช้จุดเท้าเดียวกับแท็บเงา (${it.shadow.feet.map((v) => Math.round(v * 100) + '%').join(', ')})`
+        : feetOther(it, s, r) ? 'แท็บเงาตั้งจุดเท้าไว้กับภาพอื่น ตอนนี้ใช้ขอบล่างกลางภาพแทน' : 'ยังไม่ได้ตั้ง ใช้ขอบล่างกลางภาพ';
     undoBtn.disabled = !teamUndo.length;
     const same = t.ids.filter((x) => x && x === t.ids[k]).length > 1;
     nameEl.title = same ? 'ตัวนี้อยู่หลายช่อง ขนาด/ตำแหน่งเปลี่ยนพร้อมกันทุกช่อง' : '';
@@ -1243,15 +1489,17 @@ function renderTeam(m) {
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
     undoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ลากตัวไปวางช่องอื่นเพื่อสลับ · Ctrl+Z ย้อนกลับ · ขนาดจำต่อตัวละคร บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Ctrl+Z ย้อนกลับ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
 }
-// team tab keys (bound once): Ctrl+Z undo — not while typing in a field
+// team tab keys (bound once): Ctrl+Z undo, arrows = feet / unlocked position — not while typing in a field
 document.addEventListener('keydown', (e) => {
   if (ui.tab !== 'team' || !teamApi || e.target.closest?.('input, select, textarea')) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); teamApi.undo(); return; }
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (d) { const n = e.shiftKey ? 10 : 1; if (teamApi.nudge(d[0] * n, d[1] * n)) e.preventDefault(); }
 });
 
 let libCache = null;
@@ -1294,5 +1542,5 @@ document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('cli
 $('search').addEventListener('input', (e) => { ui.railQ = e.target.value; renderRail(); });
 $('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
 $('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); if (r.library) { hub = await api('/api/hub'); render(); } toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)${r.library ? ` · เก็บเข้าคลังถาวร ${r.library} ไฟล์` : ''}`); } catch (e) { toast(e.message); } });
-$('dlg').addEventListener('click', (e) => { if (e.target === $('dlg')) $('dlg').close(); });
+$('dlg').addEventListener('click', (e) => { if (e.target === $('dlg') && !$('dlg').classList.contains('pxed-dlg')) $('dlg').close(); }); // the pixel editor closes only by its own buttons
 api('/api/hub').then((j) => { hub = j; render(); pollJob(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });
