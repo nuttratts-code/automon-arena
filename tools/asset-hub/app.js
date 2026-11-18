@@ -1025,6 +1025,8 @@ function renderTeam(m) {
   const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null);
   let bg = null;
   const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' ? it.scale.k : teamDefaultK(s ? s.h : 180));
+  // owner set 246 follow-up: drag to move. it.offset = {x, y} screen px in the 1920×1061 view, x = toward the foe, y = down
+  const offOf = (it) => (it?.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
   function draw() {
     const g = cv.getContext('2d');
     g.imageSmoothingEnabled = true;
@@ -1034,7 +1036,7 @@ function renderTeam(m) {
     const order = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[a][1] - TEAM_SLOTS[b][1]); // back row first
     for (const k of order) {
       const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
-      const fx = TEAM_SLOTS[k][0] * TEAM_W, fy = TEAM_SLOTS[k][1] * TEAM_H;
+      const [ox, oy] = offOf(it), fx = TEAM_SLOTS[k][0] * TEAM_W + ox, fy = TEAM_SLOTS[k][1] * TEAM_H + oy;
       boxes[k] = null;
       if (!s) { g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.ellipse(fx, fy, 50, 14, 0, 0, Math.PI * 2); g.fill(); continue; }
       const kk = kOf(it, s), w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk), x = Math.round(fx - w / 2), y = Math.round(fy - hh);
@@ -1047,12 +1049,38 @@ function renderTeam(m) {
     const b = boxes[ui.teamSel];
     if (b) { g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 4, b[1] - 4, b[2] + 8, b[3] + 8); g.restore(); }
   }
+  const toCv = (e) => { const rc = cv.getBoundingClientRect(); return [(e.clientX - rc.left) * TEAM_W / rc.width, (e.clientY - rc.top) * TEAM_H / rc.height]; };
   const hit = (e) => {
-    const rc = cv.getBoundingClientRect(), x = (e.clientX - rc.left) * TEAM_W / rc.width, y = (e.clientY - rc.top) * TEAM_H / rc.height;
+    const [x, y] = toCv(e);
     const order = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[b][1] - TEAM_SLOTS[a][1]); // front first
     return order.find((k) => boxes[k] && x >= boxes[k][0] && x <= boxes[k][0] + boxes[k][2] && y >= boxes[k][1] && y <= boxes[k][1] + boxes[k][3]);
   };
-  cv.addEventListener('click', (e) => { const k = hit(e); if (k != null) { ui.teamSel = k; syncCards(); draw(); } });
+  let drag = null;
+  cv.addEventListener('pointerdown', (e) => {
+    const k = hit(e); if (k == null) return;
+    ui.teamSel = k; const it = hub.items[t.ids[k]];
+    drag = { k, it, p0: toCv(e), o0: offOf(it), moved: false };
+    cv.setPointerCapture(e.pointerId); syncCards(); draw();
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!drag || !drag.it) return;
+    const [x, y] = toCv(e), dx = Math.round(x - drag.p0[0]), dy = Math.round(y - drag.p0[1]);
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+    drag.moved = true;
+    drag.it.offset = { x: Math.max(-400, Math.min(400, drag.o0[0] + dx)), y: Math.max(-300, Math.min(300, drag.o0[1] + dy)) };
+    syncCards(); draw();
+  });
+  const endDrag = () => { if (drag?.moved) saveSoon(); drag = null; };
+  cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+  // arrow keys nudge the picked one 1 px (Shift = 10)
+  cv.tabIndex = 0;
+  cv.addEventListener('keydown', (e) => {
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!d) return;
+    const it = hub.items[t.ids[ui.teamSel]]; if (!it) return;
+    e.preventDefault(); const n = e.shiftKey ? 10 : 1, [ox, oy] = offOf(it);
+    it.offset = { x: Math.max(-400, Math.min(400, ox + d[0] * n)), y: Math.max(-300, Math.min(300, oy + d[1] * n)) };
+    syncCards(); draw(); saveSoon();
+  });
   cv.addEventListener('wheel', (e) => { const k = hit(e); if (k == null) return; e.preventDefault(); ui.teamSel = k; const it = hub.items[t.ids[k]]; setK(k, kOf(it, sprs[k]) * (e.deltaY < 0 ? 1.03 : 1 / 1.03)); }, { passive: false });
   function setK(k, v) {
     const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
@@ -1067,7 +1095,8 @@ function renderTeam(m) {
       const it = hub.items[t.ids[k]], s = sprs[k], kk = kOf(it, s);
       c.el.classList.toggle('on', ui.teamSel === k);
       c.range.value = String(kk); c.range.disabled = !s;
-      c.val.textContent = s ? `×${kk.toFixed(2)} · สูง ${Math.round(s.c.height * kk)} px บนจอ` : (it ? 'ยังไม่มีภาพนิ่ง' : 'ช่องว่าง');
+      const [ox, oy] = offOf(it);
+      c.val.textContent = s ? `×${kk.toFixed(2)} · สูง ${Math.round(s.c.height * kk)} px บนจอ${ox || oy ? ` · เลื่อน ${ox > 0 ? 'หน้า' : 'หลัง'} ${Math.abs(ox)} ${oy > 0 ? 'ลง' : 'ขึ้น'} ${Math.abs(oy)} px` : ''}` : (it ? 'ยังไม่มีภาพนิ่ง' : 'ช่องว่าง');
       c.warn.textContent = s && it.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h) ? 'ขนาดนี้ตั้งไว้กับภาพเก่า ลองปรับใหม่' : '';
       c.snaps.forEach(([v, bt]) => bt.classList.toggle('on', !!s && Math.abs(kk - v) < 0.005));
     });
@@ -1078,7 +1107,9 @@ function renderTeam(m) {
     const range = h('input', { type: 'range', min: 0.05, max: 4, step: 0.01, 'aria-label': `ขนาดช่อง ${k + 1}`, oninput: (e) => { ui.teamSel = k; setK(k, Number(e.target.value)); } });
     const val = h('div', { class: 'small' }), warn = h('div', { class: 'small warn' });
     const snaps = TEAM_SNAPS.map((v) => [v, h('button', { class: 'ghost', onclick: () => { ui.teamSel = k; setK(k, v); } }, `${v}×`)]);
-    const reset = h('button', { class: 'ghost', title: 'กลับเป็นค่าเริ่มต้น', onclick: () => { const it = hub.items[t.ids[k]]; if (!it) return; delete it.scale; ui.teamSel = k; syncCards(); draw(); saveSoon(); } }, 'รีเซ็ต');
+    const resetBy = (key) => () => { const it = hub.items[t.ids[k]]; if (!it) return; delete it[key]; ui.teamSel = k; syncCards(); draw(); saveSoon(); };
+    const reset = [h('button', { class: 'ghost', title: 'ขนาดกลับเป็นค่าเริ่มต้น', onclick: resetBy('scale') }, 'รีเซ็ตขนาด'),
+      h('button', { class: 'ghost', title: 'กลับไปยืนตรงกลางช่อง', onclick: resetBy('offset') }, 'รีเซ็ตตำแหน่ง')];
     const el = h('div', { class: 'panel team-card', onclick: () => { if (ui.teamSel !== k) { ui.teamSel = k; syncCards(); draw(); } } },
       h('div', { class: 'small dim' }, `ช่อง ${k + 1} · ${k % 2 ? 'แถวหน้า' : 'แถวหลัง'}`), sel, range, val, h('div', { class: 'tools snaps' }, snaps.map((x) => x[1]), reset), warn);
     cardEls[k] = { el, range, val, warn, snaps };
@@ -1088,7 +1119,7 @@ function renderTeam(m) {
   m.append(h('div', { class: 'row' }, h('h2', {}, 'จัดทีม · ปรับขนาด'), h('span', { class: 'sp' }),
     h('button', { class: t.showBg ? 'on' : 'ghost', onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, t.showBg ? 'ฉาก: เปิด' : 'ฉาก: ปิด'),
     h('button', { class: ui.teamFull ? 'on' : 'ghost', onclick: () => { ui.teamFull = !ui.teamFull; render(); } }, ui.teamFull ? 'ขนาดจริง 1:1' : 'พอดีจอ')));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครเพื่อเลือก · หมุนล้อเมาส์บนตัวเพื่อย่อ/ขยาย · ปุ่ม 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด · ขนาดจำต่อตัวละคร (ตัวเดียวกันอยู่สองช่องจะเปลี่ยนพร้อมกัน) · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครเพื่อเลือก · ลากเพื่อย้ายตำแหน่ง (ปุ่มลูกศร = ทีละ 1 px, Shift = 10) · หมุนล้อเมาส์บนตัวเพื่อย่อ/ขยาย · ปุ่ม 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด · ขนาดจำต่อตัวละคร (ตัวเดียวกันอยู่สองช่องจะเปลี่ยนพร้อมกัน) · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(wrap, cards);
   syncCards(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => {}), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { syncCards(); draw(); });

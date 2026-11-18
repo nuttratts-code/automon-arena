@@ -151,6 +151,8 @@ export function validateHub(h) {
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
     const sc = it.scale;
+    const of = it.offset;
+    if (of != null && (typeof of !== 'object' || !Number.isFinite(of.x) || !Number.isFinite(of.y))) err.push(`${id}: offset must be {x, y}`);
     if (sc != null && (typeof sc !== 'object' || typeof sc.k !== 'number' || !Number.isFinite(sc.k) || sc.k <= 0 || sc.k > 8)) err.push(`${id}: scale.k must be a number 0..8`);
   }
   const tm = h.settings?.team;
@@ -165,6 +167,9 @@ export function shadowExport(hub) {
     if (it.kind === 'character' && it.scale && typeof it.scale === 'object') { // set 246 team tab: screen px per picture px in the 1920x1061 battle view
       const sz = it.scale.size;
       scale[it.id] = { k: num(it.scale.k, 0.05, 8, 1), size: Array.isArray(sz) ? [Math.round(num(sz[0], 1, 8192, 1)), Math.round(num(sz[1], 1, 8192, 1))] : [0, 0] };
+    }
+    if (it.kind === 'character' && it.offset && typeof it.offset === 'object') { // drag-to-move: screen px in the 1920x1061 view, x toward the foe, y down
+      (scale[it.id] ||= { k: 0, size: [0, 0] }).offset = [Math.round(num(it.offset.x, -400, 400, 0)), Math.round(num(it.offset.y, -300, 300, 0))];
     }
     if (it.kind !== 'character' || !it.shadow) continue;
     const s = it.shadow, o = s.oval || {}, c = s.cast || {};
@@ -183,7 +188,7 @@ export function shadowExport(hub) {
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
     default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 0 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
-    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size). Not read by the game yet (r38 port).',
+    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); offset = [x toward the foe, y down] in screen px of the same view, moved from the slot centre. Not read by the game yet (r38 port).',
     scale,
   };
 }
