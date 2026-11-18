@@ -95,7 +95,7 @@ const sunDir = () => { const a = (hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE) * 
 const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: false, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: null } };
 
 let hub = null;
-const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', cutView: 'both', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
+const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
 
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -175,23 +175,35 @@ function status(it) {
 function thumbRound(it) {
   const own = it.thumb && it.rounds.find((r) => r.id === it.thumb && !r.archived && isImage(r.file));
   if (own) return own;
+  if (it.kind === 'character') { const u = usedPic(it, 1); if (u) return u; }
   const byTime = (a, b) => (a.t || '').localeCompare(b.t || '');
   const cuts = it.rounds.filter((r) => !r.archived && r.slot === 'cut' && (r.form || 1) === 1 && isImage(r.file)).sort(byTime);
   if (cuts.length) return cuts.filter((r) => r.star).pop() || cuts.pop();
   const pics = it.rounds.filter((r) => !r.archived && ['still', 'frames'].includes(r.slot) && (r.form || 1) === 1 && (!r.move || r.move === 'idle') && isImage(r.file));
   return pics.filter((r) => r.star).sort(byTime).pop() || pics.sort(byTime).pop() || it.rounds.find((r) => !r.archived && isImage(r.file));
 }
-// Facing (owner set 248): our side ALWAYS faces right, on every page, the way the game shows it (stage3d: sprites face right,
-// the enemy is mirrored). Creature pictures are drawn facing left (art-style prompt), so a creature picture is shown mirrored
-// unless ⇋ กลับข้าง is on (r.flip = this file already faces right). Pictures of scenes / props / UI are never mirrored.
-function isCharRound(r) { for (const it of Object.values(hub.items)) if (it.rounds.includes(r)) return it.kind === 'character'; return false; }
-const mirrorOf = (r) => !!r && !r.flip && isCharRound(r);
-const flipped = (el, r) => { if (mirrorOf(r)) el.classList.add('flipx'); return el; };
-// cast offsets set on the old left-facing view -> the facing-right view (sideways values flip, left/right corners swap)
-function faceRightCast(c) {
-  const k = c.k, m = (v) => (Array.isArray(v) ? [+(-v[0]).toFixed(3), v[1]] : v);
-  return { ...c, ox: +(-(c.ox || 0)).toFixed(3), k: k ? { tl: m(k.tr), tr: m(k.tl), bl: m(k.br), br: m(k.bl) } : k };
+// The picture every page uses (owner set 248 A1): ONE ★ across the original stills and their cuts of a form, picked in the
+// still step (the server keeps a single ★ across both slots). No ★ = the cut of the newest still, else that still.
+function usedPic(it, form = 1) {
+  if (!it) return null;
+  const byT = (a, b) => (a.t || '').localeCompare(b.t || '');
+  const rs = it.rounds.filter((r) => (r.slot === 'still' || r.slot === 'cut') && !r.archived && (r.form || 1) === form && isImage(r.file)).sort(byT);
+  const st = rs.filter((r) => r.star).pop();
+  if (st) return st;
+  const still = rs.filter((r) => r.slot === 'still').pop();
+  return cutOf(it, still) || still || rs.pop() || null;
 }
+function itemOfRound(r) { for (const it of Object.values(hub.items)) if (it.rounds.includes(r)) return it; return null; }
+// Facing (owner set 248, round 2): what the still step shows is what every page and the game (our side) show. A still / cut is
+// drawn as its file, mirrored when ⇋ กลับข้าง is on; every other picture of a creature (video, frames, Veo input, icon) turns the
+// same way as the picture in use. Files are never changed.
+function mirrorOf(r) {
+  if (!r) return false;
+  const it = itemOfRound(r);
+  if (!it || it.kind !== 'character' || r.slot === 'still' || r.slot === 'cut') return !!r.flip;
+  return !!usedPic(it, r.form || 1)?.flip;
+}
+const flipped = (el, r) => { if (mirrorOf(r)) el.classList.add('flipx'); return el; };
 function mirrorCanvas(c) { const o = document.createElement('canvas'); o.width = c.width; o.height = c.height; const g = o.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return o; }
 function stepHas(it, step) {
   if (step === 'still') return it.rounds.some((r) => ['still', 'cut'].includes(r.slot) && r.star && !r.archived);
@@ -289,7 +301,7 @@ async function makeCut(it, st) {
     hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
     const nc = hub.items[it.id].rounds.at(-1), src = hub.items[it.id].rounds.find((x) => x.id === st.id);
     if (src?.flip && nc) { nc.flip = true; await save(); }
-    ui.cutView = 'both'; toast('ตัดพื้นแล้ว ภาพต้นฉบับยังอยู่');
+    if (nc) ui.sel = nc.id; toast('ตัดพื้นแล้ว ภาพตัดพื้นนี้คือภาพที่ใช้ตอนนี้ (ภาพต้นฉบับยังอยู่)');
   } catch (e) { toast('ตัดพื้นไม่ได้: ' + e.message); }
   render();
 }
@@ -544,59 +556,72 @@ function slotRounds(it, slot) {
 }
 
 function renderSlot(m, it, slot) {
-  let rs = slotRounds(it, slot);
-  if (slot === 'still') { // cuts with no still in this list (old uploads) still show, labelled ตัดพื้น
-    const owned = new Set(rs.map((r) => cutOf(it, r)?.id).filter(Boolean));
-    const mine = new Set(rs.map((r) => r.id));
-    rs = [...rs, ...slotRounds(it, 'cut').filter((c) => !owned.has(c.id) && !mine.has(c.from) && !rs.some((r) => fileHash(r.file) && fileHash(r.file) === fileHash(c.file)))]
-      .sort((a, b) => (a.t || '').localeCompare(b.t || ''));
-  }
-  // open a still first (it carries the ตัดพื้น button); a lone cut row only when there is no still
-  const stills = rs.filter((r) => r.slot !== 'cut');
-  let sel = rs.find((r) => r.id === ui.sel) || stills.filter((r) => r.star).pop() || stills[stills.length - 1] || rs.filter((r) => r.star).pop() || rs[rs.length - 1];
+  // still step (owner set 248 C1): originals and their cuts are two separate lists; one ★ across both = the picture every page uses
+  const pics = slot === 'still';
+  const rs = slotRounds(it, slot), cuts = pics ? slotRounds(it, 'cut') : [];
+  const all = [...rs, ...cuts];
+  const used = pics && it.kind === 'character' ? usedPic(it, ui.form) : null;
+  let sel = all.find((r) => r.id === ui.sel) || (used && all.includes(used) ? used : null) || rs.filter((r) => r.star).pop() || rs[rs.length - 1] || cuts[cuts.length - 1];
   const work = h('div', { class: 'work' });
   const left = h('div', {});
+  if (pics && it.kind === 'character') left.append(usedBanner(it, used, sel));
   // viewer
   if (sel) {
     // set 246 UI pass: "how you look at it" (quiet, above the picture) is kept apart from "what it does" (actions + on/off switches, below)
-    const cut = cutOf(it, sel), canCut = sel.slot === 'still' && isImage(sel.file);
+    const canCut = sel.slot === 'still' && isImage(sel.file);
     const viewbar = h('div', { class: 'viewbar' }, h('span', { class: 'lbl' }, 'พื้นหลัง'), h('span', { class: 'seg' }, BGS.map(([k, v]) => h('button', { class: ui.bg === k ? 'on' : '', 'aria-pressed': String(ui.bg === k), onclick: () => { ui.bg = k; render(); } }, v))));
-    if (canCut && cut) viewbar.append(h('span', { class: 'lbl' }, 'แสดง'), h('span', { class: 'seg' }, [['both', 'คู่กัน'], ['orig', 'ต้นฉบับ'], ['cut', 'ตัดพื้นแล้ว']].map(([k, v]) => h('button', { class: ui.cutView === k ? 'on' : '', 'aria-pressed': String(ui.cutView === k), onclick: () => { ui.cutView = k; render(); } }, v))));
+    if (pics) viewbar.append(h('span', { class: 'pill' + (sel.slot === 'cut' ? ' cutpill' : '') }, sel.slot === 'cut' ? 'กำลังดู: ภาพตัดพื้น' : 'กำลังดู: ภาพต้นฉบับ'));
     const actbar = h('div', { class: 'actbar' });
-    if (canCut) actbar.append(h('button', { class: cut ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้', onclick: () => makeCut(it, sel) }, cut ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
-    else if (sel.slot === 'cut') actbar.append(h('span', { class: 'small dim' }, 'รอบนี้เป็นภาพตัดพื้นที่ไม่มีภาพนิ่งต้นทาง กดแถวภาพนิ่งเพื่อตัดพื้นใหม่'));
-    if (isImage(sel.file) && slot !== 'veoin') { // web pixel editor (small pictures; edits the cut when the cut is what you are looking at)
-      const target = canCut && cut && ui.cutView !== 'orig' ? cut : sel;
-      actbar.append(h('button', { title: 'แก้เม็ดพิกเซลง่ายๆ บนเว็บ (ภาพไม่เกิน 256 px) บันทึกเป็นรอบใหม่', onclick: () => pixelEditor(it, target) }, target.slot === 'cut' ? 'แก้พิกเซล (ภาพตัดพื้น)' : 'แก้พิกเซล'));
-    }
+    if (canCut) actbar.append(h('button', { class: cutOf(it, sel) ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้ ภาพตัดพื้นใหม่จะเป็นภาพที่ใช้ทันที', onclick: () => makeCut(it, sel) }, cutOf(it, sel) ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
+    else if (sel.slot === 'cut') { const from = it.rounds.find((x) => x.id === sel.from); actbar.append(h('span', { class: 'small dim' }, from ? `ตัดจากภาพต้นฉบับ ${fmtDate(from.t)}` : 'ภาพตัดพื้นที่ไม่มีภาพต้นฉบับในคลัง')); }
+    if (isImage(sel.file) && slot !== 'veoin') actbar.append(h('button', { title: 'แก้เม็ดพิกเซลง่ายๆ บนเว็บ (ภาพไม่เกิน 256 px) บันทึกเป็นรอบใหม่และใช้ทันที', onclick: () => pixelEditor(it, sel) }, 'แก้พิกเซล'));
     const sw = (on, label, title, fn) => h('button', { class: 'switch' + (on ? ' is-on' : ''), role: 'switch', 'aria-checked': String(on), title, onclick: fn }, h('span', { class: 'knob' }), label);
-    if (isImage(sel.file) || isVideo(sel.file)) actbar.append(sw(!!sel.flip, 'กลับข้างซ้าย-ขวา', it.kind === 'character' ? 'ฝั่งเราต้องหันไปทางขวาเสมอ ถ้าตัวนี้หันซ้ายอยู่ให้กดสลับ (เกมใช้ตามที่เห็นตรงนี้ ศัตรูจะกลับด้านเอง)' : 'กลับภาพซ้าย-ขวา', () => {
-      sel.flip = !sel.flip; if (cut && cut !== sel) cut.flip = sel.flip; save().then(render); }));
+    if ((isImage(sel.file) || isVideo(sel.file)) && (it.kind !== 'character' || pics)) actbar.append(sw(!!sel.flip, 'กลับข้างซ้าย-ขวา', it.kind === 'character' ? 'ทุกหน้าและในเกม (ฝั่งเรา) หันตามที่เห็นตรงนี้ ภาพต้นฉบับกับภาพตัดพื้นของมันกลับไปด้วยกัน' : 'กลับภาพซ้าย-ขวา', () => {
+      const on = !sel.flip, group = new Set([sel, cutOf(it, sel), it.rounds.find((x) => x.id === sel.from)].filter(Boolean));
+      for (const r of it.rounds) if (r.slot === 'cut' && r.from && group.has(it.rounds.find((x) => x.id === r.from))) group.add(r);
+      for (const r of group) { if (on) r.flip = true; else delete r.flip; }
+      save().then(render); }));
+    else if (it.kind === 'character' && (isImage(sel.file) || isVideo(sel.file))) actbar.append(h('span', { class: 'small dim' }, 'หันซ้าย-ขวาตามภาพที่ใช้อยู่ในขั้นภาพนิ่ง'));
     if (isImage(sel.file) && slot !== 'veoin') {
-      const pickR = canCut && cut ? cut : sel, isOn = thumbRound(it) === pickR && it.thumb === pickR.id;
-      actbar.append(sw(isOn, 'ใช้เป็นภาพหน้าภาพรวม', 'ใช้ภาพนี้แสดงในหน้าภาพรวม (ถ้ามีภาพตัดพื้น ใช้ภาพตัดพื้น)', () => { it.thumb = isOn ? undefined : pickR.id; save().then(render); }));
+      const isOn = it.thumb === sel.id;
+      actbar.append(sw(isOn, 'ใช้เป็นภาพหน้าภาพรวม', 'ใช้ภาพนี้แสดงในหน้าภาพรวม (ปิด = ใช้ภาพที่ทุกหน้าใช้)', () => { it.thumb = isOn ? undefined : sel.id; save().then(render); }));
     }
-    const view = canCut && cut ? ui.cutView : 'orig';
-    const stage = h('div', { class: 'stage bg-' + ui.bg + (view === 'both' ? ' pair' : '') });
+    const stage = h('div', { class: 'stage bg-' + ui.bg });
     if (ui.bg === 'arena') stage.style.backgroundImage = `url("${fileUrl(hub.settings.arenaBg || TEAM_BG)}")`; // no picked arena yet → the battle scene of the team tab
     left.append(viewbar, stage, actbar);
-    if (view === 'both') { viewer(stage, left, sel); viewer(stage, left, cut); }
-    else viewer(stage, left, view === 'cut' ? cut : sel);
+    viewer(stage, left, sel);
     if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
     else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
-    if (slot === 'still' && it.kind === 'character') left.append(iconBox(it));
-    if (slot === 'still') left.append(stillChecks(it, sel));
+    if (pics && it.kind === 'character') left.append(iconBox(it));
+    if (pics && sel.slot === 'still') left.append(stillChecks(it, sel));
   } else left.append(h('p', { class: 'dim' }, emptyText(slot)));
   // drop zone + rounds
   const right = h('div', {});
   right.append(dropZone(it, slot));
-  right.append(h('div', { class: 'row small', style: 'margin:10px 0 6px' }, h('b', {}, `${rs.length} รอบ`), h('span', { class: 'sp' }),
+  right.append(h('div', { class: 'row small', style: 'margin:10px 0 6px' }, h('span', { class: 'sp' }),
     h('label', {}, h('input', { type: 'checkbox', checked: ui.showArch, onchange: (e) => { ui.showArch = e.target.checked; render(); } }), ' แสดงรอบที่ซ่อน')));
-  const list = h('div', { class: 'rounds' });
-  for (const r of rs.slice().reverse()) list.append(roundRow(it, r, r === sel));
-  right.append(list);
+  const group = (title, list, empty) => {
+    right.append(h('h3', { class: 'rgroup' }, title, h('span', { class: 'faint small' }, ` ${list.length} รอบ`)));
+    const box = h('div', { class: 'rounds' });
+    for (const r of list.slice().reverse()) box.append(roundRow(it, r, r === sel));
+    if (!list.length) box.append(h('p', { class: 'small faint' }, empty));
+    right.append(box);
+  };
+  if (pics) { group('ภาพต้นฉบับ', rs, 'ยังไม่มี วางภาพจาก Gemini ที่ช่องด้านบน'); group('ภาพตัดพื้น', cuts, 'ยังไม่มี เลือกภาพต้นฉบับแล้วกด "ตัดพื้น"'); }
+  else group(STEPS.find((x) => x[0] === slot)?.[1] || 'รอบ', rs, emptyText(slot));
   work.append(left, right);
   m.append(work);
+}
+// owner set 248: the one picture every page (team, shadow, icon, frames, Godot) uses, always shown at the top of the still step
+function usedBanner(it, used, sel) {
+  const box = h('div', { class: 'usedbar' + (used ? '' : ' none') });
+  if (!used) { box.append(h('b', {}, 'ยังไม่มีภาพที่ใช้'), h('span', { class: 'small dim' }, 'วางภาพต้นฉบับ หรือกด "ใช้รอบนี้" ที่ภาพใดภาพหนึ่ง')); return box; }
+  const th = h('span', { class: 'usedth' }); thumbInto(th, used, 52);
+  box.append(th, h('div', {}, h('b', {}, 'ทุกหน้าใช้ภาพนี้'),
+    h('div', { class: 'small dim' }, `${used.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพต้นฉบับ'} ${fmtDate(used.t)}${used.flip ? ' · กลับข้าง' : ''} · จัดทีม เงา ไอคอน เฟรม และเกมใช้ภาพนี้และหันตามนี้`)), h('span', { class: 'sp' }));
+  if (sel && sel !== used && isImage(sel.file)) box.append(h('button', { class: 'primary', onclick: () => star(it, sel) }, `ใช้${sel.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพต้นฉบับ'}ที่กำลังดูแทน`));
+  else if (sel !== used) box.append(h('button', { onclick: () => { ui.sel = used.id; render(); } }, 'ดูภาพนี้'));
+  return box;
 }
 function emptyText(slot) {
   return {
@@ -617,7 +642,7 @@ function viewer(stage, left, r) {
       const el = flipped(keyNeeded ? keyed(img) : img.cloneNode(), r);
       // small pixel sprites (set 246 UI pass): blow up by a whole number so every pixel stays square, label the zoom
       if (img.naturalHeight <= 256) {
-        const pair = stage.classList.contains('pair'), room = (stage.clientWidth || 700) / (pair ? 2 : 1) - 24;
+        const room = (stage.clientWidth || 700) - 24;
         const z = Math.max(1, Math.floor(Math.min(room / img.naturalWidth, 420 / img.naturalHeight)));
         el.style.width = img.naturalWidth * z + 'px'; el.style.height = img.naturalHeight * z + 'px'; el.classList.add('px');
         if (z > 1 && !stage.querySelector('.zoomtag')) stage.append(h('span', { class: 'zoomtag' }, `ขยาย ×${z} · ภาพจริง ${img.naturalWidth}×${img.naturalHeight}`));
@@ -763,9 +788,8 @@ async function delRound(it, r) {
 }
 async function star(it, r) {
   try {
-    const on = r.star ? 0 : 1, cut = cutOf(it, r); // a still's cut follows its star (the shadow editor uses the starred cut)
+    const on = r.star ? 0 : 1; // owner set 248: one ★ across originals + cuts, the server clears the other one
     hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=${on}`, { method: 'POST' });
-    if (cut && !!cut.star !== !!on) hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(cut.id)}&on=${on}`, { method: 'POST' });
     toast(r.star ? 'เลิกเลือกแล้ว' : 'เลือกแล้ว และเก็บเข้าคลังถาวร');
   } catch (e) { toast(e.message); }
   render();
@@ -802,10 +826,12 @@ function compareDialog(it) {
 }
 
 // ---------- shadow editor (E1: feet + ground line + one oval + sun-cast) ----------
+// owner set 248 B: idle frames made from the picture in use (each frame can get its own shadow), else the picture in use itself.
+// Frames older than the picture in use belong to an earlier picture (e.g. old painted frames under a new pixel still) and are skipped.
 function shadowSource(it) {
-  const set = it.shadow?.round && it.rounds.find((r) => r.id === it.shadow.round && !r.archived); // the picture the shadow was set on (Claude sets it on new frames)
-  if (set) return set;
-  return pick(it, 'frames', 1, 'idle') || pick(it, 'cut', 1) || pick(it, 'still', 1) || latest(it, 'frames', 1, 'idle') || latest(it, 'cut', 1) || latest(it, 'still', 1);
+  const set = it.shadow?.round && it.rounds.find((r) => r.id === it.shadow.round && !r.archived && r.slot === 'frames'); // Claude sets it on new frames
+  const fr = set || pick(it, 'frames', 1, 'idle') || latest(it, 'frames', 1, 'idle'), u = usedPic(it, 1);
+  return fr && (!u || (fr.t || '') >= (u.t || '')) ? fr : u || fr;
 }
 function guessFeet(k) {
   const g = k.getContext('2d', { willReadFrequently: true }), W = k.width, H = k.height;
@@ -831,12 +857,19 @@ function renderShadow(m, it) {
   m.append(work);
   const hit = document.createElement('canvas'); hit.width = cv.width; hit.height = cv.height;
   const hitG = hit.getContext('2d', { willReadFrequently: true });
-  let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null;
+  let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null, base = null; // s = what the handles edit: base (every frame) or one frame's own shadow
+  let ov = {}, editK = null; // owner set 248 B: ov[i] = frame i's own shadow (same shape as base); editK = the frame being edited, null = every frame
+  if (s) { if (s.frames && it.shadow.round === src.id && src.slot === 'frames') for (const [k, v] of Object.entries(s.frames)) ov[k] = v; delete s.frames; delete s.face; }
   let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
   const pitch = () => hub.settings.camPitch || 40;
-  const mir = mirrorOf(src); // the editor shows the creature facing right (owner set 248); s.feet below is in that view
-  const feetPic = () => [mir ? +(1 - s.feet[0]).toFixed(4) : s.feet[0], s.feet[1]];
-  const commit = () => { it.shadow = { ...s, feet: feetPic(), size, round: src.id, face: 'right' }; saveSoon(); };
+  const mir = mirrorOf(src); // the editor shows the creature the way the still step shows it (owner set 248); feet below are in that view
+  const feetPic = (o = s) => [mir ? +(1 - o.feet[0]).toFixed(4) : o.feet[0], o.feet[1]];
+  const commit = () => {
+    if (editK != null) ov[editK] = s; else base = s;
+    const fr = Object.entries(ov).map(([k, v]) => [k, { feet: feetPic(v), cast: v.cast }]);
+    it.shadow = { ...base, feet: feetPic(base), size, round: src.id, ...(fr.length ? { frames: Object.fromEntries(fr) } : {}) };
+    saveSoon(); stripOwn();
+  };
   // sliders
   const sl = h('div', { class: 'sliders' });
   const vals = {};
@@ -856,9 +889,9 @@ function renderShadow(m, it) {
   right.append(h('h3', {}, 'ค่าเงาของตัวนี้'), sl,
     h('h3', {}, 'จุดเท้า'), feetOut,
     h('div', { class: 'tools' },
-      h('button', { onclick: () => { if (!frames[0]) return; s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
+      h('button', { onclick: () => { const f = frames[editK ?? 0]; if (!f) return; s.feet = guessFeet(f); commit(); sync(); draw(); } }, 'ให้ Claude หาจุดเท้าใหม่'),
       h('button', { class: 'ghost', onclick: () => { s.cast.ox = 0; s.cast.oy = 0; s.cast.k = null; commit(); draw(); } }, 'คืนรูปเงาตามตัว'),
-      h('button', { class: 'ghost', onclick: () => { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
+      h('button', { class: 'ghost', onclick: () => { if (editK != null) { const k = editK; delete ov[k]; editK = null; s = base; commit(); editFrame(k); return; } s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : '', // '' not null: DOM append prints null
     h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
@@ -871,7 +904,11 @@ function renderShadow(m, it) {
     const sh = SPR_H / TILE * T, sw = f ? sh * f.width / f.height : sh;
     return { W, H, T, k, C, sh, sw, f };
   };
-  function draw() {
+  function draw() { // while every frame plays, a frame with its own shadow shows that one
+    const keep = s; if (editK == null && ov[fi]) s = ov[fi];
+    try { drawNow(); } finally { s = keep; }
+  }
+  function drawNow() {
     const g = cv.getContext('2d'); const { W, H, T, k, C, sh, sw, f } = geo();
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
     if (bg) { const r = Math.max(W / bg.width, H / bg.height); g.globalAlpha = 0.85; g.drawImage(bg, (W - bg.width * r) / 2, (H - bg.height * r) * 0.7, bg.width * r, bg.height * r); g.globalAlpha = 1; }
@@ -1003,19 +1040,33 @@ function renderShadow(m, it) {
     if (src.slot === 'frames' && src.meta) { for (let i = 0; i < (src.meta.n || 1); i++) frames.push(keyed(img, ...sheetFrame(img, src.meta, i))); size = [src.meta.fw, src.meta.fh]; }
     else { frames = [keyed(img)]; size = [img.naturalWidth, img.naturalHeight]; }
     if (mir) frames = frames.map(mirrorCanvas);
-    if (!s) { s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
+    const other = s && it.shadow?.round !== src.id && !(Array.isArray(s.size) && s.size[0] === size[0] && s.size[1] === size[1]);
+    if (!s || !Array.isArray(s.feet)) { s = { ...JSON.parse(JSON.stringify(SHADOW_DEFAULT)), ...(s || {}) }; s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
+    else if (other) { s.feet = guessFeet(frames[0]); left.append(h('p', { class: 'small warn' }, 'จุดเท้าเดิมตั้งไว้กับภาพอื่น หาจุดเท้าใหม่บนภาพนี้ให้แล้ว (บันทึกเมื่อคุณแก้อะไรสักอย่าง)')); }
     else if (mir) s.feet = [+(1 - s.feet[0]).toFixed(4), s.feet[1]];
-    if (s && mir && s.face !== 'right') s.cast = faceRightCast(s.cast || {}); // tuned before set 248 on the left-facing view
     s.oval = { ...SHADOW_DEFAULT.oval, ...s.oval, on: false }; s.cast = { ...SHADOW_DEFAULT.cast, ...s.cast };
+    base = s;
+    for (const k of Object.keys(ov)) { const v = ov[k]; ov[k] = { ...JSON.parse(JSON.stringify(base)), feet: [mir ? +(1 - v.feet[0]).toFixed(4) : v.feet[0], v.feet[1]], cast: { ...base.cast, ...(v.cast || {}) } }; }
     sync(); draw();
     let last = 0; const ms = src.meta?.ms || 190;
-    const tick = (t) => { if (!cv.isConnected) return; if (playing && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); stripMark(); } requestAnimationFrame(tick); };
+    const tick = (t) => { if (!cv.isConnected) return; if (playing && editK == null && frames.length > 1 && t - last >= ms) { last = t; fi = (fi + 1) % frames.length; draw(); stripMark(); } requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
     await frameStrip(img);
   })().catch(() => left.append(h('p', { class: 'bad' }, 'เปิดภาพไม่ได้')));
   // owner (set 246): every frame of the idle video as small pictures under the editor; pick one → use it as the still
-  let stripBtns = [], stripSel = 0, stripSame = false;
-  function stripMark() { if (stripSame) { stripSel = fi; stripBtns.forEach((b, j) => b.classList.toggle('on', j === fi)); } }
+  let stripBtns = [], stripSel = 0, stripSame = false, allBtn = null, editInfo = null, clearBtn = null;
+  function stripMark() { if (stripSame && editK == null) { stripSel = fi; stripBtns.forEach((b, j) => b.classList.toggle('on', j === fi)); } }
+  function stripOwn() { // which frames have their own shadow + what the handles edit now
+    stripBtns.forEach((b, j) => b.classList.toggle('own', !!ov[j]));
+    if (allBtn) { allBtn.classList.toggle('on', editK == null); allBtn.setAttribute('aria-pressed', String(editK == null)); }
+    if (editInfo) editInfo.textContent = editK == null ? `กำลังแก้: เงาทุกเฟรม${Object.keys(ov).length ? ` (ยกเว้น ${Object.keys(ov).length} เฟรมที่แก้แยกไว้ จุดสีส้ม)` : ''}` : `กำลังแก้: เงาเฉพาะเฟรม ${editK + 1}${ov[editK] ? ' (แก้แยกแล้ว)' : ' (ยังใช้แบบทุกเฟรม แก้อะไรก็จะแยกเป็นของเฟรมนี้)'}`;
+    if (clearBtn) clearBtn.hidden = editK == null || !ov[editK];
+  }
+  function editFrame(k) { // k = null: every frame (plays); a number: that frame only (paused on it)
+    editK = k; s = k == null ? base : ov[k] || JSON.parse(JSON.stringify(base));
+    if (k == null) playing = true; else { playing = false; fi = k; stripSel = k; stripBtns.forEach((b, j) => b.classList.toggle('on', j === k)); }
+    sync(); draw(); stripOwn();
+  }
   async function frameStrip(srcImg) {
     const fr = src.slot === 'frames' && src.meta ? src : pick(it, 'frames', 1, 'idle') || latest(it, 'frames', 1, 'idle');
     if (!fr?.meta) return;
@@ -1026,22 +1077,30 @@ function renderShadow(m, it) {
     for (let i = 0; i < n; i++) cells.push(keyed(img, ...sheetFrame(img, fr.meta, i))); // the file's own pixels (the editor's frames may be mirrored)
     const useBtn = h('button', { class: 'primary', onclick: () => useFrame(fr, cells[stripSel], stripSel) });
     const info = h('span', { class: 'small dim' });
-    const mark = () => { useBtn.textContent = `ใช้เฟรม ${stripSel + 1} เป็นภาพนิ่ง`; info.textContent = stripSame ? 'คลิกเฟรมเพื่อหยุดดูเฟรมนั้นในตัวแก้เงา' : 'เงาตั้งไว้กับภาพนิ่ง เฟรมเหล่านี้มาจากวิดีโอท่าหายใจที่ติดดาว'; stripBtns.forEach((b, j) => b.classList.toggle('on', j === stripSel)); };
+    const mark = () => { useBtn.textContent = `ใช้เฟรม ${stripSel + 1} เป็นภาพนิ่ง`; info.textContent = stripSame ? 'ระบบใส่เงาให้ทุกเฟรมแล้ว คลิกเฟรมเพื่อเช็คและแก้เงาเฉพาะเฟรมนั้น' : 'เฟรมเหล่านี้มาจากวิดีโอท่าหายใจ'; stripBtns.forEach((b, j) => b.classList.toggle('on', j === stripSel)); };
     stripBtns = cells.map((c, i) => {
       const t = flipped(h('canvas', { width: c.width, height: c.height }), fr); t.getContext('2d').drawImage(c, 0, 0);
-      return h('button', { class: 'fcell', title: `เฟรม ${i + 1}`, 'aria-label': `เฟรม ${i + 1}`, onclick: () => { stripSel = i; if (stripSame) { playing = false; fi = i; draw(); } mark(); } }, t, h('span', { class: 'n' }, String(i + 1)));
+      return h('button', { class: 'fcell', title: stripSame ? `เฟรม ${i + 1} · คลิกเพื่อแก้เงาเฉพาะเฟรมนี้` : `เฟรม ${i + 1}`, 'aria-label': `เฟรม ${i + 1}`, onclick: () => { stripSel = i; if (stripSame) editFrame(i); mark(); } }, t, h('span', { class: 'n' }, String(i + 1)), h('span', { class: 'dot', 'aria-hidden': 'true' }));
     });
-    left.append(h('div', { class: 'fstrip-wrap' }, h('div', { class: 'row' }, h('b', {}, `ทุกเฟรม (${n})`), info, h('span', { class: 'sp' }), useBtn), h('div', { class: 'fstrip' }, stripBtns)));
-    mark();
+    if (stripSame) {
+      allBtn = h('button', { class: 'fcell fall', title: 'แก้เงาทุกเฟรมพร้อมกัน (เล่นท่าหายใจ)', onclick: () => { editFrame(null); mark(); } }, h('b', {}, 'ทุก'), h('span', { class: 'small' }, 'เฟรม'));
+      editInfo = h('span', { class: 'small editinfo' });
+      clearBtn = h('button', { class: 'ghost', hidden: true, onclick: () => { if (editK == null) return; const k = editK; delete ov[k]; editK = null; s = base; commit(); editFrame(k); toast(`เฟรม ${k + 1} กลับไปใช้เงาแบบทุกเฟรมแล้ว`); } }, 'ล้างเงาเฟรมนี้');
+    }
+    left.append(h('div', { class: 'fstrip-wrap' }, h('div', { class: 'row' }, h('b', {}, `ทุกเฟรม (${n})`), info, h('span', { class: 'sp' }), useBtn),
+      stripSame ? h('div', { class: 'row' }, editInfo, h('span', { class: 'sp' }), clearBtn) : '',
+      h('div', { class: 'fstrip' }, allBtn || '', stripBtns)));
+    mark(); stripOwn();
   }
   async function useFrame(fr, c, i) {
     if (!c) return;
+    const m0 = mirrorOf(fr); // the new still keeps the facing it has on screen now
     try {
       const blob = await new Promise((ok) => c.toBlob(ok, 'image/png'));
       const q = new URLSearchParams({ item: it.id, slot: 'still', name: `${it.id}_frame${i + 1}.png`, form: String(fr.form || 1) });
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob }); // newest upload = ★ used (owner A1)
       const nr = hub.items[it.id].rounds.at(-1);
-      if (nr) { nr.note = `เฟรม ${i + 1} จากวิดีโอ ${fmtDate(fr.t)}`; if (fr.flip) nr.flip = true; await save(); }
+      if (nr) { nr.note = `เฟรม ${i + 1} จากวิดีโอ ${fmtDate(fr.t)}`; if (m0) nr.flip = true; await save(); }
       toast(`ใช้เฟรม ${i + 1} เป็นภาพนิ่งแล้ว (ภาพนิ่งเดิมยังอยู่ในขั้นภาพนิ่ง)`);
     } catch (e) { toast('ทำไม่ได้: ' + e.message); }
   }
@@ -1392,11 +1451,7 @@ function teamCfg() {
   return t;
 }
 // the picture the game will show: the cut of the starred form-1 still, else that still
-function teamRound(it) {
-  if (!it) return null;
-  const st = pick(it, 'still', 1) || latest(it, 'still', 1);
-  return cutOf(it, st) || st;
-}
+function teamRound(it) { return usedPic(it, 1); } // owner set 248: the picture in use, from the still step
 const teamSprCache = new Map();
 function teamSprite(r) {
   if (!teamSprCache.has(r.id)) teamSprCache.set(r.id, loadImg(r.file).then((img) => {
@@ -1459,7 +1514,7 @@ function renderTeam(m) {
   function place(k) { // where slot k's creature is drawn: box [x, y, w, h] + the feet point on screen
     const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
     if (!s || !it || !r) return null;
-    const kk = kOf(it, s), [ax, ay] = anchorOf(it, s, r), mir = !r.flip;
+    const kk = kOf(it, s), [ax, ay] = anchorOf(it, s, r), mir = mirrorOf(r);
     const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk);
     const [sx, sy] = slotXY(k), [ox, oy] = offOf(it), fx = sx + ox, fy = sy + oy;
     const adx = (mir ? s.c.width - ax : ax) * kk;
@@ -1520,7 +1575,7 @@ function renderTeam(m) {
   function turn(g, p) { const a = rotOf(p.it); if (!a) return; g.translate(p.feet[0], p.feet[1]); g.rotate(a * Math.PI / 180); g.translate(-p.feet[0], -p.feet[1]); }
   function paint(g, s, r, x, y, w, hh) {
     g.save();
-    if (!r.flip) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // our side faces right: pictures face left, flip ones are already mirrored
+    if (mirrorOf(r)) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // turned the way the still step shows it (owner set 248)
     else g.drawImage(s.c, x, y, w, hh);
     g.restore();
   }
@@ -1545,6 +1600,7 @@ function renderTeam(m) {
   function setFeet(it, s, r, ax, ay) {
     const fx = +Math.min(1, Math.max(0, (ax + s.x0) / s.w)).toFixed(4), fy = +Math.min(1, Math.max(0, (ay + s.y0) / s.h)).toFixed(4);
     const base = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : JSON.parse(JSON.stringify(SHADOW_DEFAULT));
+    if (base.round !== r.id) delete base.frames;
     it.shadow = { ...base, feet: [fx, fy], size: [s.w, s.h], round: r.id };
   }
   cv.addEventListener('pointerdown', (e) => {
@@ -1667,7 +1723,7 @@ function renderTeam(m) {
     slotBtns.forEach((b, j) => {
       const x = hub.items[t.ids[j]]; b.classList.toggle('on', j === k); b.setAttribute('aria-pressed', String(j === k));
       b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x?.free ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
-      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (!teamRound(x)?.flip) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
+      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (mirrorOf(teamRound(x))) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
     });
     nameEl.textContent = it ? `ช่อง ${k + 1} · ${it.id} ${it.name || ''}` : `ช่อง ${k + 1} · ว่าง`;
     sel.value = t.ids[k] || '';

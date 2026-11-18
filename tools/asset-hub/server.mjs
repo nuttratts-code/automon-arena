@@ -150,6 +150,7 @@ export function validateHub(h) {
     if (it.thumb != null && (typeof it.thumb !== 'string' || !ID_RE.test(it.thumb))) err.push(`${id}: bad thumb`);
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
+    if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: shadow.frames must be {frame: {feet: [x, y], cast}}`);
     const sc = it.scale;
     if (it.free != null && typeof it.free !== 'boolean') err.push(`${id}: free must be true/false`);
     const of = it.offset;
@@ -178,9 +179,12 @@ export function shadowExport(hub) {
     }
     if (it.kind !== 'character' || !it.shadow) continue;
     const s = it.shadow, o = s.oval || {}, c = s.cast || {};
-    const sr = it.rounds.find((x) => x.id === s.round);
+    const castOf = (cc) => ({ len: num(cc.len, 0, 2, 1), str: num(cc.str, 0, 1, 0.5), ox: num(cc.ox, -1, 1, 0), oy: num(cc.oy, -1, 1, 0), blur: num(cc.blur, 0, 1, 0.3),
+      k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(cc.k?.[q]) ? [num(cc.k[q][0], -3, 3, 0), num(cc.k[q][1], -3, 3, 0)] : [0, 0]])) });
+    const perFrame = s.frames && typeof s.frames === 'object' ? Object.entries(s.frames).filter(([k, v]) => /^\d{1,3}$/.test(k) && Array.isArray(v?.feet)) : [];
     units[it.id] = {
-      mirror: !sr?.flip, // set 248: true = the picture faces left, the game mirrors it so our side faces right (enemy = the other way); cast ox / k are in that facing-right view
+      mirror: !!usedPicS(it, 1)?.flip, // set 248: true = our side shows the picture mirrored, the way the hub still step shows it (enemy = the other way); feet stay file fractions, cast ox / k are in the shown view
+      ...(perFrame.length ? { frames: Object.fromEntries(perFrame.map(([k, v]) => [k, { feet: [num(v.feet[0], 0, 1, 0.5), num(v.feet[1], 0, 1, 1)], cast: castOf({ ...c, ...(v.cast || {}) }) }])) } : {}), // owner set 248 B: frame i of the idle sheet has its own shadow
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
       oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game
@@ -208,9 +212,19 @@ function doExport(hub) {
 
 // ---------- one ★ per slot (owner set 241) ----------
 // rounds of the same slot + form + move share one ★; "file" (other files) keeps several
+// owner set 248 A1: for creatures the original stills and their cuts share ONE ★ = the picture every page and the game use
+const starGroup = (it, slot) => (it.kind === 'character' && (slot === 'still' || slot === 'cut') ? 'pic' : slot);
 function starOnly(it, r) {
   if (r.slot === 'file') return;
-  for (const x of it.rounds) if (x !== r && x.slot === r.slot && (x.form || 1) === (r.form || 1) && (x.move || '') === (r.move || '')) x.star = false;
+  const g = starGroup(it, r.slot);
+  for (const x of it.rounds) if (x !== r && starGroup(it, x.slot) === g && (x.form || 1) === (r.form || 1) && (x.move || '') === (r.move || '')) x.star = false;
+}
+function usedPicS(it, form = 1) { // same rule as usedPic in app.js
+  const rs = it.rounds.filter((r) => (r.slot === 'still' || r.slot === 'cut') && !r.archived && (r.form || 1) === form).sort((a, b) => String(a.t || '').localeCompare(String(b.t || '')));
+  const st = rs.filter((r) => r.star).pop();
+  if (st) return st;
+  const still = rs.filter((r) => r.slot === 'still').pop();
+  return (still && rs.filter((r) => r.slot === 'cut' && r.from === still.id).pop()) || still || rs.pop() || null;
 }
 
 // ---------- library (star → copy, never overwrite) ----------

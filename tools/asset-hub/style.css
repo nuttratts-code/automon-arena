@@ -328,3 +328,15 @@ dialog.icon-dlg { width: fit-content; max-width: 96vw; }
 #saveFlash .ic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.22); font-size: 18px; }
 #saveFlash button { color: #fff; font-size: 20px; padding: 0 6px; }
 @media (prefers-reduced-motion: reduce) { #saveFlash { transition: none; } }
+/* set 248: the picture every page uses + originals / cuts as two lists + per-frame shadows */
+.usedbar { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 12px; border: 2px solid #ffd34d; border-radius: 10px; background: rgba(255,211,77,.07); }
+.usedbar.none { border-color: var(--line); background: var(--panel); }
+.usedbar .usedth { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 6px; overflow: hidden; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 10px 10px; }
+.usedbar .usedth img, .usedbar .usedth canvas { max-width: 52px; max-height: 52px; image-rendering: pixelated; }
+h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: baseline; gap: 6px; }
+.pill.cutpill { background: rgba(140,200,255,.18); }
+.fcell { position: relative; }
+.fcell .dot { position: absolute; right: 4px; top: 4px; width: 9px; height: 9px; border-radius: 50%; background: #ff9a3c; box-shadow: 0 0 0 2px #15181d; display: none; }
+.fcell.own .dot { display: block; }
+.fcell.fall { min-width: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.editinfo { color: var(--ink); }
