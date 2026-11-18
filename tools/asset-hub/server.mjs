@@ -19,6 +19,10 @@ const HUB_FILE = path.join(HUB_DIR, 'hub.json');
 const FILES = path.join(HUB_DIR, 'files');
 const LIB = path.join(ROOT, 'art', 'library');
 const SHADOW_OUT = path.join(ROOT, 'godot', 'data', 'unit_shadows.json');
+// game data shown read-only on the still step (owner set 248 round 4): always the repo's own files, never ROOT
+const GAME_JSON = path.resolve(HERE, '..', '..', 'godot', 'data', 'game.json');
+const LABELS_JSON = path.resolve(HERE, '..', '..', 'godot', 'data', 'labels.json');
+const NAME_MAX = 24;
 const PORT = Number(process.env.HUB_PORT || 5177);
 
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
@@ -131,6 +135,25 @@ function writeHub(hub) {
 
 const num = (v, lo, hi, d) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 const str = (v, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
+// display name for Godot: no control characters, trimmed, at most NAME_MAX characters
+const cleanName = (v) => (typeof v === 'string' ? [...v.replace(/[\u0000-\u001f\u007f]/g, '').trim()].slice(0, NAME_MAX).join('') : '');
+
+// ---------- game names + skill texts (read-only, owner set 248 round 4) ----------
+let gameInfoCache = null;
+function gameInfo() {
+  if (gameInfoCache) return gameInfoCache;
+  const out = {};
+  try {
+    const g = JSON.parse(fs.readFileSync(GAME_JSON, 'utf8')), lb = JSON.parse(fs.readFileSync(LABELS_JSON, 'utf8'));
+    for (const c of g.derived?.characters || []) {
+      if (!ID_RE.test(c.id)) continue;
+      const sk = Array.isArray(lb.skills?.[c.id]) ? lb.skills[c.id] : [];
+      out[c.id] = { name: str(c.name, 80), tribe: str(c.tribe, 40), rarity: str(c.rarity, 40),
+        skills: sk.map((x) => (Array.isArray(x?.text) ? x.text.slice(0, 3).map((t) => str(t, 400)) : [])).filter((t) => t.length) };
+    }
+  } catch { /* data missing: the page shows no skills */ }
+  return (gameInfoCache = out);
+}
 
 // light shape check on a hub sent by the page (it is our own page, but keep bad data out of the file)
 export function validateHub(h) {
@@ -148,6 +171,7 @@ export function validateHub(h) {
       if (r.flip != null && typeof r.flip !== 'boolean') err.push(`${id}: flip must be true/false`);
     }
     if (it.thumb != null && (typeof it.thumb !== 'string' || !ID_RE.test(it.thumb))) err.push(`${id}: bad thumb`);
+    if (it.name != null && (typeof it.name !== 'string' || [...it.name].length > NAME_MAX)) err.push(`${id}: name must be text, at most ${NAME_MAX} characters`);
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
     if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: shadow.frames must be {frame: {feet: [x, y], cast}}`);
@@ -165,8 +189,9 @@ export function validateHub(h) {
 
 // ---------- godot export (E1: feet + oval + cast; A1: one oval) ----------
 export function shadowExport(hub) {
-  const units = {}, scale = {};
+  const units = {}, scale = {}, names = {};
   for (const it of Object.values(hub.items)) {
+    if (it.kind === 'character' && cleanName(it.name)) names[it.id] = cleanName(it.name); // owner set 248 round 4 (A1 + B1): Godot shows this name
     if (it.kind === 'character' && it.scale && typeof it.scale === 'object') { // set 246 team tab: screen px per picture px in the 1920x1061 battle view
       const sz = it.scale.size;
       scale[it.id] = { k: num(it.scale.k, 0.05, 8, 1), size: Array.isArray(sz) ? [Math.round(num(sz[0], 1, 8192, 1)), Math.round(num(sz[1], 1, 8192, 1))] : [0, 0] };
@@ -201,13 +226,15 @@ export function shadowExport(hub) {
     units,
     scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) unless unlocked; offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
     scale,
+    names_note: 'set 248 asset-hub still step: display name per creature; Godot uses it in place of the game.json name (screens + messages), the save data hash stays on the game.json names.',
+    names,
   };
 }
 
 function doExport(hub) {
   const out = shadowExport(hub);
   fs.writeFileSync(SHADOW_OUT, JSON.stringify(out, null, 1) + '\n');
-  return { file: path.relative(ROOT, SHADOW_OUT).replaceAll('\\', '/'), units: Object.keys(out.units).length };
+  return { file: path.relative(ROOT, SHADOW_OUT).replaceAll('\\', '/'), units: Object.keys(out.units).length, names: Object.keys(out.names).length };
 }
 
 // ---------- one ★ per slot (owner set 241) ----------
@@ -331,6 +358,7 @@ async function handle(req, res) {
   if (req.method === 'GET' && u.pathname === '/api/hub') return send(res, 200, readHub());
   if (req.method === 'GET' && u.pathname === '/api/library') return send(res, 200, libraryList());
   if (req.method === 'GET' && u.pathname === '/api/job') return send(res, 200, job || {});
+  if (req.method === 'GET' && u.pathname === '/api/game') return send(res, 200, gameInfo());
 
   if (req.method === 'POST' && u.pathname === '/api/frames') {
     // runs local programs: demand our own page's Origin (a POST with no Origin is refused here, unlike the file APIs)

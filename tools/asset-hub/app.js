@@ -501,7 +501,7 @@ function renderItem(m, it) {
     m.append(bar);
   }
   if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
-  if (isChar && ui.step === 'still') m.append(checkBar(it));
+  if (isChar && ui.step === 'still') m.append(charInfo(it), checkBar(it));
   if (ui.step === 'prompt') { // image prompt, then the Veo input picture + video prompt underneath
     renderPrompt(m, it);
     if (isChar) { m.append(h('h3', { class: 'sect' }, 'ภาพส่ง Veo + พรอมต์วิดีโอ')); m.append(veoPanel(it)); renderSlot(m, it, 'veoin'); }
@@ -611,6 +611,35 @@ function renderSlot(m, it, slot) {
   else group(STEPS.find((x) => x[0] === slot)?.[1] || 'รอบ', rs, emptyText(slot));
   work.append(left, right);
   m.append(work);
+}
+// owner set 248 round 4: name (editable, Godot shows it after "ส่งค่าเข้า Godot") + the game's skill texts, read-only
+let gameInfo = null;
+function charInfo(it) {
+  const g = gameInfo?.[it.id];
+  const lv = h('span', { class: 'small faint' });
+  const orig = h('span', { class: 'small dim' });
+  const back = h('button', { class: 'ghost', title: 'ใช้ชื่อเดิมจากข้อมูลเกม', onclick: () => { it.name = g.name; inp.value = g.name; sync(); saveSoon(); render(); } }, 'คืนชื่อเดิม');
+  const inp = h('input', { type: 'text', class: 'nameIn', maxlength: 24, value: it.name || '', 'aria-label': 'ชื่อตัวละคร',
+    oninput: (e) => { it.name = e.target.value; sync(); saveSoon(); }, onchange: () => { it.name = (it.name || '').trim(); inp.value = it.name; sync(); render(); } });
+  function sync() {
+    lv.textContent = `${[...(it.name || '')].length}/24`;
+    const diff = g && g.name && (it.name || '').trim() !== g.name;
+    orig.textContent = diff ? `ชื่อเดิมในเกม: ${g.name}` : ''; back.hidden = !diff;
+  }
+  sync();
+  const skills = h('div', { class: 'skills' });
+  if (!gameInfo) skills.append(h('span', { class: 'small faint' }, 'กำลังโหลดสกิล…'));
+  else if (!g) skills.append(h('span', { class: 'small faint' }, 'ตัวนี้ยังไม่มีในข้อมูลเกม'));
+  else if (!g.skills.length) skills.append(h('span', { class: 'small faint' }, 'ไม่มีสกิล'));
+  else for (const t of g.skills) {
+    const same = t.every((x) => x === t[0]);
+    skills.append(h('div', { class: 'skill' }, same ? h('div', {}, t[0]) : t.map((x, i) => h('div', {}, h('b', { class: 'lv' }, `Lv${i + 1}`), ' ', x))));
+  }
+  return h('div', { class: 'charinfo' },
+    h('div', { class: 'row' }, h('label', { class: 'lbl' }, 'ชื่อ'), inp, lv, orig, back, h('span', { class: 'sp' }),
+      g ? h('span', { class: 'small dim' }, `${g.tribe}${g.rarity ? ' · ' + g.rarity : ''}`) : null),
+    h('div', { class: 'small faint' }, 'Godot ใช้ชื่อนี้หลังกด "ส่งค่าเข้า Godot" ด้านบน · สกิลมาจากข้อมูลเกม (แก้ที่นี่ไม่ได้)'),
+    h('div', { class: 'lbl' }, 'สกิล'), skills);
 }
 // owner set 248: the one picture every page (team, shadow, icon, frames, Godot) uses, always shown at the top of the still step
 function usedBanner(it, used, sel) {
@@ -772,7 +801,7 @@ function roundRow(it, r, isSel) {
       h('div', { class: 'acts' },
         h('button', { class: r.star ? 'starred' : '', 'aria-pressed': String(!!r.star), title: r.star ? 'รอบนี้คือตัวที่ใช้อยู่ กดอีกครั้งเพื่อเลิกใช้' : 'ใช้รอบนี้เป็นตัวหลัก (คัดลอกเข้าคลังถาวร)', onclick: () => star(it, r) }, r.star ? '★ ใช้อยู่' : 'ใช้รอบนี้'),
         h('label', { class: 'small chk' }, h('input', { type: 'checkbox', checked: ui.cmp.includes(r.id), onchange: (e) => { ui.cmp = e.target.checked ? [...ui.cmp, r.id].slice(-2) : ui.cmp.filter((x) => x !== r.id); render(); } }), 'เทียบ'),
-        r.star && !r.library && !String(r.file).startsWith('lib/') ? h('span', { class: 'faint small', title: 'จะคัดลอกเข้าคลังถาวรตอนกด "ส่งค่าเงา + ขนาดเข้า Godot"' }, 'ยังไม่เข้าคลัง') : null),
+        r.star && !r.library && !String(r.file).startsWith('lib/') ? h('span', { class: 'faint small', title: 'จะคัดลอกเข้าคลังถาวรตอนกด "ส่งค่าเข้า Godot"' }, 'ยังไม่เข้าคลัง') : null),
       more));
 }
 // ลบ: removes an unstarred round + its file in art/hub/files (a still takes its unstarred cut with it).
@@ -894,7 +923,7 @@ function renderShadow(m, it) {
       h('button', { class: 'ghost', onclick: () => { if (editK != null) { const k = editK; delete ov[k]; editK = null; s = base; commit(); editFrame(k); return; } s = JSON.parse(JSON.stringify(SHADOW_DEFAULT)); if (frames[0]) s.feet = guessFeet(frames[0]); commit(); sync(); draw(); } }, 'คืนค่าเริ่มต้น')),
     h('h3', {}, 'มุมกล้องที่ใช้ดู'), pitchSel,
     frames.length > 1 || src.slot === 'frames' ? h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุดท่าหายใจ')) : '', // '' not null: DOM append prints null
-    h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเงาเข้า Godot" ด้านบนเมื่อปรับครบ`));
+    h('p', { class: 'small faint' }, `ตั้งบนภาพ: ${src.file.split('/').pop()} · กด "ส่งค่าเข้า Godot" ด้านบนเมื่อปรับครบ`));
   function sync() { for (const f of Object.values(vals)) f(); feetOut.textContent = `ตำแหน่งในภาพ x ${(feetPic()[0] * 100).toFixed(1)}% · เส้นพื้น y ${(s.feet[1] * 100).toFixed(1)}% · ภาพ ${size[0]}×${size[1]} px`; }
   // geometry (canvas px)
   const geo = () => {
@@ -1887,7 +1916,7 @@ function renderTeam(m) {
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
     undoBtn, redoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Q/E หมุน · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Q/E หมุน · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
@@ -1941,6 +1970,7 @@ function newItemDialog() {
 document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => { ui.tab = b.dataset.tab; if (ui.tab === 'chars' || ui.tab === 'other') { const it = hub.items[ui.item]; if (it && (it.kind !== 'character') !== (ui.tab === 'other')) ui.item = null; } render(); }));
 $('search').addEventListener('input', (e) => { ui.railQ = e.target.value; renderRail(); });
 $('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
-$('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); if (r.library) { hub = await api('/api/hub'); render(); } toast(`เขียน ${r.file} แล้ว (${r.units} ตัว)${r.library ? ` · เก็บเข้าคลังถาวร ${r.library} ไฟล์` : ''}`); } catch (e) { toast(e.message); } });
+$('exportBtn').addEventListener('click', async () => { try { const r = await api('/api/export', { method: 'POST' }); if (r.library) { hub = await api('/api/hub'); render(); } toast(`เขียน ${r.file} แล้ว (เงา ${r.units} ตัว · ชื่อ ${r.names} ตัว)${r.library ? ` · เก็บเข้าคลังถาวร ${r.library} ไฟล์` : ''}`); } catch (e) { toast(e.message); } });
 $('dlg').addEventListener('click', (e) => { if (e.target === $('dlg') && !$('dlg').classList.contains('pxed-dlg')) $('dlg').close(); }); // the pixel editor closes only by its own buttons
+api('/api/game').then((j) => { gameInfo = j; if (hub) render(); }).catch(() => { gameInfo = {}; });
 api('/api/hub').then((j) => { hub = j; render(); pollJob(); }).catch((e) => { $('main').append(h('p', { class: 'bad' }, 'โหลดข้อมูลไม่ได้: ' + e.message)); });
