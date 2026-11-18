@@ -351,7 +351,7 @@ function render() {
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === ui.tab));
   const open = hub.queue.filter((q) => q.state === 'open').length;
   $('qCount').textContent = open ? String(open) : '';
-  $('rail').hidden = ui.tab === 'library' || ui.tab === 'queue';
+  $('rail').hidden = ui.tab === 'library' || ui.tab === 'queue' || ui.tab === 'team';
   document.querySelector('.shell').style.gridTemplateColumns = $('rail').hidden ? '1fr' : '';
   renderRail();
   const m = $('main'); m.replaceChildren();
@@ -359,6 +359,7 @@ function render() {
   document.documentElement.style.setProperty('--tribe', it && it.kind === 'character' ? tribeVar(it.tribe) : 'var(--dim)');
   if (ui.tab === 'library') return renderLibrary(m);
   if (ui.tab === 'queue') return renderQueue(m);
+  if (ui.tab === 'team') return renderTeam(m);
   if (it && (ui.tab === 'other') === (it.kind !== 'character')) return renderItem(m, it);
   renderBoard(m);
 }
@@ -980,6 +981,119 @@ function renderQueue(m) {
   const section = (title, list) => { if (list.length) m.append(h('h3', {}, `${title} (${list.length})`), ...list.map(card)); };
   section('รอ Claude', open); section('เสร็จแล้ว', done); section('ยกเลิก', cancel);
 }
+// ---------- team + size (owner set 246: A scene on/off · B1 free slider + pixel snaps · C1 saved per creature + Godot export · D1 our 6, any slot changeable) ----------
+// Background + slot feet points come from the Godot battle test (automon-scratch g/tests/s240_cuts.gd TEAMDUMP=1, 1920×1061, our half).
+// Slot k = the game's row*2+lane on our side (row 0 = next to the middle, lane 0 = back, 1 = front).
+const TEAM_BG = 'hub/_team/arena_battle_1920x1061.png', TEAM_W = 1920, TEAM_H = 1061;
+const TEAM_SLOTS = [[0.3607, 0.6311], [0.3907, 0.8079], [0.2493, 0.6311], [0.2449, 0.8079], [0.1379, 0.6311], [0.0991, 0.8079]];
+const TEAM_IDS = ['HL-1', 'PL-1', 'WY-1', 'PT-1', 'SF-1', 'WN-1'];
+const TEAM_SNAPS = [1, 1.5, 2, 2.5, 3];
+const TEAM_GRID = [[4, 2, 0], [5, 3, 1]]; // cards laid out like the screen: back row on top, left to right
+// scale k = screen px per picture px in the 1920×1061 battle view (1 = the picture at its own size); pixel sprites look even at whole/half steps
+const teamDefaultK = (hgt) => (hgt <= 256 ? 2 : +(180 / hgt).toFixed(3));
+function teamCfg() {
+  const t = hub.settings.team && typeof hub.settings.team === 'object' ? hub.settings.team : (hub.settings.team = {});
+  if (!Array.isArray(t.ids) || t.ids.length !== 6) t.ids = TEAM_IDS.slice();
+  if (typeof t.showBg !== 'boolean') t.showBg = true;
+  return t;
+}
+// the picture the game will show: the cut of the starred form-1 still, else that still
+function teamRound(it) {
+  if (!it) return null;
+  const st = pick(it, 'still', 1) || latest(it, 'still', 1);
+  return cutOf(it, st) || st;
+}
+const teamSprCache = new Map();
+function teamSprite(r) {
+  if (!teamSprCache.has(r.id)) teamSprCache.set(r.id, loadImg(r.file).then((img) => {
+    const c = keyed(img), p = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (p[(y * c.width + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0) return null;
+    const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+    o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+    return { c: o, w: img.naturalWidth, h: img.naturalHeight };
+  }).catch(() => null));
+  return teamSprCache.get(r.id);
+}
+function renderTeam(m) {
+  const t = teamCfg();
+  if (ui.teamSel == null) ui.teamSel = 1;
+  const chars = Object.values(hub.items).filter((it) => it.kind === 'character');
+  const cv = h('canvas', { width: TEAM_W, height: TEAM_H, class: 'team-cv' + (ui.teamFull ? ' full' : ''), 'aria-label': 'ทีมจำลอง 6 ช่องบนฉากต่อสู้' });
+  const wrap = h('div', { class: 'team-wrap' + (ui.teamFull ? ' full' : '') }, cv);
+  const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null);
+  let bg = null;
+  const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' ? it.scale.k : teamDefaultK(s ? s.h : 180));
+  function draw() {
+    const g = cv.getContext('2d');
+    g.imageSmoothingEnabled = true;
+    if (t.showBg && bg) g.drawImage(bg, 0, 0, TEAM_W, TEAM_H);
+    else { g.fillStyle = '#2a2d33'; g.fillRect(0, 0, TEAM_W, TEAM_H); g.strokeStyle = '#3a3e46'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, TEAM_H * 0.63); g.lineTo(TEAM_W, TEAM_H * 0.63); g.moveTo(0, TEAM_H * 0.81); g.lineTo(TEAM_W, TEAM_H * 0.81); g.stroke(); }
+    g.imageSmoothingEnabled = false;
+    const order = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[a][1] - TEAM_SLOTS[b][1]); // back row first
+    for (const k of order) {
+      const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
+      const fx = TEAM_SLOTS[k][0] * TEAM_W, fy = TEAM_SLOTS[k][1] * TEAM_H;
+      boxes[k] = null;
+      if (!s) { g.fillStyle = 'rgba(255,255,255,0.25)'; g.beginPath(); g.ellipse(fx, fy, 50, 14, 0, 0, Math.PI * 2); g.fill(); continue; }
+      const kk = kOf(it, s), w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk), x = Math.round(fx - w / 2), y = Math.round(fy - hh);
+      g.save();
+      if (!r.flip) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // our side faces right: pictures face left, flip ones are already mirrored
+      else g.drawImage(s.c, x, y, w, hh);
+      g.restore();
+      boxes[k] = [x, y, w, hh];
+    }
+    const b = boxes[ui.teamSel];
+    if (b) { g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 4, b[1] - 4, b[2] + 8, b[3] + 8); g.restore(); }
+  }
+  const hit = (e) => {
+    const rc = cv.getBoundingClientRect(), x = (e.clientX - rc.left) * TEAM_W / rc.width, y = (e.clientY - rc.top) * TEAM_H / rc.height;
+    const order = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[b][1] - TEAM_SLOTS[a][1]); // front first
+    return order.find((k) => boxes[k] && x >= boxes[k][0] && x <= boxes[k][0] + boxes[k][2] && y >= boxes[k][1] && y <= boxes[k][1] + boxes[k][3]);
+  };
+  cv.addEventListener('click', (e) => { const k = hit(e); if (k != null) { ui.teamSel = k; syncCards(); draw(); } });
+  cv.addEventListener('wheel', (e) => { const k = hit(e); if (k == null) return; e.preventDefault(); ui.teamSel = k; const it = hub.items[t.ids[k]]; setK(k, kOf(it, sprs[k]) * (e.deltaY < 0 ? 1.03 : 1 / 1.03)); }, { passive: false });
+  function setK(k, v) {
+    const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
+    if (!it || !s) return;
+    it.scale = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id };
+    syncCards(); draw(); saveSoon();
+  }
+  const cards = h('div', { class: 'team-cards' }), cardEls = [];
+  function syncCards() {
+    cardEls.forEach((c, k) => {
+      if (!c) return;
+      const it = hub.items[t.ids[k]], s = sprs[k], kk = kOf(it, s);
+      c.el.classList.toggle('on', ui.teamSel === k);
+      c.range.value = String(kk); c.range.disabled = !s;
+      c.val.textContent = s ? `×${kk.toFixed(2)} · สูง ${Math.round(s.c.height * kk)} px บนจอ` : (it ? 'ยังไม่มีภาพนิ่ง' : 'ช่องว่าง');
+      c.warn.textContent = s && it.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h) ? 'ขนาดนี้ตั้งไว้กับภาพเก่า ลองปรับใหม่' : '';
+      c.snaps.forEach(([v, bt]) => bt.classList.toggle('on', !!s && Math.abs(kk - v) < 0.005));
+    });
+  }
+  for (const row of TEAM_GRID) for (const k of row) {
+    const sel = h('select', { 'aria-label': `ตัวละครช่อง ${k + 1}`, onchange: (e) => { t.ids[k] = e.target.value; ui.teamSel = k; saveSoon(); loadSlot(k).then(() => { syncCards(); draw(); }); } },
+      h('option', { value: '' }, '— ว่าง —'), chars.map((it) => h('option', { value: it.id, selected: t.ids[k] === it.id }, `${it.id} ${it.name || ''}`)));
+    const range = h('input', { type: 'range', min: 0.05, max: 4, step: 0.01, 'aria-label': `ขนาดช่อง ${k + 1}`, oninput: (e) => { ui.teamSel = k; setK(k, Number(e.target.value)); } });
+    const val = h('div', { class: 'small' }), warn = h('div', { class: 'small warn' });
+    const snaps = TEAM_SNAPS.map((v) => [v, h('button', { class: 'ghost', onclick: () => { ui.teamSel = k; setK(k, v); } }, `${v}×`)]);
+    const reset = h('button', { class: 'ghost', title: 'กลับเป็นค่าเริ่มต้น', onclick: () => { const it = hub.items[t.ids[k]]; if (!it) return; delete it.scale; ui.teamSel = k; syncCards(); draw(); saveSoon(); } }, 'รีเซ็ต');
+    const el = h('div', { class: 'panel team-card', onclick: () => { if (ui.teamSel !== k) { ui.teamSel = k; syncCards(); draw(); } } },
+      h('div', { class: 'small dim' }, `ช่อง ${k + 1} · ${k % 2 ? 'แถวหน้า' : 'แถวหลัง'}`), sel, range, val, h('div', { class: 'tools snaps' }, snaps.map((x) => x[1]), reset), warn);
+    cardEls[k] = { el, range, val, warn, snaps };
+    cards.append(el);
+  }
+  async function loadSlot(k) { const r = teamRound(hub.items[t.ids[k]]); sprs[k] = r && isImage(r.file) ? await teamSprite(r) : null; }
+  m.append(h('div', { class: 'row' }, h('h2', {}, 'จัดทีม · ปรับขนาด'), h('span', { class: 'sp' }),
+    h('button', { class: t.showBg ? 'on' : 'ghost', onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, t.showBg ? 'ฉาก: เปิด' : 'ฉาก: ปิด'),
+    h('button', { class: ui.teamFull ? 'on' : 'ghost', onclick: () => { ui.teamFull = !ui.teamFull; render(); } }, ui.teamFull ? 'ขนาดจริง 1:1' : 'พอดีจอ')));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครเพื่อเลือก · หมุนล้อเมาส์บนตัวเพื่อย่อ/ขยาย · ปุ่ม 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด · ขนาดจำต่อตัวละคร (ตัวเดียวกันอยู่สองช่องจะเปลี่ยนพร้อมกัน) · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(wrap, cards);
+  syncCards(); draw();
+  Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => {}), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { syncCards(); draw(); });
+}
+
 let libCache = null;
 async function renderLibrary(m) {
   m.append(h('h2', {}, 'คลังเดิม (art/library)'), h('p', { class: 'dim' }, 'ไฟล์ทุกชิ้นที่อยู่ในคลังถาวร อ่านอย่างเดียว ไฟล์ที่นี่ไม่ถูกลบหรือเขียนทับ · เลือกภาพฉากเพื่อใช้เป็นพื้นหลังตอนดูตัวละครในฉากและตอนตั้งเงา'));

@@ -174,3 +174,17 @@ a.btn.primary { background: var(--tribe); color: #15181d; border-color: var(--tr
 a.btn:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 button.danger:not(:disabled) { color: #ff8a80; }
 .flipx { transform: scaleX(-1); }
+
+/* team + size tab (set 246) */
+.team-wrap { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin: 8px 0 12px; background: #161a20; }
+.team-wrap.full { overflow: auto; max-height: 80vh; }
+.team-cv { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: pointer; }
+.team-cv.full { width: 1920px; max-width: none; }
+.team-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.team-card { display: flex; flex-direction: column; gap: 6px; cursor: pointer; --tribe: #ffd34d; }
+.team-card.on { border-color: #ffd34d; box-shadow: 0 0 0 1px #ffd34d inset; }
+.team-card input[type=range] { width: 100%; }
+.team-card .snaps button { min-height: 28px; padding: 2px 8px; }
+@media (max-width: 760px) { .team-cards { grid-template-columns: 1fr; } }
+.team-card .warn { color: var(--warn); }
+.team-card .snaps button.on { background: #ffd34d; color: #15181d; border-color: #ffd34d; font-weight: 600; }
