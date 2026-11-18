@@ -986,7 +986,7 @@ function renderShadow(m, it) {
 // ---------- pixel editor (set 246, owner spec) ----------
 // Small pictures only (≤ 256 px). Left click = paint, right click = erase (owner swapped it), hold + drag = keep painting/erasing along the path.
 // Hold Space = colour picker: the colour under the pointer is picked as you point (no click); let go of Space = back to normal. Saved as a NEW round
-// (the original stays); the new round is not starred — the owner presses "ใช้รอบนี้" when happy.
+// (the original stays) and starred = used right away (owner); the old round can be starred back from the list.
 const PXED_MAX = 256;
 async function pixelEditor(it, r) {
   let img;
@@ -1017,7 +1017,7 @@ async function pixelEditor(it, r) {
   const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap2', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกขวา = ใส่สี');
   const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
   const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
-  const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกเป็นรอบใหม่');
+  const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกและใช้เลย');
   const closeB = h('button', { onclick: () => close() }, 'ปิด');
   function setColour(c) { colour = c; syncUi(); }
   function palette() { // the picture's own colours, most used first
@@ -1124,14 +1124,14 @@ async function pixelEditor(it, r) {
     try {
       sg.putImageData(data, 0, 0);
       const blob = await new Promise((ok) => src.toBlob(ok, 'image/png'));
-      const q = new URLSearchParams({ item: it.id, slot: r.slot, name: (r.orig || r.slot).replace(/\.\w+$/, '') + '_edit.png', nostar: '1' });
+      const q = new URLSearchParams({ item: it.id, slot: r.slot, name: (r.orig || r.slot).replace(/\.\w+$/, '') + '_edit.png' }); // newest upload = ★ used (owner: use the edit right away)
       if (it.kind === 'character') q.set('form', String(r.form || ui.form));
       if (r.slot === 'cut' && r.from) q.set('from', r.from);
       if (r.move) q.set('move', r.move);
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
       const nr = hub.items[it.id].rounds.at(-1);
       if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; await save(); ui.sel = r.slot === 'cut' ? ui.sel : nr.id; }
-      dirty = false; toast('บันทึกเป็นรอบใหม่แล้ว (ยังไม่ได้ติดดาว กด "ใช้รอบนี้" เมื่อพอใจ)'); close(true); render();
+      dirty = false; toast('บันทึกแล้ว ใช้ภาพนี้แทนแล้ว (ภาพเดิมยังอยู่ในรายการ กด "ใช้รอบนี้" เพื่อกลับไปใช้)'); close(true); render();
     } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
   }
   function zoomTo(nz) { // keep the middle of what you were looking at in the middle
