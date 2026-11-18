@@ -997,7 +997,8 @@ async function pixelEditor(it, r) {
   const sg = src.getContext('2d', { willReadFrequently: true }); sg.drawImage(img, 0, 0);
   let data = sg.getImageData(0, 0, W, H);
   const undoS = [], redoS = [];
-  let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null;
+  let colour = [0, 0, 0, 255], tool = 'pen', grid = true, picking = false, dirty = false, stroke = null, hover = null, lastDown = 0;
+  let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap') === '1'; } catch { /* storage off */ }
   const fitZ = () => Math.max(2, Math.min(16, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
   let z = fitZ();
   const cv = h('canvas', { class: 'pxed-cv', tabindex: 0, 'aria-label': 'ตัวแก้พิกเซล คลิกขวาใส่สี คลิกซ้ายลบ กด Space ค้างแล้วคลิกเพื่อดูดสี' });
@@ -1008,6 +1009,12 @@ async function pixelEditor(it, r) {
   const modeEl = h('div', { class: 'pxed-mode' }), posEl = h('span', { class: 'small dim' });
   const zEl = h('b', {});
   const undoB = h('button', { title: 'Ctrl+Z', onclick: () => undo() }, 'ย้อน'), redoB = h('button', { title: 'Ctrl+Y', onclick: () => redo() }, 'ทำซ้ำ');
+  // plain backdrops that stand out against the sprite (owner: black, white, bright green, bright pink)
+  const PXBG = [['checker', 'ตาราง', ''], ['black', 'ดำ', '#000000'], ['white', 'ขาว', '#ffffff'], ['green', 'เขียว', '#00ff00'], ['pink', 'ชมพู', '#ff00ff']];
+  let bgK = 'checker'; try { bgK = localStorage.getItem('pxedBg') || 'checker'; } catch { /* storage off */ }
+  const stageEl = h('div', { class: 'pxed-stage' }, cv);
+  const bgSeg = h('span', { class: 'seg' }, PXBG.map(([k, l, c]) => h('button', { 'data-k': k, onclick: () => { bgK = k; try { localStorage.setItem('pxedBg', k); } catch { /* storage off */ } syncUi(); paint(); } }, c ? [h('i', { class: 'pxed-dot', style: `--sw:${c}` }), l] : l)));
+  const swapSw = h('button', { class: 'switch', role: 'switch', title: 'สำหรับเมาส์/ทัชแพดที่คลิกขวาไม่สะดวก', onclick: () => { swapBtn = !swapBtn; try { localStorage.setItem('pxedSwap', swapBtn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'สลับปุ่ม: คลิกซ้าย = ใส่สี');
   const toolSeg = h('span', { class: 'seg' }, [['pen', 'ดินสอ'], ['fill', 'ถังเท']].map(([k, l]) => h('button', { 'data-k': k, onclick: () => { tool = k; syncUi(); } }, l)));
   const gridSw = h('button', { class: 'switch', role: 'switch', onclick: () => { grid = !grid; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เส้นตาราง');
   const saveB = h('button', { class: 'primary', onclick: () => saveEdit() }, 'บันทึกเป็นรอบใหม่');
@@ -1025,7 +1032,12 @@ async function pixelEditor(it, r) {
     toolSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === tool; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     gridSw.classList.toggle('is-on', grid); gridSw.setAttribute('aria-checked', String(grid));
     zEl.textContent = `×${z}`; undoB.disabled = !undoS.length; redoB.disabled = !redoS.length; saveB.disabled = !dirty;
-    modeEl.textContent = picking ? 'โหมดดูดสี · คลิกที่เม็ดสีที่ต้องการ · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? 'คลิกขวา = เทสีพื้นที่ติดกัน · คลิกซ้าย = ลบ · Space ค้าง = ดูดสี' : 'คลิกขวา = ใส่สี · คลิกซ้าย = ลบ · ลากค้างได้ · Space ค้าง = ดูดสี';
+    const [pb, eb] = swapBtn ? ['คลิกซ้าย', 'คลิกขวา'] : ['คลิกขวา', 'คลิกซ้าย'];
+    modeEl.textContent = picking ? 'โหมดดูดสี · คลิกที่เม็ดสีที่ต้องการ · ปล่อย Space เพื่อกลับ' : tool === 'fill' ? `${pb} = เทสีพื้นที่ติดกัน · ${eb} = ลบ · Space ค้าง = ดูดสี` : `${pb} = ใส่สี · ${eb} = ลบ · ลากค้างได้ · Space ค้าง = ดูดสี`;
+    const bc = (PXBG.find((x) => x[0] === bgK) || PXBG[0])[2];
+    stageEl.style.background = bc || ''; stageEl.classList.toggle('plain', !!bc);
+    bgSeg.querySelectorAll('button').forEach((b) => { const on = b.dataset.k === bgK; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    swapSw.classList.toggle('is-on', swapBtn); swapSw.setAttribute('aria-checked', String(swapBtn));
     modeEl.classList.toggle('picking', picking); cv.classList.toggle('picking', picking);
   }
   function paint() {
@@ -1034,12 +1046,16 @@ async function pixelEditor(it, r) {
     g.clearRect(0, 0, cv.width, cv.height);
     sg.putImageData(data, 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
     if (grid && z >= 4) {
-      g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 1; g.beginPath();
+      g.strokeStyle = bgK === 'white' || bgK === 'green' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.14)'; g.lineWidth = 1; g.beginPath();
       for (let x = 1; x < W; x++) { g.moveTo(x * z + 0.5, 0); g.lineTo(x * z + 0.5, H * z); }
       for (let y = 1; y < H; y++) { g.moveTo(0, y * z + 0.5); g.lineTo(W * z, y * z + 0.5); }
       g.stroke();
     }
-    if (hover) { g.strokeStyle = picking ? '#ff5ad1' : '#ffd34d'; g.lineWidth = 2; g.strokeRect(hover[0] * z + 1, hover[1] * z + 1, z - 2, z - 2); }
+    if (hover) {
+      if (!picking && !stroke) { g.fillStyle = hex(colour); g.fillRect(hover[0] * z, hover[1] * z, z, z); } // preview of the paint colour under the pointer
+      g.strokeStyle = picking ? '#ff5ad1' : '#fff'; g.lineWidth = 2; g.strokeRect(hover[0] * z + 1, hover[1] * z + 1, z - 2, z - 2);
+      g.strokeStyle = '#000'; g.lineWidth = 1; g.strokeRect(hover[0] * z - 0.5, hover[1] * z - 0.5, z + 1, z + 1);
+    }
   }
   const at = (e) => { const rc = cv.getBoundingClientRect(); const x = Math.floor((e.clientX - rc.left) / rc.width * W), y = Math.floor((e.clientY - rc.top) / rc.height * H); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; };
   const px = (x, y) => (y * W + x) * 4;
@@ -1060,13 +1076,21 @@ async function pixelEditor(it, r) {
   function undo() { if (!undoS.length) return; redoS.push(data); data = undoS.pop(); dirty = true; palette(); syncUi(); paint(); }
   function redo() { if (!redoS.length) return; undoS.push(data); data = redoS.pop(); dirty = true; palette(); syncUi(); paint(); }
   function pick(p) { const i = px(...p); if (data.data[i + 3] === 0) { toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
-  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (Date.now() - lastDown < 400) return; // a real right press already painted
+    const p = at(e); if (!p) return;
+    if (picking) { pick(p); return; }
+    const c = swapBtn ? [0, 0, 0, 0] : colour;
+    snapshot(); if (!swapBtn && tool === 'fill') fill(p[0], p[1], c); else setPx(p[0], p[1], c);
+    dirty = true; palette(); syncUi(); paint();
+  });
   cv.addEventListener('pointerdown', (e) => {
     const p = at(e); if (!p) return;
-    e.preventDefault(); cv.focus();
+    e.preventDefault(); cv.focus(); lastDown = Date.now();
     if (picking) { pick(p); return; }
     if (e.button !== 0 && e.button !== 2) return;
-    const erase = e.button === 0, c = erase ? [0, 0, 0, 0] : colour;
+    const erase = (e.button === 0) !== swapBtn, c = erase ? [0, 0, 0, 0] : colour;
     snapshot();
     if (!erase && tool === 'fill') { fill(p[0], p[1], c); dirty = true; palette(); syncUi(); paint(); return; }
     stroke = { c, last: p }; setPx(p[0], p[1], c); dirty = true;
@@ -1084,9 +1108,9 @@ async function pixelEditor(it, r) {
     if (e.target.closest?.('input, select, textarea')) return;
     if (e.code === 'Space') { e.preventDefault(); if (e.type === 'keydown' && !picking) { picking = true; syncUi(); paint(); } if (e.type === 'keyup') { picking = false; syncUi(); paint(); } return; }
     if (e.type !== 'keydown') return;
-    const k = e.key.toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-    else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+    const k = e.code; // physical key: a Thai keyboard layout types ผ / ั on Z / Y
+    if ((e.ctrlKey || e.metaKey) && k === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.ctrlKey || e.metaKey) && (k === 'KeyY' || (k === 'KeyZ' && e.shiftKey))) { e.preventDefault(); redo(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
@@ -1113,12 +1137,13 @@ async function pixelEditor(it, r) {
   $('dlgBody').replaceChildren(
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'แก้ภาพตามไฟล์จริง (หันซ้าย) · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },
-      h('div', { class: 'pxed-stage' }, cv),
+      stageEl,
       h('div', { class: 'pxed-side' },
         modeEl,
         h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
         h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
-        h('div', { class: 'lbl' }, 'เครื่องมือคลิกขวา'), toolSeg,
+        h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg,
+        h('div', { class: 'lbl' }, 'เครื่องมือใส่สี'), toolSeg, swapSw,
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
         h('div', { class: 'row' }, undoB, redoB, posEl))));
   dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);
@@ -1219,7 +1244,7 @@ function teamSprite(r) {
 // then dragged freely, even floating; slot buttons in the panel swap by drag for every creature. The feet point is the SAME value
 // as the shadow tab (items[ID].shadow.feet, owner B1), so the shadow keeps matching the feet. No wheel sizing; Ctrl+Z undo.
 const TEAM_CROP = { x: 0, y: 330, w: 1100, h: 731 }; // our half of the 1920×1061 battle view
-const teamUndo = [];
+const teamUndo = [], teamRedo = [];
 let teamApi = null; // keyboard hooks of the open team tab
 function teamSnap() {
   const t = teamCfg(), ids = new Set(t.ids.filter(Boolean));
@@ -1228,7 +1253,7 @@ function teamSnap() {
   for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, offset: it.offset || null, free: !!it.free, shadow: it.shadow || null }; }
   return JSON.stringify({ ids: t.ids.slice(), items });
 }
-function teamPush() { const s = teamSnap(); if (teamUndo[teamUndo.length - 1] !== s) teamUndo.push(s); if (teamUndo.length > 60) teamUndo.shift(); }
+function teamPush() { const s = teamSnap(); if (teamUndo[teamUndo.length - 1] !== s) teamUndo.push(s); if (teamUndo.length > 60) teamUndo.shift(); teamRedo.length = 0; }
 function teamRestore(s) {
   const o = JSON.parse(s), t = teamCfg(); t.ids = o.ids;
   for (const it of Object.values(hub.items)) {
@@ -1397,8 +1422,10 @@ function renderTeam(m) {
     change(() => { it.offset = { x: Math.max(-400, Math.min(400, ox + dx)), y: Math.max(-300, Math.min(300, oy + dy)) }; }, true);
     return true;
   }
-  function undo() { if (!teamUndo.length) { toast('ไม่มีอะไรให้ย้อนกลับ'); return; } teamRestore(teamUndo.pop()); Promise.all([0, 1, 2, 3, 4, 5].map(loadSlot)).then(() => { sync(); draw(); }); saveSoon(); toast('ย้อนกลับแล้ว'); }
-  teamApi = { undo, nudge };
+  function after(msg) { Promise.all([0, 1, 2, 3, 4, 5].map(loadSlot)).then(() => { sync(); draw(); }); sync(); saveSoon(); toast(msg); }
+  function undo() { if (!teamUndo.length) { toast('ไม่มีอะไรให้ย้อนกลับ'); return; } teamRedo.push(teamSnap()); teamRestore(teamUndo.pop()); after('ย้อนกลับแล้ว'); }
+  function redo() { if (!teamRedo.length) { toast('ไม่มีอะไรให้ทำซ้ำ'); return; } teamUndo.push(teamSnap()); teamRestore(teamRedo.pop()); after('ทำซ้ำแล้ว'); }
+  teamApi = { undo, redo, nudge };
   // ---- side panel ----
   const formation = h('div', { class: 'formation', role: 'group', 'aria-label': 'เลือกช่อง ลากปุ่มไปวางบนปุ่มอื่นเพื่อสลับ' });
   const slotBtns = [];
@@ -1422,7 +1449,7 @@ function renderTeam(m) {
   const range = h('input', { type: 'range', min: 0.25, max: 4, step: 0.01, 'aria-label': 'ขนาด', oninput: (e) => setK(Number(e.target.value), true) });
   const snaps = TEAM_SNAPS.map((v) => [v, h('button', { onclick: () => setK(v) }, `${v}×`)]);
   const step = (d) => { const it = cur(); setK(+(kOf(it, sprs[ui.teamSel]) + d).toFixed(2), true); };
-  const undoBtn = h('button', { onclick: undo, title: 'Ctrl+Z' }, 'ย้อนกลับ');
+  const undoBtn = h('button', { onclick: () => undo(), title: 'Ctrl+Z' }, 'ย้อนกลับ'), redoBtn = h('button', { onclick: () => redo(), title: 'Ctrl+Y' }, 'ทำซ้ำ');
   const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.scale) change(() => { delete it.scale; }); } }, 'คืนขนาดเริ่มต้น');
   // position: lock switch (on = locked to the slot centre)
   const lockSw = h('button', { class: 'switch', role: 'switch', onclick: () => { const it = cur(); if (!it) return; change(() => { if (it.free) delete it.free; else it.free = true; }); } }, h('span', { class: 'knob' }), 'ล็อคตำแหน่ง');
@@ -1479,7 +1506,7 @@ function renderTeam(m) {
     feetInfo.textContent = !s ? '' : ui.teamFeet ? 'ลากตัวละครให้เท้าแตะกากบาทชมพู · ปุ่มลูกศรขยับทีละ 1 เม็ด · ใช้ค่าเดียวกับแท็บเงา'
       : feetLinked(it, s, r) ? `ใช้จุดเท้าเดียวกับแท็บเงา (${it.shadow.feet.map((v) => Math.round(v * 100) + '%').join(', ')})`
         : feetOther(it, s, r) ? 'แท็บเงาตั้งจุดเท้าไว้กับภาพอื่น ตอนนี้ใช้ขอบล่างกลางภาพแทน' : 'ยังไม่ได้ตั้ง ใช้ขอบล่างกลางภาพ';
-    undoBtn.disabled = !teamUndo.length;
+    undoBtn.disabled = !teamUndo.length; redoBtn.disabled = !teamRedo.length;
     const same = t.ids.filter((x) => x && x === t.ids[k]).length > 1;
     nameEl.title = same ? 'ตัวนี้อยู่หลายช่อง ขนาด/ตำแหน่งเปลี่ยนพร้อมกันทุกช่อง' : '';
     nameEl.classList.toggle('dup', same);
@@ -1488,8 +1515,8 @@ function renderTeam(m) {
   m.append(h('div', { class: 'row' }, h('h2', {}, 'จัดทีม · ปรับขนาด'), h('span', { class: 'sp' }),
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
-    undoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Ctrl+Z ย้อนกลับ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+    undoBtn, redoBtn));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
@@ -1497,7 +1524,8 @@ function renderTeam(m) {
 // team tab keys (bound once): Ctrl+Z undo, arrows = feet / unlocked position — not while typing in a field
 document.addEventListener('keydown', (e) => {
   if (ui.tab !== 'team' || !teamApi || e.target.closest?.('input, select, textarea')) return;
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); teamApi.undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey) { e.preventDefault(); teamApi.undo(); return; } // physical keys: Thai layout types ผ / ั
+  if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey))) { e.preventDefault(); teamApi.redo(); return; }
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (d) { const n = e.shiftKey ? 10 : 1; if (teamApi.nudge(d[0] * n, d[1] * n)) e.preventDefault(); }
 });

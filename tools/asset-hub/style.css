@@ -293,3 +293,6 @@ dialog.pxed-dlg { width: fit-content; max-width: 96vw; }
 .pxed-sw:hover { outline: 2px solid #fff; }
 .pxed-side input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line); background: none; }
 @media (max-width: 900px) { .pxed { grid-template-columns: 1fr; } }
+.pxed-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--sw); border: 1px solid #fff8; margin-right: 4px; vertical-align: -1px; }
+.pxed-side .seg button { padding-left: 6px; padding-right: 6px; font-size: 13px; }
+.pxed { grid-template-columns: 1fr 290px; }
