@@ -17,14 +17,15 @@
     <button data-tab="library">คลังเดิม</button>
     <button data-tab="queue">งานถึง Claude <b id="qCount"></b></button>
   </nav>
+  <span id="saveState" class="small faint" role="status" aria-live="polite"></span>
   <button id="exportBtn" class="ghost" title="เขียน godot/data/unit_shadows.json จากค่าเงาและขนาดทุกตัว">ส่งค่าเงา + ขนาดเข้า Godot</button>
 </header>
 <div class="shell">
   <aside class="rail" id="rail">
-    <input id="search" type="search" placeholder="ค้นหา ID หรือชื่อ" aria-label="ค้นหา">
-    <div class="chips" id="tribeChips"></div>
-    <select id="statusFilter" aria-label="กรองตามสถานะ"></select>
-    <button id="boardBtn" class="ghost wide">ภาพรวมทุกตัว</button>
+    <button id="boardBtn" class="ghost wide">← กลับภาพรวม</button>
+    <input id="search" type="search" placeholder="ค้นหาเพื่อสลับตัว" aria-label="ค้นหาเพื่อสลับตัว">
+    <div class="chips" id="tribeChips" hidden></div>
+    <select id="statusFilter" aria-label="กรองตามสถานะ" hidden></select>
     <div id="list" class="list"></div>
   </aside>
   <main id="main"></main>
