@@ -42,7 +42,7 @@ Never star for the owner — the owner picks. The page notices the new rev on it
 Owner picks: A scene on/off · B1 free slider + pixel snaps (1× 1.5× 2× 2.5× 3×) · C1 saved per creature + exported · D1 starts with our 6, every slot changeable.
 - Background `art/hub/files/_team/arena_battle_1920x1061.png` (local, ignored) + slot feet points `TEAM_SLOTS` in app.js both come from the Godot battle test: automon-scratch `g/tests/s240_cuts.gd` with `TEAMDUMP=1` (prints `TEAMSLOT k x y` as view fractions, hides every unit). New arena or camera → render again and update both.
 - Picture per slot = cut of the starred form-1 still, else that still; trimmed to its pixels, feet = bottom centre on the slot point; our side faces right (pictures face left; `flip` rounds are already mirrored).
-- Drag a creature (or arrow keys, Shift = 10 px) = `items[ID].offset = {x, y}` screen px in the same view, x toward the foe, y down (clamped ±400 / ±300); exported as `scale[ID].offset`.
+- Positions are locked to the slot centres (owner A1): drag a creature onto another slot = swap the two in `settings.team.ids` (empty slot = move there). Old `items[ID].offset` values are ignored and not exported.
 - `items[ID].scale = {k, size, round}`: k = screen px per picture px in the 1920×1061 battle view; default 2 for pictures ≤ 256 px tall, else 180 px tall. `settings.team = {ids[6], showBg}`.
 - Export adds `scale` {ID: {k, size}} to godot/data/unit_shadows.json (clamped 0.05–8). The game does not read it yet (r38 port: `pixel_size = k × world size of one screen px`, apply only when the texture size matches).
 

@@ -1067,8 +1067,8 @@ function teamSprite(r) {
   }).catch(() => null));
   return teamSprCache.get(r.id);
 }
-// set 246 UI pass: big canvas cropped to our half + one side panel for the picked creature (mini formation, size, position).
-// No mouse-wheel sizing (it fired while scrolling the page); Ctrl+Z undo; arrows nudge the picked one anywhere on this tab.
+// set 246 UI pass: big canvas cropped to our half + one side panel for the picked creature (mini formation, size).
+// Positions are locked to the slot centres (owner pick A1): drag a creature onto another slot to swap the two. No wheel sizing; Ctrl+Z undo.
 const TEAM_CROP = { x: 0, y: 330, w: 1100, h: 731 }; // our half of the 1920×1061 battle view
 const teamUndo = [];
 let teamApi = null; // keyboard hooks of the open team tab
@@ -1096,10 +1096,10 @@ function renderTeam(m) {
   const crop = ui.teamWhole ? { x: 0, y: 0, w: TEAM_W, h: TEAM_H } : TEAM_CROP;
   const cv = h('canvas', { width: crop.w, height: crop.h, class: 'team-cv', tabindex: 0, 'aria-label': 'ทีมจำลอง 6 ช่องบนฉากต่อสู้ คลิกเพื่อเลือก ลากเพื่อย้าย' });
   const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null);
+  let drag = null;
   let bg = null;
   const stale = (it, s) => !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
   const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' && !stale(it, s) ? it.scale.k : teamDefaultK(s ? s.h : 180));
-  const offOf = (it) => (it?.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
   const slotXY = (k) => [TEAM_SLOTS[k][0] * TEAM_W - crop.x, TEAM_SLOTS[k][1] * TEAM_H - crop.y];
   const byDepth = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[a][1] - TEAM_SLOTS[b][1]); // back row first
   function draw() {
@@ -1123,21 +1123,37 @@ function renderTeam(m) {
       const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
       boxes[k] = null;
       if (!s || !it || !r) continue;
-      const [sx, sy] = slotXY(k), [ox, oy] = offOf(it), kk = kOf(it, s);
-      const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk), x = Math.round(sx + ox - w / 2), y = Math.round(sy + oy - hh);
-      g.save();
-      if (!r.flip) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // our side faces right: pictures face left, flip ones are already mirrored
-      else g.drawImage(s.c, x, y, w, hh);
-      g.restore();
+      const [sx, sy] = slotXY(k), kk = kOf(it, s);
+      const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk), x = Math.round(sx - w / 2), y = Math.round(sy - hh);
       boxes[k] = [x, y, w, hh];
+      if (drag?.moved && drag.k === k) continue; // drawn under the pointer below
+      paint(g, s, r, x, y, w, hh);
     }
     const b = boxes[ui.teamSel];
-    if (b) {
-      g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10);
-      const [sx, sy] = slotXY(ui.teamSel), [ox, oy] = offOf(hub.items[t.ids[ui.teamSel]]);
-      if (ox || oy) { g.setLineDash([4, 4]); g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + ox, sy + oy); g.stroke(); }
-      g.restore();
+    if (b && !drag?.moved) { g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 3; g.setLineDash([10, 6]); g.strokeRect(b[0] - 5, b[1] - 5, b[2] + 10, b[3] + 10); g.restore(); }
+    if (drag?.moved && boxes[drag.k]) { // the dragged creature follows the pointer; the slot it would land on lights up
+      const tk = dropSlot();
+      if (tk != null && tk !== drag.k) {
+        const [tx, ty] = slotXY(tk); g.save(); g.fillStyle = 'rgba(255,211,77,0.25)'; g.strokeStyle = '#ffd34d'; g.lineWidth = 4;
+        g.beginPath(); g.ellipse(tx, ty, 60, 18, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.fillStyle = '#ffd34d'; g.font = '600 22px "Leelawadee UI", sans-serif'; g.textAlign = 'center';
+        g.fillText(hub.items[t.ids[tk]] ? `สลับกับช่อง ${tk + 1}` : `ย้ายไปช่อง ${tk + 1}`, tx, ty + 44); g.restore();
+      }
+      const [x, y, w, hh] = boxes[drag.k], it = hub.items[t.ids[drag.k]];
+      g.save(); g.globalAlpha = 0.85; paint(g, sprs[drag.k], teamRound(it), Math.round(x + drag.cur[0] - drag.p0[0]), Math.round(y + drag.cur[1] - drag.p0[1]), w, hh); g.restore();
     }
+  }
+  function paint(g, s, r, x, y, w, hh) {
+    g.save();
+    if (!r.flip) { g.translate(x + w, y); g.scale(-1, 1); g.drawImage(s.c, 0, 0, w, hh); } // our side faces right: pictures face left, flip ones are already mirrored
+    else g.drawImage(s.c, x, y, w, hh);
+    g.restore();
+  }
+  function dropSlot() { // nearest slot to where the dragged creature's feet are now (within reach)
+    const [fx, fy] = slotXY(drag.k), px = fx + drag.cur[0] - drag.p0[0], py = fy + drag.cur[1] - drag.p0[1];
+    let best = null, bd = 170;
+    for (let k = 0; k < 6; k++) { const [x, y] = slotXY(k), d = Math.hypot(x - px, (y - py) * 1.6); if (d < bd) { bd = d; best = k; } }
+    return best;
   }
   const toCv = (e) => { const rc = cv.getBoundingClientRect(); return [(e.clientX - rc.left) * crop.w / rc.width, (e.clientY - rc.top) * crop.h / rc.height]; };
   const hit = (e) => {
@@ -1145,24 +1161,27 @@ function renderTeam(m) {
     return byDepth.slice().reverse().find((k) => boxes[k] && x >= boxes[k][0] && x <= boxes[k][0] + boxes[k][2] && y >= boxes[k][1] && y <= boxes[k][1] + boxes[k][3]);
   };
   function pickSlot(k) { ui.teamSel = k; sync(); draw(); }
-  let drag = null;
   cv.addEventListener('pointerdown', (e) => {
     const k = hit(e); if (k == null) return;
     e.preventDefault(); cv.focus();
     const it = hub.items[t.ids[k]];
-    drag = { k, it, c0: [e.clientX, e.clientY], p0: toCv(e), o0: offOf(it), moved: false };
+    drag = { k, it, c0: [e.clientX, e.clientY], p0: toCv(e), cur: toCv(e), moved: false };
     cv.setPointerCapture(e.pointerId); cv.classList.add('grabbing'); pickSlot(k);
   });
   cv.addEventListener('pointermove', (e) => {
     if (!drag) { cv.classList.toggle('over', hit(e) != null); return; }
     if (!drag.it) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.c0[0], e.clientY - drag.c0[1]) < 6) return; // a click is not a move
-    if (!drag.moved) { teamPush(); drag.moved = true; }
-    const [x, y] = toCv(e);
-    drag.it.offset = { x: Math.max(-400, Math.min(400, Math.round(drag.o0[0] + x - drag.p0[0]))), y: Math.max(-300, Math.min(300, Math.round(drag.o0[1] + y - drag.p0[1]))) };
-    sync(); draw();
+    drag.moved = true; drag.cur = toCv(e); draw();
   });
-  const endDrag = () => { if (drag?.moved) saveSoon(); drag = null; cv.classList.remove('grabbing'); };
+  const endDrag = () => {
+    const d = drag; if (!d) return;
+    const tk = d.moved ? dropSlot() : null; drag = null; cv.classList.remove('grabbing');
+    if (tk != null && tk !== d.k) { // swap the two slots (an empty slot = just move there)
+      change(() => { [t.ids[d.k], t.ids[tk]] = [t.ids[tk], t.ids[d.k]]; [sprs[d.k], sprs[tk]] = [sprs[tk], sprs[d.k]]; ui.teamSel = tk; });
+      toast(hub.items[t.ids[d.k]] ? `สลับช่อง ${d.k + 1} กับช่อง ${tk + 1} แล้ว` : `ย้ายไปช่อง ${tk + 1} แล้ว`);
+    } else draw();
+  };
   cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
   // ---- changes (all go through here: undo snapshot, redraw, save) ----
   let lastPush = 0;
@@ -1172,13 +1191,8 @@ function renderTeam(m) {
     const it = cur(), s = sprs[ui.teamSel], r = teamRound(it); if (!it || !s) return;
     change(() => { it.scale = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id }; }, coalesce);
   }
-  function nudge(dx, dy) {
-    const it = cur(); if (!it || !sprs[ui.teamSel]) return;
-    const [ox, oy] = offOf(it);
-    change(() => { it.offset = { x: Math.max(-400, Math.min(400, ox + dx)), y: Math.max(-300, Math.min(300, oy + dy)) }; }, true);
-  }
   function undo() { if (!teamUndo.length) { toast('ไม่มีอะไรให้ย้อนกลับ'); return; } teamRestore(teamUndo.pop()); Promise.all([0, 1, 2, 3, 4, 5].map(loadSlot)).then(() => { sync(); draw(); }); saveSoon(); toast('ย้อนกลับแล้ว'); }
-  teamApi = { nudge, undo };
+  teamApi = { undo };
   // ---- side panel ----
   const formation = h('div', { class: 'formation', role: 'group', 'aria-label': 'เลือกช่อง' });
   const slotBtns = [];
@@ -1194,19 +1208,14 @@ function renderTeam(m) {
   const range = h('input', { type: 'range', min: 0.25, max: 4, step: 0.01, 'aria-label': 'ขนาด', oninput: (e) => setK(Number(e.target.value), true) });
   const snaps = TEAM_SNAPS.map((v) => [v, h('button', { onclick: () => setK(v) }, `${v}×`)]);
   const step = (d) => { const it = cur(); setK(+(kOf(it, sprs[ui.teamSel]) + d).toFixed(2), true); };
-  const posInfo = h('div', { class: 'small dim' });
-  const pad = h('div', { class: 'pad' },
-    h('span', {}), h('button', { 'aria-label': 'ขยับขึ้น', onclick: () => nudge(0, -1) }, '↑'), h('span', {}),
-    h('button', { 'aria-label': 'ขยับไปทางหลัง', onclick: () => nudge(-1, 0) }, '←'), h('button', { 'aria-label': 'ขยับลง', onclick: () => nudge(0, 1) }, '↓'), h('button', { 'aria-label': 'ขยับไปทางหน้า', onclick: () => nudge(1, 0) }, '→'));
   const undoBtn = h('button', { onclick: undo, title: 'Ctrl+Z' }, 'ย้อนกลับ');
   const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.scale) change(() => { delete it.scale; }); } }, 'คืนขนาดเริ่มต้น');
-  const resetO = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.offset) change(() => { delete it.offset; }); } }, 'กลับกลางช่อง');
   const body = h('div', { class: 'insp-body' },
     h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตัวละครในช่องนี้'), sel),
     h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาด'), h('span', { class: 'sp' }), kVal),
       h('div', { class: 'row nowrap' }, h('button', { class: 'pm', 'aria-label': 'เล็กลง', onclick: () => step(-0.05) }, '−'), range, h('button', { class: 'pm', 'aria-label': 'ใหญ่ขึ้น', onclick: () => step(0.05) }, '+')),
       h('div', { class: 'seg snaps' }, snaps.map((x) => x[1])), kInfo, kWarn, resetK),
-    h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตำแหน่ง'), h('div', { class: 'row nowrap' }, pad, posInfo), resetO));
+    h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตำแหน่ง'), h('div', { class: 'small dim' }, 'ทุกตัวยืนกลางช่องเสมอ · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับกัน (ช่องว่าง = ย้ายไปเลย)')));
   const panel = h('aside', { class: 'panel insp' }, formation, nameEl, body);
   function sync() {
     const k = ui.teamSel, it = cur(), s = sprs[k];
@@ -1217,14 +1226,13 @@ function renderTeam(m) {
     });
     nameEl.textContent = it ? `ช่อง ${k + 1} · ${it.id} ${it.name || ''}` : `ช่อง ${k + 1} · ว่าง`;
     sel.value = t.ids[k] || '';
-    const kk = kOf(it, s), [ox, oy] = offOf(it);
-    for (const el of [range, ...snaps.map((x) => x[1]), resetK, resetO, ...pad.querySelectorAll('button'), ...body.querySelectorAll('.pm')]) el.disabled = !s;
+    const kk = kOf(it, s);
+    for (const el of [range, ...snaps.map((x) => x[1]), resetK, ...body.querySelectorAll('.pm')]) el.disabled = !s;
     range.value = String(kk); kVal.textContent = s ? `×${kk.toFixed(2)}` : '—';
     kInfo.textContent = !it ? 'เลือกตัวละครจากเมนูด้านบน' : !s ? 'ตัวนี้ยังไม่มีภาพนิ่ง วางภาพในหน้าตัวละครก่อน' : `สูง ${Math.round(s.c.height * kk)} px บนจอ · 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด${it.scale ? '' : ' · ยังเป็นขนาดเริ่มต้น'}`;
     kWarn.textContent = stale(it, s) ? `ขนาดที่ตั้งไว้ (×${it.scale.k}) เป็นของภาพเก่า ${it.scale.size[0]}×${it.scale.size[1]} ตอนนี้ใช้ขนาดเริ่มต้นแทน ปรับใหม่ได้เลย` : '';
     snaps.forEach(([v, bt]) => { const on = !!s && Math.abs(kk - v) < 0.005; bt.classList.toggle('on', on); bt.setAttribute('aria-pressed', String(on)); });
-    resetK.disabled = !s || !it.scale; resetO.disabled = !s || !it.offset;
-    posInfo.textContent = !s ? '' : ox || oy ? `${ox ? `${ox > 0 ? 'ไปหน้า' : 'ไปหลัง'} ${Math.abs(ox)}` : ''}${ox && oy ? ' · ' : ''}${oy ? `${oy > 0 ? 'ลง' : 'ขึ้น'} ${Math.abs(oy)}` : ''} px` : 'กลางช่อง';
+    resetK.disabled = !s || !it.scale;
     undoBtn.disabled = !teamUndo.length;
     const same = t.ids.filter((x) => x && x === t.ids[k]).length > 1;
     nameEl.title = same ? 'ตัวนี้อยู่หลายช่อง ขนาด/ตำแหน่งเปลี่ยนพร้อมกันทุกช่อง' : '';
@@ -1235,17 +1243,15 @@ function renderTeam(m) {
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
     undoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ลากตัวเพื่อย้าย · ปุ่มลูกศรบนคีย์บอร์ดขยับทีละ 1 px (Shift = 10) · Ctrl+Z ย้อนกลับ · ขนาดและตำแหน่งจำต่อตัวละคร บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
+  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ลากตัวไปวางช่องอื่นเพื่อสลับ · Ctrl+Z ย้อนกลับ · ขนาดจำต่อตัวละคร บันทึกเอง · กด "ส่งค่าเงา + ขนาดเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
 }
-// team tab keys (bound once): arrows nudge, Ctrl+Z undo — not while typing in a field
+// team tab keys (bound once): Ctrl+Z undo — not while typing in a field
 document.addEventListener('keydown', (e) => {
   if (ui.tab !== 'team' || !teamApi || e.target.closest?.('input, select, textarea')) return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); teamApi.undo(); return; }
-  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
-  if (d) { e.preventDefault(); const n = e.shiftKey ? 10 : 1; teamApi.nudge(d[0] * n, d[1] * n); }
 });
 
 let libCache = null;
