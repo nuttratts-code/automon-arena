@@ -1,6 +1,6 @@
 # Automon Arena backlog (parked work)
 
-V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
+V2.3 · 19 Nov 2026 · set 252 Repo hygiene row done (removed) · V2.2 · set 251 rows (Undecided + Repo hygiene) · V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
 
 ## Gameplay / pacing
 - Match length and run pacing (set 181: user decided to KEEP current values and the rule "long matches are not a problem" — overtime 180 s every round; reopen only if the user asks): goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
@@ -31,6 +31,8 @@ V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · no
 - Once the user has played: summarise from the plays collection (win rate by round, length, reaching sandstorm, most-used characters) · how to read it: workflow/botteams.md item 14
 
 ## Undecided (not urgent)
+- Boss resisted tribe k1 win % below the ≈40 target: B1 เหล็กกล้า 29 · B2 ภูติ 36 · B4 สายฟ้า 24 (set 149, causes in archive/reviews/review-2026-11-08-boss-resisted.md) — revisit at the Godot boss port (JS + Godot together); from closed runerun3000 review (set 251)
+- Rune names left (C5 U6 D1–D6 T8 C8 U7 + item-like names) — owner set 251: later, at the Godot rune port · claude/review-2026-11-08-runenames.md
 - Move "split hit to every unit" under the "on self" condition
 - Interpretation of "cooldown +20%"
 - Confirm the head-image of the 6 tribes (earlier proposal: เหล็กกล้า armoured guardian · เพลิงเผา igniter who burns enemies · สายฟ้า lightning caller · วายุ hunter fast as the wind · ภูติ spellcaster who speeds up time · อสูร one who refuses to fall) · skill ideas kept: charge, growth

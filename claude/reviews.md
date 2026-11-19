@@ -1,6 +1,6 @@
 # Reviews index
 
-V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V2.0 · 19 Nov 2026 (set 251: runerun3000 · econ55 · project-audit → archive, decided; rune names/text kept open for later) · V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 
 | archive/reviews/review-2026-11-12-prep-ui.md | Set 213 prep/battle spacing review — R1+R2 built set 213 (merge 62c2339) | decided |
 | archive/reviews/review-2026-11-11-godot-mcp.md | Godot MCP options (set 208) — owner tried NPGameDev toolkit as dev-only addon (set 208 E1/F2) | decided |
 | archive/reviews/review-2026-11-12-skills.md | Set 209 extra skills research — user picked A2 (7 installed skills in runbooks) · B1–B3 (godot-play draft, godot-release, port-parity) applied; C2a = no outside skill, own workflow/gdscript.md | decided (open: godot-play live run) |
-| review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
+| archive/reviews/review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — A1/A5/B1–B6 done set 180; set 251 owner B1: closed, rest stale after web freeze; README + LICENSE + src/lab cleanup → backlog small set; repo Private = owner | decided |
 | review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; rest parked for Godot (set 189 C1, web UI frozen) | parked → Godot |
 | review-2026-11-10-ui-test-notes.md | Set 187 UI test notes = Godot UI list since set 189 C1 (web UI frozen) | open (Godot) |
 | archive/reviews/review-2026-11-10-brainstorm-gamelog.md | Set 177 game-log brainstorm — user picked A1 B1 C1 (stats tab built; feeling tap + build label parked) | decided (parked items) |
@@ -36,8 +36,8 @@ V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 
 | archive/reviews/review-2026-11-09-cfgdiff-rev53.md | cfgdiff AMCFG1 rev53 (8 cells) | decided |
 | archive/reviews/review-2026-11-09-cfgdiff-rev52.md | cfgdiff AMCFG1 rev52 (21 cells) | decided |
 | archive/reviews/review-2026-11-09-cfgdiff-rev50.md | cfgdiff AMCFG1 rev50 (20 cells) | decided |
-| review-2026-11-08-runenames.md | Rune names DRAFT v2 — waiting for the user | open |
-| review-2026-11-08-runetext.md | Rune text rewrite DRAFT — waiting for the user | open |
+| review-2026-11-08-runenames.md | Rune names v3 — left: C5 U6 D1–D6 T8 C8 U7 + item-like names; owner set 251: decide later (at the Godot rune port) | open (later) |
+| review-2026-11-08-runetext.md | Rune text rewrite — applied set 145; kept open with rune names (owner set 251: runes later) | open (later) |
 | archive/reviews/review-2026-11-08-workflow-audit2.md | Set 153 workflow audit round 2 (F–K) — all recommended picks applied | decided |
 | archive/reviews/review-2026-11-08-weekly.md | Set 151 2-week review W1–W10 — applied | decided |
 | archive/reviews/review-2026-11-08-boss-resisted.md | Set 149 boss A1 re-measure after R3 rounding — measure only | decided |
@@ -46,8 +46,8 @@ V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 
 | archive/reviews/review-2026-11-08-skilltext.md | Shorter skill text — applied set 142 | decided |
 | archive/reviews/review-2026-11-08-cfgdiff-rev39.md | cfgdiff AMCFG1 rev39 (29 cells) — resolved set 147 | decided |
 | archive/reviews/review-2026-11-08-cfgdiff-rev38.md | cfgdiff AMCFG1 rev38 (76 cells) — superseded by rev39 | decided |
-| review-2026-11-08-runerun3000.md | Set 140: user analysis of Balance Room รันจริง 3000 runs — Q&A + to-do for next chat | open |
-| review-2026-11-08-econ55.md | Step 5.5 economy — what is left (set 136): PL-2 strong, PT-3, SF-7 weak | open |
+| archive/reviews/review-2026-11-08-runerun3000.md | Set 140 รันจริง 3000 runs — A–E applied sets 141–149 (boss k 60/50/45, new boss rules, win-streak foe); set 251 owner: closed; resisted-tribe leftover → backlog | decided |
+| archive/reviews/review-2026-11-08-econ55.md | Step 5.5 economy (set 136) — owner set 174: PL-2 · PT-3 · SF-7 · WY-3 keep; set 251 closed | decided |
 | archive/reviews/review-2026-11-08-workflow-audit.md | Set 152 workflow audit: unclear/conflicting rules (A–E) — A1 B1 C1 D1 applied | decided |
 | archive/reviews/review-2026-10-27.md | Review 27 Oct 2026 (Next 1) — report only, nothing changed | decided |
 | archive/reviews/review-2026-10-28-batch31.md | Batch 31 options: measured results as colours on the step-1 grid + tribe overview (28 Oct  | decided |

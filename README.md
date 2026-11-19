@@ -1,9 +1,9 @@
 # Automon Arena
 
-Original creature auto-battler for the browser (Thai UI). Single-player / offline MVP: buy and merge creatures in a shop, line up a team on a 3 × 2 board, and watch it fight bot teams and bosses.
+Original creature auto-battler (Thai UI). Single-player / offline: buy and merge creatures in a shop, line up a team on a 3 × 2 board, and watch it fight bot teams and bosses. The web version (MVP1) is finished and frozen; the game is being ported to Godot (`godot/`).
 
 - `src/core/` — game rules and battle engine (plain JavaScript, deterministic from a seed)
-- `src/game/` — the game page · `src/lab/` — the Balance Room (tuning tool) and measuring scripts · `src/tests/` — unit tests + browser smoke test
+- `src/game/` — the game page · `src/lab/` — the Balance Room (tuning tool) and measuring scripts (retired ones in `src/lab/archive/`) · `src/tests/` — unit tests + browser smoke test
 - `claude/` — design docs (Thai rule docs), work log and reviews · `art/placeholder/` — temporary art
 
 ## Build and test

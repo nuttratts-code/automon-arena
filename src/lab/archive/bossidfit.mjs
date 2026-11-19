@@ -1,9 +1,9 @@
-// ชุด 81: node lab/bossidfit.mjs <A> <boss ids> <s list> [n] · run on a tree with the user's chars applied (tools/apply-config.mjs)
+// ชุด 81: node lab/archive/bossidfit.mjs <A> <boss ids> <s list> [n] · run on a tree with the user's chars applied (tools/apply-config.mjs)
 // boss identity fit: base HP 1000 / atk A × tribe mult (T-3.1) × s · phase atk keeps today's ratio to base
-import { RULES } from '../core/rules.js';
-import { buildCharacterList } from '../core/characters.js';
-import { stageDefaults } from '../core/stage.js';
-import { bossRanking } from './analyze.js';
+import { RULES } from '../../core/rules.js';
+import { buildCharacterList } from '../../core/characters.js';
+import { stageDefaults } from '../../core/stage.js';
+import { bossRanking } from '../analyze.js';
 const TM = { 'เหล็กกล้า': [1.4, 0.6], 'เพลิงเผา': [0.9, 0.8], 'สายฟ้า': [0.9, 0.8], 'วายุ': [0.8, 0.5], 'ภูติ': [0.9, 0.7], 'อสูร': [1.0, 1.4] };
 const A = +process.argv[2], ids = process.argv[3].split(','), SS = process.argv[4].split(',').map(Number), n = +process.argv[5] || 500;
 const chars = buildCharacterList(), st = stageDefaults();

@@ -1,9 +1,9 @@
-// ชุด 81: หาตัวคูณ HP+atk ต่อบอส ให้ทีมสุ่ม Lv2 ชนะบอสครั้งที่ 1 ได้ตามเป้า · node lab/bossfit.mjs [n] [m1,m2,...]
+// ชุด 81: หาตัวคูณ HP+atk ต่อบอส ให้ทีมสุ่ม Lv2 ชนะบอสครั้งที่ 1 ได้ตามเป้า · node lab/archive/bossfit.mjs [n] [m1,m2,...]
 // พิมพ์ % ชนะ + เผ่าที่แย่สุด/ดีสุด (นับเฉพาะเผ่าที่มีทีม ≥ 40) ต่อบอส ต่อตัวคูณ
-import { RULES } from '../core/rules.js';
-import { buildCharacterList } from '../core/characters.js';
-import { stageDefaults } from '../core/stage.js';
-import { bossRanking } from './analyze.js';
+import { RULES } from '../../core/rules.js';
+import { buildCharacterList } from '../../core/characters.js';
+import { stageDefaults } from '../../core/stage.js';
+import { bossRanking } from '../analyze.js';
 const n = +process.argv[2] || 300, MS = (process.argv[3] || '0.6,0.7,0.8,0.9,1').split(',').map(Number);
 const ONLY = process.argv[4] ? process.argv[4].split(',') : null;
 const chars = buildCharacterList(), st = stageDefaults();
