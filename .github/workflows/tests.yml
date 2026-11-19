@@ -19,8 +19,9 @@ permissions:
   contents: read
 
 jobs:
+# Set 249: runners pinned to ubuntu-24.04 — ubuntu-latest moves to 26.04 (from 19 Oct 2026) where `playwright install --with-deps` cannot find its font packages (run #936). Playwright pinned (HARD RULE 9 ②; same pin in src/tools/bootstrap.mjs).
   gate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       PLAYWRIGHT_BROWSERS_PATH: /home/runner/pw-browsers
@@ -34,7 +35,7 @@ jobs:
           python-version: '3.11'
       - name: Install playwright + chromium
         run: |
-          pip install -q playwright
+          pip install -q playwright==1.65.0
           python -m playwright install --with-deps chromium
       - name: Gate (build + tests + ui_smoke)
         working-directory: src
@@ -53,7 +54,7 @@ jobs:
   # (set 191 B1: never committed). Godot only from the official GitHub release, version +
   # SHA-512 pinned in godot/tools/get_godot.sh (HARD RULE 9 ②). No export templates here.
   godot:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +87,7 @@ jobs:
   # no page errors · canvas fills · no horizontal scroll · picture not blank). Templates: official release,
   # SHA-512 pinned in get_godot.sh, cached (web templates only, ~85 MB).
   godot-web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -108,7 +109,7 @@ jobs:
           test -s build/web/index.pck && test -s build/web/index.wasm
       - name: Install playwright + chromium
         run: |
-          pip install -q playwright
+          pip install -q playwright==1.65.0
           python -m playwright install --with-deps chromium
       - name: Web check (5 sizes)
         run: timeout 600 python3 -I godot/tools/web_check.py build/web /tmp/automon-godot-web
