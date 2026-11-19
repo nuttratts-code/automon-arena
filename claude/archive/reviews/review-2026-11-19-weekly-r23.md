@@ -1,4 +1,5 @@
 # Weekly review 12–19 Nov — rounds 2 + 3 (set 250)
+n**DECIDED (owner, set 250):** G1 · H1 · I2 (keep full ui-work for local tools) · K1 · L1 — applied set 250. Note: plan-set236 kept (its step 4 = the r38 port steps, linked from plan-set238).
 
 Round 1 = archive/reviews/review-2026-11-19-weekly.md (set 249). Evidence = git + Relay only ("not shown ≠ unused"). CI #941 on 5044915 = green (checked this chat).
 
