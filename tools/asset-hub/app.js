@@ -1213,6 +1213,14 @@ function gapBrush(cv, o) {
   row.clear = () => { if (!o.get().length) return; record(); o.set([]); o.changed(); syncUi(); };
   return row;
 }
+// owner set 256: Ctrl + wheel over ANY part of the open dialog zooms the picture (over the stage: at the pointer), never the browser page.
+// The listener lives until the dialog closes.
+function dlgCtrlWheel(zoom, stageEl) {
+  const dlg = $('dlg');
+  const onWheel = (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); zoom(e, stageEl.contains(e.target)); };
+  dlg.addEventListener('wheel', onWheel, { passive: false });
+  dlg.addEventListener('close', () => dlg.removeEventListener('wheel', onWheel), { once: true });
+}
 const GAP_HINT = 'ทาไปตามขอบกรอบ (กดใกล้ขอบตรงไหนก็ได้) · 🧽 = เปิดช่อง ของหลังช่องโผล่ออกนอกกรอบ · ✏️ = ปิดคืนเฉพาะส่วนที่ทา · คลิกขวา = ใช้อีกอัน · Ctrl+Z = ย้อน · Ctrl+Y = ทำซ้ำ';
 // owner set 255: open / close frame gaps on an icon that already exists (keeps its pixel edits); only the gaps change, the file stays
 async function iconFrameEditor(it, r) {
@@ -1246,7 +1254,8 @@ async function iconFrameEditor(it, r) {
     z = nz; cv.width = cv.height = w * z; draw();
     st.scrollLeft = fx * z - ox; st.scrollTop = fy * z - oy;
   }
-  cv.addEventListener('wheel', (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); zoomTo(z + (e.deltaY < 0 ? 1 : -1), e); }, { passive: false });
+  // Ctrl + wheel anywhere in the dialog zooms the picture, never the browser page (owner set 256: it zoomed the whole page)
+  dlgCtrlWheel((e, inStage) => zoomTo(z + (e.deltaY < 0 ? 1 : -1), inStage ? e : undefined), stageEl);
   const zoomRow = h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), h('span', { class: 'sp' }),
     h('button', { 'aria-label': 'ซูมออก', title: 'Ctrl + ล้อเมาส์ลง', onclick: () => zoomTo(z - 1) }, '−'), zTxt,
     h('button', { 'aria-label': 'ซูมเข้า', title: 'Ctrl + ล้อเมาส์ขึ้น', onclick: () => zoomTo(z + 1) }, '+'),
@@ -1396,8 +1405,9 @@ async function iconEditor(it) {
   cv.addEventListener('pointermove', (e) => { if (!drag || frameMode) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
   const end = () => { drag = null; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-  cv.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) zoomTo(z + (e.deltaY < 0 ? 1 : -1), e); else setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  cv.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) return; e.preventDefault(); setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false }); // Ctrl + wheel = dlgCtrlWheel
   const stageEl = h('div', { class: 'icon-stage' }, cv), zTxt = h('b', {});
+  dlgCtrlWheel((e, inStage) => zoomTo(z + (e.deltaY < 0 ? 1 : -1), inStage ? e : undefined), stageEl); // owner set 256: never the page zoom
   function zoomTo(nz, e) { // keeps the point under the pointer (or the middle of the view) in place
     nz = Math.max(1, Math.min(32, nz)); if (nz === z) return;
     const st = stageEl, rc = st.getBoundingClientRect();

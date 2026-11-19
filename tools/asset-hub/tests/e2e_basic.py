@@ -175,6 +175,11 @@ with sync_playwright() as p:
     pg.locator("#dlg button[aria-label='ซูมเข้า']").click(); pg.wait_for_timeout(200)
     zw1 = pg.evaluate("document.querySelector('#dlg .icon-cv').width")
     pg.locator("#dlg .icon-side button", has_text="พอดีจอ").click(); pg.wait_for_timeout(200)
+    sb = pg.locator("#dlg .icon-side").bounding_box(); pg.mouse.move(sb["x"] + 20, sb["y"] + sb["height"] - 20)
+    pg.evaluate("window._wp=null; document.addEventListener('wheel', e => { _wp = e.defaultPrevented }, {once:true})")
+    pg.keyboard.down("Control"); pg.mouse.wheel(0, -100); pg.keyboard.up("Control"); pg.wait_for_timeout(200)
+    check("Ctrl+wheel on the side panel zooms the picture, not the page", pg.evaluate("_wp") is True and pg.evaluate("document.querySelector('#dlg .icon-cv').width") > zw0)
+    pg.locator("#dlg .icon-side button", has_text="พอดีจอ").click(); pg.wait_for_timeout(200)
     check("gap editor zooms in and back to fit", zw1 > zw0 and pg.evaluate("document.querySelector('#dlg .icon-cv').width") == zw0, (zw0, zw1))
     pg.locator("#dlg button", has_text="บันทึก").first.click(); pg.wait_for_timeout(1200)
     cur1 = [r for r in hub()["items"]["WN-1"]["rounds"] if r["id"] == cur0["id"]][0]
