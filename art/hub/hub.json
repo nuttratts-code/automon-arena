@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 117,
+ "rev": 434,
  "settings": {
   "moves": [
    "idle",
@@ -25,13 +25,25 @@
   "camPitch": 40,
   "starter": "",
   "shadowLift": 0.065,
-  "sunAngle": 133
+  "sunAngle": 133,
+  "team": {
+   "ids": [
+    "PL-1",
+    "WN-1",
+    "WY-1",
+    "PT-1",
+    "SF-1",
+    "HL-1"
+   ],
+   "showBg": false
+  },
+  "migr249": true
  },
  "items": {
   "HL-1": {
    "id": "HL-1",
    "kind": "character",
-   "name": "กำปั้นเหล็ก",
+   "name": "ก้ามเหล็ก",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "common",
@@ -126,22 +138,6 @@
      "library": "lib/pictures/sprites/HL-1_idle8_sheet_8x1_96x81_2026-11-14_v2.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg",
-     "orig": "HL-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini",
-     "library": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg",
-     "check": {}
-    },
-    {
      "id": "rEtMTQucG5n",
      "file": "lib/pictures/sprites/HL-1_still_px84x80_2026-11-14.png",
      "orig": "HL-1_still_px84x80_2026-11-14.png",
@@ -152,17 +148,84 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "r5d7026c9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-17_4ac59fbc.jpg",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K.jpg",
+     "t": "2026-11-17T15:56:13.978Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-17_4ac59fbc.jpg",
+     "check": {},
+     "flip": true
+    },
+    {
+     "id": "rf65f6b3d",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/HL-1/cut_f1_2026-11-17_4ac59fbc.jpg",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K.jpg",
+     "t": "2026-11-17T15:56:21.767Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/HL-1/HL-1_cut_f1_2026-11-17_4ac59fbc.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8292f5c0",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/HL-1/cut_f1_2026-11-17_b8938f24.png",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K_cut.png",
+     "t": "2026-11-17T18:07:56.026Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "from": "r5d7026c9",
+     "flip": true
+    },
+    {
+     "id": "r23bbec7f",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-18_4072bcf5.png",
+     "orig": "HL1_crab_pixel.png",
+     "t": "2026-11-18T12:14:59.463Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-18_4072bcf5.png"
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4586,
-     0.9877
+     0.4919,
+     1
     ],
     "oval": {
+     "on": false,
      "dx": -0.916,
      "dy": -1,
      "w": 1.106,
@@ -173,13 +236,28 @@
      "len": 1,
      "str": 0.5,
      "ox": 0,
-     "oy": 0
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
     },
     "size": [
-     96,
-     81
+     123,
+     114
     ],
-    "round": "rF92Mi5wbmc"
+    "round": "r23bbec7f"
+   },
+   "thumb": "r23bbec7f",
+   "scale": {
+    "k": 1.5,
+    "size": [
+     123,
+     114
+    ],
+    "round": "r23bbec7f"
+   },
+   "offset": {
+    "x": 35,
+    "y": 217
    }
   },
   "HL-2": {
@@ -285,7 +363,7 @@
   "PL-1": {
    "id": "PL-1",
    "kind": "character",
-   "name": "นักจุดไฟ",
+   "name": "หูเพลิง",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "common",
@@ -413,36 +491,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
-    },
-    {
-     "id": "rEtMTQuanBn",
-     "file": "lib/pictures/sprites/PL-1_still2_veo_2026-11-14.jpg",
-     "orig": "PL-1_still2_veo_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Veo frame",
-     "library": "lib/pictures/sprites/PL-1_still2_veo_2026-11-14.jpg"
-    },
-    {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/PL-1_still_gemini_2026-11-14.jpg",
-     "orig": "PL-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -455,12 +505,85 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "ra9fba5c8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-17_45eef157.jpg",
+     "orig": "Monkey_casting_fire_spark_e6c80a13_2K.jpg",
+     "t": "2026-11-17T16:01:35.905Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-17_45eef157.jpg",
+     "flip": true
+    },
+    {
+     "id": "r5a5a91ea",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-18_4fe5042b.png",
+     "orig": "PL1_lynx_pixel.png",
+     "t": "2026-11-18T12:14:59.151Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-18_4fe5042b.png"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.5212,
+     1
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     117,
+     83
+    ],
+    "round": "r5a5a91ea"
+   },
+   "thumb": "r5a5a91ea",
+   "offset": {
+    "x": 0,
+    "y": 10
+   },
+   "free": true,
+   "scale": {
+    "k": 1.5,
+    "size": [
+     117,
+     83
+    ],
+    "round": "r5a5a91ea"
+   }
   },
   "PL-2": {
    "id": "PL-2",
@@ -556,7 +679,7 @@
   "SF-1": {
    "id": "SF-1",
    "kind": "character",
-   "name": "นักเรียกสายฟ้า",
+   "name": "เขาสายฟ้า",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "common",
@@ -679,13 +802,14 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
      "tool": "Gemini",
-     "library": "lib/pictures/sprites/SF-1_still2_gemini_2026-11-14.jpg"
+     "library": "lib/pictures/sprites/SF-1_still2_gemini_2026-11-14.jpg",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -698,7 +822,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "rS0xNC5qcGc",
@@ -712,7 +837,8 @@
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
-     "tool": "Gemini"
+     "tool": "Gemini",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -725,12 +851,148 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "rfa0ba9fc",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_7638dd0f.jpg",
+     "orig": "Storm_beetle_character_standing_0de9d433_2K.jpg",
+     "t": "2026-11-17T16:05:42.299Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_7638dd0f.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8c8463b2",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_862a7f3b.jpg",
+     "orig": "Beetle_character_standing_and_po…_79441628_2K.jpg",
+     "t": "2026-11-17T16:09:10.773Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_862a7f3b.jpg",
+     "flip": true
+    },
+    {
+     "id": "r43e46836",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-17_862a7f3b.jpg",
+     "orig": "Beetle_character_standing_and_po…_79441628_2K.jpg",
+     "t": "2026-11-17T16:09:21.854Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-17_862a7f3b.jpg",
+     "flip": true
+    },
+    {
+     "id": "r400838e2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-17_4f84e7a1.jpg",
+     "orig": "Beetle_character_standing_and_po…_4fc167cf_2K.jpg",
+     "t": "2026-11-17T17:20:54.532Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-17_4f84e7a1.jpg",
+     "flip": true
+    },
+    {
+     "id": "ra659ade7",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_4f84e7a1.jpg",
+     "orig": "Beetle_character_standing_and_po…_4fc167cf_2K.jpg",
+     "t": "2026-11-17T17:21:10.119Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_4f84e7a1.jpg",
+     "flip": true
+    },
+    {
+     "id": "r23a6cc79",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-18_682e881b.png",
+     "orig": "SF1_beetle_pixel.png",
+     "t": "2026-11-18T12:14:59.774Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-18_682e881b.png"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4274,
+     1
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     124,
+     71
+    ],
+    "round": "r23a6cc79"
+   },
+   "thumb": "r23a6cc79",
+   "scale": {
+    "k": 1,
+    "size": [
+     124,
+     71
+    ],
+    "round": "r23a6cc79"
+   },
+   "offset": {
+    "x": 215,
+    "y": 172
+   }
   },
   "SF-2": {
    "id": "SF-2",
@@ -826,7 +1088,7 @@
   "WY-1": {
    "id": "WY-1",
    "kind": "character",
-   "name": "นักล่าสายลม",
+   "name": "กรงเล็บสังหาร",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "common",
@@ -886,20 +1148,6 @@
      "library": "lib/pictures/sprites/WY-1_idle8_sheet_8x1_93x90_2026-11-14.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/WY-1_still_gemini_2026-11-14.jpg",
-     "orig": "WY-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
-    },
-    {
      "id": "rEtMTQucHhv",
      "file": "lib/pictures/sprites/WY-1_still_pixelorama_2026-11-14.pxo",
      "orig": "WY-1_still_pixelorama_2026-11-14.pxo",
@@ -924,12 +1172,113 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "r68b04ec6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-17_21dcff32.jpg",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K.jpg",
+     "t": "2026-11-17T16:21:51.055Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-17_21dcff32.jpg",
+     "flip": true
+    },
+    {
+     "id": "rdb3f02fa",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WY-1/cut_f1_2026-11-17_21dcff32.jpg",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K.jpg",
+     "t": "2026-11-17T16:21:56.235Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_cut_f1_2026-11-17_21dcff32.jpg",
+     "flip": true
+    },
+    {
+     "id": "r27c7f62f",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WY-1/cut_f1_2026-11-17_288b3a3d.png",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K_cut.png",
+     "t": "2026-11-17T18:07:00.000Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_cut_f1_2026-11-17_288b3a3d.png",
+     "from": "r68b04ec6",
+     "flip": true
+    },
+    {
+     "id": "r3f5c769d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-18_fbf00de8.png",
+     "orig": "WY1_hawk_pixel.png",
+     "t": "2026-11-18T12:14:59.311Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-18_fbf00de8.png"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.5798,
+     1
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     119,
+     109
+    ],
+    "round": "r3f5c769d"
+   },
+   "thumb": "r3f5c769d",
+   "scale": {
+    "k": 1.5,
+    "size": [
+     119,
+     109
+    ],
+    "round": "r3f5c769d"
+   }
   },
   "WY-2": {
    "id": "WY-2",
@@ -1025,7 +1374,7 @@
   "PT-1": {
    "id": "PT-1",
    "kind": "character",
-   "name": "ภูติฮิล",
+   "name": "ภูติบิน",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "common",
@@ -1053,31 +1402,90 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
      "tool": "Gemini",
-     "library": "lib/pictures/sprites/PT-1_still_gemini_2026-11-14.jpg"
+     "library": "lib/pictures/sprites/PT-1_still_gemini_2026-11-14.jpg",
+     "flip": true
     },
     {
-     "id": "rEtMTQucG5n",
-     "file": "lib/pictures/sprites/PT-1_still_px62x77_2026-11-14.png",
-     "orig": "PT-1_still_px62x77_2026-11-14.png",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "claude",
+     "id": "r98e56514",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/PT-1/cut_f1_2026-11-17_ec610745.jpg",
+     "orig": "Moth_caterpillar_character_posing_4676a706_2K.jpg",
+     "t": "2026-11-17T17:32:07.429Z",
+     "by": "owner",
      "note": "",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/PT-1/PT-1_cut_f1_2026-11-17_ec610745.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8fb55d3f",
+     "slot": "still",
      "form": 1,
-     "slot": "cut"
+     "file": "hub/PT-1/still_f1_2026-11-18_8706bfcc.png",
+     "orig": "PT1_moth_pixel.png",
+     "t": "2026-11-18T12:14:59.619Z",
+     "by": "owner",
+     "note": "",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-18_8706bfcc.png"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4859,
+     1
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     118,
+     112
+    ],
+    "round": "r8fb55d3f"
+   },
+   "thumb": "r8fb55d3f",
+   "scale": {
+    "k": 1.05,
+    "size": [
+     118,
+     112
+    ],
+    "round": "r8fb55d3f"
+   },
+   "offset": {
+    "x": -213,
+    "y": -203
+   }
   },
   "PT-2": {
    "id": "PT-2",
@@ -1173,7 +1581,7 @@
   "WN-1": {
    "id": "WN-1",
    "kind": "character",
-   "name": "นักสู้",
+   "name": "เขี้ยวทะลวง",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "common",
@@ -1211,48 +1619,19 @@
      "library": "lib/pictures/sprites/WN-1_idle32_sheet_32x1_236x153_2026-11-15.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/WN-1_still_gemini_2026-11-14.jpg",
-     "orig": "WN-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
-    },
-    {
      "id": "rS0xNS5wbmc",
      "file": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png",
      "orig": "WN-1_still_paint_cut_1014x704_2026-11-15.png",
      "t": "2026-11-15T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "cut",
-     "library": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png"
-    },
-    {
-     "id": "rS0xNS5qcGc",
-     "file": "lib/pictures/sprites/WN-1_still_paint_gemini_2026-11-15.jpg",
-     "orig": "WN-1_still_paint_gemini_2026-11-15.jpg",
-     "t": "2026-11-15T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "still",
-     "tool": "Gemini",
-     "library": "lib/pictures/sprites/WN-1_still_paint_gemini_2026-11-15.jpg",
-     "check": {}
+     "slot": "cut",
+     "library": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -1265,7 +1644,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "r51ebe2a9",
@@ -1276,12 +1656,13 @@
      "t": "2026-11-17T13:25:28.273Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "owner-made",
      "promptId": "p1",
      "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-17_3c6df7e3.jpg",
-     "check": {}
+     "check": {},
+     "flip": true
     },
     {
      "id": "rf70d253f",
@@ -1293,7 +1674,7 @@
      "t": "2026-11-17T13:26:23.709Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -1309,7 +1690,7 @@
      "t": "2026-11-17T14:04:11.895Z",
      "by": "claude",
      "note": "จากวิดีโอ rf70d253f · loop 1.83 s",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -1321,7 +1702,8 @@
       "n": 32,
       "ms": 57
      },
-     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-17_40c6fbea.png"
+     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-17_40c6fbea.png",
+     "flip": false
     },
     {
      "id": "r647378cd",
@@ -1332,19 +1714,96 @@
      "t": "2026-11-17T14:58:11.092Z",
      "by": "owner",
      "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_cut_f1_2026-11-17_3c6df7e3.jpg",
+     "flip": true
+    },
+    {
+     "id": "r1a2c69a5",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-18_7c3ed5e3.png",
+     "orig": "WN1_boar_pixel.png",
+     "t": "2026-11-18T12:14:59.009Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "check": {},
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-18_7c3ed5e3.png"
+    },
+    {
+     "id": "r9a2d4229",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WN-1/cut_f1_2026-11-18_1697bd3e.png",
+     "orig": "WN1_boar_pixel_cut_edit.png",
+     "t": "2026-11-18T15:11:28.336Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "from": "r1a2c69a5"
+    },
+    {
+     "id": "rcd9752f8",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-18_3f2bb6ba.png",
+     "orig": "WN-1_icon_72.png",
+     "t": "2026-11-18T15:13:19.609Z",
+     "by": "owner",
+     "note": "ไอคอน 72×72 จากภาพตัดพื้น 2026-11-18",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
-     "library": "lib/characters/WN-1/WN-1_cut_f1_2026-11-17_3c6df7e3.jpg"
+     "flip": true
+    },
+    {
+     "id": "r3df87382",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-18_5861794e.png",
+     "orig": "WN1_boar_pixel_edit.png",
+     "t": "2026-11-18T15:49:14.067Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-18_5861794e.png",
+     "check": {}
+    },
+    {
+     "id": "r5cc5d8b6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-18_c2b66d18.png",
+     "orig": "WN-1_horns_128x96.png",
+     "t": "2026-11-18T15:51:40.627Z",
+     "by": "owner",
+     "note": "แก้เขา (ภาพที่คุณส่งในแชท) ย่อกลับพิกเซลจริง 128×96 พื้นขาวเป็นโปร่งใส สีดึงเข้าสีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1"
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4401,
-     1
+     0.4177,
+     0.9279
     ],
     "oval": {
      "on": false,
@@ -1356,30 +1815,36 @@
     },
     "cast": {
      "len": 0.923,
-     "str": 1,
+     "str": 0.69,
      "ox": 0,
      "oy": 0,
      "blur": 0.3,
-     "k": {
-      "br": [
-       0.002,
-       -0.294
-      ],
-      "tr": [
-       0.22,
-       0.011
-      ],
-      "bl": [
-       -0.012,
-       -0.16
-      ]
-     }
+     "k": null
     },
     "size": [
-     165,
-     156
+     128,
+     96
     ],
-    "round": "r40c6fbea"
+    "round": "r5cc5d8b6"
+   },
+   "thumb": "r9a2d4229",
+   "scale": {
+    "k": 1.5,
+    "size": [
+     118,
+     78
+    ],
+    "round": "r267411f6"
+   },
+   "offset": {
+    "x": 31,
+    "y": -33
+   },
+   "iconCrop": {
+    "round": "r9a2d4229",
+    "x": 60,
+    "y": 12,
+    "n": 72
    }
   },
   "WN-2": {
@@ -1506,6 +1971,94 @@
    "state": "done",
    "reply": "ตัดแล้ว 32 เฟรม (165×156) ลูป 1.83 วิ · 57 ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)\nไม่พบปัญหาจากตัวเลข (เท้าไม่ขยับ ตัวไม่ชนขอบ) — ยังควรเปิดดูด้วยตา",
    "seen": true
+  },
+  {
+   "id": "q0u7lu7wy",
+   "item": "HL-1",
+   "task": "check+veo",
+   "still": "r5d7026c9",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:32:59.237Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qq1zoqa9k",
+   "item": "PL-1",
+   "task": "check+veo",
+   "still": "ra9fba5c8",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:39.894Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "que00ncfb",
+   "item": "SF-1",
+   "task": "check+veo",
+   "still": "r400838e2",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:45.832Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qwujs0hok",
+   "item": "WY-1",
+   "task": "check+veo",
+   "still": "r68b04ec6",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:50.720Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "q5lw8qfxj",
+   "item": "PT-1",
+   "task": "check+veo",
+   "still": "r4adfcd16",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:54.716Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qeba8d599",
+   "item": "WN-1",
+   "task": "frames+shadow",
+   "by": "auto",
+   "video": "rf70d253f",
+   "round": "r40c6fbea",
+   "step": "frames",
+   "form": 1,
+   "move": "idle",
+   "t": "2026-11-18T12:38:41.694Z",
+   "done": "2026-11-18",
+   "text": "ตัดเฟรม + สร้างเงา: ร่าง 1 (โปรแกรมทำเอง)",
+   "state": "done",
+   "reply": "ตัดแล้ว 32 เฟรม (165×156) ลูป 1.83 วิ · 57 ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)\nไม่พบปัญหาจากตัวเลข (เท้าไม่ขยับ ตัวไม่ชนขอบ) — ยังควรเปิดดูด้วยตา"
+  },
+  {
+   "id": "qleswdu2z",
+   "item": "WN-1",
+   "task": "check+veo",
+   "still": "r1a2c69a5",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-18T12:39:13.851Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-18) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
   }
  ]
 }

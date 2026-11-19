@@ -87,6 +87,48 @@
     }
    }
   },
+  "PT-1": {
+   "feet": [
+    0.504,
+    0.9004
+   ],
+   "size": [
+    2752,
+    1536
+   ],
+   "oval": {
+    "dx": 0,
+    "dy": 0,
+    "w": 0.8,
+    "h": 0.45,
+    "a": 0
+   },
+   "cast": {
+    "len": 1,
+    "str": 0.5,
+    "ox": 0,
+    "oy": 0,
+    "blur": 0.3,
+    "k": {
+     "tl": [
+      0,
+      0
+     ],
+     "tr": [
+      0,
+      0
+     ],
+     "bl": [
+      0,
+      0
+     ],
+     "br": [
+      0,
+      0
+     ]
+    }
+   }
+  },
   "WN-1": {
    "feet": [
     0.4401,
@@ -128,6 +170,37 @@
      ]
     }
    }
+  }
+ },
+ "scale_note": "set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size). Not read by the game yet (r38 port).",
+ "scale": {
+  "HL-1": {
+   "k": 2.122,
+   "size": [
+    123,
+    114
+   ]
+  },
+  "PL-1": {
+   "k": 2,
+   "size": [
+    117,
+    83
+   ]
+  },
+  "PT-1": {
+   "k": 1.626,
+   "size": [
+    118,
+    112
+   ]
+  },
+  "WN-1": {
+   "k": 2.122,
+   "size": [
+    118,
+    78
+   ]
   }
  }
 }
