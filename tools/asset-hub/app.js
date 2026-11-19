@@ -1318,16 +1318,42 @@ async function pixelEditor(it, r) {
     h('span', { class: 'small dim' }, 'ใช้กับส่วนที่เลือก ถ้าไม่ได้เลือกใช้กับทั้งเลเยอร์'),
     h('div', { class: 'row pxed-editrow' }, h('button', { title: 'ยกขึ้นมาลากย้าย (ลูกศร = ทีละเม็ด)', onclick: () => lift() }, 'ย้าย'), h('button', { onclick: () => flipM(true) }, 'กลับซ้าย-ขวา'), h('button', { onclick: () => flipM(false) }, 'กลับบน-ล่าง')),
     h('div', { class: 'row pxed-mrot' }, h('span', { class: 'lbl' }, 'หมุน'), h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotF(mDeg() - 90) }, '⟲ 90°'), h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotF(mDeg() + 90) }, '⟳ 90°'), mRotNum, h('span', { class: 'small dim' }, '°')), mRotIn);
-  function rotImg(img, deg) { // nearest pixel, the box grows to fit; deg = clockwise in file pixels
+  // RotSprite (owner set 253 A1): for angles that are not a 90° step, the piece is first blown up 8× with Scale2x three times (keeps edges
+  // smooth, adds no new colours), turned there, then read back one sample per pixel → far fewer broken / doubled pixels. 90° steps stay exact.
+  const up8Cache = new WeakMap();
+  function scale2x(u, w, hh) { // EPX on packed RGBA; neighbours at the border repeat the edge pixel
+    const o = new Uint32Array(w * hh * 4), w2 = w * 2;
+    for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) {
+      const P = u[y * w + x], A = u[(y > 0 ? y - 1 : y) * w + x], D = u[(y < hh - 1 ? y + 1 : y) * w + x], C = u[y * w + (x > 0 ? x - 1 : x)], B = u[y * w + (x < w - 1 ? x + 1 : x)];
+      const i = (y * 2) * w2 + x * 2;
+      o[i] = C === A && C !== D && A !== B ? A : P; o[i + 1] = A === B && A !== C && B !== D ? B : P;
+      o[i + w2] = D === C && D !== B && C !== A ? C : P; o[i + w2 + 1] = B === D && B !== A && D !== C ? D : P;
+    }
+    return o;
+  }
+  function up8(img) {
+    let c = up8Cache.get(img); if (c) return c;
+    let u = new Uint32Array(img.data.buffer.slice(img.data.byteOffset, img.data.byteOffset + img.data.byteLength)), w = img.width, hh = img.height;
+    for (let k = 0; k < 3; k++) { u = scale2x(u, w, hh); w *= 2; hh *= 2; }
+    c = { u, w, h: hh }; up8Cache.set(img, c); return c;
+  }
+  function rotImg(img, deg) { // the box grows to fit; deg = clockwise in file pixels
     const a = deg * Math.PI / 180; let c = Math.cos(a), sn = Math.sin(a);
     if (Math.abs(c) < 1e-9) c = 0; if (Math.abs(sn) < 1e-9) sn = 0;
     const w = img.width, hh = img.height, nw = Math.max(1, Math.round(Math.abs(w * c) + Math.abs(hh * sn))), nh = Math.max(1, Math.round(Math.abs(w * sn) + Math.abs(hh * c)));
-    const out = new ImageData(nw, nh), s0 = img.data, d = out.data;
+    const out = new ImageData(nw, nh), s0 = img.data, d = out.data, ou = new Uint32Array(d.buffer);
+    const exact = !c || !sn, U = exact ? null : up8(img);
     for (let y = 0; y < nh; y++) for (let x = 0; x < nw; x++) {
-      const dx = x + 0.5 - nw / 2, dy = y + 0.5 - nh / 2;
-      const sx = Math.floor(dx * c + dy * sn + w / 2 + 1e-6), sy = Math.floor(-dx * sn + dy * c + hh / 2 + 1e-6);
-      if (sx < 0 || sy < 0 || sx >= w || sy >= hh) continue;
-      const i = (sy * w + sx) * 4, o = (y * nw + x) * 4; d[o] = s0[i]; d[o + 1] = s0[i + 1]; d[o + 2] = s0[i + 2]; d[o + 3] = s0[i + 3];
+      const dx = x + 0.5 - nw / 2, dy = y + 0.5 - nh / 2, fx = dx * c + dy * sn + w / 2, fy = -dx * sn + dy * c + hh / 2;
+      if (exact) {
+        const sx = Math.floor(fx + 1e-6), sy = Math.floor(fy + 1e-6);
+        if (sx < 0 || sy < 0 || sx >= w || sy >= hh) continue;
+        const i = (sy * w + sx) * 4, o = (y * nw + x) * 4; d[o] = s0[i]; d[o + 1] = s0[i + 1]; d[o + 2] = s0[i + 2]; d[o + 3] = s0[i + 3];
+      } else {
+        const ux = Math.floor(fx * 8), uy = Math.floor(fy * 8);
+        if (ux < 0 || uy < 0 || ux >= U.w || uy >= U.h) continue;
+        ou[y * nw + x] = U.u[uy * U.w + ux];
+      }
     }
     return out;
   }
@@ -1542,10 +1568,10 @@ async function pixelEditor(it, r) {
     if (!float && !lift()) return;
     const f = float;
     deg = ((Math.round(deg) + 540) % 360) - 180; if (deg === -180) deg = 180;
-    if (!f.base) { f.base = { d: f.d, w: f.w, h: f.h }; f.deg = 0; }
-    const cx = f.x + f.w / 2, cy = f.y + f.h / 2, b = new ImageData(new Uint8ClampedArray(f.base.d), f.base.w, f.base.h);
+    if (!f.base) { f.base = new ImageData(new Uint8ClampedArray(f.d), f.w, f.h); f.deg = 0; }
+    const cx = f.x + f.w / 2, cy = f.y + f.h / 2, b = f.base;
     const r2 = deg ? rotImg(b, mirX ? -deg : deg) : b;
-    f.d = r2.data; f.w = r2.width; f.h = r2.height; f.x = Math.round(cx - f.w / 2); f.y = Math.round(cy - f.h / 2); f.deg = deg;
+    f.d = new Uint8ClampedArray(r2.data); f.w = r2.width; f.h = r2.height; f.x = Math.round(cx - f.w / 2); f.y = Math.round(cy - f.h / 2); f.deg = deg;
     syncUi(); paint();
   }
   function flipM(hz) { if (!float && !lift()) return; flipFloat(hz); }
