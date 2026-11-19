@@ -20,5 +20,11 @@ dec=$(echo "$rv" | grep -E '^\| review-[^|]*\.md \|' | grep -E '\| decided \|$' 
 now=$(date +%s 2>/dev/null)
 old=$(echo "$rv" | grep -E '^\| review-[0-9]{4}-[0-9]{2}-[0-9]{2}[^|]*\| .*\| open' | grep -vE 'parked|(Godot)|(ideas)' | grep -oE 'review-[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z0-9-]*' | while read f; do d=$(echo "$f" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}'); t=$(date -d "$d" +%s 2>/dev/null) || continue; a=$(( (now - t) / 86400 )); [ "$a" -gt 7 ] && printf '%s (%sd) ' "${f#review-}" "$a"; done)
 [ -n "$old" ] && echo "⚠ hygiene: open reviews waiting > 7 days → remind the owner: $old"
+# Set 250 W1: a WIP branch runs its OWN CLAUDE.md/skills/hooks → warn when main has newer rule commits.
+br=$(git branch --show-current 2>/dev/null)
+if [ -n "$br" ] && [ "$br" != main ]; then
+  nb=$(git log --oneline "HEAD..$ref" -- CLAUDE.md .claude claude/workflow 2>/dev/null | wc -l)
+  [ "${nb:-0}" -gt 0 ] 2>/dev/null && echo "⚠ rules: branch $br is missing $nb rule commit(s) from main (CLAUDE.md/.claude/claude/workflow) → git merge origin/main first (chat-start step 5)"
+fi
 echo "=== current branch: $(git branch --show-current 2>/dev/null) ==="
 exit 0
