@@ -18,17 +18,15 @@ Read by Claude every new chat. Keep ≤ 1 screen: Relay = newest 2 sets + open W
 - User-side todo: game v132: play 1–2 runs, open Log → กด คัดลอกรหัส 60 รันล่าสุด → paste in Balance Room ดูผล → ผู้เล่นจริง → นับ (new runs show matches/wins; older runs only buys/sells) · still from set 185: first enemy team should vary · nothing to set back in the Balance Room.
 
 ## State (durable facts only — history in archive)
+- Web-game-era details (import path, run journal, run-log viewer, t-skill-calc tests) → archive/handoff-trim-2026-11-19.md (set 250 O1).
 - Balance: import done (set 49, 28 Oct; measure n 24000 seed 4242, abnormal 0, outliers SF-8 +6.5, WY-8 −11.3 = user intent). Balance Room db `results/latest` = old set-49 measure (re-measure only if user asks; live numbers come from runerun, set 138) · DRAFT_KEY v9 · bot teams 228 (set 99: 19 round cells × 3 tiers × 4; botteams.md §13)
-- Import: follow the fast order in workflow/balance-import.md §0 (V1.31). Import path: main account reads the db and builds the `AMCFG1` code itself (set 166) · 2nd account: Balance Room "คัดลอกค่าให้ Claude" paste → `src/tools/cfgcode.mjs` (workflow/balance-import). Match code `AMATCH1` → `node lab/replay.mjs --code <file> [--fx]`.
 - `healHitUp` used by PT-8 (+10 back-row spirits per hit) and PT-6 (+5 self / random ally), no per-match cap (review 2026-11-06-playtest B1) — user 6 Nov: keep, no cap (do not re-propose).
 - Closed by user, **do not re-propose**: HL-7 uncapped atk-from-armor spike (set 93, keep as is) · SF-6 stealShock loop + overkill in "dealt" metric (kept as is, 27–28 Oct) · Jules (cancelled 28 Oct).
-- t-skill-calc findings F1–F4: all decided 28 Oct and now real tests; tests/run.js keeps the `WAIT` list (empty) for future findings.
 - Cross-account: the 2nd account cannot read Balance Room db (`ideas`, `results/latest` → not found) → values and ideas reach Claude only through the AMCFG1 paste.
-- Run-log viewer (set 110): runlog.html = lab/runlog.template.html + lab/runlogread.js (shared with lab/runlog.mjs); build.mjs page 4; tests/runlog-fixture.js plays a fair run for tests. Player name: core/runlog.js rlName, journal/code/db `nm`.
-- Run journal (set 109, core/runlog.js): every run action with gold before→after → game db `runlogs/…` + match replays `parts/r` (set 188) + run code ARUN1 v2 (Log screen copies 60 newest as codes for the Balance Room, set 188); read with `node lab/runlog.mjs <file>`; public-link viewers cannot write db → friends send the run code (full note: archive/handoff-trim-2026-11-10.md).
 - Old claude/* branches (~39) still on GitHub: optional cleanup by the user on github.com (proxy cannot delete) · claude/stage-mode already gone.
 
 ## Pending bundle ("งานรอรวม")
+- CI: GitHub Actions warns that a pinned action still runs on Node 20 → bump the action versions at the next code merge (set 249).
 - MVP1 = done (web game v132, steps 1–6 · set 193 B1). MVP1.5 = Godot move (step 7, same scope) · target 31 Dec 2026 = Godot plays like the web game (plan P4) + on itch.io, art P5 not counted (set 193 C1) · plan-godot-migration.md: P0–P3 step 6 done set 195 (all core logic exact vs JS), step 7 screens: 7a–7f + 3D arena (sets 196–207) + prep redesign set 212 on main.
 - Optional: remove the `simSummary` table fold (kept in ชุด 37) — only if user asks.
 - tribe-rules T-6 still lists "วายุ ขั้น 2 +17" from old measure — re-measure only if user asks.

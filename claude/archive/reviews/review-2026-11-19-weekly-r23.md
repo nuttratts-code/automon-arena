@@ -48,3 +48,10 @@ Overlaps (art-look · char-idle · asset-3d · asset hub README) — each set us
 
 ### L. Relay lines are long (set 249 line = 1 026 chars)
 - **L1 (rec):** from now on one Relay line ≤ 400 chars (details → notes/archive file it names); add the cap to relay.md W-rules. **L2:** only item G.
+
+## Extra round (owner asked "anything else?", set 250)
+- **M (correction):** item K said the pixel routes were "not default since set 227" — wrong: art-style V2.5 brought pixel (PixelLab) back and retired painted route P. **M1 picked:** route P moved to char-idle-ref.md, skill top says the idle method is open (ask the owner), char-idle 25 → 5 KB.
+- **N2 picked:** old long Relay lines stay (L1 applies to new entries only).
+- **O1 picked:** 4 web-game-era State lines → archive/handoff-trim-2026-11-19.md; Node 20 CI warning logged in งานรอรวม. handoff 13.6 → 10.9 KB.
+- **P2 picked:** art-style.md split waits until the look settles.
+- Info: reviews waiting since 8 Nov (rune names v2, rune text, runerun3000, project audit) · plan-set230 status unknown (ask the owner whether r38 replaced it).
