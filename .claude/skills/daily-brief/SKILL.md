@@ -17,7 +17,7 @@ description: Daily brief (สรุปประจำวัน / วันนี
 
 ## 2. Show (Thai, after the 3-line header; ≤ 5 lines per group, oldest first, each line = what · where · age)
 - 🟥 **รอคุณตัดสินใจ** — open reviews, open decisions, sample rounds waiting for the owner's OK.
-- 🟧 **คุณต้องทำเอง** — user-side todo (play/paste, uploads, account settings like repo Private).
+- 🟧 **คุณต้องทำเอง** — user-side todo (play/paste, uploads, account settings; repo Private NOT listed — reminded only near finish / at uploads, owner set 253).
 - 🟦 **Claude ทำต่อได้** — WIP branches + their next step, งานรอรวม (say "3 queued → do now" when it is).
 - ⏰ **กำหนดเวลา** — weeks left, warnings, today's review reminders.
 Empty group → leave it out. No list of finished work.

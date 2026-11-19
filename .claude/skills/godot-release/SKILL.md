@@ -6,7 +6,7 @@ description: Godot release for itch.io (ออกตัวเกม / อัป 
 
 > Rules: claude/workflow/publish.md §10 + claude/workflow/security.md parts 4–5 — they win if anything differs (description trimmed set 219 A1).
 
-1. **Stop point (rule A1):** a release leaves the PC → before building, tell the user which commit and which target (web only today). The itch.io page stays Draft / Restricted until the user opens it (set 203 D1).
+1. **Stop point (rule A1):** a release leaves the PC → before building, tell the user which commit and which target (web only today). The itch.io page stays Draft / Restricted until the user opens it (set 203 D1). Repo still public → remind the owner to set it Private first (security.md S-A1, owner set 253: remind at uploads / near finish only).
 2. **Latest main + CI:** `git fetch origin`, build from a clean worktree of origin/main; the newest code CI run on that commit is green including the `godot` and `godot-web` jobs (skill `ci-check` on the PC). Code changed after it → no release.
 3. **Parity + security before the build:** AI-made art in the build → remind the owner of the accepted risk (security.md part 2, set 219 D: Hunyuan3D EU/UK/KR gap) and check its credits line + PROVENANCE rows. skill `port-parity` passed on this commit (or CI job `godot` green = the same check) · skill `security-review` on the code changed since the last release · secret grep (security.md part 1).
 4. **Build · check · zip:** publish.md §10 steps 1–3, exactly as written there (WEB CHECK: PASS needed).
