@@ -1243,6 +1243,15 @@ async function iconEditor(it) {
       g.restore();
     }
     for (const [c, k] of [[out, Math.max(1, Math.floor(200 / S))], [out1, 1]]) { c.width = S * k; c.height = S * k; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.drawImage(o, 0, 0, S * k, S * k); }
+    { // owner set 255 A1: preview the frame line the game draws, left open at the gaps
+      const k = out.width / S, gg = out.getContext('2d'); gg.save(); gg.strokeStyle = '#d6b25c'; gg.lineWidth = Math.max(2, k); gg.lineCap = 'butt';
+      const N = 400; let on = false;
+      for (let i = 0; i <= N; i++) {
+        const t = (i % N) / N, [px, py] = edgeP(t), X = (m + px) * k, Y = (m + py) * k;
+        if (!isOpen(t)) { if (!on) { gg.beginPath(); gg.moveTo(X, Y); on = true; } else gg.lineTo(X, Y); } else if (on) { gg.stroke(); on = false; }
+      }
+      if (on) gg.stroke(); gg.restore();
+    }
     zTxt.textContent = `×${z}`;
     sizeTxt.textContent = m ? `${n}×${n} px · ไฟล์ ${S}×${S}` : `${n}×${n} px`; sizeIn.value = String(n);
     openTxt.textContent = open.length ? `เปิดกรอบ ${open.length} ช่อง · ยื่นได้ไม่เกิน ${m} เม็ด (25%)` : 'ยังไม่มีช่องเปิด';
@@ -1328,7 +1337,7 @@ async function iconEditor(it) {
         zoomRow,
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาดกรอบ'), h('span', { class: 'sp' }), sizeTxt), sizeIn,
         h('div', { class: 'icon-frame' }, frameSw, h('div', { class: 'row' }, openTxt, h('span', { class: 'sp' }), clearB), hintEl),
-        h('div', { class: 'lbl' }, 'ผลลัพธ์ (ขยายให้ดู)'), h('div', { class: 'icon-prev' }, flipped(out, src)),
+        h('div', { class: 'lbl' }, 'ผลลัพธ์ (ขยายให้ดู · เส้นทอง = ขอบที่เกมจะวาด ไม่อยู่ในไฟล์)'), h('div', { class: 'icon-prev' }, flipped(out, src)),
         h('div', { class: 'lbl' }, 'ขนาดจริง'), h('div', { class: 'icon-prev small' }, flipped(out1, src)),
         h('p', { class: 'small faint' }, 'พิกเซลจริงไม่ย่อไม่ขยาย · นอกกรอบโปร่งใส (ยกเว้นหลังช่องที่เปิด) · ไม่มีขอบ (ให้เกมวาดเอง) · หันข้างตามสวิตช์กลับข้างของภาพ'))));
   dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });

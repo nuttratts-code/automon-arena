@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 495,
+ "rev": 497,
  "settings": {
   "moves": [
    "idle",
@@ -1406,7 +1406,7 @@
      "t": "2026-11-19T11:58:35.752Z",
      "by": "owner",
      "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
@@ -1423,6 +1423,21 @@
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
      "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 10
+    },
+    {
+     "id": "rac9ad33f",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-19_e93fc6eb.png",
+     "orig": "WY-1_icon_58_edit.png",
+     "t": "2026-11-19T12:09:41.463Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
