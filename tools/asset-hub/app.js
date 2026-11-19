@@ -1174,9 +1174,12 @@ function ivSub(open, iv) {
   return ivJoin(out.sort((u, v) => u[0] - v[0]));
 }
 // Brush on a canvas: o = { tAt(e) -> t, n() -> frame size px, get() / set(open), active() -> bool, changed() }.
-// Left button = the chosen tool, right button = the other one; Ctrl+Z / "ย้อน" undoes one stroke. Returns the tool row.
+// Left button = the chosen tool, right button = the other one; Ctrl+Z / "ย้อน" undoes one stroke, Ctrl+Y / "ทำซ้ำ" redoes (set 256).
+// Returns the tool row; row.clear() = "ปิดทุกช่อง" as an undoable step.
 function gapBrush(cv, o) {
-  let tool = 'erase', stroke = null; const undo = [];
+  let tool = 'erase', stroke = null; const undo = [], redo = [];
+  const snap = () => o.get().map((v) => v.slice());
+  const record = () => { undo.push(snap()); if (undo.length > 100) undo.shift(); redo.length = 0; };
   const shortIv = (ta, tb) => { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, ta + d] : [tb, ta]; };
   function paint(ta, tb) { // brush = 1.5 frame px either side of the path, so a single click makes a 3 px gap
     const r = 1.5 / (2 * Math.SQRT2 * Math.max(4, o.n())), [a, b] = shortIv(ta, tb), iv = [((a - r) % 1 + 1) % 1, ((b + r) % 1 + 1) % 1];
@@ -1186,27 +1189,38 @@ function gapBrush(cv, o) {
   cv.addEventListener('pointerdown', (e) => {
     if (!o.active() || (e.button !== 0 && e.button !== 2)) return;
     e.preventDefault(); e.stopImmediatePropagation(); cv.focus?.();
-    undo.push(o.get().map((v) => v.slice())); if (undo.length > 50) undo.shift();
+    record();
     const t = o.tAt(e); stroke = { mode: (e.button === 2) === (tool === 'erase') ? 'draw' : 'erase', t }; cv.setPointerCapture(e.pointerId); paint(t, t); syncUi();
   });
   cv.addEventListener('pointermove', (e) => { if (!stroke) return; const t = o.tAt(e); paint(stroke.t, t); stroke.t = t; });
   const end = () => { stroke = null; }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-  const back = () => { if (!undo.length) return; o.set(undo.pop()); o.changed(); syncUi(); };
-  cv.addEventListener('keydown', (e) => { if (o.active() && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); back(); } });
+  const back = () => { if (!undo.length) return; redo.push(snap()); o.set(undo.pop()); o.changed(); syncUi(); };
+  const fwd = () => { if (!redo.length) return; undo.push(snap()); o.set(redo.pop()); o.changed(); syncUi(); };
+  const onKey = (e) => { // whole dialog, not only the canvas (owner set 256: undo after clicking a button too)
+    if (!cv.isConnected) { document.removeEventListener('keydown', onKey); return; }
+    if (!o.active() || !(e.ctrlKey || e.metaKey) || e.target?.tagName === 'INPUT') return;
+    const k = e.key.toLowerCase();
+    if (k === 'z' && !e.shiftKey) { e.preventDefault(); back(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); fwd(); }
+  };
+  document.addEventListener('keydown', onKey);
   const bE = h('button', { onclick: () => { tool = 'erase'; syncUi(); } }, '🧽 ลบเส้น');
   const bD = h('button', { onclick: () => { tool = 'draw'; syncUi(); } }, '✏️ วาดเส้น');
-  const bU = h('button', { class: 'ghost', title: 'ย้อนการทา 1 ครั้ง (Ctrl+Z)', onclick: back }, '↶ ย้อน');
-  function syncUi() { for (const [b, k] of [[bE, 'erase'], [bD, 'draw']]) { b.classList.toggle('on', tool === k); b.setAttribute('aria-pressed', String(tool === k)); } bU.disabled = !undo.length; }
+  const bU = h('button', { class: 'ghost', title: 'ย้อน 1 ครั้ง (Ctrl+Z)', onclick: back }, '↶ ย้อน');
+  const bR = h('button', { class: 'ghost', title: 'ทำซ้ำ (Ctrl+Y)', onclick: fwd }, '↷ ทำซ้ำ');
+  function syncUi() { for (const [b, k] of [[bE, 'erase'], [bD, 'draw']]) { b.classList.toggle('on', tool === k); b.setAttribute('aria-pressed', String(tool === k)); } bU.disabled = !undo.length; bR.disabled = !redo.length; }
   syncUi();
-  return h('div', { class: 'row gap-tools' }, h('span', { class: 'seg' }, bE, bD), bU);
+  const row = h('div', { class: 'row gap-tools' }, h('span', { class: 'seg' }, bE, bD), bU, bR);
+  row.clear = () => { if (!o.get().length) return; record(); o.set([]); o.changed(); syncUi(); };
+  return row;
 }
-const GAP_HINT = 'ทาไปตามขอบกรอบ (กดใกล้ขอบตรงไหนก็ได้) · 🧽 = เปิดช่อง ของหลังช่องโผล่ออกนอกกรอบ · ✏️ = ปิดคืนเฉพาะส่วนที่ทา · คลิกขวา = ใช้อีกอัน · Ctrl+Z = ย้อน';
+const GAP_HINT = 'ทาไปตามขอบกรอบ (กดใกล้ขอบตรงไหนก็ได้) · 🧽 = เปิดช่อง ของหลังช่องโผล่ออกนอกกรอบ · ✏️ = ปิดคืนเฉพาะส่วนที่ทา · คลิกขวา = ใช้อีกอัน · Ctrl+Z = ย้อน · Ctrl+Y = ทำซ้ำ';
 // owner set 255: open / close frame gaps on an icon that already exists (keeps its pixel edits); only the gaps change, the file stays
 async function iconFrameEditor(it, r) {
   let img; try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
   const w = img.naturalWidth, { m, n } = iconGeom(r, w);
   let open = iconGeom(r, w).open.map((a) => a.slice());
-  const z = Math.max(3, Math.min(12, Math.floor(Math.min(window.innerWidth * 0.6, window.innerHeight * 0.7) / w)));
+  const fitZ = Math.max(3, Math.min(12, Math.floor(Math.min(window.innerWidth * 0.6, window.innerHeight * 0.7) / w)));
+  let z = fitZ; // owner set 256: zoom − / + / พอดีจอ, Ctrl + wheel at the pointer (same as the cropper)
   const cv = h('canvas', { class: 'icon-cv frame-mode', width: w * z, height: w * z, tabindex: 0, 'aria-label': 'ทาไปตามขอบกรอบ ลบเส้นเพื่อเปิดช่อง วาดเส้นเพื่อปิด' });
   if (r.flip) cv.classList.add('flipx');
   const info = h('span', { class: 'small dim' });
@@ -1219,10 +1233,24 @@ async function iconFrameEditor(it, r) {
     g.save(); g.strokeStyle = 'rgba(90,209,255,0.85)'; g.lineWidth = Math.max(2, z * 0.5); g.setLineDash([z, z]);
     for (const [a, b] of ivs) { const len = (b - a + 1) % 1, st = Math.max(2, Math.ceil(len * 160)); g.beginPath(); for (let i = 0; i <= st; i++) { const [x, y] = iconEdgeP(n, a + len * i / st); (i ? g.lineTo : g.moveTo).call(g, (m + x) * z, (m + y) * z); } g.stroke(); }
     g.restore();
-    info.textContent = open.length ? `เปิด ${open.length} ช่อง (เส้นฟ้าประ = ช่องที่เปิด)` : 'ยังไม่มีช่องเปิด';
+    zTxt.textContent = `×${z}`; info.textContent = open.length ? `เปิด ${open.length} ช่อง (เส้นฟ้าประ = ช่องที่เปิด)` : 'ยังไม่มีช่องเปิด';
   }
   const tAt = (e) => { const rc = cv.getBoundingClientRect(); const fx = (r.flip ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * w, fy = (e.clientY - rc.top) / rc.height * w; return iconEdgeT(n, fx - m, fy - m); };
   const tools = gapBrush(cv, { tAt, n: () => n, get: () => open, set: (v) => { open = v; }, active: () => true, changed: draw });
+  const stageEl = h('div', { class: 'icon-stage' }, cv), zTxt = h('b', {});
+  function zoomTo(nz, e) { // keeps the point under the pointer (or the middle of the view) in place
+    nz = Math.max(1, Math.min(32, nz)); if (nz === z) return;
+    const st = stageEl, rc = st.getBoundingClientRect();
+    const ox = e ? e.clientX - rc.left : st.clientWidth / 2, oy = e ? e.clientY - rc.top : st.clientHeight / 2;
+    const fx = (st.scrollLeft + ox) / z, fy = (st.scrollTop + oy) / z;
+    z = nz; cv.width = cv.height = w * z; draw();
+    st.scrollLeft = fx * z - ox; st.scrollTop = fy * z - oy;
+  }
+  cv.addEventListener('wheel', (e) => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); zoomTo(z + (e.deltaY < 0 ? 1 : -1), e); }, { passive: false });
+  const zoomRow = h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), h('span', { class: 'sp' }),
+    h('button', { 'aria-label': 'ซูมออก', title: 'Ctrl + ล้อเมาส์ลง', onclick: () => zoomTo(z - 1) }, '−'), zTxt,
+    h('button', { 'aria-label': 'ซูมเข้า', title: 'Ctrl + ล้อเมาส์ขึ้น', onclick: () => zoomTo(z + 1) }, '+'),
+    h('button', { class: 'ghost', onclick: () => zoomTo(fitZ) }, 'พอดีจอ'));
   const dlg = $('dlg'); const close = () => { dlg.classList.remove('icon-dlg'); dlg.close(); };
   const saveB = h('button', { class: 'primary', onclick: async () => {
     const nr = hub.items[it.id].rounds.find((x) => x.id === r.id); if (!nr) { toast('ไม่พบไอคอนนี้แล้ว'); return; }
@@ -1231,9 +1259,9 @@ async function iconFrameEditor(it, r) {
   } }, 'บันทึก');
   $('dlgBody').replaceChildren(
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แต่งกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ทาตามขอบ: 🧽 = เปิดช่อง · ✏️ = ปิด · ไฟล์ภาพไม่เปลี่ยน'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
-    h('div', { class: 'icon-ed' }, h('div', { class: 'icon-stage' }, cv),
-      h('div', { class: 'icon-side' }, h('div', { class: 'row' }, info, h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง')),
-        tools, h('p', { class: 'small icon-hint' }, GAP_HINT),
+    h('div', { class: 'icon-ed' }, stageEl,
+      h('div', { class: 'icon-side' }, h('div', { class: 'row' }, info, h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => tools.clear() }, 'ปิดทุกช่อง')),
+        zoomRow, tools, h('p', { class: 'small icon-hint' }, GAP_HINT),
         h('p', { class: 'small faint' }, 'เส้นทอง = ขอบที่เกมจะวาด (ไม่อยู่ในไฟล์) · ช่องใหม่ตรงที่ไฟล์ไม่มีพิกเซลยื่นออกไป จะแค่ไม่มีเส้น ถ้าอยากให้มีของโผล่ ใช้ "แก้พิกเซล" วาดเพิ่ม หรือ "ตัดกรอบใหม่"'),
         m ? null : h('p', { class: 'small faint' }, 'ไอคอนนี้ทำก่อนมีระบบเปิดกรอบ ไม่มีที่ว่างรอบกรอบ ส่วนที่ยื่นจะโผล่ไม่ได้'))));
   dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });
@@ -1411,7 +1439,7 @@ async function iconEditor(it) {
   const saveB = h('button', { class: 'primary', onclick: () => saveIcon(false) }, 'บันทึกและใช้เลย');
   const saveEdB = h('button', { title: 'บันทึกไอคอนนี้ แล้วเปิดตัวแก้พิกเซลเพื่อเก็บงานส่วนที่ยื่นออก', onclick: () => saveIcon(true) }, 'บันทึกแล้วแก้พิกเซลต่อ');
   const frameSw = h('button', { class: 'switch', role: 'switch', 'aria-checked': 'false', onclick: () => { frameMode = !frameMode; draw(); } }, h('span', { class: 'knob' }), 'แต่งกรอบ (เปิดช่องให้ยื่นออก)');
-  const clearB = h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง');
+  const clearB = h('button', { class: 'ghost', onclick: () => gapTools.clear() }, 'ปิดทุกช่อง');
   const openTxt = h('span', { class: 'small dim' });
   const hintEl = h('div', {}, gapTools, h('p', { class: 'small icon-hint' }, GAP_HINT + ' · ปิดสวิตช์เพื่อกลับไปลากย้ายกรอบ'));
   $('dlgBody').replaceChildren(
