@@ -1,4 +1,5 @@
 # Weekly review 12–19 Nov — part 0 (first run, set 250 R2/S1)
+n**DECIDED (owner, set 250):** X1 = hygiene warnings in .claude/hooks/session-start.sh (applied; next part 0 checks whether F/H repeat) · T2 = itch.io waits for the 3D scene (set 205 kept) → Claude warns mid-December if step 8 is not done.
 
 Numbers = estimates from `git log` on origin/main (commit subjects, not real time spent).
 

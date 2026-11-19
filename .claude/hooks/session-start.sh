@@ -9,5 +9,16 @@ timeout 20 git fetch -q origin main 2>/dev/null
 ref=origin/main; git rev-parse -q --verify "$ref" >/dev/null || ref=HEAD
 echo "=== chat-start hook: Relay block from $ref:claude/handoff.md (run skill chat-start next) ==="
 git show "$ref:claude/handoff.md" 2>/dev/null | awk '/^## Relay/{p=1} p&&/^## /&&!/^## Relay/{exit} p'
+# Set 250 X1 (weekly review experiment): hygiene warnings that text rules missed twice
+# (handoff size · decided reviews left in claude/ · open reviews > 7 days). Read-only.
+hs=$(git show "$ref:claude/handoff.md" 2>/dev/null | wc -c)
+[ "${hs:-0}" -gt 9000 ] 2>/dev/null && echo "⚠ hygiene: handoff.md = $hs bytes (> 9000) → trim at close-out (archive old Relay/State)"
+rv=$(git show "$ref:claude/reviews.md" 2>/dev/null)
+dec=$(echo "$rv" | grep -E '^\| review-[^|]*\.md \|' | grep -E '\| decided \|$' | grep -oE 'review-[0-9-]+[a-z0-9-]*\.md' | tr '
+' ' ')
+[ -n "$dec" ] && echo "⚠ hygiene: decided reviews still in claude/ → git mv to claude/archive/reviews/: $dec"
+now=$(date +%s 2>/dev/null)
+old=$(echo "$rv" | grep -E '^\| review-[0-9]{4}-[0-9]{2}-[0-9]{2}[^|]*\| .*\| open' | grep -vE 'parked|(Godot)|(ideas)' | grep -oE 'review-[0-9]{4}-[0-9]{2}-[0-9]{2}[a-z0-9-]*' | while read f; do d=$(echo "$f" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}'); t=$(date -d "$d" +%s 2>/dev/null) || continue; a=$(( (now - t) / 86400 )); [ "$a" -gt 7 ] && printf '%s (%sd) ' "${f#review-}" "$a"; done)
+[ -n "$old" ] && echo "⚠ hygiene: open reviews waiting > 7 days → remind the owner: $old"
 echo "=== current branch: $(git branch --show-current 2>/dev/null) ==="
 exit 0

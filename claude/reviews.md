@@ -4,6 +4,7 @@ V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 
 
 | File | Topic | Status |
 | --- | --- | --- |
+| archive/reviews/review-2026-11-19-weekly-p0.md | Set 250 weekly part 0 (first run): MVP1.5 plan vs 31 Dec, rework 8 %, landed 11 %, 4 repeats from last week → X1 hook warnings · T2 itch.io waits for 3D | decided |
 | archive/reviews/review-2026-11-19-weekly-r23.md | Set 250 weekly review rounds 2+3 G–L (Relay trim · decided reviews archived · ui-work kept full for local tools · char-idle/art-look bodies → *-ref.md · Relay entry ≤ 400 chars) | decided |
 | archive/reviews/review-2026-11-19-weekly.md | Set 249 weekly review A–F (D:\GitHub sessions skipped rules → parent CLAUDE.md note · art direction: ask before art-style edit · HARD RULE 3 follow-ups need own gate · char-idle description · instructions V6.3 · hygiene) — applied | decided |
 | review-2026-11-14-lumina.md | Luminati three.js HD-2D engine vs set 217 arena — ideas only | open (ideas) |
