@@ -1,10 +1,10 @@
 // ชุด 83: วัดเศรษฐกิจของ run (ผู้เล่น = บอท core/bot.js · คู่แข่ง = ทีมบอทใน core/botdata.js)
-// รัน: node lab/econ.mjs [run=1000] [เมล็ด=4242] [เงินเริ่ม/ต่อรอบ เช่น 25,25]
+// รัน: node lab/archive/econ.mjs [run=1000] [เมล็ด=4242] [เงินเริ่ม/ต่อรอบ เช่น 25,25]
 // พิมพ์ตามขั้นชนะ: เงินเหลือหลังซื้อ · ขนาดทีม · เลเวลเฉลี่ย · % ตัว Lv2/Lv3 · % ทีม Lv2 ครบ · ผู้เล่นชนะ % · BYROUND=1 = จัดกลุ่มตามรอบแทนขั้นชนะ
-import { RULES } from '../core/rules.js';
-import { buildCharacterList } from '../core/characters.js';
-import { BOT_TEAMS } from '../core/botdata.js';
-import { pickBotTeam, simRun } from '../core/botteams.js';
+import { RULES } from '../../core/rules.js';
+import { buildCharacterList } from '../../core/characters.js';
+import { BOT_TEAMS } from '../../core/botdata.js';
+import { pickBotTeam, simRun } from '../../core/botteams.js';
 
 const chars = buildCharacterList(), N = +(process.argv[2] || 1000), SEED = +(process.argv[3] || 4242);
 const [sg, gp] = (process.argv[4] || '').split(',').map(Number);

@@ -1,7 +1,7 @@
-// Set 107: how fast the shop bot levels its units (Lv2 / Lv3 per round) · node lab/botlv.mjs [runs]
-import { RULES } from '../core/rules.js';
-import { buildCharacterList } from '../core/characters.js';
-import { simRun, tribeList } from '../core/botteams.js';
+// Set 107: how fast the shop bot levels its units (Lv2 / Lv3 per round) · node lab/archive/botlv.mjs [runs]
+import { RULES } from '../../core/rules.js';
+import { buildCharacterList } from '../../core/characters.js';
+import { simRun, tribeList } from '../../core/botteams.js';
 const chars = buildCharacterList(), tribes = tribeList(chars), runs = +(process.argv[2] || 120);
 const R = Array.from({ length: 20 }, () => ({ n: 0, u: 0, l2: 0, l3: 0, gold: 0 }));
 let won = 0, rn = 0;

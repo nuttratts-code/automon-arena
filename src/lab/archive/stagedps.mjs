@@ -1,7 +1,7 @@
 // Stage-mode baseline: each match = 1 stage. Player = bot (core/bot.js) through real shop, opponents = prepared bot teams.
 // For the player team at each stage: damage dealt to a passive dummy in the first WIN ms (skills + tribes included).
-// run: node lab/stagedps.mjs [runs=300] [seed=4242] (from src/)
-const root = '..';
+// run: node lab/archive/stagedps.mjs [runs=300] [seed=4242] (from src/)
+const root = '../..';
 const { RULES } = await import(root + '/core/rules.js');
 const { buildCharacterList } = await import(root + '/core/characters.js');
 const { BOT_TEAMS } = await import(root + '/core/botdata.js');

@@ -1,13 +1,13 @@
-// ชุด 80: วัดบอส · node lab/bossmeasure.mjs [n] — ตาราง % ชนะบอส: ทีมสุ่มแต่ละเลเวล × บอสครั้งที่ k (ไม่มีรูน / สุ่มรูน)
+// ชุด 80: วัดบอส · node lab/archive/bossmeasure.mjs [n] — ตาราง % ชนะบอส: ทีมสุ่มแต่ละเลเวล × บอสครั้งที่ k (ไม่มีรูน / สุ่มรูน)
 // + ทีมจริงจาก run จำลอง (บอทเล่นแทนผู้เล่น) ตอนรอบ 5/10/15 สู้บอสครั้งที่ 1/2/3
-import { RULES } from '../core/rules.js';
-import { buildCharacterList } from '../core/characters.js';
-import { stageDefaults } from '../core/stage.js';
-import { simRun } from '../core/botteams.js';
-import { simulate } from '../core/battle.js';
-import { bossUnit } from '../core/boss.js';
-import { buildTeam, makeCharMap } from '../core/team.js';
-import { bossRanking } from './analyze.js';
+import { RULES } from '../../core/rules.js';
+import { buildCharacterList } from '../../core/characters.js';
+import { stageDefaults } from '../../core/stage.js';
+import { simRun } from '../../core/botteams.js';
+import { simulate } from '../../core/battle.js';
+import { bossUnit } from '../../core/boss.js';
+import { buildTeam, makeCharMap } from '../../core/team.js';
+import { bossRanking } from '../analyze.js';
 
 const n = +process.argv[2] || 200, ks = (process.argv[3] || '1,2,3,4,5,6,8,10').split(',').map(Number);
 const chars = buildCharacterList(), st = stageDefaults(), cm = makeCharMap(chars);
