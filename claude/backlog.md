@@ -1,6 +1,6 @@
 # Automon Arena backlog (parked work)
 
-V2.2 · 19 Nov 2026 · set 251 rows (Undecided + Repo hygiene) · V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
+V2.3 · 19 Nov 2026 · set 252 Repo hygiene row done (removed) · V2.2 · set 251 rows (Undecided + Repo hygiene) · V2.1 · 12 Nov 2026 · art tools section · V2.0 31 Oct set 64 boss phases · not opened until an item is picked up · current focus is in handoff "Next" · open balance issues live in pending.md, not here · older versions: git log
 
 ## Gameplay / pacing
 - Match length and run pacing (set 181: user decided to KEEP current values and the rule "long matches are not a problem" — overtime 180 s every round; reopen only if the user asks): goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
@@ -40,9 +40,6 @@ V2.2 · 19 Nov 2026 · set 251 rows (Undecided + Repo hygiene) · V2.1 · 12 Nov
 
 ## Art tools to try (after MVP1, with skill art-look)
 - sprite-gen (github.com/aldegad/sprite-gen, Apache-2.0, user A1 12 Nov): 1 drawing → transparent sprite atlas + manifest / motion loops; frames are drawn by outside AI (Codex/Grok/OpenAI/Claude), cut + packed locally; exports Aseprite. Before use: security.md part ② (pin version, user OK) · base image is uploaded to the provider → test on placeholder art first, read provider terms before real art · needs the user's own login/key (never in chat) · no Godot export (atlas PNG + manifest.json → small importer) · facing + walk loops not reliable per its README → clean up in Aseprite (art-style.md).
-
-## Repo hygiene (set 251, owner B1 from the set 180 audit) — one small set, code → gate
-- README.md (what it is · build/test · docs · art credits) · LICENSE = all rights reserved notice (no reuse) · src/lab: mark used tools (measure, runerun, econ55, charstat, bossrun, bossres, cfgdiff…) and move the rest to src/lab/archive/ (check imports + CI first) · repo Private = owner in GitHub settings (security.md S-A1)
 
 ## Platform (decided 27 Oct)
 - Move code/docs to GitHub: done 27 Oct · Jules part cancelled by user 28 Oct

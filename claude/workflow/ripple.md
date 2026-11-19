@@ -20,7 +20,7 @@ Every commit that changes behaviour, a value, a name, a text the player sees, a 
 | Rune (id, name, text, effect, when it pays) | src/core/runes.js / runrunes.js / stage.js / stage-user.js · claude/shop-merge-rules.md rune section · src/game/labels.js + run/js (texts, `◆n`, cards) · Balance Room stage tab (src/lab/balance) · src/tests/t-*.js + src/tests/ui_smoke.py (names!) · src/lab/runecheck.js · check.template.html |
 | Character / kit | src/core/characters.js · claude/characters.csv (tools/csv.mjs) · combat-rules (skill text) · retired kit test `ID@n` · botteams/botdata (botgen) · Balance Room chars tab · art map src/game/art.js |
 | Tribe | src/core/rules.js / rules-user.js · claude/tribe-rules.md · labels.js (tribe shapes/names) · Balance Room tribes tab · tests |
-| Shop / gold / reroll / round order | src/core/shop.js · src/core/bot.js (bot uses the same rule) · claude/shop-merge-rules.md · run/js 40-draw-details.js (shown costs) · lab/econ*.mjs · src/tests/t-shop.js |
+| Shop / gold / reroll / round order | src/core/shop.js · src/core/bot.js (bot uses the same rule) · claude/shop-merge-rules.md · run/js 40-draw-details.js (shown costs) · lab/econ55.mjs · src/tests/t-shop.js |
 | Combat rule | src/core/battle.js · claude/combat-rules.md (id C-…) · bossrun/boss.js if bosses use it · power.js · tests |
 | Save / run state / run code | src/core/save.js (version + migrate old saves) · runlog.js + lab/runlog* (old journals replay) · runcode.mjs · ARUN1 reader (lab/humanstats.js) · game db runlogs head/parts/r (10-state-save.js writer ↔ lab/runlogread.js rvFromDb/rvDbCode ↔ 20-log-screen.js, set 188) |
 | Player-visible text / layout | every screen size in ui-work 4b · ui_smoke selectors/texts · labels.js |
