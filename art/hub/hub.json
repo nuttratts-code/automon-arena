@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 503,
+ "rev": 522,
  "settings": {
   "moves": [
    "idle",
@@ -35,7 +35,7 @@
     "SF-1",
     "HL-1"
    ],
-   "showBg": false
+   "showBg": true
   },
   "migr249": true
  },
@@ -228,7 +228,8 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2"
+     "promptId": "p2",
+     "check": {}
     },
     {
      "id": "r30da5f43",
@@ -243,7 +244,18 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 20
+     "iconPad": 20,
+     "iconOpen": [
+      [
+       0.0482,
+       0.2561
+      ],
+      [
+       0.2603,
+       0.3829
+      ]
+     ],
+     "iconN": 80
     }
    ],
    "notes": "",
@@ -606,7 +618,9 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2"
+     "promptId": "p2",
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-19_a0e8a070.png",
+     "check": {}
     },
     {
      "id": "r4406e7f4",
@@ -621,7 +635,22 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 16
+     "iconPad": 16,
+     "iconOpen": [
+      [
+       0.0152,
+       0.0702
+      ],
+      [
+       0.8375,
+       0.9153
+      ],
+      [
+       0.9169,
+       0.9564
+      ]
+     ],
+     "iconN": 62
     }
    ],
    "notes": "",
@@ -645,13 +674,22 @@
      "ox": 0,
      "oy": 0,
      "blur": 0.3,
-     "k": null
+     "k": {
+      "bl": [
+       0.058,
+       -0.2
+      ],
+      "br": [
+       -0.008,
+       -0.137
+      ]
+     }
     },
     "size": [
      117,
      83
     ],
-    "round": "r5a5a91ea"
+    "round": "r49e1ff72"
    },
    "thumb": "r5a5a91ea",
    "offset": {
@@ -1380,7 +1418,8 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2"
+     "promptId": "p2",
+     "check": {}
     },
     {
      "id": "rb3b0644a",
@@ -1391,57 +1430,19 @@
      "t": "2026-11-19T11:57:44.440Z",
      "by": "owner",
      "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2",
-     "iconPad": 10
-    },
-    {
-     "id": "r44f67261",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WY-1/icon_f1_2026-11-19_f76ad55b.png",
-     "orig": "WY-1_icon_58.png",
-     "t": "2026-11-19T11:58:35.752Z",
-     "by": "owner",
-     "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2",
-     "iconPad": 10,
-     "library": "lib/characters/WY-1/WY-1_icon_f1_2026-11-19_f76ad55b.png"
-    },
-    {
-     "id": "r19f92168",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WY-1/icon_f1_2026-11-19_c67a48e4.png",
-     "orig": "WY-1_icon_58_edit.png",
-     "t": "2026-11-19T12:01:43.222Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2",
-     "iconPad": 10
-    },
-    {
-     "id": "rac9ad33f",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WY-1/icon_f1_2026-11-19_e93fc6eb.png",
-     "orig": "WY-1_icon_58_edit.png",
-     "t": "2026-11-19T12:09:41.463Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 10
+     "iconPad": 10,
+     "library": "lib/characters/WY-1/WY-1_icon_f1_2026-11-19_54f817f9.png",
+     "iconOpen": [
+      [
+       0.3191,
+       0.4387
+      ]
+     ],
+     "iconN": 38
     }
    ],
    "notes": "",
@@ -1680,7 +1681,18 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 11
+     "iconPad": 11,
+     "iconOpen": [
+      [
+       0.0435,
+       0.1307
+      ],
+      [
+       0.8676,
+       0.9679
+      ]
+     ],
+     "iconN": 44
     },
     {
      "id": "ra918456c",
@@ -1694,7 +1706,8 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2"
+     "promptId": "p2",
+     "check": {}
     }
    ],
    "notes": "",
@@ -2016,22 +2029,6 @@
      "flip": true
     },
     {
-     "id": "rcd9752f8",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WN-1/icon_f1_2026-11-18_3f2bb6ba.png",
-     "orig": "WN-1_icon_72.png",
-     "t": "2026-11-18T15:13:19.609Z",
-     "by": "owner",
-     "note": "ไอคอน 72×72 จากภาพตัดพื้น 2026-11-18",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "flip": true,
-     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-18_3f2bb6ba.png"
-    },
-    {
      "id": "r3df87382",
      "slot": "still",
      "form": 1,
@@ -2093,49 +2090,6 @@
      "check": {}
     },
     {
-     "id": "rf9489fbd",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WN-1/icon_f1_2026-11-19_4855726e.png",
-     "orig": "WN-1_icon_94_edit.png",
-     "t": "2026-11-19T11:17:08.028Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "iconPad": 16,
-     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_4855726e.png"
-    },
-    {
-     "id": "r7ca969ee",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WN-1/icon_f1_2026-11-19_9a51035f.png",
-     "orig": "WN-1_icon_94_edit.png",
-     "t": "2026-11-19T11:26:47.530Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "iconPad": 16,
-     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_9a51035f.png",
-     "iconOpen": [
-      [
-       0.8545,
-       0.9292
-      ],
-      [
-       0.9582,
-       0.9994
-      ]
-     ],
-     "iconN": 62
-    },
-    {
      "id": "rb7ea9b5d",
      "slot": "icon",
      "form": 1,
@@ -2159,7 +2113,8 @@
        0.9994
       ]
      ],
-     "iconN": 62
+     "iconN": 62,
+     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_f3b3b55c.png"
     },
     {
      "id": "r98b2d439",
@@ -2181,7 +2136,8 @@
       "fw": 118,
       "fh": 78,
       "n": 8,
-      "ms": 150
+      "ms": 150,
+      "pingpong": true
      }
     }
    ],
