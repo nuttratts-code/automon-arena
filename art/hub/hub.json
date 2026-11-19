@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 522,
+ "rev": 524,
  "settings": {
   "moves": [
    "idle",
@@ -676,8 +676,8 @@
      "blur": 0.3,
      "k": {
       "bl": [
-       0.058,
-       -0.2
+       0.068,
+       -0.165
       ],
       "br": [
        -0.008,
@@ -2138,6 +2138,52 @@
       "n": 8,
       "ms": 150,
       "pingpong": true
+     }
+    },
+    {
+     "id": "r97d33ff5",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-19_97d33ff5.png",
+     "orig": "pixellab PixMiniMax mmA (cells 1-8 of 9)",
+     "t": "2026-11-19T13:51:28.288Z",
+     "by": "claude",
+     "note": "set 257 PixMiniMax A: first + last frame = ★ still r5b8f96a2 (loops by itself) · side, east · 8 frames · palette None · description = Enhance with AI text + \"Hooves stay planted…\" · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 118,
+      "fh": 78,
+      "n": 8,
+      "ms": 150
+     }
+    },
+    {
+     "id": "r43d8f9a2",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-19_43d8f9a2.png",
+     "orig": "pixellab PixMiniMax mmB (cells 1-8 of 9)",
+     "t": "2026-11-19T13:51:28.288Z",
+     "by": "claude",
+     "note": "set 257 PixMiniMax B: first + last frame = ★ still r5b8f96a2 (loops by itself) · side, east · 8 frames · palette = from the ★ still (55 colours) · description = Enhance with AI text + \"Hooves stay planted…\" · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 118,
+      "fh": 78,
+      "n": 8,
+      "ms": 150
      }
     }
    ],
