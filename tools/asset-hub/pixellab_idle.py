@@ -9,8 +9,11 @@ Key: only from the env var PIXELLAB_API_KEY (owner H1) - never printed, never wr
 run = enhance (engine pixminimax, first + last frame = the ★ still) -> print the text ->
 append the body suffix -> animate-pixminimax (8 frames, side, no background) -> poll the job ->
 frames 1..8 (index 0 = the input) -> G1: every pixel mapped to the nearest ★-still colour ->
-8x1 sheet + GIF + numbers in claude/preview-set258/<ID>_<job8>/ -> --hub adds a frames round
-(by claude, not starred, 150 ms ค่าเสนอ, rev +1). --desc skips the enhance step.
+8x1 sheet + GIF + numbers in claude/preview-set258/<ID>_<job8>/. --desc skips the enhance step.
+Owner flow (set 258): --pad always (default 12) · --dry first, show the request, wait for OK ·
+run (no --hub) · send preview.gif + sheet_x2.png, wait for OK · only then
+  python -I tools/asset-hub/pixellab_idle.py hub <ID> claude/preview-set258/<ID>_<job8>
+adds the frames round (by claude, not starred, 150 ms ค่าเสนอ, rev +1).
 """
 import argparse, base64, io, json, os, secrets, sys, time, urllib.error, urllib.request
 from datetime import datetime, timezone
@@ -174,8 +177,9 @@ def add_round(item_id, sheet_path, still_round, info):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["balance", "enhance", "run"])
+    ap.add_argument("cmd", choices=["balance", "enhance", "run", "hub"])
     ap.add_argument("item", nargs="?")
+    ap.add_argument("run_dir", nargs="?", help="hub: the checked run folder")
     ap.add_argument("--direction", default="east", choices=DIRS)
     ap.add_argument("--action", default=BASE_DESC)
     ap.add_argument("--suffix", default=SUFFIX)
@@ -194,6 +198,23 @@ def main():
         return
     if not a.item:
         sys.exit("item id needed")
+    if a.cmd == "hub":  # owner looked at the GIF and said OK -> add that run (set 258 owner flow)
+        d = Path(a.run_dir).resolve()
+        if OUT.resolve() not in d.parents:
+            sys.exit("run dir must be inside claude/preview-set258")
+        sheets = list(d.glob("sheet_8x1_*.png"))
+        req = json.loads((d / "request.json").read_text(encoding="utf8"))
+        if len(sheets) != 1:
+            sys.exit("need exactly one sheet in the run dir")
+        sr, still = star_still(a.item)
+        w, h = (int(x) for x in sheets[0].stem.split("_")[-1].split("x"))
+        pad = (w - still.width) // 2
+        rid, dst = add_round(a.item, sheets[0], sr, {"fw": w, "fh": h, "job": d.name.split("_")[-1],
+                                                      "direction": req["direction"], "pal": len(np.unique(
+                                                          np.asarray(still)[np.asarray(still)[..., 3] >= 128][:, :3], axis=0)),
+                                                      "pad": pad})
+        print(f"HUB: round {rid} -> {dst.relative_to(ROOT)} (not starred, rev +1)")
+        return
     sr, still = star_still(a.item)
     print(f"★ still {sr['id']} {still.size}")
     if a.pad:  # transparent margin so the motion is not cut at the canvas edge (set 258)
@@ -268,6 +289,8 @@ def main():
     sheet.save(sp)
     gif(mapped, d / "preview.gif")
     gif(gen, d / "preview_raw.gif")
+    big = Image.new("RGBA", sheet.size, (40, 44, 52, 255)); big.alpha_composite(sheet)  # zoomed sheet for the owner
+    big.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST).save(d / "sheet_x2.png")
     m = measure(mapped, still)
     m.update({"input_same_as_still": bool((np.asarray(raw[0]) == np.asarray(still)).all()),
               "palette": npal, "new_colours_before_map": newc})
