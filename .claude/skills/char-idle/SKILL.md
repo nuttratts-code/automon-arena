@@ -4,7 +4,9 @@ description: Character still → idle (ภาพนิ่งตัวละค�
 ---
 # Character still → idle (set 221 · route B video added set 222 · effect pass + arena check set 223, 14 Nov 2026)
 
-> **Now (art-style V2.5, set 250 M1):** characters = PIXEL via PixelLab · the idle method is OPEN — ask the owner which route (B video → frames · A code variants) before starting; both routes live in `claude/workflow/char-idle-ref.md`. The owner rules below are kept from sets 221–222.
+> **Now (art-style V2.5, set 250 M1):** characters = PIXEL via PixelLab · the idle method is OPEN — ask the owner which route (B video → frames · A code variants) before starting; both routes live in `claude/workflow/char-idle-ref.md`.
+
+> **Idle = PixelLab (art-style V2.6, set 257 owner A1):** Claude in Chrome → pixellab.ai → Creator → Animate → **Animate with text** (V3) · First frame = the creature's ★ still from the hub (`art/hub/files/<ID>/…`, file input upload; "Smoothed pixel art detected" → Use anyway unless the owner says otherwise) · prompt `idle breathing, subtle body rise and fall, feet planted, no camera move` · Frame count 8 · Remove background on · palette None · Generate (2 credits) → Download (lands in ~/Downloads as a 3×3 sheet, cell = still size; cell 0 = the input still → drop it) → 8×1 sheet → hub frames round (by: claude, NOT starred, `meta.pingpong: true`, ms 150 ค่าเสนอ, do NOT move the shadow: add the round directly, not with hub_add.py) → measure feet row / new colours / per-step change / loop seam and send GIFs. One creature at a time until the owner OKs it. Routes B/A below = fallback only. The owner rules below are kept from sets 221–222.
 
 > Owner rules: set 222 L1 = **video first (route B), code idle (route A) only when the video fails** · set 221 = never apply a code variant silently, the owner picks per character · set 222 = **minimal processing** ("the more it is cleaned, the worse it looks"). Rules: claude/art-style.md §2 · art store: art/library/README.md (usable pieces only, never delete) · licence: AI art = placeholder, UNVERIFIED (set 219 D).
 
@@ -32,7 +34,7 @@ Scripts here (`painted_idle.py` = route P, set 227; the rest = pixel routes) (Py
 → Moved to `claude/workflow/char-idle-ref.md` (same heading; set 250 K1 — read it only when this route/step is used).
 
 ## Tried in set 222 and dropped — do not offer again unless the owner asks
-GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · PixelLab (paid; no result came back) · heavy cleaning of video frames (see B4).
+GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · (PixelLab was dropped here in set 222 — back as the idle method since set 257) · heavy cleaning of video frames (see B4).
 
 ## Notes
 - claude/idle-picks.csv is what the Godot code reads later (wired into godot/ only on the owner's order, with a ripple check — HARD RULE 8). Route B in game = AnimatedSprite3D / SpriteFrames from the 8 frames; route A = Sprite3D scale at screen resolution (never resize the image itself).
