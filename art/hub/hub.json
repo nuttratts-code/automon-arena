@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 529,
+ "rev": 530,
  "settings": {
   "moves": [
    "idle",
@@ -2218,6 +2218,35 @@
      "file": "hub/WN-1/frames_idle_f1_2026-11-19_829aca09.png",
      "orig": "pixellab API PixMiniMax job d2f63d7b-71b7-4fd3-978a-4ae1f8f8da07 (frames 1-8 of 9)",
      "t": "2026-11-19T14:24:04.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 142,
+      "fh": 92,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "rd7150af3",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-19_d7150af3.png",
+     "orig": "pixellab API PixMiniMax job ce70edd5-ebc6-43b6-ab00-df8b0ba30b52 (frames 1-8 of 9)",
+     "t": "2026-11-19T14:34:41.000Z",
      "by": "claude",
      "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
      "star": false,
