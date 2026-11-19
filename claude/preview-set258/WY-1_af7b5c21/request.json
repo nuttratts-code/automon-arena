@@ -1,0 +1,11 @@
+{
+ "first_frame": "<★ still r0eac9f9b 159x131>",
+ "last_frame": "<★ still r0eac9f9b 159x131>",
+ "description": "Flaps the wings slowly while staying perched; it does not take off. The talons flex open and closed as if gripping prey, in time with the wing beats; the beak opens slightly when the talons spread. The tail feathers flutter in the wind. Feet stay on the ground, static camera, no zoom, and it returns exactly to the starting pose.",
+ "frame_count": 8,
+ "view": "side",
+ "direction": "east",
+ "no_background": true,
+ "enhance_prompt": false,
+ "seed": 0
+}

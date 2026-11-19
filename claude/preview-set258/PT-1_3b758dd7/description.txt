@@ -1,0 +1,1 @@
+Wings flap slowly, only a little; the plume on the head sways gently. Hovers in place, the body bobbing up and down gently with the wing beats. The legs swing slightly; it does not fly anywhere; the mouth does not move. static camera, no zoom, and it returns exactly to the starting pose.

@@ -1,0 +1,11 @@
+{
+ "first_frame": "<★ still r23a6cc79 156x89>",
+ "last_frame": "<★ still r23a6cc79 156x89>",
+ "description": "Breathes gently: the body rises slightly and the leg segments flex with the breathing. Rocks forward a little, the horn thrusting forward with the rock, and faint lightning sparks crackle from the horn; the mouth opens slightly while the sparks show. All six legs stay planted, static camera, no zoom, and it returns exactly to the starting pose.",
+ "frame_count": 8,
+ "view": "side",
+ "direction": "east",
+ "no_background": true,
+ "enhance_prompt": false,
+ "seed": 0
+}
