@@ -1,6 +1,6 @@
 # char-idle reference (moved out of the skill body set 250 K1 — read only when the step needs it)
 
-V1.0 · 19 Nov 2026 (set 250 K1). Headings match skill char-idle. Pixel routes B/A = candidates again under art-style V2.5 (fallback since art-style V2.6, set 257: idle = PixelLab, see the skill) · route P = retired (V2.5). V1.1 · 19 Nov 2026 (set 250 M1: route P moved here, wording fixed).
+V1.0 · 19 Nov 2026 (set 250 K1). Headings match skill char-idle. Pixel routes B/A = candidates again under art-style V2.5 (fallback since art-style V2.6, set 257: idle = PixelLab PixMiniMax (art-style V2.7), see the skill) · route P = retired (V2.5). V1.1 · 19 Nov 2026 (set 250 M1: route P moved here, wording fixed).
 
 ## Shared steps (pixel routes A/B — before set 227)
 0. **Forms + effect spots (set 224, art-style §2):** each character has FORM 1 (stars 1–2) and FORM 3 (star 3); do every FORM 1 first, FORM 3 only after its FORM 1 is done. File names carry `_f3` for FORM 3 (`<ID>_f3_still_…`, `<ID>_f3_idle8_…`); idle-picks.csv `form` = 1 or 3. Each creature is designed with 1–2 effect spots (art-style §2) — the video `[EFFECT]` line uses those spots. Stills: check the art-style §2 never/should-not list first (shadow, pink, edge, dark mush, loose particles).
