@@ -66,9 +66,9 @@ Owner picks: A scene on/off · B1 free slider + pixel snaps (1× 1.5× 2× 2.5×
 
 Security (HARD RULE 9): Node built-ins only · binds 127.0.0.1 · POSTs only from its own page origin · upload whitelist (png jpg webp gif mp4 webm mov glb pxo txt) ≤ 600 MB · ids `[A-Za-z0-9_-]` · file reads stay inside art/hub/files and art/library · page uses textContent + CSP self · Godot clamps every number it reads.
 
-## Testing on a test copy (set 248 A2; both must pass 95/95 — never test on the owner's real hub)
+## Testing on a test copy (set 248 A2; both must pass 96/96 — never test on the owner's real hub)
 1. Make a test root `<T>` in the chat's scratchpad: `mkdir -p <T>/art/hub <T>/godot/data` · `cp art/hub/hub.json <T>/art/hub/` · `cp -ru art/hub/files/. <T>/art/hub/files/` (all picture files — a missing file disables team-tab buttons) · `cp -r art/library <T>/art/` (export files ★ rounds there) · copy godot/data/unit_shadows.json too.
 2. `.claude/launch.json` (in D:/GitHub) entry `asset-hub-test`: same server.mjs with env `HUB_PORT=5188`, `HUB_ROOT=<T>` → start it with preview_start (never Bash).
 3. Before EVERY run: copy the real hub.json over `<T>/art/hub/hub.json` again (tests change data) and re-sync files if the owner uploaded since.
-4. Run `HUB_ROOT=<T> python tests/e2e_basic.py <outdir>` (38 checks: steps, team tab, pixel editor basics, save, name + skills box, export of names — export writes only inside <T>) and `python tests/e2e_select.py <outdir>` (57 checks: select / copy / paste / drag-out copy / tool switch / piece tab + turning / layers + edit menu). Needs python playwright. Output = PASS/FAIL lines + `SUMMARY n / n`; screenshots go to `<outdir>`.
+4. Run `HUB_ROOT=<T> python tests/e2e_basic.py <outdir>` (38 checks: steps, team tab, pixel editor basics, save, name + skills box, export of names — export writes only inside <T>) and `python tests/e2e_select.py <outdir>` (58 checks: select / copy / paste / drag-out copy / tool switch / piece tab + turning / layers + edit menu). Needs python playwright. Output = PASS/FAIL lines + `SUMMARY n / n`; screenshots go to `<outdir>`.
 5. Tests read the owner's live data (WN-1 etc.); when the owner changes it, fix the test's assumption, not the app. Never press export on the real hub (5177) for the owner.

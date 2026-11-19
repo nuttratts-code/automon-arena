@@ -1528,7 +1528,8 @@ async function pixelEditor(it, r) {
     if (!pxClip) { toast('ยังไม่ได้คัดลอกอะไร'); return; }
     commitFloat();
     const c = pxClip, bx = cur === 'piece' ? 0 : c.x, by = cur === 'piece' ? 0 : c.y; // same spot it was copied from (piece tab: top left), kept inside the picture
-    float = { x: Math.max(0, Math.min(bx, W - c.w)), y: Math.max(0, Math.min(by, H - c.h)), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
+    const keep = (v, n, size) => (v + n <= 0 || v >= size ? Math.max(0, Math.min(v, size - n)) : v); // same spot even when a turned piece sticks out past the edge; pulled in only if it would be fully outside
+    float = { x: keep(bx, c.w, W), y: keep(by, c.h, H), w: c.w, h: c.h, d: new Uint8ClampedArray(c.d) };
     setSel(null); if (!isSel()) tool = 'rect'; syncUi(); paint(); cv.focus();
   }
   function dupe() { float = grab(sel); setSel(null); } // owner set 248: selecting is for copying — dragging pulls out a copy, the original stays
@@ -1568,12 +1569,13 @@ async function pixelEditor(it, r) {
     if (!float && !lift()) return;
     const f = float;
     deg = ((Math.round(deg) + 540) % 360) - 180; if (deg === -180) deg = 180;
-    if (!f.base) { f.base = new ImageData(new Uint8ClampedArray(f.d), f.w, f.h); f.deg = 0; }
-    const cx = f.x + f.w / 2, cy = f.y + f.h / 2, b = f.base;
+    if (!f.base) { f.base = new ImageData(new Uint8ClampedArray(f.d), f.w, f.h); f.deg = 0; f.cx = f.x + f.w / 2; f.cy = f.y + f.h / 2; } // turning centre fixed when turning starts (recomputing it from the rounded box made the piece creep)
+    const cx = f.cx, cy = f.cy, b = f.base;
     const r2 = deg ? rotImg(b, mirX ? -deg : deg) : b;
     f.d = new Uint8ClampedArray(r2.data); f.w = r2.width; f.h = r2.height; f.x = Math.round(cx - f.w / 2); f.y = Math.round(cy - f.h / 2); f.deg = deg;
     syncUi(); paint();
   }
+  function moveF(nx, ny) { const f = float; if (f.cx != null) { f.cx += nx - f.x; f.cy += ny - f.y; } f.x = nx; f.y = ny; } // the turning centre moves with the piece
   function flipM(hz) { if (!float && !lift()) return; flipFloat(hz); }
   function chooseLayer(i) { if (!layers || i === act) return; commitFloat(); setSel(null); act = i; data = layers[i].data; syncUi(); paint(); cv.focus(); }
   function layerOp(k, i = act) {
@@ -1644,7 +1646,7 @@ async function pixelEditor(it, r) {
     const p = at(e); hover = p; posEl.textContent = p ? `x ${p[0]}, y ${p[1]}` : '';
     if (picking && p) pick(p, true); // Space held: the colour under the pointer is taken right away (owner: no click needed)
     if (stroke && p) { line(stroke.last, p, stroke.c); stroke.last = p; }
-    if (fdrag && float) { const q = atC(e); float.x = fdrag.x0 + q[0] - fdrag.p[0]; float.y = fdrag.y0 + q[1] - fdrag.p[1]; }
+    if (fdrag && float) { const q = atC(e); moveF(fdrag.x0 + q[0] - fdrag.p[0], fdrag.y0 + q[1] - fdrag.p[1]); }
     if (rectD) rectD.b = atC(e);
     if (lassoD) { const q = atC(e), l = lassoD.pts[lassoD.pts.length - 1]; if (q[0] !== l[0] || q[1] !== l[1]) lassoD.pts.push(q); }
     paint();
@@ -1674,7 +1676,7 @@ async function pixelEditor(it, r) {
     else if ((k === 'Delete' || k === 'Backspace') && !float && sel) { e.preventDefault(); delSel(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && float) { e.preventDefault(); commitFloat(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && cur === 'piece') { e.preventDefault(); sendPiece(); }
-    else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; float.x += d[0] * n * (mirX ? -1 : 1); float.y += d[1] * n; paint(); }
+    else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; moveF(float.x + d[0] * n * (mirX ? -1 : 1), float.y + d[1] * n); paint(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
