@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 440,
+ "rev": 441,
  "settings": {
   "moves": [
    "idle",
@@ -1777,6 +1777,21 @@
      "t": "2026-11-19T10:10:59.000Z",
      "by": "claude",
      "note": "เติมเขาขวาขึ้นไปทางซ้ายบน (จุดที่วงไว้ x74-90 y5-18) จากภาพ ★ r3df87382 · ใช้สีเขาเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "from": "r3df87382"
+    },
+    {
+     "id": "r85ca20e6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-19_99ada43f.png",
+     "orig": "WN-1_horns_px.png",
+     "t": "2026-11-19T10:19:01.000Z",
+     "by": "claude",
+     "note": "ภาพพิกเซล 128×96 ที่แปลงไว้ 18 พ.ย. (เขาขวายาวขึ้นบน) ใส่กลับตามที่เจ้าของขอ · ไฟล์เดิม ไม่ย่อ/ไม่แก้สี",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
