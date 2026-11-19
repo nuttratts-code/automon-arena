@@ -1,6 +1,7 @@
 #!/bin/bash
 # Set 158 B1: at chat start, fetch and print the Relay block of origin/main so Claude
-# sees it every chat (skill chat-start continues from here). Read-only: never edits or pushes.
+# sees it every chat (skill chat-start continues from here). Read-only: never edits or pushes
+# (only writes the daily stamp file inside the git dir, set 250).
 # Never fails the session: every step falls back quietly.
 cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 src=$(cat 2>/dev/null | grep -o '"source"[^,}]*' | grep -o '[a-z]*"$' | tr -d '"')
@@ -25,6 +26,12 @@ br=$(git branch --show-current 2>/dev/null)
 if [ -n "$br" ] && [ "$br" != main ]; then
   nb=$(git log --oneline "HEAD..$ref" -- CLAUDE.md .claude claude/workflow 2>/dev/null | wc -l)
   [ "${nb:-0}" -gt 0 ] 2>/dev/null && echo "⚠ rules: branch $br is missing $nb rule commit(s) from main (CLAUDE.md/.claude/claude/workflow) → git merge origin/main first (chat-start step 5)"
+fi
+# Set 250 daily brief: once per day per PC (stamp in the git dir, never committed) → skill daily-brief.
+gd=$(git rev-parse --git-common-dir 2>/dev/null); today=$(date +%F 2>/dev/null)
+if [ -n "$gd" ] && [ -n "$today" ] && [ "$(cat "$gd/automon-daily" 2>/dev/null)" != "$today" ]; then
+  echo "🌅 DAILY: first chat today ($today) → run skill daily-brief after the Relay, before proposing work"
+  echo "$today" > "$gd/automon-daily" 2>/dev/null
 fi
 echo "=== current branch: $(git branch --show-current 2>/dev/null) ==="
 exit 0
