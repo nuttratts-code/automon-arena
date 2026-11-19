@@ -66,10 +66,10 @@ Each miss → a report item: rule · set · evidence · why it was missed (rule 
 - Docs-only = no gate, no close-out (HARD RULE 1 B1).
 
 ## 6. Cost
-- One round per week. After a round, if another round would need reading code tool by tool, say so in 1–2 Thai lines (cost vs benefit) and recommend stopping.
+- **Every weekly review = round 1 → round 2 (§7) → round 3 (§8), always in that order (owner set 249).** Rounds 2–3 may run in the next chat (round 1 ends with close-out → the paste-prompt names "รีวิวสัปดาห์ รอบ 2+3"). If a round would need reading code tool by tool, say so in 1–2 Thai lines (cost vs benefit) but still run it unless the owner says skip.
 - Sets 218–220 ran all three rounds below in one chat (owner asked each one) — fine for docs-only work, but end with a new-chat paste-prompt.
 
-## 7. Round 2 on request — skill + doc usage audit (set 219; owner: "สกิลไหนไม่ถูกเรียกใช้ ใช้น้อย/เยอะ กฎไหนถูกข้าม ขัดกัน/ซ้ำกัน")
+## 7. Round 2 (always after round 1, owner set 249) — skill + doc usage audit (set 219; owner: "สกิลไหนไม่ถูกเรียกใช้ ใช้น้อย/เยอะ กฎไหนถูกข้าม ขัดกัน/ซ้ำกัน")
 Evidence = git + Relay archives only (say "not shown ≠ unused"). Steps:
 1. **Usage per skill:** for each `.claude/skills/*/SKILL.md` → born date (`git log --diff-filter=A`), edit count, mentions in commit messages + `claude/archive/relay/*.md` + handoff. Group: heavy · used this week · dormant (name the freeze/decision that parked it) · never run. Also total size of all `description:` lines (loaded every chat; keep each ≤ 400 chars, set 219 A1).
 2. **Docs nobody points to:** for each claude/*.md + claude/workflow/*.md → last commit date, commits this week, how many of CLAUDE.md / skills / handoff / workflow name it. 0 refs + finished → archive (set 219 H1). Finished plan files still in claude/ → archive.
@@ -79,7 +79,7 @@ Evidence = git + Relay archives only (say "not shown ≠ unused"). Steps:
 6. **Outside-material check:** assets/tools with licence "UNVERIFIED" in art/PROVENANCE.csv (also on sample branches: `git show <branch>:art/PROVENANCE.csv`) → research the terms (WebSearch, sources in the review), then the owner decides; an owner exception to HARD RULE 9 ② is written in security.md part 2 with the accepted risk + conditions (set 219 D).
 7. **Lost files:** a branch reset/undo on main (e.g. 0455397) → `git diff <undo>^ <undo> --stat -- .claude CLAUDE.md claude` to find skills/docs it deleted; restore docs to main (set 218 B1).
 
-## 8. Round 3 on request — token cost vs result (set 220; owner: "จุดไหนใช้เปลืองและไม่คุ้มกับงานที่ออกมาที่สุด")
+## 8. Round 3 (always after round 2, owner set 249) — token cost vs result (set 220; owner: "จุดไหนใช้เปลืองและไม่คุ้มกับงานที่ออกมาที่สุด")
 Claude cannot see token counts → rank by file bytes + counts, label them estimates. Table columns: where · size/count · what came out (landed on main? decided? parked?) · verdict. Check each time:
 - **Fixed load per chat:** CLAUDE.md bytes · Relay hook output · all skill descriptions · handoff.md.
 - **Subagent work:** anything that starts subagents (each re-reads CLAUDE.md + sources). The brainstorm skill was deleted for this (set 220 A, owner order) — ideas are answered in the chat now.
