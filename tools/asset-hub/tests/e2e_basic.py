@@ -156,6 +156,15 @@ with sync_playwright() as p:
     cb = pg.locator("#dlg .icon-cv").bounding_box()
     pg.mouse.move(cb["x"] + cb["width"] * 0.62, cb["y"] + cb["height"] * 0.66); pg.mouse.down()
     pg.mouse.move(cb["x"] + cb["width"] * 0.66, cb["y"] + cb["height"] * 0.62, steps=3); pg.mouse.move(cb["x"] + cb["width"] * 0.70, cb["y"] + cb["height"] * 0.58, steps=3); pg.mouse.up(); pg.wait_for_timeout(200)
+    # set 256 A1: brush tools — ✏️ on the middle of the new gap closes only that part (gap splits in two), Ctrl+Z undoes it
+    k0 = len(cur0.get("iconOpen", []))
+    side = lambda: pg.locator("#dlg .icon-side").text_content()
+    check("eraser stroke opened one more gap", f"เปิด {k0 + 1} ช่อง" in side(), side()[:40])
+    pg.locator("#dlg .gap-tools button", has_text="วาดเส้น").click()
+    pg.mouse.click(cb["x"] + cb["width"] * 0.66, cb["y"] + cb["height"] * 0.62); pg.wait_for_timeout(200)
+    check("pencil closes the middle only (gap splits)", f"เปิด {k0 + 2} ช่อง" in side(), side()[:40])
+    pg.locator("#dlg .icon-cv").focus(); pg.keyboard.press("Control+z"); pg.wait_for_timeout(200)
+    check("Ctrl+Z undoes the pencil stroke", f"เปิด {k0 + 1} ช่อง" in side(), side()[:40])
     pg.locator("#dlg button", has_text="บันทึก").first.click(); pg.wait_for_timeout(1200)
     cur1 = [r for r in hub()["items"]["WN-1"]["rounds"] if r["id"] == cur0["id"]][0]
     check("frame editor adds a gap to the icon in use, same file", len(cur1.get("iconOpen", [])) == len(cur0.get("iconOpen", [])) + 1 and cur1["file"] == cur0["file"], (len(cur0.get("iconOpen", [])), len(cur1.get("iconOpen", []))))

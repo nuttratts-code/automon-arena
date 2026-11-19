@@ -394,3 +394,4 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
   .pxed-col { flex: 1; min-width: 0; overflow-y: auto; padding-right: 2px; }
   .pxed-col + .pxed-col { border-left: 1px solid var(--line); padding-left: 14px; }
 }
+.gap-tools { gap: 6px; flex-wrap: wrap; }

@@ -1158,32 +1158,71 @@ function iconFrameLine(g, k, n, m, open, colour = ICON_GOLD) { // k = screen px 
   }
   if (on) g.stroke(); g.restore();
 }
+// owner set 256 (A1): frame gaps are painted like an eraser / pencil on the gold line instead of one drag = one gap.
+// Gaps stay intervals [t0, t1] on the circle (t0 > t1 wraps); the helpers below merge / cut them exactly.
+function ivPieces(open) { const p = []; for (const [a, b] of open) { if (a <= b) p.push([a, b]); else { p.push([a, 1]); p.push([0, b]); } } return p.sort((u, v) => u[0] - v[0]); }
+function ivJoin(pieces) { // sorted linear pieces -> merged circle intervals
+  const mg = []; for (const [a, b] of pieces) { if (b - a <= 1e-6) continue; const l = mg[mg.length - 1]; if (l && a <= l[1] + 1e-6) l[1] = Math.max(l[1], b); else mg.push([a, b]); }
+  if (mg.length === 1 && mg[0][0] <= 1e-6 && mg[0][1] >= 1 - 1e-6) return [[0, 0.9999]]; // the whole frame open
+  if (mg.length > 1 && mg[0][0] <= 1e-6 && mg[mg.length - 1][1] >= 1 - 1e-6) { const f = mg.shift(); mg[mg.length - 1][1] = f[1]; } // joins across the top corner
+  return mg.map(([a, b]) => [a % 1, b >= 1 - 1e-6 ? 0.9999 : b]);
+}
+function ivAdd(open, iv) { return ivJoin(ivPieces([...open, iv])); }
+function ivSub(open, iv) {
+  const cut = ivPieces([iv]), out = [];
+  for (const [a, b] of ivPieces(open)) { let segs = [[a, b]]; for (const [c, d] of cut) segs = segs.flatMap(([x, y]) => (d <= x || c >= y ? [[x, y]] : [[x, c], [d, y]].filter(([p, q]) => q - p > 1e-6))); out.push(...segs); }
+  return ivJoin(out.sort((u, v) => u[0] - v[0]));
+}
+// Brush on a canvas: o = { tAt(e) -> t, n() -> frame size px, get() / set(open), active() -> bool, changed() }.
+// Left button = the chosen tool, right button = the other one; Ctrl+Z / "ย้อน" undoes one stroke. Returns the tool row.
+function gapBrush(cv, o) {
+  let tool = 'erase', stroke = null; const undo = [];
+  const shortIv = (ta, tb) => { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, ta + d] : [tb, ta]; };
+  function paint(ta, tb) { // brush = 1.5 frame px either side of the path, so a single click makes a 3 px gap
+    const r = 1.5 / (2 * Math.SQRT2 * Math.max(4, o.n())), [a, b] = shortIv(ta, tb), iv = [((a - r) % 1 + 1) % 1, ((b + r) % 1 + 1) % 1];
+    o.set((stroke.mode === 'erase' ? ivAdd : ivSub)(o.get(), b - a + 2 * r >= 1 ? [0, 0.9999] : iv)); o.changed();
+  }
+  cv.addEventListener('contextmenu', (e) => { if (o.active()) e.preventDefault(); });
+  cv.addEventListener('pointerdown', (e) => {
+    if (!o.active() || (e.button !== 0 && e.button !== 2)) return;
+    e.preventDefault(); e.stopImmediatePropagation(); cv.focus?.();
+    undo.push(o.get().map((v) => v.slice())); if (undo.length > 50) undo.shift();
+    const t = o.tAt(e); stroke = { mode: (e.button === 2) === (tool === 'erase') ? 'draw' : 'erase', t }; cv.setPointerCapture(e.pointerId); paint(t, t); syncUi();
+  });
+  cv.addEventListener('pointermove', (e) => { if (!stroke) return; const t = o.tAt(e); paint(stroke.t, t); stroke.t = t; });
+  const end = () => { stroke = null; }; cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  const back = () => { if (!undo.length) return; o.set(undo.pop()); o.changed(); syncUi(); };
+  cv.addEventListener('keydown', (e) => { if (o.active() && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); back(); } });
+  const bE = h('button', { onclick: () => { tool = 'erase'; syncUi(); } }, '🧽 ลบเส้น');
+  const bD = h('button', { onclick: () => { tool = 'draw'; syncUi(); } }, '✏️ วาดเส้น');
+  const bU = h('button', { class: 'ghost', title: 'ย้อนการทา 1 ครั้ง (Ctrl+Z)', onclick: back }, '↶ ย้อน');
+  function syncUi() { for (const [b, k] of [[bE, 'erase'], [bD, 'draw']]) { b.classList.toggle('on', tool === k); b.setAttribute('aria-pressed', String(tool === k)); } bU.disabled = !undo.length; }
+  syncUi();
+  return h('div', { class: 'row gap-tools' }, h('span', { class: 'seg' }, bE, bD), bU);
+}
+const GAP_HINT = 'ทาไปตามขอบกรอบ (กดใกล้ขอบตรงไหนก็ได้) · 🧽 = เปิดช่อง ของหลังช่องโผล่ออกนอกกรอบ · ✏️ = ปิดคืนเฉพาะส่วนที่ทา · คลิกขวา = ใช้อีกอัน · Ctrl+Z = ย้อน';
 // owner set 255: open / close frame gaps on an icon that already exists (keeps its pixel edits); only the gaps change, the file stays
 async function iconFrameEditor(it, r) {
   let img; try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
   const w = img.naturalWidth, { m, n } = iconGeom(r, w);
-  let open = iconGeom(r, w).open.map((a) => a.slice()), fsel = null;
+  let open = iconGeom(r, w).open.map((a) => a.slice());
   const z = Math.max(3, Math.min(12, Math.floor(Math.min(window.innerWidth * 0.6, window.innerHeight * 0.7) / w)));
-  const cv = h('canvas', { class: 'icon-cv frame-mode', width: w * z, height: w * z, 'aria-label': 'ลากไปตามขอบกรอบเพื่อเปิดช่อง คลิกขวาที่ช่องเพื่อปิด' });
+  const cv = h('canvas', { class: 'icon-cv frame-mode', width: w * z, height: w * z, tabindex: 0, 'aria-label': 'ทาไปตามขอบกรอบ ลบเส้นเพื่อเปิดช่อง วาดเส้นเพื่อปิด' });
   if (r.flip) cv.classList.add('flipx');
   const info = h('span', { class: 'small dim' });
-  const ivOf = (ta, tb) => { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, (ta + d) % 1] : [(tb + 1) % 1, ta]; };
   function draw() {
     const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, cv.width, cv.height);
     g.save(); g.fillStyle = 'rgba(64,58,48,0.9)'; g.beginPath(); const C = [0, 1, 2, 3].map((q) => iconEdgeP(n, q / 4)); C.forEach(([x, y], i) => (i ? g.lineTo : g.moveTo).call(g, (m + x) * z, (m + y) * z)); g.closePath(); g.fill(); g.restore();
     g.drawImage(img, 0, 0, w * z, w * z);
-    iconFrameLine(g, z, n, m, fsel ? [...open, ivOf(fsel.a, fsel.b)] : open);
-    const ivs = fsel ? [...open, ivOf(fsel.a, fsel.b)] : open;
+    iconFrameLine(g, z, n, m, open);
+    const ivs = open;
     g.save(); g.strokeStyle = 'rgba(90,209,255,0.85)'; g.lineWidth = Math.max(2, z * 0.5); g.setLineDash([z, z]);
     for (const [a, b] of ivs) { const len = (b - a + 1) % 1, st = Math.max(2, Math.ceil(len * 160)); g.beginPath(); for (let i = 0; i <= st; i++) { const [x, y] = iconEdgeP(n, a + len * i / st); (i ? g.lineTo : g.moveTo).call(g, (m + x) * z, (m + y) * z); } g.stroke(); }
     g.restore();
     info.textContent = open.length ? `เปิด ${open.length} ช่อง (เส้นฟ้าประ = ช่องที่เปิด)` : 'ยังไม่มีช่องเปิด';
   }
   const tAt = (e) => { const rc = cv.getBoundingClientRect(); const fx = (r.flip ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * w, fy = (e.clientY - rc.top) / rc.height * w; return iconEdgeT(n, fx - m, fy - m); };
-  cv.addEventListener('contextmenu', (e) => e.preventDefault());
-  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const t = tAt(e); if (e.button === 2) { const i = open.findIndex((iv) => iconInIv(t, iv)); if (i >= 0) { open.splice(i, 1); draw(); } return; } fsel = { a: t, b: t }; cv.setPointerCapture(e.pointerId); draw(); });
-  cv.addEventListener('pointermove', (e) => { if (!fsel) return; fsel.b = tAt(e); draw(); });
-  cv.addEventListener('pointerup', () => { if (!fsel) return; const iv = ivOf(fsel.a, fsel.b); fsel = null; if (((iv[1] - iv[0] + 1) % 1) > 0.004) open.push(iv); draw(); });
+  const tools = gapBrush(cv, { tAt, n: () => n, get: () => open, set: (v) => { open = v; }, active: () => true, changed: draw });
   const dlg = $('dlg'); const close = () => { dlg.classList.remove('icon-dlg'); dlg.close(); };
   const saveB = h('button', { class: 'primary', onclick: async () => {
     const nr = hub.items[it.id].rounds.find((x) => x.id === r.id); if (!nr) { toast('ไม่พบไอคอนนี้แล้ว'); return; }
@@ -1191,9 +1230,10 @@ async function iconFrameEditor(it, r) {
     await save(); toast('บันทึกช่องกรอบแล้ว'); close(); render();
   } }, 'บันทึก');
   $('dlgBody').replaceChildren(
-    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แต่งกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากไปตามขอบ = เปิดช่อง · คลิกขวาที่ช่อง = ปิด · ไฟล์ภาพไม่เปลี่ยน'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แต่งกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ทาตามขอบ: 🧽 = เปิดช่อง · ✏️ = ปิด · ไฟล์ภาพไม่เปลี่ยน'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
     h('div', { class: 'icon-ed' }, h('div', { class: 'icon-stage' }, cv),
       h('div', { class: 'icon-side' }, h('div', { class: 'row' }, info, h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง')),
+        tools, h('p', { class: 'small icon-hint' }, GAP_HINT),
         h('p', { class: 'small faint' }, 'เส้นทอง = ขอบที่เกมจะวาด (ไม่อยู่ในไฟล์) · ช่องใหม่ตรงที่ไฟล์ไม่มีพิกเซลยื่นออกไป จะแค่ไม่มีเส้น ถ้าอยากให้มีของโผล่ ใช้ "แก้พิกเซล" วาดเพิ่ม หรือ "ตัดกรอบใหม่"'),
         m ? null : h('p', { class: 'small faint' }, 'ไอคอนนี้ทำก่อนมีระบบเปิดกรอบ ไม่มีที่ว่างรอบกรอบ ส่วนที่ยื่นจะโผล่ไม่ได้'))));
   dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });
@@ -1246,7 +1286,7 @@ async function iconEditor(it) {
   const inside = (i, j, N) => Math.abs(i + 0.5 - N / 2) + Math.abs(j + 0.5 - N / 2) <= N / 2;
   // frame openings (owner set 255): intervals [t0, t1] of the frame edge, t = 0..1 clockwise from the top corner (t0 > t1 = wraps past the top)
   let open = prev && Array.isArray(prev.open) ? prev.open.filter((a) => Array.isArray(a) && a.length === 2 && a.every((v) => Number.isFinite(v) && v >= 0 && v <= 1)).map((a) => a.slice()) : [];
-  let frameMode = false, fsel = null;
+  let frameMode = false;
   const margin = () => (open.length ? Math.max(1, Math.round(n / 4)) : 0); // reach out <= 25 % of the frame size (owner B1)
   const corner = (k) => [[n / 2, 0], [n, n / 2], [n / 2, n], [0, n / 2]][k % 4];
   function edgeT(px, py) { // nearest point of the frame edge (frame-square coords) -> t
@@ -1262,7 +1302,6 @@ async function iconEditor(it) {
   const edgeP = (t) => { const tt = ((t % 1) + 1) % 1, k = Math.floor(tt * 4), u = tt * 4 - k, [ax, ay] = corner(k), [bx, by] = corner(k + 1); return [ax + (bx - ax) * u, ay + (by - ay) * u]; };
   const inIv = (t, [a, b]) => (a <= b ? t >= a && t <= b : t >= a || t <= b);
   const isOpen = (t) => open.some((iv) => inIv(t, iv));
-  function ivOf(ta, tb) { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, (ta + d) % 1] : [(tb + 1) % 1, ta]; } // the short way round
   function result() { // real pixels; outside the diamond transparent unless behind a frame opening
     const m = margin(), S = n + 2 * m;
     const o = document.createElement('canvas'); o.width = S; o.height = S;
@@ -1291,7 +1330,7 @@ async function iconEditor(it) {
       g.save(); g.setLineDash([3, 5]); g.strokeStyle = 'rgba(90,209,255,0.5)'; g.lineWidth = 1; g.strokeRect((pad + x - m) * z, (pad + y - m) * z, S * z, S * z); g.restore();
       g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); g.stroke(); g.restore(); // frame line back on top
     }
-    const ivs = fsel ? [...open, ivOf(fsel.a, fsel.b)] : open;
+    const ivs = open;
     if (ivs.length) { // openings = thick cyan along the frame edge
       g.save(); g.strokeStyle = '#5ad1ff'; g.lineWidth = Math.max(3, z * 0.9); g.lineCap = 'round';
       for (const [a, b] of ivs) {
@@ -1324,21 +1363,7 @@ async function iconEditor(it) {
   const mirI = mirrorOf(src); if (mirI) cv.classList.add('flipx'); // facing right like the game; crop numbers stay in file pixels
   const at = (e) => { const rc = cv.getBoundingClientRect(); return [(mirI ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * cv.width / z - pad, (e.clientY - rc.top) / rc.height * cv.height / z - pad]; };
   const tAt = (e) => { const p = at(e); return edgeT(p[0] - x, p[1] - y); };
-  cv.addEventListener('contextmenu', (e) => { if (frameMode) e.preventDefault(); });
-  cv.addEventListener('pointerdown', (e) => {
-    if (!frameMode) return;
-    e.preventDefault(); cv.focus();
-    const t = tAt(e);
-    if (e.button === 2) { const i = open.findIndex((iv) => inIv(t, iv)); if (i >= 0) { open.splice(i, 1); draw(); } return; } // right click = close that opening
-    fsel = { a: t, b: t }; cv.setPointerCapture(e.pointerId); draw();
-  });
-  cv.addEventListener('pointermove', (e) => { if (!frameMode || !fsel) return; fsel.b = tAt(e); draw(); });
-  cv.addEventListener('pointerup', () => {
-    if (!frameMode || !fsel) return;
-    const iv = ivOf(fsel.a, fsel.b); fsel = null;
-    if (((iv[1] - iv[0] + 1) % 1) > 0.004) open.push(iv);
-    draw();
-  });
+  const gapTools = gapBrush(cv, { tAt, n: () => n, get: () => open, set: (v) => { open = v; }, active: () => frameMode, changed: draw }); // owner set 256 A1
   cv.addEventListener('pointerdown', (e) => { if (frameMode) return; e.preventDefault(); cv.focus(); const p = at(e); drag = { p, x0: x, y0: y }; if (!(p[0] >= x && p[0] <= x + n && p[1] >= y && p[1] <= y + n)) { x = Math.round(p[0] - n / 2); y = Math.round(p[1] - n / 2); clamp(); drag = { p, x0: x, y0: y }; draw(); } cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', (e) => { if (!drag || frameMode) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
   const end = () => { drag = null; };
@@ -1385,10 +1410,10 @@ async function iconEditor(it) {
   }
   const saveB = h('button', { class: 'primary', onclick: () => saveIcon(false) }, 'บันทึกและใช้เลย');
   const saveEdB = h('button', { title: 'บันทึกไอคอนนี้ แล้วเปิดตัวแก้พิกเซลเพื่อเก็บงานส่วนที่ยื่นออก', onclick: () => saveIcon(true) }, 'บันทึกแล้วแก้พิกเซลต่อ');
-  const frameSw = h('button', { class: 'switch', role: 'switch', 'aria-checked': 'false', onclick: () => { frameMode = !frameMode; fsel = null; draw(); } }, h('span', { class: 'knob' }), 'แต่งกรอบ (เปิดช่องให้ยื่นออก)');
+  const frameSw = h('button', { class: 'switch', role: 'switch', 'aria-checked': 'false', onclick: () => { frameMode = !frameMode; draw(); } }, h('span', { class: 'knob' }), 'แต่งกรอบ (เปิดช่องให้ยื่นออก)');
   const clearB = h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง');
   const openTxt = h('span', { class: 'small dim' });
-  const hintEl = h('p', { class: 'small icon-hint' }, 'ลากไปตามขอบกรอบ = เปิดช่อง สิ่งที่อยู่หลังช่องจะโผล่ออกนอกกรอบ · คลิกขวาที่ช่อง = ปิดช่องนั้น · ปิดสวิตช์เพื่อกลับไปลากย้ายกรอบ');
+  const hintEl = h('div', {}, gapTools, h('p', { class: 'small icon-hint' }, GAP_HINT + ' · ปิดสวิตช์เพื่อกลับไปลากย้ายกรอบ'));
   $('dlgBody').replaceChildren(
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · Ctrl + ล้อเมาส์ = ซูม · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveEdB, saveB, h('button', { onclick: close }, 'ปิด')),
     h('div', { class: 'icon-ed' },
