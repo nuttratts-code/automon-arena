@@ -11,6 +11,16 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 ## 0. Start
 `git fetch origin` → read the handoff Relay → push the 🔒 lock line (relay.md) → work on main for docs (docs-only, relay.md).
 
+## 0b. Part 0 — progress + 3 numbers (set 250 R2, owner; from retro practice: compare with the plan, track rework, one experiment a week)
+Put this first in the report (≤ 15 lines). Numbers are estimates from git — say so.
+1. **Plan vs deadline:** open steps of claude/plan-godot-migration.md + build-plan step 7 vs the MVP1.5 target (31 Dec 2026, set 193 C1; art P5 not counted). Weeks left · steps left · did any step move this week? Behind → warn + suggest cuts (CLAUDE.md Scope).
+2. **Numbers, this week vs last week** (`git log --since/--until` on origin/main):
+   - rework ≈ commits whose subject says fix / follow-up / undo / redo / revert / again / wrong ÷ all commits;
+   - landed ≈ commits touching godot/ src/ tools/ ÷ all commits (the rest = docs, samples, art);
+   - open decisions: every `open` row in claude/reviews.md + handoff "Open decisions" with its age; > 7 days → list it for the owner.
+3. **Did last week's fixes work?** For each item of the previous weekly review: did the same mistake happen again this week (evidence or "not shown")? A repeat = text is not enough → propose a skill step, merge-code check or hook (§3b rule "missed twice").
+4. **One experiment:** end the report with ONE recommended change for next week (the item with the biggest effect), and name how next week's part 0 will tell if it worked. Other items stay A/B as usual, but say which one is the experiment.
+
 ## 1. What went wrong this week (D1)
 - Sources: `git log --since='7 days ago' --format='%h %ad %s' --date=short origin/main` · claude/handoff.md · this week's entries in claude/archive/relay/ (Claude cannot read old chats).
 - List each time the user corrected or redid Claude's work, a gate failed first time, a bug was found by the user, or a rule caused wasted work.
@@ -54,7 +64,7 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 Each miss → a report item: rule · set · evidence · why it was missed (rule not seen at that moment / trigger unclear / step forgotten) · where the fix belongs (skill description or step · merge-code check · hook · CLAUDE.md), with A1/A2 options. A rule missed twice → recommend moving it into a skill step or a merge-code check rather than adding more text.
 
 ## 4. Report
-- Write claude/review-YYYY-MM-DD-weekly.md: part 1 items, then audit items. Each item = label A, B… · where (file + line) · the problem with evidence · options A1/A2… with a recommendation. Pure wording fixes can be grouped into one item.
+- Write claude/review-YYYY-MM-DD-weekly.md: part 0 (§0b), part 1 items, then audit items. Each item = label A, B… · where (file + line) · the problem with evidence · options A1/A2… with a recommendation. Pure wording fixes can be grouped into one item.
 - Commit + push to main (docs-only). Explain in Thai chat, then the AskUserQuestion buttons (max 4 per call).
 
 ## 5. After the user picks
@@ -88,3 +98,10 @@ Claude cannot see token counts → rank by file bytes + counts, label them estim
 - **Big skill bodies (> 8 KB):** reference text (sources, lessons, trade-offs) → `claude/workflow/<skill>-ref.md`, heading + pointer stays so section numbers still work (set 220 E1).
 - Owner's standing answers (do not re-propose): look loops are rare → leave (B, set 220) · CLAUDE.md pointers were tried and got skipped → keep full rules in CLAUDE.md (C, set 220).
 
+## 9. Monthly rule test in a fresh chat (set 250 R2, owner; "the best test of a CLAUDE.md is whether behaviour changes")
+Once a month (first weekly review of the month), after the rounds:
+1. Pick 3 rules changed in the last month (from this month's review files).
+2. For each, write one short task prompt that should trigger it (e.g. "แก้ค่าพลัง PL-2" → HARD RULE 6 cfgdiff first; a code fix → merge-code gate; an art pick → ask before art-style.md).
+3. The owner opens a NEW chat in D:\GitHub\automon-arena, pastes the prompt, and stops it after Claude's first reply (no edits needed) — or Claude runs it as a subagent only if the owner OKs that (subagent rule).
+4. Pass = the first reply names / starts the rule's step. Fail → the rule's trigger is unclear → report item next week (move it into the skill description or a hook).
+Cost: ~3 short chats a month; skip the month if no rule changed.
