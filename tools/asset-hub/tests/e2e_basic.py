@@ -133,6 +133,18 @@ with sync_playwright() as p:
     check("export writes the name for Godot", ex.get("names", {}).get("WN-1") == "หมูป่าทดสอบ", ex.get("names", {}).get("WN-1"))
     pg.locator(".charinfo button", has_text="คืนชื่อเดิม").click(); pg.wait_for_timeout(1200)
     check("reset gives back the game name", hub()["items"]["WN-1"]["name"] == gi["name"])
+    # set 255: icon frame openings (แต่งกรอบ) — drag across the top of the frame opens one gap, the file grows by 25 % each side
+    pg.locator("button", has_text="ตัดกรอบใหม่").first.click(); pg.wait_for_timeout(600)
+    pg.locator(".icon-side .switch").click(); pg.wait_for_timeout(200)
+    cb = pg.locator(".icon-cv").bounding_box()
+    pg.mouse.move(cb["x"] + cb["width"] * 0.3, cb["y"] + 5); pg.mouse.down()
+    pg.mouse.move(cb["x"] + cb["width"] * 0.5, cb["y"] + 3, steps=4); pg.mouse.move(cb["x"] + cb["width"] * 0.7, cb["y"] + 5, steps=4); pg.mouse.up(); pg.wait_for_timeout(300)
+    check("frame drag opens one gap", "เปิดกรอบ 1 ช่อง" in pg.locator(".icon-frame").text_content(), pg.locator(".icon-frame").text_content()[:60])
+    check("file size shows the 25 % reach", "ไฟล์" in pg.locator(".icon-side").text_content())
+    pg.locator("#dlg button", has_text="บันทึกและใช้เลย").click(); pg.wait_for_timeout(1500)
+    wi = hub()["items"]["WN-1"]; nr = [r for r in wi["rounds"] if r["slot"] == "icon"][-1]
+    check("icon saved with pad + openings", nr.get("star") and nr.get("iconPad", 0) > 0 and len(wi["iconCrop"].get("open", [])) == 1, (nr.get("iconPad"), wi.get("iconCrop")))
+    check("icon box offers pixel edit", pg.locator(".iconbox button", has_text="แก้พิกเซล").is_visible())
     check("no page errors", not errs, errs[:3])
     print("SUMMARY", sum(res), "/", len(res))
     b.close()

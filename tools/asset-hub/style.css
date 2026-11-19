@@ -316,6 +316,9 @@ dialog.icon-dlg { width: fit-content; max-width: 96vw; }
 .icon-stage { overflow: auto; max-height: calc(92vh - 120px); max-width: calc(96vw - 380px); background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; }
 .icon-cv { display: block; image-rendering: pixelated; cursor: move; touch-action: none; }
 .icon-side { display: flex; flex-direction: column; gap: 8px; }
+.icon-frame { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; }
+.icon-hint { margin: 0; color: #5ad1ff; }
+.icon-cv.frame-mode { cursor: crosshair; }
 .icon-prev { display: grid; place-items: center; padding: 8px; border-radius: 8px; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 12px 12px; }
 .icon-prev canvas { image-rendering: pixelated; }
 @media (max-width: 900px) { .icon-ed { grid-template-columns: 1fr; } .icon-stage { max-width: 92vw; } }

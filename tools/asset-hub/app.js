@@ -1138,11 +1138,14 @@ function renderShadow(m, it) {
 // ---------- icon: diamond crop for the shop / bench screens (set 246, owner B1) ----------
 // Real pixels, no scaling: an N×N square of the picture the game uses (★ cut, else ★ still), pixels outside the diamond made
 // transparent, no border (the game draws its own). Saved as an "icon" round (newest = ★ used); the crop is remembered in it.iconCrop.
+// Owner set 255 (B1): "แต่งกรอบ" opens parts of the frame edge; whatever lies behind an opening (up to 25 % of the frame size out) shows
+// over the frame. With openings the file is (n + 2m)² with the diamond inset by m (round.iconPad = m); "แก้พิกเซล" edits the icon after.
 function iconBox(it) {
   const icons = slotRounds(it, 'icon').filter((r) => !r.archived);
   const cur = icons.filter((r) => r.star).pop() || icons[icons.length - 1];
   const box = h('div', { class: 'iconbox' });
   const head = h('div', { class: 'row' }, h('b', {}, 'ไอคอน (กรอบข้าวหลามตัด)'), h('span', { class: 'small dim' }, 'ใช้ในหน้าร้านค้า / ม้านั่ง'), h('span', { class: 'sp' }),
+    cur && isImage(cur.file) ? h('button', { title: 'แก้เม็ดพิกเซลของไอคอนที่ใช้อยู่ บันทึกเป็นไอคอนใหม่และใช้ทันที', onclick: () => pixelEditor(it, cur) }, 'แก้พิกเซล') : null,
     h('button', { class: cur ? '' : 'primary', onclick: () => iconEditor(it) }, cur ? 'ตัดกรอบใหม่' : 'ตัดกรอบไอคอน'));
   box.append(head);
   if (!icons.length) { box.append(h('p', { class: 'small faint' }, 'ยังไม่มีไอคอน กดปุ่มด้านบนแล้วเลือกส่วนที่จะอยู่ในกรอบ')); return box; }
@@ -1172,11 +1175,35 @@ async function iconEditor(it) {
   const sizeIn = h('input', { type: 'range', min: 8, max: Math.max(16, Math.min(256, Math.max(W, H) + 16)), step: 2, value: n, 'aria-label': 'ขนาดกรอบ', oninput: (e) => setN(Number(e.target.value)) });
   const sizeTxt = h('b', {});
   const inside = (i, j, N) => Math.abs(i + 0.5 - N / 2) + Math.abs(j + 0.5 - N / 2) <= N / 2;
-  function result() { // N×N real pixels, outside the diamond transparent
-    const o = document.createElement('canvas'); o.width = n; o.height = n;
-    const g = o.getContext('2d'); g.drawImage(pic, -x, -y);
-    const d = g.getImageData(0, 0, n, n);
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if (!inside(i, j, n)) d.data[(j * n + i) * 4 + 3] = 0;
+  // frame openings (owner set 255): intervals [t0, t1] of the frame edge, t = 0..1 clockwise from the top corner (t0 > t1 = wraps past the top)
+  let open = prev && Array.isArray(prev.open) ? prev.open.filter((a) => Array.isArray(a) && a.length === 2 && a.every((v) => Number.isFinite(v) && v >= 0 && v <= 1)).map((a) => a.slice()) : [];
+  let frameMode = false, fsel = null;
+  const margin = () => (open.length ? Math.max(1, Math.round(n / 4)) : 0); // reach out <= 25 % of the frame size (owner B1)
+  const corner = (k) => [[n / 2, 0], [n, n / 2], [n / 2, n], [0, n / 2]][k % 4];
+  function edgeT(px, py) { // nearest point of the frame edge (frame-square coords) -> t
+    let best = null;
+    for (let k = 0; k < 4; k++) {
+      const [ax, ay] = corner(k), [bx, by] = corner(k + 1), dx = bx - ax, dy = by - ay;
+      const u = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)));
+      const d = (ax + dx * u - px) ** 2 + (ay + dy * u - py) ** 2;
+      if (!best || d < best[0]) best = [d, (k + u) / 4];
+    }
+    return best[1] % 1;
+  }
+  const edgeP = (t) => { const tt = ((t % 1) + 1) % 1, k = Math.floor(tt * 4), u = tt * 4 - k, [ax, ay] = corner(k), [bx, by] = corner(k + 1); return [ax + (bx - ax) * u, ay + (by - ay) * u]; };
+  const inIv = (t, [a, b]) => (a <= b ? t >= a && t <= b : t >= a || t <= b);
+  const isOpen = (t) => open.some((iv) => inIv(t, iv));
+  function ivOf(ta, tb) { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, (ta + d) % 1] : [(tb + 1) % 1, ta]; } // the short way round
+  function result() { // real pixels; outside the diamond transparent unless behind a frame opening
+    const m = margin(), S = n + 2 * m;
+    const o = document.createElement('canvas'); o.width = S; o.height = S;
+    const g = o.getContext('2d'); g.drawImage(pic, -(x - m), -(y - m));
+    const d = g.getImageData(0, 0, S, S);
+    for (let j = 0; j < S; j++) for (let i = 0; i < S; i++) {
+      const li = i - m, lj = j - m;
+      if (inside(li, lj, n) || (m && isOpen(edgeT(li + 0.5, lj + 0.5)))) continue;
+      d.data[(j * S + i) * 4 + 3] = 0;
+    }
     g.putImageData(d, 0, 0); return o;
   }
   function draw() {
@@ -1189,17 +1216,52 @@ async function iconEditor(it) {
     g.moveTo(cx, cy - r); g.lineTo(cx - r, cy); g.lineTo(cx, cy + r); g.lineTo(cx + r, cy); g.closePath(); g.fill('evenodd');
     g.strokeStyle = '#ffd34d'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); g.stroke();
     g.setLineDash([4, 4]); g.strokeStyle = 'rgba(255,211,77,0.45)'; g.strokeRect((pad + x) * z, (pad + y) * z, n * z, n * z); g.restore();
-    const o = result();
-    for (const [c, k] of [[out, Math.max(1, Math.floor(200 / n))], [out1, 1]]) { c.width = n * k; c.height = n * k; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.drawImage(o, 0, 0, n * k, n * k); }
-    sizeTxt.textContent = `${n}×${n} px`; sizeIn.value = String(n);
+    const o = result(), m = margin(), S = n + 2 * m;
+    if (m) { // what pokes out is shown undimmed, inside the dashed 25 % reach box
+      g.drawImage(o, (pad + x - m) * z, (pad + y - m) * z, S * z, S * z);
+      g.save(); g.setLineDash([3, 5]); g.strokeStyle = 'rgba(90,209,255,0.5)'; g.lineWidth = 1; g.strokeRect((pad + x - m) * z, (pad + y - m) * z, S * z, S * z); g.restore();
+      g.save(); g.strokeStyle = '#ffd34d'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); g.stroke(); g.restore(); // frame line back on top
+    }
+    const ivs = fsel ? [...open, ivOf(fsel.a, fsel.b)] : open;
+    if (ivs.length) { // openings = thick cyan along the frame edge
+      g.save(); g.strokeStyle = '#5ad1ff'; g.lineWidth = Math.max(3, z * 0.9); g.lineCap = 'round';
+      for (const [a, b] of ivs) {
+        const len = (b - a + 1) % 1, steps = Math.max(2, Math.ceil(len * 160));
+        g.beginPath();
+        for (let s2 = 0; s2 <= steps; s2++) { const [px, py] = edgeP(a + len * s2 / steps); const X = (pad + x + px) * z, Y = (pad + y + py) * z; if (s2) g.lineTo(X, Y); else g.moveTo(X, Y); }
+        g.stroke();
+      }
+      g.restore();
+    }
+    for (const [c, k] of [[out, Math.max(1, Math.floor(200 / S))], [out1, 1]]) { c.width = S * k; c.height = S * k; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.drawImage(o, 0, 0, S * k, S * k); }
+    sizeTxt.textContent = m ? `${n}×${n} px · ไฟล์ ${S}×${S}` : `${n}×${n} px`; sizeIn.value = String(n);
+    openTxt.textContent = open.length ? `เปิดกรอบ ${open.length} ช่อง · ยื่นได้ไม่เกิน ${m} เม็ด (25%)` : 'ยังไม่มีช่องเปิด';
+    clearB.disabled = !open.length; frameSw.setAttribute('aria-checked', String(frameMode)); frameSw.classList.toggle('is-on', frameMode);
+    cv.classList.toggle('frame-mode', frameMode); hintEl.hidden = !frameMode;
   }
   function setN(v) { const c = [x + n / 2, y + n / 2]; n = Math.max(8, Math.min(256, Math.round(v / 2) * 2)); x = Math.round(c[0] - n / 2); y = Math.round(c[1] - n / 2); clamp(); draw(); }
   function clamp() { x = Math.max(-n + 4, Math.min(W - 4, x)); y = Math.max(-n + 4, Math.min(H - 4, y)); }
   let drag = null;
   const mirI = mirrorOf(src); if (mirI) cv.classList.add('flipx'); // facing right like the game; crop numbers stay in file pixels
   const at = (e) => { const rc = cv.getBoundingClientRect(); return [(mirI ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * cv.width / z - pad, (e.clientY - rc.top) / rc.height * cv.height / z - pad]; };
-  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); cv.focus(); const p = at(e); drag = { p, x0: x, y0: y }; if (!(p[0] >= x && p[0] <= x + n && p[1] >= y && p[1] <= y + n)) { x = Math.round(p[0] - n / 2); y = Math.round(p[1] - n / 2); clamp(); drag = { p, x0: x, y0: y }; draw(); } cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener('pointermove', (e) => { if (!drag) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
+  const tAt = (e) => { const p = at(e); return edgeT(p[0] - x, p[1] - y); };
+  cv.addEventListener('contextmenu', (e) => { if (frameMode) e.preventDefault(); });
+  cv.addEventListener('pointerdown', (e) => {
+    if (!frameMode) return;
+    e.preventDefault(); cv.focus();
+    const t = tAt(e);
+    if (e.button === 2) { const i = open.findIndex((iv) => inIv(t, iv)); if (i >= 0) { open.splice(i, 1); draw(); } return; } // right click = close that opening
+    fsel = { a: t, b: t }; cv.setPointerCapture(e.pointerId); draw();
+  });
+  cv.addEventListener('pointermove', (e) => { if (!frameMode || !fsel) return; fsel.b = tAt(e); draw(); });
+  cv.addEventListener('pointerup', () => {
+    if (!frameMode || !fsel) return;
+    const iv = ivOf(fsel.a, fsel.b); fsel = null;
+    if (((iv[1] - iv[0] + 1) % 1) > 0.004) open.push(iv);
+    draw();
+  });
+  cv.addEventListener('pointerdown', (e) => { if (frameMode) return; e.preventDefault(); cv.focus(); const p = at(e); drag = { p, x0: x, y0: y }; if (!(p[0] >= x && p[0] <= x + n && p[1] >= y && p[1] <= y + n)) { x = Math.round(p[0] - n / 2); y = Math.round(p[1] - n / 2); clamp(); drag = { p, x0: x, y0: y }; draw(); } cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { if (!drag || frameMode) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
   const end = () => { drag = null; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('wheel', (e) => { e.preventDefault(); setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
@@ -1210,27 +1272,41 @@ async function iconEditor(it) {
   });
   const dlg = $('dlg');
   const close = () => { dlg.classList.remove('icon-dlg'); dlg.close(); };
-  const saveB = h('button', { class: 'primary', onclick: async () => {
-    saveB.disabled = true;
+  async function saveIcon(thenEdit) {
+    saveB.disabled = true; saveEdB.disabled = true;
     try {
+      const m = margin(), S = n + 2 * m;
       const blob = await new Promise((ok) => result().toBlob(ok, 'image/png'));
-      const q = new URLSearchParams({ item: it.id, slot: 'icon', name: `${it.id}_icon_${n}.png`, form: String(src.form || ui.form) });
+      const q = new URLSearchParams({ item: it.id, slot: 'icon', name: `${it.id}_icon_${S}.png`, form: String(src.form || ui.form) });
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob }); // newest = ★ used
       const nit = hub.items[it.id], nr = nit.rounds.at(-1);
       nit.iconCrop = { round: src.id, x, y, n };
-      if (nr) { nr.note = `ไอคอน ${n}×${n} จาก${src.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพนิ่ง'} ${fmtDate(src.t)}`; if (src.flip) nr.flip = true; }
+      if (open.length) { nit.iconCrop.open = open.map((iv) => iv.map((v) => Math.round(v * 10000) / 10000)); nit.iconCrop.m = m; }
+      if (nr) {
+        nr.note = `ไอคอน ${n}×${n} จาก${src.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพนิ่ง'} ${fmtDate(src.t)}` + (m ? ` · เปิดกรอบ ${open.length} ช่อง ยื่นได้ ${m} เม็ด (ไฟล์ ${S}×${S})` : '');
+        if (src.flip) nr.flip = true;
+        if (m) nr.iconPad = m;
+      }
       await save(); toast('บันทึกไอคอนแล้ว ใช้อันนี้แล้ว'); close(); render();
-    } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
-  } }, 'บันทึกและใช้เลย');
+      if (thenEdit && nr) pixelEditor(hub.items[it.id], nr);
+    } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; saveEdB.disabled = false; }
+  }
+  const saveB = h('button', { class: 'primary', onclick: () => saveIcon(false) }, 'บันทึกและใช้เลย');
+  const saveEdB = h('button', { title: 'บันทึกไอคอนนี้ แล้วเปิดตัวแก้พิกเซลเพื่อเก็บงานส่วนที่ยื่นออก', onclick: () => saveIcon(true) }, 'บันทึกแล้วแก้พิกเซลต่อ');
+  const frameSw = h('button', { class: 'switch', role: 'switch', 'aria-checked': 'false', onclick: () => { frameMode = !frameMode; fsel = null; draw(); } }, h('span', { class: 'knob' }), 'แต่งกรอบ (เปิดช่องให้ยื่นออก)');
+  const clearB = h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง');
+  const openTxt = h('span', { class: 'small dim' });
+  const hintEl = h('p', { class: 'small icon-hint' }, 'ลากไปตามขอบกรอบ = เปิดช่อง สิ่งที่อยู่หลังช่องจะโผล่ออกนอกกรอบ · คลิกขวาที่ช่อง = ปิดช่องนั้น · ปิดสวิตช์เพื่อกลับไปลากย้ายกรอบ');
   $('dlgBody').replaceChildren(
-    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveEdB, saveB, h('button', { onclick: close }, 'ปิด')),
     h('div', { class: 'icon-ed' },
       h('div', { class: 'icon-stage' }, cv),
       h('div', { class: 'icon-side' },
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาดกรอบ'), h('span', { class: 'sp' }), sizeTxt), sizeIn,
+        h('div', { class: 'icon-frame' }, frameSw, h('div', { class: 'row' }, openTxt, h('span', { class: 'sp' }), clearB), hintEl),
         h('div', { class: 'lbl' }, 'ผลลัพธ์ (ขยายให้ดู)'), h('div', { class: 'icon-prev' }, flipped(out, src)),
         h('div', { class: 'lbl' }, 'ขนาดจริง'), h('div', { class: 'icon-prev small' }, flipped(out1, src)),
-        h('p', { class: 'small faint' }, 'พิกเซลจริงไม่ย่อไม่ขยาย · นอกกรอบโปร่งใส · ไม่มีขอบ (ให้เกมวาดเอง) · หันข้างตามสวิตช์กลับข้างของภาพ'))));
+        h('p', { class: 'small faint' }, 'พิกเซลจริงไม่ย่อไม่ขยาย · นอกกรอบโปร่งใส (ยกเว้นหลังช่องที่เปิด) · ไม่มีขอบ (ให้เกมวาดเอง) · หันข้างตามสวิตช์กลับข้างของภาพ'))));
   dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });
   draw(); dlg.showModal(); cv.focus();
 }
@@ -1697,7 +1773,7 @@ async function pixelEditor(it, r) {
       if (r.move) q.set('move', r.move);
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
       const nr = hub.items[it.id].rounds.at(-1);
-      if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; await save(); ui.sel = r.slot === 'cut' ? ui.sel : nr.id; }
+      if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; if (r.iconPad) nr.iconPad = r.iconPad; await save(); ui.sel = r.slot === 'cut' || r.slot === 'icon' ? ui.sel : nr.id; }
       dirty = false; toast('บันทึกแล้ว ใช้ภาพนี้แทนแล้ว (ภาพเดิมยังอยู่ในรายการ กด "ใช้รอบนี้" เพื่อกลับไปใช้)'); close(true); render();
     } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
   }
