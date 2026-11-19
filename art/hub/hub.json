@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 469,
+ "rev": 494,
  "settings": {
   "moves": [
    "idle",
@@ -209,12 +209,41 @@
      "t": "2026-11-18T12:14:59.463Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
      "check": {},
      "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-18_4072bcf5.png"
+    },
+    {
+     "id": "r399cd286",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-19_c6085d98.png",
+     "orig": "HL1_crab_pixel_edit.png",
+     "t": "2026-11-19T11:37:04.944Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "r30da5f43",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/HL-1/icon_f1_2026-11-19_fb5758c5.png",
+     "orig": "HL-1_icon_120.png",
+     "t": "2026-11-19T11:38:18.612Z",
+     "by": "owner",
+     "note": "ไอคอน 80×80 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 4 ช่อง ยื่นได้ 20 เม็ด (ไฟล์ 120×120)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 20
     }
    ],
    "notes": "",
@@ -258,6 +287,31 @@
    "offset": {
     "x": 35,
     "y": 217
+   },
+   "iconCrop": {
+    "round": "r399cd286",
+    "x": 39,
+    "y": 7,
+    "n": 80,
+    "open": [
+     [
+      0.0519,
+      0.25
+     ],
+     [
+      0.2479,
+      0.3023
+     ],
+     [
+      0.25,
+      0.3487
+     ],
+     [
+      0.0434,
+      0.0642
+     ]
+    ],
+    "m": 20
    }
   },
   "HL-2": {
@@ -533,12 +587,41 @@
      "t": "2026-11-18T12:14:59.151Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
      "check": {},
      "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-18_4fe5042b.png"
+    },
+    {
+     "id": "r49e1ff72",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-19_a0e8a070.png",
+     "orig": "PL1_lynx_pixel_edit.png",
+     "t": "2026-11-19T11:44:28.689Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "r4406e7f4",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PL-1/icon_f1_2026-11-19_e79a8710.png",
+     "orig": "PL-1_icon_94_edit.png",
+     "t": "2026-11-19T11:45:45.480Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 16
     }
    ],
    "notes": "",
@@ -583,6 +666,23 @@
      83
     ],
     "round": "r5a5a91ea"
+   },
+   "iconCrop": {
+    "round": "r49e1ff72",
+    "x": 73,
+    "y": 16,
+    "n": 62,
+    "open": [
+     [
+      0.8649,
+      0.0787
+     ],
+     [
+      0.8525,
+      0.8653
+     ]
+    ],
+    "m": 16
    }
   },
   "PL-2": {
@@ -949,6 +1049,21 @@
      "promptId": "p2",
      "check": {},
      "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-18_682e881b.png"
+    },
+    {
+     "id": "r989e9968",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/SF-1/icon_f1_2026-11-19_11207122.png",
+     "orig": "SF-1_icon_76.png",
+     "t": "2026-11-19T11:51:21.034Z",
+     "by": "owner",
+     "note": "ไอคอน 50×50 จากภาพนิ่ง 2026-11-18 · เปิดกรอบ 1 ช่อง ยื่นได้ 13 เม็ด (ไฟล์ 76×76)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 13
     }
    ],
    "notes": "",
@@ -992,6 +1107,19 @@
    "offset": {
     "x": 215,
     "y": 172
+   },
+   "iconCrop": {
+    "round": "r23a6cc79",
+    "x": 49,
+    "y": 2,
+    "n": 50,
+    "open": [
+     [
+      0.1229,
+      0.2896
+     ]
+    ],
+    "m": 13
    }
   },
   "SF-2": {
@@ -1233,12 +1361,71 @@
      "t": "2026-11-18T12:14:59.311Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
      "check": {},
      "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-18_fbf00de8.png"
+    },
+    {
+     "id": "r0eac9f9b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-19_664e7d13.png",
+     "orig": "WY1_hawk_pixel_edit.png",
+     "t": "2026-11-19T11:52:35.845Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "rb3b0644a",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-19_54f817f9.png",
+     "orig": "WY-1_icon_58.png",
+     "t": "2026-11-19T11:57:44.440Z",
+     "by": "owner",
+     "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 10
+    },
+    {
+     "id": "r44f67261",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-19_f76ad55b.png",
+     "orig": "WY-1_icon_58.png",
+     "t": "2026-11-19T11:58:35.752Z",
+     "by": "owner",
+     "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 10
+    },
+    {
+     "id": "r19f92168",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-19_c67a48e4.png",
+     "orig": "WY-1_icon_58_edit.png",
+     "t": "2026-11-19T12:01:43.222Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 10
     }
    ],
    "notes": "",
@@ -1278,6 +1465,27 @@
      109
     ],
     "round": "r3f5c769d"
+   },
+   "iconCrop": {
+    "round": "r0eac9f9b",
+    "x": 86,
+    "y": 63,
+    "n": 38,
+    "open": [
+     [
+      0.7679,
+      0.9592
+     ],
+     [
+      0.9559,
+      0.9679
+     ],
+     [
+      0.9659,
+      0.9745
+     ]
+    ],
+    "m": 10
    }
   },
   "WY-2": {
@@ -1436,12 +1644,41 @@
      "t": "2026-11-18T12:14:59.619Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
      "check": {},
      "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-18_8706bfcc.png"
+    },
+    {
+     "id": "r5a6b6c74",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PT-1/icon_f1_2026-11-19_ca91f1ea.png",
+     "orig": "PT-1_icon_66.png",
+     "t": "2026-11-19T11:34:35.897Z",
+     "by": "owner",
+     "note": "ไอคอน 44×44 จากภาพนิ่ง 2026-11-18 · เปิดกรอบ 8 ช่อง ยื่นได้ 11 เม็ด (ไฟล์ 66×66)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 11
+    },
+    {
+     "id": "ra918456c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-19_38f6adb3.png",
+     "orig": "PT1_moth_pixel_edit.png",
+     "t": "2026-11-19T11:35:45.965Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
     }
    ],
    "notes": "",
@@ -1485,6 +1722,47 @@
    "offset": {
     "x": -213,
     "y": -203
+   },
+   "iconCrop": {
+    "round": "r8fb55d3f",
+    "x": 53,
+    "y": 23,
+    "n": 44,
+    "open": [
+     [
+      0.879,
+      0.9646
+     ],
+     [
+      0.9624,
+      0.9978
+     ],
+     [
+      0.8768,
+      0.882
+     ],
+     [
+      0.0036,
+      0.1269
+     ],
+     [
+      0.8702,
+      0.8783
+     ],
+     [
+      0.8635,
+      0.8702
+     ],
+     [
+      0.8584,
+      0.8658
+     ],
+     [
+      0.8525,
+      0.8628
+     ]
+    ],
+    "m": 11
    }
   },
   "PT-2": {

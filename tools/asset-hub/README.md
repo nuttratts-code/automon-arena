@@ -4,7 +4,8 @@ Local web page where the owner keeps every art round per creature (prompt → st
 
 ## Run
 - Owner: `npm run assets` in the repo folder → open http://127.0.0.1:5177 (only this PC can reach it).
-- Claude (desktop app): `preview_start` name `asset-hub` (D:\GitHub\.claude\launch.json).
+- Claude (desktop app): `preview_start` name `asset-hub` (D:\GitHub\.claude\launch.json) — only for Claude's own checks: a preview server dies with the chat that started it (owner set 255: "hub หลุดอีกแล้ว").
+- Hub down for the owner → start it detached, not tied to any chat: PowerShell `Start-Process node -ArgumentList 'tools/asset-hub/server.mjs' -WorkingDirectory 'D:\GitHubutomon-arena' -WindowStyle Hidden -RedirectStandardOutput $env:TEMPutomon-hub\out.log -RedirectStandardError $env:TEMPutomon-hub\err.log`; read err.log first to see why it stopped last time.
 - `node tools/asset-hub/server.mjs --check` = validate hub.json · `--export` = write godot/data/unit_shadows.json.
 - `node tools/asset-hub/seed.mjs` = add new characters from src/core/characters.js + new files in art/library/pictures/sprites/ (keeps everything already there).
 
