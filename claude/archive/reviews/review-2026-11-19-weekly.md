@@ -1,4 +1,4 @@
-# Weekly review — 12–19 Nov 2026 (set 249) · WAITING FOR OWNER
+# Weekly review — 12–19 Nov 2026 (set 249) · DECIDED 19 Nov: A1 · B = owner wording (ask before writing art-style.md while the look is explored; B3 not picked) · C1 · D1 · E1 · F1 — applied
 
 Sources: `git log` origin/main since 12 Nov, handoff Relay, Claude memory files (Claude cannot read old chats; "not shown" ≠ proven). Sets this week: 230–240, 248 (+ 241–247 art work in automon-scratch, no Relay trace).
 

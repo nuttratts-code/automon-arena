@@ -6,6 +6,8 @@ description: Battle-scene look in the Godot port (ฉากสู้ / ภาพ
 
 > Rules: claude/art-style.md, claude/plan-godot-migration.md P5, claude/workflow/security.md — they win if anything differs (description trimmed set 219 A1).
 
+> **Art direction (owner set 249):** while the look is still being explored, a direction the owner tries or picks is NOT written into claude/art-style.md by itself — ask "บันทึกลง art-style.md ไหม?" and edit only after the owner says OK; until then record it in the set's Relay line (never memory-only).
+
 Claude does the work; the owner decides. Every **Gate** below = stop, show stills next to the target, offer A1/A2 (+ a recommended one), wait.
 
 ## 0. Fixed facts — do not re-decide
