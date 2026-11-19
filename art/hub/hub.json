@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 434,
+ "rev": 440,
  "settings": {
   "moves": [
    "idle",
@@ -1738,21 +1738,6 @@
      "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-18_7c3ed5e3.png"
     },
     {
-     "id": "r9a2d4229",
-     "slot": "cut",
-     "form": 1,
-     "file": "hub/WN-1/cut_f1_2026-11-18_1697bd3e.png",
-     "orig": "WN1_boar_pixel_cut_edit.png",
-     "t": "2026-11-18T15:11:28.336Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "from": "r1a2c69a5"
-    },
-    {
      "id": "rcd9752f8",
      "slot": "icon",
      "form": 1,
@@ -1784,18 +1769,19 @@
      "check": {}
     },
     {
-     "id": "r5cc5d8b6",
+     "id": "rf4a07949",
      "slot": "still",
      "form": 1,
-     "file": "hub/WN-1/still_f1_2026-11-18_c2b66d18.png",
-     "orig": "WN-1_horns_128x96.png",
-     "t": "2026-11-18T15:51:40.627Z",
-     "by": "owner",
-     "note": "แก้เขา (ภาพที่คุณส่งในแชท) ย่อกลับพิกเซลจริง 128×96 พื้นขาวเป็นโปร่งใส สีดึงเข้าสีเดิม",
+     "file": "hub/WN-1/still_f1_2026-11-19_a56b2c5a.png",
+     "orig": "WN-1_horn_fill_118x78.png",
+     "t": "2026-11-19T10:10:59.000Z",
+     "by": "claude",
+     "note": "เติมเขาขวาขึ้นไปทางซ้ายบน (จุดที่วงไว้ x74-90 y5-18) จากภาพ ★ r3df87382 · ใช้สีเขาเดิม",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1"
+     "promptId": "p1",
+     "from": "r3df87382"
     }
    ],
    "notes": "",
