@@ -19,5 +19,5 @@ Open when doing a balance/import batch or when the user asks. Measure only when 
 - (b16) cooldown slow-down % stacks multiplicatively.
 - (measured, confirm after real play) per-level thresholds ±10 · WY-8 no skill cooldown.
 - (b4 measured) summoned units count no tribe / no permanent values · split hits round down · min attack 1.
-- (not measured: across matches) HL-5 · permanent % values stack additively. (PT-3 · WN-1/2 · SF-7 · permanent sources measured set 136/137 → claude/review-2026-11-08-econ55.md, open there.)
+- (not measured: across matches) HL-5 · permanent % values stack additively. (PT-3 · WN-1/2 · SF-7 · permanent sources measured set 136/137 → claude/archive/reviews/review-2026-11-08-econ55.md, decided set 174: keep.)
 - Effects with no user yet: reflect % damage of · skill cooldown lengthen · position-based ally · self instant down · heal/hit.
