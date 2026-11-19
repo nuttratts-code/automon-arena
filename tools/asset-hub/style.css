@@ -359,3 +359,17 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .pxed-rot { flex-wrap: wrap; gap: 6px; }
 .pxed-rot input[type=range] { flex: 1; min-width: 90px; }
 .pxed-rot .pxed-rotnum { width: 4.2em; }
+/* layers + edit menu (owner set 253) */
+.pxed-lyrbox, .pxed-editbox { display: flex; flex-direction: column; gap: 6px; }
+.pxed-lyrbox[hidden], .pxed-editbox[hidden], .pxed-side .switch[hidden] { display: none; }
+.pxed-editbox { padding: 8px; border-radius: 8px; background: #ffffff0a; border: 1px solid var(--line); }
+.pxed-lyrs { display: flex; flex-direction: column; gap: 3px; max-height: 210px; overflow-y: auto; }
+.pxed-lyr { display: flex; gap: 4px; align-items: stretch; border-radius: 6px; border: 1px solid var(--line); }
+.pxed-lyr.on { border-color: #8cc8ff; background: rgba(140,200,255,.12); }
+.pxed-lyr.off .pxed-lname { opacity: .55; }
+.pxed-eye { width: 34px; padding: 2px 0; flex: none; }
+.pxed-lname { flex: 1; text-align: left; padding: 4px 8px; background: none; border: 0; }
+.pxed-lyrrow, .pxed-editrow, .pxed-mrot { flex-wrap: wrap; gap: 6px; }
+.pxed-lyrrow button, .pxed-editrow button { padding: 4px 10px; }
+.pxed-mrot input[type=range] { flex: 1; min-width: 90px; }
+.pxed-mrot .pxed-rotnum { width: 4.2em; }

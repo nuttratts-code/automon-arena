@@ -1256,6 +1256,16 @@ async function pixelEditor(it, r) {
   let sel = null, selEdges = null, rectD = null, lassoD = null, float = null, fdrag = null;
   // owner set 248 round 5 (A1 + B1): every copy opens a 2nd tab with just the copied piece; edit it there, then it floats onto the real picture
   const docs = { main: {}, piece: null }; let cur = 'main';
+  // owner set 253 (B: keep layers until saved · C1): every placed piece becomes its own layer on the real picture; tools edit the chosen layer;
+  // saving merges the visible layers into one picture. `data` is always the chosen layer's pixels (main tab) or the piece (piece tab).
+  let layers = [{ name: 'ภาพหลัก', data, vis: true }], act = 0, lyrN = 0;
+  const cloneI = (d) => new ImageData(new Uint8ClampedArray(d.data), d.width, d.height);
+  function composeL(Ls, vis = true) { // a pixel of a higher layer replaces what is under it (same rule as placing a piece)
+    const o = new ImageData(Ls[0].data.width, Ls[0].data.height), d = o.data;
+    for (const l of Ls) { if (vis && !l.vis) continue; const s0 = l.data.data; for (let i = 0; i < s0.length; i += 4) if (s0[i + 3]) { d[i] = s0[i]; d[i + 1] = s0[i + 1]; d[i + 2] = s0[i + 2]; d[i + 3] = s0[i + 3]; } }
+    return o;
+  }
+  const compose = () => (layers ? composeL(layers) : data);
   let swapBtn = false; try { swapBtn = localStorage.getItem('pxedSwap2') === '1'; } catch { /* storage off */ }
   const fitZ = (mx = 16) => Math.max(2, Math.min(mx, Math.floor(Math.min((window.innerWidth * 0.96 - 360) / W, (window.innerHeight * 0.92 - 150) / H))));
   let z = fitZ();
@@ -1293,6 +1303,21 @@ async function pixelEditor(it, r) {
   const rotL = h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotateTo((rot ? rot.deg : 0) - 90) }, '⟲ 90°'), rotR = h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotateTo((rot ? rot.deg : 0) + 90) }, '⟳ 90°');
   const rotRow = h('div', { class: 'row pxed-rot' }, h('span', { class: 'lbl' }, 'หมุน'), rotL, rotR, rotIn, rotNum, h('span', { class: 'small dim' }, '°'));
   const pieceBar = h('div', { class: 'pxed-piecebar' }, h('strong', {}, 'หน้าชิ้นที่ก๊อป'), h('span', { class: 'small dim' }, 'แก้ชิ้นนี้ก่อนได้ทุกเครื่องมือ หมุนได้ ภาพจริงยังไม่เปลี่ยน · Enter = เอาไปลอยบนภาพจริงที่จุดเดิม แล้วลาก/ขยับก่อนวาง · Esc = กลับภาพจริง (ไม่วาง)'), rotRow, sendB);
+  // layers panel + edit menu (owner set 253)
+  const lyrList = h('div', { class: 'pxed-lyrs', role: 'group', 'aria-label': 'เลเยอร์' });
+  const lyrUp = h('button', { title: 'เลื่อนเลเยอร์ขึ้น', onclick: () => layerOp('up') }, 'ขึ้น'), lyrDown = h('button', { title: 'เลื่อนเลเยอร์ลง', onclick: () => layerOp('down') }, 'ลง');
+  const lyrMerge = h('button', { title: 'รวมเลเยอร์นี้ลงกับชั้นล่าง', onclick: () => layerOp('merge') }, 'รวมลงล่าง'), lyrDel = h('button', { title: 'ลบเลเยอร์นี้', onclick: () => layerOp('del') }, 'ลบ');
+  const lyrBox = h('div', { class: 'pxed-lyrbox' }, h('div', { class: 'lbl' }, 'เลเยอร์ (บนสุดอยู่บน)'), lyrList, h('div', { class: 'row pxed-lyrrow' }, lyrUp, lyrDown, lyrMerge, lyrDel),
+    h('span', { class: 'small dim' }, 'วางชิ้นลง = ได้เลเยอร์ใหม่ · เครื่องมือแก้เฉพาะเลเยอร์ที่เลือก · บันทึก = รวมเลเยอร์ที่เห็นเป็นภาพเดียว (ที่ซ่อนจะไม่ถูกบันทึก)'));
+  let editOn = false; try { editOn = localStorage.getItem('pxedEdit') === '1'; } catch { /* storage off */ }
+  const editSw = h('button', { class: 'switch', role: 'switch', onclick: () => { editOn = !editOn; try { localStorage.setItem('pxedEdit', editOn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'เมนูแก้ไข (ย้าย หมุน กลับด้าน)');
+  const mRotIn = h('input', { type: 'range', min: -180, max: 180, step: 1, value: 0, 'aria-label': 'หมุนองศา', oninput: (e) => rotF(+e.target.value) });
+  const mRotNum = h('input', { type: 'number', min: -180, max: 180, step: 1, value: 0, class: 'pxed-rotnum', 'aria-label': 'องศา', onchange: (e) => rotF(Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)))) });
+  const mDeg = () => (float && float.deg) || 0;
+  const editBox = h('div', { class: 'pxed-editbox' },
+    h('span', { class: 'small dim' }, 'ใช้กับส่วนที่เลือก หรือทั้งเลเยอร์ที่เลือกถ้าไม่ได้เลือกไว้ · Enter = วางกลับลงเลเยอร์เดิม · Esc = ยกเลิก'),
+    h('div', { class: 'row pxed-editrow' }, h('button', { title: 'ยกขึ้นมาลากย้าย (ลูกศร = ทีละเม็ด)', onclick: () => lift() }, 'ย้าย'), h('button', { onclick: () => flipM(true) }, 'กลับซ้าย-ขวา'), h('button', { onclick: () => flipM(false) }, 'กลับบน-ล่าง')),
+    h('div', { class: 'row pxed-mrot' }, h('span', { class: 'lbl' }, 'หมุน'), h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotF(mDeg() - 90) }, '⟲ 90°'), h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotF(mDeg() + 90) }, '⟳ 90°'), mRotIn, mRotNum, h('span', { class: 'small dim' }, '°')));
   function rotImg(img, deg) { // nearest pixel, the box grows to fit; deg = clockwise in file pixels
     const a = deg * Math.PI / 180; let c = Math.cos(a), sn = Math.sin(a);
     if (Math.abs(c) < 1e-9) c = 0; if (Math.abs(sn) < 1e-9) sn = 0;
@@ -1317,9 +1342,9 @@ async function pixelEditor(it, r) {
   }
   function rotReset() { rot = null; rotIn.value = '0'; rotNum.value = '0'; }
   const mainDirty = () => (cur === 'main' ? dirty : !!docs.main.dirty);
-  function stash() { Object.assign(docs[cur], { W, H, data, undoS, redoS, dirty, z }); }
+  function stash() { Object.assign(docs[cur], { W, H, data, undoS, redoS, dirty, z, layers, act }); }
   function load(k) {
-    const d = docs[k]; W = d.W; H = d.H; data = d.data; undoS = d.undoS; redoS = d.redoS; dirty = d.dirty; z = d.z; cur = k;
+    const d = docs[k]; W = d.W; H = d.H; layers = d.layers || null; act = d.act || 0; data = layers ? layers[act].data : d.data; undoS = d.undoS; redoS = d.redoS; dirty = d.dirty; z = d.z; cur = k;
     sel = null; selEdges = null; float = null; fdrag = null; rectD = null; lassoD = null; stroke = null; hover = null;
     src.width = W; src.height = H;
   }
@@ -1344,7 +1369,7 @@ async function pixelEditor(it, r) {
   }
   function palette() { // the picture's own colours, most used first
     const n = new Map();
-    const pd = cur === 'main' ? data.data : docs.main.data.data; // the real picture's colours, also on the piece tab
+    const pd = (cur === 'main' ? composeL(layers, false) : composeL(docs.main.layers, false)).data; // the real picture's colours, also on the piece tab
     for (let i = 0; i < pd.length; i += 4) { if (pd[i + 3] < 128) continue; const k = (pd[i] << 16) | (pd[i + 1] << 8) | pd[i + 2]; n.set(k, (n.get(k) || 0) + 1); }
     const top = [...n.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([k]) => [(k >> 16) & 255, (k >> 8) & 255, k & 255, 255]);
     pal.replaceChildren(...top.map((c) => h('button', { class: 'pxed-sw', title: hex(c), 'aria-label': 'สี ' + hex(c), style: `--sw:${hex(c)}`, onclick: () => setColour(c) })));
@@ -1371,12 +1396,16 @@ async function pixelEditor(it, r) {
     for (const b of [mainTab, pieceTab]) { const on = b.dataset.k === cur; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); }
     pieceBar.hidden = cur !== 'piece'; sendB.disabled = !!float;
     if (!rot && rotIn.value !== '0') { rotIn.value = '0'; rotNum.value = '0'; } // another edit ended the turning
+    lyrBox.hidden = !layers; editSw.hidden = !layers; editBox.hidden = !layers || !editOn;
+    editSw.classList.toggle('is-on', editOn); editSw.setAttribute('aria-checked', String(editOn));
+    mRotIn.value = String(mDeg()); mRotNum.value = String(mDeg());
+    if (layers) renderLayers();
   }
   function paint() {
     cv.width = W * z; cv.height = H * z;
     const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
     g.clearRect(0, 0, cv.width, cv.height);
-    sg.putImageData(data, 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
+    sg.putImageData(compose(), 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
     if (grid && z >= 4) {
       g.strokeStyle = bgK === 'white' || bgK === 'green' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.14)'; g.lineWidth = 1; g.beginPath();
       for (let x = 1; x < W; x++) { g.moveTo(x * z + 0.5, 0); g.lineTo(x * z + 0.5, H * z); }
@@ -1480,7 +1509,11 @@ async function pixelEditor(it, r) {
   function commitFloat() { // place the floating piece; its transparent pixels keep what is underneath (owner B1)
     if (!float) return;
     const f = float; float = null; fdrag = null;
-    snapshot();
+    if (layers && f.into != null) { act = f.into; data = layers[act].data; } // a lifted layer/selection goes back into its own layer (lift already saved the undo step)
+    else {
+      snapshot();
+      if (layers) { layers.splice(act + 1, 0, { name: `ชิ้น ${++lyrN}`, data: new ImageData(W, H), vis: true }); act++; data = layers[act].data; } // owner set 253: a placed piece = a new layer above the chosen one
+    }
     for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) {
       const o = (y * f.w + x) * 4, tx = f.x + x, ty = f.y + y;
       if (f.d[o + 3] === 0 || tx < 0 || ty < 0 || tx >= W || ty >= H) continue;
@@ -1488,16 +1521,59 @@ async function pixelEditor(it, r) {
     }
     dirty = true; palette(); syncUi(); paint();
   }
-  function cancelFloat() { if (!float) return; float = null; fdrag = null; syncUi(); paint(); } // the picture was not touched yet
+  function cancelFloat() { if (!float) return; const f = float; float = null; fdrag = null; if (f.restore) { data.data.set(f.restore); undoS.pop(); } syncUi(); paint(); } // a pasted piece never touched the picture; a lifted one is put back
   function flipFloat(hz) {
     if (!float) return; const f = float, d = new Uint8ClampedArray(f.d.length);
     for (let y = 0; y < f.h; y++) for (let x = 0; x < f.w; x++) { const sx = hz ? f.w - 1 - x : x, sy = hz ? y : f.h - 1 - y; d.set(f.d.subarray((sy * f.w + sx) * 4, (sy * f.w + sx) * 4 + 4), (y * f.w + x) * 4); }
-    f.d = d; paint();
+    f.d = d; f.base = null; f.deg = 0; syncUi(); paint(); // a flip starts a fresh turn from this look
   }
-  function snapshot() { rot = null; undoS.push(new ImageData(new Uint8ClampedArray(data.data), W, H)); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
-  function undo() { if (float) { cancelFloat(); return; } if (!undoS.length) return; redoS.push(data); setData(undoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
-  function redo() { if (float) commitFloat(); if (!redoS.length) return; undoS.push(data); setData(redoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
-  function pick(p, quiet) { const i = px(...p); if (data.data[i + 3] === 0) { if (!quiet) toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([data.data[i], data.data[i + 1], data.data[i + 2], 255]); }
+  // ---- layers + edit menu on the real picture (owner set 253) ----
+  function lift() { // the selection (or the whole chosen layer) floats so it can be moved / turned / flipped; Enter puts it back into the same layer
+    if (!layers || float) return !!float;
+    let m = sel;
+    if (!m) { m = new Uint8Array(W * H); for (let i = 0; i < W * H; i++) if (data.data[i * 4 + 3]) m[i] = 1; }
+    if (!m.some((v) => v)) { toast('เลเยอร์นี้ว่าง ไม่มีอะไรให้ย้าย/หมุน'); return false; }
+    snapshot(); const restoreD = new Uint8ClampedArray(data.data), g = grab(m);
+    for (let i = 0; i < W * H; i++) if (m[i]) data.data.fill(0, i * 4, i * 4 + 4);
+    float = { ...g, into: act, restore: restoreD }; dirty = true; setSel(null); if (!isSel()) tool = 'rect';
+    syncUi(); paint(); cv.focus(); return true;
+  }
+  function rotF(deg) { // turn the floating piece around its middle; every angle is drawn from the look when turning started
+    if (!float && !lift()) return;
+    const f = float;
+    deg = ((Math.round(deg) + 540) % 360) - 180; if (deg === -180) deg = 180;
+    if (!f.base) { f.base = { d: f.d, w: f.w, h: f.h }; f.deg = 0; }
+    const cx = f.x + f.w / 2, cy = f.y + f.h / 2, b = new ImageData(new Uint8ClampedArray(f.base.d), f.base.w, f.base.h);
+    const r2 = deg ? rotImg(b, mirX ? -deg : deg) : b;
+    f.d = r2.data; f.w = r2.width; f.h = r2.height; f.x = Math.round(cx - f.w / 2); f.y = Math.round(cy - f.h / 2); f.deg = deg;
+    syncUi(); paint();
+  }
+  function flipM(hz) { if (!float && !lift()) return; flipFloat(hz); }
+  function chooseLayer(i) { if (!layers || i === act) return; commitFloat(); setSel(null); act = i; data = layers[i].data; syncUi(); paint(); cv.focus(); }
+  function layerOp(k, i = act) {
+    if (!layers) return; commitFloat(); setSel(null);
+    if (k === 'del' && layers.length < 2) { toast('ต้องเหลืออย่างน้อย 1 เลเยอร์'); return; }
+    if (k === 'merge' && i === 0) { toast('เลเยอร์ล่างสุด รวมลงไม่ได้'); return; }
+    if ((k === 'up' && i === layers.length - 1) || (k === 'down' && i === 0)) return;
+    snapshot();
+    if (k === 'vis') layers[i].vis = !layers[i].vis;
+    else if (k === 'up' || k === 'down') { const j = k === 'up' ? i + 1 : i - 1; [layers[i], layers[j]] = [layers[j], layers[i]]; act = j; }
+    else if (k === 'merge') { layers[i - 1].data = composeL([layers[i - 1], { ...layers[i], vis: true }], false); layers.splice(i, 1); act = i - 1; }
+    else if (k === 'del') { layers.splice(i, 1); if (i < act) act--; act = Math.max(0, Math.min(act, layers.length - 1)); }
+    data = layers[act].data; dirty = true; palette(); syncUi(); paint();
+  }
+  function renderLayers() {
+    lyrList.replaceChildren(...layers.map((l, i) => [l, i]).reverse().map(([l, i]) => h('div', { class: 'pxed-lyr' + (i === act ? ' on' : '') + (l.vis ? '' : ' off') },
+      h('button', { class: 'ghost pxed-eye', title: l.vis ? 'ซ่อนเลเยอร์นี้' : 'แสดงเลเยอร์นี้', 'aria-pressed': String(l.vis), 'aria-label': (l.vis ? 'ซ่อน ' : 'แสดง ') + l.name, onclick: () => layerOp('vis', i) }, l.vis ? '\u{1F441}' : '\u2014'),
+      h('button', { class: 'pxed-lname', 'aria-pressed': String(i === act), onclick: () => chooseLayer(i) }, l.name + (l.vis ? '' : ' (ซ่อน)')))));
+    lyrUp.disabled = act === layers.length - 1; lyrDown.disabled = act === 0; lyrMerge.disabled = act === 0; lyrDel.disabled = layers.length < 2;
+  }
+  function cap() { return layers ? { L: layers.map((l) => ({ ...l, data: cloneI(l.data) })), act } : cloneI(data); }
+  function restore(st) { if (st.L) { layers = st.L; act = st.act; data = layers[act].data; } else setData(st); }
+  function snapshot() { rot = null; undoS.push(cap()); if (undoS.length > 100) undoS.shift(); redoS.length = 0; }
+  function undo() { if (float) { cancelFloat(); return; } if (!undoS.length) return; redoS.push(cap()); restore(undoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
+  function redo() { if (float) commitFloat(); if (!redoS.length) return; undoS.push(cap()); restore(redoS.pop()); if (cur === 'piece') rotReset(); dirty = true; palette(); syncUi(); paint(); }
+  function pick(p, quiet) { const v = compose().data, i = px(...p); if (v[i + 3] === 0) { if (!quiet) toast('เม็ดนี้โปร่งใส ไม่มีสีให้ดูด'); return; } setColour([v[i], v[i + 1], v[i + 2], 255]); } // what you see (all visible layers)
   cv.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     if (Date.now() - lastDown < 400) return; // a real right press was already handled
@@ -1578,7 +1654,7 @@ async function pixelEditor(it, r) {
     switchTo('main'); // the piece tab is never saved by itself
     commitFloat();
     try {
-      sg.putImageData(data, 0, 0);
+      sg.putImageData(compose(), 0, 0); // visible layers merged into one picture (hidden layers are left out)
       const blob = await new Promise((ok) => src.toBlob(ok, 'image/png'));
       const q = new URLSearchParams({ item: it.id, slot: r.slot, name: (r.orig || r.slot).replace(/\.\w+$/, '') + '_edit.png' }); // newest upload = ★ used (owner: use the edit right away)
       if (it.kind === 'character') q.set('form', String(r.form || ui.form));
@@ -1605,7 +1681,7 @@ async function pixelEditor(it, r) {
         h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
         h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
         h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg,
-        h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg, swapSw,
+        h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg, swapSw, editSw, editBox, lyrBox,
         h('div', { class: 'lbl' }, 'ส่วนที่เลือก'), h('div', { class: 'row pxed-selrow' }, copyB, cutB, pasteB, delB, noneB), floatRow,
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
         h('div', { class: 'row' }, undoB, redoB, posEl))));
