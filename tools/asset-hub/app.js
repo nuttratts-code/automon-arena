@@ -1177,7 +1177,8 @@ async function iconEditor(it) {
   const prev = it.iconCrop && it.iconCrop.round === src.id ? it.iconCrop : null;
   let n = prev ? prev.n : Math.max(8, Math.round(Math.min(W, H) * 0.7 / 2) * 2), x = prev ? prev.x : Math.round((W - n) / 2), y = prev ? prev.y : Math.round((H - n) / 3);
   const pad = 24; // picture px of room around the picture, so the frame can hang over an edge
-  const z = Math.max(2, Math.min(10, Math.floor(Math.min((window.innerWidth * 0.96 - 420) / (W + pad * 2), (window.innerHeight * 0.92 - 170) / (H + pad * 2)))));
+  const fitZ = Math.max(2, Math.min(10, Math.floor(Math.min((window.innerWidth * 0.96 - 420) / (W + pad * 2), (window.innerHeight * 0.92 - 170) / (H + pad * 2)))));
+  let z = fitZ; // owner set 255: zoom − / + / พอดี, Ctrl + wheel zooms at the pointer (plain wheel = frame size)
   const cv = h('canvas', { class: 'icon-cv', width: (W + pad * 2) * z, height: (H + pad * 2) * z, tabindex: 0, 'aria-label': 'ลากกรอบข้าวหลามตัดไปวางบนส่วนที่ต้องการ ล้อเมาส์หรือแถบเลื่อนเพื่อปรับขนาด ปุ่มลูกศรขยับทีละ 1 เม็ด' });
   const out = h('canvas', { class: 'icon-out' }), out1 = h('canvas', { class: 'icon-out1' });
   const sizeIn = h('input', { type: 'range', min: 8, max: Math.max(16, Math.min(256, Math.max(W, H) + 16)), step: 2, value: n, 'aria-label': 'ขนาดกรอบ', oninput: (e) => setN(Number(e.target.value)) });
@@ -1242,6 +1243,7 @@ async function iconEditor(it) {
       g.restore();
     }
     for (const [c, k] of [[out, Math.max(1, Math.floor(200 / S))], [out1, 1]]) { c.width = S * k; c.height = S * k; const gg = c.getContext('2d'); gg.imageSmoothingEnabled = false; gg.drawImage(o, 0, 0, S * k, S * k); }
+    zTxt.textContent = `×${z}`;
     sizeTxt.textContent = m ? `${n}×${n} px · ไฟล์ ${S}×${S}` : `${n}×${n} px`; sizeIn.value = String(n);
     openTxt.textContent = open.length ? `เปิดกรอบ ${open.length} ช่อง · ยื่นได้ไม่เกิน ${m} เม็ด (25%)` : 'ยังไม่มีช่องเปิด';
     clearB.disabled = !open.length; frameSw.setAttribute('aria-checked', String(frameMode)); frameSw.classList.toggle('is-on', frameMode);
@@ -1272,7 +1274,20 @@ async function iconEditor(it) {
   cv.addEventListener('pointermove', (e) => { if (!drag || frameMode) return; const p = at(e); x = Math.round(drag.x0 + p[0] - drag.p[0]); y = Math.round(drag.y0 + p[1] - drag.p[1]); clamp(); draw(); });
   const end = () => { drag = null; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-  cv.addEventListener('wheel', (e) => { e.preventDefault(); setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  cv.addEventListener('wheel', (e) => { e.preventDefault(); if (e.ctrlKey || e.metaKey) zoomTo(z + (e.deltaY < 0 ? 1 : -1), e); else setN(n + (e.deltaY < 0 ? 2 : -2)); }, { passive: false });
+  const stageEl = h('div', { class: 'icon-stage' }, cv), zTxt = h('b', {});
+  function zoomTo(nz, e) { // keeps the point under the pointer (or the middle of the view) in place
+    nz = Math.max(1, Math.min(32, nz)); if (nz === z) return;
+    const st = stageEl, rc = st.getBoundingClientRect();
+    const ox = e ? e.clientX - rc.left : st.clientWidth / 2, oy = e ? e.clientY - rc.top : st.clientHeight / 2;
+    const fx = (st.scrollLeft + ox) / z, fy = (st.scrollTop + oy) / z;
+    z = nz; cv.width = (W + pad * 2) * z; cv.height = (H + pad * 2) * z; draw();
+    st.scrollLeft = fx * z - ox; st.scrollTop = fy * z - oy;
+  }
+  const zoomRow = h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), h('span', { class: 'sp' }),
+    h('button', { 'aria-label': 'ซูมออก', title: 'Ctrl + ล้อเมาส์ลง', onclick: () => zoomTo(z - 1) }, '−'), zTxt,
+    h('button', { 'aria-label': 'ซูมเข้า', title: 'Ctrl + ล้อเมาส์ขึ้น', onclick: () => zoomTo(z + 1) }, '+'),
+    h('button', { class: 'ghost', onclick: () => zoomTo(fitZ) }, 'พอดีจอ'));
   cv.addEventListener('keydown', (e) => {
     const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
     if (d) { e.preventDefault(); const k = e.shiftKey ? 10 : 1; x += d[0] * k * (mirI ? -1 : 1); y += d[1] * k; clamp(); draw(); }
@@ -1306,10 +1321,11 @@ async function iconEditor(it) {
   const openTxt = h('span', { class: 'small dim' });
   const hintEl = h('p', { class: 'small icon-hint' }, 'ลากไปตามขอบกรอบ = เปิดช่อง สิ่งที่อยู่หลังช่องจะโผล่ออกนอกกรอบ · คลิกขวาที่ช่อง = ปิดช่องนั้น · ปิดสวิตช์เพื่อกลับไปลากย้ายกรอบ');
   $('dlgBody').replaceChildren(
-    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveEdB, saveB, h('button', { onclick: close }, 'ปิด')),
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `ตัดกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากกรอบไปวางบนส่วนที่อยากให้อยู่ในไอคอน · ล้อเมาส์ = ขนาด · Ctrl + ล้อเมาส์ = ซูม · ลูกศร = ขยับทีละ 1 เม็ด'), h('span', { class: 'sp' }), saveEdB, saveB, h('button', { onclick: close }, 'ปิด')),
     h('div', { class: 'icon-ed' },
-      h('div', { class: 'icon-stage' }, cv),
+      stageEl,
       h('div', { class: 'icon-side' },
+        zoomRow,
         h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาดกรอบ'), h('span', { class: 'sp' }), sizeTxt), sizeIn,
         h('div', { class: 'icon-frame' }, frameSw, h('div', { class: 'row' }, openTxt, h('span', { class: 'sp' }), clearB), hintEl),
         h('div', { class: 'lbl' }, 'ผลลัพธ์ (ขยายให้ดู)'), h('div', { class: 'icon-prev' }, flipped(out, src)),

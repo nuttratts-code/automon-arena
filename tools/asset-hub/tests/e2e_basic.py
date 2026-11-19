@@ -135,6 +135,11 @@ with sync_playwright() as p:
     check("reset gives back the game name", hub()["items"]["WN-1"]["name"] == gi["name"])
     # set 255: icon frame openings (แต่งกรอบ) — drag across the top of the frame opens one gap, the file grows by 25 % each side
     pg.locator("button", has_text="ตัดกรอบใหม่").first.click(); pg.wait_for_timeout(600)
+    w0 = pg.evaluate("document.querySelector('.icon-cv').width")
+    pg.locator("button[aria-label='ซูมเข้า']").click(); pg.wait_for_timeout(200)
+    w1 = pg.evaluate("document.querySelector('.icon-cv').width")
+    pg.locator(".icon-side button", has_text="พอดีจอ").click(); pg.wait_for_timeout(200)
+    check("icon cropper zooms in and back to fit", w1 > w0 and pg.evaluate("document.querySelector('.icon-cv').width") == w0, (w0, w1))
     pg.locator(".icon-side .switch").click(); pg.wait_for_timeout(200)
     cb = pg.locator(".icon-cv").bounding_box()
     pg.mouse.move(cb["x"] + cb["width"] * 0.3, cb["y"] + 5); pg.mouse.down()

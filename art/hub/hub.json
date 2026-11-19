@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 458,
+ "rev": 469,
  "settings": {
   "moves": [
    "idle",
@@ -1734,7 +1734,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
-     "flip": true
+     "flip": true,
+     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-18_3f2bb6ba.png"
     },
     {
      "id": "r3df87382",
@@ -1797,21 +1798,6 @@
      "promptId": "p1"
     },
     {
-     "id": "r9c75b35e",
-     "slot": "icon",
-     "form": 1,
-     "file": "hub/WN-1/icon_f1_2026-11-19_eeddc606.png",
-     "orig": "WN-1_icon_94.png",
-     "t": "2026-11-19T11:14:34.501Z",
-     "by": "owner",
-     "note": "ไอคอน 62×62 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 7 ช่อง ยื่นได้ 16 เม็ด (ไฟล์ 94×94)",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "iconPad": 16
-    },
-    {
      "id": "rf9489fbd",
      "slot": "icon",
      "form": 1,
@@ -1824,21 +1810,24 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
-     "iconPad": 16
+     "iconPad": 16,
+     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_4855726e.png"
     },
     {
-     "id": "r16510e7c",
+     "id": "r7ca969ee",
      "slot": "icon",
      "form": 1,
-     "file": "hub/WN-1/icon_f1_2026-11-19_6fd30d29.png",
-     "orig": "WN-1_icon_62.png",
-     "t": "2026-11-19T11:18:13.828Z",
+     "file": "hub/WN-1/icon_f1_2026-11-19_9a51035f.png",
+     "orig": "WN-1_icon_94_edit.png",
+     "t": "2026-11-19T11:26:47.530Z",
      "by": "owner",
-     "note": "ไอคอน 62×62 จากภาพนิ่ง 2026-11-19",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1"
+     "promptId": "p1",
+     "iconPad": 16,
+     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_9a51035f.png"
     }
    ],
    "notes": "",
@@ -1886,8 +1875,51 @@
    "iconCrop": {
     "round": "r5b8f96a2",
     "x": 69,
-    "y": 19,
-    "n": 62
+    "y": 18,
+    "n": 62,
+    "open": [
+     [
+      0.9656,
+      0.0203
+     ],
+     [
+      0.9627,
+      0.9746
+     ],
+     [
+      0.8619,
+      0.9205
+     ],
+     [
+      0.9205,
+      0.9278
+     ],
+     [
+      0.9205,
+      0.9269
+     ],
+     [
+      0.8399,
+      0.8637
+     ],
+     [
+      0.8298,
+      0.8399
+     ],
+     [
+      0.8206,
+      0.8298
+     ],
+     [
+      0.8133,
+      0.8206
+     ],
+     [
+      0.8005,
+      0.8133
+     ]
+    ],
+    "m": 16
    }
   },
   "WN-2": {
