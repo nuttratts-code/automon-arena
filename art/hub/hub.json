@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 494,
+ "rev": 495,
  "settings": {
   "moves": [
    "idle",
@@ -1406,11 +1406,12 @@
      "t": "2026-11-19T11:58:35.752Z",
      "by": "owner",
      "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 10
+     "iconPad": 10,
+     "library": "lib/characters/WY-1/WY-1_icon_f1_2026-11-19_f76ad55b.png"
     },
     {
      "id": "r19f92168",
@@ -1421,7 +1422,7 @@
      "t": "2026-11-19T12:01:43.222Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",

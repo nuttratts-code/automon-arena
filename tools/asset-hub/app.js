@@ -1308,7 +1308,7 @@ async function iconEditor(it) {
       if (nr) {
         nr.note = `ไอคอน ${n}×${n} จาก${src.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพนิ่ง'} ${fmtDate(src.t)}` + (m ? ` · เปิดกรอบ ${open.length} ช่อง ยื่นได้ ${m} เม็ด (ไฟล์ ${S}×${S})` : '');
         if (src.flip) nr.flip = true;
-        if (m) nr.iconPad = m;
+        if (m) { nr.iconPad = m; nr.iconOpen = nit.iconCrop.open; nr.iconN = n; } // each icon keeps its own gaps, so the game knows where the frame line opens
       }
       await save(); toast('บันทึกไอคอนแล้ว ใช้อันนี้แล้ว'); close(); render();
       if (thenEdit && nr) pixelEditor(hub.items[it.id], nr);
@@ -1797,7 +1797,7 @@ async function pixelEditor(it, r) {
       if (r.move) q.set('move', r.move);
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
       const nr = hub.items[it.id].rounds.at(-1);
-      if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; if (r.iconPad) nr.iconPad = r.iconPad; await save(); ui.sel = r.slot === 'cut' || r.slot === 'icon' ? ui.sel : nr.id; }
+      if (nr) { nr.note = 'แก้พิกเซลบนเว็บ จาก ' + fmtDate(r.t); if (r.flip) nr.flip = true; if (r.iconPad) { nr.iconPad = r.iconPad; if (r.iconOpen) nr.iconOpen = r.iconOpen; if (r.iconN) nr.iconN = r.iconN; } await save(); ui.sel = r.slot === 'cut' || r.slot === 'icon' ? ui.sel : nr.id; }
       dirty = false; toast('บันทึกแล้ว ใช้ภาพนี้แทนแล้ว (ภาพเดิมยังอยู่ในรายการ กด "ใช้รอบนี้" เพื่อกลับไปใช้)'); close(true); render();
     } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
   }
