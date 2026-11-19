@@ -1140,11 +1140,71 @@ function renderShadow(m, it) {
 // transparent, no border (the game draws its own). Saved as an "icon" round (newest = ★ used); the crop is remembered in it.iconCrop.
 // Owner set 255 (B1): "แต่งกรอบ" opens parts of the frame edge; whatever lies behind an opening (up to 25 % of the frame size out) shows
 // over the frame. With openings the file is (n + 2m)² with the diamond inset by m (round.iconPad = m); "แก้พิกเซล" edits the icon after.
+// owner set 255 A1: the gold frame line the game draws over an icon, left open at the round's gaps (iconOpen)
+const ICON_GOLD = '#d6b25c';
+function iconGeom(r, w) { const m = r.iconPad || 0; return { m, n: r.iconN || (w - 2 * m), open: Array.isArray(r.iconOpen) ? r.iconOpen : [] }; }
+function iconEdgeP(n, t) { const C = [[n / 2, 0], [n, n / 2], [n / 2, n], [0, n / 2]], tt = ((t % 1) + 1) % 1, k = Math.floor(tt * 4), u = tt * 4 - k, a = C[k], b = C[(k + 1) % 4]; return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]; }
+function iconEdgeT(n, px, py) {
+  const C = [[n / 2, 0], [n, n / 2], [n / 2, n], [0, n / 2]]; let best = null;
+  for (let k = 0; k < 4; k++) { const [ax, ay] = C[k], [bx, by] = C[(k + 1) % 4], dx = bx - ax, dy = by - ay; const u = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))); const d = (ax + dx * u - px) ** 2 + (ay + dy * u - py) ** 2; if (!best || d < best[0]) best = [d, (k + u) / 4]; }
+  return best[1] % 1;
+}
+const iconInIv = (t, [a, b]) => (a <= b ? t >= a && t <= b : t >= a || t <= b);
+function iconFrameLine(g, k, n, m, open, colour = ICON_GOLD) { // k = screen px per icon px
+  g.save(); g.strokeStyle = colour; g.lineWidth = Math.max(1.5, k); const N = 400; let on = false;
+  for (let i = 0; i <= N; i++) {
+    const t = (i % N) / N, [px, py] = iconEdgeP(n, t), X = (m + px) * k, Y = (m + py) * k;
+    if (!open.some((iv) => iconInIv(t, iv))) { if (!on) { g.beginPath(); g.moveTo(X, Y); on = true; } else g.lineTo(X, Y); } else if (on) { g.stroke(); on = false; }
+  }
+  if (on) g.stroke(); g.restore();
+}
+// owner set 255: open / close frame gaps on an icon that already exists (keeps its pixel edits); only the gaps change, the file stays
+async function iconFrameEditor(it, r) {
+  let img; try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
+  const w = img.naturalWidth, { m, n } = iconGeom(r, w);
+  let open = iconGeom(r, w).open.map((a) => a.slice()), fsel = null;
+  const z = Math.max(3, Math.min(12, Math.floor(Math.min(window.innerWidth * 0.6, window.innerHeight * 0.7) / w)));
+  const cv = h('canvas', { class: 'icon-cv frame-mode', width: w * z, height: w * z, 'aria-label': 'ลากไปตามขอบกรอบเพื่อเปิดช่อง คลิกขวาที่ช่องเพื่อปิด' });
+  if (r.flip) cv.classList.add('flipx');
+  const info = h('span', { class: 'small dim' });
+  const ivOf = (ta, tb) => { const d = ((tb - ta + 1.5) % 1) - 0.5; return d >= 0 ? [ta, (ta + d) % 1] : [(tb + 1) % 1, ta]; };
+  function draw() {
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, cv.width, cv.height);
+    g.save(); g.fillStyle = 'rgba(64,58,48,0.9)'; g.beginPath(); const C = [0, 1, 2, 3].map((q) => iconEdgeP(n, q / 4)); C.forEach(([x, y], i) => (i ? g.lineTo : g.moveTo).call(g, (m + x) * z, (m + y) * z)); g.closePath(); g.fill(); g.restore();
+    g.drawImage(img, 0, 0, w * z, w * z);
+    iconFrameLine(g, z, n, m, fsel ? [...open, ivOf(fsel.a, fsel.b)] : open);
+    const ivs = fsel ? [...open, ivOf(fsel.a, fsel.b)] : open;
+    g.save(); g.strokeStyle = 'rgba(90,209,255,0.85)'; g.lineWidth = Math.max(2, z * 0.5); g.setLineDash([z, z]);
+    for (const [a, b] of ivs) { const len = (b - a + 1) % 1, st = Math.max(2, Math.ceil(len * 160)); g.beginPath(); for (let i = 0; i <= st; i++) { const [x, y] = iconEdgeP(n, a + len * i / st); (i ? g.lineTo : g.moveTo).call(g, (m + x) * z, (m + y) * z); } g.stroke(); }
+    g.restore();
+    info.textContent = open.length ? `เปิด ${open.length} ช่อง (เส้นฟ้าประ = ช่องที่เปิด)` : 'ยังไม่มีช่องเปิด';
+  }
+  const tAt = (e) => { const rc = cv.getBoundingClientRect(); const fx = (r.flip ? rc.right - e.clientX : e.clientX - rc.left) / rc.width * w, fy = (e.clientY - rc.top) / rc.height * w; return iconEdgeT(n, fx - m, fy - m); };
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const t = tAt(e); if (e.button === 2) { const i = open.findIndex((iv) => iconInIv(t, iv)); if (i >= 0) { open.splice(i, 1); draw(); } return; } fsel = { a: t, b: t }; cv.setPointerCapture(e.pointerId); draw(); });
+  cv.addEventListener('pointermove', (e) => { if (!fsel) return; fsel.b = tAt(e); draw(); });
+  cv.addEventListener('pointerup', () => { if (!fsel) return; const iv = ivOf(fsel.a, fsel.b); fsel = null; if (((iv[1] - iv[0] + 1) % 1) > 0.004) open.push(iv); draw(); });
+  const dlg = $('dlg'); const close = () => { dlg.classList.remove('icon-dlg'); dlg.close(); };
+  const saveB = h('button', { class: 'primary', onclick: async () => {
+    const nr = hub.items[it.id].rounds.find((x) => x.id === r.id); if (!nr) { toast('ไม่พบไอคอนนี้แล้ว'); return; }
+    nr.iconOpen = open.map((iv) => iv.map((v) => Math.round(v * 10000) / 10000)); nr.iconN = n; if (m) nr.iconPad = m;
+    await save(); toast('บันทึกช่องกรอบแล้ว'); close(); render();
+  } }, 'บันทึก');
+  $('dlgBody').replaceChildren(
+    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แต่งกรอบไอคอน · ${it.id}`), h('span', { class: 'small dim' }, 'ลากไปตามขอบ = เปิดช่อง · คลิกขวาที่ช่อง = ปิด · ไฟล์ภาพไม่เปลี่ยน'), h('span', { class: 'sp' }), saveB, h('button', { onclick: close }, 'ปิด')),
+    h('div', { class: 'icon-ed' }, h('div', { class: 'icon-stage' }, cv),
+      h('div', { class: 'icon-side' }, h('div', { class: 'row' }, info, h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { open = []; draw(); } }, 'ปิดทุกช่อง')),
+        h('p', { class: 'small faint' }, 'เส้นทอง = ขอบที่เกมจะวาด (ไม่อยู่ในไฟล์) · ช่องใหม่ตรงที่ไฟล์ไม่มีพิกเซลยื่นออกไป จะแค่ไม่มีเส้น ถ้าอยากให้มีของโผล่ ใช้ "แก้พิกเซล" วาดเพิ่ม หรือ "ตัดกรอบใหม่"'),
+        m ? null : h('p', { class: 'small faint' }, 'ไอคอนนี้ทำก่อนมีระบบเปิดกรอบ ไม่มีที่ว่างรอบกรอบ ส่วนที่ยื่นจะโผล่ไม่ได้'))));
+  dlg.classList.add('icon-dlg'); dlg.addEventListener('close', () => dlg.classList.remove('icon-dlg'), { once: true });
+  draw(); dlg.showModal();
+}
 function iconBox(it) {
   const icons = slotRounds(it, 'icon').filter((r) => !r.archived);
   const cur = icons.filter((r) => r.star).pop() || icons[icons.length - 1];
   const box = h('div', { class: 'iconbox' });
   const head = h('div', { class: 'row' }, h('b', {}, 'ไอคอน (กรอบข้าวหลามตัด)'), h('span', { class: 'small dim' }, 'ใช้ในหน้าร้านค้า / ม้านั่ง'), h('span', { class: 'sp' }),
+    cur && isImage(cur.file) ? h('button', { title: 'เปิด/ปิดช่องของขอบกรอบบนไอคอนที่ใช้อยู่ (ภาพไม่เปลี่ยน)', onclick: () => iconFrameEditor(it, cur) }, 'แต่งกรอบ') : null,
     cur && isImage(cur.file) ? h('button', { title: 'แก้เม็ดพิกเซลของไอคอนที่ใช้อยู่ บันทึกเป็นไอคอนใหม่และใช้ทันที', onclick: () => pixelEditor(it, cur) }, 'แก้พิกเซล') : null,
     h('button', { class: cur ? '' : 'primary', onclick: () => iconEditor(it) }, cur ? 'ตัดกรอบใหม่' : 'ตัดกรอบไอคอน'));
   box.append(head);
@@ -1152,7 +1212,7 @@ function iconBox(it) {
   const row = h('div', { class: 'iconrow' });
   for (const r of icons.slice().reverse()) {
     const c = h('canvas', { class: 'iconthumb' + (r.star ? ' on' : '') });
-    loadImg(r.file).then((img) => { c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); }).catch(() => c.classList.add('broken'));
+    loadImg(r.file).then((img) => { const w = img.naturalWidth, k = 3, gm = iconGeom(r, w); c.width = w * k; c.height = img.naturalHeight * k; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, c.width, c.height); iconFrameLine(g, k, gm.n, gm.m, gm.open); }).catch(() => c.classList.add('broken'));
     const pick = h('button', { class: 'iconpick' + (r.star ? ' on' : ''), title: r.star ? 'ใช้อยู่' : 'คลิกเพื่อใช้ไอคอนนี้', 'aria-pressed': String(!!r.star),
       onclick: async () => { if (r.star) return; try { hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=1`, { method: 'POST' }); render(); } catch (e) { toast(e.message); } } },
     flipped(c, r), h('span', { class: 'small' }, r.star ? '★ ใช้อยู่' : fmtDate(r.t)));

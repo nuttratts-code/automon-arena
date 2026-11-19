@@ -150,6 +150,15 @@ with sync_playwright() as p:
     wi = hub()["items"]["WN-1"]; nr = [r for r in wi["rounds"] if r["slot"] == "icon"][-1]
     check("icon saved with pad + openings", nr.get("star") and nr.get("iconPad", 0) > 0 and len(wi["iconCrop"].get("open", [])) == 1, (nr.get("iconPad"), wi.get("iconCrop")))
     check("icon box offers pixel edit", pg.locator(".iconbox button", has_text="แก้พิกเซล").is_visible())
+    # set 255: frame gaps on the icon in use (no new file)
+    pg.locator(".iconbox button", has_text="แต่งกรอบ").click(); pg.wait_for_timeout(600)
+    cur0 = [r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "icon" and r.get("star")][0]
+    cb = pg.locator("#dlg .icon-cv").bounding_box()
+    pg.mouse.move(cb["x"] + cb["width"] * 0.62, cb["y"] + cb["height"] * 0.66); pg.mouse.down()
+    pg.mouse.move(cb["x"] + cb["width"] * 0.66, cb["y"] + cb["height"] * 0.62, steps=3); pg.mouse.move(cb["x"] + cb["width"] * 0.70, cb["y"] + cb["height"] * 0.58, steps=3); pg.mouse.up(); pg.wait_for_timeout(200)
+    pg.locator("#dlg button", has_text="บันทึก").first.click(); pg.wait_for_timeout(1200)
+    cur1 = [r for r in hub()["items"]["WN-1"]["rounds"] if r["id"] == cur0["id"]][0]
+    check("frame editor adds a gap to the icon in use, same file", len(cur1.get("iconOpen", [])) == len(cur0.get("iconOpen", [])) + 1 and cur1["file"] == cur0["file"], (len(cur0.get("iconOpen", [])), len(cur1.get("iconOpen", []))))
     nIcons = len([r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "icon"])
     check("icon in use has no delete button", pg.locator(".iconcell:has(.iconpick.on) .icondel").count() == 0)
     pg.locator(".iconbox .icondel").first.click(); pg.wait_for_timeout(1200)
