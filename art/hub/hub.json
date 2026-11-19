@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 498,
+ "rev": 503,
  "settings": {
   "moves": [
    "idle",
@@ -2089,7 +2089,8 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1"
+     "promptId": "p1",
+     "check": {}
     },
     {
      "id": "rf9489fbd",
@@ -2116,7 +2117,7 @@
      "t": "2026-11-19T11:26:47.530Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -2124,47 +2125,64 @@
      "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_9a51035f.png",
      "iconOpen": [
       [
-       0.9656,
-       0.0203
+       0.8545,
+       0.9292
       ],
       [
-       0.9627,
-       0.9746
-      ],
-      [
-       0.8619,
-       0.9205
-      ],
-      [
-       0.9205,
-       0.9278
-      ],
-      [
-       0.9205,
-       0.9269
-      ],
-      [
-       0.8399,
-       0.8637
-      ],
-      [
-       0.8298,
-       0.8399
-      ],
-      [
-       0.8206,
-       0.8298
-      ],
-      [
-       0.8133,
-       0.8206
-      ],
-      [
-       0.8005,
-       0.8133
+       0.9582,
+       0.9994
       ]
      ],
      "iconN": 62
+    },
+    {
+     "id": "rb7ea9b5d",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-19_f3b3b55c.png",
+     "orig": "WN-1_icon_94_edit_edit.png",
+     "t": "2026-11-19T13:01:06.299Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 16,
+     "iconOpen": [
+      [
+       0.8545,
+       0.9198
+      ],
+      [
+       0.9582,
+       0.9994
+      ]
+     ],
+     "iconN": 62
+    },
+    {
+     "id": "r98b2d439",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-19_98b2d439.png",
+     "orig": "pixellab-idle-breathing (Animate with Text V3, 8 frames; input frame 0 dropped)",
+     "t": "2026-11-19T13:14:55.094Z",
+     "by": "claude",
+     "note": "set 257 PixelLab trial: Animate with Text V3 · prompt \"idle breathing, subtle body rise and fall, feet planted, no camera move\" · from ★ still r5b8f96a2 · 150 ms = ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 118,
+      "fh": 78,
+      "n": 8,
+      "ms": 150
+     }
     }
    ],
    "notes": "",
