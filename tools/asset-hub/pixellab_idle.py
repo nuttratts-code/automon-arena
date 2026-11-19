@@ -182,6 +182,7 @@ def main():
     ap.add_argument("--desc", help="full description; skips enhance")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--pad", type=int, default=12, help="transparent px added left/right/top (bottom max 2)")
+    ap.add_argument("--dry", action="store_true", help="print the full request, send nothing to animate")
     ap.add_argument("--hub", action="store_true", help="add the sheet to the hub as a frames round")
     a = ap.parse_args()
 
@@ -217,10 +218,17 @@ def main():
         sys.exit(f"description {len(desc)} chars > 1000")
     print("DESCRIPTION:", desc)
 
-    res = call("POST", "/animate-pixminimax", {
-        "first_frame": b64img(still), "last_frame": b64img(still), "description": desc,
-        "frame_count": 8, "view": "side", "direction": a.direction, "no_background": True,
-        "enhance_prompt": False, "seed": a.seed})
+    body = {"first_frame": b64img(still), "last_frame": b64img(still), "description": desc,
+            "frame_count": 8, "view": "side", "direction": a.direction, "no_background": True,
+            "enhance_prompt": False, "seed": a.seed}
+    shown = dict(body, first_frame=f"<★ still {sr['id']} {still.width}x{still.height}>",
+                 last_frame=f"<★ still {sr['id']} {still.width}x{still.height}>")
+    print("REQUEST (POST /v2/animate-pixminimax, key not shown):")
+    print(json.dumps(shown, ensure_ascii=False, indent=1))
+    if a.dry:
+        print("DRY: nothing sent to animate (0 generations).")
+        return
+    res = call("POST", "/animate-pixminimax", body)
     job = res["background_job_id"]
     print(f"job {job} · usage {res.get('usage')}")
     t0 = time.time()
@@ -248,6 +256,7 @@ def main():
     d = OUT / f"{a.item}_{job[:8]}"
     d.mkdir(parents=True, exist_ok=True)
     (d / "description.txt").write_text(desc + "\n", encoding="utf8")
+    (d / "request.json").write_text(json.dumps(shown, ensure_ascii=False, indent=1) + "\n", encoding="utf8")
     for i, f in enumerate(raw):
         f.save(d / f"raw_{i}.png")
     mapped, npal, newc = palette_map(gen, still)
