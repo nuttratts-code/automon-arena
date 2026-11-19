@@ -1307,17 +1307,17 @@ async function pixelEditor(it, r) {
   const lyrList = h('div', { class: 'pxed-lyrs', role: 'group', 'aria-label': 'เลเยอร์' });
   const lyrUp = h('button', { title: 'เลื่อนเลเยอร์ขึ้น', onclick: () => layerOp('up') }, 'ขึ้น'), lyrDown = h('button', { title: 'เลื่อนเลเยอร์ลง', onclick: () => layerOp('down') }, 'ลง');
   const lyrMerge = h('button', { title: 'รวมเลเยอร์นี้ลงกับชั้นล่าง', onclick: () => layerOp('merge') }, 'รวมลงล่าง'), lyrDel = h('button', { title: 'ลบเลเยอร์นี้', onclick: () => layerOp('del') }, 'ลบ');
-  const lyrBox = h('div', { class: 'pxed-lyrbox' }, h('div', { class: 'lbl' }, 'เลเยอร์ (บนสุดอยู่บน)'), lyrList, h('div', { class: 'row pxed-lyrrow' }, lyrUp, lyrDown, lyrMerge, lyrDel),
-    h('span', { class: 'small dim' }, 'วางชิ้นลง = ได้เลเยอร์ใหม่ · เครื่องมือแก้เฉพาะเลเยอร์ที่เลือก · บันทึก = รวมเลเยอร์ที่เห็นเป็นภาพเดียว (ที่ซ่อนจะไม่ถูกบันทึก)'));
+  const lyrBox = h('div', { class: 'pxed-lyrbox' }, h('div', { class: 'lbl' }, 'เลเยอร์'), lyrList, h('div', { class: 'row pxed-lyrrow' }, lyrUp, lyrDown, lyrMerge, lyrDel),
+    h('span', { class: 'small dim' }, 'เครื่องมือแก้เฉพาะเลเยอร์ที่เลือก · ตอนบันทึก เลเยอร์ที่ซ่อนจะไม่ติดไปด้วย'));
   let editOn = false; try { editOn = localStorage.getItem('pxedEdit') === '1'; } catch { /* storage off */ }
   const editSw = h('button', { class: 'switch', role: 'switch', onclick: () => { editOn = !editOn; try { localStorage.setItem('pxedEdit', editOn ? '1' : '0'); } catch { /* storage off */ } syncUi(); } }, h('span', { class: 'knob' }), 'เมนูแก้ไข (ย้าย หมุน กลับด้าน)');
   const mRotIn = h('input', { type: 'range', min: -180, max: 180, step: 1, value: 0, 'aria-label': 'หมุนองศา', oninput: (e) => rotF(+e.target.value) });
   const mRotNum = h('input', { type: 'number', min: -180, max: 180, step: 1, value: 0, class: 'pxed-rotnum', 'aria-label': 'องศา', onchange: (e) => rotF(Math.max(-180, Math.min(180, Math.round(+e.target.value || 0)))) });
   const mDeg = () => (float && float.deg) || 0;
   const editBox = h('div', { class: 'pxed-editbox' },
-    h('span', { class: 'small dim' }, 'ใช้กับส่วนที่เลือก หรือทั้งเลเยอร์ที่เลือกถ้าไม่ได้เลือกไว้ · Enter = วางกลับลงเลเยอร์เดิม · Esc = ยกเลิก'),
+    h('span', { class: 'small dim' }, 'ใช้กับส่วนที่เลือก ถ้าไม่ได้เลือกใช้กับทั้งเลเยอร์'),
     h('div', { class: 'row pxed-editrow' }, h('button', { title: 'ยกขึ้นมาลากย้าย (ลูกศร = ทีละเม็ด)', onclick: () => lift() }, 'ย้าย'), h('button', { onclick: () => flipM(true) }, 'กลับซ้าย-ขวา'), h('button', { onclick: () => flipM(false) }, 'กลับบน-ล่าง')),
-    h('div', { class: 'row pxed-mrot' }, h('span', { class: 'lbl' }, 'หมุน'), h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotF(mDeg() - 90) }, '⟲ 90°'), h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotF(mDeg() + 90) }, '⟳ 90°'), mRotIn, mRotNum, h('span', { class: 'small dim' }, '°')));
+    h('div', { class: 'row pxed-mrot' }, h('span', { class: 'lbl' }, 'หมุน'), h('button', { title: 'หมุนทวนเข็ม 90°', onclick: () => rotF(mDeg() - 90) }, '⟲ 90°'), h('button', { title: 'หมุนตามเข็ม 90°', onclick: () => rotF(mDeg() + 90) }, '⟳ 90°'), mRotNum, h('span', { class: 'small dim' }, '°')), mRotIn);
   function rotImg(img, deg) { // nearest pixel, the box grows to fit; deg = clockwise in file pixels
     const a = deg * Math.PI / 180; let c = Math.cos(a), sn = Math.sin(a);
     if (Math.abs(c) < 1e-9) c = 0; if (Math.abs(sn) < 1e-9) sn = 0;
@@ -1562,10 +1562,17 @@ async function pixelEditor(it, r) {
     else if (k === 'del') { layers.splice(i, 1); if (i < act) act--; act = Math.max(0, Math.min(act, layers.length - 1)); }
     data = layers[act].data; dirty = true; palette(); syncUi(); paint();
   }
+  function thumb(d) { // small look of one layer so pieces can be told apart (owner set 253 design pass)
+    const t = h('canvas', { class: 'pxed-thumb' }), k = Math.min(40 / d.width, 28 / d.height);
+    t.width = Math.max(1, Math.round(d.width * k)); t.height = Math.max(1, Math.round(d.height * k));
+    const tc = document.createElement('canvas'); tc.width = d.width; tc.height = d.height; tc.getContext('2d').putImageData(d, 0, 0);
+    const g = t.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(tc, 0, 0, t.width, t.height);
+    if (mirX) t.classList.add('flipx'); return t;
+  }
   function renderLayers() {
     lyrList.replaceChildren(...layers.map((l, i) => [l, i]).reverse().map(([l, i]) => h('div', { class: 'pxed-lyr' + (i === act ? ' on' : '') + (l.vis ? '' : ' off') },
-      h('button', { class: 'ghost pxed-eye', title: l.vis ? 'ซ่อนเลเยอร์นี้' : 'แสดงเลเยอร์นี้', 'aria-pressed': String(l.vis), 'aria-label': (l.vis ? 'ซ่อน ' : 'แสดง ') + l.name, onclick: () => layerOp('vis', i) }, l.vis ? '\u{1F441}' : '\u2014'),
-      h('button', { class: 'pxed-lname', 'aria-pressed': String(i === act), onclick: () => chooseLayer(i) }, l.name + (l.vis ? '' : ' (ซ่อน)')))));
+      h('button', { class: 'ghost pxed-eye', title: l.vis ? 'ซ่อนเลเยอร์นี้' : 'แสดงเลเยอร์นี้', 'aria-pressed': String(l.vis), 'aria-label': (l.vis ? 'ซ่อน ' : 'แสดง ') + l.name, onclick: () => layerOp('vis', i) }, h('i', { class: 'pxed-eyemark' })),
+      h('button', { class: 'pxed-lname', 'aria-pressed': String(i === act), onclick: () => chooseLayer(i) }, thumb(l.data), h('span', {}, l.name + (l.vis ? '' : ' (ซ่อน)'))))));
     lyrUp.disabled = act === layers.length - 1; lyrDown.disabled = act === 0; lyrMerge.disabled = act === 0; lyrDel.disabled = layers.length < 2;
   }
   function cap() { return layers ? { L: layers.map((l) => ({ ...l, data: cloneI(l.data) })), act } : cloneI(data); }
@@ -1617,7 +1624,7 @@ async function pixelEditor(it, r) {
     paint();
   });
   const endStroke = () => {
-    if (stroke) { stroke = null; palette(); }
+    if (stroke) { stroke = null; palette(); syncUi(); }
     fdrag = null;
     if (rectD) { const d = rectD; rectD = null; setSel(d.a[0] === d.b[0] && d.a[1] === d.b[1] && !d.add ? null : rectMask(d.a, d.b, d.add)); paint(); } // a click = deselect
     if (lassoD) { const d = lassoD; lassoD = null; setSel(d.pts.length > 2 ? lassoMask(d.pts, d.add) : d.add ? sel : null); paint(); }
@@ -1676,15 +1683,17 @@ async function pixelEditor(it, r) {
     h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`), h('span', { class: 'small dim' }, 'หันตามที่เห็นในขั้นภาพนิ่ง · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },
       h('div', { class: 'pxed-main' }, tabSeg, stageEl),
-      h('div', { class: 'pxed-side' },
-        pieceBar, modeEl,
-        h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
-        h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
-        h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg,
-        h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg, swapSw, editSw, editBox, lyrBox,
-        h('div', { class: 'lbl' }, 'ส่วนที่เลือก'), h('div', { class: 'row pxed-selrow' }, copyB, cutB, pasteB, delB, noneB), floatRow,
-        h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
-        h('div', { class: 'row' }, undoB, redoB, posEl))));
+      h('div', { class: 'pxed-side' }, // wide screens: 2 columns side by side (paint | pieces); narrower: one column, painting first
+        h('div', { class: 'pxed-col' }, pieceBar, modeEl,
+          h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg,
+          h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
+          h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
+          h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
+          h('div', { class: 'row' }, undoB, redoB, posEl),
+          h('div', { class: 'lbl' }, 'พื้นหลัง'), bgSeg, swapSw),
+        h('div', { class: 'pxed-col' },
+          h('div', { class: 'lbl' }, 'ส่วนที่เลือก'), h('div', { class: 'row pxed-selrow' }, copyB, cutB, pasteB, delB, noneB), floatRow,
+          editSw, editBox, lyrBox))));
   dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);
   palette(); { const f = pal.querySelector('.pxed-sw'); if (f) f.click(); } syncUi(); paint();
   dlg.showModal(); cv.focus();
