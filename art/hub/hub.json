@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 445,
+ "rev": 458,
  "settings": {
   "moves": [
    "idle",
@@ -1722,22 +1722,6 @@
      "flip": true
     },
     {
-     "id": "r1a2c69a5",
-     "slot": "still",
-     "form": 1,
-     "file": "hub/WN-1/still_f1_2026-11-18_7c3ed5e3.png",
-     "orig": "WN1_boar_pixel.png",
-     "t": "2026-11-18T12:14:59.009Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "check": {},
-     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-18_7c3ed5e3.png"
-    },
-    {
      "id": "rcd9752f8",
      "slot": "icon",
      "form": 1,
@@ -1746,7 +1730,7 @@
      "t": "2026-11-18T15:13:19.609Z",
      "by": "owner",
      "note": "ไอคอน 72×72 จากภาพตัดพื้น 2026-11-18",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -1799,14 +1783,58 @@
      "from": "r3df87382"
     },
     {
-     "id": "r9e4884ef",
+     "id": "r5b8f96a2",
      "slot": "still",
      "form": 1,
-     "file": "hub/WN-1/still_f1_2026-11-19_f52b50ae.png",
-     "orig": "WN-1_horn_graft_118x78_edit.png",
-     "t": "2026-11-19T10:53:51.127Z",
+     "file": "hub/WN-1/still_f1_2026-11-19_724a239c.png",
+     "orig": "WN-1_horn_graft_118x78_edit_edit_edit.png",
+     "t": "2026-11-19T11:11:59.459Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1"
+    },
+    {
+     "id": "r9c75b35e",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-19_eeddc606.png",
+     "orig": "WN-1_icon_94.png",
+     "t": "2026-11-19T11:14:34.501Z",
+     "by": "owner",
+     "note": "ไอคอน 62×62 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 7 ช่อง ยื่นได้ 16 เม็ด (ไฟล์ 94×94)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 16
+    },
+    {
+     "id": "rf9489fbd",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-19_4855726e.png",
+     "orig": "WN-1_icon_94_edit.png",
+     "t": "2026-11-19T11:17:08.028Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 16
+    },
+    {
+     "id": "r16510e7c",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-19_6fd30d29.png",
+     "orig": "WN-1_icon_62.png",
+     "t": "2026-11-19T11:18:13.828Z",
+     "by": "owner",
+     "note": "ไอคอน 62×62 จากภาพนิ่ง 2026-11-19",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
@@ -1856,10 +1884,10 @@
     "y": -33
    },
    "iconCrop": {
-    "round": "r9a2d4229",
-    "x": 60,
-    "y": 12,
-    "n": 72
+    "round": "r5b8f96a2",
+    "x": 69,
+    "y": 19,
+    "n": 62
    }
   },
   "WN-2": {

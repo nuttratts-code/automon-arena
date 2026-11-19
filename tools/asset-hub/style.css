@@ -311,6 +311,8 @@ h3.sect { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line)
 .iconpick { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 10px 10px; }
 .iconpick.on { outline: 2px solid #ffd34d; }
 .iconthumb { width: 72px; height: 72px; image-rendering: pixelated; object-fit: contain; }
+.iconcell { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+.icondel { padding: 2px 6px; font-size: 12px; }
 dialog.icon-dlg { width: fit-content; max-width: 96vw; }
 .icon-ed { display: grid; grid-template-columns: auto 300px; gap: 14px; margin-top: 10px; align-items: start; }
 .icon-stage { overflow: auto; max-height: calc(92vh - 120px); max-width: calc(96vw - 380px); background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); border-radius: 8px; }

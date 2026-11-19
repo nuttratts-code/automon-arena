@@ -145,6 +145,11 @@ with sync_playwright() as p:
     wi = hub()["items"]["WN-1"]; nr = [r for r in wi["rounds"] if r["slot"] == "icon"][-1]
     check("icon saved with pad + openings", nr.get("star") and nr.get("iconPad", 0) > 0 and len(wi["iconCrop"].get("open", [])) == 1, (nr.get("iconPad"), wi.get("iconCrop")))
     check("icon box offers pixel edit", pg.locator(".iconbox button", has_text="แก้พิกเซล").is_visible())
+    nIcons = len([r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "icon"])
+    check("icon in use has no delete button", pg.locator(".iconcell:has(.iconpick.on) .icondel").count() == 0)
+    pg.locator(".iconbox .icondel").first.click(); pg.wait_for_timeout(1200)
+    left = [r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "icon"]
+    check("old icon deleted, icon in use kept", len(left) == nIcons - 1 and any(r.get("star") for r in left), (nIcons, len(left)))
     check("no page errors", not errs, errs[:3])
     print("SUMMARY", sum(res), "/", len(res))
     b.close()

@@ -1153,9 +1153,17 @@ function iconBox(it) {
   for (const r of icons.slice().reverse()) {
     const c = h('canvas', { class: 'iconthumb' + (r.star ? ' on' : '') });
     loadImg(r.file).then((img) => { c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); }).catch(() => c.classList.add('broken'));
-    row.append(h('button', { class: 'iconpick' + (r.star ? ' on' : ''), title: r.star ? 'ใช้อยู่' : 'คลิกเพื่อใช้ไอคอนนี้', 'aria-pressed': String(!!r.star),
+    const pick = h('button', { class: 'iconpick' + (r.star ? ' on' : ''), title: r.star ? 'ใช้อยู่' : 'คลิกเพื่อใช้ไอคอนนี้', 'aria-pressed': String(!!r.star),
       onclick: async () => { if (r.star) return; try { hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=1`, { method: 'POST' }); render(); } catch (e) { toast(e.message); } } },
-    flipped(c, r), h('span', { class: 'small' }, r.star ? '★ ใช้อยู่' : fmtDate(r.t))));
+    flipped(c, r), h('span', { class: 'small' }, r.star ? '★ ใช้อยู่' : fmtDate(r.t)));
+    // owner set 255: old icons can be deleted (the one in use cannot; same server delete as other rounds, library copies stay)
+    const del = r.star ? null : h('button', { class: 'ghost danger icondel', title: 'ลบไอคอนนี้ถาวร', 'aria-label': `ลบไอคอน ${fmtDate(r.t)}`, onclick: async () => {
+      if (!confirm(`ลบไอคอน ${fmtDate(r.t)} ถาวร?
+ไฟล์ในคลังงานจะหายและกู้คืนไม่ได้ (สำเนาในคลังถาวร art/library ถ้ามี ยังอยู่)`)) return;
+      try { hub = await api(`/api/delete?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}`, { method: 'POST' }); toast('ลบแล้ว'); } catch (e) { toast('ลบไม่ได้: ' + e.message); }
+      render();
+    } }, 'ลบ');
+    row.append(h('div', { class: 'iconcell' }, pick, del));
   }
   box.append(row);
   return box;
