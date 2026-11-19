@@ -165,7 +165,8 @@ def add_round(item_id, sheet_path, still_round, info):
                  f"{MS} ms ค่าเสนอ"),
         "star": False, "archived": False, "licence": "AI placeholder - UNVERIFIED",
         "promptId": still_round.get("promptId", "p1"),
-        "meta": {"cols": 8, "rows": 1, "fw": w, "fh": h, "n": 8, "ms": MS}})
+        "meta": {"cols": 8, "rows": 1, "fw": w, "fh": h, "n": 8, "ms": MS,
+                 **({"pad": [info["pad"], info["pad"], info["pad"], min(info["pad"], 2)]} if info.get("pad") else {})}})
     hub["rev"] = hub.get("rev", 0) + 1
     HUB.write_text(json.dumps(hub, ensure_ascii=False, indent=1) + "\n", encoding="utf8")
     return rid, dst
@@ -180,6 +181,7 @@ def main():
     ap.add_argument("--suffix", default=SUFFIX)
     ap.add_argument("--desc", help="full description; skips enhance")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--pad", type=int, default=12, help="transparent px added left/right/top (bottom max 2)")
     ap.add_argument("--hub", action="store_true", help="add the sheet to the hub as a frames round")
     a = ap.parse_args()
 
@@ -193,6 +195,14 @@ def main():
         sys.exit("item id needed")
     sr, still = star_still(a.item)
     print(f"★ still {sr['id']} {still.size}")
+    if a.pad:  # transparent margin so the motion is not cut at the canvas edge (set 258)
+        side, bot = a.pad, min(a.pad, 2)
+        big = Image.new("RGBA", (still.width + 2 * side, still.height + side + bot), (0, 0, 0, 0))
+        big.paste(still, (side, side))
+        still = big
+        print(f"padded {side} px (bottom {bot}) -> {still.size}")
+    if still.width > 256 or still.height > 256:
+        sys.exit("padded still > 256 px")
 
     if a.desc:
         desc = a.desc
@@ -256,7 +266,8 @@ def main():
     print("MEASURE:", json.dumps(m))
     print("OUT:", d)
     if a.hub:
-        rid, dst = add_round(a.item, sp, sr, {"fw": w, "fh": h, "job": job, "direction": a.direction, "pal": npal})
+        rid, dst = add_round(a.item, sp, sr, {"fw": w, "fh": h, "job": job, "direction": a.direction,
+                                              "pal": npal, "pad": a.pad})
         print(f"HUB: round {rid} -> {dst.relative_to(ROOT)} (not starred, rev +1)")
 
 
