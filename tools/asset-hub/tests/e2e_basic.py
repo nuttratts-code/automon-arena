@@ -133,6 +133,15 @@ with sync_playwright() as p:
     check("export writes the name for Godot", ex.get("names", {}).get("WN-1") == "หมูป่าทดสอบ", ex.get("names", {}).get("WN-1"))
     pg.locator(".charinfo button", has_text="คืนชื่อเดิม").click(); pg.wait_for_timeout(1200)
     check("reset gives back the game name", hub()["items"]["WN-1"]["name"] == gi["name"])
+    # set 258: concept + idle briefs — tick saves ok, editing after the tick clears it (owner C1)
+    check("still step shows 2 brief boxes", pg.locator(".brief").count() == 2)
+    stamp = pg.locator(".brief .stamp").nth(1)
+    if stamp.is_disabled():
+        pg.locator(".brief textarea").nth(1).fill("ทดสอบ"); pg.wait_for_timeout(1200)
+    stamp.click(); pg.wait_for_timeout(1200)
+    check("tick saves idle brief ok", (hub()["items"]["WN-1"].get("brief") or {}).get("idle", {}).get("ok") is True)
+    ta = pg.locator(".brief textarea").nth(1); ta.press("End"); ta.type(" x"); pg.wait_for_timeout(1500)
+    check("editing after the tick clears it", (hub()["items"]["WN-1"].get("brief") or {}).get("idle", {}).get("ok") is False)
     # set 255: icon frame openings (แต่งกรอบ) — drag across the top of the frame opens one gap, the file grows by 25 % each side
     pg.locator("button", has_text="ตัดกรอบใหม่").first.click(); pg.wait_for_timeout(600)
     w0 = pg.evaluate("document.querySelector('.icon-cv').width")

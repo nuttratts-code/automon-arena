@@ -170,6 +170,9 @@ def add_round(item_id, sheet_path, still_round, info):
         "promptId": still_round.get("promptId", "p1"),
         "meta": {"cols": 8, "rows": 1, "fw": w, "fh": h, "n": 8, "ms": MS,
                  **({"pad": [info["pad"], info["pad"], info["pad"], min(info["pad"], 2)]} if info.get("pad") else {})}})
+    if info.get("en"):  # the English prompt that worked -> shown under the idle brief (owner set 258)
+        it.setdefault("brief", {}).setdefault("used", []).append(
+            {"kind": "idle", "en": info["en"], "round": rid, "t": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")})
     hub["rev"] = hub.get("rev", 0) + 1
     HUB.write_text(json.dumps(hub, ensure_ascii=False, indent=1) + "\n", encoding="utf8")
     return rid, dst
@@ -186,6 +189,7 @@ def main():
     ap.add_argument("--desc", help="full description; skips enhance")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--pad", type=int, default=12, help="transparent px added left/right/top (bottom max 2)")
+    ap.add_argument("--unreviewed", action="store_true", help="skip the ticked-brief check (owner said so in chat)")
     ap.add_argument("--dry", action="store_true", help="print the full request, send nothing to animate")
     ap.add_argument("--hub", action="store_true", help="add the sheet to the hub as a frames round")
     a = ap.parse_args()
@@ -212,11 +216,17 @@ def main():
         rid, dst = add_round(a.item, sheets[0], sr, {"fw": w, "fh": h, "job": d.name.split("_")[-1],
                                                       "direction": req["direction"], "pal": len(np.unique(
                                                           np.asarray(still)[np.asarray(still)[..., 3] >= 128][:, :3], axis=0)),
-                                                      "pad": pad})
+                                                      "pad": pad, "en": req.get("description")})
         print(f"HUB: round {rid} -> {dst.relative_to(ROOT)} (not starred, rev +1)")
         return
     sr, still = star_still(a.item)
     print(f"★ still {sr['id']} {still.size}")
+    if a.cmd == "run" and not a.dry:  # owner set 258: generate only from a ticked Thai idle brief
+        b = (json.loads(HUB.read_text(encoding="utf8"))["items"][a.item].get("brief") or {}).get("idle") or {}
+        if not b.get("ok") and not a.unreviewed:
+            sys.exit(f"{a.item}: idle brief not ticked in the hub (owner reviews first); --unreviewed only on the owner's word")
+        if b.get("th"):
+            print("THAI BRIEF:", b["th"].replace("\n", " / "))
     if a.pad:  # transparent margin so the motion is not cut at the canvas edge (set 258)
         side, bot = a.pad, min(a.pad, 2)
         big = Image.new("RGBA", (still.width + 2 * side, still.height + side + bot), (0, 0, 0, 0))
@@ -299,7 +309,7 @@ def main():
     print("OUT:", d)
     if a.hub:
         rid, dst = add_round(a.item, sp, sr, {"fw": w, "fh": h, "job": job, "direction": a.direction,
-                                              "pal": npal, "pad": a.pad})
+                                              "pal": npal, "pad": a.pad, "en": desc})
         print(f"HUB: round {rid} -> {dst.relative_to(ROOT)} (not starred, rev +1)")
 
 

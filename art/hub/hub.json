@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 530,
+ "rev": 545,
  "settings": {
   "moves": [
    "idle",
@@ -201,37 +201,6 @@
      "flip": true
     },
     {
-     "id": "r23bbec7f",
-     "slot": "still",
-     "form": 1,
-     "file": "hub/HL-1/still_f1_2026-11-18_4072bcf5.png",
-     "orig": "HL1_crab_pixel.png",
-     "t": "2026-11-18T12:14:59.463Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2",
-     "check": {},
-     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-18_4072bcf5.png"
-    },
-    {
-     "id": "r399cd286",
-     "slot": "still",
-     "form": 1,
-     "file": "hub/HL-1/still_f1_2026-11-19_c6085d98.png",
-     "orig": "HL1_crab_pixel_edit.png",
-     "t": "2026-11-19T11:37:04.944Z",
-     "by": "owner",
-     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2",
-     "check": {}
-    },
-    {
      "id": "r30da5f43",
      "slot": "icon",
      "form": 1,
@@ -256,6 +225,20 @@
       ]
      ],
      "iconN": 80
+    },
+    {
+     "id": "r15194f91",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-19_5ed6aac2.png",
+     "orig": "HL1_crab_pixel_edit_edit.png",
+     "t": "2026-11-19T14:43:38.336Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
     }
    ],
    "notes": "",
@@ -324,6 +307,28 @@
      ]
     ],
     "m": 20
+   },
+   "brief": {
+    "concept": {
+     "th": "ปูกระดองเหล็กหนุ่ม สายนักชก ตัวเตี้ยล่ำ (ระดับธรรมดา)\nเผ่าเหล็ก: กระดองเหลี่ยมเหมือนเกราะตอกหมุด ไหล่กว้าง ก้ามใหญ่ข้างเดียวยกไว้เหมือนโล่ สีเทาเงินกับฟ้าหม่น\nจุดเด่น: หมุดตามขอบกระดอง · เส้นรูนสีฟ้าจางๆ บนก้ามโล่ · คริสตัลฟ้าเล็กกลางกระดอง\nหน้า: มุ่งมั่น นิ่ง ภูมิใจนิดๆ ไม่น่ากลัว\nจุดเรืองแสง: ตาสีฟ้าบนก้านตาสั้น + คริสตัลบนกระดอง\nท่า: ตั้งการ์ด ก้ามโล่ยกไว้ด้านหน้า ก้ามเล็กพร้อมอยู่ข้างตัว ขากางกว้าง",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: HL-1 — young iron-shell crab brawler, stocky and low (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared-off shell like riveted plate armour, broad shoulder plates, one oversized claw held up like a shield, silver-grey and muted blue\nFantasy features: a few rivets along the shell rim · faint blue rune line etched across the shield claw · small blue crystal set in the middle of the shell\nFace: determined and steady, a little proud — not scary\nEffect spots: glowing blue eyes on short eye stalks + the blue crystal on the shell\nPose: guarding stance, shield claw raised in front, smaller claw ready at the side, legs planted wide\nBackground: pure green #00FF00",
+      "round": "r30da5f43",
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "หายใจเบาๆ กระดองยุบ-ยกนิดหน่อย\nก้ามโล่ยกค้างไว้ด้านหน้า ขยับขึ้นลงตามจังหวะหายใจเล็กน้อย ก้ามเล็กนิ่ง\nตาบนก้านกระดิกเบาๆ ปากไม่ขยับ\nขาทุกขาติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "HL-2": {
@@ -346,7 +351,23 @@
    "rounds": [],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {
+    "concept": {
+     "th": "แพะภูเขาเหล็กหนุ่ม สายใช้เขาพุ่งชนเหมือนค้อน ตัวล่ำ ขาสั้นแข็งแรง (ระดับธรรมดา)\nเผ่าเหล็ก: ตัวเหลี่ยม ไหล่กว้าง แผ่นเกราะตอกหมุดเหมือนโล่ที่ไหล่และหน้าผาก สีเทาเงินกับฟ้าหม่น\nจุดเด่น: เขาสั้นหนาโค้งไปข้างหน้าเป็นหัวค้อนแบน คาดเหล็ก · หมุดตามเกราะไหล่ · รูนฟ้าเล็กบนเกราะหน้าผาก\nหน้า: ดื้อ นิ่ง ภูมิใจ ไม่น่ากลัว\nจุดเรืองแสง: หน้าค้อนของเขาเรืองฟ้าจางๆ + รูนหน้าผาก\nท่า: ก้มหัวนิดๆ เขาชี้ไปข้างหน้า พร้อมพุ่ง ขาสั้นทั้งสี่กางกว้าง",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: HL-2 — young iron mountain goat hammer-butter, stocky with short sturdy legs (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared body, broad shoulders, riveted shield-like plates on the shoulders and forehead, silver-grey and muted blue\nFantasy features: thick short horns curving forward into a flat hammer-head shape, banded with iron · rivets along the shoulder plates · small blue rune on the forehead plate\nFace: stubborn, steady and proud — not scary\nEffect spots: the flat hammer faces of the horns glowing faintly blue + the forehead rune\nPose: head lowered slightly with the horns forward, ready to charge, four short legs planted wide\nBackground: pure green #00FF00",
+      "round": null,
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ]
+   }
   },
   "HL-3": {
    "id": "HL-3",
@@ -721,6 +742,28 @@
      ]
     ],
     "m": 16
+   },
+   "brief": {
+    "concept": {
+     "th": "ลิงไฟหนุ่ม สายปล่อยประกายไฟ ลิงตัวเล็กคล่องแคล่ว (ระดับธรรมดา)\nเผ่าไฟ: รูปทรงชี้ขึ้น หงอนขนรูปเปลวไฟบนหัว เขาเล็กสองอันชี้ขึ้น ขนสีแดงส้ม หน้า อก มือสีทอง\nจุดเด่น: เส้นถ่านไฟสีทองตามแขนและหลัง · หางสั้นม้วนขึ้น ปลายเป็นเปลวไฟ · ลูกปัดถ่านไฟสีทองเล็กบนหน้าผาก\nหน้า: กระตือรือร้น กวน มั่นใจ ไม่น่ากลัว\nจุดเรืองแสง: หงอนไฟกับปลายหาง + ตาถ่านไฟ\nท่า: ย่อตัวพร้อม ยืนสองเท้า มือข้างหนึ่งยกถือถ่านไฟเล็กๆ เหมือนจะขว้าง หางม้วนชิดตัว ไม่ยาว",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: PL-1 — young fire monkey spark-caster, a small nimble monkey (common: simple, few ornaments)\nTribe: fire — make the fire identity obvious: shapes pointing upward, a spiky flame-shaped crest of fur on the head, two tiny upward horns, red-orange fur with a gold face, chest and hands\nFantasy features: gold ember-vein lines along the arms and back · short tail curling up with a flame tip · small gold ember bead on the forehead\nFace: eager, cheeky and confident — not scary\nEffect spots: the flame crest and tail tip + glowing ember eyes\nPose: crouched ready stance on both feet, one hand raised holding a tiny ember as if about to throw a spark; tail curled up close to the body, not long\nBackground: pure green #00FF00",
+      "round": "r49e1ff72",
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "หายใจเบาๆ อกกับไหล่ยุบ-ยกนิดหน่อย\nหงอนขนไฟบนหัวไหวเบาๆ ปลายหางไฟไหวนิดหน่อย\nมือที่ถือถ่านไฟยกค้างไว้ ปากปิด\nเท้าติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "PL-2": {
@@ -1158,6 +1201,28 @@
      ]
     ],
     "m": 13
+   },
+   "brief": {
+    "concept": {
+     "th": "ด้วงพายุหนุ่ม สายเรียกสายฟ้า เป็นด้วงไม่ใช่กิ้งก่า: กระดองแข็ง ขาสั้นหกขา (ระดับธรรมดา)\nเผ่าพายุ: กระดองและหัวทรงข้าวหลามตัด หนามซิกแซกตามขอบกระดอง ตัวเพรียว กระดองสีเหลืองลายม่วงไฟฟ้า\nจุดเด่น: เขาซิกแซกอันเดียวเหมือนสายฟ้า · ลายเส้นสายฟ้าสีม่วงบนปีกแข็ง · คริสตัลม่วงเล็กที่โคนเขา\nหน้า: ตื่นตัว สดใส มีพลัง ไม่น่ากลัว\nจุดเรืองแสง: ปลายเขามีประกายไฟเล็กๆ + คริสตัลม่วง\nท่า: ยืนหกขา ยกตัวด้านหน้านิดๆ เขาชี้ไปข้างหน้าเฉียงขึ้น ปีกแข็งแง้มเล็กน้อย",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: SF-1 — young storm beetle caller, a beetle not a lizard: hard shell, six short legs (common: simple, few ornaments)\nTribe: storm — make the storm identity obvious: diamond-shaped shell and head, zigzag spikes on the shell edge, lean body, yellow shell with electric purple markings\nFantasy features: a single zigzag horn like a lightning bolt · purple lightning-line pattern across the wing cases · small purple crystal at the base of the horn\nFace: alert, bright and energetic — not scary\nEffect spots: the horn tip crackling with a tiny spark + the purple crystal\nPose: standing on six legs, front raised slightly, horn pointing forward and up, wing cases slightly open\nBackground: pure green #00FF00",
+      "round": "r23a6cc79",
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "หายใจเบาๆ ลำตัวยุบ-ยกนิดหน่อย\nปีกแข็งที่แง้มอยู่ขยับเบาๆ เขาสายฟ้าชี้ค้างไว้ ปากไม่ขยับ\nขาทั้งหกติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "SF-2": {
@@ -1503,6 +1568,28 @@
      ]
     ],
     "m": 10
+   },
+   "brief": {
+    "concept": {
+     "th": "กิ้งก่าลมหนุ่ม สายสอดแนม กิ้งก่าตัวเล็กยืนสองขาหลัง คาบใบไม้หนึ่งใบ (ระดับธรรมดา)\nเผ่าลม: รูปทรงโค้งพลิ้ว แผงคอนุ่มคล้ายขนนกหลังหัว ผิวหนังพับคลุมไหล่เหมือนผ้าคลุมที่ปลิวได้ เกล็ดสีเขียวมิ้นต์กับขาวนวล\nจุดเด่น: ลายก้นหอยลมบนผ้าคลุมไหล่ · ใบไม้สีมิ้นต์ในปาก ขอบใบม้วนเหมือนโดนลม · คริสตัลมิ้นต์เล็กบนหน้าผาก\nหน้า: อยากรู้อยากเห็น ตื่นตัว ขี้เล่น ไม่น่ากลัว\nจุดเรืองแสง: ลายก้นหอยบนผ้าคลุม + คริสตัลหน้าผาก\nท่า: ยืนตรงบนขาหลัง อุ้งมือหน้ายกไว้หน้าอก หางสั้นม้วนบนพื้นช่วยทรงตัว ตัวกว้างพอๆ กับสูง หันหน้าไปข้างหน้า",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: WY-1 — young wind skink scout, a small lizard standing up on its hind legs, holding one leaf in its mouth (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, a soft feather-like frill behind the head, a short cloak-like skin fold over the shoulders that flutters, mint green and off-white scales\nFantasy features: swirl-shaped wind marks on the shoulder cloak · one mint-green leaf held in its mouth, the leaf edges curling as if in a breeze · small mint crystal on the forehead\nFace: curious, alert and playful — not scary\nEffect spots: the swirl marks on the shoulder cloak + the forehead crystal\nPose: standing upright on both hind legs, small front paws held up in front of the chest, tail short and curled on the ground for balance so the creature is about as wide as it is tall; head turned forward\nBackground: magenta #FF00FF",
+      "round": "r0eac9f9b",
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ยืนสองขาหลัง หายใจเบาๆ อกยุบ-ยกนิดหน่อย\nผ้าคลุมผิวหนังที่ไหล่พลิ้วเบาๆ ใบไม้ในปากไหวนิดหน่อย ปากยังคาบใบไม้ไว้\nขาหลังกับหางติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "WY-2": {
@@ -1792,6 +1879,28 @@
      ]
     ],
     "m": 11
+   },
+   "brief": {
+    "concept": {
+     "th": "ผีเสื้อกลางคืนวิญญาณหนุ่ม สายรักษา ตัวนุ่มฟู (ระดับธรรมดา)\nเผ่าวิญญาณ: ลอยกลางอากาศ ปีกโปร่งแสงสีฟ้าถึงม่วงลาเวนเดอร์ ลายหกเหลี่ยมบนปีก วงแหวนเวทบางๆ ลอยชิดหลังตัว\nจุดเด่น: ช่องหกเหลี่ยมบนปีกเรืองจางๆ · หนวดเหมือนขนนก ปลายมีแสงเล็กๆ · รูนเล็กบนหน้าผาก\nหน้า: อ่อนโยน สงบ ใจดี ตาโตนุ่ม ไม่น่ากลัว\nจุดเรืองแสง: หกเหลี่ยมบนปีก + ปลายหนวด\nท่า: ลอยตัวตรง ปีกกางแต่กระชับ (ตัวกว้างพอๆ กับสูง) ขาหน้าเล็กประกบกันเหมือนร่ายเวทรักษา",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: PT-1 — young spirit moth healer with soft fuzzy body (common: simple, few ornaments)\nTribe: spirit — make the spirit identity obvious: hovering in the air, translucent sky-blue to lavender-blue wings, hexagon patterns on the wings, a thin magic ring floating close behind the body\nFantasy features: hexagon cells glowing faintly on the wings · feathery antennae tipped with tiny lights · small rune on the forehead\nFace: gentle, calm and kind, big soft eyes — not scary\nEffect spots: the glowing wing hexagons + the antenna tips\nPose: hovering upright, wings open but compact (body about as wide as tall), small front legs held together as if casting a healing spell\nBackground: pure green #00FF00",
+      "round": "r5a6b6c74",
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ลอยอยู่กับที่ ตัวลอยขึ้นลงเบาๆ\nปีกกระพือช้าๆ นิดเดียว หนวดไหวเบาๆ\nขาหน้าประกบกันค้างไว้ ไม่บินไปไหน ปากไม่ขยับ\nกล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "PT-2": {
@@ -2117,129 +2226,6 @@
      "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_f3b3b55c.png"
     },
     {
-     "id": "r98b2d439",
-     "slot": "frames",
-     "form": 1,
-     "move": "idle",
-     "file": "hub/WN-1/frames_idle_f1_2026-11-19_98b2d439.png",
-     "orig": "pixellab-idle-breathing (Animate with Text V3, 8 frames; input frame 0 dropped)",
-     "t": "2026-11-19T13:14:55.094Z",
-     "by": "claude",
-     "note": "set 257 PixelLab trial: Animate with Text V3 · prompt \"idle breathing, subtle body rise and fall, feet planted, no camera move\" · from ★ still r5b8f96a2 · 150 ms = ค่าเสนอ",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "meta": {
-      "cols": 8,
-      "rows": 1,
-      "fw": 118,
-      "fh": 78,
-      "n": 8,
-      "ms": 150,
-      "pingpong": true
-     }
-    },
-    {
-     "id": "r97d33ff5",
-     "slot": "frames",
-     "form": 1,
-     "move": "idle",
-     "file": "hub/WN-1/frames_idle_f1_2026-11-19_97d33ff5.png",
-     "orig": "pixellab PixMiniMax mmA (cells 1-8 of 9)",
-     "t": "2026-11-19T13:51:28.288Z",
-     "by": "claude",
-     "note": "set 257 PixMiniMax A: first + last frame = ★ still r5b8f96a2 (loops by itself) · side, east · 8 frames · palette None · description = Enhance with AI text + \"Hooves stay planted…\" · 150 ms ค่าเสนอ",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "meta": {
-      "cols": 8,
-      "rows": 1,
-      "fw": 118,
-      "fh": 78,
-      "n": 8,
-      "ms": 150
-     }
-    },
-    {
-     "id": "r43d8f9a2",
-     "slot": "frames",
-     "form": 1,
-     "move": "idle",
-     "file": "hub/WN-1/frames_idle_f1_2026-11-19_43d8f9a2.png",
-     "orig": "pixellab PixMiniMax mmB (cells 1-8 of 9)",
-     "t": "2026-11-19T13:51:28.288Z",
-     "by": "claude",
-     "note": "set 257 PixMiniMax B: first + last frame = ★ still r5b8f96a2 (loops by itself) · side, east · 8 frames · palette = from the ★ still (55 colours) · description = Enhance with AI text + \"Hooves stay planted…\" · 150 ms ค่าเสนอ",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "meta": {
-      "cols": 8,
-      "rows": 1,
-      "fw": 118,
-      "fh": 78,
-      "n": 8,
-      "ms": 150
-     },
-     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-19_43d8f9a2.png"
-    },
-    {
-     "id": "r4601feef",
-     "slot": "frames",
-     "form": 1,
-     "move": "idle",
-     "file": "hub/WN-1/frames_idle_f1_2026-11-19_4601feef.png",
-     "orig": "pixellab API PixMiniMax job 49402eab-62a2-4dfc-944f-297f44b482f9 (frames 1-8 of 9)",
-     "t": "2026-11-19T14:19:51.000Z",
-     "by": "claude",
-     "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "meta": {
-      "cols": 8,
-      "rows": 1,
-      "fw": 118,
-      "fh": 78,
-      "n": 8,
-      "ms": 150
-     }
-    },
-    {
-     "id": "r829aca09",
-     "slot": "frames",
-     "form": 1,
-     "move": "idle",
-     "file": "hub/WN-1/frames_idle_f1_2026-11-19_829aca09.png",
-     "orig": "pixellab API PixMiniMax job d2f63d7b-71b7-4fd3-978a-4ae1f8f8da07 (frames 1-8 of 9)",
-     "t": "2026-11-19T14:24:04.000Z",
-     "by": "claude",
-     "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p1",
-     "meta": {
-      "cols": 8,
-      "rows": 1,
-      "fw": 142,
-      "fh": 92,
-      "n": 8,
-      "ms": 150,
-      "pad": [
-       12,
-       12,
-       12,
-       2
-      ]
-     }
-    },
-    {
      "id": "rd7150af3",
      "slot": "frames",
      "form": 1,
@@ -2249,7 +2235,7 @@
      "t": "2026-11-19T14:34:41.000Z",
      "by": "claude",
      "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -2259,14 +2245,15 @@
       "fw": 142,
       "fh": 92,
       "n": 8,
-      "ms": 150,
+      "ms": 300,
       "pad": [
        12,
        12,
        12,
        2
       ]
-     }
+     },
+     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-19_de597ffe.png"
     }
    ],
    "notes": "",
@@ -2359,6 +2346,34 @@
      ]
     ],
     "m": 16
+   },
+   "brief": {
+    "concept": {
+     "th": "หมูป่าปีศาจหนุ่ม สายนักสู้ (ระดับธรรมดา: เรียบๆ เครื่องประดับน้อย)\nเผ่าปีศาจ: เขาโค้งสั้นหนา แนวหนามสั้นสีเข้มบนหลัง เกราะแตกสีแดงเลือดหมูที่ไหล่และหน้าผาก มีเส้นสีส้มถ่านไฟ รูนห้าเหลี่ยมเล็กบนเกราะไหล่\nหน้า: มั่นใจ กวนนิดๆ ไม่น่ากลัว\nจุดเรืองแสง: ตาสีถ่านไฟ + เส้นในรอยแตกของเขา\nท่า: ยืนพร้อมสู้ เท้าติดพื้น",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: WN-1 — young demon boar fighter (common: simple, few ornaments)\nTribe: demon — make the demon identity obvious: short thick curved horns, ridge of short dark spikes, cracked oxblood-red plates on shoulders/forehead with ember-orange veins, small pentagon rune on the shoulder plate\nFace: confident and a little cheeky — not scary\nEffect spots: glowing ember eyes + ember veins in the horn cracks\nPose: ready stance, feet planted\nBackground: pure green #00FF00",
+      "round": "r5b8f96a2",
+      "t": "2026-11-17T12:29:40.054Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Inhale deeply to expand the ribcage and lift the shoulder blades, then exhale slowly to lower the torso and compress the frame. Maintain a steady, rhythmic cadence until settling firmly into the original stance. Mouth stays closed the whole time: jaw, snout and tusks do not move. Only the chest and back rise and fall slightly. Hooves stay planted, legs and tail barely move, static camera, no zoom.",
+      "round": "rd7150af3",
+      "t": "2026-11-19T15:04:09.000Z"
+     }
+    ],
+    "idle": {
+     "th": "หายใจเข้าลึก ซี่โครงขยาย สะบักยกขึ้น แล้วหายใจออกช้าๆ ตัวลดลง จังหวะสม่ำเสมอ แล้วกลับมายืนท่าเดิมพอดี\nปากปิดตลอด ขากรรไกร จมูก และเขี้ยวไม่ขยับ\nมีแค่อกกับหลังที่ยุบ-ยกนิดหน่อย\nกีบติดพื้น ขากับหางแทบไม่ขยับ กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    }
    }
   },
   "WN-2": {

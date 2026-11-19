@@ -175,6 +175,14 @@ export function validateHub(h) {
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
     if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: shadow.frames must be {frame: {feet: [x, y], cast}}`);
+    const br = it.brief; // owner set 258
+    if (br != null) {
+      if (typeof br !== 'object' || Array.isArray(br)) err.push(`${id}: brief must be an object`);
+      else {
+        for (const k of ['concept', 'idle']) { const b = br[k]; if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
+        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
+      }
+    }
     const sc = it.scale;
     if (it.free != null && typeof it.free !== 'boolean') err.push(`${id}: free must be true/false`);
     const of = it.offset;

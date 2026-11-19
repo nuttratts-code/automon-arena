@@ -506,7 +506,7 @@ function renderItem(m, it) {
     m.append(bar);
   }
   if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
-  if (isChar && ui.step === 'still') m.append(charInfo(it), checkBar(it));
+  if (isChar && ui.step === 'still') m.append(charInfo(it), briefBox(it), checkBar(it));
   if (ui.step === 'prompt') { // image prompt, then the Veo input picture + video prompt underneath
     renderPrompt(m, it);
     if (isChar) { m.append(h('h3', { class: 'sect' }, 'ภาพส่ง Veo + พรอมต์วิดีโอ')); m.append(veoPanel(it)); renderSlot(m, it, 'veoin'); }
@@ -645,6 +645,47 @@ function charInfo(it) {
       g ? h('span', { class: 'small dim' }, `${g.tribe}${g.rarity ? ' · ' + g.rarity : ''}`) : null),
     h('div', { class: 'small faint' }, 'Godot ใช้ชื่อนี้หลังกด "ส่งค่าเข้า Godot" ด้านบน · สกิลมาจากข้อมูลเกม (แก้ที่นี่ไม่ได้)'),
     h('div', { class: 'lbl' }, 'สกิล'), skills);
+}
+// owner set 258: Thai briefs the owner reviews (concept + 8-frame idle). Claude drafts, the owner edits and ticks;
+// Claude generates only from a ticked brief (translates to English itself). Editing a ticked brief clears the tick (C1).
+// it.brief = { concept: {th, ok, okT, by, t}, idle: {...}, used: [{kind, en, round, t}] } — used = English prompts that worked.
+const BRIEFS = [
+  ['concept', 'คอนเซปตัวละคร', 'เช่น สัตว์อะไร นิสัย จุดเด่นของเผ่า สีหลัก ท่ายืน', 'ใช้ทำภาพนิ่ง'],
+  ['idle', 'ท่ายืน 8 เฟรม (PixelLab)', 'เช่น หายใจเบาๆ อกยุบ-ยก ปากปิด ขาไม่ขยับ', 'ภาพแรกและภาพสุดท้าย = ภาพนิ่ง ★ · เติมขอบใสก่อนเจนเสมอ · ทิศหันตามภาพนิ่ง'],
+];
+function briefBox(it) {
+  it.brief ||= {};
+  const wrap = h('div', { class: 'briefs' });
+  for (const [kind, title, hint, sub] of BRIEFS) {
+    const b = it.brief[kind] || {};
+    const card = h('div', { class: 'brief' + (b.ok ? ' is-ok' : '') });
+    const stamp = h('button', { class: 'stamp', 'aria-pressed': String(!!b.ok), disabled: !(b.th || '').trim(),
+      title: b.ok ? 'กดอีกครั้งเพื่อยกเลิกการตรวจ' : 'กดเมื่ออ่านแล้วพร้อมให้ Claude เจน',
+      onclick: () => { const x = it.brief[kind] ||= {}; x.ok = !x.ok; if (x.ok) x.okT = new Date().toISOString(); else delete x.okT; save().then(render); } },
+    b.ok ? `✓ ตรวจแล้ว ${fmtDate(b.okT)}` : 'กดเมื่อตรวจแล้ว');
+    const ta = h('textarea', { rows: 6, placeholder: hint, 'aria-label': title,
+      oninput: (e) => {
+        const x = it.brief[kind] ||= {};
+        x.th = e.target.value; x.by = 'owner'; x.t = new Date().toISOString();
+        if (x.ok) { x.ok = false; delete x.okT; card.classList.remove('is-ok'); stamp.textContent = 'กดเมื่อตรวจแล้ว'; stamp.setAttribute('aria-pressed', 'false'); }
+        stamp.disabled = !x.th.trim();
+        saveSoon();
+      } }, b.th || '');
+    const who = b.th ? h('span', { class: 'small faint' }, `${b.by === 'claude' ? 'Claude ร่าง' : 'คุณแก้'} ${fmtDate(b.t)}`) : null;
+    card.append(h('div', { class: 'row' }, h('b', {}, title), h('span', { class: 'sp' }), who),
+      h('div', { class: 'small faint' }, sub), ta, h('div', { class: 'row' }, stamp));
+    const used = (it.brief.used || []).filter((u) => u.kind === kind);
+    if (used.length) {
+      const det = h('details', {}, h('summary', { class: 'small' }, `พรอมต์อังกฤษที่ใช้ได้ผล (${used.length})`));
+      for (const u of used.slice().reverse()) det.append(h('div', { class: 'usedp' },
+        h('div', { class: 'row small' }, h('span', { class: 'faint' }, `${fmtDate(u.t)}${u.round ? ' · รอบ ' + u.round : ''}`), h('span', { class: 'sp' }),
+          h('button', { class: 'ghost', onclick: () => copy(u.en) }, 'คัดลอก')),
+        h('div', { class: 'small dim' }, u.en)));
+      card.append(det);
+    }
+    wrap.append(card);
+  }
+  return wrap;
 }
 // owner set 248: the one picture every page (team, shadow, icon, frames, Godot) uses, always shown at the top of the still step
 function usedBanner(it, used, sel) {

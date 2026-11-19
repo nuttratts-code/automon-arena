@@ -395,3 +395,12 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
   .pxed-col + .pxed-col { border-left: 1px solid var(--line); padding-left: 14px; }
 }
 .gap-tools { gap: 6px; flex-wrap: wrap; }
+/* owner set 258: concept + idle briefs (Thai, owner ticks before Claude generates) */
+.briefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.brief { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 10px; background: var(--panel); }
+.brief.is-ok { border-left-color: var(--ok); }
+.brief textarea { width: 100%; box-sizing: border-box; resize: vertical; line-height: 1.5; }
+.brief .stamp { min-height: 32px; padding: 4px 14px; border: 2px dashed var(--warn); background: transparent; color: var(--warn); font-weight: 600; border-radius: 8px; }
+.brief .stamp:disabled { border-color: var(--line); color: var(--faint); }
+.brief.is-ok .stamp { border-style: solid; border-color: var(--ok); background: var(--ok); color: #15181d; }
+.brief .usedp { padding: 6px 8px; margin-top: 6px; border-radius: 6px; background: rgba(255,255,255,.04); white-space: pre-wrap; }
