@@ -1,26 +1,31 @@
 # Reviews index
 
-V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
+V1.9 · 19 Nov 2026 (set 249: weekly row + lumina/meowa rows) · V1.8 · 13 Nov 2026 (set 220: token-cost row; brainstorm skill deleted) · V1.7 · 13 Nov 2026 (set 219: skills audit row) · V1.6 · 13 Nov 2026 (set 218 weekly F1: weekly + hd2d-gaps rows; godot-mcp, prep-ui, ui-ease → archive) · V1.5 · 12 Nov 2026 (set 209: skills research row) · V1.4 · 10 Nov 2026 (set 189: mobile row → Godot list, UI notes row) · V1.3 · 10 Nov 2026 (set 183: ui-ease row done) · V1.2 · 10 Nov 2026 (set 181: 4 unchecked rows resolved, 2 → archive) · V1.1 (set 180: 9–10 Nov files indexed, 7 finished files → archive) · V1.0 · 8 Nov 2026 (set 139 round 2, A1). Open reviews stay in claude/ root; when the user decides, move the file to archive/reviews/ and flip its row here. Status = open / decided.
 
 | File | Topic | Status |
 | --- | --- | --- |
+| archive/reviews/review-2026-11-19-weekly-p0.md | Set 250 weekly part 0 (first run): MVP1.5 plan vs 31 Dec, rework 8 %, landed 11 %, 4 repeats from last week → X1 hook warnings · T2 itch.io waits for 3D | decided |
+| archive/reviews/review-2026-11-19-weekly-r23.md | Set 250 weekly review rounds 2+3 G–L (Relay trim · decided reviews archived · ui-work kept full for local tools · char-idle/art-look bodies → *-ref.md · Relay entry ≤ 400 chars) | decided |
+| archive/reviews/review-2026-11-19-weekly.md | Set 249 weekly review A–F (D:\GitHub sessions skipped rules → parent CLAUDE.md note · art direction: ask before art-style edit · HARD RULE 3 follow-ups need own gate · char-idle description · instructions V6.3 · hygiene) — applied | decided |
+| review-2026-11-14-lumina.md | Luminati three.js HD-2D engine vs set 217 arena — ideas only | open (ideas) |
+| review-2026-11-14-meowa-template.md | HD2D-template-meowa (Godot) vs set 217 arena — ideas only | open (ideas) |
 | archive/reviews/review-2026-11-13-token-cost.md | Set 220 token cost vs result — A brainstorm deleted · B/C left (owner) · D1 instructions only at weekly review · E1 art-look/asset-3d reference split out | decided |
 | archive/reviews/review-2026-11-13-skills-audit.md | Set 219 skills + rule docs audit A–I — A1 B1 E1 F1 G1 H1 I2 applied; D: AI art (Gemini / Hunyuan3D) ships, owner accepted the licence risk | decided |
 | archive/reviews/review-2026-11-13-weekly.md | Set 218 weekly review A–I (sample branch push, asset-3d restore, sample mode, ripple line, handoff size) — owner picked all recommended, applied set 218 | decided |
 | review-2026-11-14-hd2d-gaps.md | Set 217 battle-scene look gaps vs HD-2D reference, phases 0–7 — camera A2 picked; phases open on the sample branch | open |
 | archive/reviews/review-2026-11-12-prep-ui.md | Set 213 prep/battle spacing review — R1+R2 built set 213 (merge 62c2339) | decided |
 | archive/reviews/review-2026-11-11-godot-mcp.md | Godot MCP options (set 208) — owner tried NPGameDev toolkit as dev-only addon (set 208 E1/F2) | decided |
-| review-2026-11-12-skills.md | Set 209 extra skills research — user picked A2 (7 installed skills in runbooks) · B1–B3 (godot-play draft, godot-release, port-parity) applied; C2a = no outside skill, own workflow/gdscript.md | decided (open: godot-play live run) |
+| archive/reviews/review-2026-11-12-skills.md | Set 209 extra skills research — user picked A2 (7 installed skills in runbooks) · B1–B3 (godot-play draft, godot-release, port-parity) applied; C2a = no outside skill, own workflow/gdscript.md | decided (open: godot-play live run) |
 | review-2026-11-10-project-audit.md | Set 180 whole-project audit (A–E) — user picked A1 B1 C1 D1; A1/A5/B1–B6 done set 180, rest open | open |
 | review-2026-11-10-mobile.md | Step 6 mobile check of the game page (set 175) — sets 176/179 fixed part; rest parked for Godot (set 189 C1, web UI frozen) | parked → Godot |
 | review-2026-11-10-ui-test-notes.md | Set 187 UI test notes = Godot UI list since set 189 C1 (web UI frozen) | open (Godot) |
-| review-2026-11-10-brainstorm-gamelog.md | Set 177 game-log brainstorm — user picked A1 B1 C1 (stats tab built; feeling tap + build label parked) | decided (parked items) |
+| archive/reviews/review-2026-11-10-brainstorm-gamelog.md | Set 177 game-log brainstorm — user picked A1 B1 C1 (stats tab built; feeling tap + build label parked) | decided (parked items) |
 | review-2026-11-10-brainstorm-art-workflow.md | Art workflow brainstorm — draft plan only, start after MVP1 | open (parked) |
 | review-2026-11-09-brainstorm-boss.md | Set 168 boss brainstorm — user picked A3 B2 C2 D1 E1 F1 G1 H1 (combat-rules C-17.6) | decided (kept: linked from combat-rules) |
 | review-2026-11-09-bosskits.md | Set 168 boss kit draft v1 — approved I1 (linked from core/stage.js) | decided (kept: linked from code) |
 | review-2026-11-09-bosstribe.md | Set 167 boss win % by team tribe — input of the boss brainstorm | decided (kept: linked) |
-| review-2026-11-09-brainstorm-skill.md | Set 164 brainstorm skill design sources (linked from CLAUDE.md + skill) | decided (kept: linked) |
-| review-2026-11-09-brainstorm-runstats.md | Set 165 run-end stats brainstorm — phase 1 built set 165 (Balance Room สรุปแรง/อ่อน) · real-player tab set 177 · phase 2 waits for ~30 human runs | decided (phase 2 parked) |
+| archive/reviews/review-2026-11-09-brainstorm-skill.md | Set 164 brainstorm skill design sources (skill deleted set 220) | decided (kept: linked) |
+| archive/reviews/review-2026-11-09-brainstorm-runstats.md | Set 165 run-end stats brainstorm — phase 1 built set 165 (Balance Room สรุปแรง/อ่อน) · real-player tab set 177 · phase 2 waits for ~30 human runs | decided (phase 2 parked) |
 | archive/reviews/review-2026-11-09-brainstorm-ui-ease.md | Game UI ease brainstorm — user A1: UI set 1 shipped set 169, recap + tribe highlight set 171 · 44px sweep + names hidden (B1) done set 183 · cold-start test skipped by user (C2) | done set 183 |
 | archive/reviews/review-2026-11-09-balance-ux.md | Set 161 Balance Room UX review — 18 fixes shipped set 161 | decided |
 | archive/reviews/review-2026-11-09-superpowers.md | Set 163 Superpowers ideas — B1 find-cause skill + C1 plan files adopted | decided |

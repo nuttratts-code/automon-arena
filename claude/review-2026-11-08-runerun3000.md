@@ -84,7 +84,7 @@ round (e.g. r11 +20, r15 +40, r19 +60) · E2 foeBase > 100 only in extra matches
 (CONFLICTS with set 128 X9 A "lock at shop start, for everyone" → must ask user) · E4 keep (extra = reward for strong boards).
 Check (2) first with a quick test: win % vs equal-power foes split by player Lv3 count.
 
-## Set 141 decisions (user, 8 Nov) — cfgdiff rev 34 = MATCH (claude/review-2026-11-08-cfgdiff.md)
+## Set 141 decisions (user, 8 Nov) — cfgdiff rev 34 = MATCH (claude/archive/reviews/review-2026-11-08-cfgdiff.md)
 - A1 bossrun on real-run teams (runes both sides, pickFoe) · B1 every boss same target per k (band ≈ ±5) · D1 re-measure after.
 - F targets: k1 60 · k2 50 · k3 45.
 - C (user's own rule, all k): per boss, favoured tribe (boss tribeWeak) wins > target+10 · resisted tribe (boss tribeResist) ≈ target−20 ·

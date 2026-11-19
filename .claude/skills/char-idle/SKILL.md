@@ -1,10 +1,14 @@
 ---
 name: char-idle
-description: Character still → idle — PAINTED creatures first (route P, art-style V2.0 set 227: ภาพวาด / ตัดพื้นเขียว / วิดีโอ Veo / 32 เฟรม); old pixel routes below (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ Gemini / 8 เฟรม / ยืดหด / ตาเรือง / เลือกท่าหายใจ / เติมขอบดำ) — snap the owner's Gemini still to real pixels, then route B first: the owner makes ONE Gemini video from the still with the fixed prompt, Claude turns it into 8 real-pixel frames (video_idle.py), the owner touches them up in Pixelorama; route A (8 code-idle variants, owner picks) only when the video fails. Record in claude/idle-picks.csv. Also the effect pass (หาจุดเรือง / ลบสายฟ้า / ตาให้คม — owner picks keep/remove/crisp per spot), reading the owner's Pixelorama .pxo save, and the pixel-perfect arena check (ใส่ในฉาก / ขนาดพอดีพิกเซล). Use whenever the owner sends a new character still or video, or asks to redo or finish a character's idle. Rules: claude/art-style.md §2 (wins if anything differs).
+description: Character still → idle (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ / เฟรม / ตาเรือง / ใส่ในฉาก). Characters = PIXEL via PixelLab (art-style V2.5); idle method open — ask the owner before route P (painted, retired), B (video → frames) or A (code). Also effect pass, .pxo, arena pixel check.
 ---
 # Character still → idle (set 221 · route B video added set 222 · effect pass + arena check set 223, 14 Nov 2026)
 
+> **Now (art-style V2.5, set 250 M1):** characters = PIXEL via PixelLab · the idle method is OPEN — ask the owner which route (B video → frames · A code variants) before starting; both routes live in `claude/workflow/char-idle-ref.md`. The owner rules below are kept from sets 221–222.
+
 > Owner rules: set 222 L1 = **video first (route B), code idle (route A) only when the video fails** · set 221 = never apply a code variant silently, the owner picks per character · set 222 = **minimal processing** ("the more it is cleaned, the worse it looks"). Rules: claude/art-style.md §2 · art store: art/library/README.md (usable pieces only, never delete) · licence: AI art = placeholder, UNVERIFIED (set 219 D).
+
+> **Art direction (owner set 249):** while the look is still being explored, a direction the owner tries or picks is NOT written into claude/art-style.md by itself — ask "บันทึกลง art-style.md ไหม?" and edit only after the owner says OK; until then record it in the set's Relay line (never memory-only).
 
 > Set 240: owner flow = still → hub button "ส่งให้ Claude ตรวจ + เขียนพรอมต์วิดีโอ" (task `check+veo`: P1 check → P2 cut + padded input + P3 prompt via `tools/asset-hub/veo_prep.py`) → owner makes the Veo video → hub button "ตัดเฟรม + สร้างเงา" runs P4 by itself. Stills and videos arrive through the asset hub (tools/asset-hub/README.md — files in art/hub/files/<ID>/, queue in art/hub/hub.json); put every cut / Veo input / frames sheet back there as a round (by: claude) and answer the queue item. Owner's default queue job "ตัดเฟรม + สร้างเงา" (task `frames+shadow`) = P4 frames → `tools/asset-hub/hub_add.py` (adds the round + first shadow) — steps in tools/asset-hub/README.md.
 
@@ -15,133 +19,17 @@ Scripts here (`painted_idle.py` = route P, set 227; the rest = pixel routes) (Py
 - `outline_fill.py <in> <out>` — full 1 px outline incl. diagonal corners + pink fringe → outline, when B3's fill leaves gaps (WY-1 set 225, owner asked Claude to do it, not by hand) · `eye_recolour.py <out> <in>` — eyes to one colour in all 8 frames, head offset tracked (WY-1 constants inside).
 - `idle_variants.py <still.png> <out.gif> [neck_row waist_row hip_row]` — route A, 8 code variants, 2.4 s loop, ×3 zoom.
 
-## Route P — painted creature (DEFAULT since set 227, art-style V2.0)
-Pixel-only steps (snap, outline fill, colour_lock, Pixelorama, scenematch S2, 8 frames 250 ms) do NOT apply to painted creatures.
-P1. **Still:** owner paints in Gemini with the art-style §5 painted starter (attach the scene painting) + §6 template, FORM 1 first. Check: tribe readable by colour + silhouette, fantasy (not a plain animal), face not too fierce (owner set 227), no pink on the body. Gemini often adds a darker painted frame + a ground shadow and a dull green (#35A541…) instead of #00FF00 — the cut handles all three.
-P2. **Cut + padded input:** key alpha = `clip(1 − (g − max(r,b) − 8) / 20)` + keep the largest blob (drops frame/shadow bits) + despill `g ≤ max(r,b)·1.05` + 3 px min-filter → crop. Check on magenta at ~700 px (Read) — no green rim, no shadow patches under the feet (the first boar needed the tighter 8/20 key). Padded Veo input = cut ×(0.55·720 px tall) centred on 1280×720 #00FF00 → send it with SendUserFile and say "use THIS picture, not the original" (set 227: the owner used the original — the clip zoomed to ~78 % of the height; fine that time, but long tails/horns would be cut).
-P3. **Video:** Veo settings as B1 (3.1 · Frames · 16:9 · 1080p · .mp4). Prompt = B1 fixed prompt with: "this exact painted creature" · STYLE LOCK "keep the exact same painting, brushwork, colours and details … Do not redraw, do not change the lighting, no motion blur" · BACKGROUND adds "no frame or border" · MOTION per body (tail swish, mane sway, plates move with the body and never change shape) · EFFECT = its effect spots pulse with each breath · DO NOT ADD smoke, dust, sparks, fire, text, new objects. Fill MOTION/EFFECT per creature from its still (boar = set 227, worked first time):
-```
-Animate this exact painted creature as a subtle idle breathing loop.
-
-CAMERA: completely locked. No zoom, no pan, no tilt, no shake. The creature stays exactly the same size and in exactly the same position for the whole video.
-
-FRAMING: the whole creature stays fully inside the frame for the whole video, from [highest parts] down to the [feet], with the same wide empty green margin on every side as the input image. Never zoom in, never crop.
-
-AUDIO: none. Silent video.
-
-BACKGROUND: flat solid pure green #00FF00 for the entire video, exactly like the input image. No floor, no ground, no shadow, no gradient, no frame or border, no glow or light spill onto the background.
-
-MOTION: small and slow. The chest and shoulders rise and fall like slow breathing (one breath every 2 seconds). [The tail swishes gently. The head bobs very slightly.] [Feet] stay perfectly still and planted. [Armour plates move with the body and never change shape.]
-
-EFFECT: [effect spots] glow gently brighter and dimmer with each breath.
-
-STYLE LOCK: keep the exact same painting, brushwork, colours and details as the input image in every frame. Do not redraw, do not change the lighting, no motion blur.
-
-DO NOT ADD: smoke, dust, sparks, fire, text, new objects.
-
-LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
-```
-(Green creature → magenta #FF00FF everywhere above; P2 key = `min(r,b) − g` instead of `g − max(r,b)`; P4 add `--bg=m` — magenta path tested only on a synthetic frame (set 227), check the first real clip closely. `--bg=auto` = pick green/magenta from the border of frame 1; the asset hub button uses it, set 240.)
-P4. **Frames:** `python -I painted_idle.py <video.mp4> <out_dir> 32 150` → loop = most alike frame pair 1.2–3.0 s apart, 32 frames evenly between (owner set 227 R4: 32, not 16/64), green cut as P2 per frame, union crop, LANCZOS to 150 px body height → `sheet_32x1_<W>x<H>.png` + `preview.gif` (×2 on grey, ms = loop length / 32). Prints loop pair + diff, `feet row min/max` (must be equal — the camera did not move), ms per frame. Read one GIF frame on a flat colour to check the cut; send the GIF.
-P5. **Arena check:** sample branch `ccr-882ceb4b-0ewtk1` recipe (art-look §8c; `claude/preview-set217/s227-shot.sh <name> --e:ids=a/b/c/d/e/f --e:foe=… --e:hf=32`, sheet in `<g>/tests/s225/<name>.png`, 1 texel = 1 screen px). Shadows: round blob for now (cast shadows `--e:sh=1 --e:shtex=…` tried s227 R6, owner: "still odd", open).
-P6. **Store** (after the owner OKs): original painting + cut png + 32-frame sheet to art/library/pictures/sprites (`<ID>_still_paint_gemini_<date>.jpg` · `<ID>_still_paint_cut_<W>x<H>_<date>.png` · `<ID>_idle32_sheet_32x1_<W>x<H>_<date>.png`) + INDEX rows; idle-picks.csv `variant=video-painted-32` (+ loop frames in note). At ทำจริง the frames go into a grid sheet ≤ 4096 px wide (phones). Fallback when the video fails twice: M3 = code breathing warp of the still (feet fixed, y ×(1+0.025·sin·w), x ×(1−0.012·sin·w), w = ((H−y)/H)^1.5) — sample code in the set 227 notes R3.
+## Route P — painted creature (RETIRED by art-style V2.5)
+→ Moved to `claude/workflow/char-idle-ref.md` (set 250 M1). Painted creatures are retired; do not offer route P unless the owner asks.
 
 ## Shared steps (pixel routes A/B — before set 227)
-0. **Forms + effect spots (set 224, art-style §2):** each character has FORM 1 (stars 1–2) and FORM 3 (star 3); do every FORM 1 first, FORM 3 only after its FORM 1 is done. File names carry `_f3` for FORM 3 (`<ID>_f3_still_…`, `<ID>_f3_idle8_…`); idle-picks.csv `form` = 1 or 3. Each creature is designed with 1–2 effect spots (art-style §2) — the video `[EFFECT]` line uses those spots. Stills: check the art-style §2 never/should-not list first (shadow, pink, edge, dark mush, loose particles).
-1. **Store the original still** in art/library/pictures/sprites/ as `<ID>_still_gemini_<date>.<ext>` + INDEX.csv row (only if usable — broken/wrong pictures: tell the owner, do not store).
-2. **Find the grid:** zoom the source edges (crop + Read) — block size = width of one fake pixel (HL-1: 20.0 px on a 2000 px image), offset = where the first block starts, grid_n = blocks across. Run `snap.py`; Read the result at ×8 — stair-stepped clean edges = right; doubled/half pixels = wrong block or offset, retry.
-3. **Store the snapped png** next to the original as `<ID>_still_px<W>x<H>_<date>.png` + INDEX.csv row.
+→ Moved to `claude/workflow/char-idle-ref.md` (same heading; set 250 K1 — read it only when this route/step is used).
 
 ## Route B — Gemini video → 8 frames (default, set 222 L1)
-**B1. Owner makes ONE video** in Gemini from a **padded input** (set 225, owner: full body every time, saves Gemini quota by cutting re-rolls): Claude makes `<ID>_gemini_in_1280x720.png` = the snapped still ×4 (nearest) centred on a 1280×720 flat canvas (~45–55% of the height, wide margin all round) — the same 16:9 shape as the video, so Gemini has no reason to zoom/crop. **Background colour = opposite of the creature (owner rule set 225b):** red / orange / brown / yellow creature → **green #00FF00**; green creature → **magenta #FF00FF**; mixed → the one with less of it in the body. (A dull pink came back from Veo as #BA5089, too close to a red body → fuzzy edge; green stayed #09FA10 and peeled clean.)
-- **Generator settings (owner rule set 225b, PL-1 v2):** Veo 3.1 (Quality if credits allow, else Fast) · **Frames** (image = first frame; also last frame if offered — NOT Ingredients, it redraws) · 16:9 · **1080p** (1 game pixel ≈ 6 video px vs 5.4 at 720p) · x1 · download **.mp4, never GIF** (GIF = 480×270 dithered). Omni Flash zoomed, redrew and leaned the body. A stop-motion / held-poses prompt FAILED (set 225b) — do not use. Fall-back: the snapped-or-original still (a new Gemini chat, attach the still, paste the fixed prompt below; fill `[BG NAME] [BG HEX]` = `pure green #00FF00` or `magenta #FF00FF` and `[EFFECT]` per character — e.g. HL-1: `small blue sparks in the eye visor and a few tiny lightning sparks on the raised fist`, or `none`).
-- **Length:** Gemini decides the clip length (HL-1 clips: 10 s, 24 fps, 1280×720) — any length is fine. Only ~1.5 s of it is used, so **one clip per character**; never ask for longer or for several.
-- **Retry at most once**, only for a fail in B4. Second fail → route A (saves Gemini quota).
-- The video stays in the owner's Downloads (not in the repo: big, and only the frames are used).
-
-Fixed prompt (English, paste as is):
-```
-Animate this exact pixel-art character as a subtle idle breathing loop.
-
-CAMERA: completely locked. No zoom, no pan, no tilt, no shake, no camera movement at all. The character stays exactly the same size and in exactly the same position for the whole video.
-
-FRAMING: the whole character stays fully inside the frame for the whole video, from the highest point (horns, ears, halo, wing tips, tail tip) down to the feet, with the same wide empty [BG NAME] margin on every side as the input image. Never zoom in, never crop any part of the body.
-
-AUDIO: none. Silent video, no music, no sound effects.
-
-BACKGROUND: flat solid [BG NAME] [BG HEX] for the entire video, exactly like the input image. No floor, no ground line, no shadow, no gradient, no vignette, no glow or light spill from the character onto the background.
-
-MOTION: very small and slow. Only the chest and shoulders rise and fall slightly, like slow breathing (one breath every 2 seconds). Arms move together with the shoulders by 1–2 pixels at most. Feet and legs stay perfectly still and planted. Glowing parts (eyes, runes, crystals) may glow brighter and dimmer gently with each breath.
-
-EFFECT: [EFFECT]
-
-STYLE LOCK: keep the exact same pixel art, same pixel size, same palette, same dark outlines and same details as the input image in every frame. Do not redraw. Crisp hard pixel edges, no blur, no anti-aliasing, no motion blur.
-
-DO NOT ADD: smoke, dust, text, new objects, or any effect not listed under EFFECT.
-
-LOOP: the last frame must be identical to the first frame so the video loops seamlessly.
-```
-If it zooms or adds smoke: put `Static shot, tripod camera, sprite sheet style animation.` on the first line and retry (this is the one retry).
-
-**B2. Claude stores nothing yet** — the frames are about to be touched up (art/library rule 0). Work in the scratchpad.
-
-**B3. Run** `video_idle.py <video> <ID>_still_px….png <scratch>/<ID>`. What it does — and nothing more (set 222):
-- grid = one block size for both axes (Fourier) + phase (least change inside blocks) from frame 0; every frame snapped on that same grid;
-- background colour read from frame 0's border (green or magenta) → transparent; frames kept uint8 and cropped to the character box + margin (a 1080p clip as int arrays ran out of RAM, set 225b); each block = 3×3 median;
-- **background-tinted rim peeled** from the silhouette inward (≤ 4 px; green bg: g > r+10 and g > b+10 · magenta bg: b ≥ g+12) + 1-px spurs + specks < 4 px (set 225b: the pink rim left loose dots — owner: "no aura round the body at all"); prints `background rim + specks removed per frame`;
-- camera check on the **feet strip** (bottom 8 rows must not move/grow; sparks change the top/sides, so the whole box is no test) — later frames (Gemini often zooms near the end) are dropped;
-- loop pick: the most alike start/end pair 1.2–3.0 s apart inside the still part → 8 evenly spaced frames, 250 ms each (owner set 225b; art-style §2);
-- **missing dark outline filled**: a transparent pixel next to a light edge pixel gets the most common dark edge colour of the picked frames (HL-1 `#0b0931`); ~40–110 px per frame. It does NOT catch every gap (diagonal corners, gaps inside the body) — the owner finishes them by hand (B5);
-- **effects never get a dark rim (owner rule set 225):** effect pixel = outside the body core (present in ≥ 5 of 8 frames, grown 2 px) AND a colour the still does not have, or any bit not touching the body. No outline is added next to them and the video's own dark pixels around them are made transparent. A swaying tail/wing stays body (body colours) and keeps its outline. Prints `dark rim removed around effects per frame`; Read a ×8 crop of the effect frames to check.
-- out: `idle_0..7.png`, `sheet_8x1_<W>x<H>.png`, `anim.png` (APNG), `preview.gif` (×4 on grey).
-It prints grid, still-camera range, loop + frame numbers, outline colour. `--frames=…` forces frame numbers (HL-1 approved: `105,110,114,119,123,128,133,137`).
-
-**B3b. Video cropped part of the body (set 224, PL-1 — owner: never re-roll for this, it wastes Gemini quota):** Gemini often zooms so the legs or a flame tip leave the frame in EVERY frame. Do not retry; patch it:
-- the B3 frames use the same block size as the still (check: width matches) → find the video frame's place on the still (best offset of frame 0 against the still; PL-1 = 3 rows down, 1 col left);
-- canvas = the still's size; rows above a seam row (≈ 2 rows above the video's bottom edge) come from each video frame, rows below from the still (legs stay planted). **Rows above the video's top edge must stay EMPTY** — filling them from the still left a frozen flame tip on every frame (set 224 bug);
-- a part cut flat by the frame top (flame, ear): add a 5-row tapering tip per frame from that frame's own top-row colours (brightest inside, darkest at the sides, leaning like the still);
-- the legs from the still look frozen → measure the body rise per frame (mean top row of the back) and offer leg variants in ONE GIF (1 still · 2 stretch with falloff · 3 rigid thigh follows the rise + shin stretches · 4 = 2 + knee 1 px forward · 5 = 2 ×2); owner picked **3** for PL-1;
-- owner edits to frame 0 (e.g. flame outline removed) → copy that frame's region as is and apply the same rule to the other frames **inside a box with both x limits** (an open-ended box also stripped the horn outline, set 224 bug); count outline px of nearby parts before/after.
-
-**B4. Check, then show** (Read the sheet; send preview.gif with SendUserFile). Fail = retry the video (B1 limit):
-- camera still < 3 s, or no loop found (script stops) · seam change > 25% (visible jump) · the character is redrawn (different shape/details from the still) · background not flat magenta.
-- Shimmer of ~15% of pixels per frame is normal for AI video — the owner accepted it (set 222). Do NOT clean it (palette lock, temporal median, optical flow, hysteresis all made it worse in set 222).
-
-**B5. Owner touch-up in Pixelorama** (free, installed at `D:\GitHub\Pixelorama-Windows-64bit\Pixelorama-Windows-64bit\Pixelorama.exe`; Claude can open a file with PowerShell `Start-Process <exe> -ArgumentList '"<file>"'`):
-- open **`anim.png` (APNG)** — it opens as 8 frames. A plain PNG sheet opens as ONE picture (set 222 trap);
-- outline colour: type the hex printed in B3 into the colour box; Pencil (P); click frames in the timeline;
-- save: File → Export → Spritesheet, 8 columns × 1 row, over the sheet file → tell Claude. Claude splits the sheet back into `idle_0..7.png` + `anim.png` (crop by width/8).
-- **The owner often presses Save instead (set 223 trap):** that writes `<file>.pxo` next to the APNG and the sheet stays old. Always check file times first; read the frames from the .pxo (zip: `data.json` → `frames[i].cels[layer]` `image_size` + `offset`; `image_data/frames/<i+1>/layer_<l+1>` = raw RGBA of that cel size, placed at its offset). Unsaved edits sit only in the open window (title ends with `(*)`) and in `%APPDATA%/Pixelorama/backups/` — never close that window for the owner.
-
-**B4b. Steady colour + smeared parts (set 225, SF-1 — owner: later frames must keep frame 1's colours):** run before B5 on every character, then show a before/after GIF:
-- `python -I colour_lock.py <frames_dir> <out_dir>` — removes each frame's colour drift vs frame 1, a pixel close (< 40) to frame 1's colour at the same spot takes it, moved parts take the nearest frame 1 colour; sparks (white/pink light) untouched. Prints shift / locked / moved / spark kept per frame. (This replaces the set 222 "do not clean" advice for colour only; shimmer cleaners like temporal median stay dropped.)
-- a part still muddy after that (SF-1 ears: video blurred yellow + purple into brown) → `python -I part_copy.py <dir> <out> x0 x1 y0 y1` pastes frame 1's box into frames 2–8 at the best offset (head bob 0–2 px). Box on the part only (above the head line). Find the box on a ×12 grid crop of frame 1.
-- **Frame order check after the owner's save:** measure a moving part (tail tip x per frame) — SF-1's save had frames 1↔2 swapped (tail went right then jumped left); a smooth swing = one way for ~half the frames, then back. Fix the order from the owner's frames, never from the old ones (owner: "แก้จากงานที่ผมปรับ").
-- Read the save with `python -I pxo_frames.py <file.pxo> <out_dir>` (B5 trap) — always work on top of the owner's latest save, in a NEW folder, and open the result in a new Pixelorama window.
-
-**B5a. Effect pass (set 223 — every character has effects in other places, so nothing here is fixed to HL-1):**
-1. `python -I fx_map.py <frames_dir> <out.png>` → numbered red boxes on frame 0 + one line per spot (box, frames, colour). Send the picture; explain each spot in Thai.
-2. Owner picks per spot: **keep · remove · make crisp** (A1/A2… buttons).
-3. remove → `fx_remove.py` (fills masked pixels from their neighbours) · crisp eye/visor line → `fx_eyeline.py` (fixed-length 2-row line, keeps the video's glow pulse in 3 levels from each frame's original brightness — the owner rejected a pulse-less eye; loose sparks lose their black rim). **Both scripts still hold HL-1's box/colour constants** (`reg[...]`, thresholds): set them from the B5a.1 line of that spot before running; Read a ×7 crop of all 8 frames before/after each run.
-4. Re-open the result in Pixelorama for the owner (new window; output to a NEW folder so an open window is never overwritten).
-
-**B5b. Arena check (owner A1 set 223):** copy godot → scratchpad copy, apply the current sample camera patches (preview-set217 notes: FOV 19.2 → p1-patch-depth.py → p1t-patch-tune.py), put the sheet at `<g>/tests/hl1_idle.png`, `arena_shot.gd.txt` → `<g>/tests/`, run with the console exe `--rendering-driver opengl3 --audio-driver Dummy --resolution 844x390 -s res://tests/<name>.gd -- --out <dir>` (it swaps unit id 9001 for the sheet; change the id/slot for another character).
-- **Pixel-perfect** (1 texel = 1 screen px): `pixel_size = 2·d·tan(fov/2) / DisplayServer.window_get_size().y` (NOT get_visible_rect = 854×480 base, NOT the root texture size). At the old fixed height the 2-row eye dropped out in some frames. Check: sprite height on screen = alpha height in the sheet (diff against a shot with the sprite hidden).
-- **GIF trap:** PIL ADAPTIVE palette drops small accents (the eye vanished from GIFs only). Use `quantize(colors=256, method=FASTOCTREE, dither=NONE)` and count the accent pixels per GIF frame before sending.
-- Outline: the owner tried sel-out and no-line (set 223) and **kept the black outline** — do not offer again unless asked.
-
-**B5c. Scene match S2 (owner pick set 226, art-style §4 step 6):** after the owner's last touch-up, `python -I scenematch.py <sheet_8x1.png> <out.png> 2` → frames ÷2.4 (64 px spec), 16 colours, sat 0.7, values squeezed 0.78 toward 0.42, warm-olive ×(1.02, 1, 0.9), outline = inside ×0.45 (dark, from the sheet's own outline). Show it in the arena next to the full-size sheet (B5b; shown ×4 at 1080p). Steps 3–4 (soft outline, sky rim) were tried and not picked. The S2 sheet is the in-game file; the full-size sheet stays in the library as the source.
-
-**B6. Store + record** after the owner says it is done: copy the sheet + APNG + the owner's .pxo (+ the B5c `_s2` sheet) to art/library/pictures/sprites/ as `<ID>_idle8_*_<date>` + INDEX.csv rows (a later owner fix = new `_v2` names, never overwrite — library rule 1); row in claude/idle-picks.csv with `variant=video` and the frame numbers in `note`. Docs-only → straight to main.
+→ Moved to `claude/workflow/char-idle-ref.md` (same heading; set 250 K1 — read it only when this route/step is used).
 
 ## Route A — code idle variants (fallback after a 2nd video fail, or on the owner's order)
-A1. **Rows:** defaults neck 28% / waist 56% / hip 70% of the height fit HL-1. For other shapes (blob, bird, long tail) look at the png on a coordinate grid and pass the rows by hand.
-A2. **Glow:** the printed `glow px` must be > 0 and on the effect spots. Default rule = blue (eyes/runes); other colours or a pale-blue body → `--glow=H0-H1:S:V[:Y0-Y1]` (hue degrees, wraps; repeatable) + `--glow-k` strength (set 225: WN-1 `340-45:.5:.75`, PT-1 halo `245-300:.3:.45:0-19` k 0.5). Check a ×8 mask picture before rendering.
-A3. **Render** `idle_variants.py` → scratchpad; Read frame ~20 to check; send with SendUserFile.
-A4. **Gate — owner picks:** explain the 8 in Thai first, then AskUserQuestion (max 4 options per question → show the recommended 3–4):
-   1 sprite-res scale (reference only, looks wrong) · 2 strong squash 2.5%/1.5% · **3 light squash 1.2%/0.8% + breath hold** · 4 accordion (drop a row at waist, then neck) · 5 upper body sinks 1 px · 6 = 3 + 1 px sway · 7 hover 0–2 px (flying / spirit) · 8 still + glow only (stone / statue / object).
-   Recommend by body: heavy/armoured → 3 or 5 · flying → 7 · object-like → 8 · soft/blob → 2. A new mix → new function in idle_variants.py (keep old numbers; new = 9, 10…).
-A5. **Record** in claude/idle-picks.csv (`character,variant,neck_row,waist_row,hip_row,set,note,form`).
+→ Moved to `claude/workflow/char-idle-ref.md` (same heading; set 250 K1 — read it only when this route/step is used).
 
 ## Tried in set 222 and dropped — do not offer again unless the owner asks
 GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · PixelLab (paid; no result came back) · heavy cleaning of video frames (see B4).

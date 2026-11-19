@@ -8,7 +8,7 @@ Scratch Godot copy used: `%TEMP%/claude/6778d44212994c0a/e44da554-341a-472f-839e
 ## Rounds (owner)
 1. Boar still → pixel 56/80/112 px, 24 colours ± dark outline; in arena ×2 / ×3 (×3 crowds 6v6). Pixel alone does not fix "looks AI" (realistic shapes).
 2. Reference creatures (other games, scratchpad only, never commit): toy/figure style fits the arena; one strong colour per creature; green glow clashes with grass.
-3. Gemini prompts for the boar in 3 themes → claude/prompts-set229-boar-themes.md (A1 toy · A2 cel ink · A3 pixel source). Owner has not sent results yet.
+3. Gemini prompts for the boar in 3 themes → claude/archive/prompts-set229-boar-themes.md (A1 toy · A2 cel ink · A3 pixel source). Owner has not sent results yet.
 4. Background soft = tilt-shift blur `lod` 2.6 (try 1.2) + stones blocky = set 217 R19 L3 (128 px Nearest) → smooth stones (`S229_SMOOTH=1`) = owner liked.
 5. Plaza "floats": rim shadow ring tried → owner: not shadow, it is colour. Plaza tone (set 226 warm beige) vs untinted cool stones. Moss recolour M1/M2, palette transfer from the pillar texture (plaza_T1, YCbCr Reinhard) + `plaza=0.72,0.6,0.38` = closest numbers — owner: still does not match.
 6. Root cause found: texel density — plaza 25 px/m vs stones 74–89 (all 1024 px). Library original `art/library/3d/originals/plaza_hunyuan_2026-11-14_766336cf.glb` has 4096 textures (prep cut them).

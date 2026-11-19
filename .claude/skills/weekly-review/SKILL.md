@@ -11,6 +11,16 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 ## 0. Start
 `git fetch origin` → read the handoff Relay → push the 🔒 lock line (relay.md) → work on main for docs (docs-only, relay.md).
 
+## 0b. Part 0 — progress + 3 numbers (set 250 R2, owner; from retro practice: compare with the plan, track rework, one experiment a week)
+Put this first in the report (≤ 15 lines). Numbers are estimates from git — say so.
+1. **Plan vs deadline:** open steps of claude/plan-godot-migration.md + build-plan step 7 vs the MVP1.5 target (31 Dec 2026, set 193 C1; art P5 not counted). Weeks left · steps left · did any step move this week? Behind → warn + suggest cuts (CLAUDE.md Scope).
+2. **Numbers, this week vs last week** (`git log --since/--until` on origin/main):
+   - rework ≈ commits whose subject says fix / follow-up / undo / redo / revert / again / wrong ÷ all commits;
+   - landed ≈ commits touching godot/ src/ tools/ ÷ all commits (the rest = docs, samples, art);
+   - open decisions: every `open` row in claude/reviews.md + handoff "Open decisions" with its age; > 7 days → list it for the owner.
+3. **Did last week's fixes work?** For each item of the previous weekly review: did the same mistake happen again this week (evidence or "not shown")? A repeat = text is not enough → propose a skill step, merge-code check or hook (§3b rule "missed twice").
+4. **One experiment:** end the report with ONE recommended change for next week (the item with the biggest effect), and name how next week's part 0 will tell if it worked. Other items stay A/B as usual, but say which one is the experiment.
+
 ## 1. What went wrong this week (D1)
 - Sources: `git log --since='7 days ago' --format='%h %ad %s' --date=short origin/main` · claude/handoff.md · this week's entries in claude/archive/relay/ (Claude cannot read old chats).
 - List each time the user corrected or redid Claude's work, a gate failed first time, a bug was found by the user, or a rule caused wasted work.
@@ -30,7 +40,7 @@ Report first, edit only after the user picks. Read with grep / `sed -n`, never w
 3. **Rule a chat never sees:** a rule written only in a topic file whose "open when" in CLAUDE.md does not cover the moment it applies (e.g. the lock line was only in relay.md).
 4. **Rule impossible in some state:** e.g. CI check on a docs-only commit (CI skips claude/**, art/**, *.md — .github/workflows/tests.yml) · check ① with an old results/latest · the 2nd account cannot read the Balance Room db.
 5. **Doc vs code:** every script/command named in the docs exists:
-   `grep -ohE '(tools|lab|tests)/[a-z0-9_-]+\.(mjs|js|py)' CLAUDE.md claude/workflow.md claude/workflow/*.md claude/ops-rules.md | sort -u | while read f; do [ -e src/$f ] || echo MISSING $f; done`
+   `grep -ohE '(tools|lab|tests)/[a-z0-9_-]+\.(mjs|js|py)' CLAUDE.md claude/workflow.md claude/workflow/*.md claude/ops-rules.md | sort -u | while read f; do [ -e src/$f ] || [ -e godot/$f ] || [ -e $f ] || echo MISSING $f; done`
    · claims like "X uses Y" checked with grep of imports (e.g. which lab tools import runPlayStats) · bootstrap modes and flags (`grep -n "mode ===" src/tools/bootstrap.mjs`) · times and counts in docs (gate, botgen, bot teams) vs code or the last real run.
 5b. **Missed ripples (set 186 A1):** this week's fixes that were found AFTER a set closed ("doc said X, game never did", old name in a test, stale version) → which ripple.md map row would have caught it; add/extend that row. Commits on main without a `ripple:` line that changed behaviour/values/names → list them.
 6. **Stale text:** tool names that no longer exist (e.g. `get_artifact`) · links to moved sections ("CLAUDE.md 'X'") · paths (archive folders) · numbered handoff items that no longer exist · "Project only" style notes · old decisions overruled by newer ones.
@@ -54,7 +64,7 @@ The audit above checks the TEXT of the rules; this checks the WORK of the week a
 Each miss → a report item: rule · set · evidence · why it was missed (rule not seen at that moment / trigger unclear / step forgotten) · where the fix belongs (skill description or step · merge-code check · hook · CLAUDE.md), with A1/A2 options. A rule missed twice → recommend moving it into a skill step or a merge-code check rather than adding more text.
 
 ## 4. Report
-- Write claude/review-YYYY-MM-DD-weekly.md: part 1 items, then audit items. Each item = label A, B… · where (file + line) · the problem with evidence · options A1/A2… with a recommendation. Pure wording fixes can be grouped into one item.
+- Write claude/review-YYYY-MM-DD-weekly.md: part 0 (§0b), part 1 items, then audit items. Each item = label A, B… · where (file + line) · the problem with evidence · options A1/A2… with a recommendation. Pure wording fixes can be grouped into one item.
 - Commit + push to main (docs-only). Explain in Thai chat, then the AskUserQuestion buttons (max 4 per call).
 
 ## 5. After the user picks
@@ -66,10 +76,10 @@ Each miss → a report item: rule · set · evidence · why it was missed (rule 
 - Docs-only = no gate, no close-out (HARD RULE 1 B1).
 
 ## 6. Cost
-- One round per week. After a round, if another round would need reading code tool by tool, say so in 1–2 Thai lines (cost vs benefit) and recommend stopping.
+- **Every weekly review = round 1 → round 2 (§7) → round 3 (§8), always in that order (owner set 249).** Rounds 2–3 may run in the next chat (round 1 ends with close-out → the paste-prompt names "รีวิวสัปดาห์ รอบ 2+3"). If a round would need reading code tool by tool, say so in 1–2 Thai lines (cost vs benefit) but still run it unless the owner says skip.
 - Sets 218–220 ran all three rounds below in one chat (owner asked each one) — fine for docs-only work, but end with a new-chat paste-prompt.
 
-## 7. Round 2 on request — skill + doc usage audit (set 219; owner: "สกิลไหนไม่ถูกเรียกใช้ ใช้น้อย/เยอะ กฎไหนถูกข้าม ขัดกัน/ซ้ำกัน")
+## 7. Round 2 (always after round 1, owner set 249) — skill + doc usage audit (set 219; owner: "สกิลไหนไม่ถูกเรียกใช้ ใช้น้อย/เยอะ กฎไหนถูกข้าม ขัดกัน/ซ้ำกัน")
 Evidence = git + Relay archives only (say "not shown ≠ unused"). Steps:
 1. **Usage per skill:** for each `.claude/skills/*/SKILL.md` → born date (`git log --diff-filter=A`), edit count, mentions in commit messages + `claude/archive/relay/*.md` + handoff. Group: heavy · used this week · dormant (name the freeze/decision that parked it) · never run. Also total size of all `description:` lines (loaded every chat; keep each ≤ 400 chars, set 219 A1).
 2. **Docs nobody points to:** for each claude/*.md + claude/workflow/*.md → last commit date, commits this week, how many of CLAUDE.md / skills / handoff / workflow name it. 0 refs + finished → archive (set 219 H1). Finished plan files still in claude/ → archive.
@@ -79,7 +89,7 @@ Evidence = git + Relay archives only (say "not shown ≠ unused"). Steps:
 6. **Outside-material check:** assets/tools with licence "UNVERIFIED" in art/PROVENANCE.csv (also on sample branches: `git show <branch>:art/PROVENANCE.csv`) → research the terms (WebSearch, sources in the review), then the owner decides; an owner exception to HARD RULE 9 ② is written in security.md part 2 with the accepted risk + conditions (set 219 D).
 7. **Lost files:** a branch reset/undo on main (e.g. 0455397) → `git diff <undo>^ <undo> --stat -- .claude CLAUDE.md claude` to find skills/docs it deleted; restore docs to main (set 218 B1).
 
-## 8. Round 3 on request — token cost vs result (set 220; owner: "จุดไหนใช้เปลืองและไม่คุ้มกับงานที่ออกมาที่สุด")
+## 8. Round 3 (always after round 2, owner set 249) — token cost vs result (set 220; owner: "จุดไหนใช้เปลืองและไม่คุ้มกับงานที่ออกมาที่สุด")
 Claude cannot see token counts → rank by file bytes + counts, label them estimates. Table columns: where · size/count · what came out (landed on main? decided? parked?) · verdict. Check each time:
 - **Fixed load per chat:** CLAUDE.md bytes · Relay hook output · all skill descriptions · handoff.md.
 - **Subagent work:** anything that starts subagents (each re-reads CLAUDE.md + sources). The brainstorm skill was deleted for this (set 220 A, owner order) — ideas are answered in the chat now.
@@ -88,3 +98,10 @@ Claude cannot see token counts → rank by file bytes + counts, label them estim
 - **Big skill bodies (> 8 KB):** reference text (sources, lessons, trade-offs) → `claude/workflow/<skill>-ref.md`, heading + pointer stays so section numbers still work (set 220 E1).
 - Owner's standing answers (do not re-propose): look loops are rare → leave (B, set 220) · CLAUDE.md pointers were tried and got skipped → keep full rules in CLAUDE.md (C, set 220).
 
+## 9. Monthly rule test in a fresh chat (set 250 R2, owner; "the best test of a CLAUDE.md is whether behaviour changes")
+Once a month (first weekly review of the month), after the rounds:
+1. Pick 3 rules changed in the last month (from this month's review files).
+2. For each, write one short task prompt that should trigger it (e.g. "แก้ค่าพลัง PL-2" → HARD RULE 6 cfgdiff first; a code fix → merge-code gate; an art pick → ask before art-style.md).
+3. The owner opens a NEW chat in D:\GitHub\automon-arena, pastes the prompt, and stops it after Claude's first reply (no edits needed) — or Claude runs it as a subagent only if the owner OKs that (subagent rule).
+4. Pass = the first reply names / starts the rule's step. Fail → the rule's trigger is unclear → report item next week (move it into the skill description or a hook).
+Cost: ~3 short chats a month; skip the month if no rule changed.

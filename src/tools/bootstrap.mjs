@@ -110,7 +110,7 @@ if (mode === 'setup') { // repo: build + tests only (code is already in src/)
 } else if (mode === 'gate') { // V1.x (31 Oct): merge/publish gate = build + tests + ui_smoke on the BUILT pages (no balance measure) · ~4 min · sets up python playwright if missing
   try { sh('node', ['build.mjs']); } catch (e) { say('❌ build ไม่สำเร็จ:', String(e.stderr || e.message).split('\n').slice(0, 6).join('\n')); process.exit(1); }
   const have = await run(PY, ['-c', 'import playwright']);
-  if (have.code !== 0) { say('ติดตั้ง playwright (python) ...'); await run(PY, ['-m', 'pip', 'install', '-q', 'playwright']); }
+  if (have.code !== 0) { say('ติดตั้ง playwright (python) ...'); await run(PY, ['-m', 'pip', 'install', '-q', 'playwright==1.65.0']); }
   if (!CLOUD_PW && !process.env.CHROMIUM_PATH && !WIN_BROWSER && !process.env.CI) await run(PY, ['-m', 'playwright', 'install', 'chromium']); // PC: fetch playwright's chromium once (no-op when present)
   mkdirSync(SHOTS, { recursive: true });
   let skipT = false;
