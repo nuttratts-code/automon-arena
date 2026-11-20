@@ -26,6 +26,12 @@ F3 = os.path.join(T, "sb", "fire_f3")  # set 265: a batch made for one creature,
 shutil.rmtree(F3, ignore_errors=True); shutil.copytree(os.path.join(T, "sb", "fire"), F3)
 m = json.load(open(os.path.join(F3, "batch.json"), encoding="utf-8")) if os.path.exists(os.path.join(F3, "batch.json")) else {"tribe": "fire"}
 m.update(item="PL-1", form=3); json.dump(m, open(os.path.join(F3, "batch.json"), "w", encoding="utf-8"))
+# set 265 (owner I1): a hub round from fire g07 -> g07 first on /pick, tagged
+HJ = os.path.join(T, "art", "hub", "hub.json"); hub = json.load(open(HJ, encoding="utf-8"))
+J8 = str(json.load(open(os.path.join(T, "sb", "fire", "batch.json"), encoding="utf-8")).get("job", ""))[:8]
+rr = hub["items"]["PL-1"]["rounds"]; rr[:] = [r for r in rr if r.get("id") != "re2etest"]
+rr.append({"id": "re2etest", "slot": "still", "form": 1, "file": "hub/PL-1/none.png", "archived": True, "star": False, "meta": {"batch": "batches/2026-01-01_" + J8, "pick": "g07"}})
+json.dump(hub, open(HJ, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 for f in ("latest.json", "history.jsonl"):
     if os.path.exists(os.path.join(PK, f)): os.remove(os.path.join(PK, f))
 
@@ -42,6 +48,7 @@ with sync_playwright() as p:
     box = pg.locator("#b_fire")
     check("fire batch visible, others hidden", box.is_visible() and not pg.locator("#b_steel").is_visible())
     check("25 pictures load from the outside folder", box.locator(".p img").count() == 25 and pg.evaluate("[...document.querySelectorAll('#b_fire .p img')].slice(0,3).every(i=>i.complete&&i.naturalWidth>0)") )
+    check("picture already in the hub comes first, tagged", box.locator(".p").first.get_attribute("data-n") == "g07" and box.locator(".p[data-n=g07] .hubtag").count() == 1 and box.locator(".p[data-n=g00] .hubtag").count() == 0, box.locator(".p").first.get_attribute("data-n"))
     check("style input shown for the eye check", box.locator(".ref img").count() == 1)
     opts = box.locator("select option").all_text_contents()
     check("ID menu = fire tribe only", len(opts) == 9 and all(o.startswith("PL-") for o in opts[1:]), opts[:3])

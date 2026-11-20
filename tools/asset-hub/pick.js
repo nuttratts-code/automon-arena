@@ -55,8 +55,11 @@ function build() {
     if (b.style) top.append(el('div', { className: 'ref' }, el('img', { src: '/sb/' + b.key + '/style.png', alt: '' }), 'ต้นแบบสไตล์ ' + b.styleSrc));
     top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, who), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
     const g = el('div', { className: 'grid' });
-    b.pics.forEach((n) => {
-      const p = el('div', { className: 'p' }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
+    // set 265 (owner I1): pictures already in the hub come first, tagged
+    const inHub = new Set(b.inHub || []);
+    [...b.pics.filter((n) => inHub.has(n)), ...b.pics.filter((n) => !inHub.has(n))].forEach((n) => {
+      const p = el('div', { className: 'p' + (inHub.has(n) ? ' inhub' : '') }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
+      if (inHub.has(n)) p.append(el('b', { className: 'hubtag', textContent: 'ใน hub แล้ว' }));
       p.dataset.n = n;
       p.onclick = () => { const i = s.pick.indexOf(n); if (i < 0) s.pick.push(n); else s.pick.splice(i, 1); s.pick.sort(); change(); };
       g.append(p);

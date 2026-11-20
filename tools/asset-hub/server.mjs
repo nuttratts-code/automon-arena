@@ -366,6 +366,12 @@ const BATCH_PIC = /^(g\d\d|style|sheet)\.png$/;
 function readJson(p, dflt) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return dflt; } }
 function stillBatches() {
   if (!fs.existsSync(STILL_BATCHES)) return [];
+  // set 265 (owner I1): pictures already added to the hub (round meta.batch ends with _<job8>, meta.pick = gNN) show first on /pick
+  const added = new Map();
+  for (const it of Object.values(readHub().items || {})) for (const r of it.rounds || []) {
+    const mb = r.meta && typeof r.meta.batch === 'string' ? /_([0-9a-f]{8})$/.exec(r.meta.batch) : null;
+    if (mb && typeof r.meta.pick === 'string') { if (!added.has(mb[1])) added.set(mb[1], new Set()); added.get(mb[1]).add(r.meta.pick); }
+  }
   return fs.readdirSync(STILL_BATCHES, { withFileTypes: true }).filter((d) => d.isDirectory() && ID_RE.test(d.name)).map((d) => {
     const dir = path.join(STILL_BATCHES, d.name);
     const pics = fs.readdirSync(dir).filter((n) => /^g\d\d\.png$/.test(n)).sort().map((n) => n.slice(0, -4));
@@ -375,7 +381,7 @@ function stillBatches() {
     const item = typeof m.item === 'string' && ID_RE.test(m.item) ? m.item : '';
     return { key: d.name, tribe: String(m.tribe || ''), desc: String(req.description || ''), styleSrc: String(m.style_src || ''),
       note: String(m.note || ''), seed: String(m.seed || ''), style: fs.existsSync(path.join(dir, 'style.png')), pics,
-      item, form: m.form === 3 ? 3 : 1 };
+      item, form: m.form === 3 ? 3 : 1, inHub: pics.filter((n) => (added.get(String(m.job || '').slice(0, 8)) || new Set()).has(n)) };
   }).filter(Boolean).sort((a, b) => a.tribe.localeCompare(b.tribe) || a.key.localeCompare(b.key));
 }
 function readPicks() { return readJson(path.join(PICKS_DIR, 'latest.json'), { rev: 0, t: '', batches: {} }); }
