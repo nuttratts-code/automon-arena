@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 952,
+ "rev": 1024,
  "settings": {
   "moves": [
    "idle",
@@ -121,7 +121,7 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
@@ -305,14 +305,246 @@
        2
       ]
      }
+    },
+    {
+     "id": "rb7eb0be7",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_a24fb483.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T09:51:26.393Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 2 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "re7cce440",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_95c940b3.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit.png",
+     "t": "2026-11-20T09:52:04.010Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 3 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "rdf11bed0",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_7a650157.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit.png",
+     "t": "2026-11-20T09:52:33.041Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 3 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "r54786144",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_d9f5df07.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit_edit.png",
+     "t": "2026-11-20T09:53:09.193Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 7 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "rfc769622",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_284d8a26.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-20T09:53:36.423Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 4 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "r7f2fa3bc",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_97bd8c65.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-20T09:53:46.656Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 5 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "r4bdb3f5c",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_431f5751.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-20T09:54:06.106Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 6 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "rf5478caa",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_79e20379.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)_edit_edit_edit_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-20T11:21:09.213Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 2, 3, 4, 5, 6 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4548,
-     0.7078
+     0.4701,
+     0.7394
     ],
     "oval": {
      "on": false,
@@ -331,10 +563,10 @@
      "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "rc1a11a25"
+    "round": "rf5478caa"
    },
    "scale": {
     "k": 4,
@@ -430,7 +662,7 @@
      "t": "2026-11-20T09:18:14.404Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -457,6 +689,34 @@
       ]
      ],
      "iconN": 30
+    },
+    {
+     "id": "rf5d13d9e",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-20_e3c0a941.png",
+     "orig": "fa77cc8c_g11_edit_edit_edit_edit.png",
+     "t": "2026-11-20T12:31:56.545Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1"
+    },
+    {
+     "id": "r1d8e7a06",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-20_79109e9f.png",
+     "orig": "fa77cc8c_g11_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-20T12:32:59.975Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1"
     }
    ],
    "notes": "",
@@ -502,7 +762,13 @@
       "round": null,
       "t": "2026-11-17T15:48:25.000Z"
      }
-    ]
+    ],
+    "idle": {
+     "th": "ยืนพร้อมพุ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nหางสั้นกระดิกเบาๆ หนึ่งครั้ง\nตากระพริบ 1 ครั้ง\nหัว เขา และเกราะไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
    },
    "iconCrop": {
     "round": "r6700201a",
@@ -656,7 +922,7 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
@@ -905,6 +1171,36 @@
        12,
        2
       ]
+     },
+     "library": "lib/characters/PL-1/PL-1_frames_idle_f1_2026-11-20_146dac82.png"
+    },
+    {
+     "id": "ra80ad158",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PL-1/frames_idle_f1_2026-11-20_af622032.png",
+     "orig": "pixellab API PixMiniMax job f962c43e (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T11:22:24.039Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 2, 3, 4, 6 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
      }
     }
    ],
@@ -912,8 +1208,8 @@
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4973,
-     0.8355
+     0.4908,
+     0.8388
     ],
     "oval": {
      "on": false,
@@ -929,22 +1225,13 @@
      "ox": 0,
      "oy": 0,
      "blur": 0.3,
-     "k": {
-      "bl": [
-       0.068,
-       -0.165
-      ],
-      "br": [
-       -0.008,
-       -0.137
-      ]
-     }
+     "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "r14cd146c"
+    "round": "ra80ad158"
    },
    "offset": {
     "x": 7,
@@ -1108,7 +1395,14 @@
     ],
     "round": "r90ef2c86"
    },
-   "brief": {},
+   "brief": {
+    "idle": {
+     "th": "ตัวนิ่ง หายใจเบาๆ ตัวยก-ยุบนิดเดียว\nควันจากปล่องบนหลังลอยขึ้นช้าๆ แล้ววนกลับ\nจมูกขยับฟุดฟิดเบาๆ\nปล่องและหินบนหลังไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
+   },
    "iconCrop": {
     "round": "r90ef2c86",
     "x": 14,
@@ -1282,7 +1576,7 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
@@ -1568,6 +1862,36 @@
        12,
        2
       ]
+     },
+     "library": "lib/characters/SF-1/SF-1_frames_idle_f1_2026-11-20_7c2095f7.png"
+    },
+    {
+     "id": "reb05ea88",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/SF-1/frames_idle_f1_2026-11-20_ad7d6e6c.png",
+     "orig": "pixellab API PixMiniMax job 61b44657 (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T11:29:28.346Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 1, 2, 3, 4, 5, 6, 7, 8 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
      }
     }
    ],
@@ -1575,8 +1899,8 @@
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4566,
-     0.8275
+     0.4725,
+     0.8361
     ],
     "oval": {
      "on": false,
@@ -1595,10 +1919,10 @@
      "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "r2f14ec0e"
+    "round": "reb05ea88"
    },
    "scale": {
     "k": 4,
@@ -1684,16 +2008,103 @@
      "t": "2026-11-20T09:02:13.069Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "check": {}
+    },
+    {
+     "id": "r33b3895d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-2/still_f1_2026-11-20_fb3e99f3.png",
+     "orig": "f500429e_g24_edit_edit.png",
+     "t": "2026-11-20T12:31:09.131Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r3a561b83",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/SF-2/icon_f1_2026-11-20_c978434a.png",
+     "orig": "SF-2_icon_46.png",
+     "t": "2026-11-20T12:34:05.249Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 2 ช่อง ยื่นได้ 8 เม็ด (ไฟล์ 46×46)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.0778,
+       0.1306
+      ],
+      [
+       0.8379,
+       0.9142
+      ]
+     ],
+     "iconN": 30
+    },
+    {
+     "id": "r4eb4e3c0",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/SF-2/icon_f1_2026-11-20_55676f82.png",
+     "orig": "SF-2_icon_46_edit.png",
+     "t": "2026-11-20T12:34:11.907Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.0778,
+       0.1306
+      ],
+      [
+       0.8379,
+       0.9142
+      ]
+     ],
+     "iconN": 30
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": null,
-   "brief": {}
+   "brief": {
+    "idle": {
+     "th": "ยืนนิ่ง หายใจหนักๆ อกยก-ยุบ ตัวยกนิดหนึ่ง\nหูกระดิกเร็วๆ หนึ่งครั้ง\nหางสะบัดเบาๆ หนึ่งครั้ง\nเขาและแท่งเหลืองบนหลังไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
+   },
+   "iconCrop": {
+    "round": "r33b3895d",
+    "x": 19,
+    "y": 6,
+    "n": 30,
+    "open": [
+     [
+      0.0778,
+      0.1306
+     ],
+     [
+      0.8379,
+      0.9142
+     ]
+    ],
+    "m": 8
+   }
   },
   "SF-3": {
    "id": "SF-3",
@@ -1819,7 +2230,7 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
@@ -2054,6 +2465,36 @@
        12,
        2
       ]
+     },
+     "library": "lib/characters/WY-1/WY-1_frames_idle_f1_2026-11-20_b706b471.png"
+    },
+    {
+     "id": "r88cb882c",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WY-1/frames_idle_f1_2026-11-20_eaa5ca95.png",
+     "orig": "pixellab API PixMiniMax job 1e7bf35c (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T11:32:35.392Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 1, 2, 3, 4, 5 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
      }
     }
    ],
@@ -2061,8 +2502,8 @@
    "inGame": false,
    "shadow": {
     "feet": [
-     0.6064,
-     0.8429
+     0.5714,
+     0.8443
     ],
     "oval": {
      "on": false,
@@ -2081,10 +2522,10 @@
      "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "r3cf36453"
+    "round": "r88cb882c"
    },
    "scale": {
     "k": 4,
@@ -2168,12 +2609,51 @@
       "styleSrc": "pmd-ref 0400"
      },
      "check": {}
+    },
+    {
+     "id": "rcf8cc19a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-2/still_f1_2026-11-20_d8d14252.png",
+     "orig": "afa05840_g13_edit.png",
+     "t": "2026-11-20T12:28:16.622Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rfcd325bc",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-2/icon_f1_2026-11-20_c5f94003.png",
+     "orig": "WY-2_icon_34.png",
+     "t": "2026-11-20T12:35:44.337Z",
+     "by": "owner",
+     "note": "ไอคอน 34×34 จากภาพนิ่ง 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": null,
-   "brief": {}
+   "brief": {
+    "idle": {
+     "th": "ตัวนิ่ง หายใจเบาๆ ตัวยก-ยุบนิดเดียว\nจมูกขยับฟุดฟิดเบาๆ\nตากระพริบ 1 ครั้ง\nเปลือกก้นหอยใหญ่บนหลังนิ่ง ไม่หมุน ไม่เอียง\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
+   },
+   "iconCrop": {
+    "round": "rcf8cc19a",
+    "x": 16,
+    "y": 10,
+    "n": 34
+   }
   },
   "WY-3": {
    "id": "WY-3",
@@ -2452,6 +2932,36 @@
        12,
        2
       ]
+     },
+     "library": "lib/characters/PT-1/PT-1_frames_idle_f1_2026-11-20_e6bcd61b.png"
+    },
+    {
+     "id": "r3cd77e7f",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PT-1/frames_idle_f1_2026-11-20_a8fad5ab.png",
+     "orig": "pixellab API PixMiniMax job 99fba04e (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T11:39:06.041Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 1, 2, 3, 4, 5, 6, 7, 8 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
      }
     }
    ],
@@ -2459,8 +2969,8 @@
    "inGame": false,
    "shadow": {
     "feet": [
-     0.5217,
-     0.8014
+     0.5322,
+     0.8007
     ],
     "oval": {
      "on": false,
@@ -2479,10 +2989,10 @@
      "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "rd994955c"
+    "round": "r3cd77e7f"
    },
    "scale": {
     "k": 4,
@@ -2565,12 +3075,103 @@
       "pick": "g08",
       "styleSrc": "pmd-ref 0834"
      }
+    },
+    {
+     "id": "r64342b14",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-2/still_f1_2026-11-20_daec4655.png",
+     "orig": "6fe1210f_g08_edit.png",
+     "t": "2026-11-20T12:27:25.435Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r4b6835d3",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PT-2/icon_f1_2026-11-20_00f6165f.png",
+     "orig": "PT-2_icon_52.png",
+     "t": "2026-11-20T12:36:12.387Z",
+     "by": "owner",
+     "note": "ไอคอน 34×34 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 1 ช่อง ยื่นได้ 9 เม็ด (ไฟล์ 52×52)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 9,
+     "iconOpen": [
+      [
+       0.9412,
+       0.0514
+      ]
+     ],
+     "iconN": 34
+    },
+    {
+     "id": "rde6ba454",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-2/still_f1_2026-11-20_64e0c04a.png",
+     "orig": "6fe1210f_g08_edit_edit.png",
+     "t": "2026-11-20T12:36:23.516Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rcd1783c6",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PT-2/icon_f1_2026-11-20_26638289.png",
+     "orig": "PT-2_icon_52_edit.png",
+     "t": "2026-11-20T12:36:30.929Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 9,
+     "iconOpen": [
+      [
+       0.9412,
+       0.0514
+      ]
+     ],
+     "iconN": 34
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": null,
-   "brief": {}
+   "brief": {
+    "idle": {
+     "th": "ตอไม้นิ่งทั้งตัว\nต้นอ่อนบนหัวไหวเบาๆ ซ้าย-ขวา (ส่วนที่ขยับมากที่สุด)\nหน้าตากระพริบ 1 ครั้ง\nลำตัวและเปลือกไม้ไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
+   },
+   "palette": [
+    "#00ff2a"
+   ],
+   "iconCrop": {
+    "round": "r64342b14",
+    "x": 17,
+    "y": 10,
+    "n": 34,
+    "open": [
+     [
+      0.9412,
+      0.0514
+     ]
+    ],
+    "m": 9
+   }
   },
   "PT-3": {
    "id": "PT-3",
@@ -2892,7 +3493,7 @@
      "t": "2026-11-19T14:34:41.000Z",
      "by": "claude",
      "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -2996,6 +3597,65 @@
        12,
        2
       ]
+     },
+     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-20_a704259e.png"
+    },
+    {
+     "id": "r0586d538",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-20_fd7f3a71.png",
+     "orig": "pixellab API PixMiniMax job a0f4c949 (frames 1-8 of 9)_edit.png",
+     "t": "2026-11-20T11:42:14.887Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 1, 2, 3, 4, 5, 6 บนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "rdd9b3bb7",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-20_c4c567dc.png",
+     "orig": "pixellab API PixMiniMax job a0f4c949 (frames 1-8 of 9)_edit_edit.png",
+     "t": "2026-11-20T11:42:48.786Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 3 บนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
      }
     }
    ],
@@ -3003,8 +3663,8 @@
    "inGame": false,
    "shadow": {
     "feet": [
-     0.5024,
-     0.8093
+     0.5046,
+     0.8253
     ],
     "oval": {
      "on": false,
@@ -3023,10 +3683,10 @@
      "k": null
     },
     "size": [
-     48,
-     48
+     72,
+     62
     ],
-    "round": "rf3dd6601"
+    "round": "rdd9b3bb7"
    },
    "scale": {
     "k": 4,
@@ -3121,7 +3781,7 @@
      "t": "2026-11-20T07:45:59.393Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "check": {}
@@ -3146,6 +3806,19 @@
       ]
      ],
      "iconN": 30
+    },
+    {
+     "id": "r313f22d6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-2/still_f1_2026-11-20_6edd8e21.png",
+     "orig": "cd691039_g15_edit_edit.png",
+     "t": "2026-11-20T12:18:17.273Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -3190,7 +3863,14 @@
     ],
     "m": 8
    },
-   "brief": {}
+   "brief": {
+    "idle": {
+     "th": "ยืนนิ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nปีกเล็กบนหลังกระพือเบาๆ\nหางม้วนคลาย-ม้วนนิดเดียว แล้วกลับที่เดิม\nตากลอกไปมาหนึ่งรอบ หัวไม่หัน\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-20T13:00:00.000Z"
+    }
+   }
   },
   "WN-3": {
    "id": "WN-3",

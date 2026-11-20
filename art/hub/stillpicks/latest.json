@@ -1,6 +1,6 @@
 {
- "rev": 62,
- "t": "2026-11-20T07:34:34.363Z",
+ "rev": 76,
+ "t": "2026-11-20T09:03:15.014Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -67,6 +67,22 @@
    "hidden": false,
    "closed": false
   },
+  "spirit_c": {
+   "id": "PT-2",
+   "pick": [
+    "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_d": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "spirit_ol": {
    "id": "",
    "pick": [],
@@ -99,6 +115,29 @@
    "hidden": false,
    "closed": false
   },
+  "steel_c": {
+   "id": "HL-2",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_d": {
+   "id": "",
+   "pick": [],
+   "eye": false,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_e": {
+   "id": "HL-2",
+   "pick": [
+    "g11"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm": {
    "id": "SF-1",
    "pick": [
@@ -109,6 +148,22 @@
    "closed": false
   },
   "storm_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_c": {
+   "id": "SF-2",
+   "pick": [
+    "g24"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_d": {
    "id": "",
    "pick": [],
    "eye": true,
@@ -127,6 +182,15 @@
   "wind_b": {
    "id": "",
    "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_c": {
+   "id": "WY-2",
+   "pick": [
+    "g13"
+   ],
    "eye": true,
    "hidden": false,
    "closed": false
