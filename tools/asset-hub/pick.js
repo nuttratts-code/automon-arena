@@ -1,8 +1,10 @@
 // Still batch picker on the hub server (owner A2, set 260). Every change is saved to art/hub/stillpicks/ (latest.json + history.jsonl).
 'use strict';
 const TRIBE_TH = { steel: 'เหล็กกล้า', fire: 'เพลิงเผา', storm: 'สายฟ้า', wind: 'วายุ', spirit: 'ภูติ', demon: 'อสูร' };
-let D = { batches: [], items: [] }, S = {}, rev = 0, tab = '', timer = 0, saving = false, again = false;
-try { tab = localStorage.getItem('stillpick:tab') || ''; } catch (e) { /* private window */ }
+let D = { batches: [], items: [] }, S = {}, rev = 0, tab = '', fv = 1, timer = 0, saving = false, again = false;
+// set 265 (owner): tab HID = every hidden batch in one separate menu · fv = form view of a tribe tab (ร่าง 1 first, button ร่าง 3)
+const HID = '__hidden';
+try { tab = localStorage.getItem('stillpick:tab') || ''; fv = Number(localStorage.getItem('stillpick:form')) === 3 ? 3 : 1; } catch (e) { /* private window */ }
 const el = (t, a = {}, ...k) => { const e = document.createElement(t); Object.assign(e, a); k.forEach((x) => e.append(x)); return e; };
 const th = (t) => TRIBE_TH[t] || t || '?';
 const $ = (id) => document.getElementById(id);
@@ -46,17 +48,21 @@ function build() {
     // owner set 260: a pick means "checked by eye, not like the ref"; tick only to flag one that IS too close
     const eye = el('input', { type: 'checkbox', className: 'eye' }); eye.onchange = () => { s.eye = !eye.checked; change(); };
     const fold = el('button', { className: 'fold' }); fold.onclick = () => { s.closed = !s.closed; change(); };
-    const del = el('button', { className: 'del', textContent: '✕ ซ่อนชุดนี้' });
-    del.onclick = () => { if (confirm('ซ่อนชุด ' + b.key + ' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ (' + s.pick.length + ' ภาพ) จะไม่นับในผล\nไฟล์ไม่ถูกลบ กด "แสดงชุดที่ซ่อน" ด้านล่างเพื่อเอากลับได้')) { s.hidden = true; change(); } };
+    const del = el('button', { className: 'del' });
+    del.onclick = () => { if (s.hidden) { s.hidden = false; change(); return; } if (confirm('ซ่อนชุด ' + b.key + ' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ (' + s.pick.length + ' ภาพ) จะไม่นับในผล\nไฟล์ไม่ถูกลบ เอากลับได้ที่แท็บ "ซ่อนไว้"')) { s.hidden = true; change(); } };
     const h2 = el('h2', { textContent: 'เผ่า' + th(b.tribe) + ' · ' + b.key });
     if (b.form === 3) h2.append(' ', el('span', { className: 'form3', textContent: 'ร่าง 3' }));
     const head = el('div', { className: 'head' }, fold, h2, el('span', { className: 'mut cnt' }), del);
     const top = el('div', { className: 'top' });
+    if (b.f1) top.append(el('div', { className: 'ref f1' }, el('img', { src: '/f/' + b.f1.split('/').map(encodeURIComponent).join('/'), alt: '' }), 'ร่าง 1 ★ ' + b.item));
     if (b.style) top.append(el('div', { className: 'ref' }, el('img', { src: '/sb/' + b.key + '/style.png', alt: '' }), 'ต้นแบบสไตล์ ' + b.styleSrc));
     top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, who), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
     const g = el('div', { className: 'grid' });
-    b.pics.forEach((n) => {
-      const p = el('div', { className: 'p' }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
+    // set 265 (owner I1): pictures already in the hub come first, tagged
+    const inHub = new Set(b.inHub || []);
+    [...b.pics.filter((n) => inHub.has(n)), ...b.pics.filter((n) => !inHub.has(n))].forEach((n) => {
+      const p = el('div', { className: 'p' + (inHub.has(n) ? ' inhub' : '') }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
+      if (inHub.has(n)) p.append(el('b', { className: 'hubtag', textContent: 'ใน hub แล้ว' }));
       p.dataset.n = n;
       p.onclick = () => { const i = s.pick.indexOf(n); if (i < 0) s.pick.push(n); else s.pick.splice(i, 1); s.pick.sort(); change(); };
       g.append(p);
@@ -67,8 +73,9 @@ function build() {
 }
 function render() {
   const tribes = [...new Set(D.batches.map((b) => b.tribe || '?'))];
-  if (!tribes.includes(tab)) tab = tribes[0] || '';
-  try { localStorage.setItem('stillpick:tab', tab); } catch (e) { /* ignore */ }
+  const hid = D.batches.filter((b) => S[b.key].hidden);
+  if (!tribes.includes(tab) && !(tab === HID && hid.length)) tab = tribes[0] || '';
+  try { localStorage.setItem('stillpick:tab', tab); localStorage.setItem('stillpick:form', String(fv)); } catch (e) { /* ignore */ }
   const T = $('tabs');
   T.textContent = '';
   tribes.forEach((t) => {
@@ -77,24 +84,36 @@ function render() {
     bt.dataset.tribe = t; bt.onclick = () => { tab = t; render(); };
     T.append(bt);
   });
+  if (hid.length) {
+    const hb = el('button', { className: 'hidtab' + (tab === HID ? ' on' : ''), textContent: 'ซ่อนไว้ (' + hid.length + ')' });
+    hb.dataset.tribe = HID; hb.onclick = () => { tab = HID; render(); };
+    T.append(hb);
+  }
   T.append(el('span', { id: 'save', textContent: saveMsg[0], className: saveMsg[1] }));
+  const shown = (b, f) => (b.tribe || '?') === tab && !S[b.key].hidden && (b.form || 1) === f;
+  if (tab !== HID) {
+    const seg = el('div', { className: 'fseg' });
+    [1, 3].forEach((f) => {
+      const n = D.batches.filter((b) => shown(b, f)).length;
+      const bt = el('button', { className: fv === f ? 'on' : '', textContent: 'ร่าง ' + f + ' (' + n + ')', disabled: !n && fv !== f });
+      bt.dataset.form = String(f); bt.onclick = () => { fv = f; render(); };
+      seg.append(bt);
+    });
+    T.append(seg);
+  }
   D.batches.forEach((b) => {
     const s = S[b.key], box = $('b_' + b.key);
-    box.style.display = (b.tribe || '?') === tab && !s.hidden ? '' : 'none';
+    box.style.display = (tab === HID ? s.hidden : shown(b, fv)) ? '' : 'none';
     box.classList.toggle('closed', s.closed);
     box.querySelector('.fold').textContent = s.closed ? '▸ ขยาย' : '▾ หุบ';
+    box.querySelector('.del').textContent = s.hidden ? '↩ เอากลับ' : '✕ ซ่อนชุดนี้';
     box.querySelector('.cnt').textContent = s.pick.length ? '★ ' + s.pick.join(', ') : '';
     if (b.item) s.id = b.item; else box.querySelector('select').value = s.id;
     box.querySelector('.eye').checked = !s.eye;
     box.querySelectorAll('.p').forEach((p) => p.classList.toggle('on', s.pick.includes(p.dataset.n)));
   });
-  const H = $('hidden'); H.textContent = '';
-  const hid = D.batches.filter((b) => S[b.key].hidden);
-  if (hid.length) {
-    const r = el('button', { textContent: 'แสดงชุดที่ซ่อน (' + hid.length + ')' });
-    r.onclick = () => { hid.forEach((b) => { S[b.key].hidden = false; }); change(); };
-    H.append('ซ่อนไว้: ' + hid.map((b) => b.key).join(', ') + ' ', r);
-  }
+  const H = $('hidden');
+  H.textContent = tab !== HID && !D.batches.some((b) => shown(b, fv)) ? 'ไม่มีชุดร่าง ' + fv + ' ในเผ่านี้' : '';
 }
 // old page result lines: "<batch> -> <ID> : g00,g05 · eye ok"
 $('impGo').onclick = () => {

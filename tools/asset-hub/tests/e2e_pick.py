@@ -26,6 +26,12 @@ F3 = os.path.join(T, "sb", "fire_f3")  # set 265: a batch made for one creature,
 shutil.rmtree(F3, ignore_errors=True); shutil.copytree(os.path.join(T, "sb", "fire"), F3)
 m = json.load(open(os.path.join(F3, "batch.json"), encoding="utf-8")) if os.path.exists(os.path.join(F3, "batch.json")) else {"tribe": "fire"}
 m.update(item="PL-1", form=3); json.dump(m, open(os.path.join(F3, "batch.json"), "w", encoding="utf-8"))
+# set 265 (owner I1): a hub round from fire g07 -> g07 first on /pick, tagged
+HJ = os.path.join(T, "art", "hub", "hub.json"); hub = json.load(open(HJ, encoding="utf-8"))
+J8 = str(json.load(open(os.path.join(T, "sb", "fire", "batch.json"), encoding="utf-8")).get("job", ""))[:8]
+rr = hub["items"]["PL-1"]["rounds"]; rr[:] = [r for r in rr if r.get("id") != "re2etest"]
+rr.append({"id": "re2etest", "slot": "still", "form": 1, "file": "hub/PL-1/none.png", "archived": True, "star": False, "meta": {"batch": "batches/2026-01-01_" + J8, "pick": "g07"}})
+json.dump(hub, open(HJ, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 for f in ("latest.json", "history.jsonl"):
     if os.path.exists(os.path.join(PK, f)): os.remove(os.path.join(PK, f))
 
@@ -36,12 +42,14 @@ with sync_playwright() as p:
     pg.on("dialog", lambda d: d.accept())
     pg.goto(URL + "/pick"); pg.wait_for_timeout(1200)
     check("4 batches listed", pg.locator(".batch").count() == 4, pg.locator(".batch").count())
-    check("tribe tabs", pg.locator(".tabs button").count() == 3)
+    check("tribe tabs (no hidden tab yet)", pg.locator(".tabs button[data-tribe]").count() == 3)
     check("status says never saved", "ยังไม่เคยบันทึก" in pg.locator("#save").text_content())
     pg.locator(".tabs button[data-tribe=fire]").click(); pg.wait_for_timeout(200)
     box = pg.locator("#b_fire")
     check("fire batch visible, others hidden", box.is_visible() and not pg.locator("#b_steel").is_visible())
+    check("ร่าง 1 shown first, form-3 batch waits behind its button", not pg.locator("#b_fire_f3").is_visible() and pg.locator(".fseg button[data-form='3']").text_content() == "ร่าง 3 (1)")
     check("25 pictures load from the outside folder", box.locator(".p img").count() == 25 and pg.evaluate("[...document.querySelectorAll('#b_fire .p img')].slice(0,3).every(i=>i.complete&&i.naturalWidth>0)") )
+    check("picture already in the hub comes first, tagged", box.locator(".p").first.get_attribute("data-n") == "g07" and box.locator(".p[data-n=g07] .hubtag").count() == 1 and box.locator(".p[data-n=g00] .hubtag").count() == 0, box.locator(".p").first.get_attribute("data-n"))
     check("style input shown for the eye check", box.locator(".ref img").count() == 1)
     opts = box.locator("select option").all_text_contents()
     check("ID menu = fire tribe only", len(opts) == 9 and all(o.startswith("PL-") for o in opts[1:]), opts[:3])
@@ -65,9 +73,13 @@ with sync_playwright() as p:
     check("unpick -> new history line", len(hist()) == n + 1 and hist()[-1]["picks"]["fire"]["pick"] == ["g03"])
     # set 265: locked form-3 batch
     f3 = pg.locator("#b_fire_f3")
+    pg.locator(".fseg button[data-form='3']").click(); pg.wait_for_timeout(200)
+    check("button ร่าง 3 shows the form-3 batch only", f3.is_visible() and not box.is_visible())
+    check("form-3 batch shows the ★ form-1 still", f3.locator(".ref.f1 img").count() == 1 and pg.evaluate("(()=>{const i=document.querySelector('#b_fire_f3 .ref.f1 img');return i.complete&&i.naturalWidth>0})()"))
     check("form-3 batch: badge ร่าง 3 + ID locked, no menu", f3.locator(".form3").text_content() == "ร่าง 3" and f3.locator(".lock").text_content().startswith("🔒 PL-1") and f3.locator("select").count() == 0)
     f3.locator(".p[data-n=g05]").click(); pg.wait_for_timeout(900)
     check("form-3 pick saves its own ID + form 3", latest()["batches"]["fire_f3"] == {"id": "PL-1", "form": 3, "pick": ["g05"], "eye": True, "hidden": False, "closed": False}, latest()["batches"].get("fire_f3"))
+    pg.locator(".fseg button[data-form='1']").click(); pg.wait_for_timeout(200)
     # reload keeps picks (from the file, not the browser)
     pg2 = b.new_context().new_page(); pg2.goto(URL + "/pick"); pg2.wait_for_timeout(1200)
     pg2.locator(".tabs button[data-tribe=fire]").click(); pg2.wait_for_timeout(200)
@@ -81,8 +93,11 @@ with sync_playwright() as p:
     pg.locator(".tabs button[data-tribe=steel]").click(); pg.wait_for_timeout(200)
     pg.locator("#b_steel .del").click(); pg.wait_for_timeout(800)
     check("hide saved", latest()["batches"]["steel"]["hidden"] and "steel" not in hist()[-1]["picks"])
-    pg.locator("#hidden button").click(); pg.wait_for_timeout(800)
-    check("restore saved", not latest()["batches"]["steel"]["hidden"])
+    check("hidden batch leaves the tribe tab", not pg.locator("#b_steel").is_visible() and pg.locator(".tabs button.hidtab").text_content() == "ซ่อนไว้ (1)")
+    pg.locator(".tabs button.hidtab").click(); pg.wait_for_timeout(200)
+    check("hidden tab shows only hidden batches", pg.locator("#b_steel").is_visible() and not pg.locator("#b_fire").is_visible() and pg.locator(".fseg").count() == 0)
+    pg.locator("#b_steel .del").click(); pg.wait_for_timeout(800)
+    check("restore saved", not latest()["batches"]["steel"]["hidden"] and pg.locator(".tabs button.hidtab").count() == 0)
     # import old page lines
     pg.locator("#imp summary").click()
     pg.locator("#impText").fill("STILLPICK\nspirit -> PT-1 : g02,g07 · eye ok\nsteel -> ? : - · eye no\nnope -> X : g01 · eye ok")
