@@ -1,0 +1,82 @@
+{
+ "rev": 19,
+ "t": "2026-11-20T06:26:16.107Z",
+ "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
+ "batches": {
+  "demon": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon2": {
+   "id": "",
+   "pick": [
+    "g14"
+   ],
+   "eye": false,
+   "hidden": false,
+   "closed": false
+  },
+  "fire": {
+   "id": "",
+   "pick": [
+    "g18"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit": {
+   "id": "",
+   "pick": [],
+   "eye": false,
+   "hidden": true,
+   "closed": true
+  },
+  "spirit_ol": {
+   "id": "",
+   "pick": [],
+   "eye": false,
+   "hidden": true,
+   "closed": false
+  },
+  "spirit2": {
+   "id": "",
+   "pick": [
+    "g20"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel": {
+   "id": "",
+   "pick": [
+    "g01"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm": {
+   "id": "",
+   "pick": [
+    "g21"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind": {
+   "id": "",
+   "pick": [
+    "g05"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  }
+ }
+}
