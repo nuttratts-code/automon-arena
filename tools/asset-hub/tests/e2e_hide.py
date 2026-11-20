@@ -81,5 +81,13 @@ with sync_playwright() as p:
             check("phone 390: no sideways page scroll from the header", sw <= 392 or pg.evaluate("document.querySelector('header').scrollWidth") <= 392, sw)
         check(f"no page errors ({w})", not errs, errs[:3])
         pg.close()
+    # owner set 262: opening a creature shows the whole picture on the first screen (laptop 1366x768 and 1920x1080)
+    for w, hgt in ((1366, 768), (1920, 1080)):
+        pg = b.new_page(viewport={"width": w, "height": hgt}); pg.goto(BASE + "/"); pg.wait_for_timeout(900)
+        for cid in ("WN-1", "HL-2"):
+            pg.evaluate(f"ui.tab='chars'; ui.step='still'; openItem('{cid}')"); pg.wait_for_timeout(1300)
+            bot = pg.evaluate("(()=>{const e=document.querySelector('.stage .px, .stage img, .stage canvas');return e?e.getBoundingClientRect().bottom:9999})()")
+            check(f"{cid} picture fully on the first screen at {w}x{hgt}", bot <= hgt, bot)
+        pg.screenshot(path=f"{OUT}/first_{w}.png"); pg.close()
     b.close()
 print(f"SUMMARY {sum(res)} / {len(res)}")

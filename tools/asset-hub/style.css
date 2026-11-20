@@ -424,3 +424,19 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .charinfo .skills { gap: 3px; font-size: 12.5px; color: var(--dim); }
 .charinfo .skill { padding: 0; background: none; line-height: 1.4; display: flex; flex-wrap: wrap; gap: 2px 14px; }
 .charinfo .skill .lv { min-width: 0; margin-right: 2px; }
+/* set 262 (owner): compact top so the whole creature shows on the first screen */
+.top { padding: 6px 16px; gap: 12px; }
+.head { align-items: center; gap: 10px; padding-bottom: 6px; }
+.head h2 { font-size: 20px; }
+.head .meta { font-size: 12px; }
+.pipe { margin: 8px 0 4px; }
+.pipe button { flex-direction: row; align-items: baseline; gap: 6px; padding: 5px 10px; }
+.pipe button .s { display: none; }
+.tools { margin: 4px 0; }
+.usedbar { gap: 8px; padding: 3px 8px; margin-bottom: 6px; border-width: 1px; }
+.usedbar .usedth { width: 32px; height: 32px; }
+.usedbar .usedth img, .usedbar .usedth canvas { max-width: 30px; max-height: 30px; }
+.usedbar .usedtx { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; flex: 1; }
+.usedbar button { min-height: 28px; padding: 2px 10px; }
+.viewbar { margin: 2px 0 4px; }
+.viewbar .seg button, .viewbar button { min-height: 28px; padding: 2px 9px; }

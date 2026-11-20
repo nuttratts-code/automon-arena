@@ -537,7 +537,7 @@ function renderItem(m, it) {
   const subs = isChar && !showOld ? { still: 'คุณติดดาว · ไอคอน', frames: 'ท่ายืน PixelLab' } : {};
   if (isChar && !showOld) ui.move = 'idle';
   m.append(h('nav', { class: 'pipe' }, steps.map(([k, label, sub], i) => h('button', {
-    class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); },
+    class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); }, title: subs[k] || sub,
   }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, subs[k] || sub)))));
   if (ui.step === 'cut') ui.step = 'still'; // step merged into ภาพนิ่ง
   if (ui.step === 'veoin') ui.step = 'prompt'; // merged into the พรอมต์ tab (owner C1)
@@ -735,8 +735,8 @@ function briefBox(it) {
 function usedBanner(it, used, sel) {
   const box = h('div', { class: 'usedbar' + (used ? '' : ' none') });
   if (!used) { box.append(h('b', {}, 'ยังไม่มีภาพที่ใช้'), h('span', { class: 'small dim' }, 'วางภาพต้นฉบับ หรือกด "ใช้รอบนี้" ที่ภาพใดภาพหนึ่ง')); return box; }
-  const th = h('span', { class: 'usedth' }); thumbInto(th, used, 52);
-  box.append(th, h('div', {}, h('b', {}, 'ทุกหน้าใช้ภาพนี้'),
+  const th = h('span', { class: 'usedth' }); thumbInto(th, used, 30);
+  box.append(th, h('div', { class: 'usedtx' }, h('b', {}, 'ทุกหน้าใช้ภาพนี้'),
     h('div', { class: 'small dim' }, `${used.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพต้นฉบับ'} ${fmtDate(used.t)}${used.flip ? ' · กลับข้าง' : ''} · จัดทีม เงา ไอคอน เฟรม และเกมใช้ภาพนี้และหันตามนี้`)), h('span', { class: 'sp' }));
   if (sel && sel !== used && isImage(sel.file)) box.append(h('button', { class: 'primary', onclick: () => star(it, sel) }, `ใช้${sel.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพต้นฉบับ'}ที่กำลังดูแทน`));
   else if (sel !== used) box.append(h('button', { onclick: () => { ui.sel = used.id; render(); } }, 'ดูภาพนี้'));
@@ -762,7 +762,9 @@ function viewer(stage, left, r) {
       // small pixel sprites (set 246 UI pass): blow up by a whole number so every pixel stays square, label the zoom
       if (img.naturalHeight <= 256) {
         const room = (stage.clientWidth || 700) - 24;
-        const z = Math.max(1, Math.floor(Math.min(room / img.naturalWidth, 420 / img.naturalHeight)));
+        // owner set 262: the whole picture fits the first screen — height room = window below the stage top minus the button row
+        const top = stage.getBoundingClientRect().top + window.scrollY, roomH = Math.max(200, Math.min(420, window.innerHeight - top - 56));
+        const z = Math.max(1, Math.floor(Math.min(room / img.naturalWidth, roomH / img.naturalHeight)));
         el.style.width = img.naturalWidth * z + 'px'; el.style.height = img.naturalHeight * z + 'px'; el.classList.add('px');
         if (z > 1 && !stage.querySelector('.zoomtag')) stage.append(h('span', { class: 'zoomtag' }, `ขยาย ×${z} · ภาพจริง ${img.naturalWidth}×${img.naturalHeight}`));
       }
