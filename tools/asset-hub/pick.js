@@ -54,6 +54,7 @@ function build() {
     if (b.form === 3) h2.append(' ', el('span', { className: 'form3', textContent: 'ร่าง 3' }));
     const head = el('div', { className: 'head' }, fold, h2, el('span', { className: 'mut cnt' }), del);
     const top = el('div', { className: 'top' });
+    if (b.f1) top.append(el('div', { className: 'ref f1' }, el('img', { src: '/f/' + b.f1.split('/').map(encodeURIComponent).join('/'), alt: '' }), 'ร่าง 1 ★ ' + b.item));
     if (b.style) top.append(el('div', { className: 'ref' }, el('img', { src: '/sb/' + b.key + '/style.png', alt: '' }), 'ต้นแบบสไตล์ ' + b.styleSrc));
     top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, who), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
     const g = el('div', { className: 'grid' });

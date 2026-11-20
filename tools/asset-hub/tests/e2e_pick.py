@@ -75,6 +75,7 @@ with sync_playwright() as p:
     f3 = pg.locator("#b_fire_f3")
     pg.locator(".fseg button[data-form='3']").click(); pg.wait_for_timeout(200)
     check("button ร่าง 3 shows the form-3 batch only", f3.is_visible() and not box.is_visible())
+    check("form-3 batch shows the ★ form-1 still", f3.locator(".ref.f1 img").count() == 1 and pg.evaluate("(()=>{const i=document.querySelector('#b_fire_f3 .ref.f1 img');return i.complete&&i.naturalWidth>0})()"))
     check("form-3 batch: badge ร่าง 3 + ID locked, no menu", f3.locator(".form3").text_content() == "ร่าง 3" and f3.locator(".lock").text_content().startswith("🔒 PL-1") and f3.locator("select").count() == 0)
     f3.locator(".p[data-n=g05]").click(); pg.wait_for_timeout(900)
     check("form-3 pick saves its own ID + form 3", latest()["batches"]["fire_f3"] == {"id": "PL-1", "form": 3, "pick": ["g05"], "eye": True, "hidden": False, "closed": False}, latest()["batches"].get("fire_f3"))
