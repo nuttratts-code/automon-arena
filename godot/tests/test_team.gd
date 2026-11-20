@@ -19,6 +19,20 @@ func test_character_list_matches_derived() -> String:
 	var d := G.diff(C.build_character_list(), R.game()["derived"]["characters"], "chars")
 	return "ok" if d == "" else d
 
+# set 248 round 4: asset-hub display names — cleaned, bad entries skipped, the shared list untouched
+func test_hub_names() -> String:
+	var n := C.hub_names({"names": {"WN-1": "  หมูป่าอสูร ", "PT-1": 5, "HL-1": "   ", "SF-1": "x".repeat(40)}})
+	if n.get("WN-1") != "หมูป่าอสูร" or n.has("PT-1") or n.has("HL-1") or str(n.get("SF-1")).length() != C.NAME_MAX:
+		return "hub_names cleaning wrong: " + str(n)
+	if not C.hub_names({"names": [1]}).is_empty() or not C.hub_names("x").is_empty():
+		return "bad file shape must give no names"
+	var base: Array = R.game()["derived"]["characters"]
+	var old := str(base[0]["name"])
+	var got := C.with_names(base, {base[0]["id"]: "ชื่อใหม่"})
+	if got[0]["name"] != "ชื่อใหม่" or base[0]["name"] != old or got[1]["name"] != base[1]["name"] or got.size() != base.size():
+		return "with_names must copy and swap only the named ones"
+	return "ok"
+
 func test_golden_teams_exact() -> String:
 	if not FileAccess.file_exists(FILE):
 		if _opts.get("require_golden", false):

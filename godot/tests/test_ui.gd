@@ -70,6 +70,7 @@ func test_art_tiles() -> String:
 func _app() -> Control:
 	var app: Control = load("res://scenes/main.tscn").instantiate()
 	app.set_meta("no_boot", true)
+	app.set_meta("no_hub_names", true) # set 248: names the owner types in the asset hub must not change UI tests
 	(_opts["root"] as Window).add_child(app)
 	app.build()
 	return app
@@ -1053,8 +1054,8 @@ func test_unit_shadows() -> String: # set 240: asset-hub shadow file — validat
 	var ST := load("res://scripts/ui/stage3d.gd")
 	ST.load_shadows({"lift": 9, "units": {"WN-1": {"feet": [0.25, 0.8], "size": [200, 100], "oval": {"dx": 5, "w": 0.5, "h": "x", "a": 0.4}, "cast": {"len": 1.2}}, "BAD": "nope"}})
 	var s: Dictionary = ST.unit_shadow("WN-1")
-	if not (is_equal_approx(s["dx"], 1.0) and is_equal_approx(s["w"], 0.5) and is_equal_approx(s["h"], 0.45) and is_equal_approx(s["a"], 0.4) and is_equal_approx(s["len"], 1.2)):
-		return "oval/cast values must be clamped, bad ones fall back to defaults: %s" % str(s)
+	if not (is_equal_approx(s["dx"], 1.0) and is_equal_approx(s["w"], 0.5) and is_equal_approx(s["h"], 0.45) and is_equal_approx(s["a"], 0.0) and is_equal_approx(s["len"], 1.2)):
+		return "oval/cast values must be clamped, bad ones fall back to defaults, oval strength always 0 (owner rule): %s" % str(s)
 	if ST.unit_shadow("BAD") != ST.SHADOW_DEF or ST.unit_shadow("HL-1") != ST.SHADOW_DEF:
 		return "a broken or missing unit entry must use the default shadow"
 	if ST.feet_shift(s, Vector2i(32, 32), 1.7, false) != Vector3.ZERO:

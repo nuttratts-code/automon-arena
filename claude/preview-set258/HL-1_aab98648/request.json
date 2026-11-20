@@ -1,0 +1,11 @@
+{
+ "first_frame": "<★ still r15194f91 147x128>",
+ "last_frame": "<★ still r15194f91 147x128>",
+ "description": "Legs bend slightly and the shell rises a little, then settles. The raised claws stay held up in front, bobbing slightly with the breathing, and the pincer snaps open and closed in rhythm. The eyes on their stalks wiggle gently; the mouth does not move. All legs stay planted, static camera, no zoom, and it returns exactly to the starting pose.",
+ "frame_count": 8,
+ "view": "side",
+ "direction": "south",
+ "no_background": true,
+ "enhance_prompt": false,
+ "seed": 0
+}

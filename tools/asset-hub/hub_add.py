@@ -1,8 +1,8 @@
 """Claude's queue step (set 240, owner flow "ส่งงานให้ Claude" = cut frames + make the shadow).
 
 Adds a frames sheet made by char-idle route P (painted_idle.py) to the hub as a round (by: claude) and sets the
-creature's first shadow on it: feet guessed from frame 1 (bottom band of solid pixels), size = one frame, round = this
-sheet. Oval / body-shadow numbers the owner already set are kept; a creature without a shadow gets the defaults.
+creature's shadow on it: feet kept from the shadow the owner already set (mapped onto frame 1 through the creature's
+solid box, owner D1 set 246), else guessed from frame 1 (bottom band of solid pixels); size = one frame, round = this sheet. Oval / body-shadow numbers the owner already set are kept; a creature without a shadow gets the defaults.
 Never stars anything (the owner picks).
 
 Run:  python -I tools/asset-hub/hub_add.py <ID> <sheet.png> <ms> [--form 1] [--move idle] [--note "..."]
@@ -14,7 +14,7 @@ from PIL import Image
 ROOT = os.environ.get('HUB_ROOT') or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))  # HUB_ROOT = test copy only
 HUB = os.path.join(ROOT, 'art', 'hub', 'hub.json')
 FILES = os.path.join(ROOT, 'art', 'hub', 'files')
-DEFAULT = {'oval': {'on': True, 'dx': 0, 'dy': 0, 'w': 0.8, 'h': 0.45, 'a': 1},
+DEFAULT = {'oval': {'on': False, 'dx': 0, 'dy': 0, 'w': 0.8, 'h': 0.45, 'a': 1},
            'cast': {'len': 1, 'str': 0.5, 'ox': 0, 'oy': 0, 'blur': 0.3, 'k': None}}
 
 
@@ -36,11 +36,51 @@ def guess_feet(frame):
     return [round((min(xs) + max(xs) + 1) / 2 / w, 4), round((bottom + 1) / h, 4)]
 
 
+def solid_box(frame):
+    """Bounding box of the creature: alpha > 128, and not green/magenta key colour (a raw still still has its backdrop)."""
+    im = frame.convert('RGBA'); w, h = im.size; px = im.load()
+    xs, ys = [], []
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a > 128 and not (g > r + 40 and g > b + 40) and not (r > g + 60 and b > g + 60):
+                xs.append(x); ys.append(y)
+    return (min(xs), min(ys), max(xs) + 1, max(ys) + 1) if xs else None
+
+
+def keep_feet(it, old, new_frame):
+    """Owner D1 (set 246): the feet point the owner set by hand stays on the same spot of the creature. Old feet are
+    fractions of the old picture (its frame 1 for a sheet); map them through the creature's solid box onto the new frame.
+    None when there is nothing to keep (no old feet, old file gone, empty picture)."""
+    feet, rid = old.get('feet'), old.get('round')
+    r = next((x for x in it['rounds'] if x['id'] == rid), None) if rid else None
+    f = str((r or {}).get('file', ''))
+    if not feet or not r or not re.match(r'(hub|lib)/', f) or '..' in f:
+        return None
+    path = os.path.join(FILES if f.startswith('hub/') else os.path.join(ROOT, 'art', 'library'), *f[4:].split('/'))
+    if not os.path.isfile(path):
+        return None
+    try:
+        im = Image.open(path).convert('RGBA')
+    except OSError:
+        return None
+    m = r.get('meta') or {}
+    if r.get('slot') == 'frames' and m.get('fw') and m.get('fh'):
+        im = im.crop((0, 0, int(m['fw']), int(m['fh'])))
+    ob, nb = solid_box(im), solid_box(new_frame)
+    if not ob or not nb:
+        return None
+    ow, oh = im.size; nw, nh = new_frame.size
+    u = (feet[0] * ow - ob[0]) / (ob[2] - ob[0]); v = (feet[1] * oh - ob[1]) / (ob[3] - ob[1])
+    return [round((nb[0] + u * (nb[2] - nb[0])) / nw, 4), round((nb[1] + v * (nb[3] - nb[1])) / nh, 4)]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('item'); ap.add_argument('sheet'); ap.add_argument('ms', type=int)
     ap.add_argument('--form', type=int, default=1, choices=[1, 3]); ap.add_argument('--move', default='idle')
     ap.add_argument('--note', default='')
+    ap.add_argument('--flip', action='store_true', help='source video was flipped (⇋ กลับข้าง) → frames round flip too')
     o = ap.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,39}', o.item) or not re.fullmatch(r'[A-Za-z0-9_-]{1,40}', o.move):
         sys.exit('bad item or move')
@@ -72,17 +112,21 @@ def main():
             'by': 'claude', 'note': o.note, 'star': False, 'archived': False,
             'licence': hub['settings'].get('licences', ['AI placeholder - UNVERIFIED'])[0],
             'promptId': prompts[-1]['id'] if prompts else None,
-            'meta': {'cols': cols, 'rows': rows, 'fw': fw, 'fh': fh, 'n': cols * rows, 'ms': o.ms}})
-    feet = guess_feet(img.crop((0, 0, fw, fh)))
+            'meta': {'cols': cols, 'rows': rows, 'fw': fw, 'fh': fh, 'n': cols * rows, 'ms': o.ms}, **({'flip': True} if o.flip else {})})
     old = it.get('shadow') or {}
-    it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {})},
-                    'cast': {**DEFAULT['cast'], **(old.get('cast') or {})}, 'size': [fw, fh], 'round': rid}
+    f1 = img.crop((0, 0, fw, fh))
+    kept = keep_feet(it, old, f1)
+    feet = kept or guess_feet(f1)
+    it['shadow'] = {'feet': feet, 'oval': {**DEFAULT['oval'], **(old.get('oval') or {}), 'on': False},  # under-feet oval always off (owner rule)
+                    'cast': {**DEFAULT['cast'], **(old.get('cast') or {})}, 'size': [fw, fh], 'round': rid,
+                    **({'face': old['face']} if old.get('face') else {})}  # set 248: cast offsets already in the facing-right view
+    how = f"kept from {old.get('round')}" if kept else 'guessed'
     hub['rev'] = hub.get('rev', 0) + 1
     tmp = HUB + '.tmp'
     with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
         f.write(json.dumps(hub, ensure_ascii=False, indent=1) + '\n')
     os.replace(tmp, HUB)
-    print(f'hub: {o.item} + frames round {rid} ({cols * rows} × {fw}x{fh}, {o.ms} ms) · shadow feet {feet} on it · rev {hub["rev"]}')
+    print(f'hub: {o.item} + frames round {rid} ({cols * rows} × {fw}x{fh}, {o.ms} ms) · shadow feet {feet} ({how}) on it · rev {hub["rev"]}')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,135 @@
+{
+ "rev": 62,
+ "t": "2026-11-20T07:34:34.363Z",
+ "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
+ "batches": {
+  "demon": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": true
+  },
+  "demon_b": {
+   "id": "WN-2",
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon2": {
+   "id": "WN-1",
+   "pick": [
+    "g06"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire": {
+   "id": "PL-1",
+   "pick": [
+    "g18"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "fire_c": {
+   "id": "PL-2",
+   "pick": [
+    "g24"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": true
+  },
+  "spirit_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_ol": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "spirit2": {
+   "id": "PT-1",
+   "pick": [
+    "g20"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel": {
+   "id": "HL-1",
+   "pick": [
+    "g01"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm": {
+   "id": "SF-1",
+   "pick": [
+    "g21"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind": {
+   "id": "WY-1",
+   "pick": [
+    "g05"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_b": {
+   "id": "",
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  }
+ }
+}

@@ -19,6 +19,10 @@ const HUB_FILE = path.join(HUB_DIR, 'hub.json');
 const FILES = path.join(HUB_DIR, 'files');
 const LIB = path.join(ROOT, 'art', 'library');
 const SHADOW_OUT = path.join(ROOT, 'godot', 'data', 'unit_shadows.json');
+// game data shown read-only on the still step (owner set 248 round 4): always the repo's own files, never ROOT
+const GAME_JSON = path.resolve(HERE, '..', '..', 'godot', 'data', 'game.json');
+const LABELS_JSON = path.resolve(HERE, '..', '..', 'godot', 'data', 'labels.json');
+const NAME_MAX = 24;
 const PORT = Number(process.env.HUB_PORT || 5177);
 
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
@@ -27,8 +31,12 @@ const EXT = {
   mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   glb: 'model/gltf-binary', pxo: 'application/octet-stream', txt: 'text/plain; charset=utf-8',
 };
-const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css' };
-const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file'];
+const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js' };
+// still batch picker (owner A2, set 260): batches stay OUTSIDE the repo (style.png = outside sprite, security.md part 2);
+// picks are saved in the repo so Claude reads them (latest.json) + every change kept (history.jsonl).
+const STILL_BATCHES = process.env.STILL_BATCHES ? path.resolve(process.env.STILL_BATCHES) : path.resolve(HERE, '..', '..', '..', 'automon-scratch', 'still-batches');
+const PICKS_DIR = path.join(HUB_DIR, 'stillpicks');
+const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file', 'icon']; // icon = diamond crop for the shop / bench (set 246)
 const MAX_UPLOAD = 600 * 1024 * 1024;
 const LICENCE_DEFAULT = 'AI placeholder - UNVERIFIED';
 // owner A1 (set 240 follow-up): the "ตัดเฟรม + สร้างเงา" button runs Claude's two scripts here, no chat needed.
@@ -40,6 +48,7 @@ const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 
 // ---------- auto frames + shadow (one job at a time) ----------
 let job = null; // { item, round, state: 'run' | 'done' | 'error', step, msg, t }
 
+const EXPORT_FREE_POS = false; // owner set 262 D1 (was true sets 246-261)
 function runPy(args, env) {
   return new Promise((resolve, reject) => {
     const p = spawn(PYTHON, ['-I', ...args], { windowsHide: true, env: { ...process.env, ...env, PYTHONIOENCODING: 'utf-8' } });
@@ -84,7 +93,7 @@ async function runFrames(id, rid, form, move) {
     const warn = clipWarnings(out + ' ' + sheet);
     job.step = 'กำลังใส่เฟรมและตั้งเงา';
     const addOut = await runPy([ADD_PY, id, path.join(tmp, 'out', sheet), String(ms), '--form', String(form), '--move', move,
-      '--note', `จากวิดีโอ ${rid} · ลูป ${loopLen} วิ${warn.length ? ' · มีคำเตือน' : ''}`], process.env.HUB_ROOT ? { HUB_ROOT: ROOT } : {});
+      '--note', `จากวิดีโอ ${rid} · ลูป ${loopLen} วิ${warn.length ? ' · มีคำเตือน' : ''}`, ...(readHub().items[id]?.rounds.find((x) => x.id === rid)?.flip ? ['--flip'] : [])], process.env.HUB_ROOT ? { HUB_ROOT: ROOT } : {});
     const newRound = (addOut.match(/frames round (r[0-9a-f]+)/) || [])[1];
     const [fw, fh] = sheet.match(/(\d+)x(\d+)\.png$/).slice(1);
     const reply = [`ตัดแล้ว 32 เฟรม (${fw}×${fh}) ลูป ${loopLen} วิ · ${ms} ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)`,
@@ -131,6 +140,25 @@ function writeHub(hub) {
 
 const num = (v, lo, hi, d) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
 const str = (v, max = 4000) => (typeof v === 'string' ? v.slice(0, max) : '');
+// display name for Godot: no control characters, trimmed, at most NAME_MAX characters
+const cleanName = (v) => (typeof v === 'string' ? [...v.replace(/[\u0000-\u001f\u007f]/g, '').trim()].slice(0, NAME_MAX).join('') : '');
+
+// ---------- game names + skill texts (read-only, owner set 248 round 4) ----------
+let gameInfoCache = null;
+function gameInfo() {
+  if (gameInfoCache) return gameInfoCache;
+  const out = {};
+  try {
+    const g = JSON.parse(fs.readFileSync(GAME_JSON, 'utf8')), lb = JSON.parse(fs.readFileSync(LABELS_JSON, 'utf8'));
+    for (const c of g.derived?.characters || []) {
+      if (!ID_RE.test(c.id)) continue;
+      const sk = Array.isArray(lb.skills?.[c.id]) ? lb.skills[c.id] : [];
+      out[c.id] = { name: str(c.name, 80), tribe: str(c.tribe, 40), rarity: str(c.rarity, 40),
+        skills: sk.map((x) => (Array.isArray(x?.text) ? x.text.slice(0, 3).map((t) => str(t, 400)) : [])).filter((t) => t.length) };
+    }
+  } catch { /* data missing: the page shows no skills */ }
+  return (gameInfoCache = out);
+}
 
 // light shape check on a hub sent by the page (it is our own page, but keep bad data out of the file)
 export function validateHub(h) {
@@ -145,23 +173,61 @@ export function validateHub(h) {
     for (const r of it.rounds || []) {
       if (!SLOTS.includes(r.slot)) err.push(`${id}: bad slot ${r.slot}`);
       if (typeof r.file !== 'string' || !/^(hub|lib)\//.test(r.file) || r.file.includes('..')) err.push(`${id}: bad file ${r.file}`);
+      if (r.flip != null && typeof r.flip !== 'boolean') err.push(`${id}: flip must be true/false`);
     }
+    if (it.thumb != null && (typeof it.thumb !== 'string' || !ID_RE.test(it.thumb))) err.push(`${id}: bad thumb`);
+    if (it.name != null && (typeof it.name !== 'string' || [...it.name].length > NAME_MAX)) err.push(`${id}: name must be text, at most ${NAME_MAX} characters`);
     const s = it.shadow;
     if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
+    if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: shadow.frames must be {frame: {feet: [x, y], cast}}`);
+    const br = it.brief; // owner set 258
+    if (br != null) {
+      if (typeof br !== 'object' || Array.isArray(br)) err.push(`${id}: brief must be an object`);
+      else {
+        for (const k of ['concept', 'idle']) { const b = br[k]; if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
+        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
+      }
+    }
+    if (it.palette != null && (!Array.isArray(it.palette) || it.palette.length > 64 || it.palette.some((c) => typeof c !== 'string' || !/^#[0-9a-f]{6}$/.test(c)))) err.push(`${id}: palette must be up to 64 colours '#rrggbb'`); // owner set 262
+    const sc = it.scale;
+    if (it.free != null && typeof it.free !== 'boolean') err.push(`${id}: free must be true/false`);
+    const of = it.offset;
+    if (of != null && (typeof of !== 'object' || !Number.isFinite(of.x) || !Number.isFinite(of.y))) err.push(`${id}: offset must be {x, y}`);
+    if (it.rot != null && (!Number.isFinite(it.rot) || it.rot < -180 || it.rot > 180)) err.push(`${id}: rot must be a number -180..180`);
+    if (sc != null && (typeof sc !== 'object' || typeof sc.k !== 'number' || !Number.isFinite(sc.k) || sc.k <= 0 || sc.k > 8)) err.push(`${id}: scale.k must be a number 0..8`);
   }
+  const tm = h.settings?.team;
+  if (tm != null && (typeof tm !== 'object' || !Array.isArray(tm.ids) || tm.ids.length !== 6 || tm.ids.some((x) => x !== '' && !ID_RE.test(x)))) err.push('settings.team.ids must be 6 ids');
   return err;
 }
 
 // ---------- godot export (E1: feet + oval + cast; A1: one oval) ----------
 export function shadowExport(hub) {
-  const units = {};
+  const units = {}, scale = {}, names = {};
   for (const it of Object.values(hub.items)) {
+    if (it.kind === 'character' && cleanName(it.name)) names[it.id] = cleanName(it.name); // owner set 248 round 4 (A1 + B1): Godot shows this name
+    if (it.kind === 'character' && it.scale && typeof it.scale === 'object') { // set 246 team tab: screen px per picture px in the 1920x1061 battle view
+      const sz = it.scale.size;
+      scale[it.id] = { k: num(it.scale.k, 0.05, 8, 1), size: Array.isArray(sz) ? [Math.round(num(sz[0], 1, 8192, 1)), Math.round(num(sz[1], 1, 8192, 1))] : [0, 0] };
+    }
+    // owner set 262 D1: the team tab only sets the size now; dragged / turned positions (offset, rot) stay in hub.json but are not exported
+    if (EXPORT_FREE_POS && it.kind === 'character' && it.free === true && it.offset && typeof it.offset === 'object') { // unlocked creature (owner A1): screen px in the 1920x1061 view, x toward the foe, y down (up = floating)
+      (scale[it.id] ||= { k: 0, size: [0, 0] }).offset = [Math.round(num(it.offset.x, -400, 400, 0)), Math.round(num(it.offset.y, -300, 300, 0))];
+    }
+    if (EXPORT_FREE_POS && it.kind === 'character' && it.free === true && Number.isFinite(it.rot) && it.rot) { // unlocked creature turned (owner B1/C1 set 247): degrees clockwise on screen, around the feet
+      (scale[it.id] ||= { k: 0, size: [0, 0] }).rot = Math.round(num(it.rot, -180, 180, 0));
+    }
     if (it.kind !== 'character' || !it.shadow) continue;
     const s = it.shadow, o = s.oval || {}, c = s.cast || {};
+    const castOf = (cc) => ({ len: num(cc.len, 0, 2, 1), str: num(cc.str, 0, 1, 0.5), ox: num(cc.ox, -1, 1, 0), oy: num(cc.oy, -1, 1, 0), blur: num(cc.blur, 0, 1, 0.3),
+      k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(cc.k?.[q]) ? [num(cc.k[q][0], -3, 3, 0), num(cc.k[q][1], -3, 3, 0)] : [0, 0]])) });
+    const perFrame = s.frames && typeof s.frames === 'object' ? Object.entries(s.frames).filter(([k, v]) => /^\d{1,3}$/.test(k) && Array.isArray(v?.feet)) : [];
     units[it.id] = {
+      mirror: !!usedPicS(it, 1)?.flip, // set 248: true = our side shows the picture mirrored, the way the hub still step shows it (enemy = the other way); feet stay file fractions, cast ox / k are in the shown view
+      ...(perFrame.length ? { frames: Object.fromEntries(perFrame.map(([k, v]) => [k, { feet: [num(v.feet[0], 0, 1, 0.5), num(v.feet[1], 0, 1, 1)], cast: castOf({ ...c, ...(v.cast || {}) }) }])) } : {}), // owner set 248 B: frame i of the idle sheet has its own shadow
       feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
       size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
-      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: o.on === false ? 0 : num(o.a, 0, 1, 1) }, // oval off = strength 0 in the game
+      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game
       cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0), blur: num(c.blur, 0, 1, 0.3),
         k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(c.k?.[q]) ? [num(c.k[q][0], -3, 3, 0), num(c.k[q][1], -3, 3, 0)] : [0, 0]])) },
     };
@@ -171,15 +237,36 @@ export function shadowExport(hub) {
     note: 'Written by tools/asset-hub (set 240). feet = image fraction (0..1, y down) of the sprite picture the owner set it on; size = that picture in px (the game applies feet only when its texture has the same size). oval = tile units around the feet. cast = shadow that follows the body: len (x height x sun reach), str, ox/oy start offset in tile units; blur = softness (x 0.12 of the picture height, blurred once); k = per-corner offsets [x, z] in tile units of the shadow quad (tl/tr = head end, bl/br = feet end); sun = ground direction [x, z] shared by every unit (r38 port).',
     lift: num(hub.settings?.shadowLift, 0, 0.5, 0.065),
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
-    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
+    default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 0 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
+    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) (set 262 D1: offset / rot no longer exported, every creature stands on its slot centre); old: offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
+    scale,
+    names_note: 'set 248 asset-hub still step: display name per creature; Godot uses it in place of the game.json name (screens + messages), the save data hash stays on the game.json names.',
+    names,
   };
 }
 
 function doExport(hub) {
   const out = shadowExport(hub);
   fs.writeFileSync(SHADOW_OUT, JSON.stringify(out, null, 1) + '\n');
-  return { file: path.relative(ROOT, SHADOW_OUT).replaceAll('\\', '/'), units: Object.keys(out.units).length };
+  return { file: path.relative(ROOT, SHADOW_OUT).replaceAll('\\', '/'), units: Object.keys(out.units).length, names: Object.keys(out.names).length };
+}
+
+// ---------- one ★ per slot (owner set 241) ----------
+// rounds of the same slot + form + move share one ★; "file" (other files) keeps several
+// owner set 248 A1: for creatures the original stills and their cuts share ONE ★ = the picture every page and the game use
+const starGroup = (it, slot) => (it.kind === 'character' && (slot === 'still' || slot === 'cut') ? 'pic' : slot);
+function starOnly(it, r) {
+  if (r.slot === 'file') return;
+  const g = starGroup(it, r.slot);
+  for (const x of it.rounds) if (x !== r && starGroup(it, x.slot) === g && (x.form || 1) === (r.form || 1) && (x.move || '') === (r.move || '')) x.star = false;
+}
+function usedPicS(it, form = 1) { // same rule as usedPic in app.js
+  const rs = it.rounds.filter((r) => (r.slot === 'still' || r.slot === 'cut') && !r.archived && (r.form || 1) === form).sort((a, b) => String(a.t || '').localeCompare(String(b.t || '')));
+  const st = rs.filter((r) => r.star).pop();
+  if (st) return st;
+  const still = rs.filter((r) => r.slot === 'still').pop();
+  return (still && rs.filter((r) => r.slot === 'cut' && r.from === still.id).pop()) || still || rs.pop() || null;
 }
 
 // ---------- library (star → copy, never overwrite) ----------
@@ -273,6 +360,63 @@ function libraryList() {
   return rows.filter((r) => r.length >= 2 && r[0]).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
 }
 
+
+// ---------- still batch picker (set 260) ----------
+const BATCH_PIC = /^(g\d\d|style|sheet)\.png$/;
+function readJson(p, dflt) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return dflt; } }
+function stillBatches() {
+  if (!fs.existsSync(STILL_BATCHES)) return [];
+  return fs.readdirSync(STILL_BATCHES, { withFileTypes: true }).filter((d) => d.isDirectory() && ID_RE.test(d.name)).map((d) => {
+    const dir = path.join(STILL_BATCHES, d.name);
+    const pics = fs.readdirSync(dir).filter((n) => /^g\d\d\.png$/.test(n)).sort().map((n) => n.slice(0, -4));
+    if (!pics.length) return null;
+    const m = readJson(path.join(dir, 'batch.json'), {}), req = readJson(path.join(dir, 'request.json'), {});
+    return { key: d.name, tribe: String(m.tribe || ''), desc: String(req.description || ''), styleSrc: String(m.style_src || ''),
+      note: String(m.note || ''), seed: String(m.seed || ''), style: fs.existsSync(path.join(dir, 'style.png')), pics };
+  }).filter(Boolean).sort((a, b) => a.tribe.localeCompare(b.tribe) || a.key.localeCompare(b.key));
+}
+function readPicks() { return readJson(path.join(PICKS_DIR, 'latest.json'), { rev: 0, t: '', batches: {} }); }
+function validatePicks(body, batches) {
+  if (!body || typeof body !== 'object' || typeof body.batches !== 'object' || Array.isArray(body.batches)) return 'bad body';
+  const known = new Map(batches.map((b) => [b.key, b]));
+  const out = {};
+  for (const [k, v] of Object.entries(body.batches)) {
+    const b = known.get(k);
+    if (!b) return 'unknown batch ' + String(k).slice(0, 40);
+    if (!v || typeof v !== 'object') return 'bad entry ' + k;
+    const id = v.id ?? '';
+    if (typeof id !== 'string' || (id && !ID_RE.test(id))) return 'bad id ' + k;
+    if (!Array.isArray(v.pick) || v.pick.length > 25 || !v.pick.every((p) => typeof p === 'string' && b.pics.includes(p))) return 'bad pick ' + k;
+    out[k] = { id, pick: [...new Set(v.pick)].sort(), eye: v.eye === true, hidden: v.hidden === true, closed: v.closed === true };
+  }
+  return out;
+}
+const pickLine = (b) => Object.entries(b).filter(([, v]) => !v.hidden).map(([k, v]) => `${k}>${v.id || '?'}:${v.pick.join(',') || '-'}:${v.eye ? 'ok' : 'no'}`).sort().join(' ');
+function savePicks(body) {
+  const batches = stillBatches();
+  const clean = validatePicks(body, batches);
+  if (typeof clean === 'string') return { code: 400, obj: { error: clean } };
+  const cur = readPicks();
+  if (body.rev !== cur.rev) return { code: 409, obj: { error: 'changed elsewhere', picks: cur } };
+  const t = new Date().toISOString();
+  const next = { rev: cur.rev + 1, t, batchDir: STILL_BATCHES, batches: clean };
+  fs.mkdirSync(PICKS_DIR, { recursive: true });
+  const lf = path.join(PICKS_DIR, 'latest.json');
+  fs.writeFileSync(lf + '.tmp', JSON.stringify(next, null, 1) + '\n');
+  fs.renameSync(lf + '.tmp', lf);
+  // history: one line per change of the picks (ids / ★ / eye / hidden); fold/unfold only is not history
+  const hf = path.join(PICKS_DIR, 'history.jsonl');
+  const line = pickLine(clean);
+  const lines = fs.existsSync(hf) ? fs.readFileSync(hf, 'utf8').split('\n').filter(Boolean) : [];
+  const last = lines.length ? readJsonLine(lines[lines.length - 1]) : null;
+  if (!last || last.line !== line) {
+    const summary = Object.fromEntries(Object.entries(clean).filter(([, v]) => !v.hidden).map(([k, v]) => [k, { id: v.id, pick: v.pick, eye: v.eye }]));
+    fs.appendFileSync(hf, JSON.stringify({ t, rev: next.rev, line, picks: summary }) + '\n');
+  }
+  return { code: 200, obj: next };
+}
+function readJsonLine(l) { try { return JSON.parse(l); } catch { return null; } }
+
 // ---------- server ----------
 async function handle(req, res) {
   const u = new URL(req.url, 'http://127.0.0.1');
@@ -286,6 +430,19 @@ async function handle(req, res) {
   if (req.method === 'GET' && u.pathname === '/api/hub') return send(res, 200, readHub());
   if (req.method === 'GET' && u.pathname === '/api/library') return send(res, 200, libraryList());
   if (req.method === 'GET' && u.pathname === '/api/job') return send(res, 200, job || {});
+  if (req.method === 'GET' && u.pathname === '/api/game') return send(res, 200, gameInfo());
+  if (req.method === 'GET' && u.pathname === '/api/stillbatches') return send(res, 200, { dir: STILL_BATCHES, batches: stillBatches(), items: Object.entries(readHub().items).map(([id, v]) => ({ id, name: v.name || '', tribe: v.tribe || '' })) });
+  if (req.method === 'GET' && u.pathname === '/api/stillpicks') return send(res, 200, readPicks());
+  if (req.method === 'GET' && u.pathname.startsWith('/sb/')) { // batch pictures from the outside folder (never copied into the repo)
+    const [k, n, extra] = u.pathname.slice(4).split('/');
+    if (extra !== undefined || !ID_RE.test(k || '') || !BATCH_PIC.test(n || '')) return send(res, 400, { error: 'bad path' });
+    return sendFile(req, res, path.join(STILL_BATCHES, k, n));
+  }
+  if (req.method === 'POST' && u.pathname === '/api/stillpicks') {
+    if (req.headers.origin !== `http://127.0.0.1:${PORT}` && req.headers.origin !== `http://localhost:${PORT}`) return send(res, 403, { error: 'origin' });
+    const r = savePicks(JSON.parse((await readBody(req, 2e5)).toString('utf8')));
+    return send(res, r.code, r.obj);
+  }
 
   if (req.method === 'POST' && u.pathname === '/api/frames') {
     // runs local programs: demand our own page's Origin (a POST with no Origin is refused here, unlike the file APIs)
@@ -317,7 +474,8 @@ async function handle(req, res) {
     const ext = (u.searchParams.get('name') || '').split('.').pop().toLowerCase();
     const form = Number(u.searchParams.get('form') || 0);
     const move = u.searchParams.get('move') || '';
-    if (!ID_RE.test(id) || !SLOTS.includes(slot) || !EXT[ext] || ![0, 1, 3].includes(form) || (move && !ID_RE.test(move))) return send(res, 400, { error: 'bad upload fields' });
+    const from = u.searchParams.get('from') || '';
+    if ((from && !ID_RE.test(from)) || !ID_RE.test(id) || !SLOTS.includes(slot) || !EXT[ext] || ![0, 1, 3].includes(form) || (move && !ID_RE.test(move))) return send(res, 400, { error: 'bad upload fields' });
     const hub = readHub();
     const it = hub.items[id];
     if (!it) return send(res, 404, { error: 'no such item' });
@@ -335,8 +493,29 @@ async function handle(req, res) {
       by: u.searchParams.get('by') === 'claude' ? 'claude' : 'owner', note: '', star: false, archived: false,
       licence: hub.settings.licences?.[0] || LICENCE_DEFAULT,
       promptId: it.prompts.length ? it.prompts[it.prompts.length - 1].id : undefined,
+      from: from && it.rounds.some((x) => x.id === from) ? from : undefined, // cut made from this still (ตัดพื้น button)
     };
+    if (slot !== 'file' && u.searchParams.get('nostar') !== '1') { starOnly(it, r); r.star = true; } // nostar=1: web pixel-editor saves wait for the owner's ★ // owner A1 (set 241): newest upload = ★ used; art/library copy waits for a manual ★ or the Godot export
     it.rounds.push(r);
+    hub.rev += 1;
+    writeHub(hub);
+    return send(res, 200, hub);
+  }
+
+  // owner "ลบ" button: drop an unstarred round and its hub file; art/library copies are never deleted (set 221)
+  if (req.method === 'POST' && u.pathname === '/api/delete') {
+    const hub = readHub();
+    const it = hub.items[u.searchParams.get('item') || ''];
+    const i = it ? it.rounds.findIndex((x) => x.id === u.searchParams.get('round')) : -1;
+    if (i < 0) return send(res, 404, { error: 'no such round' });
+    const r = it.rounds[i];
+    if (r.star) return send(res, 400, { error: 'รอบที่เลือก ★ อยู่ลบไม่ได้ เลิกเลือกก่อน' });
+    it.rounds.splice(i, 1);
+    const shared = Object.values(hub.items).some((x) => x.rounds.some((y) => y.file === r.file));
+    if (!shared && String(r.file).startsWith('hub/')) {
+      const f = path.resolve(FILES, r.file.slice(4));
+      if (f.startsWith(path.resolve(FILES) + path.sep) && fs.existsSync(f)) fs.unlinkSync(f);
+    }
     hub.rev += 1;
     writeHub(hub);
     return send(res, 200, hub);
@@ -348,13 +527,20 @@ async function handle(req, res) {
     const r = it?.rounds.find((x) => x.id === u.searchParams.get('round'));
     if (!r) return send(res, 404, { error: 'no such round' });
     r.star = u.searchParams.get('on') !== '0';
+    if (r.star) starOnly(it, r);
     if (r.star && !r.library) r.library = starToLibrary(hub, it, r);
     hub.rev += 1;
     writeHub(hub);
     return send(res, 200, hub);
   }
 
-  if (req.method === 'POST' && u.pathname === '/api/export') return send(res, 200, doExport(readHub()));
+  if (req.method === 'POST' && u.pathname === '/api/export') { // also files every ★ round not yet in art/library (auto ★ after upload, owner A1 set 241)
+    const hub = readHub();
+    let n = 0;
+    for (const it of Object.values(hub.items)) for (const r of it.rounds) if (r.star && !r.archived && !r.library) { r.library = starToLibrary(hub, it, r); n++; }
+    if (n) { hub.rev += 1; writeHub(hub); }
+    return send(res, 200, { ...doExport(hub), library: n });
+  }
   send(res, 404, { error: 'not found' });
 }
 

@@ -29,6 +29,7 @@ const RunEnd := preload("res://scripts/ui/run_end.gd")
 const Resume := preload("res://scripts/ui/resume.gd")
 const Arena := preload("res://scripts/ui/arena.gd")
 const Stage3D := preload("res://scripts/ui/stage3d.gd")
+const CH := preload("res://scripts/characters.gd")
 var prefs_file := "user://prefs.json" # tests point it at their own file
 
 var chars: Array = []
@@ -90,7 +91,8 @@ func build() -> void:
 	built = true
 	TH.dark = bool(get_meta("force_dark", false)) or (DisplayServer.is_dark_mode() and not bool(get_meta("force_light", false))) # metas = tests/shots.gd only
 	theme = TH.build()
-	chars = R.game()["derived"]["characters"]
+	var base: Array = R.game()["derived"]["characters"]
+	chars = base if bool(get_meta("no_hub_names", false)) else CH.with_names(base, CH.hub_names()) # set 248: asset-hub names (meta = tests only)
 	cm = T.make_char_map(chars)
 	bg = ColorRect.new()
 	bg.color = TH.c("bg")
@@ -103,7 +105,7 @@ func build() -> void:
 	world = Arena.new()
 	world.app = self
 	add_child(world) # under every screen: it draws only while the camera moves
-	data_hash = SV.data_hash(chars)
+	data_hash = SV.data_hash(base) # game.json names: renaming in the asset hub keeps saves valid
 	prep = Prep.new()
 	add_child(prep)
 	prep.setup(self)

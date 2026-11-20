@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 113,
+ "rev": 952,
  "settings": {
   "moves": [
    "idle",
@@ -25,13 +25,25 @@
   "camPitch": 40,
   "starter": "",
   "shadowLift": 0.065,
-  "sunAngle": 133
+  "sunAngle": 133,
+  "team": {
+   "ids": [
+    "WN-1",
+    "PL-1",
+    "WY-1",
+    "PT-1",
+    "SF-1",
+    "HL-1"
+   ],
+   "showBg": true
+  },
+  "migr249": true
  },
  "items": {
   "HL-1": {
    "id": "HL-1",
    "kind": "character",
-   "name": "กำปั้นเหล็ก",
+   "name": "Steel Rhino",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "common",
@@ -42,6 +54,13 @@
      "by": "claude",
      "form": 1,
      "text": "FORM 1. Character: HL-1 — young iron-shell crab brawler (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy plate armour, broad shoulders, shield-like plates, rivets\nFantasy features: [2-3 magical features in steel colours]\nFace: confident — not scary\nEffect spots: [1-2 spots]\nPose: ready stance, feet planted\nBackground: pure green #00FF00"
+    },
+    {
+     "id": "p2",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "FORM 1. Character: HL-1 — young iron-shell crab brawler, stocky and low (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared-off shell like riveted plate armour, broad shoulder plates, one oversized claw held up like a shield, silver-grey and muted blue\nFantasy features: a few rivets along the shell rim · faint blue rune line etched across the shield claw · small blue crystal set in the middle of the shell\nFace: determined and steady, a little proud — not scary\nEffect spots: glowing blue eyes on short eye stalks + the blue crystal on the shell\nPose: guarding stance, shield claw raised in front, smaller claw ready at the side, legs planted wide\nBackground: pure green #00FF00"
     }
    ],
    "rounds": [
@@ -119,22 +138,6 @@
      "library": "lib/pictures/sprites/HL-1_idle8_sheet_8x1_96x81_2026-11-14_v2.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg",
-     "orig": "HL-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini",
-     "library": "lib/pictures/sprites/HL-1_still_gemini_2026-11-14.jpg",
-     "check": {}
-    },
-    {
      "id": "rEtMTQucG5n",
      "file": "lib/pictures/sprites/HL-1_still_px84x80_2026-11-14.png",
      "orig": "HL-1_still_px84x80_2026-11-14.png",
@@ -145,17 +148,174 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "r5d7026c9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-17_4ac59fbc.jpg",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K.jpg",
+     "t": "2026-11-17T15:56:13.978Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-17_4ac59fbc.jpg",
+     "check": {},
+     "flip": true
+    },
+    {
+     "id": "rf65f6b3d",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/HL-1/cut_f1_2026-11-17_4ac59fbc.jpg",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K.jpg",
+     "t": "2026-11-17T15:56:21.767Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/HL-1/HL-1_cut_f1_2026-11-17_4ac59fbc.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8292f5c0",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/HL-1/cut_f1_2026-11-17_b8938f24.png",
+     "orig": "Crab_character_in_guarding_stance_21b5eaa6_2K_cut.png",
+     "t": "2026-11-17T18:07:56.026Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "from": "r5d7026c9",
+     "flip": true
+    },
+    {
+     "id": "r30da5f43",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/HL-1/icon_f1_2026-11-19_fb5758c5.png",
+     "orig": "HL-1_icon_120.png",
+     "t": "2026-11-19T11:38:18.612Z",
+     "by": "owner",
+     "note": "ไอคอน 80×80 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 4 ช่อง ยื่นได้ 20 เม็ด (ไฟล์ 120×120)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 20,
+     "iconOpen": [
+      [
+       0.0482,
+       0.2561
+      ],
+      [
+       0.2603,
+       0.3829
+      ]
+     ],
+     "iconN": 80,
+     "library": "lib/characters/HL-1/HL-1_icon_f1_2026-11-19_fb5758c5.png"
+    },
+    {
+     "id": "r15194f91",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-19_5ed6aac2.png",
+     "orig": "HL1_crab_pixel_edit_edit.png",
+     "t": "2026-11-19T14:43:38.336Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-19_5ed6aac2.png"
+    },
+    {
+     "id": "rc1a11a25",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-20_c1a11a25.png",
+     "orig": "13c18a50_g01.png",
+     "t": "2026-11-20T07:29:55.099Z",
+     "by": "claude",
+     "note": "ชุดเจน 13c18a50 g01 (ตัวเต็ง · ประวัติ: batches/2026-11-20_13c18a50)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_13c18a50",
+      "pick": "g01",
+      "styleSrc": "pmd-ref 0232"
+     },
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-20_c1a11a25.png",
+     "check": {}
+    },
+    {
+     "id": "rc76e9656",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/HL-1/icon_f1_2026-11-20_a8ec61fe.png",
+     "orig": "HL-1_icon_30.png",
+     "t": "2026-11-20T08:18:16.921Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "r17757d25",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-1/frames_idle_f1_2026-11-20_17757d25.png",
+     "orig": "pixellab API PixMiniMax job f409b28b (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:22.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still rc1a11a25 · side, east · 8 frames · G1 palette map to the still (6 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4586,
-     0.9877
+     0.4548,
+     0.7078
     ],
     "oval": {
+     "on": false,
      "dx": -0.916,
      "dy": -1,
      "w": 1.106,
@@ -166,27 +326,197 @@
      "len": 1,
      "str": 0.5,
      "ox": 0,
-     "oy": 0
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
     },
     "size": [
-     96,
-     81
+     48,
+     48
     ],
-    "round": "rF92Mi5wbmc"
+    "round": "rc1a11a25"
+   },
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rc1a11a25"
+   },
+   "offset": {
+    "x": 35,
+    "y": 217
+   },
+   "iconCrop": {
+    "round": "rc1a11a25",
+    "x": 18,
+    "y": 10,
+    "n": 30
+   },
+   "brief": {
+    "concept": {
+     "th": "ปูกระดองเหล็กหนุ่ม สายนักชก ตัวเตี้ยล่ำ (ระดับธรรมดา)\nเผ่าเหล็ก: กระดองเหลี่ยมเหมือนเกราะตอกหมุด ไหล่กว้าง ก้ามใหญ่ข้างเดียวยกไว้เหมือนโล่ สีเทาเงินกับฟ้าหม่น\nจุดเด่น: หมุดตามขอบกระดอง · เส้นรูนสีฟ้าจางๆ บนก้ามโล่ · คริสตัลฟ้าเล็กกลางกระดอง\nหน้า: มุ่งมั่น นิ่ง ภูมิใจนิดๆ ไม่น่ากลัว\nจุดเรืองแสง: ตาสีฟ้าบนก้านตาสั้น + คริสตัลบนกระดอง\nท่า: ตั้งการ์ด ก้ามโล่ยกไว้ด้านหน้า ก้ามเล็กพร้อมอยู่ข้างตัว ขากางกว้าง",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: HL-1 — young iron-shell crab brawler, stocky and low (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared-off shell like riveted plate armour, broad shoulder plates, one oversized claw held up like a shield, silver-grey and muted blue\nFantasy features: a few rivets along the shell rim · faint blue rune line etched across the shield claw · small blue crystal set in the middle of the shell\nFace: determined and steady, a little proud — not scary\nEffect spots: glowing blue eyes on short eye stalks + the blue crystal on the shell\nPose: guarding stance, shield claw raised in front, smaller claw ready at the side, legs planted wide\nBackground: pure green #00FF00",
+      "round": "r30da5f43",
+      "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "The whole body stays completely still. Only the short tail wags gently and the eyes blink once. The head, neck and horn do not move at all, the head never pushes forward. Mouth closed the whole time. All four feet stay planted, the armour plates do not move. Ends exactly on the start pose, static camera, no zoom.",
+      "round": "r17757d25",
+      "t": "2026-11-20T09:47:22.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ตัวนิ่งทั้งตัว มีแค่หางกระดิกเบาๆ กับตากระพริบ 1 ครั้ง\nหัว คอ และเขาไม่ขยับ ไม่ยื่นหัวออกไป\nปากปิดตลอด เท้าทั้งสี่ติดพื้น\nจบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "okT": "2026-11-20T09:46:16.481Z",
+     "by": "claude",
+     "t": "2026-11-20T09:46:16.481Z",
+     "note": "owner chat set 261: only tail wag + blink"
+    }
    }
   },
   "HL-2": {
    "id": "HL-2",
    "kind": "character",
-   "name": "ค้อนเหล็ก",
+   "name": "Shield Goat",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "common",
-   "prompts": [],
-   "rounds": [],
+   "prompts": [
+    {
+     "id": "p1",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "FORM 1. Character: HL-2 — young iron mountain goat hammer-butter, stocky with short sturdy legs (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared body, broad shoulders, riveted shield-like plates on the shoulders and forehead, silver-grey and muted blue\nFantasy features: thick short horns curving forward into a flat hammer-head shape, banded with iron · rivets along the shoulder plates · small blue rune on the forehead plate\nFace: stubborn, steady and proud — not scary\nEffect spots: the flat hammer faces of the horns glowing faintly blue + the forehead rune\nPose: head lowered slightly with the horns forward, ready to charge, four short legs planted wide\nBackground: pure green #00FF00",
+     "note": "quiz C: mountain goat (impact dust = code/video effect, not in the still)"
+    }
+   ],
+   "rounds": [
+    {
+     "id": "r3d006095",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-20_3d006095.png",
+     "orig": "fa77cc8c_g11.png",
+     "t": "2026-11-20T09:03:57.203Z",
+     "by": "claude",
+     "note": "ชุดเจน fa77cc8c g11 (ตัวเต็ง · ประวัติ: batches/2026-11-20_fa77cc8c)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_fa77cc8c",
+      "pick": "g11",
+      "styleSrc": "pmd-ref 0745"
+     }
+    },
+    {
+     "id": "r6700201a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-20_f1ea374a.png",
+     "orig": "fa77cc8c_g11_edit_edit_edit.png",
+     "t": "2026-11-20T09:18:14.404Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "check": {}
+    },
+    {
+     "id": "r0d2bc705",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/HL-2/icon_f1_2026-11-20_b8ba9e61.png",
+     "orig": "HL-2_icon_46.png",
+     "t": "2026-11-20T09:18:46.235Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 1 ช่อง ยื่นได้ 8 เม็ด (ไฟล์ 46×46)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.8284,
+       0.9032
+      ]
+     ],
+     "iconN": 30
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4613,
+     0.8563
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r6700201a"
+   },
+   "brief": {
+    "concept": {
+     "th": "แพะภูเขาเหล็กหนุ่ม สายใช้เขาพุ่งชนเหมือนค้อน ตัวล่ำ ขาสั้นแข็งแรง (ระดับธรรมดา)\nเผ่าเหล็ก: ตัวเหลี่ยม ไหล่กว้าง แผ่นเกราะตอกหมุดเหมือนโล่ที่ไหล่และหน้าผาก สีเทาเงินกับฟ้าหม่น\nจุดเด่น: เขาสั้นหนาโค้งไปข้างหน้าเป็นหัวค้อนแบน คาดเหล็ก · หมุดตามเกราะไหล่ · รูนฟ้าเล็กบนเกราะหน้าผาก\nหน้า: ดื้อ นิ่ง ภูมิใจ ไม่น่ากลัว\nจุดเรืองแสง: หน้าค้อนของเขาเรืองฟ้าจางๆ + รูนหน้าผาก\nท่า: ก้มหัวนิดๆ เขาชี้ไปข้างหน้า พร้อมพุ่ง ขาสั้นทั้งสี่กางกว้าง",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: HL-2 — young iron mountain goat hammer-butter, stocky with short sturdy legs (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared body, broad shoulders, riveted shield-like plates on the shoulders and forehead, silver-grey and muted blue\nFantasy features: thick short horns curving forward into a flat hammer-head shape, banded with iron · rivets along the shoulder plates · small blue rune on the forehead plate\nFace: stubborn, steady and proud — not scary\nEffect spots: the flat hammer faces of the horns glowing faintly blue + the forehead rune\nPose: head lowered slightly with the horns forward, ready to charge, four short legs planted wide\nBackground: pure green #00FF00",
+      "round": null,
+      "t": "2026-11-17T15:48:25.000Z"
+     }
+    ]
+   },
+   "iconCrop": {
+    "round": "r6700201a",
+    "x": 20,
+    "y": 5,
+    "n": 30,
+    "open": [
+     [
+      0.7971,
+      0.9032
+     ]
+    ],
+    "m": 8
+   }
   },
   "HL-3": {
    "id": "HL-3",
@@ -269,7 +599,7 @@
   "PL-1": {
    "id": "PL-1",
    "kind": "character",
-   "name": "นักจุดไฟ",
+   "name": "Fire Sheep",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "common",
@@ -280,6 +610,14 @@
      "by": "claude",
      "form": 1,
      "text": "FORM 1. Character: PL-1 — young ember lynx with tufted fire ears (common: simple, few ornaments)\nTribe: fire — make the fire identity obvious: shapes pointing upward, horns, flame crests\nFantasy features: [2-3 magical features in fire colours]\nFace: confident — not scary\nEffect spots: [1-2 spots]\nPose: ready stance, feet planted\nBackground: pure green #00FF00"
+    },
+    {
+     "id": "p2",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "FORM 1. Character: PL-1 — young fire monkey spark-caster, a small nimble monkey (common: simple, few ornaments)\nTribe: fire — make the fire identity obvious: shapes pointing upward, a spiky flame-shaped crest of fur on the head, two tiny upward horns, red-orange fur with a gold face, chest and hands\nFantasy features: gold ember-vein lines along the arms and back · short tail curling up with a flame tip · small gold ember bead on the forehead\nFace: eager, cheeky and confident — not scary\nEffect spots: the flame crest and tail tip + glowing ember eyes\nPose: crouched ready stance on both feet, one hand raised holding a tiny ember as if about to throw a spark; tail curled up close to the body, not long\nBackground: pure green #00FF00",
+     "note": "quiz: owner changed species lynx -> fire monkey"
     }
    ],
    "rounds": [
@@ -389,36 +727,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
-    },
-    {
-     "id": "rEtMTQuanBn",
-     "file": "lib/pictures/sprites/PL-1_still2_veo_2026-11-14.jpg",
-     "orig": "PL-1_still2_veo_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Veo frame",
-     "library": "lib/pictures/sprites/PL-1_still2_veo_2026-11-14.jpg"
-    },
-    {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/PL-1_still_gemini_2026-11-14.jpg",
-     "orig": "PL-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -431,25 +741,387 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "ra9fba5c8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-17_45eef157.jpg",
+     "orig": "Monkey_casting_fire_spark_e6c80a13_2K.jpg",
+     "t": "2026-11-17T16:01:35.905Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-17_45eef157.jpg",
+     "flip": true
+    },
+    {
+     "id": "r5a5a91ea",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-18_4fe5042b.png",
+     "orig": "PL1_lynx_pixel.png",
+     "t": "2026-11-18T12:14:59.151Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-18_4fe5042b.png"
+    },
+    {
+     "id": "r49e1ff72",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-19_a0e8a070.png",
+     "orig": "PL1_lynx_pixel_edit.png",
+     "t": "2026-11-19T11:44:28.689Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/PL-1/PL-1_still_f1_2026-11-19_a0e8a070.png",
+     "check": {}
+    },
+    {
+     "id": "r4406e7f4",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PL-1/icon_f1_2026-11-19_e79a8710.png",
+     "orig": "PL-1_icon_94_edit.png",
+     "t": "2026-11-19T11:45:45.480Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 16,
+     "iconOpen": [
+      [
+       0.0152,
+       0.0702
+      ],
+      [
+       0.8375,
+       0.9153
+      ],
+      [
+       0.9169,
+       0.9564
+      ]
+     ],
+     "iconN": 62,
+     "library": "lib/characters/PL-1/PL-1_icon_f1_2026-11-19_e79a8710.png"
+    },
+    {
+     "id": "r53e67761",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-20_53e67761.png",
+     "orig": "20059c29_g18.png",
+     "t": "2026-11-20T07:29:54.507Z",
+     "by": "claude",
+     "note": "ชุดเจน 20059c29 g18 (ตัวเต็ง · ประวัติ: batches/2026-11-20_20059c29)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_20059c29",
+      "pick": "g18",
+      "styleSrc": "pmd-ref 0555"
+     }
+    },
+    {
+     "id": "r14cd146c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-20_06a77b6f.png",
+     "orig": "20059c29_g18_edit.png",
+     "t": "2026-11-20T08:12:14.596Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {}
+    },
+    {
+     "id": "r2bb6965f",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PL-1/icon_f1_2026-11-20_50570f39.png",
+     "orig": "PL-1_icon_46_edit.png",
+     "t": "2026-11-20T08:17:13.271Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.6785,
+       0.9733
+      ]
+     ],
+     "iconN": 30
+    },
+    {
+     "id": "rf3ae7b08",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PL-1/frames_idle_f1_2026-11-20_f3ae7b08.png",
+     "orig": "pixellab API PixMiniMax job f962c43e (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:22.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r14cd146c · side, east · 8 frames · G1 palette map to the still (12 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4973,
+     0.8355
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": {
+      "bl": [
+       0.068,
+       -0.165
+      ],
+      "br": [
+       -0.008,
+       -0.137
+      ]
+     }
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r14cd146c"
+   },
+   "offset": {
+    "x": 7,
+    "y": -3
+   },
+   "free": true,
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r14cd146c"
+   },
+   "iconCrop": {
+    "round": "r14cd146c",
+    "x": 18,
+    "y": 6,
+    "n": 30,
+    "open": [
+     [
+      0.6785,
+      0.9733
+     ]
+    ],
+    "m": 8
+   },
+   "brief": {
+    "concept": {
+     "th": "ลิงไฟหนุ่ม สายปล่อยประกายไฟ ลิงตัวเล็กคล่องแคล่ว (ระดับธรรมดา)\nเผ่าไฟ: รูปทรงชี้ขึ้น หงอนขนรูปเปลวไฟบนหัว เขาเล็กสองอันชี้ขึ้น ขนสีแดงส้ม หน้า อก มือสีทอง\nจุดเด่น: เส้นถ่านไฟสีทองตามแขนและหลัง · หางสั้นม้วนขึ้น ปลายเป็นเปลวไฟ · ลูกปัดถ่านไฟสีทองเล็กบนหน้าผาก\nหน้า: กระตือรือร้น กวน มั่นใจ ไม่น่ากลัว\nจุดเรืองแสง: หงอนไฟกับปลายหาง + ตาถ่านไฟ\nท่า: ย่อตัวพร้อม ยืนสองเท้า มือข้างหนึ่งยกถือถ่านไฟเล็กๆ เหมือนจะขว้าง หางม้วนชิดตัว ไม่ยาว",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: PL-1 — young fire monkey spark-caster, a small nimble monkey (common: simple, few ornaments)\nTribe: fire — make the fire identity obvious: shapes pointing upward, a spiky flame-shaped crest of fur on the head, two tiny upward horns, red-orange fur with a gold face, chest and hands\nFantasy features: gold ember-vein lines along the arms and back · short tail curling up with a flame tip · small gold ember bead on the forehead\nFace: eager, cheeky and confident — not scary\nEffect spots: the flame crest and tail tip + glowing ember eyes\nPose: crouched ready stance on both feet, one hand raised holding a tiny ember as if about to throw a spark; tail curled up close to the body, not long\nBackground: pure green #00FF00",
+      "round": "r49e1ff72",
+      "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "The body stays still with light breathing, the chest rises and falls very slightly. The flame mane on the head flickers and sways all the time like real fire, the flame tips flutter up and down (the part that moves most). The tail tip flicks gently once. Mouth closed the whole time, the horns do not move. All four hooves stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "rf3ae7b08",
+      "t": "2026-11-20T09:47:22.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ตัวนิ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nแผงคอไฟบนหัวไหวพลิ้วตลอดเหมือนเปลวไฟจริง ปลายเปลวสั่นขึ้นลง (ส่วนที่ขยับมากที่สุด)\nปลายหางสะบัดเบาๆ หนึ่งครั้ง\nปากปิดตลอด เขาไม่ขยับ\nกีบทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "claude",
+     "t": "2026-11-20T09:13:17.766Z",
+     "okT": "2026-11-20T09:37:19.197Z"
+    }
+   }
   },
   "PL-2": {
    "id": "PL-2",
    "kind": "character",
-   "name": "คบเพลิง",
+   "name": "Volcan Mole",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r4b78d66d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-20_4b78d66d.png",
+     "orig": "547fc3d9_g24.png",
+     "t": "2026-11-20T07:29:54.705Z",
+     "by": "claude",
+     "note": "ชุดเจน 547fc3d9 g24 (ตัวเต็ง · ประวัติ: batches/2026-11-20_547fc3d9)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_547fc3d9",
+      "pick": "g24",
+      "styleSrc": "pmd-ref 0555"
+     },
+     "check": {}
+    },
+    {
+     "id": "rfef121e7",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-20_b6357391.png",
+     "orig": "547fc3d9_g24_edit.png",
+     "t": "2026-11-20T08:36:51.939Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r90ef2c86",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-20_0ae9369a.png",
+     "orig": "547fc3d9_g24_edit_edit.png",
+     "t": "2026-11-20T08:37:08.310Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "check": {}
+    },
+    {
+     "id": "r5dba0c89",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PL-2/icon_f1_2026-11-20_d7e87150.png",
+     "orig": "PL-2_icon_52_edit.png",
+     "t": "2026-11-20T08:38:51.868Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 9,
+     "iconOpen": [
+      [
+       0.852,
+       0.9488
+      ]
+     ],
+     "iconN": 34
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.5176,
+     0.7543
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r90ef2c86"
+   },
+   "brief": {},
+   "iconCrop": {
+    "round": "r90ef2c86",
+    "x": 14,
+    "y": 8,
+    "n": 34,
+    "open": [
+     [
+      0.852,
+      0.0091
+     ]
+    ],
+    "m": 9
+   }
   },
   "PL-3": {
    "id": "PL-3",
@@ -532,7 +1204,7 @@
   "SF-1": {
    "id": "SF-1",
    "kind": "character",
-   "name": "นักเรียกสายฟ้า",
+   "name": "Thunder Fox",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "common",
@@ -543,6 +1215,13 @@
      "by": "claude",
      "form": 1,
      "text": "FORM 1. Character: SF-1 — young storm beetle with a forked lightning-rod horn (common: simple, few ornaments)\nTribe: storm — make the storm identity obvious: diamond shapes, zigzag spikes, lean and fast\nFantasy features: [2-3 magical features in storm colours]\nFace: confident — not scary\nEffect spots: [1-2 spots]\nPose: ready stance, feet planted\nBackground: pure green #00FF00"
+    },
+    {
+     "id": "p2",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "FORM 1. Character: SF-1 — young storm beetle caller, a beetle not a lizard: hard shell, six short legs (common: simple, few ornaments)\nTribe: storm — make the storm identity obvious: diamond-shaped shell and head, zigzag spikes on the shell edge, lean body, yellow shell with electric purple markings\nFantasy features: a single zigzag horn like a lightning bolt · purple lightning-line pattern across the wing cases · small purple crystal at the base of the horn\nFace: alert, bright and energetic — not scary\nEffect spots: the horn tip crackling with a tiny spark + the purple crystal\nPose: standing on six legs, front raised slightly, horn pointing forward and up, wing cases slightly open\nBackground: pure green #00FF00"
     }
    ],
    "rounds": [
@@ -648,13 +1327,14 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
      "tool": "Gemini",
-     "library": "lib/pictures/sprites/SF-1_still2_gemini_2026-11-14.jpg"
+     "library": "lib/pictures/sprites/SF-1_still2_gemini_2026-11-14.jpg",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -667,7 +1347,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "rS0xNC5qcGc",
@@ -681,7 +1362,8 @@
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
-     "tool": "Gemini"
+     "tool": "Gemini",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -694,25 +1376,324 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "rfa0ba9fc",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_7638dd0f.jpg",
+     "orig": "Storm_beetle_character_standing_0de9d433_2K.jpg",
+     "t": "2026-11-17T16:05:42.299Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_7638dd0f.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8c8463b2",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_862a7f3b.jpg",
+     "orig": "Beetle_character_standing_and_po…_79441628_2K.jpg",
+     "t": "2026-11-17T16:09:10.773Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_862a7f3b.jpg",
+     "flip": true
+    },
+    {
+     "id": "r43e46836",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-17_862a7f3b.jpg",
+     "orig": "Beetle_character_standing_and_po…_79441628_2K.jpg",
+     "t": "2026-11-17T16:09:21.854Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-17_862a7f3b.jpg",
+     "flip": true
+    },
+    {
+     "id": "r400838e2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-17_4f84e7a1.jpg",
+     "orig": "Beetle_character_standing_and_po…_4fc167cf_2K.jpg",
+     "t": "2026-11-17T17:20:54.532Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-17_4f84e7a1.jpg",
+     "flip": true
+    },
+    {
+     "id": "ra659ade7",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/SF-1/cut_f1_2026-11-17_4f84e7a1.jpg",
+     "orig": "Beetle_character_standing_and_po…_4fc167cf_2K.jpg",
+     "t": "2026-11-17T17:21:10.119Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/SF-1/SF-1_cut_f1_2026-11-17_4f84e7a1.jpg",
+     "flip": true
+    },
+    {
+     "id": "r23a6cc79",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-18_682e881b.png",
+     "orig": "SF1_beetle_pixel.png",
+     "t": "2026-11-18T12:14:59.774Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-18_682e881b.png"
+    },
+    {
+     "id": "r989e9968",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/SF-1/icon_f1_2026-11-19_11207122.png",
+     "orig": "SF-1_icon_76.png",
+     "t": "2026-11-19T11:51:21.034Z",
+     "by": "owner",
+     "note": "ไอคอน 50×50 จากภาพนิ่ง 2026-11-18 · เปิดกรอบ 1 ช่อง ยื่นได้ 13 เม็ด (ไฟล์ 76×76)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 13,
+     "library": "lib/characters/SF-1/SF-1_icon_f1_2026-11-19_11207122.png"
+    },
+    {
+     "id": "r0721d706",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-20_0721d706.png",
+     "orig": "357dccc0_g21.png",
+     "t": "2026-11-20T07:33:52.710Z",
+     "by": "claude",
+     "note": "ชุดเจน 357dccc0 g21 (ตัวเต็ง · ประวัติ: batches/2026-11-20_357dccc0)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_357dccc0",
+      "pick": "g21",
+      "styleSrc": "pmd-ref 0243"
+     },
+     "check": {},
+     "library": "lib/characters/SF-1/SF-1_still_f1_2026-11-20_0721d706.png"
+    },
+    {
+     "id": "r2f14ec0e",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-20_a10c8995.png",
+     "orig": "357dccc0_g21_edit.png",
+     "t": "2026-11-20T08:08:53.685Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "flip": true
+    },
+    {
+     "id": "rd2edcdb3",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/SF-1/icon_f1_2026-11-20_73f3b1a1.png",
+     "orig": "SF-1_icon_30.png",
+     "t": "2026-11-20T08:09:29.674Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "rd361b7cc",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/SF-1/frames_idle_f1_2026-11-20_d361b7cc.png",
+     "orig": "pixellab API PixMiniMax job 61b44657 (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:23.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r2f14ec0e · side, east · 8 frames · G1 palette map to the still (8 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.4566,
+     0.8275
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r2f14ec0e"
+   },
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r2f14ec0e"
+   },
+   "offset": {
+    "x": 215,
+    "y": 172
+   },
+   "iconCrop": {
+    "round": "r2f14ec0e",
+    "x": 4,
+    "y": 1,
+    "n": 30
+   },
+   "brief": {
+    "concept": {
+     "th": "ด้วงพายุหนุ่ม สายเรียกสายฟ้า เป็นด้วงไม่ใช่กิ้งก่า: กระดองแข็ง ขาสั้นหกขา (ระดับธรรมดา)\nเผ่าพายุ: กระดองและหัวทรงข้าวหลามตัด หนามซิกแซกตามขอบกระดอง ตัวเพรียว กระดองสีเหลืองลายม่วงไฟฟ้า\nจุดเด่น: เขาซิกแซกอันเดียวเหมือนสายฟ้า · ลายเส้นสายฟ้าสีม่วงบนปีกแข็ง · คริสตัลม่วงเล็กที่โคนเขา\nหน้า: ตื่นตัว สดใส มีพลัง ไม่น่ากลัว\nจุดเรืองแสง: ปลายเขามีประกายไฟเล็กๆ + คริสตัลม่วง\nท่า: ยืนหกขา ยกตัวด้านหน้านิดๆ เขาชี้ไปข้างหน้าเฉียงขึ้น ปีกแข็งแง้มเล็กน้อย",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: SF-1 — young storm beetle caller, a beetle not a lizard: hard shell, six short legs (common: simple, few ornaments)\nTribe: storm — make the storm identity obvious: diamond-shaped shell and head, zigzag spikes on the shell edge, lean body, yellow shell with electric purple markings\nFantasy features: a single zigzag horn like a lightning bolt · purple lightning-line pattern across the wing cases · small purple crystal at the base of the horn\nFace: alert, bright and energetic — not scary\nEffect spots: the horn tip crackling with a tiny spark + the purple crystal\nPose: standing on six legs, front raised slightly, horn pointing forward and up, wing cases slightly open\nBackground: pure green #00FF00",
+      "round": "r23a6cc79",
+      "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Sitting still with light breathing, the chest rises and falls very slightly. The ears twitch quickly once. The fluffy tail sways slowly side to side, the tail tip moves most. Mouth closed the whole time, the head does not turn, the eyes blink once. Feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "rd361b7cc",
+      "t": "2026-11-20T09:47:23.000Z"
+     }
+    ],
+    "idle": {
+     "th": "นั่งนิ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nหูกระดิกเร็วๆ หนึ่งครั้ง\nหางฟูส่ายช้าๆ ไปมา ปลายหางขยับมากสุด\nปากปิดตลอด หัวไม่หัน ตากระพริบ 1 ครั้ง\nเท้าติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T09:38:03.941Z",
+     "okT": "2026-11-20T09:38:06.315Z"
+    }
+   }
   },
   "SF-2": {
    "id": "SF-2",
    "kind": "character",
-   "name": "วัวสายฟ้า",
+   "name": "Cowterry",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rd2798d7c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-2/still_f1_2026-11-20_d2798d7c.png",
+     "orig": "f500429e_g24.png",
+     "t": "2026-11-20T08:58:53.176Z",
+     "by": "claude",
+     "note": "ชุดเจน f500429e g24 (ตัวเต็ง · ประวัติ: batches/2026-11-20_f500429e)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_f500429e",
+      "pick": "g24",
+      "styleSrc": "pmd-ref 0473"
+     }
+    },
+    {
+     "id": "rf8370476",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-2/still_f1_2026-11-20_eee804ee.png",
+     "orig": "f500429e_g24_edit.png",
+     "t": "2026-11-20T09:02:13.069Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "check": {}
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-3": {
    "id": "SF-3",
@@ -795,7 +1776,7 @@
   "WY-1": {
    "id": "WY-1",
    "kind": "character",
-   "name": "นักล่าสายลม",
+   "name": "Wild Cat",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "common",
@@ -806,6 +1787,14 @@
      "by": "claude",
      "form": 1,
      "text": "FORM 1. Character: WY-1 — young small hawk (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, cloak-like membranes, wings, feathers\nFantasy features: [2-3 magical features in wind colours]\nFace: confident — not scary\nEffect spots: [1-2 spots]\nPose: ready stance, feet planted\nBackground: magenta #FF00FF"
+    },
+    {
+     "id": "p2",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: WY-1 — young wind skink scout, a small lizard standing up on its hind legs, holding one leaf in its mouth (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, a soft feather-like frill behind the head, a short cloak-like skin fold over the shoulders that flutters, mint green and off-white scales\nFantasy features: swirl-shaped wind marks on the shoulder cloak · one mint-green leaf held in its mouth, the leaf edges curling as if in a breeze · small mint crystal on the forehead\nFace: curious, alert and playful — not scary\nEffect spots: the swirl marks on the shoulder cloak + the forehead crystal\nPose: standing upright on both hind legs, small front paws held up in front of the chest, tail short and curled on the ground for balance so the creature is about as wide as it is tall; head turned forward\nBackground: magenta #FF00FF",
+     "note": "quiz: owner changed species small hawk -> standing skink holding a leaf (fixed: not a gliding skink)"
     }
    ],
    "rounds": [
@@ -847,20 +1836,6 @@
      "library": "lib/pictures/sprites/WY-1_idle8_sheet_8x1_93x90_2026-11-14.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/WY-1_still_gemini_2026-11-14.jpg",
-     "orig": "WY-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
-    },
-    {
      "id": "rEtMTQucHhv",
      "file": "lib/pictures/sprites/WY-1_still_pixelorama_2026-11-14.pxo",
      "orig": "WY-1_still_pixelorama_2026-11-14.pxo",
@@ -885,12 +1860,286 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
+    },
+    {
+     "id": "r68b04ec6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-17_21dcff32.jpg",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K.jpg",
+     "t": "2026-11-17T16:21:51.055Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-17_21dcff32.jpg",
+     "flip": true
+    },
+    {
+     "id": "rdb3f02fa",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WY-1/cut_f1_2026-11-17_21dcff32.jpg",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K.jpg",
+     "t": "2026-11-17T16:21:56.235Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_cut_f1_2026-11-17_21dcff32.jpg",
+     "flip": true
+    },
+    {
+     "id": "r27c7f62f",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WY-1/cut_f1_2026-11-17_288b3a3d.png",
+     "orig": "Predatory_hawk_creature_rendering_eb2c8aac_2K_cut.png",
+     "t": "2026-11-17T18:07:00.000Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/WY-1/WY-1_cut_f1_2026-11-17_288b3a3d.png",
+     "from": "r68b04ec6",
+     "flip": true
+    },
+    {
+     "id": "r3f5c769d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-18_fbf00de8.png",
+     "orig": "WY1_hawk_pixel.png",
+     "t": "2026-11-18T12:14:59.311Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-18_fbf00de8.png"
+    },
+    {
+     "id": "r0eac9f9b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-19_664e7d13.png",
+     "orig": "WY1_hawk_pixel_edit.png",
+     "t": "2026-11-19T11:52:35.845Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-19_664e7d13.png"
+    },
+    {
+     "id": "rb3b0644a",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-19_54f817f9.png",
+     "orig": "WY-1_icon_58.png",
+     "t": "2026-11-19T11:57:44.440Z",
+     "by": "owner",
+     "note": "ไอคอน 38×38 จากภาพนิ่ง 2026-11-19 · เปิดกรอบ 3 ช่อง ยื่นได้ 10 เม็ด (ไฟล์ 58×58)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 10,
+     "library": "lib/characters/WY-1/WY-1_icon_f1_2026-11-19_54f817f9.png",
+     "iconOpen": [
+      [
+       0.3191,
+       0.4387
+      ]
+     ],
+     "iconN": 38
+    },
+    {
+     "id": "r1b183e2c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-20_1b183e2c.png",
+     "orig": "020c0f69_g05.png",
+     "t": "2026-11-20T07:29:55.295Z",
+     "by": "claude",
+     "note": "ชุดเจน 020c0f69 g05 (ตัวเต็ง · ประวัติ: batches/2026-11-20_020c0f69)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_020c0f69",
+      "pick": "g05",
+      "styleSrc": "pmd-ref 0780"
+     },
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-20_1b183e2c.png"
+    },
+    {
+     "id": "r3cf36453",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-20_e3c443c4.png",
+     "orig": "020c0f69_g05_edit.png",
+     "t": "2026-11-20T07:56:13.276Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {}
+    },
+    {
+     "id": "rf3559223",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WY-1/icon_f1_2026-11-20_0db0b116.png",
+     "orig": "WY-1_icon_46.png",
+     "t": "2026-11-20T08:03:11.315Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 2 ช่อง ยื่นได้ 8 เม็ด (ไฟล์ 46×46)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.0557,
+       0.106
+      ],
+      [
+       0.8857,
+       0.9375
+      ]
+     ],
+     "iconN": 30
+    },
+    {
+     "id": "rff3d991f",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WY-1/frames_idle_f1_2026-11-20_ff3d991f.png",
+     "orig": "pixellab API PixMiniMax job 1e7bf35c (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:23.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r3cf36453 · side, east · 8 frames · G1 palette map to the still (11 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.6064,
+     0.8429
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r3cf36453"
+   },
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r3cf36453"
+   },
+   "iconCrop": {
+    "round": "r3cf36453",
+    "x": 20,
+    "y": 7,
+    "n": 30,
+    "open": [
+     [
+      0.0492,
+      0.106
+     ],
+     [
+      0.8857,
+      0.9375
+     ]
+    ],
+    "m": 8
+   },
+   "brief": {
+    "concept": {
+     "th": "กิ้งก่าลมหนุ่ม สายสอดแนม กิ้งก่าตัวเล็กยืนสองขาหลัง คาบใบไม้หนึ่งใบ (ระดับธรรมดา)\nเผ่าลม: รูปทรงโค้งพลิ้ว แผงคอนุ่มคล้ายขนนกหลังหัว ผิวหนังพับคลุมไหล่เหมือนผ้าคลุมที่ปลิวได้ เกล็ดสีเขียวมิ้นต์กับขาวนวล\nจุดเด่น: ลายก้นหอยลมบนผ้าคลุมไหล่ · ใบไม้สีมิ้นต์ในปาก ขอบใบม้วนเหมือนโดนลม · คริสตัลมิ้นต์เล็กบนหน้าผาก\nหน้า: อยากรู้อยากเห็น ตื่นตัว ขี้เล่น ไม่น่ากลัว\nจุดเรืองแสง: ลายก้นหอยบนผ้าคลุม + คริสตัลหน้าผาก\nท่า: ยืนตรงบนขาหลัง อุ้งมือหน้ายกไว้หน้าอก หางสั้นม้วนบนพื้นช่วยทรงตัว ตัวกว้างพอๆ กับสูง หันหน้าไปข้างหน้า",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: WY-1 — young wind skink scout, a small lizard standing up on its hind legs, holding one leaf in its mouth (common: simple, few ornaments)\nTribe: wind — make the wind identity obvious: round flowing shapes, a soft feather-like frill behind the head, a short cloak-like skin fold over the shoulders that flutters, mint green and off-white scales\nFantasy features: swirl-shaped wind marks on the shoulder cloak · one mint-green leaf held in its mouth, the leaf edges curling as if in a breeze · small mint crystal on the forehead\nFace: curious, alert and playful — not scary\nEffect spots: the swirl marks on the shoulder cloak + the forehead crystal\nPose: standing upright on both hind legs, small front paws held up in front of the chest, tail short and curled on the ground for balance so the creature is about as wide as it is tall; head turned forward\nBackground: magenta #FF00FF",
+      "round": "r0eac9f9b",
+      "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Light breathing, the body rises and falls very slightly. The fluffy fur around the neck ripples gently as if a breeze passes. The big curled tail swings slowly, then returns to its place. Mouth closed the whole time, the ears and head do not move. Feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "rff3d991f",
+      "t": "2026-11-20T09:47:23.000Z"
+     }
+    ],
+    "idle": {
+     "th": "หายใจเบาๆ ตัวยก-ยุบนิดเดียว\nขนฟูรอบคอไหวเบาๆ เหมือนโดนลมพัดผ่าน\nหางใหญ่ที่ม้วนขดแกว่งช้าๆ แล้วกลับที่เดิม\nปากปิดตลอด หูกับหัวไม่ขยับ\nเท้าติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T09:38:24.061Z",
+     "okT": "2026-11-20T09:40:13.177Z"
+    }
+   }
   },
   "WY-2": {
    "id": "WY-2",
@@ -900,10 +2149,31 @@
    "tribe2": "",
    "rarity": "common",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rf019903b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-2/still_f1_2026-11-20_f019903b.png",
+     "orig": "afa05840_g13.png",
+     "t": "2026-11-20T08:58:53.400Z",
+     "by": "claude",
+     "note": "ชุดเจน afa05840 g13 (ตัวเต็ง · ประวัติ: batches/2026-11-20_afa05840)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_afa05840",
+      "pick": "g13",
+      "styleSrc": "pmd-ref 0400"
+     },
+     "check": {}
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WY-3": {
    "id": "WY-3",
@@ -986,7 +2256,7 @@
   "PT-1": {
    "id": "PT-1",
    "kind": "character",
-   "name": "ภูติฮิล",
+   "name": "Fox Spirit",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "common",
@@ -997,6 +2267,13 @@
      "by": "claude",
      "form": 1,
      "text": "FORM 1. Character: PT-1 — young glowing night moth (common: simple, few ornaments)\nTribe: spirit — make the spirit identity obvious: floating, runes, magic rings, hexagon patterns\nFantasy features: [2-3 magical features in spirit colours]\nFace: confident — not scary\nEffect spots: [1-2 spots]\nPose: ready stance, hovering\nBackground: pure green #00FF00"
+    },
+    {
+     "id": "p2",
+     "t": "2026-11-17T15:48:25.000Z",
+     "by": "claude",
+     "form": 1,
+     "text": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: PT-1 — young spirit moth healer with soft fuzzy body (common: simple, few ornaments)\nTribe: spirit — make the spirit identity obvious: hovering in the air, translucent sky-blue to lavender-blue wings, hexagon patterns on the wings, a thin magic ring floating close behind the body\nFantasy features: hexagon cells glowing faintly on the wings · feathery antennae tipped with tiny lights · small rune on the forehead\nFace: gentle, calm and kind, big soft eyes — not scary\nEffect spots: the glowing wing hexagons + the antenna tips\nPose: hovering upright, wings open but compact (body about as wide as tall), small front legs held together as if casting a healing spell\nBackground: pure green #00FF00"
     }
    ],
    "rounds": [
@@ -1007,31 +2284,260 @@
      "t": "2026-11-14T00:00:00.000Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
      "slot": "still",
      "tool": "Gemini",
-     "library": "lib/pictures/sprites/PT-1_still_gemini_2026-11-14.jpg"
+     "library": "lib/pictures/sprites/PT-1_still_gemini_2026-11-14.jpg",
+     "flip": true
     },
     {
-     "id": "rEtMTQucG5n",
-     "file": "lib/pictures/sprites/PT-1_still_px62x77_2026-11-14.png",
-     "orig": "PT-1_still_px62x77_2026-11-14.png",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "claude",
+     "id": "r98e56514",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/PT-1/cut_f1_2026-11-17_ec610745.jpg",
+     "orig": "Moth_caterpillar_character_posing_4676a706_2K.jpg",
+     "t": "2026-11-17T17:32:07.429Z",
+     "by": "owner",
      "note": "",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "library": "lib/characters/PT-1/PT-1_cut_f1_2026-11-17_ec610745.jpg",
+     "flip": true
+    },
+    {
+     "id": "r8fb55d3f",
+     "slot": "still",
      "form": 1,
-     "slot": "cut"
+     "file": "hub/PT-1/still_f1_2026-11-18_8706bfcc.png",
+     "orig": "PT1_moth_pixel.png",
+     "t": "2026-11-18T12:14:59.619Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-18_8706bfcc.png"
+    },
+    {
+     "id": "r5a6b6c74",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PT-1/icon_f1_2026-11-19_ca91f1ea.png",
+     "orig": "PT-1_icon_66.png",
+     "t": "2026-11-19T11:34:35.897Z",
+     "by": "owner",
+     "note": "ไอคอน 44×44 จากภาพนิ่ง 2026-11-18 · เปิดกรอบ 8 ช่อง ยื่นได้ 11 เม็ด (ไฟล์ 66×66)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 11,
+     "iconOpen": [
+      [
+       0.0435,
+       0.1307
+      ],
+      [
+       0.8676,
+       0.9679
+      ]
+     ],
+     "iconN": 44,
+     "library": "lib/characters/PT-1/PT-1_icon_f1_2026-11-19_ca91f1ea.png"
+    },
+    {
+     "id": "ra918456c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-19_38f6adb3.png",
+     "orig": "PT1_moth_pixel_edit.png",
+     "t": "2026-11-19T11:35:45.965Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-19_38f6adb3.png"
+    },
+    {
+     "id": "r27c214a8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-20_27c214a8.png",
+     "orig": "fec380ca_g20.png",
+     "t": "2026-11-20T07:29:54.907Z",
+     "by": "claude",
+     "note": "ชุดเจน fec380ca g20 (ตัวเต็ง · ประวัติ: batches/2026-11-20_fec380ca)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_fec380ca",
+      "pick": "g20",
+      "styleSrc": "pmd-ref 0378"
+     },
+     "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-20_27c214a8.png",
+     "check": {}
+    },
+    {
+     "id": "rd994955c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-20_fda4d04a.png",
+     "orig": "fec380ca_g20_edit.png",
+     "t": "2026-11-20T07:53:18.840Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "check": {}
+    },
+    {
+     "id": "rf82a5d44",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/PT-1/icon_f1_2026-11-20_ba227ddd.png",
+     "orig": "PT-1_icon_46_edit.png",
+     "t": "2026-11-20T07:58:13.551Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.8286,
+       0.8942
+      ]
+     ],
+     "iconN": 30
+    },
+    {
+     "id": "r82ebb0b1",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PT-1/frames_idle_f1_2026-11-20_82ebb0b1.png",
+     "orig": "pixellab API PixMiniMax job 99fba04e (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:24.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still rd994955c · side, east · 8 frames · G1 palette map to the still (7 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.5217,
+     0.8014
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd994955c"
+   },
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd994955c"
+   },
+   "offset": {
+    "x": -213,
+    "y": -203
+   },
+   "iconCrop": {
+    "round": "rd994955c",
+    "x": 17,
+    "y": 3,
+    "n": 30,
+    "open": [
+     [
+      0.8286,
+      0.8942
+     ]
+    ],
+    "m": 8
+   },
+   "brief": {
+    "concept": {
+     "th": "ผีเสื้อกลางคืนวิญญาณหนุ่ม สายรักษา ตัวนุ่มฟู (ระดับธรรมดา)\nเผ่าวิญญาณ: ลอยกลางอากาศ ปีกโปร่งแสงสีฟ้าถึงม่วงลาเวนเดอร์ ลายหกเหลี่ยมบนปีก วงแหวนเวทบางๆ ลอยชิดหลังตัว\nจุดเด่น: ช่องหกเหลี่ยมบนปีกเรืองจางๆ · หนวดเหมือนขนนก ปลายมีแสงเล็กๆ · รูนเล็กบนหน้าผาก\nหน้า: อ่อนโยน สงบ ใจดี ตาโตนุ่ม ไม่น่ากลัว\nจุดเรืองแสง: หกเหลี่ยมบนปีก + ปลายหนวด\nท่า: ลอยตัวตรง ปีกกางแต่กระชับ (ตัวกว้างพอๆ กับสูง) ขาหน้าเล็กประกบกันเหมือนร่ายเวทรักษา",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "STYLE: match the attached boar, lynx and beetle paintings exactly — same brush texture, slightly darker painted outline, rich shadows and warm top-left light. Not pale, not soft pastel, not a cute mascot.\nFORM 1. Character: PT-1 — young spirit moth healer with soft fuzzy body (common: simple, few ornaments)\nTribe: spirit — make the spirit identity obvious: hovering in the air, translucent sky-blue to lavender-blue wings, hexagon patterns on the wings, a thin magic ring floating close behind the body\nFantasy features: hexagon cells glowing faintly on the wings · feathery antennae tipped with tiny lights · small rune on the forehead\nFace: gentle, calm and kind, big soft eyes — not scary\nEffect spots: the glowing wing hexagons + the antenna tips\nPose: hovering upright, wings open but compact (body about as wide as tall), small front legs held together as if casting a healing spell\nBackground: pure green #00FF00",
+      "round": "r5a6b6c74",
+      "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Floating in the air, the whole body bobs slowly up and down by 1-2 pixels, then returns to its place. The spirit smoke tail ripples in waves all the time, the tail tip moves most. The front legs hang still, no walking, no paddling. Eyes closed, mouth closed the whole time, the ears move only slightly. Ends exactly on the start pose, static camera, no zoom.",
+      "round": "r82ebb0b1",
+      "t": "2026-11-20T09:47:24.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ลอยกลางอากาศ ทั้งตัวลอยขึ้น-ลงช้าๆ 1-2 พิกเซล แล้วกลับที่เดิม\nหางควันวิญญาณพลิ้วเป็นคลื่นตลอด ปลายหางขยับมากสุด\nขาหน้าห้อยนิ่งๆ ไม่เดิน ไม่ตีขา\nตาปิด ปากปิดตลอด หูขยับนิดเดียว\nจบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T09:39:17.426Z",
+     "okT": "2026-11-20T09:39:19.235Z"
+    }
+   }
   },
   "PT-2": {
    "id": "PT-2",
@@ -1041,10 +2547,30 @@
    "tribe2": "",
    "rarity": "common",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rbd9e665a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-2/still_f1_2026-11-20_bd9e665a.png",
+     "orig": "6fe1210f_g08.png",
+     "t": "2026-11-20T08:58:52.966Z",
+     "by": "claude",
+     "note": "ชุดเจน 6fe1210f g08 (ตัวเต็ง · ประวัติ: batches/2026-11-20_6fe1210f)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_6fe1210f",
+      "pick": "g08",
+      "styleSrc": "pmd-ref 0834"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-3": {
    "id": "PT-3",
@@ -1127,7 +2653,7 @@
   "WN-1": {
    "id": "WN-1",
    "kind": "character",
-   "name": "นักสู้",
+   "name": "Hell Dog",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "common",
@@ -1165,48 +2691,19 @@
      "library": "lib/pictures/sprites/WN-1_idle32_sheet_32x1_236x153_2026-11-15.png"
     },
     {
-     "id": "rS0xNC5qcGc",
-     "file": "lib/pictures/sprites/WN-1_still_gemini_2026-11-14.jpg",
-     "orig": "WN-1_still_gemini_2026-11-14.jpg",
-     "t": "2026-11-14T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
-     "star": false,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "still",
-     "tool": "Gemini"
-    },
-    {
      "id": "rS0xNS5wbmc",
      "file": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png",
      "orig": "WN-1_still_paint_cut_1014x704_2026-11-15.png",
      "t": "2026-11-15T00:00:00.000Z",
      "by": "claude",
      "note": "",
-     "star": true,
-     "archived": false,
-     "licence": "AI placeholder - UNVERIFIED",
-     "form": 1,
-     "slot": "cut",
-     "library": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png"
-    },
-    {
-     "id": "rS0xNS5qcGc",
-     "file": "lib/pictures/sprites/WN-1_still_paint_gemini_2026-11-15.jpg",
-     "orig": "WN-1_still_paint_gemini_2026-11-15.jpg",
-     "t": "2026-11-15T00:00:00.000Z",
-     "by": "owner",
-     "note": "",
      "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "still",
-     "tool": "Gemini",
-     "library": "lib/pictures/sprites/WN-1_still_paint_gemini_2026-11-15.jpg",
-     "check": {}
+     "slot": "cut",
+     "library": "lib/pictures/sprites/WN-1_still_paint_cut_1014x704_2026-11-15.png",
+     "flip": true
     },
     {
      "id": "rEtMTQucG5n",
@@ -1219,7 +2716,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "form": 1,
-     "slot": "cut"
+     "slot": "cut",
+     "flip": true
     },
     {
      "id": "r51ebe2a9",
@@ -1230,12 +2728,13 @@
      "t": "2026-11-17T13:25:28.273Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "owner-made",
      "promptId": "p1",
      "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-17_3c6df7e3.jpg",
-     "check": {}
+     "check": {},
+     "flip": true
     },
     {
      "id": "rf70d253f",
@@ -1247,7 +2746,7 @@
      "t": "2026-11-17T13:26:23.709Z",
      "by": "owner",
      "note": "",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -1263,7 +2762,7 @@
      "t": "2026-11-17T14:04:11.895Z",
      "by": "claude",
      "note": "จากวิดีโอ rf70d253f · loop 1.83 s",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
@@ -1275,15 +2774,237 @@
       "n": 32,
       "ms": 57
      },
-     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-17_40c6fbea.png"
+     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-17_40c6fbea.png",
+     "flip": false
+    },
+    {
+     "id": "r647378cd",
+     "slot": "cut",
+     "form": 1,
+     "file": "hub/WN-1/cut_f1_2026-11-17_3c6df7e3.jpg",
+     "orig": "Demon_boar_charging_stance_bce22b42_2K.jpg",
+     "t": "2026-11-17T14:58:11.092Z",
+     "by": "owner",
+     "note": "",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_cut_f1_2026-11-17_3c6df7e3.jpg",
+     "flip": true
+    },
+    {
+     "id": "r3df87382",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-18_5861794e.png",
+     "orig": "WN1_boar_pixel_edit.png",
+     "t": "2026-11-18T15:49:14.067Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-18",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-18_5861794e.png",
+     "check": {}
+    },
+    {
+     "id": "r85ca20e6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-19_99ada43f.png",
+     "orig": "WN-1_horns_px.png",
+     "t": "2026-11-19T10:19:01.000Z",
+     "by": "claude",
+     "note": "ภาพพิกเซล 128×96 ที่แปลงไว้ 18 พ.ย. (เขาขวายาวขึ้นบน) ใส่กลับตามที่เจ้าของขอ · ไฟล์เดิม ไม่ย่อ/ไม่แก้สี",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "from": "r3df87382"
+    },
+    {
+     "id": "r450ea067",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-19_07c621af.png",
+     "orig": "WN-1_horn_graft_118x78.png",
+     "t": "2026-11-19T10:22:29.000Z",
+     "by": "claude",
+     "note": "ปลายเขาขวาจากภาพพิกเซล 128×96 (r85ca20e6) ย่อตามสัดส่วนภาพ (×0.92, ×0.81) มาต่อบนภาพ ★ r3df87382 · ปลายงอเดิมลบออก ส่วนอื่นไม่แตะ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "from": "r3df87382"
+    },
+    {
+     "id": "r5b8f96a2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-19_724a239c.png",
+     "orig": "WN-1_horn_graft_118x78_edit_edit_edit.png",
+     "t": "2026-11-19T11:11:59.459Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "check": {},
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-19_724a239c.png"
+    },
+    {
+     "id": "rb7ea9b5d",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-19_f3b3b55c.png",
+     "orig": "WN-1_icon_94_edit_edit.png",
+     "t": "2026-11-19T13:01:06.299Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-19",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 16,
+     "iconOpen": [
+      [
+       0.8545,
+       0.9198
+      ],
+      [
+       0.9582,
+       0.9994
+      ]
+     ],
+     "iconN": 62,
+     "library": "lib/characters/WN-1/WN-1_icon_f1_2026-11-19_f3b3b55c.png"
+    },
+    {
+     "id": "rd7150af3",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-19_d7150af3.png",
+     "orig": "pixellab API PixMiniMax job ce70edd5-ebc6-43b6-ab00-df8b0ba30b52 (frames 1-8 of 9)",
+     "t": "2026-11-19T14:34:41.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r5b8f96a2 · side, east · 8 frames · G1 palette map to the still (55 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 142,
+      "fh": 92,
+      "n": 8,
+      "ms": 300,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     },
+     "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-19_de597ffe.png"
+    },
+    {
+     "id": "r3a52c91b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-20_3a52c91b.png",
+     "orig": "8aaac062_g06.png",
+     "t": "2026-11-20T07:33:52.912Z",
+     "by": "claude",
+     "note": "ชุดเจน 8aaac062 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-20_8aaac062)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_8aaac062",
+      "pick": "g06",
+      "styleSrc": "pmd-ref 0452"
+     },
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-20_3a52c91b.png",
+     "check": {}
+    },
+    {
+     "id": "r4d761c4a",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-1/icon_f1_2026-11-20_f036ef86.png",
+     "orig": "WN-1_icon_46.png",
+     "t": "2026-11-20T07:42:46.318Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 1 ช่อง ยื่นได้ 8 เม็ด (ไฟล์ 46×46)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.8018,
+       0.9167
+      ]
+     ],
+     "iconN": 30
+    },
+    {
+     "id": "rf3dd6601",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-20_6b899ee4.png",
+     "orig": "8aaac062_g06_edit.png",
+     "t": "2026-11-20T07:44:33.564Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "check": {}
+    },
+    {
+     "id": "r473cb284",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-1/frames_idle_f1_2026-11-20_473cb284.png",
+     "orig": "pixellab API PixMiniMax job a0f4c949 (frames 1-8 of 9)",
+     "t": "2026-11-20T09:47:25.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still rf3dd6601 · side, east · 8 frames · G1 palette map to the still (10 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
    "inGame": false,
    "shadow": {
     "feet": [
-     0.4401,
-     1
+     0.5024,
+     0.8093
     ],
     "oval": {
      "on": false,
@@ -1295,44 +3016,181 @@
     },
     "cast": {
      "len": 0.923,
-     "str": 1,
+     "str": 0.69,
      "ox": 0,
      "oy": 0,
      "blur": 0.3,
-     "k": {
-      "br": [
-       0.002,
-       -0.294
-      ],
-      "tr": [
-       0.22,
-       0.011
-      ],
-      "bl": [
-       -0.012,
-       -0.16
-      ]
-     }
+     "k": null
     },
     "size": [
-     165,
-     156
+     48,
+     48
     ],
-    "round": "r40c6fbea"
+    "round": "rf3dd6601"
+   },
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf3dd6601"
+   },
+   "iconCrop": {
+    "round": "r3a52c91b",
+    "x": 18,
+    "y": 5,
+    "n": 30,
+    "open": [
+     [
+      0.8018,
+      0.9167
+     ]
+    ],
+    "m": 8
+   },
+   "brief": {
+    "concept": {
+     "th": "หมูป่าปีศาจหนุ่ม สายนักสู้ (ระดับธรรมดา: เรียบๆ เครื่องประดับน้อย)\nเผ่าปีศาจ: เขาโค้งสั้นหนา แนวหนามสั้นสีเข้มบนหลัง เกราะแตกสีแดงเลือดหมูที่ไหล่และหน้าผาก มีเส้นสีส้มถ่านไฟ รูนห้าเหลี่ยมเล็กบนเกราะไหล่\nหน้า: มั่นใจ กวนนิดๆ ไม่น่ากลัว\nจุดเรืองแสง: ตาสีถ่านไฟ + เส้นในรอยแตกของเขา\nท่า: ยืนพร้อมสู้ เท้าติดพื้น",
+     "ok": false,
+     "by": "claude",
+     "t": "2026-11-19T15:04:09.000Z"
+    },
+    "used": [
+     {
+      "kind": "concept",
+      "en": "FORM 1. Character: WN-1 — young demon boar fighter (common: simple, few ornaments)\nTribe: demon — make the demon identity obvious: short thick curved horns, ridge of short dark spikes, cracked oxblood-red plates on shoulders/forehead with ember-orange veins, small pentagon rune on the shoulder plate\nFace: confident and a little cheeky — not scary\nEffect spots: glowing ember eyes + ember veins in the horn cracks\nPose: ready stance, feet planted\nBackground: pure green #00FF00",
+      "round": "r5b8f96a2",
+      "t": "2026-11-17T12:29:40.054Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Inhale deeply to expand the ribcage and lift the shoulder blades, then exhale slowly to lower the torso and compress the frame. Maintain a steady, rhythmic cadence until settling firmly into the original stance. Mouth stays closed the whole time: jaw, snout and tusks do not move. Only the chest and back rise and fall slightly. Hooves stay planted, legs and tail barely move, static camera, no zoom.",
+      "round": "rd7150af3",
+      "t": "2026-11-19T15:04:09.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Standing ready to fight: a deep inhale, the chest expands and the body lifts slightly, then exhales and the body lowers. The smoke tip of the tail ripples gently. The eyes blink once. Mouth closed the whole time, the horns do not move. All four feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "r473cb284",
+      "t": "2026-11-20T09:47:25.000Z"
+     }
+    ],
+    "idle": {
+     "th": "ยืนพร้อมสู้ หายใจเข้าลึก อกขยาย ตัวยกนิดหนึ่ง แล้วหายใจออก ตัวลดลง\nหางควันปลายหางพลิ้วเบาๆ\nตากระบพริบหนึ่งครั้ง\nปากปิดตลอด เขาไม่ขยับ\nเท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T09:39:53.389Z",
+     "okT": "2026-11-20T09:39:57.915Z"
+    }
    }
   },
   "WN-2": {
    "id": "WN-2",
    "kind": "character",
-   "name": "ผู้ดื่มเลือด",
+   "name": "Bhameleon",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "common",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3290c870",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-2/still_f1_2026-11-20_3290c870.png",
+     "orig": "cd691039_g15.png",
+     "t": "2026-11-20T07:29:54.316Z",
+     "by": "claude",
+     "note": "ชุดเจน cd691039 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-20_cd691039)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_cd691039",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0452"
+     }
+    },
+    {
+     "id": "rf66f708e",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-2/still_f1_2026-11-20_aa4c66c5.png",
+     "orig": "cd691039_g15_edit.png",
+     "t": "2026-11-20T07:45:59.393Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "check": {}
+    },
+    {
+     "id": "r4a6d5534",
+     "slot": "icon",
+     "form": 1,
+     "file": "hub/WN-2/icon_f1_2026-11-20_918b35f7.png",
+     "orig": "WN-2_icon_46.png",
+     "t": "2026-11-20T07:48:35.543Z",
+     "by": "owner",
+     "note": "ไอคอน 30×30 จากภาพนิ่ง 2026-11-20 · เปิดกรอบ 1 ช่อง ยื่นได้ 8 เม็ด (ไฟล์ 46×46)",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "iconPad": 8,
+     "iconOpen": [
+      [
+       0.0916,
+       0.2028
+      ]
+     ],
+     "iconN": 30
+    }
+   ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": {
+    "feet": [
+     0.508,
+     0.8521
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf66f708e"
+   },
+   "iconCrop": {
+    "round": "rf66f708e",
+    "x": 1,
+    "y": 6,
+    "n": 30,
+    "open": [
+     [
+      0.0916,
+      0.2109
+     ]
+    ],
+    "m": 8
+   },
+   "brief": {}
   },
   "WN-3": {
    "id": "WN-3",
@@ -1445,6 +3303,94 @@
    "state": "done",
    "reply": "ตัดแล้ว 32 เฟรม (165×156) ลูป 1.83 วิ · 57 ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)\nไม่พบปัญหาจากตัวเลข (เท้าไม่ขยับ ตัวไม่ชนขอบ) — ยังควรเปิดดูด้วยตา",
    "seen": true
+  },
+  {
+   "id": "q0u7lu7wy",
+   "item": "HL-1",
+   "task": "check+veo",
+   "still": "r5d7026c9",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:32:59.237Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qq1zoqa9k",
+   "item": "PL-1",
+   "task": "check+veo",
+   "still": "ra9fba5c8",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:39.894Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "que00ncfb",
+   "item": "SF-1",
+   "task": "check+veo",
+   "still": "r400838e2",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:45.832Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qwujs0hok",
+   "item": "WY-1",
+   "task": "check+veo",
+   "still": "r68b04ec6",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:50.720Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "q5lw8qfxj",
+   "item": "PT-1",
+   "task": "check+veo",
+   "still": "r4adfcd16",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-17T17:33:54.716Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-17) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
+  },
+  {
+   "id": "qeba8d599",
+   "item": "WN-1",
+   "task": "frames+shadow",
+   "by": "auto",
+   "video": "rf70d253f",
+   "round": "r40c6fbea",
+   "step": "frames",
+   "form": 1,
+   "move": "idle",
+   "t": "2026-11-18T12:38:41.694Z",
+   "done": "2026-11-18",
+   "text": "ตัดเฟรม + สร้างเงา: ร่าง 1 (โปรแกรมทำเอง)",
+   "state": "done",
+   "reply": "ตัดแล้ว 32 เฟรม (165×156) ลูป 1.83 วิ · 57 ms ต่อเฟรม · ตั้งเงาบนเฟรมชุดใหม่แล้ว (ค่าวงเงา/เงาตามตัวเดิมเก็บไว้)\nไม่พบปัญหาจากตัวเลข (เท้าไม่ขยับ ตัวไม่ชนขอบ) — ยังควรเปิดดูด้วยตา"
+  },
+  {
+   "id": "qleswdu2z",
+   "item": "WN-1",
+   "task": "check+veo",
+   "still": "r1a2c69a5",
+   "step": "still",
+   "form": 1,
+   "t": "2026-11-18T12:39:13.851Z",
+   "text": "ตรวจภาพนิ่งร่าง 1 (2026-11-18) ตามกฎ ถ้าผ่าน ตัดพื้น + ทำภาพส่ง Veo + เขียนพรอมต์วิดีโอ",
+   "state": "open",
+   "reply": ""
   }
  ]
 }
