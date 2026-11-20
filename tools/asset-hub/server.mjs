@@ -371,8 +371,11 @@ function stillBatches() {
     const pics = fs.readdirSync(dir).filter((n) => /^g\d\d\.png$/.test(n)).sort().map((n) => n.slice(0, -4));
     if (!pics.length) return null;
     const m = readJson(path.join(dir, 'batch.json'), {}), req = readJson(path.join(dir, 'request.json'), {});
+    // set 265 (owner): a batch made for one creature (batch.json item + form, e.g. a form-3 batch) locks its ID on /pick
+    const item = typeof m.item === 'string' && ID_RE.test(m.item) ? m.item : '';
     return { key: d.name, tribe: String(m.tribe || ''), desc: String(req.description || ''), styleSrc: String(m.style_src || ''),
-      note: String(m.note || ''), seed: String(m.seed || ''), style: fs.existsSync(path.join(dir, 'style.png')), pics };
+      note: String(m.note || ''), seed: String(m.seed || ''), style: fs.existsSync(path.join(dir, 'style.png')), pics,
+      item, form: m.form === 3 ? 3 : 1 };
   }).filter(Boolean).sort((a, b) => a.tribe.localeCompare(b.tribe) || a.key.localeCompare(b.key));
 }
 function readPicks() { return readJson(path.join(PICKS_DIR, 'latest.json'), { rev: 0, t: '', batches: {} }); }
@@ -384,10 +387,10 @@ function validatePicks(body, batches) {
     const b = known.get(k);
     if (!b) return 'unknown batch ' + String(k).slice(0, 40);
     if (!v || typeof v !== 'object') return 'bad entry ' + k;
-    const id = v.id ?? '';
+    const id = b.item || (v.id ?? ''); // locked batch: always its own creature
     if (typeof id !== 'string' || (id && !ID_RE.test(id))) return 'bad id ' + k;
     if (!Array.isArray(v.pick) || v.pick.length > 25 || !v.pick.every((p) => typeof p === 'string' && b.pics.includes(p))) return 'bad pick ' + k;
-    out[k] = { id, pick: [...new Set(v.pick)].sort(), eye: v.eye === true, hidden: v.hidden === true, closed: v.closed === true };
+    out[k] = { id, form: b.form, pick: [...new Set(v.pick)].sort(), eye: v.eye === true, hidden: v.hidden === true, closed: v.closed === true };
   }
   return out;
 }

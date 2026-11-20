@@ -1,7 +1,8 @@
 """Still batch picker on the hub server (set 260). Run against the TEST server (port 5188, HUB_ROOT=<T>, STILL_BATCHES=<T>/sb
-with copies of 3 batches: fire, steel, spirit). Picks file = <T>/art/hub/stillpicks/ (delete it before a run).
+with copies of 3 batches: fire, steel, spirit; the test adds fire_f3 = a copy of fire locked to PL-1, form 3 (set 265)).
+Picks file = <T>/art/hub/stillpicks/ (delete it before a run).
   python tests/e2e_pick.py <outdir> <T>"""
-import json, os, sys, urllib.request, urllib.error
+import json, os, shutil, sys, urllib.request, urllib.error
 from playwright.sync_api import sync_playwright
 OUT, T = sys.argv[1], sys.argv[2]
 URL = "http://127.0.0.1:5188"
@@ -21,6 +22,10 @@ def get(path):
         with urllib.request.urlopen(URL + path) as r: return r.status
     except urllib.error.HTTPError as e: return e.code
 os.makedirs(OUT, exist_ok=True)
+F3 = os.path.join(T, "sb", "fire_f3")  # set 265: a batch made for one creature, form 3 -> ID locked on the page
+shutil.rmtree(F3, ignore_errors=True); shutil.copytree(os.path.join(T, "sb", "fire"), F3)
+m = json.load(open(os.path.join(F3, "batch.json"), encoding="utf-8")) if os.path.exists(os.path.join(F3, "batch.json")) else {"tribe": "fire"}
+m.update(item="PL-1", form=3); json.dump(m, open(os.path.join(F3, "batch.json"), "w", encoding="utf-8"))
 for f in ("latest.json", "history.jsonl"):
     if os.path.exists(os.path.join(PK, f)): os.remove(os.path.join(PK, f))
 
@@ -30,7 +35,7 @@ with sync_playwright() as p:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.on("dialog", lambda d: d.accept())
     pg.goto(URL + "/pick"); pg.wait_for_timeout(1200)
-    check("3 batches listed", pg.locator(".batch").count() == 3, pg.locator(".batch").count())
+    check("4 batches listed", pg.locator(".batch").count() == 4, pg.locator(".batch").count())
     check("tribe tabs", pg.locator(".tabs button").count() == 3)
     check("status says never saved", "ยังไม่เคยบันทึก" in pg.locator("#save").text_content())
     pg.locator(".tabs button[data-tribe=fire]").click(); pg.wait_for_timeout(200)
@@ -47,7 +52,7 @@ with sync_playwright() as p:
     box.locator("input.eye").uncheck()
     pg.wait_for_timeout(900)
     L = latest()
-    check("click saves latest.json (no paste)", L["batches"]["fire"] == {"id": "PL-1", "pick": ["g03", "g11"], "eye": True, "hidden": False, "closed": False}, L["batches"].get("fire"))
+    check("click saves latest.json (no paste)", L["batches"]["fire"] == {"id": "PL-1", "form": 1, "pick": ["g03", "g11"], "eye": True, "hidden": False, "closed": False}, L["batches"].get("fire"))
     check("status shows saved", "บันทึกแล้ว" in pg.locator("#save").text_content())
     check("latest names the batch folder", L.get("batchDir", "").replace("\\", "/").rstrip("/").endswith("/sb"))
     h = hist()
@@ -58,11 +63,16 @@ with sync_playwright() as p:
     box.locator(".fold").click(); pg.wait_for_timeout(700)
     box.locator(".p[data-n=g11]").click(); pg.wait_for_timeout(700)
     check("unpick -> new history line", len(hist()) == n + 1 and hist()[-1]["picks"]["fire"]["pick"] == ["g03"])
+    # set 265: locked form-3 batch
+    f3 = pg.locator("#b_fire_f3")
+    check("form-3 batch: badge ร่าง 3 + ID locked, no menu", f3.locator(".form3").text_content() == "ร่าง 3" and f3.locator(".lock").text_content().startswith("🔒 PL-1") and f3.locator("select").count() == 0)
+    f3.locator(".p[data-n=g05]").click(); pg.wait_for_timeout(900)
+    check("form-3 pick saves its own ID + form 3", latest()["batches"]["fire_f3"] == {"id": "PL-1", "form": 3, "pick": ["g05"], "eye": True, "hidden": False, "closed": False}, latest()["batches"].get("fire_f3"))
     # reload keeps picks (from the file, not the browser)
     pg2 = b.new_context().new_page(); pg2.goto(URL + "/pick"); pg2.wait_for_timeout(1200)
     pg2.locator(".tabs button[data-tribe=fire]").click(); pg2.wait_for_timeout(200)
     check("fresh browser shows saved picks", pg2.locator("#b_fire .p.on").count() == 1 and pg2.locator("#b_fire select").input_value() == "PL-1")
-    check("tab shows star count", "★1" in pg2.locator(".tabs button[data-tribe=fire]").text_content())
+    check("tab shows star count (fire + fire_f3)", "★2" in pg2.locator(".tabs button[data-tribe=fire]").text_content())
     # second page edits -> first page gets 409, reloads
     pg2.locator("#b_fire .p[data-n=g20]").click(); pg2.wait_for_timeout(800)
     box.locator(".p[data-n=g21]").click(); pg.wait_for_timeout(900)
@@ -91,6 +101,8 @@ with sync_playwright() as p:
     check("POST without Origin refused", post({"rev": r0, "batches": {}}, origin=None) == 403)
     check("unknown batch refused", post({"rev": r0, "batches": {"zzz": {"id": "", "pick": []}}}) == 400)
     check("picture not in batch refused", post({"rev": r0, "batches": {"fire": {"id": "", "pick": ["g99"]}}}) == 400)
+    check("locked batch keeps its ID whatever is sent", post({"rev": r0, "batches": {**latest()["batches"], "fire_f3": {"id": "PL-2", "pick": []}}}) == 200 and latest()["batches"]["fire_f3"]["id"] == "PL-1")
+    r0 = latest()["rev"]
     check("bad id refused", post({"rev": r0, "batches": {"fire": {"id": "../x", "pick": []}}}) == 400)
     check("old rev refused (409)", post({"rev": r0 - 1, "batches": {}}) == 409)
     check("path escape on /sb refused", get("/sb/fire/..%2F..%2Fhub.json") == 400 and get("/sb/fire/request.json") == 400 and get("/sb/fire/g00.png") == 200)
