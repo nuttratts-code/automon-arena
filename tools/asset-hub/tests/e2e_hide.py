@@ -53,6 +53,8 @@ with sync_playwright() as p:
             check("no cut button", pg.locator(".actbar button", has_text="ตัดพื้น").count() == 0)
             check("no P1 checklist", pg.locator(".panel b", has_text="ตรวจภาพนิ่ง").count() == 0)
             check("brief boxes kept (concept + idle)", pg.locator(".brief").count() == 2)
+            check("briefs sit below the pictures (owner set 262)", pg.evaluate("(()=>{const b=document.querySelector('.briefs'),w=document.querySelector('.rounds');return !!(b&&w&&(w.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING))})()"))
+            check("name + skills box is compact (<= 130 px tall)", pg.evaluate("document.querySelector('.charinfo').getBoundingClientRect().height") <= 130, pg.evaluate("document.querySelector('.charinfo').getBoundingClientRect().height"))
             check("no old-flow job banners (check+veo / frames+shadow)", pg.locator(".job", has_text="พรอมต์วิดีโอ").count() == 0 and pg.locator(".job", has_text="ตัดเฟรม + สร้างเงา").count() == 0)
             check("batch still row has no 'undefined'", "undefined" not in pg.locator(".rounds").first.text_content())
             pg.locator(".head button", has_text="ส่งงานให้ Claude").click(); pg.wait_for_timeout(300)

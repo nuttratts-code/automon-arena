@@ -550,7 +550,7 @@ function renderItem(m, it) {
     m.append(bar);
   }
   if (showOld && isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
-  if (isChar && ui.step === 'still') m.append(charInfo(it), briefBox(it), showOld ? checkBar(it) : '');
+  if (isChar && ui.step === 'still') m.append(charInfo(it), showOld ? checkBar(it) : '');
   if (ui.step === 'prompt') { // image prompt, then the Veo input picture + video prompt underneath
     renderPrompt(m, it);
     if (isChar) { m.append(h('h3', { class: 'sect' }, 'ภาพส่ง Veo + พรอมต์วิดีโอ')); m.append(veoPanel(it)); renderSlot(m, it, 'veoin'); }
@@ -558,6 +558,7 @@ function renderItem(m, it) {
   }
   if (ui.step === 'shadow') return renderShadow(m, it);
   renderSlot(m, it, ui.step);
+  if (isChar && ui.step === 'still') m.append(h('h3', { class: 'sect' }, 'คอนเซป + ท่ายืน'), briefBox(it)); // owner set 262: briefs below the pictures
 }
 const moveTh = (mv) => ({ idle: 'หายใจ', attack: 'โจมตี', hit: 'โดนตี', die: 'ล้ม' }[mv] || mv);
 
@@ -668,7 +669,7 @@ function charInfo(it) {
   const lv = h('span', { class: 'small faint' });
   const orig = h('span', { class: 'small dim' });
   const back = h('button', { class: 'ghost', title: 'ใช้ชื่อเดิมจากข้อมูลเกม', onclick: () => { it.name = g.name; inp.value = g.name; sync(); saveSoon(); render(); } }, 'คืนชื่อเดิม');
-  const inp = h('input', { type: 'text', class: 'nameIn', maxlength: 24, value: it.name || '', 'aria-label': 'ชื่อตัวละคร',
+  const inp = h('input', { type: 'text', class: 'nameIn', maxlength: 24, value: it.name || '', 'aria-label': 'ชื่อตัวละคร', title: 'Godot ใช้ชื่อนี้หลังกด "ส่งค่าเข้า Godot" ด้านบน · สกิลด้านล่างมาจากข้อมูลเกม (แก้ที่นี่ไม่ได้)',
     oninput: (e) => { it.name = e.target.value; sync(); saveSoon(); }, onchange: () => { it.name = (it.name || '').trim(); inp.value = it.name; sync(); render(); } });
   function sync() {
     lv.textContent = `${[...(it.name || '')].length}/24`;
@@ -687,8 +688,7 @@ function charInfo(it) {
   return h('div', { class: 'charinfo' },
     h('div', { class: 'row' }, h('label', { class: 'lbl' }, 'ชื่อ'), inp, lv, orig, back, h('span', { class: 'sp' }),
       g ? h('span', { class: 'small dim' }, `${g.tribe}${g.rarity ? ' · ' + g.rarity : ''}`) : null),
-    h('div', { class: 'small faint' }, 'Godot ใช้ชื่อนี้หลังกด "ส่งค่าเข้า Godot" ด้านบน · สกิลมาจากข้อมูลเกม (แก้ที่นี่ไม่ได้)'),
-    h('div', { class: 'lbl' }, 'สกิล'), skills);
+    skills); // owner set 262: compact — no hint line / skill label (hint is the name box tooltip), skills in one small row
 }
 // owner set 258: Thai briefs the owner reviews (concept + 8-frame idle). Claude drafts, the owner edits and ticks;
 // Claude generates only from a ticked brief (translates to English itself). Editing a ticked brief clears the tick (C1).
