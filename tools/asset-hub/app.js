@@ -1596,7 +1596,7 @@ async function pixelEditor(it, r, opt = {}) {
   // owner set 262 (A1 B1 C1): switch frames inside the editor - every frame keeps its own edits, layers and undo (fdocs[i] = that frame's
   // main doc), one save writes every changed frame into one new frames round; a small player loops all frames with the edits; onion skin
   const nFr = fr ? (r.meta.n || r.meta.cols * r.meta.rows) : 0, fdocs = fr ? new Array(nFr).fill(null) : null, origF = [];
-  let fi = fr ? opt.frame % nFr : 0, onion = false, playOn = true, playT = 0, playStep = 0;
+  let fi = fr ? opt.frame % nFr : 0, onion = false, playOn = true, playT = 0, playStep = 0, bigK = -1, bigT = 0, bigStep = 0; // bigK >= 0 = playing on the big canvas (owner set 262)
   let W = fr ? fr[2] : img.naturalWidth, H = fr ? fr[3] : img.naturalHeight; // let: the copied-piece tab swaps in its own size (owner set 248 round 5)
   if (W > PXED_MAX || H > PXED_MAX) { toast(`ภาพนี้ ${W}×${H} ใหญ่เกินไปสำหรับตัวแก้บนเว็บ (สูงสุด ${PXED_MAX} px) ใช้ Pixelorama แทน`); return; }
   const src = document.createElement('canvas'); src.width = W; src.height = H;
@@ -1728,8 +1728,23 @@ async function pixelEditor(it, r, opt = {}) {
     if (k === fi) return cur === 'main' ? compose() : composeL(docs.main.layers);
     return fdocs[k] ? composeL(fdocs[k].layers) : origFrame(k);
   }
+  function bigTick() { // owner set 262: play every frame (edits included) on the big canvas; drawing is off while it plays
+    if (bigK < 0) return;
+    const seq = frameSeq(r.meta); bigK = seq[bigStep % seq.length]; bigStep++;
+    paint(); syncUi(); bigT = setTimeout(bigTick, Math.max(30, r.meta.ms || 150));
+  }
+  function bigPlay() {
+    if (!fr) return;
+    if (bigK >= 0) { bigStop(); return; }
+    if (cur !== 'main') switchTo('main');
+    commitFloat(); setSel(null); const seq = frameSeq(r.meta); bigStep = Math.max(0, seq.indexOf(fi)); bigK = fi; bigTick();
+  }
+  function bigStop() { // stop on the frame that is showing, ready to edit it
+    if (bigK < 0) return; const k = bigK; clearTimeout(bigT); bigK = -1;
+    if (k !== fi) goFrame(k); else { syncUi(); paint(); }
+  }
   function goFrame(k) {
-    if (!fr) return; k = ((k % nFr) + nFr) % nFr; if (k === fi) return;
+    if (!fr) return; if (bigK >= 0) { clearTimeout(bigT); bigK = -1; } k = ((k % nFr) + nFr) % nFr; if (k === fi) return;
     if (cur !== 'main') switchTo('main');
     commitFloat(); stash(); fdocs[fi] = docs.main;
     if (!fdocs[k]) { const d0 = cloneI(origFrame(k)); fdocs[k] = { W, H, data: d0, layers: [{ name: 'ภาพหลัก', data: d0, vis: true }], act: 0, undoS: [], redoS: [], dirty: false, z }; }
@@ -1796,7 +1811,9 @@ async function pixelEditor(it, r, opt = {}) {
     if (layers) renderLayers();
     if (fr) {
       titleEl.textContent = `แก้พิกเซล · ${it.id} · เฟรม ${fi + 1}/${nFr} · ${W}×${H}`;
-      frBtns.forEach((b, k) => { const on = k === fi, d = on ? (cur === 'main' ? dirty : !!docs.main.dirty) : !!fdocs[k]?.dirty; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.classList.toggle('edited', d); });
+      bigB.textContent = bigK >= 0 ? '⏸ หยุด' : '▶ เล่น'; bigB.classList.toggle('on', bigK >= 0); cv.classList.toggle('playing', bigK >= 0);
+      if (bigK >= 0) titleEl.textContent = `แก้พิกเซล · ${it.id} · กำลังเล่น เฟรม ${bigK + 1}/${nFr} · คลิกภาพหรือกดหยุดเพื่อแก้เฟรมนี้`;
+      frBtns.forEach((b, k) => { const on = bigK >= 0 ? k === bigK : k === fi, d = on ? (cur === 'main' ? dirty : !!docs.main.dirty) : !!fdocs[k]?.dirty; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.classList.toggle('edited', d); });
       onionSw.classList.toggle('is-on', onion); onionSw.setAttribute('aria-checked', String(onion)); playB.textContent = playOn ? '⏸ หยุด' : '▶ เล่น';
     }
   }
@@ -1804,6 +1821,7 @@ async function pixelEditor(it, r, opt = {}) {
     cv.width = W * z; cv.height = H * z;
     const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
     g.clearRect(0, 0, cv.width, cv.height);
+    if (bigK >= 0) { sg.putImageData(frameImg(bigK), 0, 0); g.drawImage(src, 0, 0, W * z, H * z); return; }
     if (fr && onion && cur === 'main') { sg.putImageData(frameImg((fi - 1 + nFr) % nFr), 0, 0); g.globalAlpha = 0.3; g.drawImage(src, 0, 0, W * z, H * z); g.globalAlpha = 1; } // previous frame, faint
     sg.putImageData(compose(), 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
     if (grid && z >= 4) {
@@ -1994,6 +2012,7 @@ async function pixelEditor(it, r, opt = {}) {
     dirty = true; palette(); syncUi(); paint();
   });
   cv.addEventListener('pointerdown', (e) => {
+    if (bigK >= 0) { e.preventDefault(); bigStop(); return; } // owner set 262: click the playing picture = stop on this frame
     const p = at(e); if (!p) return;
     e.preventDefault(); cv.focus(); lastDown = Date.now();
     if (picking) { pick(p); return; }
@@ -2050,15 +2069,15 @@ async function pixelEditor(it, r, opt = {}) {
     else if ((k === 'Delete' || k === 'Backspace') && !float && sel) { e.preventDefault(); delSel(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && float) { e.preventDefault(); commitFloat(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && cur === 'piece') { e.preventDefault(); sendPiece(); }
-    else if (fr && !mod && !float && (k === 'Comma' || k === 'Period') && e.type === 'keydown') { e.preventDefault(); goFrame(fi + (k === 'Comma' ? -1 : 1)); }
+    else if (fr && !mod && !float && ['Comma', 'Period', 'ArrowLeft', 'ArrowRight'].includes(k)) { e.preventDefault(); goFrame((bigK >= 0 ? bigK : fi) + (k === 'Comma' || k === 'ArrowLeft' ? -1 : 1)); } // owner set 262: ← → work like ◀ ▶
     else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; moveF(float.x + d[0] * n * (mirX ? -1 : 1), float.y + d[1] * n); paint(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
   const dlg = $('dlg');
-  function cleanup() { clearTimeout(playT); playT = -1; document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
+  function cleanup() { clearTimeout(playT); playT = -1; clearTimeout(bigT); bigK = -1; document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
   function close(force) { if (!force && mainDirty() && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
-  function onCancel(e) { e.preventDefault(); if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } if (cur === 'piece') { switchTo('main'); return; } close(); } // Esc: drop the floating piece, then the selection, then leave the piece tab, then close (asks when there are changes)
+  function onCancel(e) { e.preventDefault(); if (bigK >= 0) { bigStop(); return; } if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } if (cur === 'piece') { switchTo('main'); return; } close(); } // Esc: drop the floating piece, then the selection, then leave the piece tab, then close (asks when there are changes)
   async function saveEdit() {
     saveB.disabled = true;
     switchTo('main'); // the piece tab is never saved by itself
@@ -2093,8 +2112,11 @@ async function pixelEditor(it, r, opt = {}) {
   const titleEl = h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`);
   const frBtns = fr ? Array.from({ length: nFr }, (_, k) => h('button', { 'data-k': String(k), title: `เฟรม ${k + 1}`, onclick: () => goFrame(k) }, String(k + 1))) : [];
   const onionSw = h('button', { class: 'switch', role: 'switch', title: 'เห็นเฟรมก่อนหน้าจางๆ ใต้ภาพที่กำลังแก้', onclick: () => { onion = !onion; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เงาเฟรมก่อนหน้า');
-  const frBar = fr ? h('div', { class: 'row pxed-frbar' }, h('button', { title: 'เฟรมก่อน (ปุ่ม ,)', onclick: () => goFrame(fi - 1) }, '◀'),
-    h('span', { class: 'seg pxed-frs' }, frBtns), h('button', { title: 'เฟรมถัดไป (ปุ่ม .)', onclick: () => goFrame(fi + 1) }, '▶'), onionSw,
+  const bigB = h('button', { class: 'primary pxed-bigplay', title: 'เล่นทุกเฟรมบนภาพนี้ · คลิกภาพ / หยุด / Esc = หยุดที่เฟรมนั้นแล้วแก้ต่อ', onclick: () => bigPlay() }, '▶ เล่น');
+  const step = (dk) => goFrame((bigK >= 0 ? bigK : fi) + dk);
+  const frBar = fr ? h('div', { class: 'row pxed-frbar' },
+    h('span', { class: 'seg' }, h('button', { title: 'เฟรมก่อน (← หรือ ,)', 'aria-label': 'เฟรมก่อน', onclick: () => step(-1) }, '◀'), h('button', { title: 'เฟรมถัดไป (→ หรือ .)', 'aria-label': 'เฟรมถัดไป', onclick: () => step(1) }, '▶')),
+    bigB, h('span', { class: 'seg pxed-frs' }, frBtns), onionSw,
     h('span', { class: 'small dim' }, 'จุดส้ม = เฟรมที่แก้แล้ว · บันทึกครั้งเดียวได้ทุกเฟรม')) : null;
   const playCv = h('canvas', { class: 'pxed-play' + (mirrorOf(r) ? ' flipx' : ''), 'aria-label': 'เล่นทุกเฟรม' });
   const playB = h('button', { onclick: () => { playOn = !playOn; syncUi(); if (playOn) tick(); } }, '⏸ หยุด');
