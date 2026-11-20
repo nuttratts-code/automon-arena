@@ -19,6 +19,24 @@ with sync_playwright() as p:
     info = pg.evaluate("(()=>{const c=document.querySelector('.pxed-cv');const z=parseInt(document.querySelector('.pxed b').textContent.slice(1));return {cw:c.width,ch:c.height,z,mir:c.classList.contains('flipx')}})()")
     z = info["z"]; W = info["cw"] // z; H = info["ch"] // z; MIR = info["mir"]
     print("size", W, H, "z", z, "mirror", MIR)
+    # owner set 262 (A1 B1 C1): own colours per creature - "+ เพิ่มสี", typed code, click = use, right click = remove
+    pal0 = hub()["items"]["WN-1"].get("palette") or []
+    pg.locator(".pxed-addbtn").click(); pg.wait_for_timeout(150)
+    check("add box opens", pg.locator(".pxed-addbox").is_visible())
+    pg.locator(".pxed-hex").fill("#12zz34"); pg.locator(".pxed-addbox button", has_text="เพิ่ม").click(); pg.wait_for_timeout(150)
+    check("bad code refused", pg.locator(".pxed-hex.bad").count() == 1 and pg.locator(".pxed-mypal .pxed-sw").count() == len(pal0))
+    pg.locator(".pxed-hex").fill("#F80"); pg.keyboard.press("Enter"); pg.wait_for_timeout(1300)
+    check("typed #F80 added as #ff8800 + becomes the colour", pg.locator(".pxed-mypal .pxed-sw[title^='#ff8800']").count() == 1 and pg.locator(".pxed-side .pxed-cur + .small").first.text_content() == "#ff8800")
+    check("palette saved in hub.json for this creature", "#ff8800" in (hub()["items"]["WN-1"].get("palette") or []))
+    pg.locator(".pxed-addbtn").click(); pg.locator(".pxed-addbox input[type=color]").evaluate("e=>{e.value='#3366cc';e.dispatchEvent(new Event('input'))}"); pg.locator(".pxed-addbox button", has_text="เพิ่ม").click(); pg.wait_for_timeout(1300)
+    check("colour picker adds #3366cc", (hub()["items"]["WN-1"].get("palette") or [])[-1] == "#3366cc")
+    pg.locator(".pxed-mypal .pxed-sw[title^='#ff8800']").click(); pg.wait_for_timeout(100)
+    check("click own colour = use it", pg.locator(".pxed-side .pxed-cur + .small").first.text_content() == "#ff8800")
+    pg.screenshot(path=f"{OUT}/mypal.png")
+    for v in ("#ff8800", "#3366cc"):
+        if v not in pal0: pg.locator(f".pxed-mypal .pxed-sw[title^='{v}']").click(button="right"); pg.wait_for_timeout(200)
+    pg.wait_for_timeout(1200)
+    check("right click removes (back to start)", (hub()["items"]["WN-1"].get("palette") or []) == pal0, hub()["items"]["WN-1"].get("palette"))
     def grabAll():
         pg.mouse.move(5, 5); pg.wait_for_timeout(50)
         return pg.evaluate(f"(()=>{{const c=document.querySelector('.pxed-cv'),g=c.getContext('2d'),d=g.getImageData(0,0,c.width,c.height).data,o=[];for(let y=0;y<{H};y++)for(let x=0;x<{W};x++){{const i=((y*{z}+({z}>>1))*c.width+x*{z}+({z}>>1))*4;o.push([d[i],d[i+1],d[i+2],d[i+3]])}}return o}})()")
@@ -80,7 +98,7 @@ with sync_playwright() as p:
     bb = pg.locator(".pxed-cv").bounding_box(); ps = bb["width"] / 12
     check("piece tab canvas = the 12x12 piece, zoomed", abs(bb["width"] - bb["height"]) < 2 and ps >= info["z"])
     pg.locator(".pxed-side .seg button", has_text="ดินสอ").click()
-    hexc = pg.locator(".pxed-side input[type=color]").input_value(); col = [int(hexc[i:i + 2], 16) for i in (1, 3, 5)] + [255]
+    hexc = pg.locator(".pxed-side input[type=color]").first.input_value(); col = [int(hexc[i:i + 2], 16) for i in (1, 3, 5)] + [255]
     px0 = (bb["x"] + bb["width"] - ps * 0.5) if MIR else (bb["x"] + ps * 0.5)
     pg.mouse.click(px0, bb["y"] + ps * 0.5); pg.wait_for_timeout(100)
     pg.locator(".pxed-tabs button", has_text="ภาพจริง").click(); pg.wait_for_timeout(150)

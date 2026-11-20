@@ -448,3 +448,9 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .pxed-play { image-rendering: pixelated; background: repeating-conic-gradient(#3a3f48 0 25%, #2c3038 0 50%) 0 0 / 12px 12px; border-radius: 6px; max-width: 180px; }
 .pxed-cv.playing { cursor: pointer; }
 .pxed-bigplay { min-width: 78px; }
+/* set 262 (owner A1 B1 C1): own colours in the pixel editor */
+.pxed-mypal-empty { grid-column: 1 / -1; }
+.pxed-addbox { gap: 6px; }
+.pxed-addbox input[type=color] { width: 40px; height: 30px; padding: 0; border: 0; background: none; }
+.pxed-hex { width: 88px; font-family: ui-monospace, Consolas, monospace; }
+.pxed-hex.bad { outline: 2px solid var(--bad, #e5534b); }

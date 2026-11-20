@@ -188,6 +188,7 @@ export function validateHub(h) {
         if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
       }
     }
+    if (it.palette != null && (!Array.isArray(it.palette) || it.palette.length > 64 || it.palette.some((c) => typeof c !== 'string' || !/^#[0-9a-f]{6}$/.test(c)))) err.push(`${id}: palette must be up to 64 colours '#rrggbb'`); // owner set 262
     const sc = it.scale;
     if (it.free != null && typeof it.free !== 'boolean') err.push(`${id}: free must be true/false`);
     const of = it.offset;

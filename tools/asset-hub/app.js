@@ -1626,6 +1626,31 @@ async function pixelEditor(it, r, opt = {}) {
   const curSw = h('span', { class: 'pxed-cur' }), curTxt = h('span', { class: 'small dim' });
   const colIn = h('input', { type: 'color', 'aria-label': 'เลือกสีเอง', oninput: (e) => { const v = e.target.value; setColour([parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16), 255]); } });
   const pal = h('div', { class: 'pxed-pal', role: 'group', 'aria-label': 'สีในภาพ' });
+  // owner set 262 (A1 B1 C1): own colours per creature (items[ID].palette = ['#rrggbb', …], saved in hub.json right away);
+  // "+ เพิ่มสี" = colour picker or typed code, click = use, right click = remove
+  const myPal = h('div', { class: 'pxed-pal pxed-mypal', role: 'group', 'aria-label': 'สีที่เพิ่มเอง' });
+  const HEX_RE = /^#?([0-9a-f]{6}|[0-9a-f]{3})$/i;
+  const normHex = (v) => { const m = HEX_RE.exec(String(v).trim()); if (!m) return null; const x = m[1].length === 3 ? [...m[1]].map((ch) => ch + ch).join('') : m[1]; return '#' + x.toLowerCase(); };
+  const hexRGBA = (v) => [parseInt(v.slice(1, 3), 16), parseInt(v.slice(3, 5), 16), parseInt(v.slice(5, 7), 16), 255];
+  function myPalette() {
+    const list = Array.isArray(it.palette) ? it.palette : [];
+    myPal.replaceChildren(...list.map((v) => h('button', { class: 'pxed-sw', title: v + ' · คลิกขวา = ลบออกจากแถว', 'aria-label': 'สีที่เพิ่ม ' + v, style: `--sw:${v}`,
+      onclick: () => setColour(hexRGBA(v)), oncontextmenu: (e) => { e.preventDefault(); it.palette = list.filter((x) => x !== v); if (!it.palette.length) delete it.palette; saveSoon(); myPalette(); } })));
+    if (!list.length) myPal.append(h('span', { class: 'small faint pxed-mypal-empty' }, 'ยังไม่มี · กด + เพิ่มสี'));
+  }
+  const addCol = h('input', { type: 'color', 'aria-label': 'สีที่จะเพิ่ม', oninput: (e) => { addTxt.value = e.target.value; } });
+  const addTxt = h('input', { type: 'text', class: 'pxed-hex', maxlength: 7, placeholder: '#ff8800', 'aria-label': 'รหัสสี', spellcheck: 'false',
+    oninput: (e) => { const v = normHex(e.target.value); e.target.classList.toggle('bad', !!e.target.value && !v); if (v) addCol.value = v; },
+    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); addMine(); } } });
+  function addMine() {
+    const v = normHex(addTxt.value || addCol.value); if (!v) { addTxt.classList.add('bad'); addTxt.focus(); return; }
+    const list = Array.isArray(it.palette) ? it.palette : [];
+    if (!list.includes(v)) { if (list.length >= 64) { toast('เพิ่มได้สูงสุด 64 สี'); return; } it.palette = [...list, v]; saveSoon(); }
+    setColour(hexRGBA(v)); myPalette(); addBox.hidden = true;
+  }
+  const addBox = h('div', { class: 'row nowrap pxed-addbox', hidden: true }, addCol, addTxt, h('button', { class: 'primary', onclick: () => addMine() }, 'เพิ่ม'));
+  const addBtn = h('button', { class: 'pxed-addbtn', title: 'เพิ่มสีของคุณเข้าแถว (เก็บไว้กับตัวนี้ ใช้ได้ทุกภาพของตัวนี้)', onclick: () => {
+    addBox.hidden = !addBox.hidden; if (!addBox.hidden) { addCol.value = hex(colour); addTxt.value = hex(colour); addTxt.classList.remove('bad'); addTxt.select(); addTxt.focus(); } } }, '+ เพิ่มสี');
   const modeEl = h('div', { class: 'pxed-mode' }), posEl = h('span', { class: 'small dim' });
   const zEl = h('b', {});
   const undoB = h('button', { title: 'Ctrl+Z', onclick: () => undo() }, 'ย้อน'), redoB = h('button', { title: 'Ctrl+Y', onclick: () => redo() }, 'ทำซ้ำ');
@@ -2138,6 +2163,7 @@ async function pixelEditor(it, r, opt = {}) {
         h('div', { class: 'pxed-col' }, playBox, pieceBar, modeEl,
           h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg,
           h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
+          h('div', { class: 'row nowrap' }, h('span', { class: 'lbl' }, 'สีที่เพิ่มเอง'), h('span', { class: 'sp' }), addBtn), addBox, myPal,
           h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
           h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ซูม'), zEl, zoomBtns, gridSw),
           h('div', { class: 'row' }, undoB, redoB, posEl),
@@ -2146,7 +2172,7 @@ async function pixelEditor(it, r, opt = {}) {
           h('div', { class: 'lbl' }, 'ส่วนที่เลือก'), h('div', { class: 'row pxed-selrow' }, copyB, cutB, pasteB, delB, noneB), floatRow,
           editSw, editBox, lyrBox))));
   dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);
-  palette(); { const f = pal.querySelector('.pxed-sw'); if (f) f.click(); } syncUi(); paint();
+  palette(); myPalette(); { const f = pal.querySelector('.pxed-sw'); if (f) f.click(); } syncUi(); paint();
   dlg.showModal(); cv.focus(); if (fr) tick();
 }
 
