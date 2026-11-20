@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1068,
+ "rev": 1069,
  "settings": {
   "moves": [
    "idle",
@@ -1400,6 +1400,35 @@
       ]
      ],
      "iconN": 34
+    },
+    {
+     "id": "r1ed67cb2",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PL-2/frames_idle_f1_2026-11-20_1ed67cb2.png",
+     "orig": "pixellab API PixMiniMax job c0706b42 (frames 1-8 of 9)",
+     "t": "2026-11-20T13:08:35.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r90ef2c86 · side, east · 8 frames · G1 palette map to the still (10 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
@@ -1438,7 +1467,15 @@
      "by": "owner",
      "t": "2026-11-20T12:53:26.561Z",
      "okT": "2026-11-20T12:53:30.709Z"
-    }
+    },
+    "used": [
+     {
+      "kind": "idle",
+      "en": "The body stays still with light breathing. The smoke from the small volcano vent on the back rises slowly, then loops back to its start shape. The nose twitches gently, sniffing, and the eyes blink once. The vent and the rocks on the back do not move. Mouth closed the whole time. All four feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "r1ed67cb2",
+      "t": "2026-11-20T13:08:35.000Z"
+     }
+    ]
    },
    "iconCrop": {
     "round": "r90ef2c86",
