@@ -883,6 +883,9 @@ async function star(it, r) {
   try {
     const on = r.star ? 0 : 1; // owner set 248: one ★ across originals + cuts, the server clears the other one
     hub = await api(`/api/star?item=${encodeURIComponent(it.id)}&round=${encodeURIComponent(r.id)}&on=${on}`, { method: 'POST' });
+    // set 261: a new ★ still/cut drops an older board pin ("ใช้เป็นภาพหน้าภาพรวม"), else the board kept showing the pinned old picture
+    const cur = hub.items[it.id];
+    if (on && cur && cur.kind === 'character' && ['still', 'cut'].includes(r.slot) && cur.thumb && cur.thumb !== r.id) { delete cur.thumb; await save(); }
     toast(r.star ? 'เลิกเลือกแล้ว' : 'เลือกแล้ว และเก็บเข้าคลังถาวร');
   } catch (e) { toast(e.message); }
   render();
