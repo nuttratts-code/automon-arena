@@ -1,12 +1,19 @@
 {
- "rev": 19,
- "t": "2026-11-20T06:26:16.107Z",
+ "rev": 25,
+ "t": "2026-11-20T07:13:18.680Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
    "id": "",
    "pick": [],
    "eye": true,
+   "hidden": false,
+   "closed": true
+  },
+  "demon_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
    "hidden": false,
    "closed": false
   },
@@ -17,7 +24,7 @@
    ],
    "eye": false,
    "hidden": false,
-   "closed": false
+   "closed": true
   },
   "fire": {
    "id": "",
@@ -25,6 +32,13 @@
     "g18"
    ],
    "eye": true,
+   "hidden": false,
+   "closed": true
+  },
+  "fire_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
    "hidden": false,
    "closed": false
   },
@@ -35,12 +49,19 @@
    "hidden": true,
    "closed": true
   },
+  "spirit_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
+   "hidden": false,
+   "closed": false
+  },
   "spirit_ol": {
    "id": "",
    "pick": [],
    "eye": false,
    "hidden": true,
-   "closed": false
+   "closed": true
   },
   "spirit2": {
    "id": "",
@@ -49,7 +70,7 @@
    ],
    "eye": true,
    "hidden": false,
-   "closed": false
+   "closed": true
   },
   "steel": {
    "id": "",
@@ -57,6 +78,13 @@
     "g01"
    ],
    "eye": true,
+   "hidden": false,
+   "closed": true
+  },
+  "steel_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
    "hidden": false,
    "closed": false
   },
@@ -67,6 +95,13 @@
    ],
    "eye": true,
    "hidden": false,
+   "closed": true
+  },
+  "storm_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
+   "hidden": false,
    "closed": false
   },
   "wind": {
@@ -75,6 +110,13 @@
     "g05"
    ],
    "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_b": {
+   "id": "",
+   "pick": [],
+   "eye": false,
    "hidden": false,
    "closed": false
   }
