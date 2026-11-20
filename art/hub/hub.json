@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1067,
+ "rev": 1068,
  "settings": {
   "moves": [
    "idle",
@@ -3970,6 +3970,35 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r2f59bf3b",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/WN-2/frames_idle_f1_2026-11-20_2f59bf3b.png",
+     "orig": "pixellab API PixMiniMax job 73152ec2 (frames 1-8 of 9)",
+     "t": "2026-11-20T13:07:15.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r313f22d6 · side, west · 8 frames · G1 palette map to the still (11 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
@@ -4021,7 +4050,15 @@
      "by": "owner",
      "t": "2026-11-20T12:57:57.375Z",
      "okT": "2026-11-20T12:58:03.083Z"
-    }
+    },
+    "used": [
+     {
+      "kind": "idle",
+      "en": "Standing still: light breathing, the chest rises and falls very slightly. The small wings on the back flap gently and the body lifts and lowers very slightly with them. The curled tail uncurls a little, then curls back to where it was. The eyes roll around once; the head does not turn. Mouth closed the whole time. All four feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "r2f59bf3b",
+      "t": "2026-11-20T13:07:15.000Z"
+     }
+    ]
    }
   },
   "WN-3": {
