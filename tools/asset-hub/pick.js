@@ -27,7 +27,7 @@ function fill(saved) {
   const o = {};
   D.batches.forEach((b) => {
     const v = saved[b.key] || {};
-    o[b.key] = { id: v.id || '', pick: Array.isArray(v.pick) ? v.pick.filter((p) => b.pics.includes(p)) : [], eye: !!v.eye, hidden: !!v.hidden, closed: !!v.closed };
+    o[b.key] = { id: v.id || '', pick: Array.isArray(v.pick) ? v.pick.filter((p) => b.pics.includes(p)) : [], eye: v.eye !== false, hidden: !!v.hidden, closed: !!v.closed };
   });
   return o;
 }
@@ -41,14 +41,15 @@ function build() {
     D.items.filter((i) => !b.tribe || i.tribe === b.tribe || i.id === s.id)
       .forEach((i) => sel.append(el('option', { value: i.id, textContent: i.id + ' ' + i.name + (b.tribe && i.tribe !== b.tribe ? ' (' + th(i.tribe) + ')' : '') })));
     sel.onchange = () => { s.id = sel.value; change(); };
-    const eye = el('input', { type: 'checkbox', className: 'eye' }); eye.onchange = () => { s.eye = eye.checked; change(); };
+    // owner set 260: a pick means "checked by eye, not like the ref"; tick only to flag one that IS too close
+    const eye = el('input', { type: 'checkbox', className: 'eye' }); eye.onchange = () => { s.eye = !eye.checked; change(); };
     const fold = el('button', { className: 'fold' }); fold.onclick = () => { s.closed = !s.closed; change(); };
     const del = el('button', { className: 'del', textContent: '✕ ซ่อนชุดนี้' });
     del.onclick = () => { if (confirm('ซ่อนชุด ' + b.key + ' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ (' + s.pick.length + ' ภาพ) จะไม่นับในผล\nไฟล์ไม่ถูกลบ กด "แสดงชุดที่ซ่อน" ด้านล่างเพื่อเอากลับได้')) { s.hidden = true; change(); } };
     const head = el('div', { className: 'head' }, fold, el('h2', { textContent: 'เผ่า' + th(b.tribe) + ' · ' + b.key }), el('span', { className: 'mut cnt' }), del);
     const top = el('div', { className: 'top' });
     if (b.style) top.append(el('div', { className: 'ref' }, el('img', { src: '/sb/' + b.key + '/style.png', alt: '' }), 'ต้นแบบสไตล์ ' + b.styleSrc));
-    top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, sel), el('label', {}, eye, ' ดูแล้ว ไม่เหมือนต้นแบบ')));
+    top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, sel), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
     const g = el('div', { className: 'grid' });
     b.pics.forEach((n) => {
       const p = el('div', { className: 'p' }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
@@ -79,7 +80,7 @@ function render() {
     box.classList.toggle('closed', s.closed);
     box.querySelector('.fold').textContent = s.closed ? '▸ ขยาย' : '▾ หุบ';
     box.querySelector('.cnt').textContent = s.pick.length ? '★ ' + s.pick.join(', ') : '';
-    box.querySelector('select').value = s.id; box.querySelector('.eye').checked = s.eye;
+    box.querySelector('select').value = s.id; box.querySelector('.eye').checked = !s.eye;
     box.querySelectorAll('.p').forEach((p) => p.classList.toggle('on', s.pick.includes(p.dataset.n)));
   });
   const H = $('hidden'); H.textContent = '';

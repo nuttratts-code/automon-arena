@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 686,
+ "rev": 688,
  "settings": {
   "moves": [
    "idle",
@@ -1207,6 +1207,24 @@
      "promptId": "p2",
      "iconPad": 13,
      "library": "lib/characters/SF-1/SF-1_icon_f1_2026-11-19_11207122.png"
+    },
+    {
+     "id": "r0721d706",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-20_0721d706.png",
+     "orig": "357dccc0_g21.png",
+     "t": "2026-11-20T07:33:52.710Z",
+     "by": "claude",
+     "note": "ชุดเจน 357dccc0 g21 (ตัวเต็ง · ประวัติ: batches/2026-11-20_357dccc0)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_357dccc0",
+      "pick": "g21",
+      "styleSrc": "pmd-ref 0243"
+     }
     }
    ],
    "notes": "",
@@ -2359,6 +2377,24 @@
       ]
      },
      "library": "lib/characters/WN-1/WN-1_frames_idle_f1_2026-11-19_de597ffe.png"
+    },
+    {
+     "id": "r3a52c91b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-20_3a52c91b.png",
+     "orig": "8aaac062_g06.png",
+     "t": "2026-11-20T07:33:52.912Z",
+     "by": "claude",
+     "note": "ชุดเจน 8aaac062 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-20_8aaac062)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_8aaac062",
+      "pick": "g06",
+      "styleSrc": "pmd-ref 0452"
+     }
     }
    ],
    "notes": "",
