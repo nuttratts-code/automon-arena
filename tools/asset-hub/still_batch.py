@@ -128,9 +128,10 @@ textarea{width:100%;box-sizing:border-box;height:120px;background:#22222a;color:
 <div id="list"></div>
 <div class="b"><button id="copy">คัดลอกผล</button> <span id="msg" class="mut"></span><textarea id="out" readonly></textarea></div>
 <script>
-const D=__DATA__;const KEY='stillpick:'+D.batches.map(b=>b.key).join(',');
-let S={};try{S=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){};render()};
+const D=__DATA__;let S={};
+D.batches.forEach(b=>{try{const v=JSON.parse(localStorage.getItem('stillpick:'+b.key)||'null');if(v)S[b.key]=v}catch(e){}});
+try{const old=JSON.parse(localStorage.getItem('stillpick:'+['steel','fire','storm','wind','spirit','demon'].join(','))||'{}');for(const k in old)if(!S[k])S[k]=old[k]}catch(e){}
+const save=()=>{for(const k in S)try{localStorage.setItem('stillpick:'+k,JSON.stringify(S[k]))}catch(e){};render()};
 const el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);k.forEach(x=>e.append(x));return e};
 function build(){const L=document.getElementById('list');
  D.batches.forEach(b=>{const s=S[b.key]||(S[b.key]={id:'',pick:[],eye:false});
