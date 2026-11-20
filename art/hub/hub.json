@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 545,
+ "rev": 686,
  "settings": {
   "moves": [
    "idle",
@@ -224,7 +224,8 @@
        0.3829
       ]
      ],
-     "iconN": 80
+     "iconN": 80,
+     "library": "lib/characters/HL-1/HL-1_icon_f1_2026-11-19_fb5758c5.png"
     },
     {
      "id": "r15194f91",
@@ -238,7 +239,27 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
-     "promptId": "p2"
+     "promptId": "p2",
+     "check": {},
+     "library": "lib/characters/HL-1/HL-1_still_f1_2026-11-19_5ed6aac2.png"
+    },
+    {
+     "id": "rc1a11a25",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-20_c1a11a25.png",
+     "orig": "13c18a50_g01.png",
+     "t": "2026-11-20T07:29:55.099Z",
+     "by": "claude",
+     "note": "ชุดเจน 13c18a50 g01 (ตัวเต็ง · ประวัติ: batches/2026-11-20_13c18a50)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_13c18a50",
+      "pick": "g01",
+      "styleSrc": "pmd-ref 0232"
+     }
     }
    ],
    "notes": "",
@@ -324,10 +345,11 @@
      }
     ],
     "idle": {
-     "th": "หายใจเบาๆ กระดองยุบ-ยกนิดหน่อย\nก้ามโล่ยกค้างไว้ด้านหน้า ขยับขึ้นลงตามจังหวะหายใจเล็กน้อย ก้ามเล็กนิ่ง\nตาบนก้านกระดิกเบาๆ ปากไม่ขยับ\nขาทุกขาติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-19T15:04:09.000Z"
+     "th": "ขาย่อ เล็กน้อย กระดอง-ยกนิดหน่อย\nก้ามโล่ยกค้างไว้ด้านหน้า ขยับขึ้นลงตามจังหวะหายใจเล็กน้อย และหนีบตมจังหวะ\nตาบนก้านกระดิกเบาๆ ปากไม่ขยับ\nขาทุกขาติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-19T15:13:38.024Z",
+     "okT": "2026-11-19T15:13:49.043Z"
     }
    }
   },
@@ -671,7 +693,26 @@
        0.9564
       ]
      ],
-     "iconN": 62
+     "iconN": 62,
+     "library": "lib/characters/PL-1/PL-1_icon_f1_2026-11-19_e79a8710.png"
+    },
+    {
+     "id": "r53e67761",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-20_53e67761.png",
+     "orig": "20059c29_g18.png",
+     "t": "2026-11-20T07:29:54.507Z",
+     "by": "claude",
+     "note": "ชุดเจน 20059c29 g18 (ตัวเต็ง · ประวัติ: batches/2026-11-20_20059c29)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_20059c29",
+      "pick": "g18",
+      "styleSrc": "pmd-ref 0555"
+     }
     }
    ],
    "notes": "",
@@ -759,10 +800,11 @@
      }
     ],
     "idle": {
-     "th": "หายใจเบาๆ อกกับไหล่ยุบ-ยกนิดหน่อย\nหงอนขนไฟบนหัวไหวเบาๆ ปลายหางไฟไหวนิดหน่อย\nมือที่ถือถ่านไฟยกค้างไว้ ปากปิด\nเท้าติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-19T15:04:09.000Z"
+     "th": "หายใจเบาๆ อกกับไหล่ยุบ-ยกนิดหน่อย\nไฟบนหูไหวเบาๆ ปลายหางไหวนิดหน่อย\nอ้าปากคำรามนิดหน่อย\nเท้าติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-19T15:16:31.972Z",
+     "okT": "2026-11-19T15:16:33.893Z"
     }
    }
   },
@@ -774,7 +816,26 @@
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r4b78d66d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-20_4b78d66d.png",
+     "orig": "547fc3d9_g24.png",
+     "t": "2026-11-20T07:29:54.705Z",
+     "by": "claude",
+     "note": "ชุดเจน 547fc3d9 g24 (ตัวเต็ง · ประวัติ: batches/2026-11-20_547fc3d9)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_547fc3d9",
+      "pick": "g24",
+      "styleSrc": "pmd-ref 0555"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -1144,7 +1205,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "iconPad": 13
+     "iconPad": 13,
+     "library": "lib/characters/SF-1/SF-1_icon_f1_2026-11-19_11207122.png"
     }
    ],
    "notes": "",
@@ -1218,10 +1280,11 @@
      }
     ],
     "idle": {
-     "th": "หายใจเบาๆ ลำตัวยุบ-ยกนิดหน่อย\nปีกแข็งที่แง้มอยู่ขยับเบาๆ เขาสายฟ้าชี้ค้างไว้ ปากไม่ขยับ\nขาทั้งหกติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-19T15:04:09.000Z"
+     "th": "หายใจเบาๆ ลำตัว-ยกนิดหน่อย ปล้องขาขยับตามการหายใจ\nโยกตัวไปด้านหน้าเบาๆ เขาพุ่งตามการโยกตัว และมีประกายสายฟ้าอ่อนๆ ออกมา ปากเปิดนิดหน่อยตอนมีสายฟ้า\nขาทั้งหกติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-19T15:19:20.066Z",
+     "okT": "2026-11-19T15:19:21.471Z"
     }
    }
   },
@@ -1484,7 +1547,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "check": {}
+     "check": {},
+     "library": "lib/characters/WY-1/WY-1_still_f1_2026-11-19_664e7d13.png"
     },
     {
      "id": "rb3b0644a",
@@ -1508,6 +1572,24 @@
       ]
      ],
      "iconN": 38
+    },
+    {
+     "id": "r1b183e2c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-20_1b183e2c.png",
+     "orig": "020c0f69_g05.png",
+     "t": "2026-11-20T07:29:55.295Z",
+     "by": "claude",
+     "note": "ชุดเจน 020c0f69 g05 (ตัวเต็ง · ประวัติ: batches/2026-11-20_020c0f69)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_020c0f69",
+      "pick": "g05",
+      "styleSrc": "pmd-ref 0780"
+     }
     }
    ],
    "notes": "",
@@ -1585,10 +1667,11 @@
      }
     ],
     "idle": {
-     "th": "ยืนสองขาหลัง หายใจเบาๆ อกยุบ-ยกนิดหน่อย\nผ้าคลุมผิวหนังที่ไหล่พลิ้วเบาๆ ใบไม้ในปากไหวนิดหน่อย ปากยังคาบใบไม้ไว้\nขาหลังกับหางติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-19T15:04:09.000Z"
+     "th": "กระพือปีกบินช้าๆ\nกรงเล็บทีขาทำท่าจับเหยื่อย ตามการกระพือปีก\nปากอ้าเล็กน้อยตอนกางกรงเล็บ\nหางกระพือตามลม\nขาหลังกับหางติดพื้น กล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-19T15:23:37.943Z",
+     "okT": "2026-11-19T15:23:39.842Z"
     }
    }
   },
@@ -1779,7 +1862,8 @@
        0.9679
       ]
      ],
-     "iconN": 44
+     "iconN": 44,
+     "library": "lib/characters/PT-1/PT-1_icon_f1_2026-11-19_ca91f1ea.png"
     },
     {
      "id": "ra918456c",
@@ -1794,7 +1878,26 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
-     "check": {}
+     "check": {},
+     "library": "lib/characters/PT-1/PT-1_still_f1_2026-11-19_38f6adb3.png"
+    },
+    {
+     "id": "r27c214a8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-20_27c214a8.png",
+     "orig": "fec380ca_g20.png",
+     "t": "2026-11-20T07:29:54.907Z",
+     "by": "claude",
+     "note": "ชุดเจน fec380ca g20 (ตัวเต็ง · ประวัติ: batches/2026-11-20_fec380ca)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_fec380ca",
+      "pick": "g20",
+      "styleSrc": "pmd-ref 0378"
+     }
     }
    ],
    "notes": "",
@@ -1896,10 +1999,11 @@
      }
     ],
     "idle": {
-     "th": "ลอยอยู่กับที่ ตัวลอยขึ้นลงเบาๆ\nปีกกระพือช้าๆ นิดเดียว หนวดไหวเบาๆ\nขาหน้าประกบกันค้างไว้ ไม่บินไปไหน ปากไม่ขยับ\nกล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-19T15:04:09.000Z"
+     "th": "ปีกกระพือช้าๆ นิดเดียว พู่บนหัวไหวเบาๆ\nลอยอยู่กับที่ ตัวลอยขึ้นลงเบาๆ ตามการขึ้นลงของปีก\nขาแกว่งเล็กน้อย ไม่บินไปไหน ปากไม่ขยับ\nกล้องนิ่ง ไม่ซูม แล้วกลับมาท่าเดิมพอดี",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-19T15:23:07.991Z",
+     "okT": "2026-11-19T15:23:10.158Z"
     }
    }
   },
@@ -2196,7 +2300,8 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1",
-     "check": {}
+     "check": {},
+     "library": "lib/characters/WN-1/WN-1_still_f1_2026-11-19_724a239c.png"
     },
     {
      "id": "rb7ea9b5d",
@@ -2384,7 +2489,26 @@
    "tribe2": "",
    "rarity": "common",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3290c870",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-2/still_f1_2026-11-20_3290c870.png",
+     "orig": "cd691039_g15.png",
+     "t": "2026-11-20T07:29:54.316Z",
+     "by": "claude",
+     "note": "ชุดเจน cd691039 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-20_cd691039)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_cd691039",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0452"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
