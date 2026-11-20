@@ -21,6 +21,22 @@ with sync_playwright() as p:
         if w == 1100:
             check("old tabs hidden by default", old_tabs() == 0)
             check("kept tabs visible", pg.locator("#tabs button", has_text="จัดทีม").is_visible() and pg.locator("#tabs button", has_text="ตัวละคร").is_visible())
+        # set 262 B: overview = 8-step flow bar per creature + "ถัดไป" line + who filter
+        nchar = sum(1 for it in hub0["items"].values() if it.get("kind") == "character")
+        pg.screenshot(path=f"{OUT}/board_{w}.png", full_page=True)
+        if w == 1100:
+            check("every character tile has an 8-step bar", pg.locator(".tile .flowbar").count() == nchar and pg.locator(".tile .flowbar").first.locator("i").count() == 8, (pg.locator(".tile .flowbar").count(), nchar))
+            wn = pg.locator(".tile", has_text="WN-1").first
+            exp = pg.evaluate("flowDone(hub.items['WN-1'])")
+            check("WN-1 bar matches its data", wn.locator(".flowbar i.on").count() == sum(exp), exp)
+            check("WN-1 next line", wn.locator(".nxt").count() == (0 if all(exp) else 1) and (all(exp) or "ถัดไป:" in wn.text_content()))
+            check("all-done tile says ครบทุกขั้น, never the old เฟรมเสร็จ", pg.locator(".tile", has_text="เฟรมเสร็จ").count() == 0)
+            sel = pg.locator(".filters select")
+            sel.select_option("who-claude"); pg.wait_for_timeout(300)
+            vis = pg.evaluate("[...document.querySelectorAll('.tile:not([hidden])')].map(t=>t.querySelector('.nxt')?.className||'')")
+            check("filter ถึงตา Claude shows only Claude's turn", vis and all("who-claude" in c for c in vis), vis[:4])
+            sel.select_option(""); pg.wait_for_timeout(200)
+            check("old status legend gone", pg.locator(".legend", has_text="รอวิดีโอ").count() == 0 and pg.locator(".legend", has_text="ถึงตาคุณ").count() == 1)
         pg.evaluate("ui.tab='chars'; ui.step='still'; openItem('WN-1')"); pg.wait_for_timeout(1200)
         pg.screenshot(path=f"{OUT}/hide_still_{w}.png", full_page=True)
         if w == 1100:

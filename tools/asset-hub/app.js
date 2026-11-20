@@ -167,7 +167,32 @@ function latest(it, slot, form, move) {
   const rs = live(it, slot).filter((r) => (!form || (r.form || 1) === form) && (!move || !r.move || r.move === move));
   return rs.filter((r) => r.star).pop() || rs[rs.length - 1] || null;
 }
+// set 262 (owner A1 B1 C1 D1): overview progress = the current flow in 8 steps (form 1); status = the next step not done
+// [key, done label (bar), next-step text, whose turn, test]
+const FLOW = [
+  ['still', 'มีภาพนิ่ง', 'เลือกภาพที่ /pick', 'owner', (it) => live(it, 'still').some((r) => (r.form || 1) === 1)],
+  ['star', '★ ภาพนิ่ง', 'ติดดาวภาพนิ่ง', 'owner', (it) => !!(pick(it, 'still', 1) || pick(it, 'cut', 1))],
+  ['brief', 'ร่างท่ายืน', 'Claude ร่างท่ายืน', 'claude', (it) => !!(it.brief?.idle?.th || '').trim()],
+  ['briefOk', 'ยืนยันท่ายืน', 'ยืนยันร่างท่ายืน', 'owner', (it) => !!it.brief?.idle?.ok],
+  ['frames', 'เฟรมท่ายืน', 'Claude เจนท่ายืน', 'claude', (it) => live(it, 'frames').some((r) => (r.form || 1) === 1 && (!r.move || r.move === 'idle'))],
+  ['framesStar', '★ เฟรม', 'ดู GIF แล้วติดดาวเฟรม', 'owner', (it) => !!pick(it, 'frames', 1, 'idle')],
+  ['icon', 'ไอคอน', 'ทำไอคอน', 'owner', (it) => live(it, 'icon').length > 0],
+  ['shadow', 'เงา', 'ปรับเงา', 'owner', (it) => !!it.shadow],
+];
+const FLOW_ST = Object.fromEntries(FLOW.map(([k, , next, who]) => ['f-' + k, { next, who }]));
+const FLOW_STATUS = [...FLOW.map(([k, , next]) => ['f-' + k, 'ถัดไป: ' + next]), ['f-done', 'ครบทุกขั้น'], ['ingame', 'อยู่ในเกมแล้ว']];
+const flowDone = (it) => FLOW.map((f) => f[4](it));
+const useFlow = (it) => !showOld && it.kind === 'character';
+const statusTh = (st) => (FLOW_ST[st] ? 'ถัดไป: ' + FLOW_ST[st].next : st === 'f-done' ? 'ครบทุกขั้น' : STATUS_TH[st] || st);
+const dotCls = (st) => 'dot ' + (FLOW_ST[st] ? 'who-' + FLOW_ST[st].who : st === 'f-done' ? 'st-done' : 'st-' + st);
+const statusOk = (it, v) => !v || (v.startsWith('who-') ? FLOW_ST[status(it)]?.who === v.slice(4) : status(it) === v);
+function flowBar(it) {
+  const d = flowDone(it), nx = d.indexOf(false);
+  return h('div', { class: 'flowbar', 'aria-label': 'ความคืบหน้า ' + d.filter(Boolean).length + '/' + FLOW.length },
+    FLOW.map(([, label, , who], i) => h('i', { class: (d[i] ? 'on' : '') + (i === nx ? ' nx who-' + who : ''), title: `${i + 1} ${label} ${d[i] ? '✓' : '—'}` })));
+}
 function status(it) {
+  if (useFlow(it)) { if (it.inGame) return 'ingame'; const i = flowDone(it).indexOf(false); return i < 0 ? 'f-done' : 'f-' + FLOW[i][0]; }
   if (it.inGame) return 'ingame';
   if (it.kind !== 'character') return it.rounds.some((r) => !r.archived) ? 'done' : 'none';
   if (pick(it, 'frames', 1, 'idle')) return 'done';
@@ -381,8 +406,8 @@ function renderRail() {
     list.append(h('div', { class: 'grp', style: `--c: ${c}` }, label));
     for (const it of rows) {
       const st = status(it);
-      list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: `${it.id} ${it.name || ''} · ${STATUS_TH[st]}`, onclick: () => openItem(it.id) },
-        h('span', { class: 'dot st-' + st }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || ''),
+      list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: `${it.id} ${it.name || ''} · ${statusTh(st)}`, onclick: () => openItem(it.id) },
+        h('span', { class: dotCls(st) }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || ''),
         openJobs(it.id).length ? h('span', { class: 'badge', title: openJobs(it.id).map(taskTh).join(', ') }, 'รอ Claude') : null));
     }
   }
@@ -392,7 +417,7 @@ function filtered(kindOk) {
   const q = ui.q.trim().toLowerCase();
   return Object.values(hub.items).filter((it) => kindOk(it)
     && (!ui.tribe || it.tribe === ui.tribe || it.tribe2 === ui.tribe)
-    && (!ui.status || status(it) === ui.status)
+    && statusOk(it, ui.status)
     && (!q || it.id.toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q)));
 }
 function openItem(id) { ui.item = id; ui.sel = null; ui.cmp = []; const it = hub.items[id]; if (it.kind !== 'character' && ['prompt', 'shadow', 'cut', 'veoin', 'frames'].includes(ui.step)) ui.step = 'file'; render(); window.scrollTo(0, 0); }
@@ -428,7 +453,7 @@ function renderBoard(m) {
   const empty = h('p', { class: 'dim', hidden: true }, 'ไม่มีตัวที่ตรงกับตัวกรอง');
   function apply() {
     const q = ui.q.trim().toLowerCase();
-    for (const t of tiles) t.el.hidden = !((!ui.tribe || t.it.tribe === ui.tribe || t.it.tribe2 === ui.tribe) && (!ui.status || t.st === ui.status)
+    for (const t of tiles) t.el.hidden = !((!ui.tribe || t.it.tribe === ui.tribe || t.it.tribe2 === ui.tribe) && statusOk(t.it, ui.status)
       && (!q || t.it.id.toLowerCase().includes(q) || (t.it.name || '').toLowerCase().includes(q)));
     for (const s of sections) s.hidden = s.querySelectorAll('.tile:not([hidden])').length === 0;
     empty.hidden = tiles.some((t) => !t.el.hidden) || !items.length;
@@ -437,10 +462,17 @@ function renderBoard(m) {
   const search = h('input', { type: 'search', placeholder: 'ค้นหา ID หรือชื่อ', value: ui.q, 'aria-label': 'ค้นหา', oninput: (e) => { ui.q = e.target.value; apply(); } });
   const chipBox = h('div', { class: 'chips' }, h('button', { 'data-t': '', style: '--c: var(--dim)', onclick: () => { ui.tribe = ''; apply(); } }, 'ทุกเผ่า'),
     other ? null : TRIBES.map(([t, th]) => h('button', { 'data-t': t, style: `--c: ${tribeVar(t)}`, onclick: () => { ui.tribe = ui.tribe === t ? '' : t; apply(); } }, th)));
+  const flow = !other && !showOld;
+  if (flow) for (const it of items) { const w = FLOW_ST[status(it)]?.who; if (w) counts['who-' + w] = (counts['who-' + w] || 0) + 1; }
+  const stList = flow ? [['who-owner', 'ถึงตาคุณ'], ['who-claude', 'ถึงตา Claude'], ...FLOW_STATUS] : STATUS;
+  if (ui.status && !stList.some(([k]) => k === ui.status)) ui.status = '';
   const stSel = h('select', { 'aria-label': 'กรองตามสถานะ', onchange: (e) => { ui.status = e.target.value; apply(); } },
-    h('option', { value: '' }, 'ทุกสถานะ'), STATUS.map(([k, v]) => h('option', { value: k, selected: ui.status === k }, `${v} (${counts[k] || 0})`)));
+    h('option', { value: '' }, 'ทุกสถานะ'), stList.map(([k, v]) => h('option', { value: k, selected: ui.status === k }, `${v} (${counts[k] || 0})`)));
   m.append(h('div', { class: 'filters' }, search, chipBox, stSel));
-  m.append(h('div', { class: 'legend' }, STATUS.map(([k, v]) => h('span', {}, h('i', { class: 'dot st-' + k }), v)),
+  m.append(h('div', { class: 'legend' }, flow
+    ? [h('span', {}, h('i', { class: 'dot who-owner' }), 'ถึงตาคุณ'), h('span', {}, h('i', { class: 'dot who-claude' }), 'ถึงตา Claude'), h('span', {}, h('i', { class: 'dot st-done' }), 'ครบทุกขั้น'),
+      h('span', { class: 'faint' }, 'แถบใต้รูป: ' + FLOW.map(([, l], i) => `${i + 1} ${l}`).join(' · '))]
+    : STATUS.map(([k, v]) => h('span', {}, h('i', { class: 'dot st-' + k }), v)),
     unverified ? h('span', { class: 'warn' }, `ในเกมแต่ยังเป็นภาพ AI ไม่ยืนยันสิทธิ์: ${unverified} ตัว`) : null));
   const groups = other ? Object.keys(KIND_TH).filter((k) => k !== 'character').map((k) => [k, KIND_TH[k], 'var(--dim)', (it) => it.kind === k])
     : TRIBES.map(([t, th]) => [t, th, tribeVar(t), (it) => it.tribe === t]);
@@ -453,9 +485,10 @@ function renderBoard(m) {
       const r = thumbRound(it);
       if (r) thumbInto(th, r, 96);
       const st = status(it), jobs = openJobs(it.id);
-      const el = h('button', { class: 'tile' + (r ? '' : ' empty'), style: `--tribe: ${tribeVar(it.tribe)}`, title: `${it.id} ${it.name || ''} · ${STATUS_TH[st]}`, onclick: () => openItem(it.id) }, th,
-        h('div', { class: 'row nm' }, h('span', { class: 'dot st-' + st }), h('b', {}, it.id), h('span', { class: 'dim small ell' }, it.name || '')),
-        h('div', { class: 'small faint' }, STATUS_TH[st]),
+      const el = h('button', { class: 'tile' + (r ? '' : ' empty'), style: `--tribe: ${tribeVar(it.tribe)}`, title: `${it.id} ${it.name || ''} · ${statusTh(st)}`, onclick: () => openItem(it.id) }, th,
+        h('div', { class: 'row nm' }, h('span', { class: dotCls(st) }), h('b', {}, it.id), h('span', { class: 'dim small ell' }, it.name || '')),
+        useFlow(it) ? flowBar(it) : null,
+        h('div', { class: 'small ' + (FLOW_ST[st] ? 'nxt who-' + FLOW_ST[st].who : 'faint') }, statusTh(st)),
         jobs.length ? h('span', { class: 'badge corner', title: 'รอ Claude: ' + jobs.map(taskTh).join(', ') }, 'รอ Claude') : null);
       tiles.push({ el, it, st }); box.append(el);
     }
@@ -482,7 +515,7 @@ function renderItem(m, it) {
   m.append(h('div', { class: 'head' },
     h('div', {}, h('div', { class: 'meta' }, isChar ? `${TRIBE_TH[it.tribe] || ''}${it.tribe2 ? ' + ' + TRIBE_TH[it.tribe2] : ''} · ${it.rarity || ''}` : KIND_TH[it.kind]),
       h('h2', {}, `${it.id}  ${it.name || ''}`)),
-    h('span', { class: 'pill' }, h('span', { class: 'dot st-' + st }), STATUS_TH[st]),
+    h('span', { class: 'pill' }, h('span', { class: dotCls(st) }), statusTh(st)),
     h('span', { class: 'sp' }),
     h('label', { class: 'pill' }, h('input', { type: 'checkbox', checked: it.inGame, onchange: (e) => { it.inGame = e.target.checked; save().then(render); } }), 'อยู่ในเกมแล้ว'),
     h('button', { onclick: () => queueDialog(it) }, 'ส่งงานให้ Claude')));

@@ -405,3 +405,12 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .brief.is-ok .stamp { border-style: solid; border-color: var(--ok); background: var(--ok); color: #15181d; }
 .brief .usedp { padding: 6px 8px; margin-top: 6px; border-radius: 6px; background: rgba(255,255,255,.04); white-space: pre-wrap; }
 .picklink { color: var(--warn); font-size: 14px; text-decoration: none; white-space: nowrap; }
+
+/* set 262: overview flow progress (owner A1 B1 C1 D1) — orange = your turn, blue (spirit) = Claude turn */
+.dot.who-owner { background: var(--warn); } .dot.who-claude { background: var(--spirit); }
+.flowbar { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+.flowbar i { height: 6px; border-radius: 2px; background: var(--line); }
+.flowbar i.on { background: var(--ok); }
+.flowbar i.nx { outline: 1px solid currentColor; outline-offset: 1px; }
+.flowbar i.nx.who-owner { color: var(--warn); } .flowbar i.nx.who-claude { color: var(--spirit); }
+.tile .nxt { font-weight: 600; } .tile .nxt.who-owner { color: var(--warn); } .tile .nxt.who-claude { color: var(--spirit); }
