@@ -173,9 +173,10 @@ with sync_playwright() as p:
     pg.locator(".pxed-float button", has_text="กลับซ้าย-ขวา").click()
     pg.locator(".pxed-float button", has_text="วางลง").click(); pg.wait_for_timeout(150)
     A4 = grabAll()
-    # the piece box = bounding box of the cleared pixels; flipped left-right inside it
+    # the piece box = the lasso's own box (top line cx-8..cx+8 is selected); flipped left-right inside it.
+    # Not the box of the changed pixels: pixels already transparent at the edge do not change (set 262: new WN-1 still)
     cl = [i for i in range(W * H) if A3[i] != A0[i]]
-    bx0 = min(i % W for i in cl); bx1 = max(i % W for i in cl)
+    bx0, bx1 = cx - 8, cx + 8
     bad = 0
     for i in cl:
         x, y = i % W, i // W; mx = bx0 + bx1 - x

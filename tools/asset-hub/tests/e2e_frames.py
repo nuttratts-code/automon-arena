@@ -21,7 +21,8 @@ with sync_playwright() as p:
     check("frameSeq ping-pong 8 -> 14 steps", pg.evaluate("JSON.stringify(frameSeq({n:8,pingpong:true}))") == "[0,1,2,3,4,5,6,7,6,5,4,3,2,1]")
     check("frameSeq plain 8 -> 8 steps", pg.evaluate("frameSeq({n:8}).length") == 8)
     r0 = [r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "frames"][-1]
-    pg.evaluate(f"ui.tab='chars'; ui.step='frames'; ui.sel='{r0['id']}'; openItem('WN-1')"); pg.wait_for_timeout(1500)
+    # openItem() resets ui.sel, so pick the round after it (set 262: the newest round is no longer the ★ one)
+    pg.evaluate(f"ui.tab='chars'; ui.step='frames'; openItem('WN-1'); ui.sel='{r0['id']}'; render()"); pg.wait_for_timeout(1500)
     n = r0["meta"]["n"]
     check("strip shows every frame", pg.locator(".fstrip .fcell").count() == n, pg.locator(".fstrip .fcell").count())
     sw = pg.locator(".tools .switch", has_text="เล่นไป-กลับ")

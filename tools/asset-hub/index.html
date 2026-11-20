@@ -12,12 +12,13 @@
   <h1>คลังงานศิลป์ <span>Automon</span></h1>
   <nav class="tabs" id="tabs">
     <button data-tab="chars" class="on">ตัวละคร</button>
-    <button data-tab="other">ฉาก · 3D · เอฟเฟกต์ · UI</button>
+    <button data-tab="other" data-old>ฉาก · 3D · เอฟเฟกต์ · UI</button>
     <button data-tab="team">จัดทีม · ขนาด</button>
-    <button data-tab="library">คลังเดิม</button>
-    <button data-tab="queue">งานถึง Claude <b id="qCount"></b></button>
+    <button data-tab="library" data-old>คลังเดิม</button>
+    <button data-tab="queue" data-old>งานถึง Claude <b id="qCount"></b></button>
   </nav>
   <a class="picklink" href="/pick">เลือกภาพชุดเจน ↗</a>
+  <button id="oldBtn" class="switch" role="switch" aria-checked="false" title="แสดงขั้นและปุ่มของโฟลเก่า (วิดีโอ Veo, พรอมต์, ตัดพื้น, ไฟล์อื่น, ท่าอื่น, แท็บเก่า) งานเก่าไม่ได้ถูกลบ"><span class="knob"></span>แสดงส่วนที่ซ่อน</button>
   <span id="saveState" class="small faint" role="status" aria-live="polite"></span>
   <button id="exportBtn" class="ghost" title="เขียน godot/data/unit_shadows.json จากค่าเงา ขนาด และชื่อทุกตัว">ส่งค่าเข้า Godot</button>
 </header>

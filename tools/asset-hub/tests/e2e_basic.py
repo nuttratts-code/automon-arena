@@ -26,6 +26,8 @@ with sync_playwright() as p:
     pg.locator("#tabs button", has_text="จัดทีม").click(); pg.wait_for_timeout(1500)
     ids0 = hub()["settings"]["team"]["ids"]
     SID = ids0[1]; print("slot 2 =", SID, ids0)
+    # the owner may have unlocked this creature in the live data (set 262: PL-1 free) -> start the test from the locked default
+    pg.evaluate(f"(async()=>{{const it=hub.items['{SID}']; if(it.free||it.offset||it.rot){{delete it.free; delete it.offset; delete it.rot; await save(); render();}}}})()"); wait(1200)
     # ---- locked by default: drag swaps
     pg.locator(".fslot").nth(5).click(); pg.wait_for_timeout(200)  # slot 1 PL-1
     sw = pg.locator(".insp .switch", has_text="ล็อคตำแหน่ง")
@@ -136,6 +138,8 @@ with sync_playwright() as p:
     # set 258: concept + idle briefs — tick saves ok, editing after the tick clears it (owner C1)
     check("still step shows 2 brief boxes", pg.locator(".brief").count() == 2)
     stamp = pg.locator(".brief .stamp").nth(1)
+    if stamp.get_attribute("aria-pressed") == "true":  # owner already ticked it in the live data (set 262) -> untick first
+        stamp.click(); pg.wait_for_timeout(1200)
     if stamp.is_disabled():
         pg.locator(".brief textarea").nth(1).fill("ทดสอบ"); pg.wait_for_timeout(1200)
     stamp.click(); pg.wait_for_timeout(1200)

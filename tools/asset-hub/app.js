@@ -7,7 +7,7 @@ const TRIBES = [
 const TRIBE_TH = Object.fromEntries(TRIBES);
 const KIND_TH = { character: 'ตัวละคร', scene: 'ฉาก', prop3d: 'โมเดล 3D', effect: 'เอฟเฟกต์', ui: 'UI' };
 const STATUS = [
-  ['none', 'ยังไม่เริ่ม'], ['wait-still', 'รอภาพนิ่ง'], ['pick', 'รอเลือกภาพ'], ['wait-video', 'รอวิดีโอ'],
+  ['none', 'ยังไม่เริ่ม'], ['wait-still', 'รอภาพนิ่ง'], ['pick', 'รอเลือกภาพ'], ['wait-video', 'รอท่ายืน'],
   ['claude', 'รอ Claude ทำเฟรม'], ['done', 'เฟรมเสร็จ'], ['ingame', 'อยู่ในเกมแล้ว'],
 ];
 const STATUS_TH = Object.fromEntries(STATUS);
@@ -42,7 +42,10 @@ function veoPanel(it) {
   if (p) box.append(h('pre', { class: 'prompt' }, p.text), h('p', { class: 'small faint' }, `Claude เขียน ${fmtDate(p.t)} จากภาพนิ่งที่ตรวจผ่าน`));
   return box;
 }
-const openJobs = (id) => (hub.queue || []).filter((q) => q.item === id && q.state === 'open');
+// set 262: jobs of the old video flow (check+veo, frames+shadow) are hidden with the switch off; free-text jobs always show
+const OLD_TASKS = ['check+veo', 'frames+shadow'];
+const jobShown = (q) => showOld || !OLD_TASKS.includes(q.task);
+const openJobs = (id) => (hub.queue || []).filter((q) => q.item === id && q.state === 'open' && jobShown(q));
 // owner A1: "ตัดเฟรม + สร้างเงา" runs on this computer right away (server calls Claude's scripts), no chat needed
 let job = {};
 async function pollJob() {
@@ -95,6 +98,10 @@ const sunDir = () => { const a = (hub.settings.sunAngle ?? SUN_DEFAULT_ANGLE) * 
 const SHADOW_DEFAULT = { feet: [0.5, 1], oval: { on: false, dx: 0, dy: 0, w: 0.8, h: 0.45, a: 1 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: null } };
 
 let hub = null;
+// set 262 (owner): parts outside the current flow (still batch → /pick → ★ → idle brief → PixelLab 8×150 ms → ★ → icon + shadow)
+// are hidden from the screen only; data, files and old rounds stay. Switch "แสดงส่วนที่ซ่อน" (per browser) shows them again.
+let showOld = false; try { showOld = localStorage.getItem('hubShowOld') === '1'; } catch { /* storage off */ }
+const OLD_STEPS = ['video', 'file', 'prompt'];
 const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
 
 // ---------- helpers ----------
@@ -484,17 +491,19 @@ function renderItem(m, it) {
     h('span', { class: 'sp' }), h('button', { class: 'ghost small-btn', onclick: () => { q.state = 'cancel'; save().then(render); } }, 'ยกเลิกงานนี้')));
   if (job.state === 'run' && job.item === it.id) m.append(h('div', { class: 'job' }, h('b', {}, 'โปรแกรมกำลังตัดเฟรม + สร้างเงา'), h('span', { class: 'small', id: 'jobStep' }, job.step || ''), h('span', { class: 'spin' })));
   if (job.state === 'error' && job.item === it.id) m.append(h('div', { class: 'job bad-job' }, h('b', {}, 'ตัดเฟรมไม่สำเร็จ'), h('span', { class: 'small' }, job.msg), h('span', { class: 'sp' }), h('button', { class: 'ghost', onclick: () => { job = {}; render(); } }, 'ปิด')));
-  const lastDone = (hub.queue || []).filter((q) => q.item === it.id && q.state === 'done' && !q.seen).pop();
+  const lastDone = (hub.queue || []).filter((q) => q.item === it.id && q.state === 'done' && !q.seen && jobShown(q)).pop();
   if (lastDone) m.append(h('details', { class: 'job done slim' },
     h('summary', {}, h('b', {}, `${lastDone.by === 'auto' ? 'โปรแกรม' : 'Claude '}ทำเสร็จแล้ว: ${taskTh(lastDone)}${lastDone.result === 'fail' ? ' (ไม่ผ่าน)' : ''}`),
       nextTh(lastDone) ? h('span', { class: 'small next-inline' }, nextTh(lastDone)) : null, h('span', { class: 'sp' }), h('span', { class: 'small faint' }, 'กดดูรายละเอียด'),
       h('button', { class: 'ghost small-btn', onclick: (e) => { e.preventDefault(); lastDone.seen = true; save().then(render); } }, 'รับทราบ')),
     h('div', { class: 'small', style: 'white-space:pre-wrap;padding-top:6px' }, lastDone.reply || '')));
-  const steps = isChar ? STEPS : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
-  const labels = isChar ? null : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
+  const steps = isChar ? STEPS.filter(([k]) => showOld || !OLD_STEPS.includes(k)) : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
+  const labels = isChar ? (showOld ? null : { still: 'ภาพนิ่ง' }) : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
+  const subs = isChar && !showOld ? { still: 'คุณติดดาว · ไอคอน', frames: 'ท่ายืน PixelLab' } : {};
+  if (isChar && !showOld) ui.move = 'idle';
   m.append(h('nav', { class: 'pipe' }, steps.map(([k, label, sub], i) => h('button', {
     class: (ui.step === k ? 'on ' : '') + (stepHas(it, k) ? 'has' : ''), onclick: () => { ui.step = k; ui.sel = null; ui.cmp = []; render(); },
-  }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, sub)))));
+  }, h('span', { class: 'n' }, String(i + 1)), h('b', {}, labels?.[k] || label), h('span', { class: 's' }, subs[k] || sub)))));
   if (ui.step === 'cut') ui.step = 'still'; // step merged into ภาพนิ่ง
   if (ui.step === 'veoin') ui.step = 'prompt'; // merged into the พรอมต์ tab (owner C1)
   if (!steps.some(([k]) => k === ui.step)) ui.step = steps[0][0];
@@ -502,11 +511,11 @@ function renderItem(m, it) {
   if (isChar && ui.step !== 'shadow') {
     const bar = h('div', { class: 'tools' });
     if (ui.step !== 'prompt' || true) bar.append(h('span', { class: 'seg' }, [1, 3].map((f) => h('button', { class: ui.form === f ? 'on' : '', onclick: () => { ui.form = f; ui.sel = null; render(); } }, `ร่าง ${f}`))));
-    if (['video', 'frames', 'file'].includes(ui.step)) bar.append(h('span', { class: 'seg' }, hub.settings.moves.map((mv) => h('button', { class: ui.move === mv ? 'on' : '', onclick: () => { ui.move = mv; ui.sel = null; render(); } }, moveTh(mv)))));
+    if (showOld && ['video', 'frames', 'file'].includes(ui.step)) bar.append(h('span', { class: 'seg' }, hub.settings.moves.map((mv) => h('button', { class: ui.move === mv ? 'on' : '', onclick: () => { ui.move = mv; ui.sel = null; render(); } }, moveTh(mv)))));
     m.append(bar);
   }
-  if (isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
-  if (isChar && ui.step === 'still') m.append(charInfo(it), briefBox(it), checkBar(it));
+  if (showOld && isChar && ['video', 'frames'].includes(ui.step)) m.append(autoFramesBar(it));
+  if (isChar && ui.step === 'still') m.append(charInfo(it), briefBox(it), showOld ? checkBar(it) : '');
   if (ui.step === 'prompt') { // image prompt, then the Veo input picture + video prompt underneath
     renderPrompt(m, it);
     if (isChar) { m.append(h('h3', { class: 'sect' }, 'ภาพส่ง Veo + พรอมต์วิดีโอ')); m.append(veoPanel(it)); renderSlot(m, it, 'veoin'); }
@@ -577,7 +586,7 @@ function renderSlot(m, it, slot) {
     const viewbar = h('div', { class: 'viewbar' }, h('span', { class: 'lbl' }, 'พื้นหลัง'), h('span', { class: 'seg' }, BGS.map(([k, v]) => h('button', { class: ui.bg === k ? 'on' : '', 'aria-pressed': String(ui.bg === k), onclick: () => { ui.bg = k; render(); } }, v))));
     if (pics) viewbar.append(h('span', { class: 'pill' + (sel.slot === 'cut' ? ' cutpill' : '') }, sel.slot === 'cut' ? 'กำลังดู: ภาพตัดพื้น' : 'กำลังดู: ภาพต้นฉบับ'));
     const actbar = h('div', { class: 'actbar' });
-    if (canCut) actbar.append(h('button', { class: cutOf(it, sel) ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้ ภาพตัดพื้นใหม่จะเป็นภาพที่ใช้ทันที', onclick: () => makeCut(it, sel) }, cutOf(it, sel) ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
+    if (canCut && showOld) actbar.append(h('button', { class: cutOf(it, sel) ? '' : 'primary', title: 'ตัดพื้นเขียว/ม่วงแดงออก ภาพต้นฉบับยังเก็บไว้ ภาพตัดพื้นใหม่จะเป็นภาพที่ใช้ทันที', onclick: () => makeCut(it, sel) }, cutOf(it, sel) ? 'ตัดพื้นใหม่' : 'ตัดพื้น'));
     else if (sel.slot === 'cut') { const from = it.rounds.find((x) => x.id === sel.from); actbar.append(h('span', { class: 'small dim' }, from ? `ตัดจากภาพต้นฉบับ ${fmtDate(from.t)}` : 'ภาพตัดพื้นที่ไม่มีภาพต้นฉบับในคลัง')); }
     if (isImage(sel.file) && slot !== 'veoin' && !(sel.slot === 'frames' && sel.meta)) actbar.append(h('button', { title: 'แก้เม็ดพิกเซลง่ายๆ บนเว็บ (ภาพไม่เกิน 256 px) บันทึกเป็นรอบใหม่และใช้ทันที', onclick: () => pixelEditor(it, sel) }, 'แก้พิกเซล'));
     const sw = (on, label, title, fn) => h('button', { class: 'switch' + (on ? ' is-on' : ''), role: 'switch', 'aria-checked': String(on), title, onclick: fn }, h('span', { class: 'knob' }), label);
@@ -598,7 +607,7 @@ function renderSlot(m, it, slot) {
     if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
     else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
     if (pics && it.kind === 'character') left.append(iconBox(it));
-    if (pics && sel.slot === 'still') left.append(stillChecks(it, sel));
+    if (showOld && pics && sel.slot === 'still') left.append(stillChecks(it, sel));
   } else left.append(h('p', { class: 'dim' }, emptyText(slot)));
   // drop zone + rounds
   const right = h('div', {});
@@ -612,7 +621,7 @@ function renderSlot(m, it, slot) {
     if (!list.length) box.append(h('p', { class: 'small faint' }, empty));
     right.append(box);
   };
-  if (pics) { group('ภาพต้นฉบับ', rs, 'ยังไม่มี วางภาพจาก Gemini ที่ช่องด้านบน'); group('ภาพตัดพื้น', cuts, 'ยังไม่มี เลือกภาพต้นฉบับแล้วกด "ตัดพื้น"'); }
+  if (pics) { group('ภาพต้นฉบับ', rs, showOld ? 'ยังไม่มี วางภาพจาก Gemini ที่ช่องด้านบน' : 'ยังไม่มี ภาพที่คุณเลือกที่หน้าเลือกภาพจะมาอยู่ที่นี่'); if (showOld || cuts.length) group('ภาพตัดพื้น', cuts, 'ยังไม่มี เลือกภาพต้นฉบับแล้วกด "ตัดพื้น"'); }
   else group(STEPS.find((x) => x[0] === slot)?.[1] || 'รอบ', rs, emptyText(slot));
   work.append(left, right);
   m.append(work);
@@ -700,7 +709,7 @@ function usedBanner(it, used, sel) {
 }
 function emptyText(slot) {
   return {
-    still: 'ยังไม่มีภาพนิ่ง ลากภาพที่เจนจาก Gemini มาวางที่ช่องด้านขวา',
+    still: 'ยังไม่มีภาพนิ่ง ลากภาพมาวางที่ช่องด้านขวา',
     veoin: 'ยังไม่มีภาพเตรียมส่ง Veo Claude จะทำจากภาพตัดพื้น',
     video: 'ยังไม่มีวิดีโอ ลากไฟล์ .mp4 จาก Veo มาวางที่ช่องด้านขวา',
     frames: 'ยังไม่มีเฟรม Claude จะแตกเฟรมจากวิดีโอที่ติดดาว',
@@ -860,7 +869,7 @@ function roundRow(it, r, isSel) {
     h('div', { class: 'info' },
       h('div', { class: 'row' }, h('b', {}, fmtDate(r.t) || 'ไม่มีวันที่'), h('span', { class: 'faint' }, r.by === 'claude' ? 'Claude' : 'คุณ'),
         r.slot === 'cut' && ui.step === 'still' ? h('span', { class: 'pill' }, 'ตัดพื้น') : cutOf(it, r) ? h('span', { class: 'faint' }, '· ตัดพื้นแล้ว') : null,
-        r.meta ? h('span', { class: 'faint' }, `${r.meta.n} เฟรม`) : null, r.archived ? h('span', { class: 'pill' }, 'ซ่อนอยู่') : null),
+        r.meta?.n ? h('span', { class: 'faint' }, `${r.meta.n} เฟรม`) : null, r.archived ? h('span', { class: 'pill' }, 'ซ่อนอยู่') : null),
       noteEl,
       h('div', { class: 'acts' },
         h('button', { class: r.star ? 'starred' : '', 'aria-pressed': String(!!r.star), title: r.star ? 'รอบนี้คือตัวที่ใช้อยู่ กดอีกครั้งเพื่อเลิกใช้' : 'ใช้รอบนี้เป็นตัวหลัก (คัดลอกเข้าคลังถาวร)', onclick: () => star(it, r) }, r.star ? '★ ใช้อยู่' : 'ใช้รอบนี้'),
@@ -2042,8 +2051,8 @@ function queueDialog(it) {
   const preset = h('button', { class: 'primary', disabled: !vid || job.state === 'run', title: vid ? '' : 'ต้องติดดาววิดีโอของร่าง/ท่านี้ก่อน', onclick: () => { $('dlg').close(); startFrames(it, vid); } }, 'ตัดเฟรม + สร้างเงา (ทำเลย)');
   const stl = it.kind === 'character' ? pick(it, 'still', ui.form) || latest(it, 'still', ui.form) : null;
   body.replaceChildren(h('h3', { style: 'margin-top:0' }, `ส่งงานให้ Claude: ${it.id} ${it.name || ''}`),
-    it.kind === 'character' ? h('div', { class: 'tools' }, h('button', { class: 'primary', disabled: !stl, onclick: () => { $('dlg').close(); sendCheck(it, stl); } }, 'ตรวจภาพ + เขียนพรอมต์วิดีโอ'), h('span', { class: 'small dim' }, stl ? `ภาพนิ่งร่าง ${ui.form} ${stl.star ? 'ที่ติดดาว' : 'ล่าสุด'}` : 'วางภาพนิ่งก่อน')) : null,
-    it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'โปรแกรมทำเองทันที ไม่ต้องรอ Claude · ช่องข้อความด้านล่างไว้สำหรับงานอื่นที่ต้องให้ Claude คิด' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
+    showOld && it.kind === 'character' ? h('div', { class: 'tools' }, h('button', { class: 'primary', disabled: !stl, onclick: () => { $('dlg').close(); sendCheck(it, stl); } }, 'ตรวจภาพ + เขียนพรอมต์วิดีโอ'), h('span', { class: 'small dim' }, stl ? `ภาพนิ่งร่าง ${ui.form} ${stl.star ? 'ที่ติดดาว' : 'ล่าสุด'}` : 'วางภาพนิ่งก่อน')) : null,
+    showOld && it.kind === 'character' ? h('div', { class: 'tools' }, preset, h('span', { class: 'small dim' }, vid ? 'โปรแกรมทำเองทันที ไม่ต้องรอ Claude · ช่องข้อความด้านล่างไว้สำหรับงานอื่นที่ต้องให้ Claude คิด' : 'ติดดาววิดีโอในขั้น "วิดีโอ" ก่อน ปุ่มนี้จึงจะกดได้')) : null,
     h('p', { class: 'small dim' }, `งานจะเข้าคิว พอคุณบอก Claude ว่า "ดูคิว" Claude จะทำทุกงานที่รออยู่ (ตอนนี้อยู่ขั้น: ${step ? step[1] : ''} ร่าง ${ui.form})`), ta,
     h('div', { class: 'tools' }, h('button', {
       class: 'primary', onclick: () => {
@@ -2458,6 +2467,13 @@ function newItemDialog() {
 }
 
 // ---------- boot ----------
+function applyOld() {
+  const b = $('oldBtn'); b.classList.toggle('is-on', showOld); b.setAttribute('aria-checked', String(showOld));
+  document.querySelectorAll('#tabs [data-old]').forEach((t) => { t.hidden = !showOld; });
+  if (!showOld && ['other', 'library', 'queue'].includes(ui.tab)) { ui.tab = 'chars'; const it = hub.items?.[ui.item]; if (it && it.kind !== 'character') ui.item = null; }
+}
+$('oldBtn').addEventListener('click', () => { showOld = !showOld; try { localStorage.setItem('hubShowOld', showOld ? '1' : '0'); } catch { /* storage off */ } applyOld(); render(); });
+applyOld();
 document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => { ui.tab = b.dataset.tab; if (ui.tab === 'chars' || ui.tab === 'other') { const it = hub.items[ui.item]; if (it && (it.kind !== 'character') !== (ui.tab === 'other')) ui.item = null; } render(); }));
 $('search').addEventListener('input', (e) => { ui.railQ = e.target.value; renderRail(); });
 $('boardBtn').addEventListener('click', () => { ui.item = null; render(); });
