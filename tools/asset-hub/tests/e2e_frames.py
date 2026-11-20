@@ -44,17 +44,34 @@ with sync_playwright() as p:
     for k in range(3):
         pg.mouse.click(cvb["x"] + (2 + k) * z * sx + 1, cvb["y"] + 2 * z * sx + 1)
     pg.wait_for_timeout(200)
+    # set 262 (owner A1 B1 C1): switch to frame 5 inside the editor, edit it too, player + onion skin, one save writes both frames
+    check("frame bar has every frame", pg.locator(".pxed-frs button").count() == n)
+    check("player canvas runs", pg.evaluate("document.querySelector('.pxed-play').width") > 0)
+    pg.locator(".pxed-frs button").nth(4).click(); pg.wait_for_timeout(400)
+    check("switch to frame 5", f"เฟรม 5/{n}" in pg.locator("dialog.pxed-dlg[open] h3").text_content())
+    check("frame 3 marked edited", "edited" in (pg.locator(".pxed-frs button").nth(2).get_attribute("class") or ""))
+    on = pg.locator(".pxed-frbar .switch"); on.click(); pg.wait_for_timeout(150)
+    check("onion skin switch", on.get_attribute("aria-checked") == "true")
+    cvb = pg.locator(".pxed-cv").bounding_box()
+    for k in range(2):
+        pg.mouse.click(cvb["x"] + (2 + k) * z * sx + 1, cvb["y"] + 3 * z * sx + 1)
+    pg.wait_for_timeout(200)
+    pg.keyboard.press("Comma"); pg.wait_for_timeout(300)
+    check("key , = previous frame", f"เฟรม 4/{n}" in pg.locator("dialog.pxed-dlg[open] h3").text_content())
+    pg.locator(".pxed-frs button").nth(2).click(); pg.wait_for_timeout(300)
+    check("back on frame 3 its undo is kept", not pg.locator("dialog.pxed-dlg button", has_text="ย้อน").first.is_disabled())
+    pg.screenshot(path=f"{OUT}/frame_editor.png")
     pg.locator("dialog.pxed-dlg button", has_text="บันทึกและใช้เลย").click(); pg.wait_for_timeout(2000)
     rs = [r for r in hub()["items"]["WN-1"]["rounds"] if r["slot"] == "frames"]
     r1 = rs[-1]
     check("save adds a new frames round", r1["id"] != r0["id"] and len(rs) >= 2)
     check("new round keeps layout + ms + ไป-กลับ", r1.get("meta") == r0["meta"], r1.get("meta"))
-    check("new round note names the frame", "เฟรม 3" in (r1.get("note") or ""), r1.get("note"))
+    check("new round note names both frames", "เฟรม 3, 5" in (r1.get("note") or ""), r1.get("note"))
     a, bb = png(r0["file"]), png(r1["file"])
     check("sheet size unchanged", a.size == bb.size, (a.size, bb.size))
     fw, fh = r0["meta"]["fw"], r0["meta"]["fh"]
     changed = [k for k in range(n) if ImageChops.difference(a.crop((k * fw, 0, k * fw + fw, fh)), bb.crop((k * fw, 0, k * fw + fw, fh))).getbbox()]
-    check("only frame 3 changed", changed == [2], changed)
+    check("only frames 3 and 5 changed", changed == [2, 4], changed)
     check("old round kept", any(r["id"] == r0["id"] for r in rs))
     # toggle ไป-กลับ on the new round
     pg.evaluate(f"ui.step='frames'; ui.sel='{r1['id']}'; render()"); pg.wait_for_timeout(1200)

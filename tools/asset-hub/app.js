@@ -1592,7 +1592,11 @@ async function pixelEditor(it, r, opt = {}) {
   let img;
   try { img = await loadImg(r.file); } catch { toast('เปิดภาพไม่ได้'); return; }
   // owner set 257 C1: a frames sheet is edited one frame at a time (opt.frame); saving writes that frame back into a copy of the whole sheet
-  const fr = r.slot === 'frames' && r.meta && Number.isInteger(opt.frame) ? sheetFrame(img, r.meta, opt.frame) : null;
+  let fr = r.slot === 'frames' && r.meta && Number.isInteger(opt.frame) ? sheetFrame(img, r.meta, opt.frame) : null;
+  // owner set 262 (A1 B1 C1): switch frames inside the editor - every frame keeps its own edits, layers and undo (fdocs[i] = that frame's
+  // main doc), one save writes every changed frame into one new frames round; a small player loops all frames with the edits; onion skin
+  const nFr = fr ? (r.meta.n || r.meta.cols * r.meta.rows) : 0, fdocs = fr ? new Array(nFr).fill(null) : null, origF = [];
+  let fi = fr ? opt.frame % nFr : 0, onion = false, playOn = true, playT = 0, playStep = 0;
   let W = fr ? fr[2] : img.naturalWidth, H = fr ? fr[3] : img.naturalHeight; // let: the copied-piece tab swaps in its own size (owner set 248 round 5)
   if (W > PXED_MAX || H > PXED_MAX) { toast(`ภาพนี้ ${W}×${H} ใหญ่เกินไปสำหรับตัวแก้บนเว็บ (สูงสุด ${PXED_MAX} px) ใช้ Pixelorama แทน`); return; }
   const src = document.createElement('canvas'); src.width = W; src.height = H;
@@ -1715,7 +1719,23 @@ async function pixelEditor(it, r, opt = {}) {
     rotIn.value = String(deg); rotNum.value = String(deg); syncUi(); paint();
   }
   function rotReset() { rot = null; rotIn.value = '0'; rotNum.value = '0'; }
-  const mainDirty = () => (cur === 'main' ? dirty : !!docs.main.dirty);
+  const mainDirty = () => (cur === 'main' ? dirty : !!docs.main.dirty) || !!(fdocs && fdocs.some((d) => d && d !== docs.main && d.dirty));
+  function origFrame(k) { // the frame as it is in the file (cached)
+    if (!origF[k]) { const [x, y, w, hh] = sheetFrame(img, r.meta, k), c = document.createElement('canvas'); c.width = w; c.height = hh; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, x, y, w, hh, 0, 0, w, hh); origF[k] = g.getImageData(0, 0, w, hh); }
+    return origF[k];
+  }
+  function frameImg(k) { // what frame k looks like now, edits included
+    if (k === fi) return cur === 'main' ? compose() : composeL(docs.main.layers);
+    return fdocs[k] ? composeL(fdocs[k].layers) : origFrame(k);
+  }
+  function goFrame(k) {
+    if (!fr) return; k = ((k % nFr) + nFr) % nFr; if (k === fi) return;
+    if (cur !== 'main') switchTo('main');
+    commitFloat(); stash(); fdocs[fi] = docs.main;
+    if (!fdocs[k]) { const d0 = cloneI(origFrame(k)); fdocs[k] = { W, H, data: d0, layers: [{ name: 'ภาพหลัก', data: d0, vis: true }], act: 0, undoS: [], redoS: [], dirty: false, z }; }
+    else fdocs[k].z = z;
+    docs.main = fdocs[k]; fi = k; fr = sheetFrame(img, r.meta, k); load('main'); rotReset(); syncUi(); paint(); cv.focus();
+  }
   function stash() { Object.assign(docs[cur], { W, H, data, undoS, redoS, dirty, z, layers, act }); }
   function load(k) {
     const d = docs[k]; W = d.W; H = d.H; layers = d.layers || null; act = d.act || 0; data = layers ? layers[act].data : d.data; undoS = d.undoS; redoS = d.redoS; dirty = d.dirty; z = d.z; cur = k;
@@ -1774,11 +1794,17 @@ async function pixelEditor(it, r, opt = {}) {
     editSw.classList.toggle('is-on', editOn); editSw.setAttribute('aria-checked', String(editOn));
     mRotIn.value = String(mDeg()); mRotNum.value = String(mDeg());
     if (layers) renderLayers();
+    if (fr) {
+      titleEl.textContent = `แก้พิกเซล · ${it.id} · เฟรม ${fi + 1}/${nFr} · ${W}×${H}`;
+      frBtns.forEach((b, k) => { const on = k === fi, d = on ? (cur === 'main' ? dirty : !!docs.main.dirty) : !!fdocs[k]?.dirty; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.classList.toggle('edited', d); });
+      onionSw.classList.toggle('is-on', onion); onionSw.setAttribute('aria-checked', String(onion)); playB.textContent = playOn ? '⏸ หยุด' : '▶ เล่น';
+    }
   }
   function paint() {
     cv.width = W * z; cv.height = H * z;
     const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
     g.clearRect(0, 0, cv.width, cv.height);
+    if (fr && onion && cur === 'main') { sg.putImageData(frameImg((fi - 1 + nFr) % nFr), 0, 0); g.globalAlpha = 0.3; g.drawImage(src, 0, 0, W * z, H * z); g.globalAlpha = 1; } // previous frame, faint
     sg.putImageData(compose(), 0, 0); g.drawImage(src, 0, 0, W * z, H * z);
     if (grid && z >= 4) {
       g.strokeStyle = bgK === 'white' || bgK === 'green' ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.14)'; g.lineWidth = 1; g.beginPath();
@@ -2024,12 +2050,13 @@ async function pixelEditor(it, r, opt = {}) {
     else if ((k === 'Delete' || k === 'Backspace') && !float && sel) { e.preventDefault(); delSel(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && float) { e.preventDefault(); commitFloat(); }
     else if ((k === 'Enter' || k === 'NumpadEnter') && cur === 'piece') { e.preventDefault(); sendPiece(); }
+    else if (fr && !mod && !float && (k === 'Comma' || k === 'Period') && e.type === 'keydown') { e.preventDefault(); goFrame(fi + (k === 'Comma' ? -1 : 1)); }
     else if (float && k.startsWith('Arrow')) { e.preventDefault(); const n = e.shiftKey ? 10 : 1, d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k]; moveF(float.x + d[0] * n * (mirX ? -1 : 1), float.y + d[1] * n); paint(); }
   }
   const offPick = () => { if (picking) { picking = false; syncUi(); paint(); } };
   document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey); window.addEventListener('blur', offPick);
   const dlg = $('dlg');
-  function cleanup() { document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
+  function cleanup() { clearTimeout(playT); playT = -1; document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); window.removeEventListener('blur', offPick); dlg.classList.remove('pxed-dlg'); dlg.removeEventListener('cancel', onCancel); }
   function close(force) { if (!force && mainDirty() && !confirm('ยังไม่ได้บันทึก ปิดแล้วงานที่แก้จะหาย ปิดเลยไหม')) return; cleanup(); dlg.close(); }
   function onCancel(e) { e.preventDefault(); if (float) { cancelFloat(); return; } if (sel) { setSel(null); paint(); return; } if (cur === 'piece') { switchTo('main'); return; } close(); } // Esc: drop the floating piece, then the selection, then leave the piece tab, then close (asks when there are changes)
   async function saveEdit() {
@@ -2039,7 +2066,12 @@ async function pixelEditor(it, r, opt = {}) {
     try {
       sg.putImageData(compose(), 0, 0); // visible layers merged into one picture (hidden layers are left out)
       let out = src;
-      if (fr) { out = document.createElement('canvas'); out.width = img.naturalWidth; out.height = img.naturalHeight; const og = out.getContext('2d'); og.drawImage(img, 0, 0); og.clearRect(fr[0], fr[1], W, H); og.drawImage(src, fr[0], fr[1]); }
+      const doneFr = [];
+      if (fr) {
+        stash(); fdocs[fi] = docs.main;
+        out = document.createElement('canvas'); out.width = img.naturalWidth; out.height = img.naturalHeight; const og = out.getContext('2d'); og.drawImage(img, 0, 0);
+        fdocs.forEach((d, k) => { if (!d || !d.dirty) return; const [x, y] = sheetFrame(img, r.meta, k); sg.putImageData(composeL(d.layers), 0, 0); og.clearRect(x, y, W, H); og.drawImage(src, x, y); doneFr.push(k + 1); });
+      }
       const blob = await new Promise((ok) => out.toBlob(ok, 'image/png'));
       const q = new URLSearchParams({ item: it.id, slot: r.slot, name: (r.orig || r.slot).replace(/\.\w+$/, '') + '_edit.png' }); // newest upload = ★ used (owner: use the edit right away)
       if (it.kind === 'character') q.set('form', String(r.form || ui.form));
@@ -2048,7 +2080,7 @@ async function pixelEditor(it, r, opt = {}) {
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob });
       const nr = hub.items[it.id].rounds.at(-1);
       if (nr && fr) nr.meta = { ...r.meta }; // same frames layout, ms and ไป-กลับ
-      if (nr) { nr.note = (fr ? `แก้พิกเซลเฟรม ${opt.frame + 1} บนเว็บ จาก ` : 'แก้พิกเซลบนเว็บ จาก ') + fmtDate(r.t); if (r.flip) nr.flip = true; if (r.iconPad) { nr.iconPad = r.iconPad; if (r.iconOpen) nr.iconOpen = r.iconOpen; if (r.iconN) nr.iconN = r.iconN; } await save(); ui.sel = r.slot === 'cut' || r.slot === 'icon' ? ui.sel : nr.id; }
+      if (nr) { nr.note = (fr ? `แก้พิกเซลเฟรม ${doneFr.join(', ')} บนเว็บ จาก ` : 'แก้พิกเซลบนเว็บ จาก ') + fmtDate(r.t); if (r.flip) nr.flip = true; if (r.iconPad) { nr.iconPad = r.iconPad; if (r.iconOpen) nr.iconOpen = r.iconOpen; if (r.iconN) nr.iconN = r.iconN; } await save(); ui.sel = r.slot === 'cut' || r.slot === 'icon' ? ui.sel : nr.id; }
       dirty = false; toast('บันทึกแล้ว ใช้ภาพนี้แทนแล้ว (ภาพเดิมยังอยู่ในรายการ กด "ใช้รอบนี้" เพื่อกลับไปใช้)'); close(true); render();
     } catch (e) { toast('บันทึกไม่ได้: ' + e.message); saveB.disabled = false; }
   }
@@ -2057,13 +2089,31 @@ async function pixelEditor(it, r, opt = {}) {
     z = Math.max(1, Math.min(24, nz)); syncUi(); paint();
     st.scrollLeft = cx * st.scrollWidth - st.clientWidth / 2; st.scrollTop = cy * st.scrollHeight - st.clientHeight / 2;
   }
+  // frame bar + player (only when editing a frames sheet)
+  const titleEl = h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id} · ${W}×${H}`);
+  const frBtns = fr ? Array.from({ length: nFr }, (_, k) => h('button', { 'data-k': String(k), title: `เฟรม ${k + 1}`, onclick: () => goFrame(k) }, String(k + 1))) : [];
+  const onionSw = h('button', { class: 'switch', role: 'switch', title: 'เห็นเฟรมก่อนหน้าจางๆ ใต้ภาพที่กำลังแก้', onclick: () => { onion = !onion; syncUi(); paint(); } }, h('span', { class: 'knob' }), 'เงาเฟรมก่อนหน้า');
+  const frBar = fr ? h('div', { class: 'row pxed-frbar' }, h('button', { title: 'เฟรมก่อน (ปุ่ม ,)', onclick: () => goFrame(fi - 1) }, '◀'),
+    h('span', { class: 'seg pxed-frs' }, frBtns), h('button', { title: 'เฟรมถัดไป (ปุ่ม .)', onclick: () => goFrame(fi + 1) }, '▶'), onionSw,
+    h('span', { class: 'small dim' }, 'จุดส้ม = เฟรมที่แก้แล้ว · บันทึกครั้งเดียวได้ทุกเฟรม')) : null;
+  const playCv = h('canvas', { class: 'pxed-play' + (mirrorOf(r) ? ' flipx' : ''), 'aria-label': 'เล่นทุกเฟรม' });
+  const playB = h('button', { onclick: () => { playOn = !playOn; syncUi(); if (playOn) tick(); } }, '⏸ หยุด');
+  const playBox = fr ? h('div', { class: 'pxed-playbox' }, h('div', { class: 'lbl' }, `เล่นทุกเฟรม (${r.meta.ms || 150} ms)`), playCv, h('div', { class: 'row' }, playB)) : null;
+  function tick() {
+    if (!fr || playT < 0) return; clearTimeout(playT);
+    const seq = frameSeq(r.meta), k = seq[playStep % seq.length], im = frameImg(k), pz = Math.max(1, Math.floor(Math.min(180 / W, 180 / H)));
+    playCv.width = W * pz; playCv.height = H * pz;
+    const t = document.createElement('canvas'); t.width = W; t.height = H; t.getContext('2d').putImageData(im, 0, 0);
+    const g = playCv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, playCv.width, playCv.height); g.drawImage(t, 0, 0, W * pz, H * pz);
+    if (playOn) { playStep++; playT = setTimeout(tick, Math.max(30, r.meta.ms || 150)); }
+  }
   const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => zoomTo(z - 1) }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => zoomTo(z + 1) }, '+'));
   $('dlgBody').replaceChildren(
-    h('div', { class: 'row' }, h('h3', { style: 'margin:0' }, `แก้พิกเซล · ${it.id}${fr ? ` · เฟรม ${opt.frame + 1}/${r.meta.n}` : ''} · ${W}×${H}`), h('span', { class: 'small dim' }, 'หันตามที่เห็นในขั้นภาพนิ่ง · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
+    h('div', { class: 'row' }, titleEl, h('span', { class: 'small dim' }, 'หันตามที่เห็นในขั้นภาพนิ่ง · บันทึกเป็นรอบใหม่ ภาพเดิมยังอยู่'), h('span', { class: 'sp' }), saveB, closeB),
     h('div', { class: 'pxed' },
-      h('div', { class: 'pxed-main' }, tabSeg, stageEl),
+      h('div', { class: 'pxed-main' }, frBar, tabSeg, stageEl),
       h('div', { class: 'pxed-side' }, // wide screens: 2 columns side by side (paint | pieces); narrower: one column, painting first
-        h('div', { class: 'pxed-col' }, pieceBar, modeEl,
+        h('div', { class: 'pxed-col' }, playBox, pieceBar, modeEl,
           h('div', { class: 'lbl' }, 'เครื่องมือ'), toolSeg,
           h('div', { class: 'lbl' }, 'สีที่ใช้'), h('div', { class: 'row nowrap' }, curSw, curTxt, colIn),
           h('div', { class: 'lbl' }, 'สีในภาพ'), pal,
@@ -2075,7 +2125,7 @@ async function pixelEditor(it, r, opt = {}) {
           editSw, editBox, lyrBox))));
   dlg.classList.add('pxed-dlg'); dlg.addEventListener('cancel', onCancel);
   palette(); { const f = pal.querySelector('.pxed-sw'); if (f) f.click(); } syncUi(); paint();
-  dlg.showModal(); cv.focus();
+  dlg.showModal(); cv.focus(); if (fr) tick();
 }
 
 // ---------- queue / library / new item ----------
