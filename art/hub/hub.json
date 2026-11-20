@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1024,
+ "rev": 1064,
  "settings": {
   "moves": [
    "idle",
@@ -717,6 +717,35 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1"
+    },
+    {
+     "id": "r711f76fe",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/HL-2/frames_idle_f1_2026-11-20_711f76fe.png",
+     "orig": "pixellab API PixMiniMax job 07b9fa96 (frames 1-8 of 9)",
+     "t": "2026-11-20T12:59:42.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r1d8e7a06 · side, east · 8 frames · G1 palette map to the still (11 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
@@ -761,13 +790,20 @@
       "en": "FORM 1. Character: HL-2 — young iron mountain goat hammer-butter, stocky with short sturdy legs (common: simple, few ornaments)\nTribe: steel — make the steel identity obvious: boxy squared body, broad shoulders, riveted shield-like plates on the shoulders and forehead, silver-grey and muted blue\nFantasy features: thick short horns curving forward into a flat hammer-head shape, banded with iron · rivets along the shoulder plates · small blue rune on the forehead plate\nFace: stubborn, steady and proud — not scary\nEffect spots: the flat hammer faces of the horns glowing faintly blue + the forehead rune\nPose: head lowered slightly with the horns forward, ready to charge, four short legs planted wide\nBackground: pure green #00FF00",
       "round": null,
       "t": "2026-11-17T15:48:25.000Z"
+     },
+     {
+      "kind": "idle",
+      "en": "Standing ready to charge: light breathing, the chest rises and falls very slightly. The short tail wags gently once. The eyes blink once. Head, horns and armor plates do not move. Mouth closed the whole time. All four hooves stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "r711f76fe",
+      "t": "2026-11-20T12:59:42.000Z"
      }
     ],
     "idle": {
      "th": "ยืนพร้อมพุ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nหางสั้นกระดิกเบาๆ หนึ่งครั้ง\nตากระพริบ 1 ครั้ง\nหัว เขา และเกราะไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
+     "ok": true,
      "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "t": "2026-11-20T13:00:00.000Z",
+     "okT": "2026-11-20T12:52:37.690Z"
     }
    },
    "iconCrop": {
@@ -1397,10 +1433,11 @@
    },
    "brief": {
     "idle": {
-     "th": "ตัวนิ่ง หายใจเบาๆ ตัวยก-ยุบนิดเดียว\nควันจากปล่องบนหลังลอยขึ้นช้าๆ แล้ววนกลับ\nจมูกขยับฟุดฟิดเบาๆ\nปล่องและหินบนหลังไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "th": "ตัวนิ่ง หายใจเบาๆ \nควันจากปล่องบนหลังลอยขึ้นช้าๆ แล้ววนกลับ\nจมูกขยับฟุดฟิดเบาๆ ตากระพริบ 1 ครั้ง\nปล่องและหินบนหลังไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T12:53:26.561Z",
+     "okT": "2026-11-20T12:53:30.709Z"
     }
    },
    "iconCrop": {
@@ -2082,10 +2119,11 @@
    "shadow": null,
    "brief": {
     "idle": {
-     "th": "ยืนนิ่ง หายใจหนักๆ อกยก-ยุบ ตัวยกนิดหนึ่ง\nหูกระดิกเร็วๆ หนึ่งครั้ง\nหางสะบัดเบาๆ หนึ่งครั้ง\nเขาและแท่งเหลืองบนหลังไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "th": "ยืนนิ่ง หายใจหนักๆ อกยก-ยุบ ตัวยกนิดหนึ่ง\nหูกระดิกเร็วๆ หนึ่งครั้ง\nหางสะบัดเบาๆ หนึ่งครั้ง\nเขาและไม่ขยับ\nแท่งเหลืองบนหลังกระพริบเหมือนมีพลังงานไฟฟ้าอยุ่ด้านใน\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T12:54:59.586Z",
+     "okT": "2026-11-20T12:55:09.165Z"
     }
    },
    "iconCrop": {
@@ -2643,9 +2681,10 @@
    "brief": {
     "idle": {
      "th": "ตัวนิ่ง หายใจเบาๆ ตัวยก-ยุบนิดเดียว\nจมูกขยับฟุดฟิดเบาๆ\nตากระพริบ 1 ครั้ง\nเปลือกก้นหอยใหญ่บนหลังนิ่ง ไม่หมุน ไม่เอียง\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
+     "ok": true,
      "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "t": "2026-11-20T13:00:00.000Z",
+     "okT": "2026-11-20T12:55:40.905Z"
     }
    },
    "iconCrop": {
@@ -3150,10 +3189,11 @@
    "shadow": null,
    "brief": {
     "idle": {
-     "th": "ตอไม้นิ่งทั้งตัว\nต้นอ่อนบนหัวไหวเบาๆ ซ้าย-ขวา (ส่วนที่ขยับมากที่สุด)\nหน้าตากระพริบ 1 ครั้ง\nลำตัวและเปลือกไม้ไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "th": "ตอไม้นิ่งทั้งตัว\nต้นอ่อนบนหัวไหวเบาๆ ซ้าย-ขวา (ส่วนที่ขยับมากที่สุด)\nหน้าตาไม่กระพริบ\nลำตัวและเปลือกไม้ไม่ขยับ\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T12:56:22.403Z",
+     "okT": "2026-11-20T12:57:26.805Z"
     }
    },
    "palette": [
@@ -3865,10 +3905,11 @@
    },
    "brief": {
     "idle": {
-     "th": "ยืนนิ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nปีกเล็กบนหลังกระพือเบาๆ\nหางม้วนคลาย-ม้วนนิดเดียว แล้วกลับที่เดิม\nตากลอกไปมาหนึ่งรอบ หัวไม่หัน\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
-     "ok": false,
-     "by": "claude",
-     "t": "2026-11-20T13:00:00.000Z"
+     "th": "ยืนนิ่ง หายใจเบาๆ อกยก-ยุบนิดเดียว\nปีกเล็กบนหลังกระพือเบาๆ ตัวลอยขึ้นลงนิดเดียว\nหางม้วนคลาย-ม้วนนิดเดียว แล้วกลับที่เดิม\nตากลอกไปมาหนึ่งรอบ หัวไม่หัน\nปากปิดตลอด เท้าทั้งสี่ติดพื้น จบที่ท่าเดิมพอดี กล้องนิ่ง ไม่ซูม",
+     "ok": true,
+     "by": "owner",
+     "t": "2026-11-20T12:57:57.375Z",
+     "okT": "2026-11-20T12:58:03.083Z"
     }
    }
   },
