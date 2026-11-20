@@ -1,6 +1,6 @@
 ---
 name: char-idle
-description: Character still → idle (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ / เฟรม / ตาเรือง / ใส่ในฉาก). Characters = PIXEL via PixelLab (art-style V2.5); idle method open — ask the owner before route P (painted, retired), B (video → frames) or A (code). Also effect pass, .pxo, arena pixel check.
+description: Character still → idle (ภาพนิ่งตัวละคร / ท่ายืน / idle / วิดีโอ / เฟรม / ตาเรือง / ใส่ในฉาก). Characters = PIXEL via PixelLab (art-style V2.5); idle method open — ask the owner before route P (painted, retired), B (video → frames) or A (code). Also effect pass, .pxo, arena pixel check, and new-creature still batches via the PixelLab Pro API (ภาพนิ่ง PixelLab / เจน 25 แบบ / เรฟสไตล์ / ชุดสี).
 ---
 # Character still → idle (set 221 · route B video added set 222 · effect pass + arena check set 223, 14 Nov 2026)
 
@@ -39,6 +39,14 @@ Scripts here (`painted_idle.py` = route P, set 227; the rest = pixel routes) (Py
 
 ## Tried in set 222 and dropped — do not offer again unless the owner asks
 GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · (PixelLab was dropped here in set 222 — back as the idle method since set 257) · heavy cleaning of video frames (see B4).
+
+## Still batch — PixelLab Pro API (set 259, owner A2 at close-out)
+Use when designing a NEW creature still (concept variants), before any idle. Script: `pixellab_still.py` (this folder).
+1. `python -I .claude/skills/char-idle/pixellab_still.py --dry --desc "<features in English, no game/IP names>" --style <one creature png> --palette <colour source png> --out <scratch dir>` → show the request; balance check is in the live run.
+2. Live run (drop `--dry`): POST `/v2/generate-image-v2` → poll `/v2/background-jobs/{id}` → 25 images at 48 px for **10 generations** (size sets the count: ≤32 px = 64, 42–50 = 25, 86–170 = 4, >170 = 1). Writes g00..g24 + sheet.png + request.json.
+3. Show sheet.png; place picks in the arena with `automon-scratch/s239t/s259_pmd5.sh` pattern (pmd_meta-style json: hf 1, k 5, pad_b) — ×5 = owner's tone pick (20 Nov).
+Lessons (20 Nov, 3 runs): style image gives outline/detail/shading AND stance/pose (an upright ref → upright results) but never copied the ref's shape or colours · `style_options.color_palette:false` + `target_palette` hex = colours held exactly · seed changes the whole batch, not each image — no-seed did not add variety; vary `--desc` or `--style` per call · note the returned seed of a liked batch to refine it later · Bitforge (`/create-image-bitforge`) = 1 image per generation but style_image must equal image_size and the 48 px shape broke — do not use.
+Security: key only from env PIXELLAB_API_KEY · outputs outside the repo until the owner OKs a pick · a style ref from someone else's art (e.g. `automon-scratch/pmd-ref`) may be used for shipped creatures since set 259 A2 — input only (never edit/trace its frames), owner checks a side-by-side by eye, PROVENANCE row, the file stays out of the repo (claude/workflow/security.md part 2). Owner-supplied tip: pick the style/palette ref with the tribe's main colour (fire → a mostly-red sprite).
 
 ## Notes
 - claude/idle-picks.csv is what the Godot code reads later (wired into godot/ only on the owner's order, with a ripple check — HARD RULE 8). Route B in game = AnimatedSprite3D / SpriteFrames from the 8 frames; route A = Sprite3D scale at screen resolution (never resize the image itself).
