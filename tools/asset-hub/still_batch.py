@@ -119,20 +119,27 @@ h1{font-size:20px;margin:0 0 4px} .mut{color:var(--mut);font-size:13px}
 .p{position:relative;background:#55556a;border-radius:8px;cursor:pointer;border:3px solid transparent;padding:4px;text-align:center}
 .p img{image-rendering:pixelated;width:100%;aspect-ratio:1;object-fit:contain}
 .p span{font-size:12px;color:var(--mut)} .p.on{border-color:var(--acc)} .p.on::after{content:"★";position:absolute;top:2px;right:8px;color:var(--acc);font-size:20px}
-select,button{font:inherit;padding:6px 10px;border-radius:6px;border:1px solid #667;background:#22222a;color:var(--fg)}
-button{background:var(--acc);color:#222;border:0;font-weight:600;cursor:pointer}
+.tabs{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #556}
+.tabs button{background:var(--card);color:var(--fg);font-weight:600}.tabs button.on{background:var(--acc);color:#222}
+.tabs .n{font-weight:400;margin-left:4px}
+.head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.head h2{margin:0;font-size:17px;flex:1;min-width:150px}
+.closed .body{display:none} .closed .head{margin-bottom:0}
+select,button{font:inherit;padding:6px 10px;border-radius:6px;border:1px solid #667;background:#22222a;color:var(--fg);min-height:34px;cursor:pointer}
+button.main{background:var(--acc);color:#222;border:0;font-weight:600} button.del{color:#ff8a7a}
 textarea{width:100%;box-sizing:border-box;height:120px;background:#22222a;color:var(--fg);border:1px solid #667;border-radius:6px;font:13px monospace}
 .desc{font-size:12px;color:var(--mut);max-width:620px}
 </style></head><body>
 <h1>เลือกภาพจากชุดเจน</h1><div class="mut">คลิกภาพ = ติ๊กเป็นตัวเต็ง (หลายภาพได้) · เลือกรหัสตัวละครของแต่ละชุด · ดูภาพต้นแบบสไตล์ซ้ายมือแล้วติ๊ก "ไม่เหมือนต้นแบบ" · เสร็จแล้วกด คัดลอกผล แล้ววางในแชท</div>
-<div id="list"></div>
-<div class="b"><button id="copy">คัดลอกผล</button> <span id="msg" class="mut"></span><textarea id="out" readonly></textarea></div>
+<div class="tabs" id="tabs"></div><div id="list"></div><p id="hidden" class="mut"></p>
+<div class="b"><button class="main" id="copy">คัดลอกผล</button> <span id="msg" class="mut"></span><textarea id="out" readonly></textarea></div>
 <script>
 const D=__DATA__;let S={};
 D.batches.forEach(b=>{try{const v=JSON.parse(localStorage.getItem('stillpick:'+b.key)||'null');if(v)S[b.key]=v}catch(e){}});
 try{const old=JSON.parse(localStorage.getItem('stillpick:'+['steel','fire','storm','wind','spirit','demon'].join(','))||'{}');for(const k in old)if(!S[k])S[k]=old[k]}catch(e){}
-const save=()=>{for(const k in S)try{localStorage.setItem('stillpick:'+k,JSON.stringify(S[k]))}catch(e){};render()};
+let tab='';try{tab=localStorage.getItem('stillpick:tab')||''}catch(e){}
+const save=()=>{for(const k in S)try{localStorage.setItem('stillpick:'+k,JSON.stringify(S[k]))}catch(e){};try{localStorage.setItem('stillpick:tab',tab)}catch(e){};render()};
 const el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);k.forEach(x=>e.append(x));return e};
+const th=t=>D.tribeTh[t]||t||'?',tribes=[...new Set(D.batches.map(b=>b.tribe||'?'))];if(!tribes.includes(tab))tab=tribes[0];
 function build(){const L=document.getElementById('list');
  D.batches.forEach(b=>{const s=S[b.key]||(S[b.key]={id:'',pick:[],eye:false});
   const sel=el('select');sel.append(el('option',{value:'',textContent:'— รหัสตัวละคร —'}));
@@ -140,16 +147,28 @@ function build(){const L=document.getElementById('list');
   mine.concat(rest).forEach(i=>sel.append(el('option',{value:i.id,textContent:i.id+' '+i.name+(i.tribe!==b.tribe&&b.tribe?' ('+(D.tribeTh[i.tribe]||i.tribe)+')':'')})));
   sel.value=s.id;sel.onchange=()=>{s.id=sel.value;save()};
   const eye=el('input',{type:'checkbox',checked:s.eye});eye.onchange=()=>{s.eye=eye.checked;save()};
+  s.pick=s.pick||[];
+  const fold=el('button',{className:'fold'});fold.onclick=()=>{s.closed=!s.closed;save()};
+  const del=el('button',{className:'del',textContent:'✕ ซ่อนชุดนี้'});
+  del.onclick=()=>{if(confirm('ซ่อนชุด '+b.key+' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ ('+s.pick.length+' ภาพ) จะไม่ถูกส่งในผล\nไฟล์ไม่ถูกลบ กด "แสดงชุดที่ซ่อน" ด้านล่างเพื่อเอากลับได้')){s.hidden=true;save()}};
+  const head=el('div',{className:'head'},fold,el('h2',{textContent:'เผ่า'+th(b.tribe)+' · '+b.key}),el('span',{className:'mut cnt'}),del);
   const top=el('div',{className:'top'});
   if(b.style)top.append(el('div',{className:'ref'},el('img',{src:b.style}),'ต้นแบบสไตล์ '+b.styleSrc));
-  top.append(el('div',{},el('h2',{textContent:'เผ่า'+(D.tribeTh[b.tribe]||b.tribe)+' · '+b.key,style:'margin:0;font-size:17px'}),
-   el('div',{className:'desc',textContent:b.desc}),el('p',{},sel),el('label',{},eye,' ดูแล้ว ไม่เหมือนต้นแบบ')));
+  top.append(el('div',{},el('div',{className:'desc',textContent:b.desc}),el('p',{},sel),el('label',{},eye,' ดูแล้ว ไม่เหมือนต้นแบบ')));
   const g=el('div',{className:'grid'});
   b.pics.forEach(([n,src])=>{const p=el('div',{className:'p'},el('img',{src}),el('span',{textContent:n}));p.dataset.n=n;
    p.onclick=()=>{const i=s.pick.indexOf(n);i<0?s.pick.push(n):s.pick.splice(i,1);s.pick.sort();save()};g.append(p)});
-  L.append(el('div',{className:'b',id:'b_'+b.key},top,g))});render()}
-function render(){D.batches.forEach(b=>{const s=S[b.key];document.querySelectorAll('#b_'+CSS.escape(b.key)+' .p').forEach(p=>p.classList.toggle('on',s.pick.includes(p.dataset.n)))});
- document.getElementById('out').value='STILLPICK\n'+D.batches.map(b=>{const s=S[b.key];return b.key+' -> '+(s.id||'?')+' : '+(s.pick.join(',')||'-')+' · eye '+(s.eye?'ok':'no')}).join('\n')}
+  L.append(el('div',{className:'b',id:'b_'+b.key},head,el('div',{className:'body'},top,g)))});render()}
+function render(){const T=document.getElementById('tabs');T.textContent='';
+ tribes.forEach(t=>{const n=D.batches.filter(b=>(b.tribe||'?')===t&&!S[b.key].hidden).reduce((a,b)=>a+S[b.key].pick.length,0);
+  const bt=el('button',{className:t===tab?'on':''},th(t),el('span',{className:'n',textContent:n?'★'+n:''}));bt.onclick=()=>{tab=t;save()};T.append(bt)});
+ D.batches.forEach(b=>{const s=S[b.key],box=document.getElementById('b_'+b.key);
+  box.style.display=(b.tribe||'?')===tab&&!s.hidden?'':'none';box.classList.toggle('closed',!!s.closed);
+  box.querySelector('.fold').textContent=s.closed?'▸ ขยาย':'▾ หุบ';box.querySelector('.cnt').textContent=s.pick.length?'★ '+s.pick.join(', '):'';
+  box.querySelectorAll('.p').forEach(p=>p.classList.toggle('on',s.pick.includes(p.dataset.n)))});
+ const H=document.getElementById('hidden');H.textContent='';const hid=D.batches.filter(b=>S[b.key].hidden);
+ if(hid.length){const r=el('button',{textContent:'แสดงชุดที่ซ่อน ('+hid.length+')'});r.onclick=()=>{hid.forEach(b=>S[b.key].hidden=false);save()};H.append('ซ่อนไว้: '+hid.map(b=>b.key).join(', ')+' ',r)}
+ document.getElementById('out').value='STILLPICK\n'+D.batches.filter(b=>!S[b.key].hidden).map(b=>{const s=S[b.key];return b.key+' -> '+(s.id||'?')+' : '+(s.pick.join(',')||'-')+' · eye '+(s.eye?'ok':'no')}).join('\n')}
 document.getElementById('copy').onclick=async()=>{const t=document.getElementById('out');try{await navigator.clipboard.writeText(t.value);document.getElementById('msg').textContent='คัดลอกแล้ว'}catch(e){t.select();document.getElementById('msg').textContent='กด Ctrl+C'}};
 build();
 </script></body></html>'''
