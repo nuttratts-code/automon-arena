@@ -48,6 +48,7 @@ const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 
 // ---------- auto frames + shadow (one job at a time) ----------
 let job = null; // { item, round, state: 'run' | 'done' | 'error', step, msg, t }
 
+const EXPORT_FREE_POS = false; // owner set 262 D1 (was true sets 246-261)
 function runPy(args, env) {
   return new Promise((resolve, reject) => {
     const p = spawn(PYTHON, ['-I', ...args], { windowsHide: true, env: { ...process.env, ...env, PYTHONIOENCODING: 'utf-8' } });
@@ -208,10 +209,11 @@ export function shadowExport(hub) {
       const sz = it.scale.size;
       scale[it.id] = { k: num(it.scale.k, 0.05, 8, 1), size: Array.isArray(sz) ? [Math.round(num(sz[0], 1, 8192, 1)), Math.round(num(sz[1], 1, 8192, 1))] : [0, 0] };
     }
-    if (it.kind === 'character' && it.free === true && it.offset && typeof it.offset === 'object') { // unlocked creature (owner A1): screen px in the 1920x1061 view, x toward the foe, y down (up = floating)
+    // owner set 262 D1: the team tab only sets the size now; dragged / turned positions (offset, rot) stay in hub.json but are not exported
+    if (EXPORT_FREE_POS && it.kind === 'character' && it.free === true && it.offset && typeof it.offset === 'object') { // unlocked creature (owner A1): screen px in the 1920x1061 view, x toward the foe, y down (up = floating)
       (scale[it.id] ||= { k: 0, size: [0, 0] }).offset = [Math.round(num(it.offset.x, -400, 400, 0)), Math.round(num(it.offset.y, -300, 300, 0))];
     }
-    if (it.kind === 'character' && it.free === true && Number.isFinite(it.rot) && it.rot) { // unlocked creature turned (owner B1/C1 set 247): degrees clockwise on screen, around the feet
+    if (EXPORT_FREE_POS && it.kind === 'character' && it.free === true && Number.isFinite(it.rot) && it.rot) { // unlocked creature turned (owner B1/C1 set 247): degrees clockwise on screen, around the feet
       (scale[it.id] ||= { k: 0, size: [0, 0] }).rot = Math.round(num(it.rot, -180, 180, 0));
     }
     if (it.kind !== 'character' || !it.shadow) continue;
@@ -236,7 +238,7 @@ export function shadowExport(hub) {
     sun: (() => { const d = num(hub.settings?.sunAngle, -180, 180, -37.4) * Math.PI / 180; return [+Math.cos(d).toFixed(4), +Math.sin(d).toFixed(4)]; })(),
     default: { feet: [0.5, 1], oval: { dx: 0, dy: 0, w: 0.8, h: 0.45, a: 0 }, cast: { len: 1, str: 0.5, ox: 0, oy: 0, blur: 0.3, k: { tl: [0, 0], tr: [0, 0], bl: [0, 0], br: [0, 0] } } },
     units,
-    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) unless unlocked; offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
+    scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) (set 262 D1: offset / rot no longer exported, every creature stands on its slot centre); old: offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
     scale,
     names_note: 'set 248 asset-hub still step: display name per creature; Godot uses it in place of the game.json name (screens + messages), the save data hash stays on the game.json names.',
     names,

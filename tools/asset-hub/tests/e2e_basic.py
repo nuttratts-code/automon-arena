@@ -22,7 +22,7 @@ with sync_playwright() as p:
           const x=S[{k}][0]*1920, y=S[{k}][1]*1061-oy; return [r.left+x*r.width/cw, r.top+(y-{up})*r.height/ch]}})()""")
     def drag(a, bb, steps=8):
         pg.mouse.move(*a); pg.mouse.down(); pg.mouse.move(*bb, steps=steps); pg.mouse.up()
-    pg.goto("http://127.0.0.1:5188/"); pg.wait_for_timeout(1000)
+    pg.goto("http://127.0.0.1:5188/"); pg.evaluate("localStorage.setItem('hubShowOld','1')"); pg.reload(); pg.wait_for_timeout(1000)  # set 262: lock / move / feet live behind the switch now
     pg.locator("#tabs button", has_text="จัดทีม").click(); pg.wait_for_timeout(1500)
     ids0 = hub()["settings"]["team"]["ids"]
     SID = ids0[1]; print("slot 2 =", SID, ids0)
@@ -79,7 +79,8 @@ with sync_playwright() as p:
     pg.evaluate("ui.tab='chars'; ui.step='shadow'; openItem('"+SID+"')"); pg.wait_for_timeout(1500)
     check("shadow tab renders", pg.locator(".shadow-ed canvas").count() >= 1)
     # ---- pixel editor
-    pg.evaluate("ui.step='still'; openItem('WN-1')"); pg.wait_for_timeout(1200)
+    pg.evaluate("localStorage.removeItem('hubShowOld')"); pg.reload(); pg.wait_for_timeout(1000)
+    pg.evaluate("ui.tab='chars'; ui.step='still'; openItem('WN-1')"); pg.wait_for_timeout(1200)
     n0 = len(hub()["items"]["WN-1"]["rounds"])
     star0 = [r["id"] for r in hub()["items"]["WN-1"]["rounds"] if r["star"] and r["slot"] == "still"]
     pg.locator(".actbar button", has_text="แก้พิกเซล").first.click(); pg.wait_for_timeout(800)

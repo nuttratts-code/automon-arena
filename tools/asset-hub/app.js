@@ -2219,6 +2219,59 @@ function teamCfg() {
   if (typeof t.showBg !== 'boolean') t.showBg = true;
   return t;
 }
+// owner set 262 (A1 C1): the team tab draws each creature's shadow from the shadow tab's values. SAME math as renderShadow
+// (castGeo / silCanvas / warp / oval) — change both. fv = the frame as shown (mirrored when the still step shows it mirrored),
+// sd = { feet (fractions of fv), cast, oval }, C = feet point on screen, sw/sh = drawn size, T = screen px per tile, k = camera squash
+function drawUnitShadow(g, fv, sd, C, sw, sh, T, k) {
+  const cast = sd.cast || SHADOW_DEFAULT.cast, o = { ...SHADOW_DEFAULT.oval, ...(sd.oval || {}) }, feet = sd.feet;
+  const fw = fv.width, fh = fv.height, D = sunDir(), m = (cast.len ?? 1) * SUN_REACH;
+  const bx = C.x + (cast.ox || 0) * T, by = C.y + (cast.oy || 0) * T * k;
+  const a = sw / fw, c = -(sh / fh) * m * D.x, dd = -(sh / fh) * m * D.z * k;
+  const e = bx - a * feet[0] * fw - c * feet[1] * fh, ff = by - dd * feet[1] * fh, silH = Math.max(1, Math.round(feet[1] * fh));
+  const P = (u, v) => ({ x: a * u + c * v + e, y: dd * v + ff });
+  const K = cast.k || {}, off = (pt, kk) => ({ x: pt.x + ((K[kk] || [0, 0])[0]) * T, y: pt.y + ((K[kk] || [0, 0])[1]) * T * k });
+  const q = { tl: off(P(0, 0), 'tl'), tr: off(P(fw, 0), 'tr'), bl: off(P(0, silH), 'bl'), br: off(P(fw, silH), 'br') };
+  if ((cast.len ?? 1) > 0 && silH > 0) {
+    const bl = Math.round((cast.blur ?? 0.3) * 0.12 * fh), pad = bl * 2 + 1;
+    const base = document.createElement('canvas'); base.width = fw; base.height = silH;
+    const b2 = base.getContext('2d'); b2.drawImage(fv, 0, 0, fw, silH, 0, 0, fw, silH);
+    b2.globalCompositeOperation = 'source-in'; b2.fillStyle = 'rgb(13,18,33)'; b2.fillRect(0, 0, fw, silH);
+    b2.globalCompositeOperation = 'destination-in'; const fd = b2.createLinearGradient(0, silH, 0, 0); fd.addColorStop(0, '#000'); fd.addColorStop(1, 'rgba(0,0,0,.35)'); b2.fillStyle = fd; b2.fillRect(0, 0, fw, silH);
+    const sil = document.createElement('canvas'); sil.width = fw + pad * 2; sil.height = silH + pad * 2;
+    const sg2 = sil.getContext('2d'); if (bl > 0) sg2.filter = `blur(${bl}px)`; sg2.drawImage(base, pad, pad);
+    const L = (u, t) => ({ x: (q.tl.x + (q.tr.x - q.tl.x) * u) * (1 - t) + (q.bl.x + (q.br.x - q.bl.x) * u) * t, y: (q.tl.y + (q.tr.y - q.tl.y) * u) * (1 - t) + (q.bl.y + (q.br.y - q.bl.y) * u) * t });
+    const N = 40, u0 = -pad / fw, u1 = (fw + pad) / fw;
+    // strips go to a full-alpha layer first, then the layer gets the strength once (strips overlap 1 row; alpha per strip made stripes)
+    const lay = document.createElement('canvas'); lay.width = g.canvas.width; lay.height = g.canvas.height;
+    const lg = lay.getContext('2d'); lg.imageSmoothingEnabled = true;
+    for (let i = 0; i < N; i++) {
+      const y0 = (sil.height * i) / N, y1 = (sil.height * (i + 1)) / N, t0 = (y0 - pad) / silH, t1 = (y1 - pad) / silH;
+      const A = L(u0, t0), B = L(u1, t0), Cc = L(u0, t1);
+      const aa = (B.x - A.x) / sil.width, bb = (B.y - A.y) / sil.width, cc = (Cc.x - A.x) / (y1 - y0), d2 = (Cc.y - A.y) / (y1 - y0);
+      lg.setTransform(aa, bb, cc, d2, A.x - cc * y0, A.y - d2 * y0);
+      lg.drawImage(sil, 0, y0, sil.width, Math.min(sil.height - y0, y1 - y0 + 1), 0, y0, sil.width, Math.min(sil.height - y0, y1 - y0 + 1));
+    }
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = Math.max(0.05, cast.str ?? 0.5); g.drawImage(lay, 0, 0); g.restore();
+  }
+  if (o.on !== false) {
+    const ox = C.x + o.dx * T, oy = C.y + o.dy * T * k, rw = o.w * T / 2, rh = Math.max(2, o.h * T * k / 2);
+    g.save(); g.translate(ox, oy); g.scale(1, rh / rw);
+    const rg = g.createRadialGradient(0, 0, 0, 0, 0, rw); rg.addColorStop(0, `rgba(0,0,0,${0.55 * o.a})`); rg.addColorStop(0.6, `rgba(0,0,0,${0.35 * o.a})`); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(0, 0, rw, 0, Math.PI * 2); g.fill(); g.restore();
+  }
+}
+// owner set 262 (C1): the team tab plays the ★ idle frames (8 PixelLab frames) of every creature; the whole frame, not trimmed
+const teamFrCache = new Map();
+function teamFrames(r) {
+  if (!teamFrCache.has(r.id)) teamFrCache.set(r.id, loadImg(r.file).then((img) => {
+    const n = r.meta.n || r.meta.cols * r.meta.rows, cells = [];
+    for (let i = 0; i < n; i++) cells.push(keyed(img, ...sheetFrame(img, r.meta, i)));
+    const mir = mirrorOf(r), views = cells.map((c) => { if (!mir) return c; const v = document.createElement('canvas'); v.width = c.width; v.height = c.height; const g = v.getContext('2d'); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return v; });
+    return { c: cells[0], cells, views, w: r.meta.fw, h: r.meta.fh, x0: 0, y0: 0, r, seq: frameSeq(r.meta), ms: Math.max(30, r.meta.ms || 150), fi: 0 };
+  }).catch(() => null));
+  return teamFrCache.get(r.id);
+}
+let teamAnim = 0;
 // the picture the game will show: the cut of the starred form-1 still, else that still
 function teamRound(it) { return usedPic(it, 1); } // owner set 248: the picture in use, from the still step
 const teamSprCache = new Map();
@@ -2260,7 +2313,9 @@ function teamRestore(s) {
   }
 }
 function renderTeam(m) {
+  clearInterval(teamAnim); teamAnim = 0;
   const t = teamCfg();
+  const sizeOnly = !showOld; // owner set 262 A1: only the size is set here; position = slot centre + feet / shadow from the shadow tab
   if (ui.teamSel == null) ui.teamSel = 1;
   if (ui.teamWhole == null) ui.teamWhole = false;
   ui.teamFeet = false; // feet mode never survives a re-render
@@ -2270,18 +2325,23 @@ function renderTeam(m) {
   const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null), anchors = new Array(6).fill(null);
   let drag = null;
   let bg = null;
-  const stale = (it, s) => !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
+  const stale = (it, s) => !sizeOnly && !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
   const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' && !stale(it, s) ? it.scale.k : teamDefaultK(s ? s.h : 180));
-  const rotOf = (it) => (it?.free && Number.isFinite(it.rot) ? it.rot : 0); // degrees clockwise on screen, around the feet (owner B1/C1 set 247: unlocked only)
-  const offOf = (it) => (it?.free && it.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
+  const rotOf = (it) => (!sizeOnly && it?.free && Number.isFinite(it.rot) ? it.rot : 0); // degrees clockwise on screen, around the feet (owner B1/C1 set 247: unlocked only)
+  const offOf = (it) => (!sizeOnly && it?.free && it.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
   // feet from the shadow tab count only when they were set on this same picture (same round, or same pixel size)
   const feetLinked = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && s && r && (it.shadow.round === r.id || (Array.isArray(it.shadow.size) && it.shadow.size[0] === s.w && it.shadow.size[1] === s.h)));
   const feetOther = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && !feetLinked(it, s, r));
-  const anchorOf = (it, s, r) => (feetLinked(it, s, r) ? [it.shadow.feet[0] * s.w - s.x0, it.shadow.feet[1] * s.h - s.y0] : [s.c.width / 2, s.c.height]); // picture px of the trimmed sprite, unmirrored
+  const shadowOf = (it, s, r) => { // the shadow-tab values for the frame showing now (a frame with its own shadow uses that one)
+    if (!feetLinked(it, s, r)) return null;
+    const own = s.cells && it.shadow.round === r.id && it.shadow.frames?.[s.fi];
+    return own ? { ...it.shadow, feet: own.feet || it.shadow.feet, cast: own.cast || it.shadow.cast } : it.shadow;
+  };
+  const anchorOf = (it, s, r) => { const sd = shadowOf(it, s, r); return sd ? [sd.feet[0] * s.w - s.x0, sd.feet[1] * s.h - s.y0] : [s.c.width / 2, s.c.height]; }; // picture px of the (trimmed) sprite, unmirrored
   const slotXY = (k) => [TEAM_SLOTS[k][0] * TEAM_W - crop.x, TEAM_SLOTS[k][1] * TEAM_H - crop.y];
   const byDepth = [0, 1, 2, 3, 4, 5].sort((a, b) => TEAM_SLOTS[a][1] - TEAM_SLOTS[b][1]); // back row first
   function place(k) { // where slot k's creature is drawn: box [x, y, w, h] + the feet point on screen
-    const it = hub.items[t.ids[k]], s = sprs[k], r = teamRound(it);
+    const it = hub.items[t.ids[k]], s = sprs[k], r = s?.r || teamRound(it);
     if (!s || !it || !r) return null;
     const kk = kOf(it, s), [ax, ay] = anchorOf(it, s, r), mir = mirrorOf(r);
     const w = Math.round(s.c.width * kk), hh = Math.round(s.c.height * kk);
@@ -2307,6 +2367,15 @@ function renderTeam(m) {
     }
     g.imageSmoothingEnabled = false;
     const swapping = drag?.moved && drag.kind === 'swap';
+    if (sizeOnly) for (const k of byDepth) { // shadows first, so no shadow covers a creature
+      const p = place(k); if (!p || (swapping && drag.k === k)) continue;
+      const sd = shadowOf(p.it, p.s, p.r); if (!sd) continue;
+      const fv = p.s.views ? p.s.views[p.s.fi] : (() => { const v = document.createElement('canvas'); v.width = p.s.c.width; v.height = p.s.c.height; const vg = v.getContext('2d'); if (p.mir) { vg.translate(v.width, 0); vg.scale(-1, 1); } vg.drawImage(p.s.c, 0, 0); return v; })();
+      const feetV = [p.mir ? 1 - (sd.feet[0] * p.s.w - p.s.x0) / p.s.c.width : (sd.feet[0] * p.s.w - p.s.x0) / p.s.c.width, (sd.feet[1] * p.s.h - p.s.y0) / p.s.c.height];
+      const T = p.box[3] * TILE / SPR_H, kq = Math.sin((hub.settings.camPitch || 40) * Math.PI / 180);
+      drawUnitShadow(g, fv, { ...sd, feet: feetV }, { x: p.feet[0], y: p.feet[1] }, p.box[2], p.box[3], T, kq);
+      g.imageSmoothingEnabled = false;
+    }
     for (const k of byDepth) {
       const p = place(k);
       boxes[k] = p ? p.box : null; anchors[k] = p ? p.feet : null;
@@ -2377,7 +2446,7 @@ function renderTeam(m) {
     e.preventDefault(); cv.focus();
     const it = hub.items[t.ids[k]];
     if (ui.teamFeet && k !== ui.teamSel) ui.teamFeet = false;
-    const kind = ui.teamFeet ? 'feet' : it?.free ? 'move' : 'swap';
+    const kind = sizeOnly ? 'swap' : ui.teamFeet ? 'feet' : it?.free ? 'move' : 'swap';
     const p = place(k);
     drag = { k, it, kind, c0: [e.clientX, e.clientY], p0: toCv(e), cur: toCv(e), moved: false, o0: offOf(it), a0: p ? anchorOf(it, p.s, p.r) : null, p };
     cv.setPointerCapture(e.pointerId); cv.classList.add('grabbing'); pickSlot(k);
@@ -2410,11 +2479,11 @@ function renderTeam(m) {
   function change(fn, coalesce) { const now = Date.now(); if (!coalesce || now - lastPush > 800) teamPush(); lastPush = now; fn(); sync(); draw(); saveSoon(); }
   const cur = () => hub.items[t.ids[ui.teamSel]];
   function setK(v, coalesce) {
-    const it = cur(), s = sprs[ui.teamSel], r = teamRound(it); if (!it || !s) return;
+    const it = cur(), s = sprs[ui.teamSel], r = s?.r || teamRound(it); if (!it || !s) return;
     change(() => { it.scale = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id }; }, coalesce);
   }
   function nudge(dx, dy) { // arrows: feet mode = move the picture 1 picture px; unlocked = move 1 screen px
-    const it = cur(), p = place(ui.teamSel); if (!it || !p) return false;
+    const it = cur(), p = place(ui.teamSel); if (!it || !p || sizeOnly) return false;
     if (ui.teamFeet) { const [ax, ay] = anchorOf(it, p.s, p.r); change(() => setFeet(it, p.s, p.r, ax - (p.mir ? -dx : dx), ay - dy), true); return true; }
     if (!it.free) return false;
     const [ox, oy] = offOf(it);
@@ -2457,7 +2526,7 @@ function renderTeam(m) {
     h('span', {}), h('button', { 'aria-label': 'ขยับขึ้น', onclick: () => nudge(0, -1) }, '↑'), h('span', {}),
     h('button', { 'aria-label': 'ขยับไปทางหลัง', onclick: () => nudge(-1, 0) }, '←'), h('button', { 'aria-label': 'ขยับลง', onclick: () => nudge(0, 1) }, '↓'), h('button', { 'aria-label': 'ขยับไปทางหน้า', onclick: () => nudge(1, 0) }, '→'));
   const resetO = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.offset) change(() => { delete it.offset; }); } }, 'กลับกลางช่อง');
-  function setRot(v, coalesce) { const it = cur(); if (!it?.free) return false; let a = Math.round(v); a = ((a + 180) % 360 + 360) % 360 - 180; change(() => { if (a) it.rot = a; else delete it.rot; }, coalesce); return true; }
+  function setRot(v, coalesce) { const it = cur(); if (!it?.free || sizeOnly) return false; let a = Math.round(v); a = ((a + 180) % 360 + 360) % 360 - 180; change(() => { if (a) it.rot = a; else delete it.rot; }, coalesce); return true; }
   const rotate = (d) => setRot(rotOf(cur()) + d, true);
   const rotVal = h('b', { class: 'kval' });
   const rotRange = h('input', { type: 'range', min: -180, max: 180, step: 1, 'aria-label': 'องศาการหมุน', oninput: (e) => setRot(Number(e.target.value), true) });
@@ -2483,15 +2552,18 @@ function renderTeam(m) {
     h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาด'), h('span', { class: 'sp' }), kVal),
       h('div', { class: 'row nowrap' }, h('button', { class: 'pm', 'aria-label': 'เล็กลง', onclick: () => step(-0.05) }, '−'), range, h('button', { class: 'pm', 'aria-label': 'ใหญ่ขึ้น', onclick: () => step(0.05) }, '+')),
       h('div', { class: 'seg snaps' }, snaps.map((x) => x[1])), kInfo, kWarn, resetK),
-    h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ตำแหน่ง'), h('span', { class: 'sp' }), lockSw), freeBox, h('div', { class: 'small dim lockinfo' })),
-    h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'จุดเท้า'), h('span', { class: 'sp' }), feetBtn), feetInfo, feetReset));
+    sizeOnly ? h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตำแหน่ง + เงา'), h('div', { class: 'small dim shadowinfo' })) : '',
+    sizeOnly ? '' : h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ตำแหน่ง'), h('span', { class: 'sp' }), lockSw), freeBox, h('div', { class: 'small dim lockinfo' })),
+    sizeOnly ? '' : h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'จุดเท้า'), h('span', { class: 'sp' }), feetBtn), feetInfo, feetReset));
+  const shadowInfo = body.querySelector('.shadowinfo');
   const lockInfo = body.querySelector('.lockinfo');
   const panel = h('aside', { class: 'panel insp' }, formation, nameEl, body);
   function sync() {
-    const k = ui.teamSel, it = cur(), s = sprs[k], r = teamRound(it);
+    const k = ui.teamSel, it = cur(), s = sprs[k], r = s?.r || teamRound(it);
+    if (shadowInfo) shadowInfo.textContent = !s ? '' : `ยืนกลางช่อง · จุดเท้าและเงามาจากแท็บเงา${feetLinked(it, s, r) ? '' : ' (ยังไม่ได้ตั้งกับภาพนี้ ใช้ขอบล่างกลางภาพ ไม่มีเงา)'}${s.cells ? ` · เล่นท่ายืน ${s.cells.length} เฟรม` : ' · ยังไม่มีเฟรมท่ายืนที่ติดดาว ใช้ภาพนิ่ง'} · แก้ตำแหน่ง/เงาที่แท็บเงา`;
     slotBtns.forEach((b, j) => {
       const x = hub.items[t.ids[j]]; b.classList.toggle('on', j === k); b.setAttribute('aria-pressed', String(j === k));
-      b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x?.free ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
+      b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x?.free && !sizeOnly ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
       const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (mirrorOf(teamRound(x))) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
     });
     nameEl.textContent = it ? `ช่อง ${k + 1} · ${it.id} ${it.name || ''}` : `ช่อง ${k + 1} · ว่าง`;
@@ -2506,7 +2578,7 @@ function renderTeam(m) {
     const locked = !it?.free;
     lockSw.classList.toggle('is-on', !!s && locked); lockSw.setAttribute('aria-checked', String(!!s && locked));
     freeBox.hidden = !s || locked;
-    lockInfo.textContent = !s ? '' : locked ? 'ยืนกลางช่อง · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับ' : 'ปลดล็อคแล้ว · ลากตัวบนภาพเพื่อขยับหรือให้ลอย · สลับช่องให้ลากปุ่มช่องด้านบน';
+    if (lockInfo) lockInfo.textContent = !s ? '' : locked ? 'ยืนกลางช่อง · ลากตัวบนภาพไปวางช่องอื่นเพื่อสลับ' : 'ปลดล็อคแล้ว · ลากตัวบนภาพเพื่อขยับหรือให้ลอย · สลับช่องให้ลากปุ่มช่องด้านบน';
     posInfo.textContent = !s ? '' : ox || oy ? `${ox ? `${ox > 0 ? 'ไปหน้า' : 'ไปหลัง'} ${Math.abs(ox)}` : ''}${ox && oy ? ' · ' : ''}${oy ? `${oy > 0 ? 'ลง' : 'ลอยขึ้น'} ${Math.abs(oy)}` : ''} px` : 'กลางช่อง';
     resetO.disabled = !s || !it.offset;
     const ra = rotOf(it); rotRange.value = String(ra); rotVal.textContent = `${ra}°`; rotReset.disabled = !s || !ra;
@@ -2520,15 +2592,30 @@ function renderTeam(m) {
     nameEl.title = same ? 'ตัวนี้อยู่หลายช่อง ขนาด/ตำแหน่งเปลี่ยนพร้อมกันทุกช่อง' : '';
     nameEl.classList.toggle('dup', same);
   }
-  async function loadSlot(k) { const r = teamRound(hub.items[t.ids[k]]); sprs[k] = r && isImage(r.file) ? await teamSprite(r).catch(() => null) : null; }
+  async function loadSlot(k) {
+    const it = hub.items[t.ids[k]], fr = sizeOnly && it ? pick(it, 'frames', 1, 'idle') : null;
+    if (fr?.meta) { const f = await teamFrames(fr); if (f) { sprs[k] = f; return; } }
+    const r = teamRound(it); sprs[k] = r && isImage(r.file) ? await teamSprite(r).catch(() => null) : null;
+  }
+  let playing = true;
+  const playBtn = h('button', { class: 'teamplay', onclick: () => { playing = !playing; playBtn.textContent = playing ? '⏸ หยุดท่ายืน' : '▶ เล่นท่ายืน'; } }, '⏸ หยุดท่ายืน');
+  function animate() { // every creature on its own frame time (seq + ms of its ★ frames)
+    if (!cv.isConnected) { clearInterval(teamAnim); teamAnim = 0; return; }
+    if (!playing || drag) return;
+    const now = performance.now(); let ch = false;
+    for (const s of new Set(sprs)) { if (!s?.cells) continue; const i = s.seq[Math.floor(now / s.ms) % s.seq.length]; if (i !== s.fi) { s.fi = i; s.c = s.cells[i]; ch = true; } }
+    if (ch) draw();
+  }
   m.append(h('div', { class: 'row' }, h('h2', {}, 'จัดทีม · ปรับขนาด'), h('span', { class: 'sp' }),
     h('span', { class: 'seg' }, [[false, 'ฝั่งเรา'], [true, 'ทั้งฉาก']].map(([v, l]) => h('button', { class: ui.teamWhole === v ? 'on' : '', 'aria-pressed': String(ui.teamWhole === v), onclick: () => { ui.teamWhole = v; render(); } }, l))),
     h('button', { class: 'switch' + (t.showBg ? ' is-on' : ''), role: 'switch', 'aria-checked': String(t.showBg), onclick: () => { t.showBg = !t.showBg; saveSoon(); render(); } }, h('span', { class: 'knob' }), 'ฉากหลัง'),
-    undoBtn, redoBtn));
-  m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Q/E หมุน · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเข้า Godot" ด้านบนเมื่อพอใจ'));
+    sizeOnly ? playBtn : '', undoBtn, redoBtn));
+  if (sizeOnly) m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ลากไปวางช่องอื่นเพื่อสลับ · ที่นี่ปรับได้แค่ขนาด · ตำแหน่งเท้าและเงามาจากแท็บเงาของแต่ละตัว · Ctrl+Z ย้อนกลับ · บันทึกเอง · กด "ส่งค่าเข้า Godot" ด้านบนเมื่อพอใจ'));
+  else m.append(h('p', { class: 'small dim' }, 'คลิกตัวละครหรือปุ่มช่องเพื่อเลือก · ตัวที่ล็อค: ลากไปวางช่องอื่นเพื่อสลับ · ตัวที่ปลดล็อค: ลากเพื่อขยับ/ลอย · Q/E หมุน · Ctrl+Z ย้อนกลับ · Ctrl+Y ทำซ้ำ · บันทึกเอง · กด "ส่งค่าเข้า Godot" ด้านบนเมื่อพอใจ'));
   m.append(h('div', { class: 'team-layout' }, h('div', { class: 'team-wrap' }, cv), panel));
   sync(); draw();
   Promise.all([loadImg(TEAM_BG).then((i) => { bg = i; }).catch(() => loadImg(TEAM_BG_OLD).then((i) => { bg = i; }).catch(() => {})), ...[0, 1, 2, 3, 4, 5].map(loadSlot)]).then(() => { sync(); draw(); });
+  if (sizeOnly) teamAnim = setInterval(animate, 30);
 }
 // team tab keys (bound once): Ctrl+Z undo, arrows = feet / unlocked position — not while typing in a field
 document.addEventListener('keydown', (e) => {
