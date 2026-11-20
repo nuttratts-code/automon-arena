@@ -414,3 +414,6 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .flowbar i.nx { outline: 1px solid currentColor; outline-offset: 1px; }
 .flowbar i.nx.who-owner { color: var(--warn); } .flowbar i.nx.who-claude { color: var(--spirit); }
 .tile .nxt { font-weight: 600; } .tile .nxt.who-owner { color: var(--warn); } .tile .nxt.who-claude { color: var(--spirit); }
+.list button:has(.flowbar) { flex-wrap: wrap; row-gap: 3px; }
+.flowbar.mini { flex-basis: 100%; margin-left: 17px; gap: 2px; }
+.flowbar.mini i { height: 4px; }

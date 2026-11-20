@@ -185,10 +185,11 @@ const flowDone = (it) => FLOW.map((f) => f[4](it));
 const useFlow = (it) => !showOld && it.kind === 'character';
 const statusTh = (st) => (FLOW_ST[st] ? 'ถัดไป: ' + FLOW_ST[st].next : st === 'f-done' ? 'ครบทุกขั้น' : STATUS_TH[st] || st);
 const dotCls = (st) => 'dot ' + (FLOW_ST[st] ? 'who-' + FLOW_ST[st].who : st === 'f-done' ? 'st-done' : 'st-' + st);
+const flowMissing = (it) => { const d = flowDone(it), miss = FLOW.filter((f, i) => !d[i]).map((f) => f[1]); return miss.length ? 'ขาด: ' + miss.join(' · ') : 'ครบทุกขั้น'; };
 const statusOk = (it, v) => !v || (v.startsWith('who-') ? FLOW_ST[status(it)]?.who === v.slice(4) : status(it) === v);
-function flowBar(it) {
+function flowBar(it, mini) {
   const d = flowDone(it), nx = d.indexOf(false);
-  return h('div', { class: 'flowbar', 'aria-label': 'ความคืบหน้า ' + d.filter(Boolean).length + '/' + FLOW.length },
+  return h('div', { class: 'flowbar' + (mini ? ' mini' : ''), title: flowMissing(it), 'aria-label': 'ความคืบหน้า ' + d.filter(Boolean).length + '/' + FLOW.length },
     FLOW.map(([, label, , who], i) => h('i', { class: (d[i] ? 'on' : '') + (i === nx ? ' nx who-' + who : ''), title: `${i + 1} ${label} ${d[i] ? '✓' : '—'}` })));
 }
 function status(it) {
@@ -408,7 +409,8 @@ function renderRail() {
       const st = status(it);
       list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: `${it.id} ${it.name || ''} · ${statusTh(st)}`, onclick: () => openItem(it.id) },
         h('span', { class: dotCls(st) }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || ''),
-        openJobs(it.id).length ? h('span', { class: 'badge', title: openJobs(it.id).map(taskTh).join(', ') }, 'รอ Claude') : null));
+        openJobs(it.id).length ? h('span', { class: 'badge', title: openJobs(it.id).map(taskTh).join(', ') }, 'รอ Claude') : null,
+        useFlow(it) ? flowBar(it, true) : null)); // set 262 (owner): the rail shows the same 8-step bar
     }
   }
   if (ui.tab === 'other') list.append(h('button', { class: 'ghost', onclick: newItemDialog }, '+ เพิ่มรายการใหม่'));

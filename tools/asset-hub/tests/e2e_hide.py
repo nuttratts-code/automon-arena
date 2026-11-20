@@ -36,6 +36,13 @@ with sync_playwright() as p:
             vis = pg.evaluate("[...document.querySelectorAll('.tile:not([hidden])')].map(t=>t.querySelector('.nxt')?.className||'')")
             check("filter ถึงตา Claude shows only Claude's turn", vis and all("who-claude" in c for c in vis), vis[:4])
             sel.select_option(""); pg.wait_for_timeout(200)
+            pg.evaluate("openItem('HL-2')"); pg.wait_for_timeout(1000)
+            row = pg.locator("#list button", has_text="HL-2").first
+            exp2 = pg.evaluate("flowDone(hub.items['HL-2'])")
+            check("rail row has the 8-step bar matching data", row.locator(".flowbar i").count() == 8 and row.locator(".flowbar i.on").count() == sum(exp2), exp2)
+            check("rail bar tooltip lists missing steps", ("ขาด:" in (row.locator(".flowbar").get_attribute("title") or "")) != all(exp2))
+            pg.screenshot(path=f"{OUT}/rail_{w}.png")
+            pg.evaluate("ui.item=null; render()"); pg.wait_for_timeout(600)
             check("old status legend gone", pg.locator(".legend", has_text="รอวิดีโอ").count() == 0 and pg.locator(".legend", has_text="ถึงตาคุณ").count() == 1)
         pg.evaluate("ui.tab='chars'; ui.step='still'; openItem('WN-1')"); pg.wait_for_timeout(1200)
         pg.screenshot(path=f"{OUT}/hide_still_{w}.png", full_page=True)
