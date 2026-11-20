@@ -37,8 +37,9 @@ function build() {
   D.batches.forEach((b) => {
     const s = S[b.key];
     const sel = el('select'); sel.append(el('option', { value: '', textContent: '— รหัสตัวละคร —' }));
-    const mine = D.items.filter((i) => !b.tribe || i.tribe === b.tribe), rest = D.items.filter((i) => b.tribe && i.tribe !== b.tribe);
-    mine.concat(rest).forEach((i) => sel.append(el('option', { value: i.id, textContent: i.id + ' ' + i.name + (b.tribe && i.tribe !== b.tribe ? ' (' + th(i.tribe) + ')' : '') })));
+    // owner set 260: only the batch's own tribe (a saved id from another tribe stays listed so it is not lost)
+    D.items.filter((i) => !b.tribe || i.tribe === b.tribe || i.id === s.id)
+      .forEach((i) => sel.append(el('option', { value: i.id, textContent: i.id + ' ' + i.name + (b.tribe && i.tribe !== b.tribe ? ' (' + th(i.tribe) + ')' : '') })));
     sel.onchange = () => { s.id = sel.value; change(); };
     const eye = el('input', { type: 'checkbox', className: 'eye' }); eye.onchange = () => { s.eye = eye.checked; change(); };
     const fold = el('button', { className: 'fold' }); fold.onclick = () => { s.closed = !s.closed; change(); };

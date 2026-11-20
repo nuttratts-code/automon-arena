@@ -38,6 +38,8 @@ with sync_playwright() as p:
     check("fire batch visible, others hidden", box.is_visible() and not pg.locator("#b_steel").is_visible())
     check("25 pictures load from the outside folder", box.locator(".p img").count() == 25 and pg.evaluate("[...document.querySelectorAll('#b_fire .p img')].slice(0,3).every(i=>i.complete&&i.naturalWidth>0)") )
     check("style input shown for the eye check", box.locator(".ref img").count() == 1)
+    opts = box.locator("select option").all_text_contents()
+    check("ID menu = fire tribe only", len(opts) == 9 and all(o.startswith("PL-") for o in opts[1:]), opts[:3])
     box.locator(".p[data-n=g03]").click(); box.locator(".p[data-n=g11]").click()
     box.locator("select").select_option("PL-1"); box.locator("input.eye").check()
     pg.wait_for_timeout(900)
