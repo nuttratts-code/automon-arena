@@ -46,13 +46,14 @@
  },
  "units": {
   "HL-1": {
+   "mirror": false,
    "feet": [
-    0.4586,
-    0.9877
+    0.4919,
+    1
    ],
    "size": [
-    96,
-    81
+    123,
+    114
    ],
    "oval": {
     "dx": -0.916,
@@ -87,14 +88,144 @@
     }
    }
   },
-  "PT-1": {
+  "PL-1": {
+   "mirror": false,
    "feet": [
-    0.504,
-    0.9004
+    0.5212,
+    1
    ],
    "size": [
-    2752,
-    1536
+    117,
+    83
+   ],
+   "oval": {
+    "dx": 0,
+    "dy": 0,
+    "w": 0.8,
+    "h": 0.45,
+    "a": 0
+   },
+   "cast": {
+    "len": 1,
+    "str": 0.5,
+    "ox": 0,
+    "oy": 0,
+    "blur": 0.3,
+    "k": {
+     "tl": [
+      0,
+      0
+     ],
+     "tr": [
+      0,
+      0
+     ],
+     "bl": [
+      0.068,
+      -0.165
+     ],
+     "br": [
+      -0.008,
+      -0.137
+     ]
+    }
+   }
+  },
+  "SF-1": {
+   "mirror": false,
+   "feet": [
+    0.4274,
+    1
+   ],
+   "size": [
+    124,
+    71
+   ],
+   "oval": {
+    "dx": 0,
+    "dy": 0,
+    "w": 0.8,
+    "h": 0.45,
+    "a": 0
+   },
+   "cast": {
+    "len": 1,
+    "str": 0.5,
+    "ox": 0,
+    "oy": 0,
+    "blur": 0.3,
+    "k": {
+     "tl": [
+      0,
+      0
+     ],
+     "tr": [
+      0,
+      0
+     ],
+     "bl": [
+      0,
+      0
+     ],
+     "br": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  "WY-1": {
+   "mirror": false,
+   "feet": [
+    0.5798,
+    1
+   ],
+   "size": [
+    119,
+    109
+   ],
+   "oval": {
+    "dx": 0,
+    "dy": 0,
+    "w": 0.8,
+    "h": 0.45,
+    "a": 0
+   },
+   "cast": {
+    "len": 1,
+    "str": 0.5,
+    "ox": 0,
+    "oy": 0,
+    "blur": 0.3,
+    "k": {
+     "tl": [
+      0,
+      0
+     ],
+     "tr": [
+      0,
+      0
+     ],
+     "bl": [
+      0,
+      0
+     ],
+     "br": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  "PT-1": {
+   "mirror": false,
+   "feet": [
+    0.4859,
+    1
+   ],
+   "size": [
+    118,
+    112
    ],
    "oval": {
     "dx": 0,
@@ -130,13 +261,14 @@
    }
   },
   "WN-1": {
+   "mirror": false,
    "feet": [
-    0.4401,
-    1
+    0.4478,
+    0.9305
    ],
    "size": [
-    165,
-    156
+    118,
+    78
    ],
    "oval": {
     "dx": 0,
@@ -147,7 +279,7 @@
    },
    "cast": {
     "len": 0.923,
-    "str": 1,
+    "str": 0.69,
     "ox": 0,
     "oy": 0,
     "blur": 0.3,
@@ -157,50 +289,119 @@
       0
      ],
      "tr": [
-      0.22,
-      0.011
+      0,
+      0
      ],
      "bl": [
-      -0.012,
-      -0.16
+      0,
+      0
      ],
      "br": [
-      0.002,
-      -0.294
+      0,
+      0
      ]
     }
    }
   }
  },
- "scale_note": "set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size). Not read by the game yet (r38 port).",
+ "scale_note": "set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) unless unlocked; offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).",
  "scale": {
   "HL-1": {
-   "k": 2.122,
+   "k": 1.5,
    "size": [
     123,
     114
    ]
   },
   "PL-1": {
-   "k": 2,
+   "k": 1.5,
    "size": [
     117,
     83
+   ],
+   "offset": [
+    0,
+    10
+   ]
+  },
+  "SF-1": {
+   "k": 1,
+   "size": [
+    124,
+    71
+   ]
+  },
+  "WY-1": {
+   "k": 1.5,
+   "size": [
+    119,
+    109
    ]
   },
   "PT-1": {
-   "k": 1.626,
+   "k": 1.05,
    "size": [
     118,
     112
    ]
   },
   "WN-1": {
-   "k": 2.122,
+   "k": 1.5,
    "size": [
     118,
     78
    ]
   }
+ },
+ "names_note": "set 248 asset-hub still step: display name per creature; Godot uses it in place of the game.json name (screens + messages), the save data hash stays on the game.json names.",
+ "names": {
+  "HL-1": "ก้ามเหล็ก",
+  "HL-2": "ค้อนเหล็ก",
+  "HL-3": "โล่พลังงาน",
+  "HL-7": "ผู้คุมโล่",
+  "HL-4": "ช่างตีเหล็ก",
+  "HL-5": "ไฟพิทักษ์",
+  "HL-8": "ปราสาทโบราณ",
+  "HL-6": "ป้อมปราการเหล็ก",
+  "PL-1": "หูเพลิง",
+  "PL-2": "คบเพลิง",
+  "PL-3": "เพลิงสายฟ้า",
+  "PL-7": "เหยี่ยวไฟ",
+  "PL-4": "ปืนไฟ",
+  "PL-5": "ฟีนิกซ์",
+  "PL-8": "แม่มดเถ้าถ่าน",
+  "PL-6": "ราชาเพลิงกัลป์",
+  "SF-1": "เขาสายฟ้า",
+  "SF-2": "วัวสายฟ้า",
+  "SF-3": "กำแพงสายฟ้า",
+  "SF-7": "ผู้เก็บประจุ",
+  "SF-4": "ยมทูตสายฟ้า",
+  "SF-5": "ฟ้าผ่า",
+  "SF-8": "คลื่นพลัง",
+  "SF-6": "เทพอสุนีบาต",
+  "WY-1": "กรงเล็บสังหาร",
+  "WY-2": "กำแพงลม",
+  "WY-3": "กรงเล็บ",
+  "WY-7": "เหยี่ยวลม",
+  "WY-4": "ลมคลั่ง",
+  "WY-5": "เกราะวายุ",
+  "WY-8": "พรแห่งวายุ",
+  "WY-6": "มังกรวายุคลั่ง",
+  "PT-1": "ภูติบิน",
+  "PT-2": "กำแพงพฤกษา",
+  "PT-3": "นักกวี",
+  "PT-7": "เหยี่ยวแสง",
+  "PT-4": "คทาแสง",
+  "PT-5": "แสงนำพา",
+  "PT-8": "พรสูงสุด",
+  "PT-6": "ราชินีภูติ",
+  "WN-1": "เขี้ยวทะลวง",
+  "WN-2": "ผู้ดื่มเลือด",
+  "WN-3": "โล่เนื้อ",
+  "WN-7": "อสูรโลหิต",
+  "WN-4": "ชาแมน",
+  "WN-5": "แสงคลั่ง",
+  "WN-8": "ทัณฑ์อสูร",
+  "WN-6": "อสูรอมตะ"
  }
 }
