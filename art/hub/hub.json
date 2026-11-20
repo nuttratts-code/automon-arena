@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1064,
+ "rev": 1065,
  "settings": {
   "moves": [
    "idle",
@@ -2112,6 +2112,35 @@
       ]
      ],
      "iconN": 30
+    },
+    {
+     "id": "ref72e090",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/SF-2/frames_idle_f1_2026-11-20_ef72e090.png",
+     "orig": "pixellab API PixMiniMax job e9cb12a7 (frames 1-8 of 9)",
+     "t": "2026-11-20T13:01:44.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still r33b3895d · side, east · 8 frames · G1 palette map to the still (9 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
@@ -2124,7 +2153,15 @@
      "by": "owner",
      "t": "2026-11-20T12:54:59.586Z",
      "okT": "2026-11-20T12:55:09.165Z"
-    }
+    },
+    "used": [
+     {
+      "kind": "idle",
+      "en": "Standing still: heavy breathing, the chest rises and falls and the body lifts slightly. The ears twitch quickly once. The tail flicks gently once. The horns do not move. The yellow bars on the back flicker as if electric energy is pulsing inside them. Mouth closed the whole time. All four hooves stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "ref72e090",
+      "t": "2026-11-20T13:01:44.000Z"
+     }
+    ]
    },
    "iconCrop": {
     "round": "r33b3895d",
