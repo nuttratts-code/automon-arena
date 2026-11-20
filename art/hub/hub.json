@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1066,
+ "rev": 1067,
  "settings": {
   "moves": [
    "idle",
@@ -3256,6 +3256,35 @@
       ]
      ],
      "iconN": 34
+    },
+    {
+     "id": "r1343792e",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PT-2/frames_idle_f1_2026-11-20_1343792e.png",
+     "orig": "pixellab API PixMiniMax job c7e7e773 (frames 1-8 of 9)",
+     "t": "2026-11-20T13:05:03.000Z",
+     "by": "claude",
+     "note": "set 258 API: first + last = ★ still rde6ba454 · side, east · 8 frames · G1 palette map to the still (10 colours) · description = enhance (pixminimax) + suffix · 150 ms ค่าเสนอ",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
     }
    ],
    "notes": "",
@@ -3268,7 +3297,15 @@
      "by": "owner",
      "t": "2026-11-20T12:56:22.403Z",
      "okT": "2026-11-20T12:57:26.805Z"
-    }
+    },
+    "used": [
+     {
+      "kind": "idle",
+      "en": "The whole tree-stump body stays completely still. Only the small sprout on top of the head sways gently left and right (the part that moves most). The face does not blink. The trunk and bark do not move. Mouth closed the whole time. All feet stay planted, ends exactly on the start pose, static camera, no zoom.",
+      "round": "r1343792e",
+      "t": "2026-11-20T13:05:03.000Z"
+     }
+    ]
    },
    "palette": [
     "#00ff2a"
