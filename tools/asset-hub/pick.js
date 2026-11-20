@@ -41,15 +41,19 @@ function build() {
     D.items.filter((i) => !b.tribe || i.tribe === b.tribe || i.id === s.id)
       .forEach((i) => sel.append(el('option', { value: i.id, textContent: i.id + ' ' + i.name + (b.tribe && i.tribe !== b.tribe ? ' (' + th(i.tribe) + ')' : '') })));
     sel.onchange = () => { s.id = sel.value; change(); };
+    // set 265 (owner): a batch made for one creature shows its ID locked, no menu
+    const who = b.item ? el('span', { className: 'lock', textContent: '🔒 ' + b.item + ' ' + ((D.items.find((i) => i.id === b.item) || {}).name || '') }) : sel;
     // owner set 260: a pick means "checked by eye, not like the ref"; tick only to flag one that IS too close
     const eye = el('input', { type: 'checkbox', className: 'eye' }); eye.onchange = () => { s.eye = !eye.checked; change(); };
     const fold = el('button', { className: 'fold' }); fold.onclick = () => { s.closed = !s.closed; change(); };
     const del = el('button', { className: 'del', textContent: '✕ ซ่อนชุดนี้' });
     del.onclick = () => { if (confirm('ซ่อนชุด ' + b.key + ' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ (' + s.pick.length + ' ภาพ) จะไม่นับในผล\nไฟล์ไม่ถูกลบ กด "แสดงชุดที่ซ่อน" ด้านล่างเพื่อเอากลับได้')) { s.hidden = true; change(); } };
-    const head = el('div', { className: 'head' }, fold, el('h2', { textContent: 'เผ่า' + th(b.tribe) + ' · ' + b.key }), el('span', { className: 'mut cnt' }), del);
+    const h2 = el('h2', { textContent: 'เผ่า' + th(b.tribe) + ' · ' + b.key });
+    if (b.form === 3) h2.append(' ', el('span', { className: 'form3', textContent: 'ร่าง 3' }));
+    const head = el('div', { className: 'head' }, fold, h2, el('span', { className: 'mut cnt' }), del);
     const top = el('div', { className: 'top' });
     if (b.style) top.append(el('div', { className: 'ref' }, el('img', { src: '/sb/' + b.key + '/style.png', alt: '' }), 'ต้นแบบสไตล์ ' + b.styleSrc));
-    top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, sel), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
+    top.append(el('div', {}, el('div', { className: 'desc', textContent: b.desc + (b.note ? ' · ' + b.note : '') }), el('p', {}, who), el('label', {}, eye, ' ⚠ เหมือนต้นแบบเกินไป (ห้ามใช้)')));
     const g = el('div', { className: 'grid' });
     b.pics.forEach((n) => {
       const p = el('div', { className: 'p' }, el('img', { src: '/sb/' + b.key + '/' + n + '.png', alt: n, loading: 'lazy' }), el('span', { textContent: n }));
@@ -80,7 +84,8 @@ function render() {
     box.classList.toggle('closed', s.closed);
     box.querySelector('.fold').textContent = s.closed ? '▸ ขยาย' : '▾ หุบ';
     box.querySelector('.cnt').textContent = s.pick.length ? '★ ' + s.pick.join(', ') : '';
-    box.querySelector('select').value = s.id; box.querySelector('.eye').checked = !s.eye;
+    if (b.item) s.id = b.item; else box.querySelector('select').value = s.id;
+    box.querySelector('.eye').checked = !s.eye;
     box.querySelectorAll('.p').forEach((p) => p.classList.toggle('on', s.pick.includes(p.dataset.n)));
   });
   const H = $('hidden'); H.textContent = '';
@@ -99,7 +104,7 @@ $('impGo').onclick = () => {
     if (!m) { if (l.trim() && l.trim() !== 'STILLPICK') bad.push(l.trim().slice(0, 30)); return; }
     const s = S[m[1]], b = D.batches.find((x) => x.key === m[1]);
     if (!s) { bad.push(m[1]); return; }
-    s.id = m[2] === '?' || !D.items.some((i) => i.id === m[2]) ? '' : m[2];
+    s.id = b.item || (m[2] === '?' || !D.items.some((i) => i.id === m[2]) ? '' : m[2]);
     s.pick = m[3].split(',').map((x) => x.trim()).filter((x) => b.pics.includes(x)).sort();
     s.eye = m[4] === 'ok'; s.hidden = false; n++;
   });

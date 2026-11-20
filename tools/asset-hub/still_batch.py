@@ -4,7 +4,8 @@
           + one history.jsonl line per change, so Claude reads the picks (no paste).
   add     python -I tools/asset-hub/still_batch.py add <ID> <batch_dir> --pick g00,g05 [--job J] [--seed N] [--style-src S]
           History (C1): every gNN.png + sheet.png + request.json → art/hub/files/<ID>/batches/<date>_<key>/ + batch.json.
-          Each pick → still round (form 1, by claude, NOT starred — the owner stars in the hub).
+          Each pick → still round (form from batch.json `form` or --form, default 1; by claude, NOT starred — the owner stars in the hub).
+          A batch made for one creature (batch.json `item`, set 265) must be added to that item.
 A batch_dir = pixellab_still.py --out (g00..g24.png, sheet.png, request.json) + optional style.png (the style input,
 never copied into the repo) + optional batch.json {tribe, job, seed, style_src}.
 """
@@ -26,6 +27,7 @@ def add(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument('item'); ap.add_argument('batch'); ap.add_argument('--pick', required=True)
     ap.add_argument('--job', default=''); ap.add_argument('--seed', default=''); ap.add_argument('--style-src', default='')
+    ap.add_argument('--form', type=int, choices=(1, 3))
     o = ap.parse_args(argv)
     if not re.fullmatch(ID_RE, o.item):
         sys.exit('bad item')
@@ -40,6 +42,9 @@ def add(argv):
     missing = [p for p in picks if not os.path.isfile(os.path.join(o.batch, p + '.png'))]
     if not src or missing:
         sys.exit('missing pictures: %s' % (missing or 'gNN.png'))
+    if meta(o.batch).get('item') not in (None, '', o.item):
+        sys.exit('batch is for %s, not %s' % (meta(o.batch)['item'], o.item))
+    form = o.form or (3 if meta(o.batch).get('form') == 3 else 1)
     m = {**meta(o.batch), **{k: v for k, v in (('job', o.job), ('seed', o.seed), ('style_src', o.style_src)) if v}}
     today = datetime.date.today().isoformat()
     key = (m.get('job') or hashlib.sha1(open(src[0], 'rb').read()).hexdigest())[:8]
@@ -55,14 +60,14 @@ def add(argv):
     for p in picks:
         data = open(os.path.join(o.batch, p + '.png'), 'rb').read()
         h8 = hashlib.sha1(data).hexdigest()[:8]
-        name = f'still_f1_{today}_{h8}.png'
+        name = f'still_f{form}_{today}_{h8}.png'
         rid = 'r' + h8
         open(os.path.join(FILES, o.item, name), 'wb').write(data)
         if any(r['id'] == rid for r in it['rounds']):
             continue
-        it['rounds'].append({'id': rid, 'slot': 'still', 'form': 1, 'file': f'hub/{o.item}/{name}', 'orig': f'{key}_{p}.png',
+        it['rounds'].append({'id': rid, 'slot': 'still', 'form': form, 'file': f'hub/{o.item}/{name}', 'orig': f'{key}_{p}.png',
                              't': datetime.datetime.utcnow().isoformat(timespec='milliseconds') + 'Z', 'by': 'claude',
-                             'note': f'ชุดเจน {key} {p} (ตัวเต็ง · ประวัติ: {rel})', 'star': False, 'archived': False,
+                             'note': ('ร่าง 3 · ' if form == 3 else '') + f'ชุดเจน {key} {p} (ตัวเต็ง · ประวัติ: {rel})', 'star': False, 'archived': False,
                              'licence': lic, 'meta': {'batch': rel, 'pick': p, 'styleSrc': m.get('style_src', '')}})
     hub['rev'] = hub.get('rev', 0) + 1
     tmp = HUB + '.tmp'
