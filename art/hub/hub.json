@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 859,
+ "rev": 862,
  "settings": {
   "moves": [
    "idle",
@@ -366,7 +366,26 @@
      "note": "quiz C: mountain goat (impact dust = code/video effect, not in the still)"
     }
    ],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3d006095",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-20_3d006095.png",
+     "orig": "fa77cc8c_g11.png",
+     "t": "2026-11-20T09:03:57.203Z",
+     "by": "claude",
+     "note": "ชุดเจน fa77cc8c g11 (ตัวเต็ง · ประวัติ: batches/2026-11-20_fa77cc8c)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-20_fa77cc8c",
+      "pick": "g11",
+      "styleSrc": "pmd-ref 0745"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null,
@@ -1473,6 +1492,19 @@
       "pick": "g24",
       "styleSrc": "pmd-ref 0473"
      }
+    },
+    {
+     "id": "rf8370476",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-2/still_f1_2026-11-20_eee804ee.png",
+     "orig": "f500429e_g24_edit.png",
+     "t": "2026-11-20T09:02:13.069Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
