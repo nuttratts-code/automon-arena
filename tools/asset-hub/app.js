@@ -970,10 +970,18 @@ function compareDialog(it) {
 // ---------- shadow editor (E1: feet + ground line + one oval + sun-cast) ----------
 // owner set 248 B: idle frames made from the picture in use (each frame can get its own shadow), else the picture in use itself.
 // Frames older than the picture in use belong to an earlier picture (e.g. old painted frames under a new pixel still) and are skipped.
+// set 264: the ★ frames win over the round the shadow was saved on (a frame pixel edit = new ★ round; the tab kept showing the old sheet).
 function shadowSource(it) {
   const set = it.shadow?.round && it.rounds.find((r) => r.id === it.shadow.round && !r.archived && r.slot === 'frames'); // Claude sets it on new frames
-  const fr = set || pick(it, 'frames', 1, 'idle') || latest(it, 'frames', 1, 'idle'), u = usedPic(it, 1);
+  const fr = pick(it, 'frames', 1, 'idle') || set || latest(it, 'frames', 1, 'idle'), u = usedPic(it, 1);
   return fr && (!u || (fr.t || '') >= (u.t || '')) ? fr : u || fr;
+}
+// per-frame shadows follow a frames round onto an edited copy of the same sheet (same grid + frame size), set 264
+function sameSheet(it, id, r) {
+  if (!r || r.slot !== 'frames') return false;
+  if (it.shadow?.round === r.id) return true;
+  const o = it.rounds.find((x) => x.id === id && x.slot === 'frames'), a = o?.meta, b = r.meta;
+  return !!(a && b && ['cols', 'rows', 'fw', 'fh', 'n'].every((k) => a[k] === b[k]));
 }
 function guessFeet(k) {
   const g = k.getContext('2d', { willReadFrequently: true }), W = k.width, H = k.height;
@@ -1001,7 +1009,7 @@ function renderShadow(m, it) {
   const hitG = hit.getContext('2d', { willReadFrequently: true });
   let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null, base = null; // s = what the handles edit: base (every frame) or one frame's own shadow
   let ov = {}, editK = null; // owner set 248 B: ov[i] = frame i's own shadow (same shape as base); editK = the frame being edited, null = every frame
-  if (s) { if (s.frames && it.shadow.round === src.id && src.slot === 'frames') for (const [k, v] of Object.entries(s.frames)) ov[k] = v; delete s.frames; delete s.face; }
+  if (s) { if (s.frames && sameSheet(it, it.shadow.round, src)) for (const [k, v] of Object.entries(s.frames)) ov[k] = v; delete s.frames; delete s.face; }
   let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
   const pitch = () => hub.settings.camPitch || 40;
   const mir = mirrorOf(src); // the editor shows the creature the way the still step shows it (owner set 248); feet below are in that view
@@ -2360,7 +2368,7 @@ function renderTeam(m) {
   const feetOther = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && !feetLinked(it, s, r));
   const shadowOf = (it, s, r) => { // the shadow-tab values for the frame showing now (a frame with its own shadow uses that one)
     if (!feetLinked(it, s, r)) return null;
-    const own = s.cells && it.shadow.round === r.id && it.shadow.frames?.[s.fi];
+    const own = s.cells && sameSheet(it, it.shadow.round, r) && it.shadow.frames?.[s.fi];
     return own ? { ...it.shadow, feet: own.feet || it.shadow.feet, cast: own.cast || it.shadow.cast } : it.shadow;
   };
   const anchorOf = (it, s, r) => { const sd = shadowOf(it, s, r); return sd ? [sd.feet[0] * s.w - s.x0, sd.feet[1] * s.h - s.y0] : [s.c.width / 2, s.c.height]; }; // picture px of the (trimmed) sprite, unmirrored
