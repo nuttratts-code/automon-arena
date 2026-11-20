@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'">
+<title>เลือกภาพจากชุดเจน</title>
+<style>
+:root{--bg:#2b2b33;--card:#3a3a44;--fg:#eee;--mut:#aab;--acc:#ffcf4a;--ok:#7ddc8a;--bad:#ff8a7a}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,sans-serif;padding:16px}
+h1{font-size:20px;margin:0 0 4px} .mut{color:var(--mut);font-size:13px} a{color:var(--acc)}
+.b{background:var(--card);border-radius:10px;padding:12px;margin:14px 0}
+.top{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.ref{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--mut)}
+.ref img{image-rendering:pixelated;width:144px;height:144px;object-fit:contain;background:#55556a;border-radius:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.p{position:relative;background:#55556a;border-radius:8px;cursor:pointer;border:3px solid transparent;padding:4px;text-align:center}
+.p img{image-rendering:pixelated;width:100%;aspect-ratio:1;object-fit:contain}
+.p span{font-size:12px;color:var(--mut)} .p.on{border-color:var(--acc)} .p.on::after{content:"★";position:absolute;top:2px;right:8px;color:var(--acc);font-size:20px}
+.tabs{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 0;border-bottom:1px solid #556}
+.tabs button{background:var(--card);color:var(--fg);font-weight:600}.tabs button.on{background:var(--acc);color:#222}
+.tabs .n{font-weight:400;margin-left:4px}
+#save{margin-left:auto;font-size:13px} #save.ok{color:var(--ok)} #save.bad{color:var(--bad)}
+.head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.head h2{margin:0;font-size:17px;flex:1;min-width:150px}
+.closed .body{display:none} .closed .head{margin-bottom:0}
+select,button{font:inherit;padding:6px 10px;border-radius:6px;border:1px solid #667;background:#22222a;color:var(--fg);min-height:34px;cursor:pointer;max-width:100%}
+button.main{background:var(--acc);color:#222;border:0;font-weight:600} button.del{color:var(--bad)}
+textarea{width:100%;box-sizing:border-box;height:110px;background:#22222a;color:var(--fg);border:1px solid #667;border-radius:6px;font:13px monospace}
+.desc{font-size:12px;color:var(--mut);max-width:620px}
+summary{cursor:pointer;color:var(--mut)}
+</style>
+</head>
+<body>
+<h1>เลือกภาพจากชุดเจน</h1>
+<div class="mut">คลิกภาพ = ติ๊กเป็นตัวเต็ง (หลายภาพได้) · เลือกรหัสตัวละครของแต่ละชุด · ดูภาพต้นแบบสไตล์ซ้ายมือแล้วติ๊ก "ดูแล้ว ไม่เหมือนต้นแบบ" · <b>บันทึกเองทุกครั้งที่คลิก</b> ลงไฟล์ในโปรเจกต์ (Claude อ่านเองได้ ไม่ต้องคัดลอกวาง) · <a href="/">← กลับคลังงานศิลป์</a></div>
+<div class="tabs" id="tabs"></div>
+<div id="list"></div>
+<p id="hidden" class="mut"></p>
+<div class="b"><details id="imp"><summary>นำเข้าผลจากหน้าเก่า (ไฟล์ pick_6tribes.html — ทำครั้งเดียว)</summary>
+<p class="mut">ในหน้าเก่ากด "คัดลอกผล" แล้ววางที่นี่ → กด นำเข้า (ทับตัวเลือกของชุดที่มีในข้อความ)</p>
+<textarea id="impText" placeholder="STILLPICK&#10;fire -> FR-1 : g00,g05 · eye ok"></textarea>
+<p><button class="main" id="impGo">นำเข้า</button> <span id="impMsg" class="mut"></span></p></details></div>
+<script src="/pick.js"></script>
+</body>
+</html>

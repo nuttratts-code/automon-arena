@@ -31,7 +31,11 @@ const EXT = {
   mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   glb: 'model/gltf-binary', pxo: 'application/octet-stream', txt: 'text/plain; charset=utf-8',
 };
-const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css' };
+const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js' };
+// still batch picker (owner A2, set 260): batches stay OUTSIDE the repo (style.png = outside sprite, security.md part 2);
+// picks are saved in the repo so Claude reads them (latest.json) + every change kept (history.jsonl).
+const STILL_BATCHES = process.env.STILL_BATCHES ? path.resolve(process.env.STILL_BATCHES) : path.resolve(HERE, '..', '..', '..', 'automon-scratch', 'still-batches');
+const PICKS_DIR = path.join(HUB_DIR, 'stillpicks');
 const SLOTS = ['still', 'cut', 'veoin', 'video', 'frames', 'file', 'icon']; // icon = diamond crop for the shop / bench (set 246)
 const MAX_UPLOAD = 600 * 1024 * 1024;
 const LICENCE_DEFAULT = 'AI placeholder - UNVERIFIED';
@@ -353,6 +357,63 @@ function libraryList() {
   return rows.filter((r) => r.length >= 2 && r[0]).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
 }
 
+
+// ---------- still batch picker (set 260) ----------
+const BATCH_PIC = /^(g\d\d|style|sheet)\.png$/;
+function readJson(p, dflt) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return dflt; } }
+function stillBatches() {
+  if (!fs.existsSync(STILL_BATCHES)) return [];
+  return fs.readdirSync(STILL_BATCHES, { withFileTypes: true }).filter((d) => d.isDirectory() && ID_RE.test(d.name)).map((d) => {
+    const dir = path.join(STILL_BATCHES, d.name);
+    const pics = fs.readdirSync(dir).filter((n) => /^g\d\d\.png$/.test(n)).sort().map((n) => n.slice(0, -4));
+    if (!pics.length) return null;
+    const m = readJson(path.join(dir, 'batch.json'), {}), req = readJson(path.join(dir, 'request.json'), {});
+    return { key: d.name, tribe: String(m.tribe || ''), desc: String(req.description || ''), styleSrc: String(m.style_src || ''),
+      note: String(m.note || ''), seed: String(m.seed || ''), style: fs.existsSync(path.join(dir, 'style.png')), pics };
+  }).filter(Boolean).sort((a, b) => a.tribe.localeCompare(b.tribe) || a.key.localeCompare(b.key));
+}
+function readPicks() { return readJson(path.join(PICKS_DIR, 'latest.json'), { rev: 0, t: '', batches: {} }); }
+function validatePicks(body, batches) {
+  if (!body || typeof body !== 'object' || typeof body.batches !== 'object' || Array.isArray(body.batches)) return 'bad body';
+  const known = new Map(batches.map((b) => [b.key, b]));
+  const out = {};
+  for (const [k, v] of Object.entries(body.batches)) {
+    const b = known.get(k);
+    if (!b) return 'unknown batch ' + String(k).slice(0, 40);
+    if (!v || typeof v !== 'object') return 'bad entry ' + k;
+    const id = v.id ?? '';
+    if (typeof id !== 'string' || (id && !ID_RE.test(id))) return 'bad id ' + k;
+    if (!Array.isArray(v.pick) || v.pick.length > 25 || !v.pick.every((p) => typeof p === 'string' && b.pics.includes(p))) return 'bad pick ' + k;
+    out[k] = { id, pick: [...new Set(v.pick)].sort(), eye: v.eye === true, hidden: v.hidden === true, closed: v.closed === true };
+  }
+  return out;
+}
+const pickLine = (b) => Object.entries(b).filter(([, v]) => !v.hidden).map(([k, v]) => `${k}>${v.id || '?'}:${v.pick.join(',') || '-'}:${v.eye ? 'ok' : 'no'}`).sort().join(' ');
+function savePicks(body) {
+  const batches = stillBatches();
+  const clean = validatePicks(body, batches);
+  if (typeof clean === 'string') return { code: 400, obj: { error: clean } };
+  const cur = readPicks();
+  if (body.rev !== cur.rev) return { code: 409, obj: { error: 'changed elsewhere', picks: cur } };
+  const t = new Date().toISOString();
+  const next = { rev: cur.rev + 1, t, batchDir: STILL_BATCHES, batches: clean };
+  fs.mkdirSync(PICKS_DIR, { recursive: true });
+  const lf = path.join(PICKS_DIR, 'latest.json');
+  fs.writeFileSync(lf + '.tmp', JSON.stringify(next, null, 1) + '\n');
+  fs.renameSync(lf + '.tmp', lf);
+  // history: one line per change of the picks (ids / ★ / eye / hidden); fold/unfold only is not history
+  const hf = path.join(PICKS_DIR, 'history.jsonl');
+  const line = pickLine(clean);
+  const lines = fs.existsSync(hf) ? fs.readFileSync(hf, 'utf8').split('\n').filter(Boolean) : [];
+  const last = lines.length ? readJsonLine(lines[lines.length - 1]) : null;
+  if (!last || last.line !== line) {
+    const summary = Object.fromEntries(Object.entries(clean).filter(([, v]) => !v.hidden).map(([k, v]) => [k, { id: v.id, pick: v.pick, eye: v.eye }]));
+    fs.appendFileSync(hf, JSON.stringify({ t, rev: next.rev, line, picks: summary }) + '\n');
+  }
+  return { code: 200, obj: next };
+}
+function readJsonLine(l) { try { return JSON.parse(l); } catch { return null; } }
+
 // ---------- server ----------
 async function handle(req, res) {
   const u = new URL(req.url, 'http://127.0.0.1');
@@ -367,6 +428,18 @@ async function handle(req, res) {
   if (req.method === 'GET' && u.pathname === '/api/library') return send(res, 200, libraryList());
   if (req.method === 'GET' && u.pathname === '/api/job') return send(res, 200, job || {});
   if (req.method === 'GET' && u.pathname === '/api/game') return send(res, 200, gameInfo());
+  if (req.method === 'GET' && u.pathname === '/api/stillbatches') return send(res, 200, { dir: STILL_BATCHES, batches: stillBatches(), items: Object.entries(readHub().items).map(([id, v]) => ({ id, name: v.name || '', tribe: v.tribe || '' })) });
+  if (req.method === 'GET' && u.pathname === '/api/stillpicks') return send(res, 200, readPicks());
+  if (req.method === 'GET' && u.pathname.startsWith('/sb/')) { // batch pictures from the outside folder (never copied into the repo)
+    const [k, n, extra] = u.pathname.slice(4).split('/');
+    if (extra !== undefined || !ID_RE.test(k || '') || !BATCH_PIC.test(n || '')) return send(res, 400, { error: 'bad path' });
+    return sendFile(req, res, path.join(STILL_BATCHES, k, n));
+  }
+  if (req.method === 'POST' && u.pathname === '/api/stillpicks') {
+    if (req.headers.origin !== `http://127.0.0.1:${PORT}` && req.headers.origin !== `http://localhost:${PORT}`) return send(res, 403, { error: 'origin' });
+    const r = savePicks(JSON.parse((await readBody(req, 2e5)).toString('utf8')));
+    return send(res, r.code, r.obj);
+  }
 
   if (req.method === 'POST' && u.pathname === '/api/frames') {
     // runs local programs: demand our own page's Origin (a POST with no Origin is refused here, unlike the file APIs)

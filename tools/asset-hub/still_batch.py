@@ -1,58 +1,24 @@
 """Still batch → owner picks → hub (owner set 259: pick first, then the hub; keep every round's history).
-  picker  python -I tools/asset-hub/still_batch.py picker <out.html> <batch_dir>...
-          One local page: per batch the style input (eye check, security.md part 2) + 25 pictures; click = shortlist (D1),
-          menu = which hub ID the batch belongs to; "คัดลอกผล" gives lines the owner pastes in chat.
-          Keep <out.html> OUTSIDE the repo (it embeds the outside style input).
+  picker  moved to the hub server (owner A2, set 260): http://127.0.0.1:5177/pick — batches from STILL_BATCHES
+          (default D:/GitHub/automon-scratch/still-batches, outside the repo); every click saves art/hub/stillpicks/latest.json
+          + one history.jsonl line per change, so Claude reads the picks (no paste).
   add     python -I tools/asset-hub/still_batch.py add <ID> <batch_dir> --pick g00,g05 [--job J] [--seed N] [--style-src S]
           History (C1): every gNN.png + sheet.png + request.json → art/hub/files/<ID>/batches/<date>_<key>/ + batch.json.
           Each pick → still round (form 1, by claude, NOT starred — the owner stars in the hub).
 A batch_dir = pixellab_still.py --out (g00..g24.png, sheet.png, request.json) + optional style.png (the style input,
 never copied into the repo) + optional batch.json {tribe, job, seed, style_src}.
 """
-import base64, datetime, glob, hashlib, html, json, os, re, shutil, sys
+import datetime, glob, hashlib, json, os, re, shutil, sys
 
 ROOT = os.environ.get('HUB_ROOT') or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 HUB = os.path.join(ROOT, 'art', 'hub', 'hub.json')
 FILES = os.path.join(ROOT, 'art', 'hub', 'files')
-TRIBE_TH = {'steel': 'เหล็กกล้า', 'fire': 'เพลิงเผา', 'storm': 'สายฟ้า', 'wind': 'วายุ', 'spirit': 'ภูติ', 'demon': 'อสูร'}
 ID_RE = r'[A-Za-z0-9][A-Za-z0-9_-]{0,39}'
-
-
-def b64(p):
-    return 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode()
 
 
 def meta(d):
     p = os.path.join(d, 'batch.json')
     return json.load(open(p, encoding='utf-8')) if os.path.isfile(p) else {}
-
-
-def picker(out, dirs):
-    repo = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
-    for r in {ROOT, repo}:
-        try:
-            inside = os.path.commonpath([os.path.abspath(out), r]) == r
-        except ValueError:  # other drive
-            inside = False
-        if inside:
-            sys.exit('write the picker outside the repo (it embeds the outside style input)')
-    hub = json.load(open(HUB, encoding='utf-8'))
-    items = [{'id': k, 'name': v.get('name') or '', 'tribe': v.get('tribe') or ''} for k, v in hub['items'].items()]
-    batches = []
-    for d in dirs:
-        g = sorted(glob.glob(os.path.join(d, 'g[0-9][0-9].png')))
-        if not g:
-            sys.exit('no gNN.png in ' + d)
-        m = meta(d)
-        req = json.load(open(os.path.join(d, 'request.json'), encoding='utf-8'))
-        st = os.path.join(d, 'style.png')
-        batches.append({'key': os.path.basename(os.path.normpath(d)), 'tribe': m.get('tribe', ''), 'desc': req.get('description', ''),
-                        'style': b64(st) if os.path.isfile(st) else '', 'styleSrc': m.get('style_src', ''),
-                        'pics': [[os.path.basename(p)[:-4], b64(p)] for p in g]})
-    page = TEMPLATE.replace('__DATA__', json.dumps({'items': items, 'batches': batches, 'tribeTh': TRIBE_TH}, ensure_ascii=False)
-                            .replace('</', '<\\/'))
-    open(out, 'w', encoding='utf-8').write(page)
-    print('picker:', out, len(batches), 'batches')
 
 
 def add(argv):
@@ -106,76 +72,9 @@ def add(argv):
     print(f'hub: {o.item} + {len(picks)} still round(s) from batch {key} · history {rel} ({len(src)} pictures) · rev {hub["rev"]}')
 
 
-TEMPLATE = r'''<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>เลือกภาพจากชุดเจน</title><style>
-:root{--bg:#2b2b33;--card:#3a3a44;--fg:#eee;--mut:#aab;--acc:#ffcf4a}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,sans-serif;padding:16px}
-h1{font-size:20px;margin:0 0 4px} .mut{color:var(--mut);font-size:13px}
-.b{background:var(--card);border-radius:10px;padding:12px;margin:14px 0}
-.top{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.ref{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--mut)}
-.ref img{image-rendering:pixelated;width:144px;height:144px;object-fit:contain;background:#55556a;border-radius:6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
-.p{position:relative;background:#55556a;border-radius:8px;cursor:pointer;border:3px solid transparent;padding:4px;text-align:center}
-.p img{image-rendering:pixelated;width:100%;aspect-ratio:1;object-fit:contain}
-.p span{font-size:12px;color:var(--mut)} .p.on{border-color:var(--acc)} .p.on::after{content:"★";position:absolute;top:2px;right:8px;color:var(--acc);font-size:20px}
-.tabs{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #556}
-.tabs button{background:var(--card);color:var(--fg);font-weight:600}.tabs button.on{background:var(--acc);color:#222}
-.tabs .n{font-weight:400;margin-left:4px}
-.head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.head h2{margin:0;font-size:17px;flex:1;min-width:150px}
-.closed .body{display:none} .closed .head{margin-bottom:0}
-select,button{font:inherit;padding:6px 10px;border-radius:6px;border:1px solid #667;background:#22222a;color:var(--fg);min-height:34px;cursor:pointer}
-button.main{background:var(--acc);color:#222;border:0;font-weight:600} button.del{color:#ff8a7a}
-textarea{width:100%;box-sizing:border-box;height:120px;background:#22222a;color:var(--fg);border:1px solid #667;border-radius:6px;font:13px monospace}
-.desc{font-size:12px;color:var(--mut);max-width:620px}
-</style></head><body>
-<h1>เลือกภาพจากชุดเจน</h1><div class="mut">คลิกภาพ = ติ๊กเป็นตัวเต็ง (หลายภาพได้) · เลือกรหัสตัวละครของแต่ละชุด · ดูภาพต้นแบบสไตล์ซ้ายมือแล้วติ๊ก "ไม่เหมือนต้นแบบ" · เสร็จแล้วกด คัดลอกผล แล้ววางในแชท</div>
-<div class="tabs" id="tabs"></div><div id="list"></div><p id="hidden" class="mut"></p>
-<div class="b"><button class="main" id="copy">คัดลอกผล</button> <span id="msg" class="mut"></span><textarea id="out" readonly></textarea></div>
-<script>
-const D=__DATA__;let S={};
-D.batches.forEach(b=>{try{const v=JSON.parse(localStorage.getItem('stillpick:'+b.key)||'null');if(v)S[b.key]=v}catch(e){}});
-try{const old=JSON.parse(localStorage.getItem('stillpick:'+['steel','fire','storm','wind','spirit','demon'].join(','))||'{}');for(const k in old)if(!S[k])S[k]=old[k]}catch(e){}
-let tab='';try{tab=localStorage.getItem('stillpick:tab')||''}catch(e){}
-const save=()=>{for(const k in S)try{localStorage.setItem('stillpick:'+k,JSON.stringify(S[k]))}catch(e){};try{localStorage.setItem('stillpick:tab',tab)}catch(e){};render()};
-const el=(t,a={},...k)=>{const e=document.createElement(t);Object.assign(e,a);k.forEach(x=>e.append(x));return e};
-const th=t=>D.tribeTh[t]||t||'?',tribes=[...new Set(D.batches.map(b=>b.tribe||'?'))];if(!tribes.includes(tab))tab=tribes[0];
-function build(){const L=document.getElementById('list');
- D.batches.forEach(b=>{const s=S[b.key]||(S[b.key]={id:'',pick:[],eye:false});
-  const sel=el('select');sel.append(el('option',{value:'',textContent:'— รหัสตัวละคร —'}));
-  const mine=D.items.filter(i=>!b.tribe||i.tribe===b.tribe),rest=D.items.filter(i=>b.tribe&&i.tribe!==b.tribe);
-  mine.concat(rest).forEach(i=>sel.append(el('option',{value:i.id,textContent:i.id+' '+i.name+(i.tribe!==b.tribe&&b.tribe?' ('+(D.tribeTh[i.tribe]||i.tribe)+')':'')})));
-  sel.value=s.id;sel.onchange=()=>{s.id=sel.value;save()};
-  const eye=el('input',{type:'checkbox',checked:s.eye});eye.onchange=()=>{s.eye=eye.checked;save()};
-  s.pick=s.pick||[];
-  const fold=el('button',{className:'fold'});fold.onclick=()=>{s.closed=!s.closed;save()};
-  const del=el('button',{className:'del',textContent:'✕ ซ่อนชุดนี้'});
-  del.onclick=()=>{if(confirm('ซ่อนชุด '+b.key+' ออกจากหน้านี้?\nภาพที่ติด ★ ในชุดนี้ ('+s.pick.length+' ภาพ) จะไม่ถูกส่งในผล\nไฟล์ไม่ถูกลบ กด "แสดงชุดที่ซ่อน" ด้านล่างเพื่อเอากลับได้')){s.hidden=true;save()}};
-  const head=el('div',{className:'head'},fold,el('h2',{textContent:'เผ่า'+th(b.tribe)+' · '+b.key}),el('span',{className:'mut cnt'}),del);
-  const top=el('div',{className:'top'});
-  if(b.style)top.append(el('div',{className:'ref'},el('img',{src:b.style}),'ต้นแบบสไตล์ '+b.styleSrc));
-  top.append(el('div',{},el('div',{className:'desc',textContent:b.desc}),el('p',{},sel),el('label',{},eye,' ดูแล้ว ไม่เหมือนต้นแบบ')));
-  const g=el('div',{className:'grid'});
-  b.pics.forEach(([n,src])=>{const p=el('div',{className:'p'},el('img',{src}),el('span',{textContent:n}));p.dataset.n=n;
-   p.onclick=()=>{const i=s.pick.indexOf(n);i<0?s.pick.push(n):s.pick.splice(i,1);s.pick.sort();save()};g.append(p)});
-  L.append(el('div',{className:'b',id:'b_'+b.key},head,el('div',{className:'body'},top,g)))});render()}
-function render(){const T=document.getElementById('tabs');T.textContent='';
- tribes.forEach(t=>{const n=D.batches.filter(b=>(b.tribe||'?')===t&&!S[b.key].hidden).reduce((a,b)=>a+S[b.key].pick.length,0);
-  const bt=el('button',{className:t===tab?'on':''},th(t),el('span',{className:'n',textContent:n?'★'+n:''}));bt.onclick=()=>{tab=t;save()};T.append(bt)});
- D.batches.forEach(b=>{const s=S[b.key],box=document.getElementById('b_'+b.key);
-  box.style.display=(b.tribe||'?')===tab&&!s.hidden?'':'none';box.classList.toggle('closed',!!s.closed);
-  box.querySelector('.fold').textContent=s.closed?'▸ ขยาย':'▾ หุบ';box.querySelector('.cnt').textContent=s.pick.length?'★ '+s.pick.join(', '):'';
-  box.querySelectorAll('.p').forEach(p=>p.classList.toggle('on',s.pick.includes(p.dataset.n)))});
- const H=document.getElementById('hidden');H.textContent='';const hid=D.batches.filter(b=>S[b.key].hidden);
- if(hid.length){const r=el('button',{textContent:'แสดงชุดที่ซ่อน ('+hid.length+')'});r.onclick=()=>{hid.forEach(b=>S[b.key].hidden=false);save()};H.append('ซ่อนไว้: '+hid.map(b=>b.key).join(', ')+' ',r)}
- document.getElementById('out').value='STILLPICK\n'+D.batches.filter(b=>!S[b.key].hidden).map(b=>{const s=S[b.key];return b.key+' -> '+(s.id||'?')+' : '+(s.pick.join(',')||'-')+' · eye '+(s.eye?'ok':'no')}).join('\n')}
-document.getElementById('copy').onclick=async()=>{const t=document.getElementById('out');try{await navigator.clipboard.writeText(t.value);document.getElementById('msg').textContent='คัดลอกแล้ว'}catch(e){t.select();document.getElementById('msg').textContent='กด Ctrl+C'}};
-build();
-</script></body></html>'''
-
 if __name__ == '__main__':
-    if len(sys.argv) >= 4 and sys.argv[1] == 'picker':
-        picker(sys.argv[2], sys.argv[3:])
+    if len(sys.argv) >= 2 and sys.argv[1] == 'picker':
+        sys.exit('the picker moved to the hub server (set 260): node tools/asset-hub/server.mjs -> http://127.0.0.1:5177/pick')
     elif len(sys.argv) >= 2 and sys.argv[1] == 'add':
         add(sys.argv[2:])
     else:

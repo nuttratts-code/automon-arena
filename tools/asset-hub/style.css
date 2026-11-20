@@ -404,3 +404,4 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .brief .stamp:disabled { border-color: var(--line); color: var(--faint); }
 .brief.is-ok .stamp { border-style: solid; border-color: var(--ok); background: var(--ok); color: #15181d; }
 .brief .usedp { padding: 6px 8px; margin-top: 6px; border-radius: 6px; background: rgba(255,255,255,.04); white-space: pre-wrap; }
+.picklink { color: var(--warn); font-size: 14px; text-decoration: none; white-space: nowrap; }

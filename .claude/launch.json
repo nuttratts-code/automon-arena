@@ -3,6 +3,7 @@
   "configurations": [
     { "name": "asset-hub", "runtimeExecutable": "node", "runtimeArgs": ["tools/asset-hub/server.mjs"], "port": 5177 },
     { "name": "asset-hub-test", "runtimeExecutable": "node", "runtimeArgs": ["tools/asset-hub/server.mjs"], "port": 5188,
-      "env": { "HUB_PORT": "5188", "HUB_ROOT": "C:\\Users\\nuttr\\AppData\\Local\\Temp\\claude\\09a6651aaa6fbcca\\6f9cf8b1-aa10-44e3-811e-4fa3e0def0fc\\scratchpad\\hubtest" } }
+      "env": { "HUB_PORT": "5188", "HUB_ROOT": "C:\\Users\\nuttr\\AppData\\Local\\Temp\\claude\\0d5187492848a006\\0aa87453-b320-443a-bc65-b9f06c960d30\\scratchpad\\hubtest",
+        "STILL_BATCHES": "C:\\Users\\nuttr\\AppData\\Local\\Temp\\claude\\0d5187492848a006\\0aa87453-b320-443a-bc65-b9f06c960d30\\scratchpad\\hubtest\\sb" } }
   ]
 }
