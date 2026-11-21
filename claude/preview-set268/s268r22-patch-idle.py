@@ -32,14 +32,28 @@ for cid in own + foe:
     bb = a.getbbox()
     pad_b = im.height - bb[3]
     k = float((v.get("scale") or {}).get("k", 4))
-    meta[key] = {"hf": int(m["cols"]), "pad_b": pad_b, "ms": int(m.get("ms", 150)), "k": k}
+    # hub facing: the form-1 picture in use (starred still/cut) may have the ⇋ flip switch on -> frames + icon shown mirrored
+    pic = [r for r in v["rounds"] if r.get("slot") in ("still", "cut") and r.get("form", 1) == 1 and r.get("star")]
+    mir = bool(pic and pic[-1].get("flip"))
+    meta[key] = {"hf": int(m["cols"]), "pad_b": pad_b, "ms": int(m.get("ms", 150)), "k": k, "mirror": mir}
     ics = [r for r in v["rounds"] if r.get("slot") == "icon" and r.get("form") == 1 and not r.get("archived")]
     st = [r for r in ics if r.get("star")]
     ic = (st or ics)[-1]
-    shutil.copyfile(HUB + "/files/" + ic["file"][len("hub/"):], os.path.join(icd, cid + ".png"))
+    ico = Image.open(HUB + "/files/" + ic["file"][len("hub/"):])
+    if mir:
+        ico = ico.transpose(Image.FLIP_LEFT_RIGHT)
+    ico.save(os.path.join(icd, cid + ".png"))
     print(key, meta[key], "icon", ic["file"].split("_")[-1], "star" if st else "newest")
 json.dump(meta, open(os.path.join(dst, "s268i1_meta.json"), "w"), indent=1)
 
+# harness: honour the hub mirror flag
+pr = os.path.join(G, "tests", "s239_prep.gd")
+t = open(pr, encoding="utf-8").read()
+a = 'sp.flip_h = (s == 0) != (OS.get_environment("S259RIGHT") == "1") # S259RIGHT: art faces right'
+if "s268mirror" not in t:
+    assert a in t
+    t = t.replace(a, a + '\n\t\t\t\tif bool(im.get("mirror", false)): sp.flip_h = not sp.flip_h # s268mirror: hub flip switch')
+    open(pr, "w", encoding="utf-8").write(t)
 # timeline: accept the i1 prefix as well as f3
 tl = os.path.join(G, "scripts", "ui", "s268_timeline.gd")
 s = open(tl, encoding="utf-8").read()
