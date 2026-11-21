@@ -30,5 +30,9 @@ Left as is (owner picks, ask): shop cards still 0.55 see-through (R7) · heart/g
 ## R5 — owner: "buttons more see-through"
 19. (R5, pending) Button bodies 60 % (theme BTN_A, prep glass_btn too), Fight plate 75 % so the main action still leads · panels/cards stay 0.85 · shop cards 0.55 (R7).
 
-Rebuild: `cp -r automon-scratch/g g268` (v47 scratch, keeps .godot = no re-import) · delete the `MCPRuntimeServer=` line · patches in this order with `python <patch> g268`: r1-patch-runend → r1-patch-battle → r1-patch-prep → r7-patch-shoptop → r8-patch-hudbottom → r0-patch-harness-ui → r0-patch-harness-runend → r2-patch-slate-timeline (needs r2-timeline.gd.txt beside it) → r4-patch-refshape → r5-patch-btnglass · shots: `sh shoot.sh` (phone 1688x780 → out/s268r5) and `sh shoot_pc.sh` (1920x1061 → out/s268r5pc). The shoot scripts expect `$SP/g268`; stills used: 1_battle, 8_prepH_hybrid, 9_runend, 9b_runend_details.
+## R6 — owner: "use the frames I cut (hub icons) on the top"
+20. (R6, pending) Timeline portraits = the owner's own hub icons (form 3, newest icon_f3 round per creature in art/hub/files/<ID>/, set 267 crop: diamond with parts poking out), drawn as is (not mirrored) at 1.25× the frame diamond over a dark fill, own = white frame, foe = red frame. Fallback = the R3 auto head crop.
+Files used (21 Nov): HL-1 eb638b69 · WN-1 1fa45ec2 · PL-1 2d6b6fd2 · SF-1 38368c0a · WY-1 b98e3b7a · PT-1 a3c705cc.
+
+Rebuild: `cp -r automon-scratch/g g268` (v47 scratch, keeps .godot = no re-import) · delete the `MCPRuntimeServer=` line · patches in this order with `python <patch> g268`: r1-patch-runend → r1-patch-battle → r1-patch-prep → r7-patch-shoptop → r8-patch-hudbottom → r0-patch-harness-ui → r0-patch-harness-runend → r2-patch-slate-timeline (needs r2-timeline.gd.txt beside it) → r4-patch-refshape → r5-patch-btnglass → r6-patch-icons (reads art/hub/files from the repo folder) · shots: `sh shoot.sh` (phone 1688x780 → out/s268r6) and `sh shoot_pc.sh` (1920x1061 → out/s268r6pc). The shoot scripts expect `$SP/g268`; stills used: 1_battle, 8_prepH_hybrid, 9_runend, 9b_runend_details.
 Security: scratch copy only, no outside assets, nothing shipped.

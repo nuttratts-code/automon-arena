@@ -58,6 +58,29 @@ func _portrait(uid: int) -> Variant:
 func _diamond(c: Vector2, r: float) -> PackedVector2Array:
 	return PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)])
 
+# R6: owner icons (hub "icon" rounds, form 3, newest = used) copied to res://tests/s268icons/<ID>.png by r6-patch-icons.py
+const ICON_K := 1.25
+var _icons := {}
+func _icon(uid: int) -> Texture2D:
+	if _icons.has(uid):
+		return _icons[uid]
+	var tex: Texture2D = null
+	var idx := uid - 9001
+	if idx >= 0 and idx < 12:
+		var own := OS.get_environment("S259IDS").split("/")
+		var foe := OS.get_environment("S259FOE").split("/")
+		var lst: PackedStringArray = own if idx < 6 else foe
+		if lst.size() == 6:
+			var cid := lst[idx % 6].trim_prefix("f3")
+			cid = cid.substr(0, 2) + "-" + cid.substr(2)
+			var fp := ProjectSettings.globalize_path("res://tests/s268icons/%s.png" % cid)
+			if FileAccess.file_exists(fp):
+				var img := Image.load_from_file(fp)
+				if img != null:
+					tex = ImageTexture.create_from_image(img)
+	_icons[uid] = tex
+	return tex
+
 func _draw() -> void:
 	var w := size.x
 	var y := size.y * 0.5
@@ -101,6 +124,12 @@ func _draw() -> void:
 		var frame := FOE_COL if int(v["side"]) == 1 else OWN_COL
 		var pts := _diamond(c, r)
 		draw_colored_polygon(_diamond(c, r + 2.5), frame)
+		var ic: Texture2D = _icon(int(v["uid"]))
+		if ic != null:   # R6: the owner's own icon cut from the hub, drawn as is (parts may poke out of the frame)
+			draw_colored_polygon(pts, Color(0.16, 0.22, 0.30))
+			var s2 := 2.0 * r * ICON_K
+			draw_texture_rect(ic, Rect2(c - Vector2(s2, s2) * 0.5, Vector2(s2, s2)), false)
+			continue
 		var p: Variant = _portrait(int(v["uid"]))
 		if p != null:
 			var tex: Texture2D = p[0]
