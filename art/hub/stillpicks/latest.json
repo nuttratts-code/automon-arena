@@ -1,6 +1,6 @@
 {
- "rev": 110,
- "t": "2026-11-21T14:55:52.375Z",
+ "rev": 120,
+ "t": "2026-11-21T17:32:19.908Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -36,6 +36,16 @@
    "form": 1,
    "pick": [
     "g12"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn4a": {
+   "id": "WN-4",
+   "form": 1,
+   "pick": [
+    "g15"
    ],
    "eye": true,
    "hidden": false,
@@ -107,6 +117,24 @@
    "hidden": false,
    "closed": false
   },
+  "fire_pl4a": {
+   "id": "PL-4",
+   "form": 1,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "fire_pl4b": {
+   "id": "PL-4",
+   "form": 1,
+   "pick": [
+    "g20"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "spirit": {
    "id": "",
    "form": 1,
@@ -164,6 +192,24 @@
    "form": 1,
    "pick": [
     "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_pt4a": {
+   "id": "PT-4",
+   "form": 1,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "spirit_pt4b": {
+   "id": "PT-4",
+   "form": 1,
+   "pick": [
+    "g17"
    ],
    "eye": true,
    "hidden": false,
@@ -243,6 +289,16 @@
    "hidden": false,
    "closed": false
   },
+  "steel_hl4a": {
+   "id": "HL-4",
+   "form": 1,
+   "pick": [
+    "g23"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm": {
    "id": "SF-1",
    "form": 1,
@@ -299,6 +355,16 @@
    "hidden": false,
    "closed": false
   },
+  "storm_sf4a": {
+   "id": "SF-4",
+   "form": 1,
+   "pick": [
+    "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "wind": {
    "id": "WY-1",
    "form": 1,
@@ -342,6 +408,16 @@
    "form": 1,
    "pick": [
     "g21"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy4a": {
+   "id": "WY-4",
+   "form": 1,
+   "pick": [
+    "g20"
    ],
    "eye": true,
    "hidden": false,
