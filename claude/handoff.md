@@ -2,6 +2,7 @@
 Read by Claude every new chat. Keep ≤ 1 screen: Relay = newest 2 sets + open WIP sets (set 211 B1), trim at every close-out; move finished items to claude/archive/ (full pre-trim copy: archive/handoff-2026-10-30-full.md). User gets a Thai summary in chat at the end of each task set.
 
 ## Relay (two accounts take turns — rules in claude/workflow/relay.md · full pre-trim block: archive/relay/relay-2026-10-31.md)
+- 🔒 set 268 · Godot screen UI samples (set 216 R1–R8 moved onto the v47 arena, ui-preview) · files/areas: scratch copy only, claude/preview-set268, WIP branch claude/ui-sample-268
 - 🔒 set 267 · hub form 3 (icon crop · team form switch · shadow per form) · files/areas: tools/asset-hub, art/hub/hub.json, godot/data/unit_shadows.json
 - **Set 266 form-3 in the arena (21 Nov, PC · CLOSED · scratch sample only · no code · no gate · no values · no publish).** ★ form-3 stills of the six -1 creatures stand in the v47 live window, loop prep → D1 zoom → battle 4 s (k 3). Run `sh s239t/s266_f3_live.sh` · notes claude/preview-set266/notes.md. **Next:** owner OK on size → form-3 idles.
 - **Set 265 form-3 stills (20–21 Nov, PC · CLOSED · claude/f3-pick + claude/pick-inhub → main ae28fe0 · GATE: PASS tests 347/347 · ui_smoke 342/342 ×2 · e2e_pick 41/41 · no values · no publish).** All six -1 creatures have a form-3 still in the hub (d9916c3, not ★) via `char-idle/pixellab_f3.py`; /pick: ร่าง 1/3 view, hidden tab, in-hub first, locked ID. **Next:** owner ★ form-3 stills → form-3 idles.
