@@ -41,6 +41,7 @@ Scripts here (`painted_idle.py` = route P, set 227; the rest = pixel routes) (Py
 GPT-made frames (owner: no) · cut-out bone rig with rotated parts (RotSprite; joints and stiffness) · 37 frames (too many to touch up; 8 is enough) · 16-frame rig in Pixelwright (parts can only move, not rotate) · (PixelLab was dropped here in set 222 — back as the idle method since set 257) · heavy cleaning of video frames (see B4).
 
 ## Still batch — PixelLab Pro API (set 259, owner A2 at close-out)
+**Always the LATEST recipe (owner set 269, 21 Nov):** every new creature batch uses the newest rules below (new unused style ref + custom palette, set 261 = the HL-2 recipe), never an older set's recipe, without asking; one batch per creature ID, owner OKs each batch before it runs (set 269 G).
 Use when designing a NEW creature still (concept variants), before any idle. Script: `pixellab_still.py` (this folder).
 1. `python -I .claude/skills/char-idle/pixellab_still.py --dry --desc "<features in English, no game/IP names>" --style <one creature png> --palette <colour source png> --out <scratch dir>` → show the request; balance check is in the live run.
 2. Live run (drop `--dry`): POST `/v2/generate-image-v2` → poll `/v2/background-jobs/{id}` → 25 images at 48 px for **10 generations** (size sets the count: ≤32 px = 64, 42–50 = 25, 86–170 = 4, >170 = 1). Writes g00..g24 + sheet.png + request.json.
