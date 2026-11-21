@@ -1,0 +1,112 @@
+# SAMPLE set 268 R2 (owner B1): cooldown timeline across the battle top — one line, the act point at the LEFT end.
+# Every living unit (both sides) slides left as its cooldown runs; reaching the left end = it acts, then it jumps back.
+# Display only: progress = (clock - last "set" event of that unit) / its current cooldown ("stat" cd). Stun/freeze are approximate.
+extends Control
+
+var view: Node = null      # battle_view.gd
+var stage: Node = null     # stage3d.gd (portraits come from the 3D sprites)
+var _crop := {}            # uid -> [Texture2D, Rect2 px of the head square] (or null)
+const LINE_COL := Color(0.82, 0.88, 0.94, 0.85)
+const TRAIL_COL := Color(0.30, 0.72, 0.80, 0.55)
+const OWN_COL := Color(0.86, 0.92, 0.98)
+const FOE_COL := Color(0.92, 0.30, 0.34)
+
+func _process(_d: float) -> void:
+	if is_visible_in_tree():
+		queue_redraw()
+
+func _cd_of(v: Dictionary) -> float:
+	var st: Variant = v.get("stat")
+	if st is Dictionary and float(st.get("cd", 0.0)) > 0.0:
+		return float(st["cd"])
+	return 0.0
+
+func _portrait(uid: int) -> Variant:
+	if _crop.has(uid):
+		return _crop[uid]
+	var res: Variant = null
+	var gb: Dictionary = stage.groups.get("battle", {}) if stage != null else {}
+	var key: Variant = uid if gb.has(uid) else float(uid)
+	if gb.has(key):
+		var s: Variant = gb[key].get("spr")
+		if s is Sprite3D and (s as Sprite3D).texture != null:
+			var sp := s as Sprite3D
+			var tex := sp.texture
+			var cell := Rect2(Vector2.ZERO, tex.get_size())
+			if sp.region_enabled:
+				cell = sp.region_rect
+			elif sp.hframes > 1 or sp.vframes > 1:
+				var cw := tex.get_size().x / sp.hframes
+				var chh := tex.get_size().y / sp.vframes
+				cell = Rect2(Vector2((sp.frame % sp.hframes) * cw, (sp.frame / sp.hframes) * chh), Vector2(cw, chh))
+			var img := tex.get_image()
+			if img != null:
+				img = img.get_region(Rect2i(cell))
+				img.decompress()
+				var ur := img.get_used_rect()
+				if ur.size.x > 0:
+					var side := minf(ur.size.x, ur.size.y) * 0.5    # head = top part of the used box
+					var c := Vector2(ur.position.x + ur.size.x * 0.5, ur.position.y + side * 0.6)
+					res = [tex, Rect2(cell.position + c - Vector2(side, side) * 0.5, Vector2(side, side))]
+	_crop[uid] = res
+	return res
+
+func _diamond(c: Vector2, r: float) -> PackedVector2Array:
+	return PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)])
+
+func _draw() -> void:
+	var w := size.x
+	var y := size.y * 0.5
+	var x0 := 34.0                # act point
+	var x1 := w - 8.0
+	# trail + line + ticks
+	draw_rect(Rect2(x0, y - 5.0, (x1 - x0) * 0.55, 10.0), Color(TRAIL_COL, 0.35))
+	draw_line(Vector2(x0, y), Vector2(x1, y), LINE_COL, 2.0)
+	var n := 14
+	for i in n + 1:
+		var tx := x0 + (x1 - x0) * float(i) / float(n)
+		draw_colored_polygon(_diamond(Vector2(tx, y), 4.0), LINE_COL)
+	# act point: big open diamond
+	draw_colored_polygon(_diamond(Vector2(x0, y), 24.0), Color(0.10, 0.15, 0.22, 0.85))
+	draw_polyline(_diamond(Vector2(x0, y), 24.0) + PackedVector2Array([Vector2(x0, y - 24.0)]), OWN_COL, 2.0)
+	if view == null:
+		return
+	var clock: float = float(view.clock)
+	var items := []
+	if OS.get_environment("S268REAL") != "1" and stage != null:   # sample: the 12 stand-ins with made-up cooldowns 2-8 s
+		for k in (stage.groups.get("battle", {}) as Dictionary).keys():
+			var cdf := 2000.0 + float((int(k) * 1371) % 6000)
+			var ph := float((int(k) * 577) % 1000) / 1000.0
+			items.append([fmod(clock / cdf + ph, 1.0), {"uid": int(k), "side": int(stage.groups["battle"][k]["side"])}])
+	for v in ([] if not items.is_empty() else view.units.values()):
+		if v.get("down") == true or float(v["hp"]) <= 0.0:
+			continue
+		var cd := _cd_of(v)
+		if cd <= 0.0:
+			continue
+		var last := float(v.get("lastAct", 0.0))
+		var f := clampf((clock - last) / cd, 0.0, 1.0)
+		items.append([f, v])
+	items.sort_custom(func(a, b): return float(a[0]) < float(b[0]))   # nearest to acting drawn last (on top)
+	for it in items:
+		var f: float = it[0]
+		var v: Dictionary = it[1]
+		var front := f > 0.97
+		var r := 27.0 if front else 19.0
+		var c := Vector2(lerpf(x1 - 14.0, x0, f), y)
+		var frame := FOE_COL if int(v["side"]) == 1 else OWN_COL
+		var pts := _diamond(c, r)
+		draw_colored_polygon(_diamond(c, r + 2.5), frame)
+		var p: Variant = _portrait(int(v["uid"]))
+		if p != null:
+			var tex: Texture2D = p[0]
+			var rr: Rect2 = p[1]
+			var ts := tex.get_size()
+			var uv := PackedVector2Array()
+			for q in pts:
+				var k := (q - c) / (2.0 * r) + Vector2(0.5, 0.5)
+				uv.append((rr.position + rr.size * k) / ts)
+			draw_colored_polygon(pts, Color(0.16, 0.22, 0.30), PackedVector2Array(), null)
+			draw_colored_polygon(pts, Color.WHITE, uv, tex)
+		else:
+			draw_colored_polygon(pts, Color(0.16, 0.22, 0.30))
