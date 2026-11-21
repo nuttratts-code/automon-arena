@@ -11,6 +11,9 @@ const TRAIL_COL := Color(0.30, 0.72, 0.80, 0.55)
 const OWN_COL := Color(0.86, 0.92, 0.98)
 const FOE_COL := Color(0.92, 0.30, 0.34)
 
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST   # pixel sprites stay crisp
+
 func _process(_d: float) -> void:
 	if is_visible_in_tree():
 		queue_redraw()
@@ -45,8 +48,9 @@ func _portrait(uid: int) -> Variant:
 				img.decompress()
 				var ur := img.get_used_rect()
 				if ur.size.x > 0:
-					var side := minf(ur.size.x, ur.size.y) * 0.5    # head = top part of the used box
-					var c := Vector2(ur.position.x + ur.size.x * 0.5, ur.position.y + side * 0.6)
+					# R3: hub creatures are side views facing right in the file -> head square at the top-right of the used box
+					var side := minf(ur.size.y * 0.8, ur.size.x)
+					var c := Vector2(ur.end.x - side * 0.5, ur.position.y + side * 0.5)
 					res = [tex, Rect2(cell.position + c - Vector2(side, side) * 0.5, Vector2(side, side))]
 	_crop[uid] = res
 	return res
@@ -105,6 +109,7 @@ func _draw() -> void:
 			var uv := PackedVector2Array()
 			for q in pts:
 				var k := (q - c) / (2.0 * r) + Vector2(0.5, 0.5)
+				k.x = 1.0 - k.x   # R3: every portrait faces left, toward the act point
 				uv.append((rr.position + rr.size * k) / ts)
 			draw_colored_polygon(pts, Color(0.16, 0.22, 0.30), PackedVector2Array(), null)
 			draw_colored_polygon(pts, Color.WHITE, uv, tex)

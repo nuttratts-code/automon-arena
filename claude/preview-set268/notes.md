@@ -19,5 +19,9 @@ Conflict told + owner picks: D1 dark slate see-through panels replace the set 21
 Guesses: the sample timeline uses MADE-UP cooldowns (2–8 s) for the 12 stand-ins (S268REAL=1 = real data path: last "set" event + "stat" cd; stun/freeze approximate) · portraits = auto head crop of the stand-in sprites (real icons = hub set 267 work).
 Tells: see-through dark panels (owner pick R2 — kept) · 3 identical tiles (owner list item 1) · cut corners (owner set 212). critique: self-check · tells 0 new.
 
+## R3 — owner: "use the hub creatures, not stand-ins"
+17. (R3) Units = the six -1 creatures' ★ form-3 stills from the hub (set 266 files f3<ID>.png + s266f3_meta.json in g/tests/s225; shoot env S259RIGHT/S259IDS/S259FOE/S259META as in s266_f3_live.sh) · timeline portrait = head square at the top-right of the sprite (files face right), mirrored so every portrait faces the act point (left) · nearest-pixel filter.
+Still made-up cooldowns on the timeline (stand-in battle data).
+
 Rebuild: `cp -r automon-scratch/g g268` (v47 scratch, keeps .godot = no re-import) · delete the `MCPRuntimeServer=` line · patches in this order with `python <patch> g268`: r1-patch-runend → r1-patch-battle → r1-patch-prep → r7-patch-shoptop → r8-patch-hudbottom → r0-patch-harness-ui → r0-patch-harness-runend → r2-patch-slate-timeline (needs r2-timeline.gd.txt beside it) · shots: `sh shoot.sh` (phone 1688x780 → out/s268r2) and `sh shoot_pc.sh` (1920x1061 → out/s268r2pc). The shoot scripts expect `$SP/g268`; stills used: 1_battle, 8_prepH_hybrid, 9_runend, 9b_runend_details.
 Security: scratch copy only, no outside assets, nothing shipped.
