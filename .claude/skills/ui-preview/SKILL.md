@@ -27,3 +27,11 @@ description: Screen design samples before real code (ภาพตัวอย่
 7. **ทำจริง:** re-implement cleanly from notes.md through skill `ui-work` (all sizes, dark, tests, ripple) — never paste the sample hack as is.
 
 ## 8. Arena / battle-scene look samples → skill art-look §8 (moved set 219 E1)
+
+## 9. Screen samples on the NEW arena (v47 scratch, set 268 A2)
+Use when screens must sit on the arena the game will ship (repo godot/ still shows the old one, memory "newest arena = scratch g").
+1. `cp -r automon-scratch/g automon-scratch/gNNN` (keeps `.godot` → no re-import, ~10 s) · delete the `MCPRuntimeServer=` line. Never patch `g` itself.
+2. Screen patches as usual, then the harness patches from `claude/ui-sample-268:claude/preview-set268/`: `r0-patch-harness-ui.py` (env KEEPUI=1 keeps the CanvasLayers the v47 harness hides; flips the UI to prep before the zoom shots with `world.moving = true` so the 3D groups stay) + `r0-patch-harness-runend.py` (run-end still).
+3. Shoot with that folder's `shoot.sh` (phone 1688×780) / `shoot_pc.sh` (1920×1061) = the v47 env + KEEPUI + hub creatures (S259RIGHT/S259IDS/S259FOE/S259META as in s266_f3_live.sh). Stills: 1_battle · 8_prepH_hybrid (D1 zoom) · 9_runend · 9b_runend_details.
+4. Rebuild = fresh copy + every patch in the notes.md "Rebuild:" order (a patch asserts its old text, so never re-run one on a patched copy).
+5. Traps met: a Control added as a child of a Button needs `set_anchors_and_offsets_preset(PRESET_FULL_RECT)` (anchors alone leave size 0 → nothing draws) · `Button.flat = true` skips every stylebox (no tile shows) · `TH.dark` also changes the 3D scene, so a dark UI palette goes into data/tone.json "light" · phone width shows white strips at the top corners (v47 card is 1.81:1) — an art-look item, not UI.
