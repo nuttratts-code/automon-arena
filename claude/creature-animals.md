@@ -13,16 +13,20 @@ Before proposing a new concept: read this list, pick an animal not on it, then a
 | PL-1 | Firasheep | sheep / ram |
 | PL-2 | Volcanmole | mole |
 | PL-3 | Snockfire | snake (two heads) |
-| PL-4 | (set 270) | — redo (chameleon taken) |
+| PL-4 | (set 270) | hermit crab (cannon shell) |
 | SF-1 | Foxlash | fox |
 | SF-2 | Cowterry | cow |
 | SF-3 | Fhock | toad |
+| SF-4 | (set 270) | owl |
 | WY-1 | Catus | cat |
 | WY-2 | Pangofan | pangolin |
 | WY-3 | Wildsel | weasel |
+| WY-4 | (set 270) | boar |
 | PT-1 | Xpirit | many-tailed fox spirit (fox) |
 | PT-2 | Log-Log | log creature |
 | PT-3 | Axoloty | axolotl |
+| PT-4 | (set 270) | bear (moon) — moth rejected by owner |
 | WN-1 | Heldog | dog / hound |
 | WN-2 | Bhameleon | chameleon |
 | WN-3 | Hipplood | hippo |
+| WN-4 | (set 270) | baboon |
