@@ -1,0 +1,48 @@
+# SAMPLE set 268 R7 (owner picture 21 Nov): battle controls as bare symbols, bottom-right.
+# kind "pause" = two grey bars (▶ when paused) · kind "ff" = two red triangles + the speed (2×…16×) when above 1×.
+extends Control
+
+var kind := "pause"
+var paused := false
+var speed := 1
+const GREY := Color(0.55, 0.58, 0.62)
+const RED := Color(0.98, 0.22, 0.32)
+const EDGE := Color(0.05, 0.07, 0.10, 0.85)
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)   # fills the button (anchors alone keep size 0)
+
+func _process(_d: float) -> void:
+	queue_redraw()
+
+func _poly(pts: PackedVector2Array, col: Color) -> void:
+	# dark edge first (1.5 px bigger), then the fill
+	var c := Vector2.ZERO
+	for p in pts: c += p
+	c /= pts.size()
+	var big := PackedVector2Array()
+	for p in pts: big.append(c + (p - c) * 1.0 + (p - c).normalized() * 2.0)
+	draw_colored_polygon(big, EDGE)
+	draw_colored_polygon(pts, col)
+
+func _draw() -> void:
+	var s := minf(size.x, size.y) * 0.62
+	var o := size * 0.5
+	if kind == "pause":
+		if paused:
+			_poly(PackedVector2Array([o + Vector2(-s * 0.35, -s * 0.5), o + Vector2(s * 0.5, 0), o + Vector2(-s * 0.35, s * 0.5)]), GREY)
+		else:
+			var w := s * 0.28
+			for dx in [-s * 0.24, s * 0.24]:
+				var x: float = o.x + dx
+				_poly(PackedVector2Array([Vector2(x - w * 0.5, o.y - s * 0.5), Vector2(x + w * 0.5, o.y - s * 0.5), Vector2(x + w * 0.5, o.y + s * 0.5), Vector2(x - w * 0.5, o.y + s * 0.5)]), GREY)
+	else:
+		var h := s * 0.5
+		for dx in [-s * 0.42, s * 0.08]:
+			var x: float = o.x + dx
+			_poly(PackedVector2Array([Vector2(x, o.y - h), Vector2(x + s * 0.5, o.y), Vector2(x, o.y + h)]), RED)
+		if speed > 1:
+			var f := ThemeDB.fallback_font
+			draw_string_outline(f, Vector2(size.x - 18.0, size.y - 2.0), "%d×" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, EDGE)
+			draw_string(f, Vector2(size.x - 18.0, size.y - 2.0), "%d×" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
