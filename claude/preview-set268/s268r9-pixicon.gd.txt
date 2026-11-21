@@ -1,0 +1,66 @@
+# SAMPLE set 268 round 9 (owner A1): pause / fast-forward as PIXEL icons in the same hand as the creature sprites —
+# a pixel grid, 1-px dark outline, light from the top-left (lit top/left edge, shaded bottom/right edge), like the arena sun.
+extends Control
+
+var kind := "pause"
+var paused := false
+var speed := 1
+const OUT := Color("#0e1620")
+const BASE := Color("#d6e2e9")
+const LIT := Color("#ffffff")
+const SHADE := Color("#93a6b3")
+const GRID := 13
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+func _process(_d: float) -> void:
+	queue_redraw()
+
+func _fill() -> Dictionary:
+	var f := {}
+	if kind == "pause" and not paused:
+		for y in range(1, 12):
+			for x in [2, 3, 4, 8, 9, 10]:
+				f[Vector2i(x, y)] = true
+	elif kind == "pause":   # ▶ while paused
+		for y in range(1, 12):
+			var w := 6 - absi(y - 6)
+			for x in range(3, 3 + w * 2 - 1):
+				f[Vector2i(x, y)] = true
+	else:                    # ▶▶
+		for y in range(2, 11):
+			var w := 4 - absi(y - 6)
+			for x0 in [1, 7]:
+				for x in range(x0, x0 + w + 1):
+					f[Vector2i(x, y)] = true
+	return f
+
+func _draw() -> void:
+	var px := floorf(minf(size.x, size.y) * 0.62 / GRID * 2.0) / 2.0   # half-pixel steps of the UI unit = crisp at 2x screens
+	px = maxf(px, 1.5)
+	var o := (size - Vector2(GRID, GRID) * px) * 0.5
+	o = Vector2(roundf(o.x), roundf(o.y))
+	var f := _fill()
+	var outl := {}
+	for p in f:
+		for dy in [-1, 0, 1]:
+			for dx in [-1, 0, 1]:
+				var q: Vector2i = p + Vector2i(dx, dy)
+				if not f.has(q):
+					outl[q] = true
+	for q in outl:
+		draw_rect(Rect2(o + Vector2(q) * px, Vector2(px, px)), OUT)
+	for p in f:
+		var c := BASE
+		if not f.has(p + Vector2i(0, -1)) or not f.has(p + Vector2i(-1, 0)):
+			c = LIT
+		elif not f.has(p + Vector2i(0, 1)) or not f.has(p + Vector2i(1, 0)):
+			c = SHADE
+		draw_rect(Rect2(o + Vector2(p) * px, Vector2(px, px)), c)
+	if kind == "ff" and speed > 1:
+		var fnt := ThemeDB.fallback_font
+		var at := Vector2(size.x - 16.0, size.y - 3.0)
+		draw_string_outline(fnt, at, "%d×" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 4, OUT)
+		draw_string(fnt, at, "%d×" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, LIT)
