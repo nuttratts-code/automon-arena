@@ -27,7 +27,7 @@ var _drag := false
 var _dragged := false # the owner moved it (stills stop re-anchoring)
 
 func _clamp_scroll() -> void:
-	_scroll = clampf(_scroll, 0.0, maxf(0.0, (size.x - 34.0) * (_zoom - 1.0)))
+	_scroll = clampf(_scroll, 0.0, maxf(0.0, (size.x - 34.0) * (_zoom - 1.0) + (OPEN_GAP * 6.0 if _zoom > 1.0 else 0.0)))
 
 func _gui_input(ev: InputEvent) -> void: # s268r26: tap a stack = open / close it · s268r28d: tap on release, drag = scroll
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
