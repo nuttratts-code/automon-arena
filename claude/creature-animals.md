@@ -1,0 +1,28 @@
+# Creature animals — no repeats (owner rule set 270, 22 Nov 2026)
+
+Every creature uses an animal (or base thing) that no other creature uses yet, across ALL tribes and forms.
+Before proposing a new concept: read this list, pick an animal not on it, then add the row here when the owner OKs it.
+(Set 270: PL-4 chameleon was rejected — WN-2 is already a chameleon.)
+
+| ID | Name (hub) | Animal / base |
+|---|---|---|
+| HL-1 | Steerhino | rhino / steer |
+| HL-2 | Shieldoat | goat |
+| HL-3 | barvier | beaver |
+| HL-4 | (set 270) | otter |
+| PL-1 | Firasheep | sheep / ram |
+| PL-2 | Volcanmole | mole |
+| PL-3 | Snockfire | snake (two heads) |
+| PL-4 | (set 270) | — redo (chameleon taken) |
+| SF-1 | Foxlash | fox |
+| SF-2 | Cowterry | cow |
+| SF-3 | Fhock | toad |
+| WY-1 | Catus | cat |
+| WY-2 | Pangofan | pangolin |
+| WY-3 | Wildsel | weasel |
+| PT-1 | Xpirit | many-tailed fox spirit (fox) |
+| PT-2 | Log-Log | log creature |
+| PT-3 | Axoloty | axolotl |
+| WN-1 | Heldog | dog / hound |
+| WN-2 | Bhameleon | chameleon |
+| WN-3 | Hipplood | hippo |
