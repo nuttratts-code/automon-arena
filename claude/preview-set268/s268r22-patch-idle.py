@@ -36,6 +36,15 @@ for cid in own + foe:
     pic = [r for r in v["rounds"] if r.get("slot") in ("still", "cut") and r.get("form", 1) == 1 and r.get("star")]
     mir = bool(pic and pic[-1].get("flip"))
     meta[key] = {"hf": int(m["cols"]), "pad_b": pad_b, "ms": int(m.get("ms", 150)), "k": k, "mirror": mir}
+    # round 22c (owner rule set 268: EVERY hub setting): feet point + cast shadow from the shadow tab, play order
+    sh = v.get("shadow") or {}
+    ft = sh.get("feet") or [0.5, 1.0]
+    ca = sh.get("cast") or {}
+    meta[key].update({"fx": float(ft[0]), "fy": float(ft[1]), "len": float(ca.get("len", 1)), "str": float(ca.get("str", 0.5)),
+                      "blur": float(ca.get("blur", 0.3)), "ox": float(ca.get("ox", 0)), "oy": float(ca.get("oy", 0)),
+                      "pingpong": bool(m.get("pingpong", False))})
+    if sh.get("frames") or ca.get("k") or (sh.get("oval") or {}).get("on") or ca.get("ox") or ca.get("oy") or m.get("pingpong"):
+        print("WARN", cid, "per-frame feet / corner k / oval / ox oy / pingpong set in the hub: NOT applied by this sample")
     ics = [r for r in v["rounds"] if r.get("slot") == "icon" and r.get("form") == 1 and not r.get("archived")]
     st = [r for r in ics if r.get("star")]
     ic = (st or ics)[-1]
