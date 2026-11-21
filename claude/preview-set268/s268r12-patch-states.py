@@ -28,7 +28,7 @@ sub("scripts/ui/s268_icon.gd", [
     ("        draw_rect(Rect2(o + Vector2(p) * px, Vector2(px, px)), c)\n",
      "        draw_rect(Rect2(o + Vector2(p) * px, Vector2(px, px)), Color(c, a))\n"),
     ("    if kind == \"ff\" and speed > 1:\n        var fnt := ThemeDB.fallback_font\n        var at := Vector2(size.x - 16.0, size.y - 3.0)\n        draw_string_outline(fnt, at, \"%d×\" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 4, OUT)\n        draw_string(fnt, at, \"%d×\" % speed, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, LIT)\n",
-     "    if on:   # round 12: small word under the button (C1: FAST without a number)\n        var fnt := ThemeDB.fallback_font\n        var word := \"STOP\" if kind == \"pause\" else \"FAST\"\n        var fs := 12\n        var tw := fnt.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x\n        var at := Vector2(roundf((size.x - tw) * 0.5), size.y + 8.0)\n        draw_string_outline(fnt, at, word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 4, Color(\"#16202a\", 0.9))\n        draw_string(fnt, at, word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(\"#e4ebef\"))\n"),
+     "    if on:   # round 12: small word under the button (C1: FAST without a number)\n        var fnt := ThemeDB.fallback_font\n        var word := \"STOP\" if kind == \"pause\" else \"FAST\"\n        var fs := 12\n        var tw := fnt.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x\n        var at := Vector2(roundf((size.x - tw) * 0.5), size.y + 1.0)\n        draw_string_outline(fnt, at, word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 4, Color(\"#16202a\", 0.9))\n        draw_string(fnt, at, word, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(\"#e4ebef\"))\n"),
 ])
 
 sub("scripts/ui/battle.gd", [
