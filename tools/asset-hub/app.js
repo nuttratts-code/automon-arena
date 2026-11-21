@@ -226,6 +226,8 @@ function usedPic(it, form = 1) {
   const still = rs.filter((r) => r.slot === 'still').pop();
   return cutOf(it, still) || still || rs.pop() || null;
 }
+// set 267 (owner A1 B1 C1): per-form data on an item — form 1 keeps the old key, form 3 adds '3' (shadow3, scale3, iconCrop3)
+const fk = (base, f) => (f === 3 ? base + '3' : base);
 function itemOfRound(r) { for (const it of Object.values(hub.items)) if (it.rounds.includes(r)) return it; return null; }
 // Facing (owner set 248, round 2): what the still step shows is what every page and the game (our side) show. A still / cut is
 // drawn as its file, mirrored when ⇋ กลับข้าง is on; every other picture of a creature (video, frames, Veo input, icon) turns the
@@ -241,7 +243,7 @@ function mirrorCanvas(c) { const o = document.createElement('canvas'); o.width =
 function stepHas(it, step) {
   if (step === 'still') return it.rounds.some((r) => ['still', 'cut'].includes(r.slot) && r.star && !r.archived);
   if (step === 'prompt') return it.prompts.length > 0;
-  if (step === 'shadow') return !!it.shadow;
+  if (step === 'shadow') return !!it[fk('shadow', ui.form)];
   return it.rounds.some((r) => r.slot === step && r.star && !r.archived);
 }
 
@@ -543,7 +545,7 @@ function renderItem(m, it) {
   if (ui.step === 'veoin') ui.step = 'prompt'; // merged into the พรอมต์ tab (owner C1)
   if (!steps.some(([k]) => k === ui.step)) ui.step = steps[0][0];
   // form + move switches (F1 / F3, idle / attack …)
-  if (isChar && ui.step !== 'shadow') {
+  if (isChar) { // set 267 C1: the shadow step has the ร่าง 1/3 switch too
     const bar = h('div', { class: 'tools' });
     if (ui.step !== 'prompt' || true) bar.append(h('span', { class: 'seg' }, [1, 3].map((f) => h('button', { class: ui.form === f ? 'on' : '', onclick: () => { ui.form = f; ui.sel = null; render(); } }, `ร่าง ${f}`))));
     if (showOld && ['video', 'frames', 'file'].includes(ui.step)) bar.append(h('span', { class: 'seg' }, hub.settings.moves.map((mv) => h('button', { class: ui.move === mv ? 'on' : '', onclick: () => { ui.move = mv; ui.sel = null; render(); } }, moveTh(mv)))));
@@ -971,15 +973,16 @@ function compareDialog(it) {
 // owner set 248 B: idle frames made from the picture in use (each frame can get its own shadow), else the picture in use itself.
 // Frames older than the picture in use belong to an earlier picture (e.g. old painted frames under a new pixel still) and are skipped.
 // set 264: the ★ frames win over the round the shadow was saved on (a frame pixel edit = new ★ round; the tab kept showing the old sheet).
-function shadowSource(it) {
-  const set = it.shadow?.round && it.rounds.find((r) => r.id === it.shadow.round && !r.archived && r.slot === 'frames'); // Claude sets it on new frames
-  const fr = pick(it, 'frames', 1, 'idle') || set || latest(it, 'frames', 1, 'idle'), u = usedPic(it, 1);
+function shadowSource(it, f = 1) {
+  const sh = it[fk('shadow', f)];
+  const set = sh?.round && it.rounds.find((r) => r.id === sh.round && !r.archived && r.slot === 'frames' && (r.form || 1) === f); // Claude sets it on new frames
+  const fr = pick(it, 'frames', f, 'idle') || set || latest(it, 'frames', f, 'idle'), u = usedPic(it, f);
   return fr && (!u || (fr.t || '') >= (u.t || '')) ? fr : u || fr;
 }
 // per-frame shadows follow a frames round onto an edited copy of the same sheet (same grid + frame size), set 264
 function sameSheet(it, id, r) {
   if (!r || r.slot !== 'frames') return false;
-  if (it.shadow?.round === r.id) return true;
+  if (id === r.id) return true;
   const o = it.rounds.find((x) => x.id === id && x.slot === 'frames'), a = o?.meta, b = r.meta;
   return !!(a && b && ['cols', 'rows', 'fw', 'fh', 'n'].every((k) => a[k] === b[k]));
 }
@@ -996,7 +999,8 @@ function guessFeet(k) {
   return [+(x1 >= 0 ? (x0 + x1 + 1) / 2 / W : 0.5).toFixed(4), +((bottom + 1) / H).toFixed(4)];
 }
 function renderShadow(m, it) {
-  const src = shadowSource(it);
+  const F = ui.form, SK = fk('shadow', F); // set 267 C1: form 3 has its own shadow (it[SK]3)
+  const src = shadowSource(it, F);
   if (!src) { m.append(h('p', { class: 'dim' }, 'ต้องมีภาพนิ่ง ภาพตัดพื้น หรือเฟรมก่อน จึงจะตั้งเงาได้')); return; }
   const work = h('div', { class: 'work' });
   const left = h('div', { class: 'shadow-ed' });
@@ -1007,9 +1011,9 @@ function renderShadow(m, it) {
   m.append(work);
   const hit = document.createElement('canvas'); hit.width = cv.width; hit.height = cv.height;
   const hitG = hit.getContext('2d', { willReadFrequently: true });
-  let s = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : null, base = null; // s = what the handles edit: base (every frame) or one frame's own shadow
+  let s = it[SK] ? JSON.parse(JSON.stringify(it[SK])) : null, base = null; // s = what the handles edit: base (every frame) or one frame's own shadow
   let ov = {}, editK = null; // owner set 248 B: ov[i] = frame i's own shadow (same shape as base); editK = the frame being edited, null = every frame
-  if (s) { if (s.frames && sameSheet(it, it.shadow.round, src)) for (const [k, v] of Object.entries(s.frames)) ov[k] = v; delete s.frames; delete s.face; }
+  if (s) { if (s.frames && sameSheet(it, it[SK].round, src)) for (const [k, v] of Object.entries(s.frames)) ov[k] = v; delete s.frames; delete s.face; }
   let frames = [], fi = 0, playing = true, bg = null, size = [0, 0];
   const pitch = () => hub.settings.camPitch || 40;
   const mir = mirrorOf(src); // the editor shows the creature the way the still step shows it (owner set 248); feet below are in that view
@@ -1017,7 +1021,7 @@ function renderShadow(m, it) {
   const commit = () => {
     if (editK != null) ov[editK] = s; else base = s;
     const fr = Object.entries(ov).map(([k, v]) => [k, { feet: feetPic(v), cast: v.cast }]);
-    it.shadow = { ...base, feet: feetPic(base), size, round: src.id, ...(fr.length ? { frames: Object.fromEntries(fr) } : {}) };
+    it[SK] = { ...base, feet: feetPic(base), size, round: src.id, ...(fr.length ? { frames: Object.fromEntries(fr) } : {}) };
     saveSoon(); stripOwn();
   };
   // sliders
@@ -1190,7 +1194,7 @@ function renderShadow(m, it) {
     if (src.slot === 'frames' && src.meta) { for (let i = 0; i < (src.meta.n || 1); i++) frames.push(keyed(img, ...sheetFrame(img, src.meta, i))); size = [src.meta.fw, src.meta.fh]; }
     else { frames = [keyed(img)]; size = [img.naturalWidth, img.naturalHeight]; }
     if (mir) frames = frames.map(mirrorCanvas);
-    const other = s && it.shadow?.round !== src.id && !(Array.isArray(s.size) && s.size[0] === size[0] && s.size[1] === size[1]);
+    const other = s && it[SK]?.round !== src.id && !(Array.isArray(s.size) && s.size[0] === size[0] && s.size[1] === size[1]);
     if (!s || !Array.isArray(s.feet)) { s = { ...JSON.parse(JSON.stringify(SHADOW_DEFAULT)), ...(s || {}) }; s.feet = guessFeet(frames[0]); } // saved only once the owner changes something
     else if (other) { s.feet = guessFeet(frames[0]); left.append(h('p', { class: 'small warn' }, 'จุดเท้าเดิมตั้งไว้กับภาพอื่น หาจุดเท้าใหม่บนภาพนี้ให้แล้ว (บันทึกเมื่อคุณแก้อะไรสักอย่าง)')); }
     else if (mir) s.feet = [+(1 - s.feet[0]).toFixed(4), s.feet[1]];
@@ -1219,7 +1223,7 @@ function renderShadow(m, it) {
     sync(); draw(); stripOwn();
   }
   async function frameStrip(srcImg) {
-    const fr = src.slot === 'frames' && src.meta ? src : pick(it, 'frames', 1, 'idle') || latest(it, 'frames', 1, 'idle');
+    const fr = src.slot === 'frames' && src.meta ? src : pick(it, 'frames', F, 'idle') || latest(it, 'frames', F, 'idle');
     if (!fr?.meta) return;
     stripSame = fr === src;
     const img = stripSame ? srcImg : await loadImg(fr.file).catch(() => null);
@@ -1259,7 +1263,7 @@ function renderShadow(m, it) {
 
 // ---------- icon: diamond crop for the shop / bench screens (set 246, owner B1) ----------
 // Real pixels, no scaling: an N×N square of the picture the game uses (★ cut, else ★ still), pixels outside the diamond made
-// transparent, no border (the game draws its own). Saved as an "icon" round (newest = ★ used); the crop is remembered in it.iconCrop.
+// transparent, no border (the game draws its own). Saved as an "icon" round (newest = ★ used); the crop is remembered in it.iconCrop (form 3: it.iconCrop3, set 267 A1).
 // Owner set 255 (B1): "แต่งกรอบ" opens parts of the frame edge; whatever lies behind an opening (up to 25 % of the frame size out) shows
 // over the frame. With openings the file is (n + 2m)² with the diamond inset by m (round.iconPad = m); "แก้พิกเซล" edits the icon after.
 // owner set 255 A1: the gold frame line the game draws over an icon, left open at the round's gaps (iconOpen)
@@ -1428,12 +1432,13 @@ function iconBox(it) {
   return box;
 }
 async function iconEditor(it) {
-  const src = teamRound(it);
+  const F = ui.form, CK = fk('iconCrop', F); // set 267 A1: each form crops its own picture and remembers its own frame
+  const src = usedPic(it, F);
   if (!src || !isImage(src.file)) { toast('ต้องมีภาพนิ่งก่อน'); return; }
   let img; try { img = await loadImg(src.file); } catch { toast('เปิดภาพไม่ได้'); return; }
   const W = img.naturalWidth, H = img.naturalHeight;
   const pic = keyed(img); // green/magenta background removed, same as the game picture
-  const prev = it.iconCrop && it.iconCrop.round === src.id ? it.iconCrop : null;
+  const prev = it[CK] && it[CK].round === src.id ? it[CK] : null;
   let n = prev ? prev.n : Math.max(8, Math.round(Math.min(W, H) * 0.7 / 2) * 2), x = prev ? prev.x : Math.round((W - n) / 2), y = prev ? prev.y : Math.round((H - n) / 3);
   const pad = 24; // picture px of room around the picture, so the frame can hang over an edge
   const fitZ = Math.max(2, Math.min(10, Math.floor(Math.min((window.innerWidth * 0.96 - 420) / (W + pad * 2), (window.innerHeight * 0.92 - 170) / (H + pad * 2)))));
@@ -1554,15 +1559,15 @@ async function iconEditor(it) {
     try {
       const m = margin(), S = n + 2 * m;
       const blob = await new Promise((ok) => result().toBlob(ok, 'image/png'));
-      const q = new URLSearchParams({ item: it.id, slot: 'icon', name: `${it.id}_icon_${S}.png`, form: String(src.form || ui.form) });
+      const q = new URLSearchParams({ item: it.id, slot: 'icon', name: `${it.id}_icon_${S}.png`, form: String(F) });
       hub = await api('/api/upload?' + q, { method: 'POST', body: blob }); // newest = ★ used
       const nit = hub.items[it.id], nr = nit.rounds.at(-1);
-      nit.iconCrop = { round: src.id, x, y, n };
-      if (open.length) { nit.iconCrop.open = open.map((iv) => iv.map((v) => Math.round(v * 10000) / 10000)); nit.iconCrop.m = m; }
+      nit[CK] = { round: src.id, x, y, n };
+      if (open.length) { nit[CK].open = open.map((iv) => iv.map((v) => Math.round(v * 10000) / 10000)); nit[CK].m = m; }
       if (nr) {
         nr.note = `ไอคอน ${n}×${n} จาก${src.slot === 'cut' ? 'ภาพตัดพื้น' : 'ภาพนิ่ง'} ${fmtDate(src.t)}` + (m ? ` · เปิดกรอบ ${open.length} ช่อง ยื่นได้ ${m} เม็ด (ไฟล์ ${S}×${S})` : '');
         if (src.flip) nr.flip = true;
-        if (m) { nr.iconPad = m; nr.iconOpen = nit.iconCrop.open; nr.iconN = n; } // each icon keeps its own gaps, so the game knows where the frame line opens
+        if (m) { nr.iconPad = m; nr.iconOpen = nit[CK].open; nr.iconN = n; } // each icon keeps its own gaps, so the game knows where the frame line opens
       }
       await save(); toast('บันทึกไอคอนแล้ว ใช้อันนี้แล้ว'); close(); render();
       if (thenEdit && nr) pixelEditor(hub.items[it.id], nr);
@@ -2251,6 +2256,7 @@ function teamCfg() {
   const t = hub.settings.team && typeof hub.settings.team === 'object' ? hub.settings.team : (hub.settings.team = {});
   if (!Array.isArray(t.ids) || t.ids.length !== 6) t.ids = TEAM_IDS.slice();
   if (typeof t.showBg !== 'boolean') t.showBg = true;
+  if (!Array.isArray(t.forms) || t.forms.length !== 6) t.forms = [1, 1, 1, 1, 1, 1]; // set 267 B1: form per slot (1 or 3)
   return t;
 }
 // owner set 262 (A1 C1): the team tab draws each creature's shadow from the shadow tab's values. SAME math as renderShadow
@@ -2317,7 +2323,7 @@ function teamSprite(r) {
     if (x1 < 0) return null;
     const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
     o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
-    return { c: o, w: img.naturalWidth, h: img.naturalHeight, x0, y0 }; // x0/y0 = where the trimmed sprite sits in the whole picture
+    return { c: o, w: img.naturalWidth, h: img.naturalHeight, x0, y0, r }; // r = the round (its form picks scale / shadow, set 267); x0/y0 = where the trimmed sprite sits in the whole picture
   }).catch(() => null));
   return teamSprCache.get(r.id);
 }
@@ -2330,19 +2336,19 @@ const teamUndo = [], teamRedo = [];
 let teamApi = null; // keyboard hooks of the open team tab
 function teamSnap() {
   const t = teamCfg(), ids = new Set(t.ids.filter(Boolean));
-  for (const it of Object.values(hub.items)) if (it.scale || it.offset || it.rot || it.free || it.shadow) ids.add(it.id);
+  for (const it of Object.values(hub.items)) if (it.scale || it.scale3 || it.offset || it.rot || it.free || it.shadow || it.shadow3) ids.add(it.id);
   const items = {};
-  for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, offset: it.offset || null, rot: it.rot || 0, free: !!it.free, shadow: it.shadow || null }; }
-  return JSON.stringify({ ids: t.ids.slice(), items });
+  for (const id of ids) { const it = hub.items[id]; if (it) items[id] = { scale: it.scale || null, scale3: it.scale3 || null, offset: it.offset || null, rot: it.rot || 0, free: !!it.free, shadow: it.shadow || null, shadow3: it.shadow3 || null }; }
+  return JSON.stringify({ ids: t.ids.slice(), forms: t.forms.slice(), items });
 }
 function teamPush() { const s = teamSnap(); if (teamUndo[teamUndo.length - 1] !== s) teamUndo.push(s); if (teamUndo.length > 60) teamUndo.shift(); teamRedo.length = 0; }
 function teamRestore(s) {
-  const o = JSON.parse(s), t = teamCfg(); t.ids = o.ids;
+  const o = JSON.parse(s), t = teamCfg(); t.ids = o.ids; if (o.forms) t.forms = o.forms;
   for (const it of Object.values(hub.items)) {
     const v = o.items[it.id];
-    if (!v) { delete it.scale; delete it.offset; delete it.rot; delete it.free; continue; }
+    if (!v) { delete it.scale; delete it.scale3; delete it.offset; delete it.rot; delete it.free; continue; }
     if (v.rot) it.rot = v.rot; else delete it.rot;
-    for (const key of ['scale', 'offset', 'shadow']) { if (v[key]) it[key] = v[key]; else delete it[key]; }
+    for (const key of ['scale', 'scale3', 'offset', 'shadow', 'shadow3']) { if (v[key]) it[key] = v[key]; else delete it[key]; }
     if (v.free) it.free = true; else delete it.free;
   }
 }
@@ -2359,17 +2365,20 @@ function renderTeam(m) {
   const sprs = new Array(6).fill(null), boxes = new Array(6).fill(null), anchors = new Array(6).fill(null);
   let drag = null;
   let bg = null;
-  const stale = (it, s) => !sizeOnly && !!(s && it?.scale && Array.isArray(it.scale.size) && (it.scale.size[0] !== s.w || it.scale.size[1] !== s.h)); // size was set on another picture
-  const kOf = (it, s) => (it?.scale && typeof it.scale.k === 'number' && !stale(it, s) ? it.scale.k : teamDefaultK(s ? s.h : 180));
+  // set 267 B1: each slot shows form 1 or 3 (t.forms); size and shadow are kept per form (scale / scale3, shadow / shadow3)
+  const fOf = (k) => (t.forms[k] === 3 ? 3 : 1), formOf = (r) => (r?.form === 3 ? 3 : 1);
+  const SC = (it, s) => it?.[fk('scale', formOf(s?.r))], SH = (it, r) => it?.[fk('shadow', formOf(r))];
+  const stale = (it, s) => { const c = SC(it, s); return !sizeOnly && !!(s && c && Array.isArray(c.size) && (c.size[0] !== s.w || c.size[1] !== s.h)); }; // size was set on another picture
+  const kOf = (it, s) => { const c = SC(it, s); return c && typeof c.k === 'number' && !stale(it, s) ? c.k : teamDefaultK(s ? s.h : 180); };
   const rotOf = (it) => (!sizeOnly && it?.free && Number.isFinite(it.rot) ? it.rot : 0); // degrees clockwise on screen, around the feet (owner B1/C1 set 247: unlocked only)
   const offOf = (it) => (!sizeOnly && it?.free && it.offset && typeof it.offset === 'object' ? [Number(it.offset.x) || 0, Number(it.offset.y) || 0] : [0, 0]);
   // feet from the shadow tab count only when they were set on this same picture (same round, or same pixel size)
-  const feetLinked = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && s && r && (it.shadow.round === r.id || (Array.isArray(it.shadow.size) && it.shadow.size[0] === s.w && it.shadow.size[1] === s.h)));
-  const feetOther = (it, s, r) => !!(it?.shadow && Array.isArray(it.shadow.feet) && !feetLinked(it, s, r));
+  const feetLinked = (it, s, r) => { const d = SH(it, r); return !!(d && Array.isArray(d.feet) && s && r && (d.round === r.id || (Array.isArray(d.size) && d.size[0] === s.w && d.size[1] === s.h))); };
+  const feetOther = (it, s, r) => { const d = SH(it, r); return !!(d && Array.isArray(d.feet) && !feetLinked(it, s, r)); };
   const shadowOf = (it, s, r) => { // the shadow-tab values for the frame showing now (a frame with its own shadow uses that one)
     if (!feetLinked(it, s, r)) return null;
-    const own = s.cells && sameSheet(it, it.shadow.round, r) && it.shadow.frames?.[s.fi];
-    return own ? { ...it.shadow, feet: own.feet || it.shadow.feet, cast: own.cast || it.shadow.cast } : it.shadow;
+    const d = SH(it, r), own = s.cells && sameSheet(it, d.round, r) && d.frames?.[s.fi];
+    return own ? { ...d, feet: own.feet || d.feet, cast: own.cast || d.cast } : d;
   };
   const anchorOf = (it, s, r) => { const sd = shadowOf(it, s, r); return sd ? [sd.feet[0] * s.w - s.x0, sd.feet[1] * s.h - s.y0] : [s.c.width / 2, s.c.height]; }; // picture px of the (trimmed) sprite, unmirrored
   const slotXY = (k) => [TEAM_SLOTS[k][0] * TEAM_W - crop.x, TEAM_SLOTS[k][1] * TEAM_H - crop.y];
@@ -2441,7 +2450,7 @@ function renderTeam(m) {
         g.fillText(hub.items[t.ids[tk]] ? `สลับกับช่อง ${tk + 1}` : `ย้ายไปช่อง ${tk + 1}`, tx, ty + 44); g.restore();
       }
       const [x, y, w, hh] = boxes[drag.k], it = hub.items[t.ids[drag.k]];
-      g.save(); g.globalAlpha = 0.85; paint(g, sprs[drag.k], teamRound(it), Math.round(x + drag.cur[0] - drag.p0[0]), Math.round(y + drag.cur[1] - drag.p0[1]), w, hh); g.restore();
+      g.save(); g.globalAlpha = 0.85; paint(g, sprs[drag.k], sprs[drag.k].r || teamRound(it), Math.round(x + drag.cur[0] - drag.p0[0]), Math.round(y + drag.cur[1] - drag.p0[1]), w, hh); g.restore();
     }
   }
   function turn(g, p) { const a = rotOf(p.it); if (!a) return; g.translate(p.feet[0], p.feet[1]); g.rotate(a * Math.PI / 180); g.translate(-p.feet[0], -p.feet[1]); }
@@ -2465,15 +2474,15 @@ function renderTeam(m) {
   function pickSlot(k) { if (ui.teamSel !== k) ui.teamFeet = false; ui.teamSel = k; sync(); draw(); }
   function swapSlots(a, b) {
     if (a === b) return;
-    change(() => { [t.ids[a], t.ids[b]] = [t.ids[b], t.ids[a]]; [sprs[a], sprs[b]] = [sprs[b], sprs[a]]; ui.teamSel = b; ui.teamFeet = false; });
+    change(() => { [t.ids[a], t.ids[b]] = [t.ids[b], t.ids[a]]; [t.forms[a], t.forms[b]] = [t.forms[b], t.forms[a]]; [sprs[a], sprs[b]] = [sprs[b], sprs[a]]; ui.teamSel = b; ui.teamFeet = false; });
     toast(hub.items[t.ids[a]] ? `สลับช่อง ${a + 1} กับช่อง ${b + 1} แล้ว` : `ย้ายไปช่อง ${b + 1} แล้ว`);
   }
   // feet point (shared with the shadow tab): stored as fractions of the whole picture, like the shadow editor
   function setFeet(it, s, r, ax, ay) {
     const fx = +Math.min(1, Math.max(0, (ax + s.x0) / s.w)).toFixed(4), fy = +Math.min(1, Math.max(0, (ay + s.y0) / s.h)).toFixed(4);
-    const base = it.shadow ? JSON.parse(JSON.stringify(it.shadow)) : JSON.parse(JSON.stringify(SHADOW_DEFAULT));
+    const key = fk('shadow', formOf(r)), base = it[key] ? JSON.parse(JSON.stringify(it[key])) : JSON.parse(JSON.stringify(SHADOW_DEFAULT));
     if (base.round !== r.id) delete base.frames;
-    it.shadow = { ...base, feet: [fx, fy], size: [s.w, s.h], round: r.id };
+    it[key] = { ...base, feet: [fx, fy], size: [s.w, s.h], round: r.id };
   }
   cv.addEventListener('pointerdown', (e) => {
     const k = hit(e); if (k == null) return;
@@ -2514,7 +2523,7 @@ function renderTeam(m) {
   const cur = () => hub.items[t.ids[ui.teamSel]];
   function setK(v, coalesce) {
     const it = cur(), s = sprs[ui.teamSel], r = s?.r || teamRound(it); if (!it || !s) return;
-    change(() => { it.scale = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id }; }, coalesce);
+    change(() => { it[fk('scale', formOf(r))] = { k: +Math.min(8, Math.max(0.05, v)).toFixed(3), size: [s.w, s.h], round: r.id }; }, coalesce);
   }
   function nudge(dx, dy) { // arrows: feet mode = move the picture 1 picture px; unlocked = move 1 screen px
     const it = cur(), p = place(ui.teamSel); if (!it || !p || sizeOnly) return false;
@@ -2545,14 +2554,17 @@ function renderTeam(m) {
   }
   formation.append(h('span', {}), h('span', { class: 'small faint toward' }, 'ลากปุ่มเพื่อสลับช่อง · ศัตรูอยู่ทางขวา →'));
   const nameEl = h('div', { class: 'insp-name' });
-  const sel = h('select', { 'aria-label': 'เปลี่ยนตัวละครในช่องนี้', onchange: (e) => { const k = ui.teamSel; ui.teamFeet = false; change(() => { t.ids[k] = e.target.value; sprs[k] = null; }); loadSlot(k).then(() => { sync(); draw(); }); } },
+  const sel = h('select', { 'aria-label': 'เปลี่ยนตัวละครในช่องนี้', onchange: (e) => { const k = ui.teamSel; ui.teamFeet = false; change(() => { t.ids[k] = e.target.value; if (!usedPic(hub.items[t.ids[k]], 3)) t.forms[k] = 1; sprs[k] = null; }); loadSlot(k).then(() => { sync(); draw(); }); } },
     h('option', { value: '' }, '— ว่าง —'), chars.map((it) => h('option', { value: it.id }, `${it.id} ${it.name || ''}`)));
   const kVal = h('b', { class: 'kval' }), kInfo = h('div', { class: 'small dim' }), kWarn = h('div', { class: 'small warn' });
   const range = h('input', { type: 'range', min: 0.25, max: 4, step: 0.01, 'aria-label': 'ขนาด', oninput: (e) => setK(Number(e.target.value), true) });
   const snaps = TEAM_SNAPS.map((v) => [v, h('button', { onclick: () => setK(v) }, `${v}×`)]);
   const step = (d) => { const it = cur(); setK(+(kOf(it, sprs[ui.teamSel]) + d).toFixed(2), true); };
   const undoBtn = h('button', { onclick: () => undo(), title: 'Ctrl+Z' }, 'ย้อนกลับ'), redoBtn = h('button', { onclick: () => redo(), title: 'Ctrl+Y' }, 'ทำซ้ำ');
-  const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(); if (it?.scale) change(() => { delete it.scale; }); } }, 'คืนขนาดเริ่มต้น');
+  const resetK = h('button', { class: 'ghost', onclick: () => { const it = cur(), key = fk('scale', fOf(ui.teamSel)); if (it?.[key]) change(() => { delete it[key]; }); } }, 'คืนขนาดเริ่มต้น');
+  // set 267 B1: ร่าง 1 / ร่าง 3 for this slot (ร่าง 3 needs a form-3 still in the hub)
+  const formBtns = [1, 3].map((f) => h('button', { 'aria-pressed': 'false', onclick: () => { const k = ui.teamSel; if (fOf(k) === f) return; ui.teamFeet = false; change(() => { t.forms[k] = f; sprs[k] = null; }); loadSlot(k).then(() => { sync(); draw(); }); } }, `ร่าง ${f}`));
+  const formInfo = h('div', { class: 'small dim' });
   // position: lock switch (on = locked to the slot centre)
   const lockSw = h('button', { class: 'switch', role: 'switch', onclick: () => { const it = cur(); if (!it) return; change(() => { if (it.free) { delete it.free; delete it.offset; delete it.rot; } else it.free = true; }); } }, h('span', { class: 'knob' }), 'ล็อคตำแหน่ง'); // lock = back to the slot centre, upright (owner A1 set 247; Ctrl+Z brings it back)
   const posInfo = h('div', { class: 'small dim' });
@@ -2582,7 +2594,8 @@ function renderTeam(m) {
     const g = guessFeet(p.s.c); change(() => setFeet(it, p.s, p.r, g[0] * p.s.c.width, g[1] * p.s.c.height));
   } }, 'หาจุดเท้าอัตโนมัติ');
   const body = h('div', { class: 'insp-body' },
-    h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตัวละครในช่องนี้'), sel),
+    h('div', { class: 'insp-sec' }, h('div', { class: 'lbl' }, 'ตัวละครในช่องนี้'), sel,
+      h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ร่าง'), h('span', { class: 'sp' }), h('span', { class: 'seg teamform' }, formBtns)), formInfo),
     h('div', { class: 'insp-sec' }, h('div', { class: 'row' }, h('span', { class: 'lbl' }, 'ขนาด'), h('span', { class: 'sp' }), kVal),
       h('div', { class: 'row nowrap' }, h('button', { class: 'pm', 'aria-label': 'เล็กลง', onclick: () => step(-0.05) }, '−'), range, h('button', { class: 'pm', 'aria-label': 'ใหญ่ขึ้น', onclick: () => step(0.05) }, '+')),
       h('div', { class: 'seg snaps' }, snaps.map((x) => x[1])), kInfo, kWarn, resetK),
@@ -2597,18 +2610,21 @@ function renderTeam(m) {
     if (shadowInfo) shadowInfo.textContent = !s ? '' : `ยืนกลางช่อง · จุดเท้าและเงามาจากแท็บเงา${feetLinked(it, s, r) ? '' : ' (ยังไม่ได้ตั้งกับภาพนี้ ใช้ขอบล่างกลางภาพ ไม่มีเงา)'}${s.cells ? ` · เล่นท่ายืน ${s.cells.length} เฟรม` : ' · ยังไม่มีเฟรมท่ายืนที่ติดดาว ใช้ภาพนิ่ง'} · แก้ตำแหน่ง/เงาที่แท็บเงา`;
     slotBtns.forEach((b, j) => {
       const x = hub.items[t.ids[j]]; b.classList.toggle('on', j === k); b.setAttribute('aria-pressed', String(j === k));
-      b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x?.free && !sizeOnly ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
-      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (mirrorOf(teamRound(x))) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
+      b.replaceChildren(...[h('span', { class: 'n' }, String(j + 1)), x ? h('b', {}, x.id) : h('span', { class: 'faint' }, 'ว่าง'), x && fOf(j) === 3 ? h('span', { class: 'freetag', title: 'ช่องนี้ใช้ร่าง 3' }, 'ร่าง 3') : null, x?.free && !sizeOnly ? h('span', { class: 'freetag', title: 'ปลดล็อคตำแหน่งอยู่' }, 'อิสระ') : null].filter(Boolean));
+      const sp = sprs[j]; if (sp) { const c = document.createElement('canvas'); c.width = sp.c.width; c.height = sp.c.height; const g = c.getContext('2d'); if (mirrorOf(sp.r || teamRound(x))) { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(sp.c, 0, 0); c.className = 'fthumb'; c.draggable = false; b.prepend(c); }
     });
     nameEl.textContent = it ? `ช่อง ${k + 1} · ${it.id} ${it.name || ''}` : `ช่อง ${k + 1} · ว่าง`;
     sel.value = t.ids[k] || '';
+    const has3 = !!usedPic(it, 3);
+    formBtns.forEach((b, i) => { const f = i ? 3 : 1, on = !!it && fOf(k) === f; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); b.disabled = !it || (f === 3 && !has3 && fOf(k) !== 3); });
+    formInfo.textContent = !it ? '' : !has3 ? 'ตัวนี้ยังไม่มีภาพนิ่งร่าง 3 ในหน้าตัวละคร' : fOf(k) === 3 ? 'ร่าง 3 · ขนาดและเงาตั้งแยกจากร่าง 1' : '';
     const kk = kOf(it, s), [ox, oy] = offOf(it);
     for (const el of [range, ...snaps.map((x) => x[1]), resetK, lockSw, feetBtn, feetReset, ...body.querySelectorAll('.pm')]) el.disabled = !s;
     range.value = String(kk); kVal.textContent = s ? `×${kk.toFixed(2)}` : '—';
-    kInfo.textContent = !it ? 'เลือกตัวละครจากเมนูด้านบน' : !s ? 'ตัวนี้ยังไม่มีภาพนิ่ง วางภาพในหน้าตัวละครก่อน' : `สูง ${Math.round(s.c.height * kk)} px บนจอ · 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด${it.scale ? '' : ' · ยังเป็นขนาดเริ่มต้น'}`;
-    kWarn.textContent = stale(it, s) ? `ขนาดที่ตั้งไว้ (×${it.scale.k}) เป็นของภาพเก่า ${it.scale.size[0]}×${it.scale.size[1]} ตอนนี้ใช้ขนาดเริ่มต้นแทน ปรับใหม่ได้เลย` : '';
+    kInfo.textContent = !it ? 'เลือกตัวละครจากเมนูด้านบน' : !s ? `ตัวนี้ยังไม่มีภาพนิ่งร่าง ${fOf(k)} วางภาพในหน้าตัวละครก่อน` : `สูง ${Math.round(s.c.height * kk)} px บนจอ · 1× 2× 3× = พิกเซลเท่ากันทุกเม็ด${SC(it, s) ? '' : ' · ยังเป็นขนาดเริ่มต้น'}`;
+    kWarn.textContent = stale(it, s) ? `ขนาดที่ตั้งไว้ (×${SC(it, s).k}) เป็นของภาพเก่า ${SC(it, s).size[0]}×${SC(it, s).size[1]} ตอนนี้ใช้ขนาดเริ่มต้นแทน ปรับใหม่ได้เลย` : '';
     snaps.forEach(([v, bt]) => { const on = !!s && Math.abs(kk - v) < 0.005; bt.classList.toggle('on', on); bt.setAttribute('aria-pressed', String(on)); });
-    resetK.disabled = !s || !it.scale;
+    resetK.disabled = !s || !SC(it, s);
     const locked = !it?.free;
     lockSw.classList.toggle('is-on', !!s && locked); lockSw.setAttribute('aria-checked', String(!!s && locked));
     freeBox.hidden = !s || locked;
@@ -2619,7 +2635,7 @@ function renderTeam(m) {
     feetBtn.classList.toggle('on', ui.teamFeet); feetBtn.setAttribute('aria-pressed', String(!!ui.teamFeet));
     feetBtn.textContent = ui.teamFeet ? 'เสร็จ' : 'ปรับจุดเท้า';
     feetInfo.textContent = !s ? '' : ui.teamFeet ? 'ลากตัวละครให้เท้าแตะกากบาทชมพู · ปุ่มลูกศรขยับทีละ 1 เม็ด · ใช้ค่าเดียวกับแท็บเงา'
-      : feetLinked(it, s, r) ? `ใช้จุดเท้าเดียวกับแท็บเงา (${it.shadow.feet.map((v) => Math.round(v * 100) + '%').join(', ')})`
+      : feetLinked(it, s, r) ? `ใช้จุดเท้าเดียวกับแท็บเงา (${SH(it, r).feet.map((v) => Math.round(v * 100) + '%').join(', ')})`
         : feetOther(it, s, r) ? 'แท็บเงาตั้งจุดเท้าไว้กับภาพอื่น ตอนนี้ใช้ขอบล่างกลางภาพแทน' : 'ยังไม่ได้ตั้ง ใช้ขอบล่างกลางภาพ';
     undoBtn.disabled = !teamUndo.length; redoBtn.disabled = !teamRedo.length;
     const same = t.ids.filter((x) => x && x === t.ids[k]).length > 1;
@@ -2627,9 +2643,9 @@ function renderTeam(m) {
     nameEl.classList.toggle('dup', same);
   }
   async function loadSlot(k) {
-    const it = hub.items[t.ids[k]], fr = sizeOnly && it ? pick(it, 'frames', 1, 'idle') : null;
+    const it = hub.items[t.ids[k]], fo = fOf(k), fr = sizeOnly && it ? pick(it, 'frames', fo, 'idle') : null;
     if (fr?.meta) { const f = await teamFrames(fr); if (f) { sprs[k] = f; return; } }
-    const r = teamRound(it); sprs[k] = r && isImage(r.file) ? await teamSprite(r).catch(() => null) : null;
+    const r = it ? usedPic(it, fo) : null; sprs[k] = r && isImage(r.file) ? await teamSprite(r).catch(() => null) : null;
   }
   let playing = true;
   const playBtn = h('button', { class: 'teamplay', onclick: () => { playing = !playing; playBtn.textContent = playing ? '⏸ หยุดท่ายืน' : '▶ เล่นท่ายืน'; } }, '⏸ หยุดท่ายืน');

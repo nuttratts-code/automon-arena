@@ -34,7 +34,8 @@ with sync_playwright() as p:
             sel = pg.locator(".filters select")
             sel.select_option("who-claude"); pg.wait_for_timeout(300)
             vis = pg.evaluate("[...document.querySelectorAll('.tile:not([hidden])')].map(t=>t.querySelector('.nxt')?.className||'')")
-            check("filter ถึงตา Claude shows only Claude's turn", vis and all("who-claude" in c for c in vis), vis[:4])
+            n_cl = pg.evaluate("document.querySelectorAll('.tile .nxt.who-claude').length")  # set 267: may be 0 when every creature waits for the owner
+            check("filter ถึงตา Claude shows only Claude's turn", len(vis) == n_cl and all("who-claude" in c for c in vis), (len(vis), n_cl, vis[:4]))
             sel.select_option(""); pg.wait_for_timeout(200)
             pg.evaluate("openItem('HL-2')"); pg.wait_for_timeout(1000)
             row = pg.locator("#list button", has_text="HL-2").first
