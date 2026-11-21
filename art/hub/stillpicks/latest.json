@@ -1,6 +1,6 @@
 {
- "rev": 102,
- "t": "2026-11-20T17:06:17.612Z",
+ "rev": 110,
+ "t": "2026-11-21T14:55:52.375Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -26,6 +26,16 @@
    "form": 3,
    "pick": [
     "g14"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn3a": {
+   "id": "WN-3",
+   "form": 1,
+   "pick": [
+    "g12"
    ],
    "eye": true,
    "hidden": false,
@@ -87,6 +97,16 @@
    "hidden": false,
    "closed": false
   },
+  "fire_pl3a": {
+   "id": "PL-3",
+   "form": 1,
+   "pick": [
+    "g17"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "spirit": {
    "id": "",
    "form": 1,
@@ -137,6 +157,16 @@
    "pick": [],
    "eye": true,
    "hidden": true,
+   "closed": false
+  },
+  "spirit_pt3a": {
+   "id": "PT-3",
+   "form": 1,
+   "pick": [
+    "g03"
+   ],
+   "eye": true,
+   "hidden": false,
    "closed": false
   },
   "spirit2": {
@@ -203,6 +233,16 @@
    "hidden": false,
    "closed": false
   },
+  "steel_hl3a": {
+   "id": "HL-3",
+   "form": 1,
+   "pick": [
+    "g24"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm": {
    "id": "SF-1",
    "form": 1,
@@ -249,6 +289,16 @@
    "hidden": false,
    "closed": false
   },
+  "storm_sf3a": {
+   "id": "SF-3",
+   "form": 1,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "wind": {
    "id": "WY-1",
    "form": 1,
@@ -282,6 +332,16 @@
    "form": 3,
    "pick": [
     "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy3a": {
+   "id": "WY-3",
+   "form": 1,
+   "pick": [
+    "g21"
    ],
    "eye": true,
    "hidden": false,
