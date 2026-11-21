@@ -20,7 +20,7 @@ pairs = [
     ("\tif not items.is_empty():\n\t\tvar nx: Dictionary = items[items.size() - 1][1]\n\t\tvar nic: Texture2D = _icon(int(nx[\"uid\"]))\n\t\tif nic != null:\n\t\t\tvar s3 := 2.0 * ar * ICON_K\n\t\t\tdraw_texture_rect(nic, Rect2(ac - Vector2(s3, s3) * 0.5, Vector2(s3, s3)), false)\n",
      "\tif not items.is_empty():   # round 20: arriving unit fades in, the one that just acted fades out\n"
      "\t\tvar s3 := 2.0 * ar * ICON_K\n"
-     "\t\tfor pick in [[items[0], 1.0 - smoothstep(0.0, 0.15, float(items[0][0]))], [items[items.size() - 1], smoothstep(0.93, 1.0, float(items[items.size() - 1][0]))]]:\n"
+     "\t\tfor pick in [[items[0], 1.0 - smoothstep(0.93, 1.0, float(items[items.size() - 1][0]))], [items[items.size() - 1], smoothstep(0.93, 1.0, float(items[items.size() - 1][0]))]]:   # round 21: the last arrival stays until the next one crossfades in\n"
      "\t\t\tvar aa: float = pick[1]\n"
      "\t\t\tif aa <= 0.01: continue\n"
      "\t\t\tvar nic: Texture2D = _icon(int(pick[0][1][\"uid\"]))\n"
