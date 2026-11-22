@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1640,
+ "rev": 1641,
  "settings": {
   "moves": [
    "idle",
@@ -5084,6 +5084,24 @@
       "batch": "batches/2026-11-22_d8e6eeac",
       "pick": "g00",
       "styleSrc": "pmd-ref 0381"
+     }
+    },
+    {
+     "id": "r61a0f484",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-8/still_f1_2026-11-22_61a0f484.png",
+     "orig": "2bf83d54_g14.png",
+     "t": "2026-11-22T13:40:22.392Z",
+     "by": "claude",
+     "note": "ชุดเจน 2bf83d54 g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_2bf83d54)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_2bf83d54",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 0145"
      }
     }
    ],
