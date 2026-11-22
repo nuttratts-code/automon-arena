@@ -42,3 +42,9 @@ Before proposing a new concept: read this list, pick an animal not on it, then a
 | WY-6 | (set 272, legendary) | Chinese sky dragon |
 | PT-6 | (set 272, legendary) | stag / deer (golden antlers, Ceryneian hind) |
 | WN-6 | (set 272, legendary) | manticore (lion + scorpion tail) |
+| HL-7 | ผู้คุมโล่ (set 274) | gorilla (armoured) |
+| PL-7 | เหยี่ยวไฟ (set 274) | hawk |
+| SF-7 | ผู้เก็บประจุ (set 274) | electric eel |
+| WY-7 | เหยี่ยวลม (set 274) | swallow (game name says hawk; hawk = PL-7) |
+| PT-7 | เหยี่ยวแสง (set 274) | crane (game name says hawk; hawk = PL-7) |
+| WN-7 | อสูรโลหิต (set 274) | leech |
