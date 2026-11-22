@@ -1,6 +1,6 @@
 {
- "rev": 120,
- "t": "2026-11-21T17:32:19.908Z",
+ "rev": 176,
+ "t": "2026-11-22T14:17:54.174Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -31,6 +31,16 @@
    "hidden": false,
    "closed": false
   },
+  "demon_f3_m2": {
+   "id": "WN-2",
+   "form": 3,
+   "pick": [
+    "g01"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "demon_wn3a": {
    "id": "WN-3",
    "form": 1,
@@ -43,6 +53,47 @@
   },
   "demon_wn4a": {
    "id": "WN-4",
+   "form": 1,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn5a": {
+   "id": "WN-5",
+   "form": 1,
+   "pick": [
+    "g17"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn6a": {
+   "id": "WN-6",
+   "form": 1,
+   "pick": [
+    "g07",
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn7a": {
+   "id": "WN-7",
+   "form": 1,
+   "pick": [
+    "g07"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_wn8a": {
+   "id": "WN-8",
    "form": 1,
    "pick": [
     "g15"
@@ -97,6 +148,16 @@
    "hidden": true,
    "closed": false
   },
+  "fire_f3_m2": {
+   "id": "PL-2",
+   "form": 3,
+   "pick": [
+    "g00"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "fire_f3b": {
    "id": "PL-1",
    "form": 3,
@@ -130,6 +191,46 @@
    "form": 1,
    "pick": [
     "g20"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_pl5a": {
+   "id": "PL-5",
+   "form": 1,
+   "pick": [
+    "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_pl6a": {
+   "id": "PL-6",
+   "form": 1,
+   "pick": [
+    "g00"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_pl7a": {
+   "id": "PL-7",
+   "form": 1,
+   "pick": [
+    "g17"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_pl8a": {
+   "id": "PL-8",
+   "form": 1,
+   "pick": [
+    "g10"
    ],
    "eye": true,
    "hidden": false,
@@ -179,6 +280,16 @@
    "hidden": false,
    "closed": false
   },
+  "spirit_f3_m2": {
+   "id": "PT-2",
+   "form": 3,
+   "pick": [
+    "g09"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "spirit_ol": {
    "id": "",
    "form": 1,
@@ -210,6 +321,46 @@
    "form": 1,
    "pick": [
     "g17"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_pt5a": {
+   "id": "PT-5",
+   "form": 1,
+   "pick": [
+    "g13"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_pt6a": {
+   "id": "PT-6",
+   "form": 1,
+   "pick": [
+    "g14"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_pt7a": {
+   "id": "PT-7",
+   "form": 1,
+   "pick": [
+    "g24"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_pt8a": {
+   "id": "PT-8",
+   "form": 1,
+   "pick": [
+    "g24"
    ],
    "eye": true,
    "hidden": false,
@@ -279,6 +430,16 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m2": {
+   "id": "HL-2",
+   "form": 3,
+   "pick": [
+    "g09"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -294,6 +455,46 @@
    "form": 1,
    "pick": [
     "g23"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_hl5a": {
+   "id": "HL-5",
+   "form": 1,
+   "pick": [
+    "g10"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_hl6a": {
+   "id": "HL-6",
+   "form": 1,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_hl7a": {
+   "id": "HL-7",
+   "form": 1,
+   "pick": [
+    "g00"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_hl8a": {
+   "id": "HL-8",
+   "form": 1,
+   "pick": [
+    "g08"
    ],
    "eye": true,
    "hidden": false,
@@ -345,6 +546,16 @@
    "hidden": false,
    "closed": false
   },
+  "storm_f3_m2": {
+   "id": "SF-2",
+   "form": 3,
+   "pick": [
+    "g11"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm_sf3a": {
    "id": "SF-3",
    "form": 1,
@@ -360,6 +571,46 @@
    "form": 1,
    "pick": [
     "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_sf5a": {
+   "id": "SF-5",
+   "form": 1,
+   "pick": [
+    "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_sf6a": {
+   "id": "SF-6",
+   "form": 1,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_sf7a": {
+   "id": "SF-7",
+   "form": 1,
+   "pick": [
+    "g13"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_sf8a": {
+   "id": "SF-8",
+   "form": 1,
+   "pick": [
+    "g01"
    ],
    "eye": true,
    "hidden": false,
@@ -403,6 +654,16 @@
    "hidden": false,
    "closed": false
   },
+  "wind_f3_m2": {
+   "id": "WY-2",
+   "form": 3,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "wind_wy3a": {
    "id": "WY-3",
    "form": 1,
@@ -418,6 +679,56 @@
    "form": 1,
    "pick": [
     "g20"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy5a": {
+   "id": "WY-5",
+   "form": 1,
+   "pick": [
+    "g14"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy6a": {
+   "id": "WY-6",
+   "form": 1,
+   "pick": [
+    "g10"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy7a": {
+   "id": "WY-7",
+   "form": 1,
+   "pick": [
+    "g16"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy8a": {
+   "id": "WY-8",
+   "form": 1,
+   "pick": [
+    "g00"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_wy8b": {
+   "id": "WY-8",
+   "form": 1,
+   "pick": [
+    "g14"
    ],
    "eye": true,
    "hidden": false,
