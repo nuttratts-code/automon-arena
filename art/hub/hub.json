@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1427,
+ "rev": 1469,
  "settings": {
   "moves": [
    "idle",
@@ -1203,12 +1203,14 @@
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-21",
      "star": true,
      "archived": false,
-     "licence": "AI placeholder - UNVERIFIED"
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "HL-5": {
    "id": "HL-5",
@@ -1236,6 +1238,45 @@
       "pick": "g10",
       "styleSrc": "pmd-ref 0464"
      }
+    },
+    {
+     "id": "r758f7523",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-5/still_f1_2026-11-22_1fc7acb6.png",
+     "orig": "0a4e2b35_g10_edit.png",
+     "t": "2026-11-22T04:46:26.599Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r0b7d6083",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-5/still_f1_2026-11-22_75615423.png",
+     "orig": "0a4e2b35_g10_edit_edit.png",
+     "t": "2026-11-22T04:54:22.850Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1527c05c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-5/still_f1_2026-11-22_22f98569.png",
+     "orig": "0a4e2b35_g10_edit_edit_edit.png",
+     "t": "2026-11-22T04:54:55.227Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -1263,7 +1304,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r7f1585a5",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-22_7f1585a5.png",
+     "orig": "4f0c117e_g15.png",
+     "t": "2026-11-22T07:57:47.447Z",
+     "by": "claude",
+     "note": "ชุดเจน 4f0c117e g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_4f0c117e)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_4f0c117e",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 1003"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -2428,6 +2488,19 @@
       "pick": "g08",
       "styleSrc": "pmd-ref 0398"
      }
+    },
+    {
+     "id": "rfcec6c21",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-5/still_f1_2026-11-22_8c52f2d4.png",
+     "orig": "29be6aaf_g08_edit.png",
+     "t": "2026-11-22T05:01:12.664Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -2455,7 +2528,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r66741ce4",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-6/still_f1_2026-11-22_66741ce4.png",
+     "orig": "2dd7a2bb_g00.png",
+     "t": "2026-11-22T07:57:47.676Z",
+     "by": "claude",
+     "note": "ชุดเจน 2dd7a2bb g00 (ตัวเต็ง · ประวัติ: batches/2026-11-22_2dd7a2bb)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_2dd7a2bb",
+      "pick": "g00",
+      "styleSrc": "pmd-ref 0383\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -3590,6 +3682,32 @@
       "pick": "g08",
       "styleSrc": "pmd-ref 0363"
      }
+    },
+    {
+     "id": "r52cd698e",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-5/still_f1_2026-11-22_6132c9bd.png",
+     "orig": "9b078671_g08_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-22T05:29:34.223Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "re22bf9b2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-5/still_f1_2026-11-22_9fe9da12.png",
+     "orig": "9b078671_g08_edit_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-22T05:30:57.192Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -3617,7 +3735,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rae4cf220",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-6/still_f1_2026-11-22_ae4cf220.png",
+     "orig": "c7e020db_g15.png",
+     "t": "2026-11-22T07:57:47.907Z",
+     "by": "claude",
+     "note": "ชุดเจน c7e020db g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_c7e020db)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_c7e020db",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0959\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -4539,6 +4676,19 @@
       "pick": "g14",
       "styleSrc": "pmd-ref 0449"
      }
+    },
+    {
+     "id": "r19609352",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-5/still_f1_2026-11-22_c8ac3b70.png",
+     "orig": "fb51ba6a_g14_edit.png",
+     "t": "2026-11-22T05:34:12.622Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -4566,7 +4716,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rdd626edf",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-6/still_f1_2026-11-22_dd626edf.png",
+     "orig": "f638857a_g10.png",
+     "t": "2026-11-22T07:57:48.126Z",
+     "by": "claude",
+     "note": "ชุดเจน f638857a g10 (ตัวเต็ง · ประวัติ: batches/2026-11-22_f638857a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_f638857a",
+      "pick": "g10",
+      "styleSrc": "pmd-ref 0484\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -5569,11 +5738,25 @@
       "pick": "g13",
       "styleSrc": "pmd-ref 0605"
      }
+    },
+    {
+     "id": "rfde74993",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-5/still_f1_2026-11-22_d907e553.png",
+     "orig": "0f6c2d7a_g13_edit.png",
+     "t": "2026-11-22T05:38:00.585Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-8": {
    "id": "PT-8",
@@ -5596,7 +5779,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r343b513a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-6/still_f1_2026-11-22_343b513a.png",
+     "orig": "6ca3be2a_g14.png",
+     "t": "2026-11-22T07:57:48.344Z",
+     "by": "claude",
+     "note": "ชุดเจน 6ca3be2a g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_6ca3be2a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_6ca3be2a",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 1020\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -6699,12 +6901,14 @@
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-21",
      "star": true,
      "archived": false,
-     "licence": "AI placeholder - UNVERIFIED"
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WN-5": {
    "id": "WN-5",
@@ -6732,6 +6936,45 @@
       "pick": "g17",
       "styleSrc": "pmd-ref 0519"
      }
+    },
+    {
+     "id": "r4ab5c4db",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-22_4da02e45.png",
+     "orig": "25ea5b5b_g17_edit.png",
+     "t": "2026-11-22T05:43:34.453Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "re3c11279",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-22_d7e1a991.png",
+     "orig": "25ea5b5b_g17_edit_edit.png",
+     "t": "2026-11-22T05:44:53.265Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r61d3ef9c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-22_206f39cc.png",
+     "orig": "25ea5b5b_g17_edit_edit_edit.png",
+     "t": "2026-11-22T05:45:17.307Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -6759,7 +7002,26 @@
    "tribe2": "",
    "rarity": "legendary",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "re2677bc4",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-22_e2677bc4.png",
+     "orig": "5daa7351_g15.png",
+     "t": "2026-11-22T07:57:48.570Z",
+     "by": "claude",
+     "note": "ชุดเจน 5daa7351 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5daa7351)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5daa7351",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0646\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
