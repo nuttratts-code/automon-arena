@@ -1,6 +1,6 @@
 {
- "rev": 196,
- "t": "2026-11-22T15:32:09.837Z",
+ "rev": 210,
+ "t": "2026-11-22T16:18:48.127Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -64,6 +64,16 @@
    "form": 3,
    "pick": [
     "g06"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_f3_m5": {
+   "id": "WN-5",
+   "form": 3,
+   "pick": [
+    "g04"
    ],
    "eye": true,
    "hidden": false,
@@ -209,6 +219,16 @@
    "form": 3,
    "pick": [
     "g06"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m5": {
+   "id": "PL-5",
+   "form": 3,
+   "pick": [
+    "g07"
    ],
    "eye": true,
    "hidden": false,
@@ -361,6 +381,24 @@
    "form": 3,
    "pick": [
     "g07"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m5": {
+   "id": "PT-5",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m5b": {
+   "id": "PT-5",
+   "form": 3,
+   "pick": [
+    "g15"
    ],
    "eye": true,
    "hidden": false,
@@ -544,6 +582,16 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m5": {
+   "id": "HL-5",
+   "form": 3,
+   "pick": [
+    "g14"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -675,6 +723,16 @@
    "form": 3,
    "pick": [
     "g14"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_f3_m5": {
+   "id": "SF-5",
+   "form": 3,
+   "pick": [
+    "g02"
    ],
    "eye": true,
    "hidden": false,
@@ -819,6 +877,16 @@
    "form": 3,
    "pick": [
     "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m5": {
+   "id": "WY-5",
+   "form": 3,
+   "pick": [
+    "g11"
    ],
    "eye": true,
    "hidden": false,

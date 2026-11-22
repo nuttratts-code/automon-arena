@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1761,
+ "rev": 1767,
  "settings": {
   "moves": [
    "idle",
@@ -1390,6 +1390,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "raca84cc4",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-5/still_f3_2026-11-22_aca84cc4.png",
+     "orig": "5a1d065d_g14.png",
+     "t": "2026-11-22T16:19:10.707Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 5a1d065d g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5a1d065d)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5a1d065d",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 0820"
+     }
     }
    ],
    "notes": "",
@@ -2859,6 +2877,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r34a0300f",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-5/still_f3_2026-11-22_34a0300f.png",
+     "orig": "a4687b6a_g07.png",
+     "t": "2026-11-22T16:19:10.935Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน a4687b6a g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_a4687b6a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_a4687b6a",
+      "pick": "g07",
+      "styleSrc": "pmd-ref 0663"
+     }
     }
    ],
    "notes": "",
@@ -4215,6 +4251,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r2dcd1065",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-5/still_f3_2026-11-22_2dcd1065.png",
+     "orig": "e1c54665_g02.png",
+     "t": "2026-11-22T16:19:11.152Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน e1c54665 g02 (ตัวเต็ง · ประวัติ: batches/2026-11-22_e1c54665)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_e1c54665",
+      "pick": "g02",
+      "styleSrc": "pmd-ref 0151"
+     }
     }
    ],
    "notes": "",
@@ -5357,6 +5411,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1d94de8c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-5/still_f3_2026-11-22_1d94de8c.png",
+     "orig": "a59aeb9d_g11.png",
+     "t": "2026-11-22T16:19:11.383Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน a59aeb9d g11 (ตัวเต็ง · ประวัติ: batches/2026-11-22_a59aeb9d)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_a59aeb9d",
+      "pick": "g11",
+      "styleSrc": "pmd-ref 0305"
+     }
     }
    ],
    "notes": "",
@@ -6642,6 +6714,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1b2f018c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-5/still_f3_2026-11-22_1b2f018c.png",
+     "orig": "2d716dc2_g15.png",
+     "t": "2026-11-22T16:19:11.617Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 2d716dc2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_2d716dc2)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_2d716dc2",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0412"
+     }
     }
    ],
    "notes": "",
@@ -8026,6 +8116,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rfdf7573c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-5/still_f3_2026-11-22_fdf7573c.png",
+     "orig": "41700c11_g04.png",
+     "t": "2026-11-22T16:19:11.845Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 41700c11 g04 (ตัวเต็ง · ประวัติ: batches/2026-11-22_41700c11)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_41700c11",
+      "pick": "g04",
+      "styleSrc": "pmd-ref 0587"
+     }
     }
    ],
    "notes": "",
