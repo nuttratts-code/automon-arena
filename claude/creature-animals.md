@@ -36,3 +36,9 @@ Before proposing a new concept: read this list, pick an animal not on it, then a
 | WN-3 | Hipplood | hippo |
 | WN-4 | (set 270) | baboon |
 | WN-5 | (set 271) | vulture (demon priest) |
+| HL-6 | (set 272, legendary) | Behemoth (myth giant beast) |
+| PL-6 | (set 272, legendary) | Ifrit (fire djinn) |
+| SF-6 | (set 272, legendary) | Raijin (thunder oni, drum ring) |
+| WY-6 | (set 272, legendary) | Chinese sky dragon |
+| PT-6 | (set 272, legendary) | stag / deer (golden antlers, Ceryneian hind) |
+| WN-6 | (set 272, legendary) | manticore (lion + scorpion tail) |
