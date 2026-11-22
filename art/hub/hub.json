@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1615,
+ "rev": 1616,
  "settings": {
   "moves": [
    "idle",
@@ -7360,6 +7360,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r6c63bb16",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-22_6c63bb16.png",
+     "orig": "5daa7351_g07.png",
+     "t": "2026-11-22T12:46:17.188Z",
+     "by": "claude",
+     "note": "ชุดเจน 5daa7351 g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5daa7351)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5daa7351",
+      "pick": "g07",
+      "styleSrc": "pmd-ref 0646\r"
+     }
     }
    ],
    "notes": "",
