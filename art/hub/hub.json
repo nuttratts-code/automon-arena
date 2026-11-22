@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1671,
+ "rev": 1717,
  "settings": {
   "moves": [
    "idle",
@@ -1150,6 +1150,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r95d0fc72",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-3/still_f3_2026-11-22_95d0fc72.png",
+     "orig": "55d84064_g15.png",
+     "t": "2026-11-22T14:51:39.911Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 55d84064 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_55d84064)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_55d84064",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0791"
+     }
     }
    ],
    "notes": "",
@@ -1160,7 +1178,7 @@
   "HL-7": {
    "id": "HL-7",
    "kind": "character",
-   "name": "ผู้คุมโล่",
+   "name": "Guarilla",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "rare",
@@ -1226,7 +1244,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "HL-4": {
    "id": "HL-4",
@@ -1363,7 +1382,7 @@
   "HL-8": {
    "id": "HL-8",
    "kind": "character",
-   "name": "ปราสาทโบราณ",
+   "name": "Snaitle",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "epic",
@@ -1403,7 +1422,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "HL-6": {
    "id": "HL-6",
@@ -2512,6 +2532,42 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r437f2208",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-3/still_f3_2026-11-22_437f2208.png",
+     "orig": "8bac5919_g05.png",
+     "t": "2026-11-22T14:40:11.389Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 8bac5919 g05 (ตัวเต็ง · ประวัติ: batches/2026-11-22_8bac5919)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_8bac5919",
+      "pick": "g05",
+      "styleSrc": "pmd-ref 0350"
+     }
+    },
+    {
+     "id": "r3eacec79",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-3/still_f3_2026-11-22_3eacec79.png",
+     "orig": "d98b6cf9_g05.png",
+     "t": "2026-11-22T14:51:40.120Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน d98b6cf9 g05 (ตัวเต็ง · ประวัติ: batches/2026-11-22_d98b6cf9)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_d98b6cf9",
+      "pick": "g05",
+      "styleSrc": "pmd-ref 0851"
+     }
     }
    ],
    "notes": "",
@@ -2522,7 +2578,7 @@
   "PL-7": {
    "id": "PL-7",
    "kind": "character",
-   "name": "เหยี่ยวไฟ",
+   "name": "Metehawk",
    "tribe": "fire",
    "tribe2": "wind",
    "rarity": "uncommon",
@@ -2614,7 +2670,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PL-4": {
    "id": "PL-4",
@@ -2776,7 +2833,7 @@
   "PL-8": {
    "id": "PL-8",
    "kind": "character",
-   "name": "แม่มดเถ้าถ่าน",
+   "name": "Crowash",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "rare",
@@ -2816,7 +2873,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PL-6": {
    "id": "PL-6",
@@ -3856,6 +3914,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rfed40205",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-3/still_f3_2026-11-22_fed40205.png",
+     "orig": "dc6955bb_g06.png",
+     "t": "2026-11-22T14:40:11.823Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน dc6955bb g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_dc6955bb)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_dc6955bb",
+      "pick": "g06",
+      "styleSrc": "pmd-ref 0880"
+     }
     }
    ],
    "notes": "",
@@ -3866,7 +3942,7 @@
   "SF-7": {
    "id": "SF-7",
    "kind": "character",
-   "name": "ผู้เก็บประจุ",
+   "name": "Eelect",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "uncommon",
@@ -3899,6 +3975,19 @@
      "t": "2026-11-22T13:06:41.547Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rf030c8dc",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-7/still_f1_2026-11-22_2f00b86c.png",
+     "orig": "5e5ffb6f_g13_edit_edit.png",
+     "t": "2026-11-22T14:29:47.192Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
@@ -3906,7 +3995,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-4": {
    "id": "SF-4",
@@ -4081,7 +4171,7 @@
   "SF-8": {
    "id": "SF-8",
    "kind": "character",
-   "name": "คลื่นพลัง",
+   "name": "Jellight",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "epic",
@@ -4121,12 +4211,13 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-6": {
    "id": "SF-6",
    "kind": "character",
-   "name": "Onithundara",
+   "name": "Onithunda",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "legendary",
@@ -5012,6 +5103,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r0959a555",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-3/still_f3_2026-11-22_0959a555.png",
+     "orig": "5114470f_g15.png",
+     "t": "2026-11-22T14:40:12.039Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 5114470f g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5114470f)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5114470f",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0889"
+     }
     }
    ],
    "notes": "",
@@ -6234,6 +6343,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rd635c4b0",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-3/still_f3_2026-11-22_d635c4b0.png",
+     "orig": "aa2b178d_g02.png",
+     "t": "2026-11-22T14:40:11.605Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน aa2b178d g02 (ตัวเต็ง · ประวัติ: batches/2026-11-22_aa2b178d)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_aa2b178d",
+      "pick": "g02",
+      "styleSrc": "pmd-ref 0699"
+     }
     }
    ],
    "notes": "",
@@ -7566,6 +7693,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r47a1321c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-3/still_f3_2026-11-22_47a1321c.png",
+     "orig": "36a1595e_g14.png",
+     "t": "2026-11-22T14:51:40.337Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 36a1595e g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_36a1595e)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_36a1595e",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 0382"
+     }
     }
    ],
    "notes": "",

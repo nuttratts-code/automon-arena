@@ -1,6 +1,6 @@
 {
- "rev": 176,
- "t": "2026-11-22T14:17:54.174Z",
+ "rev": 186,
+ "t": "2026-11-22T14:50:15.884Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -36,6 +36,24 @@
    "form": 3,
    "pick": [
     "g01"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_f3_m3": {
+   "id": "WN-3",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "demon_f3_m3b": {
+   "id": "WN-3",
+   "form": 3,
+   "pick": [
+    "g14"
    ],
    "eye": true,
    "hidden": false,
@@ -153,6 +171,24 @@
    "form": 3,
    "pick": [
     "g00"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m3": {
+   "id": "PL-3",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m3b": {
+   "id": "PL-3",
+   "form": 3,
+   "pick": [
+    "g05"
    ],
    "eye": true,
    "hidden": false,
@@ -285,6 +321,16 @@
    "form": 3,
    "pick": [
     "g09"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m3": {
+   "id": "PT-3",
+   "form": 3,
+   "pick": [
+    "g02"
    ],
    "eye": true,
    "hidden": false,
@@ -440,6 +486,24 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m3": {
+   "id": "HL-3",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "steel_f3_m3b": {
+   "id": "HL-3",
+   "form": 3,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -556,6 +620,16 @@
    "hidden": false,
    "closed": false
   },
+  "storm_f3_m3": {
+   "id": "SF-3",
+   "form": 3,
+   "pick": [
+    "g06"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm_sf3a": {
    "id": "SF-3",
    "form": 1,
@@ -656,6 +730,16 @@
   },
   "wind_f3_m2": {
    "id": "WY-2",
+   "form": 3,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m3": {
+   "id": "WY-3",
    "form": 3,
    "pick": [
     "g15"
