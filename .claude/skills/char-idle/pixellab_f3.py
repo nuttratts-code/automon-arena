@@ -1,6 +1,7 @@
 """Form-3 still batch for one creature (set 265, owner OK on all six -1 creatures). Key from env PIXELLAB_API_KEY only.
   python -I pixellab_f3.py <ID> --still <hub still png> --tribe <tribe> --noun "a fire ram monster"
          --keep "the colours and the curled horn shape" --style <pmd-ref number> [--extra "#ffe066,#5a2410"] [--size 56] [--dry]
+         [--palette <png>]  colours from this png instead of --still (owner idea picture as --still → pass the form-1 still here)
 Request = generate-image-v2: reference_images = the ★ form-1 still with usage "take only <keep> from this creature",
 short desc "the final evolved form of the reference creature, <noun>, with a clear dark outline, side view facing right, full body",
 style_image = a NEW unused pmd-ref sprite (outline/detail/shading only), target_palette = the still's colours + --extra.
@@ -31,6 +32,7 @@ def main():
     ap.add_argument("--noun", required=True); ap.add_argument("--keep", required=True); ap.add_argument("--style", required=True)
     ap.add_argument("--extra", default=""); ap.add_argument("--size", type=int, default=56); ap.add_argument("--out", default="")
     ap.add_argument("--dry", action="store_true")
+    ap.add_argument("--palette", default="", help="png whose colours form target_palette (default: --still); set 282: lock form-1 colours when --still is an owner idea picture")
     a = ap.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", a.item) or not re.fullmatch(r"\d{4}", a.style):
         sys.exit("bad item or style number")
@@ -44,7 +46,8 @@ def main():
     out = a.out or f"{SCR}/still-batches/{a.tribe}_f3"
     still = Image.open(a.still).convert("RGBA"); still = still.crop(still.getbbox())
     st = frame(a.style)
-    cols = sorted({"#%02x%02x%02x" % p[:3] for p in still.get_flattened_data() if p[3] > 0} | {c.lower() for c in extra})
+    pal = Image.open(a.palette).convert("RGBA") if a.palette else still
+    cols = sorted({"#%02x%02x%02x" % p[:3] for p in pal.get_flattened_data() if p[3] > 0} | {c.lower() for c in extra})
     desc = "the final evolved form of the reference creature, %s, with a clear dark outline, side view facing right, full body" % a.noun
     body = {"description": desc, "image_size": {"width": a.size, "height": a.size}, "no_background": True,
             "style_image": {"image": pls.b64(st), "size": {"width": st.width, "height": st.height},
@@ -76,7 +79,7 @@ def main():
         sheet.alpha_composite(g.resize((g.width * Z, g.height * Z), Image.NEAREST), ((i % N) * C * Z + 2 * Z, (i // N) * C * Z + 2 * Z))
     sheet.convert("RGB").save(out + "/sheet.png")
     json.dump({"tribe": a.tribe, "job": jid, "seed": str(lr.get("seed")), "style_src": "pmd-ref " + a.style,
-               "palette_src": "custom: %s still colours + %s" % (a.item, " ".join(extra)), "ref": "%s %s (reference_images)" % (a.item, os.path.basename(a.still)),
+               "palette_src": "custom: %s colours + %s" % (os.path.basename(a.palette) if a.palette else a.item + " still", " ".join(extra)), "ref": "%s %s (reference_images)" % (a.item, os.path.basename(a.still)),
                "item": a.item, "form": 3, "note": "form 3 batch (pixellab_f3.py)"}, open(out + "/batch.json", "w"))
     print(a.item, "job", jid, "seed", lr.get("seed"), "images", len(imgs), "->", out)
 
