@@ -1,6 +1,6 @@
 {
- "rev": 210,
- "t": "2026-11-22T16:18:48.127Z",
+ "rev": 231,
+ "t": "2026-11-22T17:44:37.864Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -74,6 +74,24 @@
    "form": 3,
    "pick": [
     "g04"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_f3_m6": {
+   "id": "WN-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "demon_f3_m6b": {
+   "id": "WN-6",
+   "form": 3,
+   "pick": [
+    "g02"
    ],
    "eye": true,
    "hidden": false,
@@ -201,7 +219,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "fire_f3_m3b": {
@@ -229,6 +247,24 @@
    "form": 3,
    "pick": [
     "g07"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m6": {
+   "id": "PL-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m6b": {
+   "id": "PL-6",
+   "form": 3,
+   "pick": [
+    "g08"
    ],
    "eye": true,
    "hidden": false,
@@ -391,7 +427,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "spirit_f3_m5b": {
@@ -399,6 +435,16 @@
    "form": 3,
    "pick": [
     "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m6": {
+   "id": "PT-6",
+   "form": 3,
+   "pick": [
+    "g02"
    ],
    "eye": true,
    "hidden": false,
@@ -592,6 +638,32 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m6": {
+   "id": "HL-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "steel_f3_m6b": {
+   "id": "HL-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "steel_f3_m6c": {
+   "id": "HL-6",
+   "form": 3,
+   "pick": [
+    "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -734,6 +806,38 @@
    "pick": [
     "g02"
    ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_f3_m6": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_f3_m6b": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m6c": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_f3_m6d": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
    "eye": true,
    "hidden": false,
    "closed": false
@@ -887,6 +991,40 @@
    "form": 3,
    "pick": [
     "g11"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m6": {
+   "id": "WY-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m6b": {
+   "id": "WY-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m6c": {
+   "id": "WY-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m6d": {
+   "id": "WY-6",
+   "form": 3,
+   "pick": [
+    "g07"
    ],
    "eye": true,
    "hidden": false,
