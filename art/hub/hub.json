@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1469,
+ "rev": 1615,
  "settings": {
   "moves": [
    "idle",
@@ -1147,7 +1147,26 @@
    "tribe2": "",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rac9ec98d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-7/still_f1_2026-11-22_ac9ec98d.png",
+     "orig": "bdd7bcd3_g00.png",
+     "t": "2026-11-22T12:42:55.683Z",
+     "by": "claude",
+     "note": "ชุดเจน bdd7bcd3 g00 (ตัวเต็ง · ประวัติ: batches/2026-11-22_bdd7bcd3)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_bdd7bcd3",
+      "pick": "g00",
+      "styleSrc": "pmd-ref 0125\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -1155,7 +1174,7 @@
   "HL-4": {
    "id": "HL-4",
    "kind": "character",
-   "name": "ช่างตีเหล็ก",
+   "name": "Ottsmith",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "uncommon",
@@ -1215,7 +1234,7 @@
   "HL-5": {
    "id": "HL-5",
    "kind": "character",
-   "name": "ไฟพิทักษ์",
+   "name": "Hedguard",
    "tribe": "steel",
    "tribe2": "fire",
    "rarity": "rare",
@@ -1281,7 +1300,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "HL-8": {
    "id": "HL-8",
@@ -1299,7 +1319,7 @@
   "HL-6": {
    "id": "HL-6",
    "kind": "character",
-   "name": "ป้อมปราการเหล็ก",
+   "name": "Elemoth",
    "tribe": "steel",
    "tribe2": "",
    "rarity": "legendary",
@@ -1322,11 +1342,64 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 1003"
      }
+    },
+    {
+     "id": "r8f94c2ba",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-22_6a1aa8a3.png",
+     "orig": "4f0c117e_g15_edit.png",
+     "t": "2026-11-22T08:19:21.225Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r93af73c9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-22_78ed18e7.png",
+     "orig": "4f0c117e_g15_edit_edit.png",
+     "t": "2026-11-22T08:23:59.290Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rcfd790f9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-22_3c0eac71.png",
+     "orig": "4f0c117e_g15_edit_edit_edit.png",
+     "t": "2026-11-22T11:01:29.995Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "ra373ed5a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-22_127b35e6.png",
+     "orig": "4f0c117e_g15_edit_edit_edit_edit.png",
+     "t": "2026-11-22T11:01:54.058Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PL-1": {
    "id": "PL-1",
@@ -2347,7 +2420,26 @@
    "tribe2": "wind",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rbb01f73b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-7/still_f1_2026-11-22_bb01f73b.png",
+     "orig": "ff099060_g17.png",
+     "t": "2026-11-22T12:42:55.890Z",
+     "by": "claude",
+     "note": "ชุดเจน ff099060 g17 (ตัวเต็ง · ประวัติ: batches/2026-11-22_ff099060)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_ff099060",
+      "pick": "g17",
+      "styleSrc": "pmd-ref 0521\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -2355,7 +2447,7 @@
   "PL-4": {
    "id": "PL-4",
    "kind": "character",
-   "name": "ปืนไฟ",
+   "name": "Crabomb",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "rare",
@@ -2460,12 +2552,13 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PL-5": {
    "id": "PL-5",
    "kind": "character",
-   "name": "ฟีนิกซ์",
+   "name": "Phoecock",
    "tribe": "fire",
    "tribe2": "wind",
    "rarity": "epic",
@@ -2505,7 +2598,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PL-8": {
    "id": "PL-8",
@@ -2523,7 +2617,7 @@
   "PL-6": {
    "id": "PL-6",
    "kind": "character",
-   "name": "ราชาเพลิงกัลป์",
+   "name": "Ifrira",
    "tribe": "fire",
    "tribe2": "",
    "rarity": "legendary",
@@ -2546,11 +2640,25 @@
       "pick": "g00",
       "styleSrc": "pmd-ref 0383\r"
      }
+    },
+    {
+     "id": "re028dcb7",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-6/still_f1_2026-11-22_97d14a9c.png",
+     "orig": "2dd7a2bb_g00_edit.png",
+     "t": "2026-11-22T08:47:36.254Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-1": {
    "id": "SF-1",
@@ -3541,7 +3649,26 @@
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3e430a08",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-7/still_f1_2026-11-22_3e430a08.png",
+     "orig": "5e5ffb6f_g13.png",
+     "t": "2026-11-22T12:42:56.098Z",
+     "by": "claude",
+     "note": "ชุดเจน 5e5ffb6f g13 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5e5ffb6f)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5e5ffb6f",
+      "pick": "g13",
+      "styleSrc": "pmd-ref 0847\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -3549,7 +3676,7 @@
   "SF-4": {
    "id": "SF-4",
    "kind": "character",
-   "name": "ยมทูตสายฟ้า",
+   "name": "Owleaper",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "rare",
@@ -3654,12 +3781,13 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-5": {
    "id": "SF-5",
    "kind": "character",
-   "name": "ฟ้าผ่า",
+   "name": "Pufferbomb",
    "tribe": "storm",
    "tribe2": "demon",
    "rarity": "rare",
@@ -3712,7 +3840,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "SF-8": {
    "id": "SF-8",
@@ -3730,7 +3859,7 @@
   "SF-6": {
    "id": "SF-6",
    "kind": "character",
-   "name": "เทพอสุนีบาต",
+   "name": "Onithundara",
    "tribe": "storm",
    "tribe2": "",
    "rarity": "legendary",
@@ -3753,11 +3882,25 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 0959\r"
      }
+    },
+    {
+     "id": "rcdecd91f",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-6/still_f1_2026-11-22_91647e63.png",
+     "orig": "c7e020db_g15_edit.png",
+     "t": "2026-11-22T08:54:25.971Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WY-1": {
    "id": "WY-1",
@@ -4599,7 +4742,26 @@
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rc1d57496",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-7/still_f1_2026-11-22_c1d57496.png",
+     "orig": "6b3427f5_g16.png",
+     "t": "2026-11-22T12:42:56.306Z",
+     "by": "claude",
+     "note": "ชุดเจน 6b3427f5 g16 (ตัวเต็ง · ประวัติ: batches/2026-11-22_6b3427f5)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_6b3427f5",
+      "pick": "g16",
+      "styleSrc": "pmd-ref 0567\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null,
@@ -4608,7 +4770,7 @@
   "WY-4": {
    "id": "WY-4",
    "kind": "character",
-   "name": "ลมคลั่ง",
+   "name": "Boarserker",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "rare",
@@ -4648,12 +4810,13 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WY-5": {
    "id": "WY-5",
    "kind": "character",
-   "name": "เกราะวายุ",
+   "name": "Windtoise",
    "tribe": "wind",
    "tribe2": "steel",
    "rarity": "rare",
@@ -4686,6 +4849,32 @@
      "t": "2026-11-22T05:34:12.622Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "re7effb41",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-5/still_f1_2026-11-22_9b1df5e5.png",
+     "orig": "fb51ba6a_g14_edit_edit.png",
+     "t": "2026-11-22T12:21:20.220Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r62feeb74",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-5/still_f1_2026-11-22_fd6a8c7f.png",
+     "orig": "fb51ba6a_g14_edit_edit_edit.png",
+     "t": "2026-11-22T12:21:32.096Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
@@ -4693,7 +4882,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WY-8": {
    "id": "WY-8",
@@ -4711,7 +4901,7 @@
   "WY-6": {
    "id": "WY-6",
    "kind": "character",
-   "name": "มังกรวายุคลั่ง",
+   "name": "Windragon",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "legendary",
@@ -4734,11 +4924,25 @@
       "pick": "g10",
       "styleSrc": "pmd-ref 0484\r"
      }
+    },
+    {
+     "id": "r49756470",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-6/still_f1_2026-11-22_d2c2d3b2.png",
+     "orig": "f638857a_g10_edit.png",
+     "t": "2026-11-22T08:59:33.095Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-1": {
    "id": "PT-1",
@@ -4884,7 +5088,7 @@
      "t": "2026-11-20T07:53:18.840Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2",
@@ -5174,6 +5378,49 @@
      "t": "2026-11-21T12:42:04.848Z",
      "by": "owner",
      "note": "แก้พิกเซลเฟรม 3, 4, 5 บนเว็บ จาก 2026-11-21",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "cols": 8,
+      "rows": 1,
+      "fw": 72,
+      "fh": 62,
+      "n": 8,
+      "ms": 150,
+      "pad": [
+       12,
+       12,
+       12,
+       2
+      ]
+     }
+    },
+    {
+     "id": "r34bffc70",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-22_e2541926.png",
+     "orig": "fec380ca_g20_edit_edit.png",
+     "t": "2026-11-22T10:48:49.646Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2"
+    },
+    {
+     "id": "r2ad6cc58",
+     "slot": "frames",
+     "form": 1,
+     "move": "idle",
+     "file": "hub/PT-1/frames_idle_f1_2026-11-22_a319b90d.png",
+     "orig": "pixellab API PixMiniMax job 99fba04e (frames 1-8 of 9)_edit_edit_edit_edit.png",
+     "t": "2026-11-22T10:49:39.956Z",
+     "by": "owner",
+     "note": "แก้พิกเซลเฟรม 2 บนเว็บ จาก 2026-11-21",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
@@ -5636,7 +5883,26 @@
    "tribe2": "wind",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r775b20ad",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-7/still_f1_2026-11-22_775b20ad.png",
+     "orig": "b18dc4f9_g24.png",
+     "t": "2026-11-22T12:42:56.512Z",
+     "by": "claude",
+     "note": "ชุดเจน b18dc4f9 g24 (ตัวเต็ง · ประวัติ: batches/2026-11-22_b18dc4f9)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_b18dc4f9",
+      "pick": "g24",
+      "styleSrc": "pmd-ref 0581\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -5644,7 +5910,7 @@
   "PT-4": {
    "id": "PT-4",
    "kind": "character",
-   "name": "คทาแสง",
+   "name": "Lunabear",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "rare",
@@ -5710,12 +5976,13 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-5": {
    "id": "PT-5",
    "kind": "character",
-   "name": "แสงนำพา",
+   "name": "Anglerer",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "rare",
@@ -5774,7 +6041,7 @@
   "PT-6": {
    "id": "PT-6",
    "kind": "character",
-   "name": "ราชินีภูติ",
+   "name": "Ultistaga",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "legendary",
@@ -5797,11 +6064,25 @@
       "pick": "g14",
       "styleSrc": "pmd-ref 1020\r"
      }
+    },
+    {
+     "id": "r3091d390",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-6/still_f1_2026-11-22_29a358a4.png",
+     "orig": "6ca3be2a_g14_edit.png",
+     "t": "2026-11-22T10:45:29.777Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WN-1": {
    "id": "WN-1",
@@ -6858,7 +7139,26 @@
    "tribe2": "",
    "rarity": "uncommon",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "ra9935b66",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-7/still_f1_2026-11-22_a9935b66.png",
+     "orig": "0d713b5f_g07.png",
+     "t": "2026-11-22T12:42:56.708Z",
+     "by": "claude",
+     "note": "ชุดเจน 0d713b5f g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_0d713b5f)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_0d713b5f",
+      "pick": "g07",
+      "styleSrc": "pmd-ref 0857\r"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -6866,7 +7166,7 @@
   "WN-4": {
    "id": "WN-4",
    "kind": "character",
-   "name": "ชาแมน",
+   "name": "Shamonba",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "rare",
@@ -6913,7 +7213,7 @@
   "WN-5": {
    "id": "WN-5",
    "kind": "character",
-   "name": "แสงคลั่ง",
+   "name": "Vulturiest",
    "tribe": "demon",
    "tribe2": "spirit",
    "rarity": "rare",
@@ -6979,7 +7279,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WN-8": {
    "id": "WN-8",
@@ -6997,7 +7298,7 @@
   "WN-6": {
    "id": "WN-6",
    "kind": "character",
-   "name": "อสูรอมตะ",
+   "name": "Mantimmor",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "legendary",
@@ -7020,11 +7321,51 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 0646\r"
      }
+    },
+    {
+     "id": "r89f76601",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-22_8c7663d2.png",
+     "orig": "5daa7351_g15_edit.png",
+     "t": "2026-11-22T09:01:44.095Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1af5e3e1",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-22_25b977e3.png",
+     "orig": "5daa7351_g15_edit_edit.png",
+     "t": "2026-11-22T12:33:08.619Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r49a0564a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-22_e75a2f8c.png",
+     "orig": "5daa7351_g15_edit_edit_edit.png",
+     "t": "2026-11-22T12:33:26.425Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   }
  },
  "queue": [
