@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1421,
+ "rev": 1427,
  "settings": {
   "moves": [
    "idle",
@@ -1218,7 +1218,26 @@
    "tribe2": "fire",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r4cb563af",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-5/still_f1_2026-11-22_4cb563af.png",
+     "orig": "0a4e2b35_g10.png",
+     "t": "2026-11-22T04:32:40.726Z",
+     "by": "claude",
+     "note": "ชุดเจน 0a4e2b35 g10 (ตัวเต็ง · ประวัติ: batches/2026-11-22_0a4e2b35)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_0a4e2b35",
+      "pick": "g10",
+      "styleSrc": "pmd-ref 0464"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -2391,7 +2410,26 @@
    "tribe2": "wind",
    "rarity": "epic",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3df871c7",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-5/still_f1_2026-11-22_3df871c7.png",
+     "orig": "29be6aaf_g08.png",
+     "t": "2026-11-22T04:32:40.957Z",
+     "by": "claude",
+     "note": "ชุดเจน 29be6aaf g08 (ตัวเต็ง · ประวัติ: batches/2026-11-22_29be6aaf)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_29be6aaf",
+      "pick": "g08",
+      "styleSrc": "pmd-ref 0398"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -3534,7 +3572,26 @@
    "tribe2": "demon",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r97285282",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-5/still_f1_2026-11-22_97285282.png",
+     "orig": "9b078671_g08.png",
+     "t": "2026-11-22T04:32:41.194Z",
+     "by": "claude",
+     "note": "ชุดเจน 9b078671 g08 (ตัวเต็ง · ประวัติ: batches/2026-11-22_9b078671)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_9b078671",
+      "pick": "g08",
+      "styleSrc": "pmd-ref 0363"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -4464,7 +4521,26 @@
    "tribe2": "steel",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "rd22fdfa1",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-5/still_f1_2026-11-22_d22fdfa1.png",
+     "orig": "fb51ba6a_g14.png",
+     "t": "2026-11-22T04:32:41.405Z",
+     "by": "claude",
+     "note": "ชุดเจน fb51ba6a g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_fb51ba6a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_fb51ba6a",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 0449"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -5475,7 +5551,26 @@
    "tribe2": "",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r3799e4a8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-5/still_f1_2026-11-22_3799e4a8.png",
+     "orig": "0f6c2d7a_g13.png",
+     "t": "2026-11-22T04:32:41.639Z",
+     "by": "claude",
+     "note": "ชุดเจน 0f6c2d7a g13 (ตัวเต็ง · ประวัติ: batches/2026-11-22_0f6c2d7a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_0f6c2d7a",
+      "pick": "g13",
+      "styleSrc": "pmd-ref 0605"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
@@ -6619,7 +6714,26 @@
    "tribe2": "spirit",
    "rarity": "rare",
    "prompts": [],
-   "rounds": [],
+   "rounds": [
+    {
+     "id": "r359a198c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-22_359a198c.png",
+     "orig": "25ea5b5b_g17.png",
+     "t": "2026-11-22T04:32:41.880Z",
+     "by": "claude",
+     "note": "ชุดเจน 25ea5b5b g17 (ตัวเต็ง · ประวัติ: batches/2026-11-22_25ea5b5b)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_25ea5b5b",
+      "pick": "g17",
+      "styleSrc": "pmd-ref 0519"
+     }
+    }
+   ],
    "notes": "",
    "inGame": false,
    "shadow": null
