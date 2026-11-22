@@ -102,7 +102,8 @@ let hub = null;
 // are hidden from the screen only; data, files and old rounds stay. Switch "แสดงส่วนที่ซ่อน" (per browser) shows them again.
 let showOld = false; try { showOld = localStorage.getItem('hubShowOld') === '1'; } catch { /* storage off */ }
 const OLD_STEPS = ['video', 'file', 'prompt'];
-const ui = { tab: 'chars', item: null, step: 'still', form: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
+const ui = { tab: 'chars', item: null, step: 'still', form: 1, boardForm: 1, move: 'idle', bg: 'checker', sel: null, cmp: [], tribe: '', status: '', q: '', showArch: false };
+try { if (localStorage.getItem('hubBoardForm') === '3') ui.boardForm = 3; } catch { /* storage off */ } // owner set 281: board shows ร่าง 1 or ร่าง 3
 
 // ---------- helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -167,45 +168,47 @@ function latest(it, slot, form, move) {
   const rs = live(it, slot).filter((r) => (!form || (r.form || 1) === form) && (!move || !r.move || r.move === move));
   return rs.filter((r) => r.star).pop() || rs[rs.length - 1] || null;
 }
-// set 262 (owner A1 B1 C1 D1): overview progress = the current flow in 8 steps (form 1); status = the next step not done
-// [key, done label (bar), next-step text, whose turn, test]
+// set 262 (owner A1 B1 C1 D1): overview progress = the current flow in 8 steps; status = the next step not done
+// set 281 (owner A1): every step is per form (f = 1 or 3); form 3 has its own idle brief (brief.idle3), concept stays shared
+// [key, done label (bar), next-step text, whose turn, test(it, f)]
 const FLOW = [
-  ['still', 'มีภาพนิ่ง', 'เลือกภาพที่ /pick', 'owner', (it) => live(it, 'still').some((r) => (r.form || 1) === 1)],
-  ['star', '★ ภาพนิ่ง', 'ติดดาวภาพนิ่ง', 'owner', (it) => !!(pick(it, 'still', 1) || pick(it, 'cut', 1))],
-  ['brief', 'ร่างท่ายืน', 'Claude ร่างท่ายืน', 'claude', (it) => !!(it.brief?.idle?.th || '').trim()],
-  ['briefOk', 'ยืนยันท่ายืน', 'ยืนยันร่างท่ายืน', 'owner', (it) => !!it.brief?.idle?.ok],
-  ['frames', 'เฟรมท่ายืน', 'Claude เจนท่ายืน', 'claude', (it) => live(it, 'frames').some((r) => (r.form || 1) === 1 && (!r.move || r.move === 'idle'))],
-  ['framesStar', '★ เฟรม', 'ดู GIF แล้วติดดาวเฟรม', 'owner', (it) => !!pick(it, 'frames', 1, 'idle')],
-  ['icon', 'ไอคอน', 'ทำไอคอน', 'owner', (it) => live(it, 'icon').length > 0],
-  ['shadow', 'เงา', 'ปรับเงา', 'owner', (it) => !!it.shadow],
+  ['still', 'มีภาพนิ่ง', 'เลือกภาพที่ /pick', 'owner', (it, f) => live(it, 'still').some((r) => (r.form || 1) === f)],
+  ['star', '★ ภาพนิ่ง', 'ติดดาวภาพนิ่ง', 'owner', (it, f) => !!(pick(it, 'still', f) || pick(it, 'cut', f))],
+  ['brief', 'ร่างท่ายืน', 'Claude ร่างท่ายืน', 'claude', (it, f) => !!(it.brief?.[fk('idle', f)]?.th || '').trim()],
+  ['briefOk', 'ยืนยันท่ายืน', 'ยืนยันร่างท่ายืน', 'owner', (it, f) => !!it.brief?.[fk('idle', f)]?.ok],
+  ['frames', 'เฟรมท่ายืน', 'Claude เจนท่ายืน', 'claude', (it, f) => live(it, 'frames').some((r) => (r.form || 1) === f && (!r.move || r.move === 'idle'))],
+  ['framesStar', '★ เฟรม', 'ดู GIF แล้วติดดาวเฟรม', 'owner', (it, f) => !!pick(it, 'frames', f, 'idle')],
+  ['icon', 'ไอคอน', 'ทำไอคอน', 'owner', (it, f) => live(it, 'icon').some((r) => (r.form || 1) === f)],
+  ['shadow', 'เงา', 'ปรับเงา', 'owner', (it, f) => !!it[fk('shadow', f)]],
 ];
 const FLOW_ST = Object.fromEntries(FLOW.map(([k, , next, who]) => ['f-' + k, { next, who }]));
 const FLOW_STATUS = [...FLOW.map(([k, , next]) => ['f-' + k, 'ถัดไป: ' + next]), ['f-done', 'ครบทุกขั้น'], ['ingame', 'อยู่ในเกมแล้ว']];
-const flowDone = (it) => FLOW.map((f) => f[4](it));
+const flowDone = (it, f = 1) => FLOW.map((x) => x[4](it, f));
 const useFlow = (it) => !showOld && it.kind === 'character';
 const statusTh = (st) => (FLOW_ST[st] ? 'ถัดไป: ' + FLOW_ST[st].next : st === 'f-done' ? 'ครบทุกขั้น' : STATUS_TH[st] || st);
 const dotCls = (st) => 'dot ' + (FLOW_ST[st] ? 'who-' + FLOW_ST[st].who : st === 'f-done' ? 'st-done' : 'st-' + st);
-const flowMissing = (it) => { const d = flowDone(it), miss = FLOW.filter((f, i) => !d[i]).map((f) => f[1]); return miss.length ? 'ขาด: ' + miss.join(' · ') : 'ครบทุกขั้น'; };
-const statusOk = (it, v) => !v || (v.startsWith('who-') ? FLOW_ST[status(it)]?.who === v.slice(4) : status(it) === v);
-function flowBar(it, mini) {
-  const d = flowDone(it), nx = d.indexOf(false);
-  return h('div', { class: 'flowbar' + (mini ? ' mini' : ''), title: flowMissing(it), 'aria-label': 'ความคืบหน้า ' + d.filter(Boolean).length + '/' + FLOW.length },
+const flowMissing = (it, f = 1) => { const d = flowDone(it, f), miss = FLOW.filter((f, i) => !d[i]).map((f) => f[1]); return miss.length ? 'ขาด: ' + miss.join(' · ') : 'ครบทุกขั้น'; };
+const statusOk = (it, v, f = 1) => !v || (v.startsWith('who-') ? FLOW_ST[status(it, f)]?.who === v.slice(4) : status(it, f) === v);
+function flowBar(it, mini, f = 1) {
+  const d = flowDone(it, f), nx = d.indexOf(false);
+  return h('div', { class: 'flowbar' + (mini ? ' mini' : ''), title: (f === 3 ? 'ร่าง 3 · ' : '') + flowMissing(it, f), 'aria-label': 'ความคืบหน้า ' + d.filter(Boolean).length + '/' + FLOW.length },
     FLOW.map(([, label, , who], i) => h('i', { class: (d[i] ? 'on' : '') + (i === nx ? ' nx who-' + who : ''), title: `${i + 1} ${label} ${d[i] ? '✓' : '—'}` })));
 }
-function status(it) {
-  if (useFlow(it)) { if (it.inGame) return 'ingame'; const i = flowDone(it).indexOf(false); return i < 0 ? 'f-done' : 'f-' + FLOW[i][0]; }
+function status(it, f = 1) {
+  if (useFlow(it)) { if (it.inGame) return 'ingame'; const i = flowDone(it, f).indexOf(false); return i < 0 ? 'f-done' : 'f-' + FLOW[i][0]; }
   if (it.inGame) return 'ingame';
   if (it.kind !== 'character') return it.rounds.some((r) => !r.archived) ? 'done' : 'none';
-  if (pick(it, 'frames', 1, 'idle')) return 'done';
+  if (pick(it, 'frames', f, 'idle')) return 'done';
   if (live(it, 'video').length) return 'claude';
-  if (pick(it, 'still', 1)) return 'wait-video';
+  if (pick(it, 'still', f)) return 'wait-video';
   if (live(it, 'still').length) return 'pick';
   if (it.prompts.length) return 'wait-still';
   return 'none';
 }
 // board picture (owner set 241): the round the owner picked ("ใช้เป็นภาพหน้าภาพรวม"), else the cut (★ first, form 1),
 // else the newest starred still / idle frames, so a new ★ shows on the board at once
-function thumbRound(it) {
+function thumbRound(it, f = 1) {
+  if (f === 3) return it.kind === 'character' ? usedPic(it, 3) : null; // set 281: board on ร่าง 3 = the form-3 picture in use (the board pin is form 1)
   const own = it.thumb && it.rounds.find((r) => r.id === it.thumb && !r.archived && isImage(r.file));
   if (own) return own;
   if (it.kind === 'character') { const u = usedPic(it, 1); if (u) return u; }
@@ -408,11 +411,11 @@ function renderRail() {
     if (!rows.length) continue;
     list.append(h('div', { class: 'grp', style: `--c: ${c}` }, label));
     for (const it of rows) {
-      const st = status(it);
+      const st = status(it, ui.form);
       list.append(h('button', { class: ui.item === it.id ? 'on' : '', title: `${it.id} ${it.name || ''} · ${statusTh(st)}`, onclick: () => openItem(it.id) },
         h('span', { class: dotCls(st) }), h('span', { class: 'id' }, it.id), h('span', { class: 'nm' }, it.name || ''),
         openJobs(it.id).length ? h('span', { class: 'badge', title: openJobs(it.id).map(taskTh).join(', ') }, 'รอ Claude') : null,
-        useFlow(it) ? flowBar(it, true) : null)); // set 262 (owner): the rail shows the same 8-step bar
+        useFlow(it) ? flowBar(it, true, ui.form) : null)); // set 262 (owner): the rail shows the same 8-step bar
     }
   }
   if (ui.tab === 'other') list.append(h('button', { class: 'ghost', onclick: newItemDialog }, '+ เพิ่มรายการใหม่'));
@@ -421,7 +424,7 @@ function filtered(kindOk) {
   const q = ui.q.trim().toLowerCase();
   return Object.values(hub.items).filter((it) => kindOk(it)
     && (!ui.tribe || it.tribe === ui.tribe || it.tribe2 === ui.tribe)
-    && statusOk(it, ui.status)
+    && statusOk(it, ui.status, ui.boardForm)
     && (!q || it.id.toLowerCase().includes(q) || (it.name || '').toLowerCase().includes(q)));
 }
 function openItem(id) { ui.item = id; ui.sel = null; ui.cmp = []; const it = hub.items[id]; if (it.kind !== 'character' && ['prompt', 'shadow', 'cut', 'veoin', 'frames'].includes(ui.step)) ui.step = 'file'; render(); window.scrollTo(0, 0); }
@@ -449,15 +452,20 @@ function render() {
 function renderBoard(m) {
   const other = ui.tab === 'other';
   const items = Object.values(hub.items).filter(other ? (it) => it.kind !== 'character' : (it) => it.kind === 'character');
-  const counts = {}; for (const it of items) counts[status(it)] = (counts[status(it)] || 0) + 1;
+  const F = other ? 1 : ui.boardForm; // set 281 (owner): ร่าง 1 / ร่าง 3 for the whole board — pictures, bars, status and filters
+  const counts = {}; for (const it of items) { const s = status(it, F); counts[s] = (counts[s] || 0) + 1; }
+  const n3 = other ? 0 : items.filter((it) => usedPic(it, 3)).length;
+  const formSeg = other ? null : h('span', { class: 'seg boardform', role: 'group', 'aria-label': 'แสดงร่าง' }, [1, 3].map((f) => h('button', {
+    class: F === f ? 'on' : '', 'aria-pressed': String(F === f), title: f === 3 ? `มีภาพร่าง 3 แล้ว ${n3}/${items.length} ตัว` : '',
+    onclick: () => { ui.boardForm = f; try { localStorage.setItem('hubBoardForm', String(f)); } catch { /* storage off */ } render(); } }, f === 3 ? `ร่าง 3 (${n3}/${items.length})` : 'ร่าง 1')));
   const unverified = Object.values(hub.items).filter((it) => it.inGame && it.rounds.some((r) => r.star && /UNVERIFIED/.test(r.licence || ''))).length;
-  m.append(h('div', { class: 'row' }, h('h2', {}, other ? 'ฉาก โมเดล 3D เอฟเฟกต์ และ UI' : 'ภาพรวมตัวละคร'), h('span', { class: 'sp' }),
+  m.append(h('div', { class: 'row' }, h('h2', {}, other ? 'ฉาก โมเดล 3D เอฟเฟกต์ และ UI' : 'ภาพรวมตัวละคร'), formSeg, h('span', { class: 'sp' }),
     other ? h('button', { onclick: newItemDialog }, '+ เพิ่มรายการใหม่') : null));
   const tiles = [], sections = [];
   const empty = h('p', { class: 'dim', hidden: true }, 'ไม่มีตัวที่ตรงกับตัวกรอง');
   function apply() {
     const q = ui.q.trim().toLowerCase();
-    for (const t of tiles) t.el.hidden = !((!ui.tribe || t.it.tribe === ui.tribe || t.it.tribe2 === ui.tribe) && statusOk(t.it, ui.status)
+    for (const t of tiles) t.el.hidden = !((!ui.tribe || t.it.tribe === ui.tribe || t.it.tribe2 === ui.tribe) && statusOk(t.it, ui.status, F)
       && (!q || t.it.id.toLowerCase().includes(q) || (t.it.name || '').toLowerCase().includes(q)));
     for (const s of sections) s.hidden = s.querySelectorAll('.tile:not([hidden])').length === 0;
     empty.hidden = tiles.some((t) => !t.el.hidden) || !items.length;
@@ -467,7 +475,7 @@ function renderBoard(m) {
   const chipBox = h('div', { class: 'chips' }, h('button', { 'data-t': '', style: '--c: var(--dim)', onclick: () => { ui.tribe = ''; apply(); } }, 'ทุกเผ่า'),
     other ? null : TRIBES.map(([t, th]) => h('button', { 'data-t': t, style: `--c: ${tribeVar(t)}`, onclick: () => { ui.tribe = ui.tribe === t ? '' : t; apply(); } }, th)));
   const flow = !other && !showOld;
-  if (flow) for (const it of items) { const w = FLOW_ST[status(it)]?.who; if (w) counts['who-' + w] = (counts['who-' + w] || 0) + 1; }
+  if (flow) for (const it of items) { const w = FLOW_ST[status(it, F)]?.who; if (w) counts['who-' + w] = (counts['who-' + w] || 0) + 1; }
   const stList = flow ? [['who-owner', 'ถึงตาคุณ'], ['who-claude', 'ถึงตา Claude'], ...FLOW_STATUS] : STATUS;
   if (ui.status && !stList.some(([k]) => k === ui.status)) ui.status = '';
   const stSel = h('select', { 'aria-label': 'กรองตามสถานะ', onchange: (e) => { ui.status = e.target.value; apply(); } },
@@ -486,12 +494,13 @@ function renderBoard(m) {
     const box = h('div', { class: 'tiles' + (other ? '' : ' row8') });
     for (const it of rows) {
       const th = h('div', { class: 'th' });
-      const r = thumbRound(it);
+      const r = thumbRound(it, F);
       if (r) thumbInto(th, r, 96);
-      const st = status(it), jobs = openJobs(it.id);
-      const el = h('button', { class: 'tile' + (r ? '' : ' empty'), style: `--tribe: ${tribeVar(it.tribe)}`, title: `${it.id} ${it.name || ''} · ${statusTh(st)}`, onclick: () => openItem(it.id) }, th,
+      const st = status(it, F), jobs = openJobs(it.id);
+      const el = h('button', { class: 'tile' + (r ? '' : ' empty'), style: `--tribe: ${tribeVar(it.tribe)}`, title: `${it.id} ${it.name || ''}${F === 3 ? ' · ร่าง 3' : ''} · ${statusTh(st)}`,
+        onclick: () => { if (!other) ui.form = F; openItem(it.id); } }, th,
         h('div', { class: 'row nm' }, h('span', { class: dotCls(st) }), h('b', {}, it.id), h('span', { class: 'dim small ell' }, it.name || '')),
-        useFlow(it) ? flowBar(it) : null,
+        useFlow(it) ? flowBar(it, false, F) : null,
         h('div', { class: 'small ' + (FLOW_ST[st] ? 'nxt who-' + FLOW_ST[st].who : 'faint') }, statusTh(st)),
         jobs.length ? h('span', { class: 'badge corner', title: 'รอ Claude: ' + jobs.map(taskTh).join(', ') }, 'รอ Claude') : null);
       tiles.push({ el, it, st }); box.append(el);
@@ -514,12 +523,12 @@ function thumbInto(box, r, max) {
 
 // ---------- item ----------
 function renderItem(m, it) {
-  const st = status(it);
+  const st = status(it, it.kind === 'character' ? ui.form : 1);
   const isChar = it.kind === 'character';
   m.append(h('div', { class: 'head' },
     h('div', {}, h('div', { class: 'meta' }, isChar ? `${TRIBE_TH[it.tribe] || ''}${it.tribe2 ? ' + ' + TRIBE_TH[it.tribe2] : ''} · ${it.rarity || ''}` : KIND_TH[it.kind]),
       h('h2', {}, `${it.id}  ${it.name || ''}`)),
-    h('span', { class: 'pill' }, h('span', { class: dotCls(st) }), statusTh(st)),
+    h('span', { class: 'pill' }, h('span', { class: dotCls(st) }), (isChar && ui.form === 3 ? 'ร่าง 3 · ' : '') + statusTh(st)),
     h('span', { class: 'sp' }),
     h('label', { class: 'pill' }, h('input', { type: 'checkbox', checked: it.inGame, onchange: (e) => { it.inGame = e.target.checked; save().then(render); } }), 'อยู่ในเกมแล้ว'),
     h('button', { onclick: () => queueDialog(it) }, 'ส่งงานให้ Claude')));
@@ -702,7 +711,9 @@ const BRIEFS = [
 function briefBox(it) {
   it.brief ||= {};
   const wrap = h('div', { class: 'briefs' });
-  for (const [kind, title, hint, sub] of BRIEFS) {
+  for (const [base, title0, hint, sub] of BRIEFS) {
+    const kind = base === 'idle' ? fk('idle', ui.form) : base; // set 281 (owner A1): form 3 has its own idle brief (idle3); concept is shared
+    const title = kind === 'idle3' ? title0 + ' · ร่าง 3' : title0;
     const b = it.brief[kind] || {};
     const card = h('div', { class: 'brief' + (b.ok ? ' is-ok' : '') });
     const stamp = h('button', { class: 'stamp', 'aria-pressed': String(!!b.ok), disabled: !(b.th || '').trim(),
