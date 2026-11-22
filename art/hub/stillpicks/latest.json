@@ -1,6 +1,6 @@
 {
- "rev": 231,
- "t": "2026-11-22T17:44:37.864Z",
+ "rev": 240,
+ "t": "2026-11-22T18:10:09.048Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -839,6 +839,42 @@
    "form": 3,
    "pick": [],
    "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m6e": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m6f": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m6g": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [
+    "g06"
+   ],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m6h": {
+   "id": "SF-6",
+   "form": 3,
+   "pick": [
+    "g03"
+   ],
+   "eye": true,
    "hidden": false,
    "closed": false
   },
@@ -1001,7 +1037,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "wind_f3_m6b": {
@@ -1009,7 +1045,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "wind_f3_m6c": {
@@ -1017,7 +1053,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "wind_f3_m6d": {
