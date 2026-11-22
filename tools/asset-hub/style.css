@@ -454,3 +454,8 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .pxed-addbox input[type=color] { width: 40px; height: 30px; padding: 0; border: 0; background: none; }
 .pxed-hex { width: 88px; font-family: ui-monospace, Consolas, monospace; }
 .pxed-hex.bad { outline: 2px solid var(--bad, #e5534b); }
+/* set 281: ร่าง 1 / ร่าง 3 switch on the board header */
+.seg.boardform { display: inline-flex; margin-left: 14px; }
+.seg.boardform button { border-radius: 0; margin-left: -1px; min-height: 30px; padding: 3px 12px; font-size: 13px; }
+.seg.boardform button:first-child { border-radius: var(--r) 0 0 var(--r); }
+.seg.boardform button:last-child { border-radius: 0 var(--r) var(--r) 0; }

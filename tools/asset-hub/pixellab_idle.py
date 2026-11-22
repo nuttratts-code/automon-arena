@@ -172,7 +172,7 @@ def add_round(item_id, sheet_path, still_round, info):
                  **({"pad": [info["pad"], info["pad"], info["pad"], min(info["pad"], 2)]} if info.get("pad") else {})}})
     if info.get("en"):  # the English prompt that worked -> shown under the idle brief (owner set 258)
         it.setdefault("brief", {}).setdefault("used", []).append(
-            {"kind": "idle", "en": info["en"], "round": rid, "t": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")})
+            {"kind": "idle3" if still_round.get("form") == 3 else "idle", "en": info["en"], "round": rid, "t": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")})
     hub["rev"] = hub.get("rev", 0) + 1
     HUB.write_text(json.dumps(hub, ensure_ascii=False, indent=1) + "\n", encoding="utf8")
     return rid, dst
@@ -222,7 +222,8 @@ def main():
     sr, still = star_still(a.item)
     print(f"★ still {sr['id']} {still.size}")
     if a.cmd == "run" and not a.dry:  # owner set 258: generate only from a ticked Thai idle brief
-        b = (json.loads(HUB.read_text(encoding="utf8"))["items"][a.item].get("brief") or {}).get("idle") or {}
+        bk = "idle3" if sr.get("form") == 3 else "idle"  # set 281 (owner A1): form 3 has its own idle brief
+        b = (json.loads(HUB.read_text(encoding="utf8"))["items"][a.item].get("brief") or {}).get(bk) or {}
         if not b.get("ok") and not a.unreviewed:
             sys.exit(f"{a.item}: idle brief not ticked in the hub (owner reviews first); --unreviewed only on the owner's word")
         if b.get("th"):

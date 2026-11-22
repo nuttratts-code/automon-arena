@@ -186,8 +186,8 @@ export function validateHub(h) {
     if (br != null) {
       if (typeof br !== 'object' || Array.isArray(br)) err.push(`${id}: brief must be an object`);
       else {
-        for (const k of ['concept', 'idle']) { const b = br[k]; if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
-        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
+        for (const k of ['concept', 'idle', 'idle3']) { const b = br[k]; /* idle3 = form-3 idle brief (set 281) */ if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
+        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle', 'idle3'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
       }
     }
     if (it.palette != null && (!Array.isArray(it.palette) || it.palette.length > 64 || it.palette.some((c) => typeof c !== 'string' || !/^#[0-9a-f]{6}$/.test(c)))) err.push(`${id}: palette must be up to 64 colours '#rrggbb'`); // owner set 262
