@@ -51,6 +51,6 @@ Before proposing a new concept: read this list, pick an animal not on it, then a
 | HL-8 | ปราสาทโบราณ (set 275) | snail (stone castle shell) |
 | PL-8 | แม่มดเถ้าถ่าน (set 275) | crow (ash witch hat) |
 | SF-8 | คลื่นพลัง (set 275) | jellyfish |
-| WY-8 | พรแห่งวายุ (set 275) | dragonfly |
+| WY-8 | พรแห่งวายุ (set 275) | duck (cool: goggles + scarf) — dragonfly dropped by owner, free again |
 | PT-8 | พรสูงสุด (set 275) | whale (floating sky whale) |
 | WN-8 | ทัณฑ์อสูร (set 275) | spider |
