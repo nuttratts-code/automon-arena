@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1717,
+ "rev": 1761,
  "settings": {
   "moves": [
    "idle",
@@ -1300,6 +1300,24 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "flip": true
+    },
+    {
+     "id": "rd2a7f89c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-22_d2a7f89c.png",
+     "orig": "98d3b147_g00.png",
+     "t": "2026-11-22T15:25:35.044Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 98d3b147 g00 (ตัวเต็ง · ประวัติ: batches/2026-11-22_98d3b147)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_98d3b147",
+      "pick": "g00",
+      "styleSrc": "pmd-ref 0571"
+     }
     }
    ],
    "notes": "",
@@ -2777,6 +2795,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rb00fe3d8",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-4/still_f3_2026-11-22_b00fe3d8.png",
+     "orig": "e652e068_g06.png",
+     "t": "2026-11-22T15:25:35.278Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน e652e068 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_e652e068)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_e652e068",
+      "pick": "g06",
+      "styleSrc": "pmd-ref 0988"
+     }
     }
    ],
    "notes": "",
@@ -4102,6 +4138,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rc542c969",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-4/still_f3_2026-11-22_c542c969.png",
+     "orig": "1b218d84_g14.png",
+     "t": "2026-11-22T15:25:35.508Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 1b218d84 g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_1b218d84)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_1b218d84",
+      "pick": "g14",
+      "styleSrc": "pmd-ref 1007"
+     }
     }
    ],
    "notes": "",
@@ -5131,7 +5185,7 @@
   "WY-7": {
    "id": "WY-7",
    "kind": "character",
-   "name": "เหยี่ยวลม",
+   "name": "Swaerow",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "uncommon",
@@ -5213,6 +5267,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r4be0db0e",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-4/still_f3_2026-11-22_4be0db0e.png",
+     "orig": "5812d121_g15.png",
+     "t": "2026-11-22T15:32:53.015Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 5812d121 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5812d121)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5812d121",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0716"
+     }
     }
    ],
    "notes": "",
@@ -5295,7 +5367,7 @@
   "WY-8": {
    "id": "WY-8",
    "kind": "character",
-   "name": "พรแห่งวายุ",
+   "name": "Ducool ",
    "tribe": "wind",
    "tribe2": "",
    "rarity": "epic",
@@ -5346,6 +5418,19 @@
      "t": "2026-11-22T13:58:37.665Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r0e913864",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-8/still_f1_2026-11-22_d7aa18c8.png",
+     "orig": "2bf83d54_g14_edit_edit.png",
+     "t": "2026-11-22T14:57:23.724Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
@@ -5353,7 +5438,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WY-6": {
    "id": "WY-6",
@@ -6371,7 +6457,7 @@
   "PT-7": {
    "id": "PT-7",
    "kind": "character",
-   "name": "เหยี่ยวแสง",
+   "name": "Craler",
    "tribe": "spirit",
    "tribe2": "wind",
    "rarity": "uncommon",
@@ -6424,7 +6510,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-4": {
    "id": "PT-4",
@@ -6491,6 +6578,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rce352af7",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-4/still_f3_2026-11-22_ce352af7.png",
+     "orig": "3de4617a_g07.png",
+     "t": "2026-11-22T15:25:35.738Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 3de4617a g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_3de4617a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_3de4617a",
+      "pick": "g07",
+      "styleSrc": "pmd-ref 0249"
+     }
     }
    ],
    "notes": "",
@@ -6547,7 +6652,7 @@
   "PT-8": {
    "id": "PT-8",
    "kind": "character",
-   "name": "พรสูงสุด",
+   "name": "Wholy",
    "tribe": "spirit",
    "tribe2": "",
    "rarity": "epic",
@@ -6587,7 +6692,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "PT-6": {
    "id": "PT-6",
@@ -7721,7 +7827,7 @@
   "WN-7": {
    "id": "WN-7",
    "kind": "character",
-   "name": "อสูรโลหิต",
+   "name": "Bleech",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "uncommon",
@@ -7767,6 +7873,19 @@
      "t": "2026-11-22T14:05:59.268Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rbcc107e4",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-7/still_f1_2026-11-22_e687f6e1.png",
+     "orig": "0d713b5f_g07_edit_edit_edit.png",
+     "t": "2026-11-22T15:04:06.115Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
@@ -7774,7 +7893,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WN-4": {
    "id": "WN-4",
@@ -7816,6 +7936,24 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "flip": true
+    },
+    {
+     "id": "r2f57f987",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-4/still_f3_2026-11-22_2f57f987.png",
+     "orig": "5572efb4_g06.png",
+     "t": "2026-11-22T15:25:35.968Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 5572efb4 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5572efb4)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-22_5572efb4",
+      "pick": "g06",
+      "styleSrc": "pmd-ref 0718"
+     }
     }
    ],
    "notes": "",
@@ -7898,7 +8036,7 @@
   "WN-8": {
    "id": "WN-8",
    "kind": "character",
-   "name": "ทัณฑ์อสูร",
+   "name": "Spidlood",
    "tribe": "demon",
    "tribe2": "",
    "rarity": "epic",
@@ -7951,7 +8089,8 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null
+   "shadow": null,
+   "brief": {}
   },
   "WN-6": {
    "id": "WN-6",
