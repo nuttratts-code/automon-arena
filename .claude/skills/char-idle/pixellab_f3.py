@@ -29,12 +29,14 @@ def frame(n, row=2):  # pmd-ref idle sheet, row 2 = facing right, first frame, t
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("item"); ap.add_argument("--still", required=True); ap.add_argument("--tribe", required=True)
-    ap.add_argument("--noun", required=True); ap.add_argument("--keep", required=True); ap.add_argument("--style", required=True)
+    ap.add_argument("--noun", default=""); ap.add_argument("--keep", required=True); ap.add_argument("--style", default="")
     ap.add_argument("--extra", default=""); ap.add_argument("--size", type=int, default=56); ap.add_argument("--out", default="")
     ap.add_argument("--dry", action="store_true")
+    ap.add_argument("--desc", default="", help="full description used as-is (owner's own words, set 282); replaces the built desc, --noun ignored")
+    ap.add_argument("--style-png", default="", help="style image from this png (e.g. the form-1 still to keep its line style) instead of a pmd-ref")
     ap.add_argument("--palette", default="", help="png whose colours form target_palette (default: --still); set 282: lock form-1 colours when --still is an owner idea picture")
     a = ap.parse_args()
-    if not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", a.item) or not re.fullmatch(r"\d{4}", a.style):
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", a.item) or not (a.style_png or re.fullmatch(r"\d{4}", a.style)):
         sys.exit("bad item or style number")
     used = [f for f in os.listdir(f"{SCR}/still-batches") if os.path.isfile(f"{SCR}/still-batches/{f}/batch.json")
             and json.load(open(f"{SCR}/still-batches/{f}/batch.json")).get("style_src") == "pmd-ref " + a.style]
@@ -45,10 +47,13 @@ def main():
         sys.exit("--extra = #rrggbb,#rrggbb")
     out = a.out or f"{SCR}/still-batches/{a.tribe}_f3"
     still = Image.open(a.still).convert("RGBA"); still = still.crop(still.getbbox())
-    st = frame(a.style)
+    if a.style_png:
+        st = Image.open(a.style_png).convert("RGBA"); st = st.crop(st.getbbox())
+    else:
+        st = frame(a.style)
     pal = Image.open(a.palette).convert("RGBA") if a.palette else still
     cols = sorted({"#%02x%02x%02x" % p[:3] for p in pal.get_flattened_data() if p[3] > 0} | {c.lower() for c in extra})
-    desc = "the final evolved form of the reference creature, %s, with a clear dark outline, side view facing right, full body" % a.noun
+    desc = a.desc or "the final evolved form of the reference creature, %s, with a clear dark outline, side view facing right, full body" % a.noun
     body = {"description": desc, "image_size": {"width": a.size, "height": a.size}, "no_background": True,
             "style_image": {"image": pls.b64(st), "size": {"width": st.width, "height": st.height},
                             "usage_description": "copy only the outline, pixel detail and shading"},
@@ -57,7 +62,7 @@ def main():
             "reference_images": [{"image": pls.b64(still), "size": {"width": still.width, "height": still.height},
                                   "usage_description": "take only %s from this creature" % a.keep}]}
     show = {k: v for k, v in body.items() if k not in ("style_image", "reference_images")}
-    show["style_image"] = "<pmd-ref %s %dx%d>" % (a.style, st.width, st.height)
+    show["style_image"] = "<%s %dx%d>" % (os.path.basename(a.style_png) if a.style_png else "pmd-ref " + a.style, st.width, st.height)
     show["reference_images"] = ["<%s %s %dx%d: %s>" % (a.item, os.path.basename(a.still), *still.size, a.keep)]
     print(json.dumps(show, indent=1))
     if a.dry:
@@ -78,7 +83,7 @@ def main():
         g = Image.open(io.BytesIO(base64.b64decode(im["base64"].split(",")[-1]))).convert("RGBA"); g.save(out + "/g%02d.png" % i)
         sheet.alpha_composite(g.resize((g.width * Z, g.height * Z), Image.NEAREST), ((i % N) * C * Z + 2 * Z, (i // N) * C * Z + 2 * Z))
     sheet.convert("RGB").save(out + "/sheet.png")
-    json.dump({"tribe": a.tribe, "job": jid, "seed": str(lr.get("seed")), "style_src": "pmd-ref " + a.style,
+    json.dump({"tribe": a.tribe, "job": jid, "seed": str(lr.get("seed")), "style_src": (os.path.basename(a.style_png) if a.style_png else "pmd-ref " + a.style),
                "palette_src": "custom: %s colours + %s" % (os.path.basename(a.palette) if a.palette else a.item + " still", " ".join(extra)), "ref": "%s %s (reference_images)" % (a.item, os.path.basename(a.still)),
                "item": a.item, "form": 3, "note": "form 3 batch (pixellab_f3.py)"}, open(out + "/batch.json", "w"))
     print(a.item, "job", jid, "seed", lr.get("seed"), "images", len(imgs), "->", out)
