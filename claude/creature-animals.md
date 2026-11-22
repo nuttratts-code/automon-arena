@@ -10,23 +10,29 @@ Before proposing a new concept: read this list, pick an animal not on it, then a
 | HL-2 | Shieldoat | goat |
 | HL-3 | barvier | beaver |
 | HL-4 | (set 270) | otter |
+| HL-5 | (set 271) | hedgehog (red-hot iron spikes) |
 | PL-1 | Firasheep | sheep / ram |
 | PL-2 | Volcanmole | mole |
 | PL-3 | Snockfire | snake (two heads) |
 | PL-4 | (set 270) | hermit crab (cannon shell) |
+| PL-5 | (set 271) | peacock (ember tail fan) |
 | SF-1 | Foxlash | fox |
 | SF-2 | Cowterry | cow |
 | SF-3 | Fhock | toad |
 | SF-4 | (set 270) | owl |
+| SF-5 | (set 271) | pufferfish (storm, floating) |
 | WY-1 | Catus | cat |
 | WY-2 | Pangofan | pangolin |
 | WY-3 | Wildsel | weasel |
 | WY-4 | (set 270) | boar |
+| WY-5 | (set 271) | tortoise (windmill shell) |
 | PT-1 | Xpirit | many-tailed fox spirit (fox) |
 | PT-2 | Log-Log | log creature |
 | PT-3 | Axoloty | axolotl |
 | PT-4 | (set 270) | bear (moon) — moth rejected by owner |
+| PT-5 | (set 271) | anglerfish (guiding lantern, floating) |
 | WN-1 | Heldog | dog / hound |
 | WN-2 | Bhameleon | chameleon |
 | WN-3 | Hipplood | hippo |
 | WN-4 | (set 270) | baboon |
+| WN-5 | (set 271) | vulture (demon priest) |
