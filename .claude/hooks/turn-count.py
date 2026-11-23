@@ -28,8 +28,12 @@ def text_of(content):
     return ""
 
 
+BACKGROUND_HEADS = ("<task-notification>", "<cross-session-message", "Another Claude session sent a message")
+
+
 def is_background(text):
-    return text.lstrip().startswith("<task-notification>")
+    """Automatic inputs that are not the owner typing: background notices and messages from other chats."""
+    return text.lstrip().startswith(BACKGROUND_HEADS)
 
 
 def owner_text(d):
