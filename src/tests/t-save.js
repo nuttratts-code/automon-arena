@@ -12,10 +12,23 @@ import { cleanStage, stageDefaults } from '../core/stage.js';
 import { equipRunes } from '../core/runes.js';
 import { bossUnit } from '../core/boss.js';
 import { eq, ok, randomTeam } from './helpers.js';
+import { RENUM_285, OLD_HASH_285, NEW_HASH_285, renum285 } from '../core/save.js';
 import { newRunLog, rlApply, rlCheck, rlName, rlPush, rlRef, rlReplay } from '../core/runlog.js';
 import { rvReadCode } from '../lab/runlogread.js';
 import { fxPlayRun } from './runlog-fixture.js';
 export const TESTS_SAVE = [
+  ['set 285 B2: save / replays made before the renumber (old hash, old IDs) load as the same creatures under the new IDs', () => {
+    const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars);
+    const back = {}; for (const t in RENUM_285) { back[t] = {}; for (const [o, n] of Object.entries(RENUM_285[t])) back[t][n] = +o; }
+    const toOld = s => s.replace(/\b(HL|PL|PT|SF|WN|WY)-([1-8])\b/g, (m, t, n) => `${t}-${back[t][n] ?? n}`);
+    eq(renum285(toOld('HL-6 HL-7 HL-8 PL-2 SF-8 WY-1')), 'HL-6 HL-7 HL-8 PL-2 SF-8 WY-1', 'old → new is the exact inverse');
+    eq(renum285('HL-6 PL-2 SF-6'), 'HL-8 PL-3 SF-8', 'map: HL 6→8 · PL 2→3 · SF 6→8');
+    const P = newRun(chars, 77), B = newRun(chars, 78); startRound(P, chars); startRound(B, chars, RULES); botShop(P, chars); botShop(B, chars, RULES);
+    const raw = makeSave(P, B, newStats(), 1000, H), old = toOld(raw).replace(`"data":"${H}"`, `"data":"${OLD_HASH_285}"`);
+    const r = readSave(old, cm, RULES, H);
+    if (H === NEW_HASH_285) { eq(r.status, 'ok', 'old save loads ' + (r.errors || []).join(',')); eq(JSON.stringify(r.save.P), JSON.stringify(JSON.parse(raw).P), 'same run state'); }
+    else eq(r.status, 'data', 'values changed since set 285 → old save is old data');
+  }],
   ['ชุด 22: เซฟ run ผ่านตัวตรวจทุกรอบ · เล่นต่อแล้วได้ร้านเดิม', () => {
     const chars = buildCharacterList(), cm = makeCharMap(chars), H = dataHash(chars);
     const P = newRun(chars, 123), B = newRun(chars, 456), st = newStats();
@@ -50,8 +63,8 @@ export const TESTS_SAVE = [
     eq(bad(o => { o.P.bench[0].perm = { hack: 1 }; }), 'bad', 'ค่าถาวรไม่รู้จัก');
     eq(bad(o => { o.P.bench[0].hp = 9999; }), 'bad', 'ช่องแปลกปลอมในตัวละคร');
     eq(bad(o => { o.P.extra = 1; }), 'bad', 'ช่องแปลกปลอมในสถานะ');
-    eq(bad(o => { o.P.charges = [{ id: 'SF-7', uid: 999, si: 0 }, { id: 'SF-7', uid: 998, si: 0 }]; }), 'bad', 'ประจุเกิน 1');
-    eq(bad(o => { o.P.charges = [{ id: 'SF-7', uid: 999, si: 0 }]; }), 'bad', 'ประจุที่เจ้าของไม่อยู่');
+    eq(bad(o => { o.P.charges = [{ id: 'SF-4', uid: 999, si: 0 }, { id: 'SF-4', uid: 998, si: 0 }]; }), 'bad', 'ประจุเกิน 1');
+    eq(bad(o => { o.P.charges = [{ id: 'SF-4', uid: 999, si: 0 }]; }), 'bad', 'ประจุที่เจ้าของไม่อยู่');
     eq(bad(o => { o.P.wins = 10; o.P.over = true; }), 'bad', 'run จบแล้วไม่โหลด');
     eq(bad(o => { o.stats.w = 5; }), 'bad', 'สถิติไม่ตรงกัน');
     eq(bad(o => { o.data = '00000000'; }), 'data', 'ค่าเกมเปลี่ยน');
@@ -88,11 +101,11 @@ export const TESTS_SAVE = [
   ['ชุด 22: สถิติ run และประวัติ run กรองข้อมูลผิด', () => {
     const st = newStats();
     addMatchStats(st, { winner: 0, timeMs: 5000, events: [{ k: 'start', units: [{ uid: 0, side: 0, id: 'HL-1' }, { uid: 1, side: 1, id: 'PL-1' }] },
-      { k: 'dmg', from: 0, to: 1, amount: 30 }, { k: 'dmg', from: 1, to: 0, amount: 99 }, { k: 'summon', unit: { uid: 2, side: 0, id: 'PL-7' } }, { k: 'dmg', from: 2, to: 1, amount: 7.6 }] });
+      { k: 'dmg', from: 0, to: 1, amount: 30 }, { k: 'dmg', from: 1, to: 0, amount: 99 }, { k: 'summon', unit: { uid: 2, side: 0, id: 'PL-4' } }, { k: 'dmg', from: 2, to: 1, amount: 7.6 }] });
     addMatchStats(st, { winner: 1, timeMs: 3000, events: [] });
     addMatchStats(st, { winner: null, timeMs: 1000, events: [] });
     eq([st.matches, st.w, st.l, st.d, st.best, st.timeMs], [3, 1, 1, 1, 1, 9000], 'นับผล');
-    eq(st.dmg, { 'HL-1': 30, 'PL-7': 7 }, 'ดาเมจฝั่งผู้เล่นเท่านั้น (รวมตัวที่ถูกเรียก)');
+    eq(st.dmg, { 'HL-1': 30, 'PL-4': 7 }, 'ดาเมจฝั่งผู้เล่นเท่านั้น (รวมตัวที่ถูกเรียก)');
     const P = newRun(buildCharacterList(), 1); P.wins = 3; P.hearts = 0; P.round = 13; P.over = true;
     const e = historyEntry(P, st, 5);
     eq([e.won, e.top, e.topDmg], [false, 'HL-1', 30], 'บันทึกประวัติ');
@@ -174,9 +187,9 @@ export const TESTS_SAVE = [
   }],
   ['ชุด 39: รหัสแมตช์ (ห้องบาลานซ์) เล่นซ้ำได้ผลเดิม · ค่าที่แก้ติดไปด้วย · รหัสเสีย/ช่องแปลกถูกปฏิเสธ', () => {
     const base = buildCharacterList(), bt = JSON.parse(JSON.stringify(RULES.tribeBonus)), fp = baseFingerprint(base, bt);
-    const edited = JSON.parse(JSON.stringify(base)), c0 = edited.find(c => c.id === 'WY-4'); c0.atk = c0.atk.map(x => x * 3);
-    const diff = { chars: { 'WY-4': { atk: c0.atk } }, tribes: {} };
-    const A = [{ id: 'WY-4', level: 2, row: 2, lane: 0 }, { id: 'HL-1', level: 1, row: 0, lane: 1 }], B = [{ id: 'PL-1', level: 2, row: 1, lane: 1 }, { id: 'SF-6', level: 1, row: 0, lane: 0 }];
+    const edited = JSON.parse(JSON.stringify(base)), c0 = edited.find(c => c.id === 'WY-5'); c0.atk = c0.atk.map(x => x * 3);
+    const diff = { chars: { 'WY-5': { atk: c0.atk } }, tribes: {} };
+    const A = [{ id: 'WY-5', level: 2, row: 2, lane: 0 }, { id: 'HL-1', level: 1, row: 0, lane: 1 }], B = [{ id: 'PL-1', level: 2, row: 1, lane: 1 }, { id: 'SF-8', level: 1, row: 0, lane: 0 }];
     for (const seed of [0, 77]) {
       const m = makeCharMap(edited), run = () => simulate(buildTeam(A, m), buildTeam(B, m), { rules: RULES, ...(seed ? { seed } : {}), tribesOff: [false, true] });
       const r = run(), code = makeMatchCode({ base: fp, seed, A, B, tribesOff: [false, true], diff, result: r });
@@ -186,10 +199,10 @@ export const TESTS_SAVE = [
       eq([r2.winner, r2.timeMs, r2.events.length], [r.winner, r.timeMs, r.events.length], 'เล่นซ้ำได้ผลเดิม seed ' + seed);
     }
     const good = makeMatchCode({ base: fp, seed: 1, A, B, tribesOff: [true, true], diff, result: { winner: 0, timeMs: 1000 } });
-    for (const bad of ['', 'hello', good.slice(0, -5), good.replace('"WY-4",2', '"WY-4",9'), good.replace('AMATCH1', 'AMATCH2')]) {
+    for (const bad of ['', 'hello', good.slice(0, -5), good.replace('"WY-5",2', '"WY-5",9'), good.replace('AMATCH1', 'AMATCH2')]) {
       let threw = false; try { parseMatchCode(bad); } catch (e) { threw = true; } ok(threw, 'รหัสเสียต้องถูกปฏิเสธ: ' + bad.slice(0, 30));
     }
-    for (const d of [{ chars: { 'XX-1': { atk: [1, 1, 1] } }, tribes: {} }, { chars: { 'WY-4': { atk: 5 } }, tribes: {} }, { chars: { 'WY-4': { evil: 1 } }, tribes: {} }, { chars: { 'WY-4': JSON.parse('{"__proto__":{"x":1}}') }, tribes: {} }, { chars: {}, tribes: { nope: {} } }]) {
+    for (const d of [{ chars: { 'XX-1': { atk: [1, 1, 1] } }, tribes: {} }, { chars: { 'WY-5': { atk: 5 } }, tribes: {} }, { chars: { 'WY-5': { evil: 1 } }, tribes: {} }, { chars: { 'WY-5': JSON.parse('{"__proto__":{"x":1}}') }, tribes: {} }, { chars: {}, tribes: { nope: {} } }]) {
       let threw = false; try { applyMatchDiff(base, bt, d); } catch (e) { threw = true; } ok(threw, 'ค่าที่แก้แปลกต้องถูกปฏิเสธ ' + JSON.stringify(d).slice(0, 40));
     }
   }],
@@ -201,7 +214,7 @@ export const TESTS_SAVE = [
     const all = [...Object.entries(st.runes).map(([id, r]) => ({ ...r, id })), ...st.custom.map(r => ({ ...r }))].filter(r => r.on && !r.del);
     const one = all.find(r => r.scope === 'one' && r.eff !== 'link' && r.eff !== 'buddy'), wide = all.find(r => r.scope !== 'one' && r.id !== (one && one.id));
     ok(one && wide, 'default stage has runes to equip');
-    const A = [{ id: 'WY-6', level: 3, row: 2, lane: 1 }, { id: 'WY-4', level: 3, row: 2, lane: 0 }, { id: 'PT-7', level: 2, row: 1, lane: 0 }];
+    const A = [{ id: 'WY-8', level: 3, row: 2, lane: 1 }, { id: 'WY-5', level: 3, row: 2, lane: 0 }, { id: 'PT-4', level: 2, row: 1, lane: 0 }];
     const runes = [{ r: one, n: 1, slot: [2, 1], partner: null }, { r: wide, n: 1, slot: null, partner: null }];
     for (const k of [1, 2]) {
       const b = JSON.parse(JSON.stringify(recClean)), eqA = equipRunes(buildTeam(A, m), runes);

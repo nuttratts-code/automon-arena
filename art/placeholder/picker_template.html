@@ -123,7 +123,7 @@ const byId = Object.fromEntries(D.chars.map(r => [r[0], r]));
 
 function renderScenes() {
   const box = document.getElementById('scenes'); box.replaceChildren();
-  const team = ['HL-6','PL-5','SF-6','WY-3','PT-8','WN-6'], foe = ['WN-7','SF-4','PL-6','HL-8','PT-2','WY-6'];
+  const team = ['HL-8','PL-7','SF-8','WY-3','PT-7','WN-8'], foe = ['WN-4','SF-5','PL-8','HL-7','PT-2','WY-8'];
   D.scenes.forEach(([key, label, opts]) => {
     const s = el('section', 'scene'), h = el('header'), seg = el('div', 'seg');
     h.append(el('b', null, label));

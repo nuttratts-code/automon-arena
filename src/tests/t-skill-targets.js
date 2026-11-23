@@ -35,7 +35,7 @@ export const TESTS_SKILL_TARGETS = [
     eq(ev(r, 'atkUp', e => e.to === bu).length, 3, 'เพื่อน down ทำงาน 3 ครั้ง');
     ok(ev(r, 'atkUp', e => e.to === ku).length >= 3, 'ศัตรู down ทำงานทุกครั้ง');
   }],
-  ['ดาเมจ % เกราะตัวเอง (HL-7) ใช้เกราะก่อนโดนฮิตใน tick เดียวกัน', () => {
+  ['ดาเมจ % เกราะตัวเอง (HL-6) ใช้เกราะก่อนโดนฮิตใน tick เดียวกัน', () => {
     const H = mk('H', { armor: L3(50), atk: L3(0), hp: L3(1000), skills: [{ when: 'set', do: 'dmgPctArmor', to: 'enemyFront', v: L3(40) }] });
     const r = fight([H, mk('B', { atk: L3(100), hp: L3(1000) })], [u('H')], [u('B')]);
     eq(ev(r, 'dmg', e => e.why === 'skill' && e.t === 1000).map(e => e.amount), [20], 'เกราะ 50 × 40% แม้โดนฮิต 100 ใน tick เดียวกัน');

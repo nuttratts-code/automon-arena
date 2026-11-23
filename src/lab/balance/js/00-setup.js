@@ -23,6 +23,14 @@ let lastRun = null, baseCache = {};
 // [ช่อง, ชื่อ, ตัวคูณแสดงผล] · คูลดาวน์เก็บเป็นมิลลิวินาที แสดงเป็นวินาที แยกเลเวล (20 ต.ค.)
 const LV_FIELDS = [['hp', 'HP'], ['atk', 'พลังโจมตี'], ['cdMs', 'คูลดาวน์ (วิ)', 1000], ['multi', 'มัลติฮิต'], ['burn', 'ไฟ/ฮิต'], ['shock', 'ช็อต/ฮิต'], ['armorHit', 'เกราะ/ฮิต'], ['healHit', 'ฟื้น/ฮิต']]; // ฟื้น/ฮิต (ชุด 18): ทุกฮิตที่ตีโดน ตัวเองฟื้น HP · ทุกเผ่า
 const ONE_FIELDS = [];
+// set 285 (owner B2): creature IDs renumbered by rarity → once per device, every automon-balance-* draft (values, stage, sim team, bench,
+// combo, dock …) is rewritten to the new IDs (core/save.js renum285) so drafts made before keep pointing at the same creatures
+try {
+  if (!localStorage.getItem('automon-balance-renum-285')) {
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('automon-balance')) { const t = localStorage.getItem(k); if (t) localStorage.setItem(k, renum285(t)); } }
+    localStorage.setItem('automon-balance-renum-285', '1');
+  }
+} catch (e) { /* no storage */ }
 const DRAFT_KEY = 'automon-balance-draft-v9'; // v3 (20 ต.ค.): นำค่าที่บันทึกเข้าเกมแล้ว ร่างเก่าไม่โหลด (กันค่าเก่าทับค่าที่ปรับบาลานซ์ใหม่)
 const TRIBE_LABEL = {
   armorPct: 'เกราะเริ่ม % ของ HP', restore: 'เกราะแตกได้คืน (ครั้ง)', burn: 'ไฟ +N ที่ฮิตแรก', every: 'ทุกกี่ชุด', shock: 'ช็อต +N ที่ฮิตแรก',

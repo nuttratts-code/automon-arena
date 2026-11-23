@@ -34,8 +34,8 @@ func _initialize() -> void:
 	var st: Node = app.stage
 	for id in (st.groups.get("battle", {}) as Dictionary).keys():
 		st.remove_unit("battle", id)
-	var you := ["HL-1", "HL-3", "PL-1", "PL-2", "HL-5", "HL-7"]
-	var foe := ["B1", "HL-2", "HL-4", "HL-6", "HL-8", "B2"]
+	var you := ["HL-1", "HL-3", "PL-1", "PL-3", "HL-5", "HL-6"]
+	var foe := ["B1", "HL-2", "HL-4", "HL-8", "HL-7", "B2"]
 	var n := 9000
 	for s in 2:
 		for row in 3:

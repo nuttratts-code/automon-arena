@@ -108,7 +108,7 @@ export function simulate(teamA, teamB, opts = {}) {
 
   // เมล็ดสุ่ม: ส่งมาเอง หรือคำนวณจากทีม (ทีมเดิม = เลขสุ่มชุดเดิม)
   // ชุด 19: ตัวสุ่มแยกต่อฝั่ง · เมล็ดของแต่ละฝั่งคิดจากทีมตัวเอง + เมล็ดแมตช์ที่ไม่ขึ้นกับว่าอยู่ฝั่งไหน
-  //   → สลับฝั่งแล้วผลเหมือนเดิม (สกิลสุ่ม เช่น allyRandom2 ของ WN-5 ไม่ทำให้ฝั่งซ้าย/ขวาได้เปรียบ)
+  //   → สลับฝั่งแล้วผลเหมือนเดิม (สกิลสุ่ม เช่น allyRandom2 ของ WN-6 ไม่ทำให้ฝั่งซ้าย/ขวาได้เปรียบ)
   const teamHash = side => { let h = 2166136261; for (const f of F) if (f.side === side) for (const ch of `${f.id}${f.level}${f.row}${f.lane}`) h = (Math.imul(h ^ ch.charCodeAt(0), 16777619) + 1) >>> 0; return h; };
   const th = [teamHash(0), teamHash(1)];
   const base = opts.seed ? opts.seed >>> 0 : (th[0] + th[1]) >>> 0; // บวกกัน = สลับฝั่งได้ค่าเดิม
@@ -307,7 +307,7 @@ export function simulate(teamA, teamB, opts = {}) {
 
   // ดาเมจ: หักเกราะก่อน HP (ไม่มีการลดดาเมจ) · pierce = เข้า HP ตรง
   const restoreQ = [];
-  let subHit = false; // ชุด 33: ฮิตตีแบ่ง (SF-8) เป้าที่ 2 เป็นต้นไป = ส่วนของฮิตเดิม ไม่นับเป็นฮิตใหม่ในสรุปรายตัว
+  let subHit = false; // ชุด 33: ฮิตตีแบ่ง (SF-7) เป้าที่ 2 เป็นต้นไป = ส่วนของฮิตเดิม ไม่นับเป็นฮิตใหม่ในสรุปรายตัว
   // กฎบอสที่ปรับดาเมจ (ชุด 66) · ไม่มีบอส = ไม่ถูกเรียก
   // set 75 (detail): ids of the boss rules that changed this hit → dmg event field rr · a hit a rule stops → 'ruleBlock' event
   let hitRules = null;
@@ -416,7 +416,7 @@ export function simulate(teamA, teamB, opts = {}) {
     if (why !== 'share') { const o = otCut(); if (o > 0) v = Math.floor(v * Math.max(0, 1 - o / 100)); } // set 98 overtime: new armor −% (share = already cut at the source)
     if (!(v > 0 && up(f))) return;
     f.armor += v; log('armor', detailOn && BOSS && !f.boss && BR.armorCut && !shellOff() ? { to: f.uid, amount: v, why, rr: ['armorCut'] } : { to: f.uid, amount: v, why });
-    // แบ่งเกราะ (HL-8): เพื่อนทั้งทีมได้ % ของเกราะที่ตัวนี้ได้ · เกราะที่ได้จากการแบ่งไม่แบ่งต่อ (กันวนไม่จบ)
+    // แบ่งเกราะ (HL-7): เพื่อนทั้งทีมได้ % ของเกราะที่ตัวนี้ได้ · เกราะที่ได้จากการแบ่งไม่แบ่งต่อ (กันวนไม่จบ)
     if (why !== 'share') { // แบ่งเกราะ (ชุด 7): แยกตามผู้รับ · shareArmor = ทั้งทีม
       if (f.shareArmor > 0) for (const x of allies(f)) if (x !== f) addArmor(x, v * f.shareArmor / 100, 'share');
       for (const [to, pct] of Object.entries(f.shareTo)) if (pct > 0) for (const x of targetsOf(f, to, {})) if (x !== f) addArmor(x, v * pct / 100, 'share');
@@ -424,7 +424,7 @@ export function simulate(teamA, teamB, opts = {}) {
       if (f.shareTribePct > 0) for (const x of pickN(allies(f).filter(x => x !== f && x.tribes.some(tr => f.tribes.includes(tr))), f.shareTribeN, f.side)) addArmor(x, v * f.shareTribePct / 100, 'share');
     }
   }
-  // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค. ผู้ใช้เลือก A: ไฟ/ช็อตที่สะท้อน นับเป็นของ PT-8 ที่สะท้อน · ไม่ใช้ค่า +% ของมัน · ถ้ามี PT-8 หลายตัวปกป้องเพื่อนคนเดียวกัน นับให้ตัวแรก)
+  // credit = ผู้ที่นับเป็นผู้ทำให้ติด เมื่อไม่ใช่ src (F1 28 ต.ค. ผู้ใช้เลือก A: ไฟ/ช็อตที่สะท้อน นับเป็นของ PT-7 ที่สะท้อน · ไม่ใช้ค่า +% ของมัน · ถ้ามี PT-7 หลายตัวปกป้องเพื่อนคนเดียวกัน นับให้ตัวแรก)
   function addStatus(f, kind, v, why, src, credit) {
     if (kind === 'burn' && src && src.side !== f.side && src.burnAmp) v *= amp(src.burnAmp); // ไฟที่ทำให้ติด +% (ชุด 6)
     v = Math.floor(v);
@@ -446,14 +446,14 @@ export function simulate(teamA, teamB, opts = {}) {
     if (kind === 'burn' && src && src.burnNoDecay) f.noDecayPerm = true;
     if (why !== 'reflect' && src && src.side !== f.side) reflectBack(f, src, kind, v);
   }
-  // ชุด 20 (PT-8): ตัวที่มีผู้ปกป้อง (ยังยืนอยู่) โดนศัตรูใส่ ไฟ/ช็อต/คูลดาวน์ช้าลง → ศัตรูที่ใส่โดนกลับ % (รวมทุกผู้ปกป้อง ไม่เกิน reflectDebuffMaxPct)
+  // ชุด 20 (PT-7): ตัวที่มีผู้ปกป้อง (ยังยืนอยู่) โดนศัตรูใส่ ไฟ/ช็อต/คูลดาวน์ช้าลง → ศัตรูที่ใส่โดนกลับ % (รวมทุกผู้ปกป้อง ไม่เกิน reflectDebuffMaxPct)
   // ตัวที่โดนยังโดนเต็ม · ของที่สะท้อนไปแล้วไม่สะท้อนกลับ (กันวน) · ไฟ/ช็อตที่สะท้อน ปัดลง
   function reflectBack(f, src, kind, v) {
     if (!f.reflDebuff.length || !up(src)) return;
     let p = 0; const by = []; for (const r of f.reflDebuff) if (up(r.by)) { p += r.pct; by.push({ u: r.by, si: r.si }); }
     p = Math.min(R.reflectDebuffMaxPct ?? 100, p);
     if (!(p > 0)) return;
-    // ชุด 21: เก็บไว้ทำหลังคิวสถานะของ tick นั้นหมด (เดิมทำทันที → ลำดับฝั่งมีผล เช่น PL-4 อ่านไฟศัตรูก่อน/หลังไฟที่สะท้อน · เทสต์สลับฝั่งพัง)
+    // ชุด 21: เก็บไว้ทำหลังคิวสถานะของ tick นั้นหมด (เดิมทำทันที → ลำดับฝั่งมีผล เช่น PL-5 อ่านไฟศัตรูก่อน/หลังไฟที่สะท้อน · เทสต์สลับฝั่งพัง)
     if (kind === 'cdSlowPct') reflQ.push({ src, from: f, kind, amount: v * p / 100, by });
     else { const n = Math.floor(v * p / 100); if (n > 0) reflQ.push({ src, from: f, kind, amount: n, by }); }
   }
@@ -472,7 +472,7 @@ export function simulate(teamA, teamB, opts = {}) {
       for (const { src, from, kind, amount, by } of list) {
         if (src.down) continue;
         const g = by[0]; // ผู้สะท้อน (นับเครดิตให้ตัวนี้) · from = เพื่อนที่ถูกปกป้อง
-        // F1 (28 Oct, user A): from = PT-8 ที่สะท้อน (ได้เครดิต) · ally/si = เพื่อนที่ถูกปกป้อง + ลำดับสกิล (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-8)
+        // F1 (28 Oct, user A): from = PT-7 ที่สะท้อน (ได้เครดิต) · ally/si = เพื่อนที่ถูกปกป้อง + ลำดับสกิล (จดเมื่อเปิด detail ให้แท็บ "อื่นๆ" ของ PT-7)
         log('reflectDebuff', { to: src.uid, from: g.u.uid, kind, amount, ...(detailOn ? { ally: from.uid, si: g.si } : {}) });
         if (kind === 'cdSlowPct') { src.cdMult *= 1 + amount / 100; if (src.db) src.db.cd *= 1 + amount / 100; buff(src, 'cdSlowPct', amount); }
         else addStatus(src, kind, amount, 'reflect', null, g.u);
@@ -488,7 +488,7 @@ export function simulate(teamA, teamB, opts = {}) {
     const h = Math.min(v, (BOSS && f.boss ? bossCap() : f.maxHp) - f.hp); // ชุด 71: บอสฟื้น (เช่น ฟื้น/ฮิต) ไม่เกินแถบที่อยู่
     if (h > 0) {
       f.hp += h; log('heal', detailOn ? { to: f.uid, amount: h, ...(why ? { why } : {}), ...(BOSS && !f.boss && BR.healCut ? { rr: ['healCut'] } : {}) } : { to: f.uid, amount: h }); // A1: why (e.g. healHit) only with detail on
-      // ฟื้นเป็นพลัง (PT-4): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
+      // ฟื้นเป็นพลัง (PT-5): ผู้ฟื้นได้พลังโจมตี % ของ HP ที่ฟื้นได้จริง (ระหว่างสู้)
       if (src && src.healToAtk > 0 && up(src)) { const a = upGain(h, src.healToAtk); if (a > 0) { src.atkBonus += a; log('atkUp', { to: src.uid, amount: a }); } }
       if (BOSS && !f.boss && BR.rage && rage > 0) { rage--; if (detailOn) log('rage', { who: BOSS.uid, stacks: rage }); } // set 168 S3: a player heal calms 1 stack
     }
@@ -554,7 +554,7 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'dmgPctArmor': for (const x of T()) hurt(x, (ctx.armorSnap ?? u.armor) * v / 100, u, false, dwhy); break;
       case 'dmgPctEnemyBurn': { const sum = enemies(u).reduce((a, e) => a + e.burn, 0); for (const x of T()) hurt(x, sum * v / 100, u, false, dwhy); break; }
       case 'execute': for (const x of T()) if (up(x)) hurt(x, x.hp, u, true, 'execute'); break; // เข้า HP ตรง ไม่สนเกราะ
-      case 'selfKo': if (up(u)) hurt(u, u.hp, null, true, 'execute'); break; // ชุด 16 (SF-5): ตัวเองล้มทันที · ไม่มีผู้ทำล้ม (ไม่กระตุ้น "ทำศัตรูล้ม")
+      case 'selfKo': if (up(u)) hurt(u, u.hp, null, true, 'execute'); break; // ชุด 16 (SF-6): ตัวเองล้มทันที · ไม่มีผู้ทำล้ม (ไม่กระตุ้น "ทำศัตรูล้ม")
       case 'burnPctArmor': for (const x of T()) addStatus(x, 'burn', (ctx.armorSnap ?? u.armor) * v / 100, why, u); break;
       case 'maxHpCut': for (const x of T()) if (up(x)) {
         const cut = Math.floor(x.maxHp * v / 100);
@@ -574,14 +574,14 @@ export function simulate(teamA, teamB, opts = {}) {
         x.burn -= b; x.shock -= k; if (x.burn === 0) { x.noDecay = 0; x.noDecayPerm = false; }
         log('cleanse', { to: x.uid, what: 'pct', burn: x.burn, shock: x.shock, cut: [b, k] });
       } break;
-      case 'reviveDowned': { // ชุด 20 (WN-4): ชุบเพื่อนที่ล้มจริงอยู่ สุ่ม v ตัว · ไม่รวมตัวที่ถูกเรียกมาสู้แทน และตัวที่ช่องถูกแทนแล้ว · HP เท่าชุบเพื่อน
+      case 'reviveDowned': { // ชุด 20 (WN-5): ชุบเพื่อนที่ล้มจริงอยู่ สุ่ม v ตัว · ไม่รวมตัวที่ถูกเรียกมาสู้แทน และตัวที่ช่องถูกแทนแล้ว · HP เท่าชุบเพื่อน
         if (!up(u)) break;
         revQ.push({ u, v, s }); // ชุด 21: ชุบหลังฟื้น HP ทั้งหมดของ tick (เดิมชุบทันที → ฟื้นที่เลือก "เพื่อน HP ต่ำสุด" ขึ้นกับลำดับฝั่ง)
         break; }
       case 'reflectDebuff': for (const x of T()) { x.reflDebuff.push({ by: u, pct: v, si: s.idx ?? null }); buff(x, 'reflectDebuff', v); } break;
       case 'eatAllyBurn': { let sum = 0; for (const x of allies(u)) if (x.burn > 0) { sum += x.burn; x.burn = 0; x.noDecay = 0; x.noDecayPerm = false; log('cleanse', { to: x.uid, what: 'burn' }); }
         const a = upGain(sum, v); if (a > 0) { u.atkBonus += a; log('atkUp', { to: u.uid, amount: a }); permRec(u, s, u, a); } break; }
-      case 'stealShock': for (const x of T()) if (up(x) && x.shock > 0) { // ดูดช็อต (SF-6): ช็อตบนเป้าลดลงเท่าที่ดูด ตัวเองได้ช็อตต่อฮิตเท่านั้น (ระหว่างสู้)
+      case 'stealShock': for (const x of T()) if (up(x) && x.shock > 0) { // ดูดช็อต (SF-8): ช็อตบนเป้าลดลงเท่าที่ดูด ตัวเองได้ช็อตต่อฮิตเท่านั้น (ระหว่างสู้)
         const n = Math.floor(x.shock * v / 100); if (n <= 0) continue;
         x.shock -= n; u.shockHit += n;
         log('steal', { to: x.uid, from: u.uid, amount: n, total: x.shock }); buff(u, 'shockHitUp', n); permRec(u, s, u, n);
@@ -598,7 +598,7 @@ export function simulate(teamA, teamB, opts = {}) {
       case 'shockHitOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.shockHit += a; buff(x, 'shockHitUp', a); permRec(u, s, x, a); } } break;
       case 'armorHitOf': for (const x of T()) { const a = upGain(ofVal(u, s, x, ctx), v); if (a > 0) { x.armorHit += a; buff(x, 'armorHitUp', a); permRec(u, s, x, a); } } break;
       case 'armorOf': for (const x of T()) { const a = ofVal(u, s, x, ctx) * v / 100; addArmor(x, a, why); permRec(u, s, x, a); } break;
-      // F3 (28 Oct, user A): ค่าที่ใช้คิดอ่านครั้งเดียวตอนสกิลทำงาน → ทุกคนที่ได้ฟื้นได้ % ของค่าเดียวกัน (เดิมอ่านใหม่หลังฟื้นแต่ละคน PT-6 ฟื้นตัวเองก่อนแล้วคนถัดไปได้น้อยลง) · who=each (WN-5) ยังอ่านของแต่ละคน
+      // F3 (28 Oct, user A): ค่าที่ใช้คิดอ่านครั้งเดียวตอนสกิลทำงาน → ทุกคนที่ได้ฟื้นได้ % ของค่าเดียวกัน (เดิมอ่านใหม่หลังฟื้นแต่ละคน PT-8 ฟื้นตัวเองก่อนแล้วคนถัดไปได้น้อยลง) · who=each (WN-6) ยังอ่านของแต่ละคน
       case 'healOf': { const once = s.of && s.of.who === 'each' ? null : ofVal(u, s, null, ctx); for (const x of T()) { const a = (once ?? ofVal(u, s, x, ctx)) * v / 100; heal(x, a, u); permRec(u, s, x, a); } break; }
       case 'healToAtk': u.healToAtk += v; statNote(u, 'healToAtk', v); permRec(u, s, u, v); break;
       case 'dmg': for (const x of T()) hurt(x, v, u, false, dwhy); break;
@@ -672,7 +672,7 @@ export function simulate(teamA, teamB, opts = {}) {
     trigger(a, 'hit', carried ? { target: tg, dealt: taken, carried: true } : { target: tg, dealt: taken });
     trigger(tg, 'hitTaken', { attacker: a, amount: absorbed, taken });
   }
-  // ชุด 20 (PT-5): ตีโดน → ผู้รับ (เช่น สุ่มเพื่อนเผ่าเดียวกัน 1 ตัว) ตีเป้าเดียวกันทันที v ฮิต · นับเป็นฮิตปกติของเพื่อน (ไฟ/ช็อต/เกราะ/ฟื้นต่อฮิต สกิลตีโดนของเพื่อน สกิลโดนตีของเป้า)
+  // ชุด 20 (PT-6): ตีโดน → ผู้รับ (เช่น สุ่มเพื่อนเผ่าเดียวกัน 1 ตัว) ตีเป้าเดียวกันทันที v ฮิต · นับเป็นฮิตปกติของเพื่อน (ไฟ/ช็อต/เกราะ/ฟื้นต่อฮิต สกิลตีโดนของเพื่อน สกิลโดนตีของเป้า)
   //   ไม่นับโบนัสเผ่าฮิตแรก · ไม่นับครบ 3 ฮิต · ฮิตที่ถูกพาไปไม่พาต่อ · นับเข้าตัวตัดนิรภัยฮิต
   function carryHit(u, s, ctx) {
     const tg = ctx.target;
@@ -694,7 +694,7 @@ export function simulate(teamA, teamB, opts = {}) {
   // ชุด 21 (ผู้ใช้เลือก 2A): ลำดับในคิวสถานะ/ฟื้น HP ไม่ขึ้นกับฝั่ง · เดิมทำตามลำดับที่เข้าคิว ซึ่งขึ้นกับว่าฝั่งไหนตีก่อนใน tick
   //   สถานะ: (1) ใส่ศัตรู (ไฟ ช็อต ดีบัฟ) ของทั้งสองฝั่ง → (2) ล้าง → (3) ผลฝ่ายเดียวกัน/ตัวเอง (บัฟ ค่าที่คิดจากไฟ/ช็อตศัตรู)
   //   ฟื้น HP: เรียงตามตำแหน่งตัวที่ใช้สกิล (แถว เลน ลำดับสกิล) · ฟื้นมีผลกับฝั่งตัวเองเท่านั้น จึงไม่ต้องดูฝั่ง
-  // set 137: a foe effect computed from a burn/shock value (PL-3 burnOf shock) runs after the plain foe statuses of the same tick (else the result depended on which side acted first)
+  // set 137: a foe effect computed from a burn/shock value (PL-2 burnOf shock) runs after the plain foe statuses of the same tick (else the result depended on which side acted first)
   const sTier = it => { const i = DO_INFO[it.s.do]; if (!i) return 2; if (i.side === 'foe' || (i.side === 'foeSelf' && it.s.to !== 'self')) return it.s.of && (it.s.of.stat === 'burn' || it.s.of.stat === 'shock') ? 0.5 : 0; return it.s.do === 'cleanse' || it.s.do === 'cleansePct' ? 1 : 2; };
   const hKey = it => ((it.u.row * 2 + it.u.lane) * 64 + (it.s.idx ?? 63));
   function drainSorted(list, key) {
@@ -853,7 +853,7 @@ export function simulate(teamA, teamB, opts = {}) {
   for (const f of F) trigger(f, 'matchStart', {});
   drainAll();
   for (const f of F) f.cdLeft = Math.max(0, (f.tb.instant ? 0 : effCd(f)) + (f.cdLeft - f.cd0) - f.cdStart); // cdStart = ลดคูลดาวน์ตอนเริ่มแบบถาวร (22 ต.ค.)
-  resolveDowns(); // ผลตอนเริ่มทำให้ล้มได้ (เช่นล้มทันที WN-8)
+  resolveDowns(); // ผลตอนเริ่มทำให้ล้มได้ (เช่นล้มทันที WN-7)
   if (BOSS) bossBars(); // ดาเมจตอนเริ่มแมตช์อาจทำแถบแรกหมดไปแล้ว
   if (opts.startOnly) return { units: F.map(f => ({ side: f.side, row: f.row, lane: f.lane, st: snapStats(f) })) }; // set 184: stats right after "match start" only (game card: what runes add)
 
@@ -929,7 +929,7 @@ export function simulate(teamA, teamB, opts = {}) {
         let tgs;
         const aoePow = BOSS && a.boss && BR.aoe ? BR.aoe.v : null; // R4 บอสตีโดนทุกตัว (ดาเมจต่อตัว %)
         if (aoePow) tgs = foes(a).sort(byFront);
-        else if (p.split) tgs = enemies(a).sort(byFront); // ตีแบ่งทุกตัว (SF-8): ทุกค่าของฮิตหารเท่ากันตามจำนวนศัตรูที่ยังยืน
+        else if (p.split) tgs = enemies(a).sort(byFront); // ตีแบ่งทุกตัว (SF-7): ทุกค่าของฮิตหารเท่ากันตามจำนวนศัตรูที่ยังยืน
         else {
           let tg = p.target;
           if (p.spread) { const live = p.spread.filter(up); tg = live.length ? live[h % live.length] : null; }
@@ -990,7 +990,7 @@ export function simulate(teamA, teamB, opts = {}) {
           reviveUnit(f, rv.value, 'skill', f, rv);
           continue;
         }
-        // ชุบเพื่อน (WN-4): เพื่อนที่ยังยืนอยู่ใช้ได้ v ครั้ง/แมตช์ · ฟื้นด้วย HP reviveAllyHpPct%
+        // ชุบเพื่อน (WN-5): เพื่อนที่ยังยืนอยู่ใช้ได้ v ครั้ง/แมตช์ · ฟื้นด้วย HP reviveAllyHpPct%
         let healer = null, ra = null;
         for (const x of noRev ? [] : F) {
           if (x === f || x.side !== f.side || !up(x)) continue;
@@ -1010,7 +1010,7 @@ export function simulate(teamA, teamB, opts = {}) {
         }
         f.down = true; f.hp = 0; f.burn = f.shock = f.armor = f.noDecay = 0; f.noDecayPerm = false; f.cdLeft = Infinity;
         log('down', { who: f.uid });
-        // เรียกตัวมาสู้แทน (PL-5 · 21 ต.ค.): ล้มจริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
+        // เรียกตัวมาสู้แทน (PL-7 · 21 ต.ค.): ล้มจริงเท่านั้น (ถูกชุบ/ลุก = ไม่เรียก) · ช่องเดิม เลเวลเดียวกัน
         // ตัวที่ถูกเรียก: ไม่นับเผ่า ไม่ได้โบนัสเผ่า ไม่มีค่าถาวร สกิลติดตัวทำงานทันที (ค่าเสนอ)
         const sm = f.skills.find(s => s.do === 'summon' && s.when === 'selfDown' && s.unit && usable(s) && (s.chance == null || s.chance >= 100 || rngOf(f.side).next() * 100 < s.chance));
         if (sm) { fire(f, sm, 'selfDown'); f.replaced = true; summons.push([f, sm]); } // ชุด 20: ช่องนี้มีตัวใหม่แล้ว ชุบตัวเดิมไม่ได้

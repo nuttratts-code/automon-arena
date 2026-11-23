@@ -25,7 +25,7 @@ export function newRun(chars, seed, rules = RULES) {
     bench: Array(S.bench).fill(null),
     board: [[null, null], [null, null], [null, null]],
     uid: 1,
-    charges: [], // ประจุรอใช้ (SF-7): { id, uid, si } · ให้ค่าถาวรกับเพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ
+    charges: [], // ประจุรอใช้ (SF-4): { id, uid, si } · ให้ค่าถาวรกับเพื่อนเผ่าเดียวกันตัวถัดไปที่ซื้อ
     rn: newRunes(), // set 94 (2b): runes of this run (core/runrunes.js) · v4
     // set 99 (user 6 Nov): bw = normal-match wins since the last boss fight (boss after bossEvery of them, core/runboss.js)
     // bk = bosses beaten (next boss = bk + 1; a lost boss comes back later) · extra = playing extra matches after the run was cleared
@@ -183,7 +183,7 @@ export function fireShopSkill(st, u, ref, when, chars, rules, msgs) {
   }
 }
 
-// ประจุรอใช้ (SF-7 · 21 ต.ค.): ตัวที่ซื้อใหม่ เผ่าตรงกับเจ้าของประจุ (set 137 user: รวมตัวชนิดเดียวกันด้วย) → ได้ค่าถาวรตามเลเวลของเจ้าของประจุตอนนี้
+// ประจุรอใช้ (SF-4 · 21 ต.ค.): ตัวที่ซื้อใหม่ เผ่าตรงกับเจ้าของประจุ (set 137 user: รวมตัวชนิดเดียวกันด้วย) → ได้ค่าถาวรตามเลเวลของเจ้าของประจุตอนนี้
 // เจ้าของประจุถูกขายหมดแล้ว = ประจุหาย · ถูกรวมร่าง = ใช้ตัวชนิดเดียวกันที่เลเวลสูงสุดแทน
 export function chargeOwner(st, x) {
   const all = allUnits(st).map(y => y.u);

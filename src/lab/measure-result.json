@@ -18,7 +18,7 @@
     "err": 4.8,
     "games": 5613
    },
-   "HL-7": {
+   "HL-6": {
     "win": 57.7,
     "err": 6,
     "games": 5672
@@ -33,12 +33,12 @@
     "err": -3.5,
     "games": 5703
    },
-   "HL-8": {
+   "HL-7": {
     "win": 63.6,
     "err": 6.9,
     "games": 5598
    },
-   "HL-6": {
+   "HL-8": {
     "win": 71.9,
     "err": 5.2,
     "games": 5569
@@ -48,37 +48,37 @@
     "err": -1.5,
     "games": 5669
    },
-   "PL-2": {
+   "PL-3": {
     "win": 42.4,
     "err": -2.2,
     "games": 5496
    },
-   "PL-3": {
+   "PL-2": {
     "win": 44.9,
     "err": 3.2,
     "games": 5673
    },
-   "PL-7": {
+   "PL-4": {
     "win": 43,
     "err": -3.6,
     "games": 5684
    },
-   "PL-4": {
+   "PL-5": {
     "win": 48.5,
     "err": -3.1,
     "games": 5715
    },
-   "PL-5": {
+   "PL-7": {
     "win": 55,
     "err": -1.7,
     "games": 5799
    },
-   "PL-8": {
+   "PL-6": {
     "win": 45.2,
     "err": -6.5,
     "games": 5623
    },
-   "PL-6": {
+   "PL-8": {
     "win": 69.6,
     "err": 2.9,
     "games": 5720
@@ -88,37 +88,37 @@
     "err": 2.6,
     "games": 5677
    },
-   "SF-2": {
+   "SF-3": {
     "win": 41.3,
     "err": -0.4,
     "games": 5779
    },
-   "SF-3": {
+   "SF-2": {
     "win": 43.3,
     "err": -3.4,
     "games": 5764
    },
-   "SF-7": {
+   "SF-4": {
     "win": 39.5,
     "err": -5.2,
     "games": 5622
    },
-   "SF-4": {
+   "SF-5": {
     "win": 54.5,
     "err": 2.8,
     "games": 5686
    },
-   "SF-5": {
+   "SF-6": {
     "win": 60.9,
     "err": 9.2,
     "games": 5838
    },
-   "SF-8": {
+   "SF-7": {
     "win": 54.7,
     "err": -1.9,
     "games": 5668
    },
-   "SF-6": {
+   "SF-8": {
     "win": 70.6,
     "err": 3.9,
     "games": 5642
@@ -138,27 +138,27 @@
     "err": -5.3,
     "games": 5687
    },
-   "WY-7": {
+   "WY-4": {
     "win": 41.8,
     "err": -4.9,
     "games": 5761
    },
-   "WY-4": {
+   "WY-5": {
     "win": 55.7,
     "err": 4,
     "games": 5818
    },
-   "WY-5": {
+   "WY-6": {
     "win": 54.9,
     "err": 3.2,
     "games": 5660
    },
-   "WY-8": {
+   "WY-7": {
     "win": 44.8,
     "err": -11.9,
     "games": 5755
    },
-   "WY-6": {
+   "WY-8": {
     "win": 75.9,
     "err": 9.2,
     "games": 5737
@@ -178,27 +178,27 @@
     "err": -3.3,
     "games": 5748
    },
-   "PT-7": {
+   "PT-4": {
     "win": 49.5,
     "err": 2.9,
     "games": 5755
    },
-   "PT-4": {
+   "PT-5": {
     "win": 46.7,
     "err": -5,
     "games": 5744
    },
-   "PT-5": {
+   "PT-6": {
     "win": 47,
     "err": -4.7,
     "games": 5672
    },
-   "PT-8": {
+   "PT-7": {
     "win": 57.9,
     "err": 1.2,
     "games": 5703
    },
-   "PT-6": {
+   "PT-8": {
     "win": 63.2,
     "err": -3.5,
     "games": 5616
@@ -218,27 +218,27 @@
     "err": 3.9,
     "games": 5633
    },
-   "WN-7": {
+   "WN-4": {
     "win": 46.1,
     "err": -0.6,
     "games": 5742
    },
-   "WN-4": {
+   "WN-5": {
     "win": 47.2,
     "err": -4.5,
     "games": 5766
    },
-   "WN-5": {
+   "WN-6": {
     "win": 45.8,
     "err": -5.9,
     "games": 5766
    },
-   "WN-8": {
+   "WN-7": {
     "win": 61.7,
     "err": 5,
     "games": 5620
    },
-   "WN-6": {
+   "WN-8": {
     "win": 59.4,
     "err": -7.3,
     "games": 5785
@@ -260,7 +260,7 @@
     "err": 4.4,
     "games": 5613
    },
-   "HL-7": {
+   "HL-6": {
     "win": 56.6,
     "err": 4.9,
     "games": 5672
@@ -275,12 +275,12 @@
     "err": -3.7,
     "games": 5703
    },
-   "HL-8": {
+   "HL-7": {
     "win": 64.4,
     "err": 7.7,
     "games": 5598
    },
-   "HL-6": {
+   "HL-8": {
     "win": 70.7,
     "err": 4,
     "games": 5569
@@ -290,37 +290,37 @@
     "err": -0.9,
     "games": 5669
    },
-   "PL-2": {
+   "PL-3": {
     "win": 41.4,
     "err": -3.2,
     "games": 5496
    },
-   "PL-3": {
+   "PL-2": {
     "win": 46.2,
     "err": 4.5,
     "games": 5673
    },
-   "PL-7": {
+   "PL-4": {
     "win": 44.7,
     "err": -2,
     "games": 5684
    },
-   "PL-4": {
+   "PL-5": {
     "win": 53.2,
     "err": 1.5,
     "games": 5715
    },
-   "PL-5": {
+   "PL-7": {
     "win": 57.5,
     "err": 0.8,
     "games": 5799
    },
-   "PL-8": {
+   "PL-6": {
     "win": 47.6,
     "err": -4.1,
     "games": 5623
    },
-   "PL-6": {
+   "PL-8": {
     "win": 71.4,
     "err": 4.7,
     "games": 5720
@@ -330,37 +330,37 @@
     "err": 2.4,
     "games": 5677
    },
-   "SF-2": {
+   "SF-3": {
     "win": 41.1,
     "err": -0.6,
     "games": 5779
    },
-   "SF-3": {
+   "SF-2": {
     "win": 42.1,
     "err": -4.6,
     "games": 5764
    },
-   "SF-7": {
+   "SF-4": {
     "win": 38.6,
     "err": -6.1,
     "games": 5622
    },
-   "SF-4": {
+   "SF-5": {
     "win": 53.9,
     "err": 2.2,
     "games": 5686
    },
-   "SF-5": {
+   "SF-6": {
     "win": 59.4,
     "err": 7.7,
     "games": 5838
    },
-   "SF-8": {
+   "SF-7": {
     "win": 53.3,
     "err": -3.4,
     "games": 5668
    },
-   "SF-6": {
+   "SF-8": {
     "win": 68.3,
     "err": 1.6,
     "games": 5642
@@ -380,27 +380,27 @@
     "err": -5.7,
     "games": 5687
    },
-   "WY-7": {
+   "WY-4": {
     "win": 41.5,
     "err": -5.2,
     "games": 5761
    },
-   "WY-4": {
+   "WY-5": {
     "win": 57.9,
     "err": 6.2,
     "games": 5818
    },
-   "WY-5": {
+   "WY-6": {
     "win": 48.4,
     "err": -3.3,
     "games": 5660
    },
-   "WY-8": {
+   "WY-7": {
     "win": 45.7,
     "err": -11,
     "games": 5755
    },
-   "WY-6": {
+   "WY-8": {
     "win": 75.1,
     "err": 8.4,
     "games": 5737
@@ -420,27 +420,27 @@
     "err": -3.4,
     "games": 5748
    },
-   "PT-7": {
+   "PT-4": {
     "win": 49.7,
     "err": 3,
     "games": 5755
    },
-   "PT-4": {
+   "PT-5": {
     "win": 47,
     "err": -4.7,
     "games": 5744
    },
-   "PT-5": {
+   "PT-6": {
     "win": 46.6,
     "err": -5.1,
     "games": 5672
    },
-   "PT-8": {
+   "PT-7": {
     "win": 57.3,
     "err": 0.6,
     "games": 5703
    },
-   "PT-6": {
+   "PT-8": {
     "win": 61.7,
     "err": -5,
     "games": 5616
@@ -460,27 +460,27 @@
     "err": 4.9,
     "games": 5633
    },
-   "WN-7": {
+   "WN-4": {
     "win": 43.6,
     "err": -3.1,
     "games": 5742
    },
-   "WN-4": {
+   "WN-5": {
     "win": 47.1,
     "err": -4.6,
     "games": 5766
    },
-   "WN-5": {
+   "WN-6": {
     "win": 44.9,
     "err": -6.8,
     "games": 5766
    },
-   "WN-8": {
+   "WN-7": {
     "win": 61,
     "err": 4.3,
     "games": 5620
    },
-   "WN-6": {
+   "WN-8": {
     "win": 66.2,
     "err": -0.5,
     "games": 5785
@@ -502,7 +502,7 @@
     "err": 1.8,
     "games": 5613
    },
-   "HL-7": {
+   "HL-6": {
     "win": 54.5,
     "err": 2.9,
     "games": 5672
@@ -517,12 +517,12 @@
     "err": -3.4,
     "games": 5703
    },
-   "HL-8": {
+   "HL-7": {
     "win": 62.7,
     "err": 6,
     "games": 5598
    },
-   "HL-6": {
+   "HL-8": {
     "win": 67,
     "err": 0.4,
     "games": 5569
@@ -532,37 +532,37 @@
     "err": 2.6,
     "games": 5669
    },
-   "PL-2": {
+   "PL-3": {
     "win": 40.3,
     "err": -4.4,
     "games": 5496
    },
-   "PL-3": {
+   "PL-2": {
     "win": 46.7,
     "err": 5.1,
     "games": 5673
    },
-   "PL-7": {
+   "PL-4": {
     "win": 45,
     "err": -1.7,
     "games": 5684
    },
-   "PL-4": {
+   "PL-5": {
     "win": 61.4,
     "err": 9.7,
     "games": 5715
    },
-   "PL-5": {
+   "PL-7": {
     "win": 59.7,
     "err": 3,
     "games": 5799
    },
-   "PL-8": {
+   "PL-6": {
     "win": 56.7,
     "err": 5.1,
     "games": 5623
    },
-   "PL-6": {
+   "PL-8": {
     "win": 69.9,
     "err": 3.3,
     "games": 5720
@@ -572,37 +572,37 @@
     "err": 1.7,
     "games": 5677
    },
-   "SF-2": {
+   "SF-3": {
     "win": 41.4,
     "err": -0.2,
     "games": 5779
    },
-   "SF-3": {
+   "SF-2": {
     "win": 42,
     "err": -4.6,
     "games": 5764
    },
-   "SF-7": {
+   "SF-4": {
     "win": 39.2,
     "err": -5.5,
     "games": 5622
    },
-   "SF-4": {
+   "SF-5": {
     "win": 52.6,
     "err": 0.9,
     "games": 5686
    },
-   "SF-5": {
+   "SF-6": {
     "win": 57.3,
     "err": 5.6,
     "games": 5838
    },
-   "SF-8": {
+   "SF-7": {
     "win": 50.8,
     "err": -5.9,
     "games": 5668
    },
-   "SF-6": {
+   "SF-8": {
     "win": 63.4,
     "err": -3.2,
     "games": 5642
@@ -622,27 +622,27 @@
     "err": -5.4,
     "games": 5687
    },
-   "WY-7": {
+   "WY-4": {
     "win": 40.8,
     "err": -5.8,
     "games": 5761
    },
-   "WY-4": {
+   "WY-5": {
     "win": 56.2,
     "err": 4.5,
     "games": 5818
    },
-   "WY-5": {
+   "WY-6": {
     "win": 44.4,
     "err": -7.2,
     "games": 5660
    },
-   "WY-8": {
+   "WY-7": {
     "win": 45.3,
     "err": -11.3,
     "games": 5755
    },
-   "WY-6": {
+   "WY-8": {
     "win": 72,
     "err": 5.4,
     "games": 5737
@@ -662,27 +662,27 @@
     "err": -3.1,
     "games": 5748
    },
-   "PT-7": {
+   "PT-4": {
     "win": 48.9,
     "err": 2.2,
     "games": 5755
    },
-   "PT-4": {
+   "PT-5": {
     "win": 48.3,
     "err": -3.4,
     "games": 5744
    },
-   "PT-5": {
+   "PT-6": {
     "win": 47,
     "err": -4.7,
     "games": 5672
    },
-   "PT-8": {
+   "PT-7": {
     "win": 55.5,
     "err": -1.2,
     "games": 5703
    },
-   "PT-6": {
+   "PT-8": {
     "win": 58.2,
     "err": -8.5,
     "games": 5616
@@ -702,27 +702,27 @@
     "err": 4.9,
     "games": 5633
    },
-   "WN-7": {
+   "WN-4": {
     "win": 42.3,
     "err": -4.3,
     "games": 5742
    },
-   "WN-4": {
+   "WN-5": {
     "win": 48.9,
     "err": -2.8,
     "games": 5766
    },
-   "WN-5": {
+   "WN-6": {
     "win": 44.9,
     "err": -6.8,
     "games": 5766
    },
-   "WN-8": {
+   "WN-7": {
     "win": 59.3,
     "err": 2.7,
     "games": 5620
    },
-   "WN-6": {
+   "WN-8": {
     "win": 78.4,
     "err": 11.8,
     "games": 5785
@@ -744,7 +744,7 @@
     "err": 4.1,
     "games": 5606
    },
-   "HL-7": {
+   "HL-6": {
     "win": 55.3,
     "err": 3.7,
     "games": 5627
@@ -759,12 +759,12 @@
     "err": -4.2,
     "games": 5728
    },
-   "HL-8": {
+   "HL-7": {
     "win": 59.8,
     "err": 3.2,
     "games": 5703
    },
-   "HL-6": {
+   "HL-8": {
     "win": 64,
     "err": -2.6,
     "games": 5748
@@ -774,37 +774,37 @@
     "err": 4.7,
     "games": 5596
    },
-   "PL-2": {
+   "PL-3": {
     "win": 43.4,
     "err": -1.3,
     "games": 5723
    },
-   "PL-3": {
+   "PL-2": {
     "win": 46.2,
     "err": 4.6,
     "games": 5697
    },
-   "PL-7": {
+   "PL-4": {
     "win": 45.8,
     "err": -0.8,
     "games": 5733
    },
-   "PL-4": {
+   "PL-5": {
     "win": 56.1,
     "err": 4.5,
     "games": 5599
    },
-   "PL-5": {
+   "PL-7": {
     "win": 57.8,
     "err": 1.2,
     "games": 5869
    },
-   "PL-8": {
+   "PL-6": {
     "win": 50.8,
     "err": -0.9,
     "games": 5766
    },
-   "PL-6": {
+   "PL-8": {
     "win": 65.2,
     "err": -1.4,
     "games": 5705
@@ -814,37 +814,37 @@
     "err": 4.1,
     "games": 5751
    },
-   "SF-2": {
+   "SF-3": {
     "win": 42.8,
     "err": 1.2,
     "games": 5737
    },
-   "SF-3": {
+   "SF-2": {
     "win": 44.4,
     "err": -2.2,
     "games": 5668
    },
-   "SF-7": {
+   "SF-4": {
     "win": 42.1,
     "err": -2.5,
     "games": 5590
    },
-   "SF-4": {
+   "SF-5": {
     "win": 54,
     "err": 2.4,
     "games": 5708
    },
-   "SF-5": {
+   "SF-6": {
     "win": 56.2,
     "err": 4.6,
     "games": 5694
    },
-   "SF-8": {
+   "SF-7": {
     "win": 52.5,
     "err": -4.1,
     "games": 5467
    },
-   "SF-6": {
+   "SF-8": {
     "win": 64.4,
     "err": -2.3,
     "games": 5685
@@ -864,27 +864,27 @@
     "err": -3.4,
     "games": 5732
    },
-   "WY-7": {
+   "WY-4": {
     "win": 43.5,
     "err": -3.1,
     "games": 5621
    },
-   "WY-4": {
+   "WY-5": {
     "win": 54.3,
     "err": 2.7,
     "games": 5688
    },
-   "WY-5": {
+   "WY-6": {
     "win": 48.4,
     "err": -3.2,
     "games": 5682
    },
-   "WY-8": {
+   "WY-7": {
     "win": 45.6,
     "err": -11,
     "games": 5707
    },
-   "WY-6": {
+   "WY-8": {
     "win": 66.7,
     "err": 0.1,
     "games": 5741
@@ -904,27 +904,27 @@
     "err": -2.5,
     "games": 5724
    },
-   "PT-7": {
+   "PT-4": {
     "win": 48.5,
     "err": 1.9,
     "games": 5686
    },
-   "PT-4": {
+   "PT-5": {
     "win": 48.7,
     "err": -2.9,
     "games": 5834
    },
-   "PT-5": {
+   "PT-6": {
     "win": 47.8,
     "err": -3.8,
     "games": 5907
    },
-   "PT-8": {
+   "PT-7": {
     "win": 54.3,
     "err": -2.3,
     "games": 5754
    },
-   "PT-6": {
+   "PT-8": {
     "win": 57.2,
     "err": -9.4,
     "games": 5666
@@ -944,27 +944,27 @@
     "err": 5.1,
     "games": 5741
    },
-   "WN-7": {
+   "WN-4": {
     "win": 44.2,
     "err": -2.4,
     "games": 5729
    },
-   "WN-4": {
+   "WN-5": {
     "win": 48.5,
     "err": -3.1,
     "games": 5694
    },
-   "WN-5": {
+   "WN-6": {
     "win": 46.3,
     "err": -5.3,
     "games": 5699
    },
-   "WN-8": {
+   "WN-7": {
     "win": 56.1,
     "err": -0.5,
     "games": 5626
    },
-   "WN-6": {
+   "WN-8": {
     "win": 64.5,
     "err": -2.1,
     "games": 5693
@@ -1030,21 +1030,21 @@
    ],
    "perUnit": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 0,
      "dealt": 208,
      "taken": 3725,
      "hp": 0
     },
     {
-     "id": "SF-2",
+     "id": "SF-3",
      "side": 0,
      "dealt": 24,
      "taken": 287,
      "hp": 0
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "side": 0,
      "dealt": 288,
      "taken": 310,
@@ -1058,28 +1058,28 @@
      "hp": 0
     },
     {
-     "id": "WY-4",
+     "id": "WY-5",
      "side": 0,
      "dealt": 5129,
      "taken": 310,
      "hp": 0
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "side": 0,
      "dealt": 53833,
      "taken": 462,
      "hp": 0
     },
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "side": 1,
      "dealt": 530,
      "taken": 204,
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 1160,
      "taken": 61343,
@@ -1093,7 +1093,7 @@
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 1,
      "dealt": 77,
      "taken": 310,
@@ -1116,19 +1116,19 @@
    ],
    "teamA": [
     {
-     "id": "SF-2",
+     "id": "SF-3",
      "level": 2,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "level": 2,
      "row": 1,
      "lane": 0
@@ -1140,13 +1140,13 @@
      "lane": 1
     },
     {
-     "id": "WY-4",
+     "id": "WY-5",
      "level": 2,
      "row": 2,
      "lane": 0
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1154,19 +1154,19 @@
    ],
    "teamB": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 2,
      "row": 1,
      "lane": 1
@@ -1218,21 +1218,21 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 0,
      "dealt": 16,
      "taken": 278,
      "hp": 0
     },
     {
-     "id": "WY-6",
+     "id": "WY-8",
      "side": 0,
      "dealt": 4104,
      "taken": 678,
      "hp": 0
     },
     {
-     "id": "PL-5",
+     "id": "PL-7",
      "side": 0,
      "dealt": 568,
      "taken": 230,
@@ -1246,21 +1246,21 @@
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 0,
      "dealt": 56207,
      "taken": 892,
      "hp": 0
     },
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "side": 1,
      "dealt": 503,
      "taken": 217,
      "hp": 0
     },
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "side": 1,
      "dealt": 81,
      "taken": 200,
@@ -1274,7 +1274,7 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 1104,
      "taken": 61258,
@@ -1288,14 +1288,14 @@
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 1,
      "dealt": 77,
      "taken": 230,
      "hp": 0
     },
     {
-     "id": "PL-7",
+     "id": "PL-4",
      "side": 0,
      "dealt": 112,
      "taken": 163,
@@ -1304,7 +1304,7 @@
    ],
    "teamA": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -1316,13 +1316,13 @@
      "lane": 0
     },
     {
-     "id": "PL-5",
+     "id": "PL-7",
      "level": 2,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "WY-6",
+     "id": "WY-8",
      "level": 2,
      "row": 1,
      "lane": 0
@@ -1334,7 +1334,7 @@
      "lane": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1342,19 +1342,19 @@
    ],
    "teamB": [
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "PL-3",
+     "id": "PL-2",
      "level": 2,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 1,
      "lane": 1
@@ -1372,7 +1372,7 @@
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1399,7 +1399,7 @@
    ],
    "perUnit": [
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 0,
      "dealt": 17259,
      "taken": 785,
@@ -1413,7 +1413,7 @@
      "hp": 0
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "side": 0,
      "dealt": 28442,
      "taken": 538,
@@ -1434,35 +1434,35 @@
      "hp": 0
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "side": 0,
      "dealt": 215,
      "taken": 208,
      "hp": 0
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "side": 1,
      "dealt": 33,
      "taken": 203,
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 1116,
      "taken": 48309,
      "hp": 166
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "side": 1,
      "dealt": 110,
      "taken": 225,
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 1,
      "dealt": 77,
      "taken": 310,
@@ -1476,7 +1476,7 @@
      "hp": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "side": 1,
      "dealt": 264,
      "taken": 310,
@@ -1485,7 +1485,7 @@
    ],
    "teamA": [
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 0,
      "lane": 0
@@ -1497,7 +1497,7 @@
      "lane": 1
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "level": 2,
      "row": 1,
      "lane": 0
@@ -1509,7 +1509,7 @@
      "lane": 1
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1523,25 +1523,25 @@
    ],
    "teamB": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "level": 2,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 2,
      "row": 1,
      "lane": 1
@@ -1553,7 +1553,7 @@
      "lane": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1587,56 +1587,56 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 0,
      "dealt": 1092,
      "taken": 50030,
      "hp": 21
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "side": 0,
      "dealt": 56,
      "taken": 236,
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 0,
      "dealt": 77,
      "taken": 310,
      "hp": 0
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "side": 0,
      "dealt": 136,
      "taken": 242,
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 0,
      "dealt": 253,
      "taken": 630,
      "hp": 175
     },
     {
-     "id": "WN-8",
+     "id": "WN-7",
      "side": 1,
      "dealt": 1188,
      "taken": 358,
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 1,
      "dealt": 2536,
      "taken": 533,
      "hp": 0
     },
     {
-     "id": "WN-6",
+     "id": "WN-8",
      "side": 1,
      "dealt": 1780,
      "taken": 630,
@@ -1650,14 +1650,14 @@
      "hp": 0
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "side": 1,
      "dealt": 304,
      "taken": 150,
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 1,
      "dealt": 43975,
      "taken": 837,
@@ -1666,7 +1666,7 @@
    ],
    "teamA": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -1678,25 +1678,25 @@
      "lane": 0
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "level": 2,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 2,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "level": 2,
      "row": 2,
      "lane": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -1704,13 +1704,13 @@
    ],
    "teamB": [
     {
-     "id": "WN-8",
+     "id": "WN-7",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -1722,19 +1722,19 @@
      "lane": 1
     },
     {
-     "id": "WN-6",
+     "id": "WN-8",
      "level": 2,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "level": 2,
      "row": 2,
      "lane": 0
@@ -1761,7 +1761,7 @@
    ],
    "perUnit": [
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 0,
      "dealt": 8739,
      "taken": 580,
@@ -1775,7 +1775,7 @@
      "hp": 0
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "side": 0,
      "dealt": 11285,
      "taken": 310,
@@ -1796,35 +1796,35 @@
      "hp": 0
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "side": 0,
      "dealt": 195,
      "taken": 104,
      "hp": 0
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "side": 1,
      "dealt": 15,
      "taken": 110,
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 322,
      "taken": 21208,
      "hp": 88
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "side": 1,
      "dealt": 66,
      "taken": 111,
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 1,
      "dealt": 35,
      "taken": 150,
@@ -1838,7 +1838,7 @@
      "hp": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "side": 1,
      "dealt": 120,
      "taken": 150,
@@ -1847,7 +1847,7 @@
    ],
    "teamA": [
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 1,
      "row": 0,
      "lane": 0
@@ -1859,7 +1859,7 @@
      "lane": 1
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "level": 1,
      "row": 1,
      "lane": 0
@@ -1871,7 +1871,7 @@
      "lane": 1
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "level": 1,
      "row": 2,
      "lane": 1
@@ -1885,25 +1885,25 @@
    ],
    "teamB": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 1,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "level": 1,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "level": 1,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 1,
      "row": 1,
      "lane": 1
@@ -1915,7 +1915,7 @@
      "lane": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "level": 1,
      "row": 2,
      "lane": 1
@@ -1956,21 +1956,21 @@
      "hp": 0
     },
     {
-     "id": "PL-8",
+     "id": "PL-6",
      "side": 0,
      "dealt": 1434,
      "taken": 17790,
      "hp": 0
     },
     {
-     "id": "HL-8",
+     "id": "HL-7",
      "side": 0,
      "dealt": 352,
      "taken": 24425,
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 0,
      "dealt": 280,
      "taken": 5717,
@@ -1984,7 +1984,7 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 48,
      "taken": 514,
@@ -2012,14 +2012,14 @@
      "hp": 292
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "side": 1,
      "dealt": 105,
      "taken": 440,
      "hp": 0
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "side": 1,
      "dealt": 528,
      "taken": 0,
@@ -2040,13 +2040,13 @@
      "lane": 1
     },
     {
-     "id": "HL-8",
+     "id": "HL-7",
      "level": 3,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "PL-8",
+     "id": "PL-6",
      "level": 3,
      "row": 1,
      "lane": 0
@@ -2058,7 +2058,7 @@
      "lane": 1
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 3,
      "row": 2,
      "lane": 0
@@ -2066,7 +2066,7 @@
    ],
    "teamB": [
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 3,
      "row": 0,
      "lane": 0
@@ -2090,13 +2090,13 @@
      "lane": 1
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "level": 3,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "WN-7",
+     "id": "WN-4",
      "level": 3,
      "row": 2,
      "lane": 0
@@ -2130,7 +2130,7 @@
      "hp": 0
     },
     {
-     "id": "PL-5",
+     "id": "PL-7",
      "side": 0,
      "dealt": 428,
      "taken": 204,
@@ -2144,28 +2144,28 @@
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 0,
      "dealt": 204,
      "taken": 150,
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 0,
      "dealt": 809,
      "taken": 2988,
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 0,
      "dealt": 170,
      "taken": 150,
      "hp": 0
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "side": 1,
      "dealt": 468,
      "taken": 484,
@@ -2179,14 +2179,14 @@
      "hp": 0
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "side": 1,
      "dealt": 35323,
      "taken": 859,
      "hp": 315
     },
     {
-     "id": "PT-5",
+     "id": "PT-6",
      "side": 1,
      "dealt": 144,
      "taken": 227,
@@ -2200,14 +2200,14 @@
      "hp": 80
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 1,
      "dealt": 80,
      "taken": 166,
      "hp": 0
     },
     {
-     "id": "PL-7",
+     "id": "PL-4",
      "side": 0,
      "dealt": 116,
      "taken": 982,
@@ -2222,7 +2222,7 @@
      "lane": 0
     },
     {
-     "id": "PL-5",
+     "id": "PL-7",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -2234,19 +2234,19 @@
      "lane": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 2,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 2,
      "lane": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -2260,19 +2260,19 @@
      "lane": 1
     },
     {
-     "id": "PL-6",
+     "id": "PL-8",
      "level": 2,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "PT-5",
+     "id": "PT-6",
      "level": 2,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "HL-7",
+     "id": "HL-6",
      "level": 2,
      "row": 1,
      "lane": 0
@@ -2284,7 +2284,7 @@
      "lane": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -2311,7 +2311,7 @@
    ],
    "perUnit": [
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "side": 0,
      "dealt": 66,
      "taken": 411,
@@ -2325,49 +2325,49 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 0,
      "dealt": 3272,
      "taken": 59501,
      "hp": 400
     },
     {
-     "id": "SF-3",
+     "id": "SF-2",
      "side": 0,
      "dealt": 6,
      "taken": 154,
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 0,
      "dealt": 154,
      "taken": 630,
      "hp": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "side": 0,
      "dealt": 55,
      "taken": 347,
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 240,
      "taken": 4762,
      "hp": 0
     },
     {
-     "id": "PT-8",
+     "id": "PT-7",
      "side": 1,
      "dealt": 1122,
      "taken": 1395,
      "hp": 0
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "side": 1,
      "dealt": 1241,
      "taken": 630,
@@ -2381,14 +2381,14 @@
      "hp": 0
     },
     {
-     "id": "PT-5",
+     "id": "PT-6",
      "side": 1,
      "dealt": 348,
      "taken": 150,
      "hp": 0
     },
     {
-     "id": "PT-6",
+     "id": "PT-8",
      "side": 1,
      "dealt": 56484,
      "taken": 1272,
@@ -2403,31 +2403,31 @@
      "lane": 1
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "level": 3,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "SF-3",
+     "id": "SF-2",
      "level": 1,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 3,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 3,
      "row": 2,
      "lane": 0
     },
     {
-     "id": "PT-4",
+     "id": "PT-5",
      "level": 2,
      "row": 2,
      "lane": 1
@@ -2435,13 +2435,13 @@
    ],
    "teamB": [
     {
-     "id": "PT-8",
+     "id": "PT-7",
      "level": 3,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 0
@@ -2453,19 +2453,19 @@
      "lane": 1
     },
     {
-     "id": "PT-7",
+     "id": "PT-4",
      "level": 3,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "PT-6",
+     "id": "PT-8",
      "level": 3,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "PT-5",
+     "id": "PT-6",
      "level": 1,
      "row": 2,
      "lane": 0
@@ -2499,14 +2499,14 @@
      "hp": 0
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "side": 0,
      "dealt": 140,
      "taken": 321,
      "hp": 0
     },
     {
-     "id": "HL-6",
+     "id": "HL-8",
      "side": 0,
      "dealt": 34544,
      "taken": 2125,
@@ -2520,14 +2520,14 @@
      "hp": 0
     },
     {
-     "id": "WN-6",
+     "id": "WN-8",
      "side": 0,
      "dealt": 2368,
      "taken": 630,
      "hp": 0
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "side": 0,
      "dealt": 140,
      "taken": 180,
@@ -2541,7 +2541,7 @@
      "hp": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "side": 1,
      "dealt": 1120,
      "taken": 34511,
@@ -2555,21 +2555,21 @@
      "hp": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "side": 1,
      "dealt": 77,
      "taken": 316,
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 1,
      "dealt": 102,
      "taken": 410,
      "hp": 0
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "side": 1,
      "dealt": 628,
      "taken": 2364,
@@ -2578,7 +2578,7 @@
    ],
    "teamA": [
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -2590,7 +2590,7 @@
      "lane": 0
     },
     {
-     "id": "HL-6",
+     "id": "HL-8",
      "level": 2,
      "row": 1,
      "lane": 0
@@ -2602,13 +2602,13 @@
      "lane": 1
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "level": 2,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "WN-6",
+     "id": "WN-8",
      "level": 2,
      "row": 2,
      "lane": 0
@@ -2622,7 +2622,7 @@
      "lane": 0
     },
     {
-     "id": "WY-5",
+     "id": "WY-6",
      "level": 2,
      "row": 0,
      "lane": 1
@@ -2634,19 +2634,19 @@
      "lane": 0
     },
     {
-     "id": "WY-8",
+     "id": "WY-7",
      "level": 2,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "WY-7",
+     "id": "WY-4",
      "level": 2,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 2,
      "row": 2,
      "lane": 0
@@ -2673,14 +2673,14 @@
    ],
    "perUnit": [
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "side": 0,
      "dealt": 2873,
      "taken": 1118,
      "hp": 68
     },
     {
-     "id": "SF-2",
+     "id": "SF-3",
      "side": 0,
      "dealt": 240,
      "taken": 568,
@@ -2701,21 +2701,21 @@
      "hp": 550
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "side": 0,
      "dealt": 6549,
      "taken": 514,
      "hp": 86
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 0,
      "dealt": 288,
      "taken": 0,
      "hp": 280
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "side": 1,
      "dealt": 339,
      "taken": 6087,
@@ -2729,28 +2729,28 @@
      "hp": 0
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "side": 1,
      "dealt": 365,
      "taken": 21568,
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 1,
      "dealt": 224,
      "taken": 7547,
      "hp": 0
     },
     {
-     "id": "SF-4",
+     "id": "SF-5",
      "side": 1,
      "dealt": 2038,
      "taken": 1179,
      "hp": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "side": 1,
      "dealt": 224,
      "taken": 16078,
@@ -2759,13 +2759,13 @@
    ],
    "teamA": [
     {
-     "id": "SF-2",
+     "id": "SF-3",
      "level": 3,
      "row": 0,
      "lane": 1
     },
     {
-     "id": "PL-2",
+     "id": "PL-3",
      "level": 3,
      "row": 0,
      "lane": 0
@@ -2783,13 +2783,13 @@
      "lane": 0
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "level": 3,
      "row": 2,
      "lane": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 3,
      "row": 2,
      "lane": 1
@@ -2803,31 +2803,31 @@
      "lane": 1
     },
     {
-     "id": "WN-5",
+     "id": "WN-6",
      "level": 3,
      "row": 0,
      "lane": 0
     },
     {
-     "id": "SF-6",
+     "id": "SF-8",
      "level": 3,
      "row": 1,
      "lane": 0
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 3,
      "row": 1,
      "lane": 1
     },
     {
-     "id": "WN-4",
+     "id": "WN-5",
      "level": 3,
      "row": 2,
      "lane": 1
     },
     {
-     "id": "SF-4",
+     "id": "SF-5",
      "level": 3,
      "row": 2,
      "lane": 0
