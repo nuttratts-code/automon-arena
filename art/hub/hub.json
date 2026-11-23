@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1775,
+ "rev": 1829,
  "settings": {
   "moves": [
    "idle",
@@ -30,19 +30,19 @@
    "ids": [
     "SF-2",
     "HL-1",
-    "PL-2",
+    "WY-2",
     "PT-2",
     "HL-2",
-    "WY-2"
+    "PL-2"
    ],
    "showBg": true,
    "forms": [
-    1,
-    1,
-    1,
-    1,
-    1,
-    1
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
    ]
   },
   "migr249": true
@@ -809,6 +809,14 @@
      ]
     ],
     "m": 6
+   },
+   "scale3": {
+    "k": 3.5,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd837981b"
    }
   },
   "HL-2": {
@@ -1109,6 +1117,14 @@
      62
     ],
     "round": "r88330644"
+   },
+   "scale3": {
+    "k": 3,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r74e412f9"
    }
   },
   "HL-3": {
@@ -2545,6 +2561,14 @@
      62
     ],
     "round": "r368fc2cb"
+   },
+   "scale3": {
+    "k": 3,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0c712e7a"
    }
   },
   "PL-3": {
@@ -3981,6 +4005,14 @@
      62
     ],
     "round": "rcb78006b"
+   },
+   "scale3": {
+    "k": 3,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd76bc3f4"
    }
   },
   "SF-3": {
@@ -4433,6 +4465,32 @@
       "pick": "g03",
       "styleSrc": "still_f1_2026-11-22_91647e63.png"
      }
+    },
+    {
+     "id": "r6fa5f330",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-6/still_f3_2026-11-22_71100a3d.png",
+     "orig": "f696ef66_g03_edit.png",
+     "t": "2026-11-22T18:15:15.543Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rf5872b1f",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-6/still_f3_2026-11-22_cc215b84.png",
+     "orig": "f696ef66_g03_edit_edit.png",
+     "t": "2026-11-22T18:16:52.301Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -5216,6 +5274,14 @@
      62
     ],
     "round": "r51526538"
+   },
+   "scale3": {
+    "k": 3,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r9af7b079"
    }
   },
   "WY-3": {
@@ -5642,6 +5708,20 @@
       "pick": "g07",
       "styleSrc": "pmd-ref 0147"
      },
+     "flip": true
+    },
+    {
+     "id": "rfef63e53",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-6/still_f3_2026-11-22_0abc4b96.png",
+     "orig": "ab713257_g07_edit.png",
+     "t": "2026-11-22T18:19:08.319Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
      "flip": true
     }
    ],
@@ -6538,6 +6618,14 @@
      62
     ],
     "round": "rca303027"
+   },
+   "scale3": {
+    "k": 3.5,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rca969ea2"
    }
   },
   "PT-3": {
