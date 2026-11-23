@@ -10,7 +10,7 @@ Owner answers: A1 history files keep old IDs + header note (archive/, measure-lo
 Side effects known up front:
 - dataHash includes chars → hash changes. botdata.js: IDs remapped + hash set to the new hash (teams identity-preserving, no botgen run).
 - bot.js:85 / bot.gd:163 tie-break `id < best` compares ID strings → exact-score ties may pick differently (both sides, parity unaffected).
-- humanstats: ARUN1 codes from the live v132 game carry the old hash → counted as "old patch" (no misattribution).
+- humanstats: ARUN1 codes from the live v132 game (old hash on every run) are renumbered by parseRunCode and counted as current values (B2).
 
 ## Steps (tick when done + pushed)
 1. [x] C1: commit owner hub edits (hub.json, INDEX.csv, library HL-2/HL-4) to main as-is — after the owner closes the hub (port 5177).
