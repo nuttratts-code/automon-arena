@@ -22,9 +22,9 @@ Side effects known up front:
 7. [x] Thai docs version bump (+0.1, ID renumber) + handoff Doc versions line · history files get header note (A1).
 8. [x] Ripple check (ripple.md map + grep of every changed ID) → ripple line.
 9. [x] setup until pass → gate once → merge to main → CI green.
-10. [ ] Hub (owner hub closed): hub.json + stillpicks/latest.json + history.jsonl text pass, art/hub/files/<ID>/ folder renames, still-batches batch.json `item`.
-11. [ ] Balance Room db: config/main (rev+1, savedAt), results/latest, ui/main, simTeams, ideas text/char → remapped (pinned writes).
-12. [ ] Publish Balance Room (skill publish-pages) → Relay line → owner: cells to set back (none expected; local drafts converted).
+10. [x] Hub (owner hub closed): hub.json + stillpicks/latest.json + history.jsonl text pass, art/hub/files/<ID>/ folder renames, still-batches batch.json `item`.
+11. [x] Balance Room db: config/main (rev+1, savedAt), results/latest, ui/main, simTeams, ideas text/char → remapped (pinned writes).
+12. [x] Publish Balance Room (skill publish-pages) → Relay line → owner: cells to set back (none expected; local drafts converted).
 
 Security: no secrets touched; no new dependency; db content treated as data; secret grep before each commit.
 - Found while working: `\b` misses an ID followed by `_` (PL-2_icon…) → second pass for IDs followed by `_` (library names, hub orig/library paths, batch files). · tools/cfgdiff.mjs main guard never runs on Windows (pathname /D:/…) → ran it via a direct import.
