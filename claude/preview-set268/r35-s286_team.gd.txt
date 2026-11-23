@@ -1,0 +1,295 @@
+# SAMPLE set 286 (round 35 of the set 268 battle-screen samples) — owner: "our 6 units' values in the empty strip at the
+# bottom; the picked unit gets a white line". Owner picks: A1 keep the bars over units (hidden in this sample, S217_CLEAN) ·
+# B3 name + HP bar/number + cooldown bar (no MP in this game) + armour + status icons · C1 white outline only.
+# Overlay on the battle screen (does not change the layout, so the 3D camera fit stays the same).
+extends Control
+const TH := preload("res://scripts/ui/theme.gd")
+
+var view: Node = null      # battle_view.gd
+var stage: Node = null     # stage3d.gd
+var tl: Node = null        # s268_timeline.gd (icons)
+var picked := -1           # uid of the picked unit
+var _order: Array = []     # own uids, left -> right as they stand on screen
+var _rects := {}           # uid -> Rect2 of its card (this control's space)
+var _outl: Array = []      # outline Sprite3D copies on the picked unit
+var _outl_src: Sprite3D = null
+var _sil := {}             # Texture2D -> white silhouette
+var _pre := false
+
+const PLATE := Color("#16202a", 0.62)
+const PLATE_PICK := Color("#1d6079", 0.78)   # the battle buttons' teal-blue (round 34i)
+const LINE := Color(0.82, 0.88, 0.94, 0.28)
+const INK := Color("#e8eef2")
+const MUTE := Color("#9fadb6", 0.95)
+const OUT := Color("#16202a", 0.8)
+const HP_COL := Color("#5fbf6a")
+const HP_LOW := Color("#d9a441")
+const HP_BG := Color(0.05, 0.08, 0.10, 0.75)
+const ARM_COL := Color("#c9d6de")
+const CD_COL := Color(0.30, 0.56, 0.95)      # own side blue (queue frames)
+const CARD_H := 46.0
+const GAP := 6.0
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+func _process(_d: float) -> void:
+	if view == null or not is_visible_in_tree():
+		return
+	if _order.is_empty() or _order.size() != _own_count():
+		_sort_units()
+	if not _pre and not _order.is_empty() and OS.get_environment("S286PICK") != "": # stills: pick card N
+		_pre = true; picked = int(_order[clampi(int(OS.get_environment("S286PICK")), 0, _order.size() - 1)])
+	_sync_outline()
+	queue_redraw()
+
+func _own_count() -> int:
+	var n := 0
+	for v in view.units.values():
+		if int(v["side"]) == 0: n += 1
+	return n
+
+func _spr(uid: int) -> Sprite3D:
+	if stage == null: return null
+	var gb: Dictionary = stage.groups.get("battle", {})
+	var key: Variant = uid if gb.has(uid) else float(uid)
+	if not gb.has(key): return null
+	var s: Variant = gb[key].get("spr")
+	return s as Sprite3D if s is Sprite3D else null
+
+func _sort_units() -> void:
+	var cam := get_viewport().get_camera_3d()
+	var rows := []
+	for v in view.units.values():
+		if int(v["side"]) != 0: continue
+		var x := float(int(v["lane"]) * 10 + int(v["row"]))
+		var s := _spr(int(v["uid"]))
+		if cam != null and s != null:
+			x = cam.unproject_position(s.global_position).x
+		rows.append([x, int(v["uid"])])
+	rows.sort_custom(func(a, b): return a[0] < b[0])
+	_order = rows.map(func(r): return r[1])
+
+# ---------- drawing ----------
+func _draw() -> void:
+	_rects.clear()
+	if view == null or _order.is_empty(): return
+	var n := _order.size()
+	var w := (size.x - GAP * float(n - 1)) / float(n)
+	for i in n:
+		var uid: int = _order[i]
+		if not view.units.has(uid): continue
+		var r := Rect2(Vector2(float(i) * (w + GAP), size.y - CARD_H), Vector2(w, CARD_H))
+		_rects[uid] = r
+		_card(r, view.units[uid], uid == picked)
+
+func _card(r: Rect2, v: Dictionary, on: bool) -> void:
+	var dead: bool = v.get("down") == true or float(v["hp"]) <= 0.0
+	var a := 0.45 if dead else 1.0
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = PLATE_PICK if on else PLATE
+	sb.set_corner_radius_all(3)
+	sb.border_color = Color(1, 1, 1, 0.95) if on else LINE
+	sb.set_border_width_all(1)
+	if on: sb.set_border_width_all(2)
+	draw_style_box(sb, r)
+	# icon (owner hub icon, same as the queue) in the side-colour diamond
+	var ic: Texture2D = tl._icon(int(v["uid"])) if tl != null else null
+	var c := r.position + Vector2(20.0, r.size.y * 0.5)
+	var dr := 15.0
+	var dia := PackedVector2Array([c + Vector2(0, -dr), c + Vector2(dr, 0), c + Vector2(0, dr), c + Vector2(-dr, 0)])
+	draw_colored_polygon(dia, Color(0.08, 0.12, 0.16, 0.85 * a))
+	if ic != null:
+		var isz := dr * 2.0 * 1.15
+		draw_texture_rect(ic, Rect2(c - Vector2(isz, isz) * 0.5, Vector2(isz, isz)), false, Color(1, 1, 1, a))
+	draw_polyline(dia + PackedVector2Array([dia[0]]), Color(CD_COL, 0.95 * a), 1.5)
+	# text + bars column
+	var x0 := r.position.x + 40.0
+	var x1 := r.end.x - 6.0
+	var bw := x1 - x0
+	var nf: Font = TH.font("body_b")
+	var mf: Font = TH.font("mono")
+	var y := r.position.y + 13.0
+	var nm := str(v.get("name", v["id"]))
+	var sw := _status(Vector2(x1, y - 8.0), v, a)
+	_txt(nf, Vector2(x0, y), nm, 10, Color(INK, a), bw - sw - (4.0 if sw > 0.0 else 0.0))
+	# HP bar + armour
+	var hp := maxf(0.0, float(v["hp"]))
+	var mx := maxf(1.0, float(v["maxHp"]))
+	var fr := clampf(hp / mx, 0.0, 1.0)
+	var by := r.position.y + 19.0
+	draw_rect(Rect2(x0, by, bw, 5.0), Color(HP_BG, HP_BG.a * a))
+	draw_rect(Rect2(x0, by, bw * fr, 5.0), Color(HP_COL if fr > 0.3 else HP_LOW, a))
+	var arm := float(v.get("armor", 0.0))
+	if arm > 0.0:
+		var af := minf(1.0, arm / mx)
+		draw_rect(Rect2(x0, by - 2.0, bw * af, 2.0), Color(ARM_COL, a))
+	var t := "%d" % int(hp)
+	if arm > 0.0: t += " +%d" % int(arm)
+	var tw := mf.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x
+	_txt(mf, Vector2(x1 - tw, by + 14.0), t, 9, Color(MUTE, a), -1.0)
+	# cooldown bar (fills toward the act moment; white in the last 0.4 s like the queue rounds)
+	var cy := r.position.y + 37.0
+	var cbw := bw - tw - 6.0
+	draw_rect(Rect2(x0, cy, cbw, 3.0), Color(HP_BG, HP_BG.a * a))
+	if not dead:
+		var cf := _cd_frac(v)
+		if cf >= 0.0:
+			var rem_s := _cd_rem(v)
+			var col := Color(1, 1, 1, 0.95) if rem_s < 0.4 else CD_COL
+			draw_rect(Rect2(x0, cy, cbw * cf, 3.0), col)
+
+func _txt(f: Font, p: Vector2, t: String, fs: int, col: Color, maxw: float) -> void:
+	var s := t
+	if maxw > 0.0:
+		while s.length() > 1 and f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw:
+			s = s.substr(0, s.length() - 1)
+		if s != t: s = s.substr(0, maxi(1, s.length() - 1)) + "…"
+	draw_string_outline(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(OUT, OUT.a * col.a))
+	draw_string(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+func _cd_rem(v: Dictionary) -> float:
+	if not v.has("cdl"): return -1.0
+	return maxf(0.0, float(v["cdl"]) - maxf(0.0, float(view.clock) - float(v["cdlT"]))) / 1000.0
+
+func _cd_frac(v: Dictionary) -> float:
+	var rem := _cd_rem(v)
+	if rem < 0.0: return -1.0
+	var st: Variant = v.get("stat")
+	var cd := float(st.get("cd", 0.0)) / 1000.0 if st is Dictionary else 0.0
+	cd = maxf(cd, rem)
+	if cd <= 0.0: return 1.0
+	return clampf(1.0 - rem / cd, 0.0, 1.0)
+
+# ---------- status icons: tiny pixel marks, right-aligned on the name line ----------
+const ICONS := {
+	"stun": ["..#.#..", ".#####.", "##.#.##", ".#####.", "..#.#.."],   # spark ring
+	"burn": ["...#...", "..##...", ".####..", "######.", ".####.."],   # flame
+	"shock": ["...##..", "..##...", ".####..", "...##..", "..##..."],  # bolt
+}
+const ICON_COL := {"stun": Color("#e8eef2"), "burn": Color("#ef8a3c"), "shock": Color("#f2d64b")}
+
+func _stunned(v: Dictionary) -> bool:
+	return float(v.get("stunL", 0.0)) > 0.0 and float(view.clock) < float(v.get("stunT", 0.0)) + float(v.get("stunL", 0.0))
+
+func _status(right_top: Vector2, v: Dictionary, a: float) -> float: # returns the width used
+	var on := []
+	if _stunned(v): on.append("stun")
+	if OS.get_environment("S286FAKESTAT") == "1": # stills: show every status icon on the first three cards
+		var ix := _order.find(int(v["uid"]))
+		on = [["stun"], ["burn", "shock"], ["stun", "burn", "shock"]][ix] if ix >= 0 and ix < 3 else on
+	if float(v.get("burn", 0.0)) > 0.0: on.append("burn")
+	if float(v.get("shock", 0.0)) > 0.0: on.append("shock")
+	var px := 1.5
+	var x := right_top.x
+	for k in on:
+		var g: Array = ICONS[k]
+		var gw := float((g[0] as String).length()) * px
+		x -= gw
+		for yy in g.size():
+			var row: String = g[yy]
+			for xx in row.length():
+				if row[xx] == "#":
+					draw_rect(Rect2(x + float(xx) * px - 0.5, right_top.y + float(yy) * px - 0.5, px + 1.0, px + 1.0), Color(OUT, OUT.a * a))
+		for yy in g.size():
+			var row2: String = g[yy]
+			for xx in row2.length():
+				if row2[xx] == "#":
+					draw_rect(Rect2(x + float(xx) * px, right_top.y + float(yy) * px, px, px), Color(ICON_COL[k], a))
+		x -= 3.0
+	return maxf(0.0, right_top.x - x - 3.0)
+
+# ---------- picking: tap a card, or tap the unit on the arena ----------
+func _input(ev: InputEvent) -> void:
+	if not is_visible_in_tree() or view == null: return
+	var mb := ev as InputEventMouseButton
+	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT: return
+	var p := get_global_transform_with_canvas().affine_inverse() * mb.position
+	for uid in _rects:
+		if (_rects[uid] as Rect2).has_point(p):
+			_pick(uid)
+			get_viewport().set_input_as_handled()
+			return
+	var hit := _unit_at(mb.position)
+	if hit >= 0:
+		_pick(hit)
+
+func _pick(uid: int) -> void:
+	picked = -1 if picked == uid else uid
+	if OS.get_environment("S286LOG") == "1": print("S286 pick ", picked)
+
+func _unit_at(screen_p: Vector2) -> int:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null: return -1
+	var best := -1
+	var bestd := 1.0e9
+	for uid in _order:
+		var s := _spr(uid)
+		if s == null or not s.is_visible_in_tree(): continue
+		var aabb := s.get_aabb()
+		var pts := []
+		for i in 8:
+			pts.append(cam.unproject_position(s.global_transform * aabb.get_endpoint(i)))
+		var rr := Rect2(pts[0], Vector2.ZERO)
+		for q in pts: rr = rr.expand(q)
+		var canvas_p := get_viewport().get_canvas_transform().affine_inverse() * screen_p
+		if rr.grow(-rr.size.x * 0.15).has_point(canvas_p):
+			var d := canvas_p.distance_to(rr.get_center())
+			if d < bestd:
+				bestd = d; best = uid
+	return best
+
+# ---------- white outline on the picked unit's sprite: 4 white silhouettes 1 art pixel out, just behind it ----------
+func _silhouette(t: Texture2D) -> Texture2D:
+	if _sil.has(t): return _sil[t]
+	var img := t.get_image()
+	if img == null: return null
+	img = img.duplicate()
+	img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	for yy in img.get_height():
+		for xx in img.get_width():
+			img.set_pixel(xx, yy, Color(1, 1, 1, 1) if img.get_pixel(xx, yy).a > 0.5 else Color(1, 1, 1, 0))
+	var out := ImageTexture.create_from_image(img)
+	_sil[t] = out
+	return out
+
+func _clear_outline() -> void:
+	for o in _outl:
+		if is_instance_valid(o): o.queue_free()
+	_outl.clear()
+	_outl_src = null
+
+func _sync_outline() -> void:
+	var s := _spr(picked) if picked >= 0 else null
+	if s == null:
+		if _outl_src != null: _clear_outline()
+		return
+	if s != _outl_src or (not _outl.is_empty() and _outl[0].get_meta("src") != s.texture):
+		_clear_outline()
+		var sil := _silhouette(s.texture)
+		if sil == null: return
+		_outl_src = s
+		if OS.get_environment("S286LOG") == "1": print("S286 outline on ", s.name, " tex ", s.texture.get_size(), " hf ", s.hframes, " px ", s.pixel_size, " mat ", s.material_override, " vis ", s.is_visible_in_tree())
+		for d in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
+			var o := Sprite3D.new()
+			o.texture = sil
+			o.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			o.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			o.shaded = false
+			o.double_sided = true
+			o.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			o.set_meta("d", d)
+			o.set_meta("src", s.texture)
+			s.add_child(o)
+			_outl.append(o)
+	for o in _outl:
+		var d: Vector2 = o.get_meta("d")
+		o.hframes = s.hframes; o.vframes = s.vframes; o.frame = s.frame
+		o.flip_h = s.flip_h; o.flip_v = s.flip_v
+		o.centered = s.centered; o.offset = s.offset
+		o.pixel_size = s.pixel_size
+		o.region_enabled = s.region_enabled; o.region_rect = s.region_rect
+		o.render_priority = s.render_priority - 1
+		o.position = Vector3(d.x * s.pixel_size, d.y * s.pixel_size, -0.004)
