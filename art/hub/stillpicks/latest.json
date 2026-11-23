@@ -1,6 +1,6 @@
 {
- "rev": 251,
- "t": "2026-11-23T07:57:57.026Z",
+ "rev": 260,
+ "t": "2026-11-23T09:00:09.765Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -102,6 +102,24 @@
    "form": 3,
    "pick": [
     "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_f3_m8": {
+   "id": "WN-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "demon_f3_m8b": {
+   "id": "WN-8",
+   "form": 3,
+   "pick": [
+    "g08"
    ],
    "eye": true,
    "hidden": false,
@@ -298,6 +316,32 @@
    "hidden": false,
    "closed": false
   },
+  "fire_f3_m8": {
+   "id": "PL-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m8b": {
+   "id": "PL-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m8c": {
+   "id": "PL-8",
+   "form": 3,
+   "pick": [
+    "g04"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "fire_f3b": {
    "id": "PL-1",
    "form": 3,
@@ -483,6 +527,24 @@
    "form": 3,
    "pick": [
     "g07"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m8": {
+   "id": "PT-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "spirit_f3_m8b": {
+   "id": "PT-8",
+   "form": 3,
+   "pick": [
+    "g03"
    ],
    "eye": true,
    "hidden": false,
@@ -728,6 +790,24 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m8": {
+   "id": "HL-8",
+   "form": 3,
+   "pick": [
+    "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "steel_f3_m8b": {
+   "id": "HL-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -952,6 +1032,24 @@
    "hidden": false,
    "closed": false
   },
+  "storm_f3_m8": {
+   "id": "SF-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "storm_f3_m8b": {
+   "id": "SF-8",
+   "form": 3,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "storm_sf3a": {
    "id": "SF-3",
    "form": 1,
@@ -1145,6 +1243,24 @@
    "form": 3,
    "pick": [
     "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m8": {
+   "id": "WY-8",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m8b": {
+   "id": "WY-8",
+   "form": 3,
+   "pick": [
+    "g05"
    ],
    "eye": true,
    "hidden": false,

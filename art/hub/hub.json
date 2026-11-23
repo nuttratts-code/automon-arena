@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1843,
+ "rev": 1880,
  "settings": {
   "moves": [
    "idle",
@@ -915,7 +915,7 @@
      "t": "2026-11-20T12:32:59.975Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1"
@@ -1016,14 +1016,29 @@
      "t": "2026-11-22T14:18:27.393Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 42c4926d g09 (ตัวเต็ง · ประวัติ: batches/2026-11-22_42c4926d)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_42c4926d",
       "pick": "g09",
       "styleSrc": "pmd-ref 0981"
-     }
+     },
+     "library": "lib/characters/HL-2/HL-2_still_f3_2026-11-22_74e412f9.png"
+    },
+    {
+     "id": "r0431a9eb",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-23_5220872f.png",
+     "orig": "fa77cc8c_g11_edit_edit_edit_edit_edit_edit.png",
+     "t": "2026-11-23T08:16:02.030Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-20",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1"
     }
    ],
    "notes": "",
@@ -1125,7 +1140,10 @@
      56
     ],
     "round": "r74e412f9"
-   }
+   },
+   "palette": [
+    "#ff0000"
+   ]
   },
   "HL-3": {
    "id": "HL-3",
@@ -1313,6 +1331,45 @@
       "pick": "g15",
       "styleSrc": "still_f1_2026-11-22_eeb29b39.png"
      }
+    },
+    {
+     "id": "r2e7ac753",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-23_50f8eb5a.png",
+     "orig": "52997499_g15_edit.png",
+     "t": "2026-11-23T08:04:11.537Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1844458f",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-23_e75705b9.png",
+     "orig": "52997499_g15_edit_edit.png",
+     "t": "2026-11-23T08:08:24.087Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rb8f78b95",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-23_850b456d.png",
+     "orig": "52997499_g15_edit_edit_edit.png",
+     "t": "2026-11-23T08:09:58.485Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -1401,6 +1458,33 @@
      "t": "2026-11-23T07:58:33.459Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "library": "lib/characters/HL-4/HL-4_still_f3_2026-11-23_64773093.png"
+    },
+    {
+     "id": "ra7e7fd31",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-23_8e4f9730.png",
+     "orig": "98d3b147_g00_edit_edit_edit_edit.png",
+     "t": "2026-11-23T08:01:29.828Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r5dfc4957",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-23_a993dd2b.png",
+     "orig": "98d3b147_g00_edit_edit.png",
+     "t": "2026-11-23T08:29:39.468Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
@@ -1494,6 +1578,32 @@
       "pick": "g14",
       "styleSrc": "pmd-ref 0820"
      }
+    },
+    {
+     "id": "r2e5ba678",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-5/still_f3_2026-11-23_af2fd52e.png",
+     "orig": "5a1d065d_g14_edit.png",
+     "t": "2026-11-23T08:11:22.336Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1ec078ed",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-5/still_f3_2026-11-23_4d10859c.png",
+     "orig": "5a1d065d_g14_edit_edit.png",
+     "t": "2026-11-23T08:37:23.094Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -1540,6 +1650,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rfd8014b4",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-8/still_f3_2026-11-23_fd8014b4.png",
+     "orig": "b4d7c92b_g08.png",
+     "t": "2026-11-23T09:00:52.682Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน b4d7c92b g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_b4d7c92b)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_b4d7c92b",
+      "pick": "g08",
+      "styleSrc": "still_f1_2026-11-22_27db8a1a.png"
+     }
     }
    ],
    "notes": "",
@@ -3071,6 +3199,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r247bcc96",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-8/still_f3_2026-11-23_247bcc96.png",
+     "orig": "548cd844_g04.png",
+     "t": "2026-11-23T09:00:52.249Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 548cd844 g04 (ตัวเต็ง · ประวัติ: batches/2026-11-23_548cd844)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_548cd844",
+      "pick": "g04",
+      "styleSrc": "pmd-ref 0018"
+     }
     }
    ],
    "notes": "",
@@ -4489,6 +4635,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rdb558966",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-8/still_f3_2026-11-23_db558966.png",
+     "orig": "695f84cd_g15.png",
+     "t": "2026-11-23T09:00:52.907Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 695f84cd g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_695f84cd)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_695f84cd",
+      "pick": "g15",
+      "styleSrc": "pmd-ref 0593"
+     }
     }
    ],
    "notes": "",
@@ -5768,6 +5932,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rd7f1b92d",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-8/still_f3_2026-11-23_d7f1b92d.png",
+     "orig": "449f387c_g05.png",
+     "t": "2026-11-23T09:00:53.132Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 449f387c g05 (ตัวเต็ง · ประวัติ: batches/2026-11-23_449f387c)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_449f387c",
+      "pick": "g05",
+      "styleSrc": "pmd-ref 0055"
+     }
     }
    ],
    "notes": "",
@@ -7099,6 +7281,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r5361cb42",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-8/still_f3_2026-11-23_5361cb42.png",
+     "orig": "a92e4343_g03.png",
+     "t": "2026-11-23T09:00:52.468Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน a92e4343 g03 (ตัวเต็ง · ประวัติ: batches/2026-11-23_a92e4343)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_a92e4343",
+      "pick": "g03",
+      "styleSrc": "pmd-ref 0321"
+     }
     }
    ],
    "notes": "",
@@ -8550,6 +8750,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r0b1531b3",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-8/still_f3_2026-11-23_0b1531b3.png",
+     "orig": "6c86f982_g08.png",
+     "t": "2026-11-23T09:00:52.002Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 6c86f982 g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_6c86f982)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_6c86f982",
+      "pick": "g08",
+      "styleSrc": "pmd-ref 0168"
+     }
     }
    ],
    "notes": "",
