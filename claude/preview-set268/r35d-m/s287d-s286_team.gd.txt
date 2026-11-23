@@ -1,0 +1,788 @@
+# SAMPLE set 286 (set 268 rounds 35/35b) — bottom team cards + bars under every unit + white outline on the picked unit.
+# r35 owner picks: A1 · B3 · C1 (notes 52). r35b owner (notes 53): HP bar + cooldown gauge UNDER every unit (both sides, A1),
+# HP bar = blocks of 100 HP, no number · cards: no bars; inside = what we HAVE (icon + total, e.g. attack 10 +5 shows 15),
+# above = what HITS us (icon + number: burn, shock, stun) · tap a foe = white outline too (D1, no foe cards).
+# Full-rect overlay on the battle screen (layout unchanged → 3D camera fit unchanged); only cards/units take taps.
+extends Control
+const TH := preload("res://scripts/ui/theme.gd")
+
+var view: Node = null      # battle_view.gd
+var stage: Node = null     # stage3d.gd
+var tl: Node = null        # s268_timeline.gd (icons)
+var picked := -1           # uid of the picked unit (either side)
+var _order: Array = []     # own uids, left -> right as they stand on screen
+var _rects := {}           # uid -> Rect2 of its card (this control's space)
+var _outl: Array = []
+var _outl_src: Sprite3D = null
+var _sil := {}
+var _pre := false
+# r35d: crisp icons drawn on a child layer with linear+mipmap filtering (this node stays NEAREST for the hub pixel icons)
+const ICON_DIR := "res://data/ui_icons/r35d/"
+const ISZ := 9.0
+static var _itex := {}
+var _ic_layer: Control = null
+var _ic_q: Array = []
+var _seen := {}   # r35l: uid -> {effect key: clock first seen} (arrival order)
+var _mx0 := {}    # r35l: uid -> highest max HP seen (max HP cut = black part of the bar)
+var _tips: Array = []   # r35l: [Rect2, text] hover / tap targets, rebuilt every draw
+var _pin_tip := ""
+var _pin_r := Rect2()
+var _pin_t := 0.0
+var _cw := {}   # r35e2: card width per uid (only grows during a match)
+
+const PLATE := Color("#16202a", 0.62)
+const PLATE_PICK := Color("#1d6079", 0.78)
+const LINE := Color(0.82, 0.88, 0.94, 0.28)
+const INK := Color("#e8eef2")
+const MUTE := Color("#c9d3da", 0.98)
+const OUT := Color("#16202a", 0.8)
+const HP_COL := Color("#5fbf6a")
+const HP_LOW := Color("#d9a441")
+const HP_BG := Color(0.05, 0.08, 0.10, 0.78)
+const OWN_COL := Color(0.30, 0.56, 0.95)
+const FOE_COL := Color(0.92, 0.30, 0.34)
+const CARD_H := 28.0
+const GAP := 4.0   # r35e: cards closer
+const PAD_L := 16.0
+const PAD_R := 150.0
+const PAD_B := 10.0
+const HP_BLOCK := 100.0
+const BAR_W := 46.0
+const HP_H := 3.0   # r35g: thin bar, no number
+const CARD_MIN := 60.0
+const CARD_MIN_W := 52.0   # s287: card never narrower than this (diamond + one value)
+var _tw287 := 0.0
+var _hov287 := -1
+var _panel_q := []
+var _pn_layer: Control = null
+var _cv287: CanvasItem = null   # s287d: when set, _chip draws there (icons too, no queue)
+var _bar287 := {}
+var _c1w287 := 0.0
+var _c2w287 := 0.0
+func _fit2_w(hv: Array) -> float:   # s287: narrowest width that holds every value in 2 rows
+	var ws := []
+	for it in hv: ws.append(_chip_w(it[0], it[1]))
+	var best := 0.0
+	if ws.size() > 0:
+		best = 1e9
+		for k in range(ws.size() + 1):
+			var a := 0.0
+			var b := 0.0
+			for i in ws.size():
+				if i < k: a += ws[i] + (VG if i > 0 else 0.0)
+				else: b += ws[i] + (VG if i > k else 0.0)
+			best = minf(best, maxf(a, b))
+	return 27.0 + best + 4.0 + 1.0
+const CARD_W := 102.0   # r35j: one width for every card (fits 2 values of "100K" per row)
+const ROW_H := 11.5
+const CARD_MAX := 84.0
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_ic_layer = Control.new()
+	_ic_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ic_layer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_ic_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_ic_layer)
+	_ic_layer.draw.connect(_draw_icons)
+	_pn_layer = Control.new()   # s287d: tap / hover panels sit above every chip and icon
+	_pn_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pn_layer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_pn_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_pn_layer)
+	_pn_layer.draw.connect(_draw_panels)
+
+func _process(_d: float) -> void:
+	if view == null or not is_visible_in_tree():
+		return
+	if _order.is_empty() or _order.size() != _own_count():
+		_sort_units()
+	if not _pre and not _order.is_empty() and OS.get_environment("S286PICK") != "": # stills: pick card N (or f<N> = foe N)
+		_pre = true
+		var pk := OS.get_environment("S286PICK")
+		if pk.begins_with("f"):
+			var foes := []
+			for v in view.units.values():
+				if int(v["side"]) == 1: foes.append(int(v["uid"]))
+			foes.sort()
+			if not foes.is_empty(): picked = int(foes[clampi(int(pk.substr(1)), 0, foes.size() - 1)])
+		else:
+			picked = int(_order[clampi(int(pk), 0, _order.size() - 1)])
+	_hov287 = -1
+	if OS.get_environment("S287HOVER") != "" and _order.size() > int(OS.get_environment("S287HOVER")): _hov287 = int(_order[int(OS.get_environment("S287HOVER"))])
+	elif get_viewport() != null:
+		var hu := _unit_at(get_viewport().get_mouse_position())
+		if hu >= 0 and view.units.has(hu) and int(view.units[hu]["side"]) == 0: _hov287 = hu
+	_sync_outline()
+	queue_redraw()
+
+func _own_count() -> int:
+	var n := 0
+	for v in view.units.values():
+		if int(v["side"]) == 0: n += 1
+	return n
+
+func _grp(uid: int) -> Variant:
+	if stage == null: return null
+	var gb: Dictionary = stage.groups.get("battle", {})
+	var key: Variant = uid if gb.has(uid) else float(uid)
+	return gb.get(key)
+
+func _spr(uid: int) -> Sprite3D:
+	var g: Variant = _grp(uid)
+	if g == null: return null
+	var s: Variant = g.get("spr")
+	return s as Sprite3D if s is Sprite3D else null
+
+func _sort_units() -> void:
+	_cw.clear()
+	_seen.clear()
+	_mx0.clear()
+	var cam := get_viewport().get_camera_3d()
+	var rows := []
+	for v in view.units.values():
+		if int(v["side"]) != 0: continue
+		var x := float(int(v["lane"]))
+		var yy := float(int(v["row"]))
+		var s := _spr(int(v["uid"]))
+		if cam != null and s != null:
+			var sp2 := cam.unproject_position(s.global_position)
+			x = sp2.x; yy = sp2.y
+		rows.append([x, int(v["uid"]), yy])
+	# s287b: card order follows the board slots and never changes: top row left -> right, then the bottom row
+	var ys := rows.map(func(r): return r[2]); ys.sort()
+	var mid := (float(ys[0]) + float(ys[ys.size() - 1])) * 0.5 if not ys.is_empty() else 0.0
+	rows.sort_custom(func(a, b):
+		var ra := 0 if float(a[2]) < mid - 1.0 else 1
+		var rb := 0 if float(b[2]) < mid - 1.0 else 1
+		return ra < rb if ra != rb else a[0] < b[0])
+	_order = rows.map(func(r): return r[1])
+
+# ---------- drawing ----------
+func _draw() -> void:
+	_rects.clear()
+	_ic_q.clear()
+	_tips.clear()
+	if _ic_layer != null: _ic_layer.queue_redraw()
+	if view == null: return
+	_bar287.clear()
+	_panel_q.clear()
+	for v in view.units.values():
+		_feet_bars(v)
+	if _order.is_empty(): return
+	var n := _order.size()
+	# r35j: one size for every card: fixed width, height = rows the busiest card needs (min 2), cards packed from the left
+	# s287: one width for the whole team = the narrowest card where the busiest card still fits in 2 rows (no "+N");
+	# grows when a card gains values, never shrinks during the fight
+	# s287b: values in a 2-column grid, 3 rows, filled left then right, row by row; column 2 starts after the widest
+	# left value of the team (grows only), so every card lines up
+	for uid0 in _order:
+		if not view.units.has(uid0): continue
+		var hv0 := _haves(view.units[uid0])
+		for k0 in hv0.size():
+			var cw0 := _chip_w(hv0[k0][0], hv0[k0][1])
+			if k0 % 2 == 0: _c1w287 = maxf(_c1w287, cw0)
+			else: _c2w287 = maxf(_c2w287, cw0)
+	_tw287 = 27.0 + _c1w287 + (VG + _c2w287 if _c2w287 > 0.0 else 0.0) + 5.0
+	var w := minf(maxf(_tw287, CARD_MIN_W), (size.x - PAD_L - PAD_R - GAP * float(n - 1)) / float(n))
+	if OS.get_environment("S287FIXW") == "1": w = minf(CARD_W, (size.x - PAD_L - PAD_R - GAP * float(n - 1)) / float(n))
+	var rows := 3   # s287b: fixed 3 rows x 2 values (armour moved above the card, max 6 values inside)
+	var h := 5.0 + float(rows) * ROW_H
+	var y := size.y - PAD_B - h
+	for i in n:
+		var uid: int = _order[i]
+		if not view.units.has(uid): continue
+		var r := Rect2(Vector2(PAD_L + float(i) * (w + GAP), y), Vector2(w, h))
+		if OS.get_environment("S287CARDS") == "1":
+			_rects[uid] = r
+			_card(r, view.units[uid], uid == picked)
+		elif _bar287.has(uid):
+			_attached(view.units[uid], _bar287[uid])
+	if _pn_layer != null: _pn_layer.queue_redraw()
+
+func _draw_panels() -> void:
+	_cv287 = _pn_layer
+	for pq in _panel_q: _panel(pq[0], pq[1])
+	_cv287 = null
+
+func _panel(v: Dictionary, br: Rect2) -> void:   # s287d (owner C1): small stats panel beside the HP bar, tap / hover only
+	var hv := _haves(v)
+	var mx := maxf(1.0, float(v["maxHp"]))
+	var arm := maxf(0.0, float(v.get("armor", 0.0)))
+	var c1 := 0.0
+	var c2 := 0.0
+	for k in hv.size():
+		if k % 2 == 0: c1 = maxf(c1, _chip_w(hv[k][0], hv[k][1]))
+		else: c2 = maxf(c2, _chip_w(hv[k][0], hv[k][1]))
+	var mf: Font = TH.font("mono")
+	var hpt := "%s/%s" % [R_num(float(v["hp"])), R_num(mx)]
+	var top_w := mf.get_string_size(hpt, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 10.0 + (_chip_w("armor", R_num(arm)) + VG if arm > 0.0 else 0.0)
+	var w := maxf(top_w, c1 + (VG + c2 if c2 > 0.0 else 0.0)) + 8.0
+	var rows := (hv.size() + 1) / 2
+	var h := 4.0 + 11.5 + float(rows) * 11.5 + 2.0
+	var p := Vector2(br.end.x + 5.0, br.end.y - h)
+	if p.x + w > size.x - 4.0: p.x = br.position.x - 5.0 - w
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.08, 0.09, 0.95)   # solid: chips behind must not show through
+	sb.set_corner_radius_all(3)
+	sb.border_color = LINE
+	sb.set_border_width_all(1)
+	_cv287.draw_style_box(sb, Rect2(p, Vector2(w, h)))
+	var hy := p.y + 3.5
+	_cv287.draw_rect(Rect2(p.x + 4.0, hy + 3.0, 5.0, 4.0), Color("#5e9a45"))   # HP mark (green block = the bar colour)
+	_cv287.draw_string(mf, Vector2(p.x + 11.0, hy + 8.0), hpt, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, INK)
+	if arm > 0.0: _chip(Vector2(p.x + 4.0 + top_w - _chip_w("armor", R_num(arm)), hy), "armor", R_num(arm), 1.0, false)
+	for k in hv.size():
+		var gx := p.x + 4.0 + (0.0 if k % 2 == 0 else c1 + VG)
+		_chip(Vector2(gx, hy + 11.5 + float(k / 2) * 11.5), hv[k][0], hv[k][1], 1.0, false)
+
+func _attached(v: Dictionary, br: Rect2) -> void:   # s287c (owner): no cards — the HP bar is the card line
+	# above the bar = what used to sit above the card (armour / burn / shock numbers, then buff / debuff chips);
+	# below the cooldown bar = what used to be inside the card (3 rows x 2 values, left first). Same rules as the cards.
+	var a := 1.0
+	if int(v["uid"]) == picked or int(v["uid"]) == _hov287: _panel_q.append([v, br])   # s287d: values only on tap / hover
+	var row := 0
+	var hx := br.position.x
+	var base := br.position.y - 1.0
+	var st := _row1(v)
+	for it in st:
+		var pw := _chip_w(it[0], it[1]) + 4.0
+		if hx > br.position.x and hx + pw > br.end.x + 8.0:
+			row += 1; hx = br.position.x
+		var top := base - G - CH - float(row) * (CH + G)
+		_chip(Vector2(hx + 2.0, top + 1.5), it[0], it[1], a, true)
+		_tips.append([Rect2(hx, top, pw, CH), TIP_ROW1.get(it[0], "") % it[1]])
+		hx += pw + G
+	var ef := _effects(v)
+	if not ef.is_empty():
+		if not st.is_empty():
+			row += 1; hx = br.position.x
+		for e in ef:
+			if hx > br.position.x and hx + EF_SZ > br.end.x + 1.0:
+				row += 1; hx = br.position.x
+			var er := Rect2(hx, base - G - CH - float(row) * (CH + G), EF_SZ, CH)
+			_effect_chip(er, e, a)
+			_tips.append([er, String(e[4])])
+			hx += EF_SZ + G
+
+func _feet_bars(v: Dictionary) -> void:
+	if v.get("down") == true or float(v["hp"]) <= 0.0: return
+	var g: Variant = _grp(int(v["uid"]))
+	if g == null: return
+	var sh: Variant = g.get("shadow")
+	if not (sh is Node3D) or not (sh as Node3D).is_visible_in_tree(): return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null: return
+	var gp := (sh as Node3D).global_position
+	if cam.is_position_behind(gp): return
+	var inv := get_global_transform_with_canvas().affine_inverse()
+	var c: Vector2 = inv * cam.unproject_position(gp)
+	var low: Vector2 = inv * cam.unproject_position(gp + Vector3(0, 0, 0.40))   # front edge of the shadow
+	var x0 := roundf(c.x - BAR_W * 0.5)
+	var y0 := roundf(low.y + 4.0)
+	var mx := maxf(1.0, float(v["maxHp"]))
+	var uidb := int(v["uid"])
+	_mx0[uidb] = maxf(float(_mx0.get(uidb, 0.0)), mx)
+	var cut := 1.0 - mx / float(_mx0[uidb])
+	if OS.get_environment("S286FAKESTAT") == "1" and _order.find(uidb) == 0: cut = 0.3   # stills: max HP cut 30 %
+	var hp := clampf(float(v["hp"]), 0.0, mx)
+	var fr := hp / mx
+	# r35h: soft bar — see-through edge, muted colours, 1 px rounded ends (owner: blend with the background)
+	var full := HP_H + 3.0
+	_bar287[uidb] = Rect2(x0, y0, BAR_W, full)   # s287c: HP + cooldown bar = the divider line
+	_soft_rect(Rect2(x0 - 1.0, y0 - 1.0, BAR_W + 2.0, full + 2.0), Color(0.07, 0.06, 0.05, 0.62))
+	_soft_rect(Rect2(x0, y0, BAR_W, HP_H), Color(0.09, 0.08, 0.06, 0.65))
+	var arm287 := maxf(0.0, float(v.get("armor", 0.0)))
+	if OS.get_environment("S286FAKESTAT") == "1" and _order.find(uidb) == 1: arm287 = mx * 0.25   # stills: show the armour part
+	var sc287 := BAR_W * (1.0 - cut) / maxf(mx, hp + arm287)   # s287d: armour = white part right after the HP (owner C1)
+	var hw := roundf(hp * sc287)
+	if hw > 0.0: _soft_rect(Rect2(x0, y0, hw, HP_H), Color("#5e9a45", 0.97) if fr > 0.3 else Color("#bf8530", 0.97))
+	var aw287 := roundf((hp + arm287) * sc287) - hw
+	if aw287 > 0.0: draw_rect(Rect2(x0 + hw, y0, aw287, HP_H), Color(0.93, 0.93, 0.9, 0.95))
+	if hw > 2.0: draw_rect(Rect2(x0 + 1.0, y0, hw - 2.0, 1.0), Color(1.0, 0.98, 0.85, 0.14))   # sun-lit top edge
+	if cut > 0.001:   # r35l: max HP cut = black part eating the bar from the right
+		var cw := roundf(BAR_W * cut)
+		draw_rect(Rect2(x0 + BAR_W - cw, y0, cw, HP_H), Color(0.02, 0.02, 0.02, 0.95))
+	var col: Color = Color("#4f7fc4") if int(v["side"]) == 0 else Color("#c0564f")
+	var cf := _cd_frac(v)
+	draw_rect(Rect2(x0, y0 + HP_H + 1.0, BAR_W, 2.0), Color(0.09, 0.08, 0.06, 0.6))
+	if cf >= 0.0:
+		var rem_s := _cd_rem(v)
+		draw_rect(Rect2(x0, y0 + HP_H + 1.0, BAR_W * cf, 2.0), Color(1, 0.98, 0.9, 0.85) if rem_s < 0.4 else Color(col, 0.97))
+
+func _soft_rect(r: Rect2, c: Color) -> void:   # r35h: rectangle with the 4 corner pixels left out
+	if r.size.x < 3.0 or r.size.y < 3.0:
+		draw_rect(r, c); return
+	draw_rect(Rect2(r.position.x + 1.0, r.position.y, r.size.x - 2.0, r.size.y), c)
+	draw_rect(Rect2(r.position.x, r.position.y + 1.0, 1.0, r.size.y - 2.0), c)
+	draw_rect(Rect2(r.end.x - 1.0, r.position.y + 1.0, 1.0, r.size.y - 2.0), c)
+
+func _card(r: Rect2, v: Dictionary, on: bool) -> void:
+	var dead: bool = v.get("down") == true or float(v["hp"]) <= 0.0
+	var a := 0.45 if dead else 1.0
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = PLATE_PICK if on else PLATE
+	sb.set_corner_radius_all(3)
+	sb.border_color = Color(1, 1, 1, 0.95) if on else LINE
+	sb.set_border_width_all(2 if on else 1)
+	draw_style_box(sb, r)
+	var ic: Texture2D = tl._icon(int(v["uid"])) if tl != null else null
+	var c := r.position + Vector2(14.0, r.size.y * 0.5)
+	var dr := 10.0
+	var dia := PackedVector2Array([c + Vector2(0, -dr), c + Vector2(dr, 0), c + Vector2(0, dr), c + Vector2(-dr, 0)])
+	draw_colored_polygon(dia, Color(0.08, 0.12, 0.16, 0.85 * a))
+	if ic != null:
+		var isz := dr * 2.0 * 1.15
+		draw_texture_rect(ic, Rect2(c - Vector2(isz, isz) * 0.5, Vector2(isz, isz)), false, Color(1, 1, 1, a))
+	draw_polyline(dia + PackedVector2Array([dia[0]]), Color(OWN_COL, 0.95 * a), 1.5)
+	# inside = flat values only, flowing with one gap (r35m), 2 rows; overflow -> "+N" (hover / tap the card = all values)
+	var hv := _haves(v)
+	var x0 := r.position.x + 27.0
+	for k in hv.size():   # s287b: k = 0 top-left, 1 top-right, 2 middle-left ... 5 bottom-right
+		var gx := x0 + (0.0 if k % 2 == 0 else _c1w287 + VG)
+		_chip(Vector2(gx, r.position.y + 3.5 + float(k / 2) * 11.5), hv[k][0], hv[k][1], a, false)
+	if not hv.is_empty():
+		var lines := PackedStringArray()
+		for it in hv: lines.append("%s %s" % [VAL_NAME.get(it[0], it[0]), it[1]])
+		_tips.append([r, " · ".join(lines)])
+	# above the card (r35m spacing): rows of 11 px chips, 2 px gaps, row 1 = burn / shock, then buffs / debuffs in arrival order
+	var row := 0
+	var hx := r.position.x
+	var st := _row1(v)
+	for it in st:
+		var pw := _chip_w(it[0], it[1]) + 4.0
+		if hx > r.position.x and hx + pw > r.end.x:
+			row += 1; hx = r.position.x
+		var top := r.position.y - G - CH - float(row) * (CH + G)
+		_chip(Vector2(hx + 2.0, top + 1.5), it[0], it[1], a, true)
+		_tips.append([Rect2(hx, top, pw, CH), TIP_ROW1.get(it[0], "") % it[1]])
+		hx += pw + G
+	var ef := _effects(v)
+	if not ef.is_empty():
+		if not st.is_empty():
+			row += 1; hx = r.position.x
+		for e in ef:
+			if hx > r.position.x and hx + EF_SZ > r.end.x:
+				row += 1; hx = r.position.x
+			var er := Rect2(hx, r.position.y - G - CH - float(row) * (CH + G), EF_SZ, CH)
+			_effect_chip(er, e, a)
+			_tips.append([er, String(e[4])])
+			hx += EF_SZ + G
+
+const EF_SZ := 11.0
+const CH := 11.0     # r35m: every chip 11 tall
+const G := 2.0       # r35m: one gap between chips and rows
+const VG := 6.0      # r35m: gap between values inside the card
+const VAL_NAME := {"atk": "พลังโจมตี", "armor": "เกราะ", "multi": "ตีต่อครั้ง", "burn": "ไฟต่อการตี", "shock": "สายฟ้าต่อการตี",
+	"armhit": "เกราะต่อการตี", "heal": "ฮีลต่อการตี"}
+const TIP_ROW1 := {"armor": "เกราะ %s", "burn": "ติดไฟ %s", "shock": "ติดสายฟ้า %s"}
+
+func _effect_chip(r: Rect2, e: Array, a: float) -> void:   # [key, icon, buff?, time left 0..1 (-1 = none), tip, mark "+" / "-" / ""]
+	var buff: bool = e[2]
+	var bg := Color("#2f6db5", 0.92 * a) if buff else Color("#b8343a", 0.92 * a)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_corner_radius_all(2)
+	sb.border_color = Color(OUT, 0.7 * a)
+	sb.set_border_width_all(1)
+	draw_style_box(sb, r)
+	_ic_q.append([r.grow(-1.5), e[1], Color(1, 1, 1, 0.97), a])
+	var mk: String = e[5]
+	if mk != "":   # white "+" / "−" at the top-right corner = which way the stat goes
+		_ic_q.append([mk, r.position + Vector2(r.size.x - 1.5, 1.5), a])
+	var fr: float = e[3]
+	if fr >= 0.0:   # r35m: time left = the chip fades from the top down (used part = dim veil on top)
+		_ic_q.append(["veil", Rect2(r.position, Vector2(r.size.x, roundf(r.size.y * (1.0 - fr)))), a])
+
+func _row1(v: Dictionary) -> Array:   # burn / shock on the unit (numbers)
+	if OS.get_environment("S286FAKESTAT") == "1":
+		var ix := _order.find(int(v["uid"]))
+		if ix == 1: return [["burn", "12"], ["shock", "8"]]
+		if ix == 2: return [["burn", "4"]]
+		if ix in [0, 3]: return []
+	var out := []
+	if float(v.get("burn", 0.0)) > 0.0: out.append(["burn", R_num(float(v["burn"]))])
+	if float(v.get("shock", 0.0)) > 0.0: out.append(["shock", R_num(float(v["shock"]))])
+	return out
+
+const BUFF_KEYS := [["hitAmp", "atk", "พลังโจมตีแรงขึ้น %s%%"], ["burnAmp", "burn", "ไฟแรงขึ้น %s%%"], ["shockAmp", "shock", "สายฟ้าแรงขึ้น %s%%"],
+	["armorAmp", "armor", "เกราะที่ได้รับเพิ่ม %s%%"], ["healAmp", "heal", "ฮีลที่ได้รับเพิ่ม %s%%"], ["cdAmp", "cd", "ผลลดคูลดาวน์เพิ่ม %s%%"],
+	["healToAtk", "h2a", "ฮีลแปลงเป็นพลังโจมตี %s%%"]]
+const DEBUFF_KEYS := [["dmgTaken", "vuln", "โดนดาเมจตีแรงขึ้น %s%%", false], ["burnTaken", "burn", "โดนไฟแรงขึ้น %s%%", true],
+	["shockTaken", "shock", "โดนสายฟ้าแรงขึ้น %s%%", true]]
+
+func _effects(v: Dictionary) -> Array:   # buffs + debuffs in arrival order: [key, icon, buff?, ring, tip, plus?]
+	var uid := int(v["uid"])
+	if OS.get_environment("S286FAKESTAT") == "1":
+		var ix := _order.find(uid)
+		if ix == 0: return [["stun", "stun", false, 0.6, "มึนงง เหลือ 0.9 วิ", ""]]
+		if ix == 1: return [["hitAmp", "atk", true, -1.0, "พลังโจมตีแรงขึ้น 20%", "+"], ["shockAmp", "shock", true, -1.0, "สายฟ้าแรงขึ้น 30%", "+"]]
+		if ix == 2: return [["stun", "stun", false, 0.3, "มึนงง เหลือ 0.4 วิ", ""], ["dmgTaken", "vuln", false, -1.0, "โดนดาเมจตีแรงขึ้น 15%", "+"],
+			["cdSlow", "cd", false, -1.0, "คูลดาวน์ช้าลง 30%", "+"], ["burnAmp", "burn", true, -1.0, "ไฟแรงขึ้น 50%", "+"],
+			["healAmp", "heal", true, -1.0, "ฮีลที่ได้รับเพิ่ม 20%", "+"], ["armorAmp", "armor", true, -1.0, "เกราะที่ได้รับเพิ่ม 30%", "+"]]
+		if ix == 3: return [["hitAmp", "atk", true, -1.0, "พลังโจมตีแรงขึ้น 20%", "+"], ["shockAmp", "shock", true, -1.0, "สายฟ้าแรงขึ้น 30%", "+"],
+			["burnTaken", "burn", false, 0.8, "โดนไฟแรงขึ้น 25% (เหลือ 4 วิ)", "+"], ["armorCut", "armor", false, 0.5, "เกราะที่ได้รับ −30% (เหลือ 3 วิ)", "-"], ["cdAmp", "cd", true, -1.0, "ผลลดคูลดาวน์เพิ่ม 10%", "+"],
+			["healToAtk", "h2a", true, -1.0, "ฮีลแปลงเป็นพลังโจมตี 25%", "+"]]
+	var now: Array = []
+	var sl := _stun_left(v)
+	if sl > 0.0:
+		var tot := maxf(0.001, float(v.get("stunL", 1.0)) / 1000.0)
+		now.append(["stun", "stun", false, clampf(sl / tot, 0.0, 1.0), "มึนงง เหลือ %.1f วิ" % sl, ""])
+	var st: Variant = v.get("stat")
+	if st is Dictionary:
+		for bk in BUFF_KEYS:
+			var val := float(st.get(bk[0], 0.0)) if st.get(bk[0]) is float or st.get(bk[0]) is int else 0.0
+			if val > 0.0: now.append([bk[0], bk[1], true, -1.0, String(bk[2]) % R_num(val), "+"])
+		for dk in DEBUFF_KEYS:
+			var val := float(st.get(dk[0], 0.0)) if st.get(dk[0]) is float or st.get(dk[0]) is int else 0.0
+			if val > 0.0: now.append([dk[0], dk[1], false, -1.0, String(dk[2]) % R_num(val), "+"])
+	var seen: Dictionary = _seen.get(uid, {})
+	var keep := {}
+	for e in now:
+		if not seen.has(e[0]): seen[e[0]] = float(view.clock) + float(seen.size()) * 0.001
+		keep[e[0]] = seen[e[0]]
+	_seen[uid] = keep   # an effect that ends and comes back later joins the end of the line
+	now.sort_custom(func(p, q): return float(keep[p[0]]) < float(keep[q[0]]))
+	return now
+
+func _rows_for(v: Dictionary, w: float) -> int:   # r35j: rows the values need inside a card of width w
+	var x0 := 27.0
+	var xr := w - 4.0
+	var x := x0
+	var rows := 1
+	for it in _haves(v):
+		var wv := _chip_w(it[0], it[1])
+		if x + wv > xr and x > x0:
+			rows += 1; x = x0
+		x += wv + 6.0
+	return rows
+
+const HAVE_KEYS := [["burnHit", "burn", ""], ["shockHit", "shock", ""], ["armorHit", "armhit", ""], ["healHit", "heal", ""],
+	["hitAmp", "atk", "%"], ["burnAmp", "burn", "%"], ["shockAmp", "shock", "%"], ["armorAmp", "armor", "%"], ["healAmp", "heal", "%"],
+	["cdAmp", "cd", "%"], ["healToAtk", "h2a", "%"]]
+const TAKEN_KEYS := [["dmgTaken", "vuln", "%"], ["burnTaken", "burn", "%"], ["shockTaken", "shock", "%"]]
+
+func _need_w(v: Dictionary) -> float:   # r35e: narrowest card that fits this unit's values in 2 rows
+	var its := _haves(v)
+	var ws: Array = []
+	for it in its: ws.append(_chip_w(it[0], it[1]) + 6.0)
+	var lo := 27.0 + 3.0
+	for cw in range(int(CARD_MIN), int(CARD_MAX) + 1, 2):
+		var avail := float(cw) - lo
+		var rows := 1
+		var x := 0.0
+		var ok := true
+		for wv in ws:
+			if x + wv - 6.0 > avail and x > 0.0:
+				rows += 1; x = 0.0
+			if wv - 6.0 > avail: ok = false
+			x += wv
+		if ok and rows <= 2: return float(cw)
+	return CARD_MAX
+
+func _haves(v: Dictionary) -> Array: # r35l: flat values only (every % boost moved outside the card as a buff chip)
+	var out := []
+	var st: Variant = v.get("stat")
+	var sd: Dictionary = st if st is Dictionary else {}
+	if OS.get_environment("S286FAKESTAT") == "1" and _order.find(int(v["uid"])) == 3: # mock: busiest real flat set
+		return [["atk", "100K"], ["multi", "3"], ["burn", "100K"], ["shock", "100K"], ["armhit", "100K"], ["heal", "100K"]]
+	if sd.has("atk") and float(sd["atk"]) != 0.0: out.append(["atk", R_num(float(sd["atk"]))])
+	var m := float(sd.get("multi", v.get("multi", 1.0)))
+	if m > 1.0: out.append(["multi", R_num(m)])
+	for hk in [["burnHit", "burn"], ["shockHit", "shock"], ["armorHit", "armhit"], ["healHit", "heal"]]:
+		var val := float(sd.get(hk[0], 0.0)) if sd.get(hk[0]) is float or sd.get(hk[0]) is int else 0.0
+		if val != 0.0: out.append([hk[1], R_num(val)])
+	return out
+
+func _hits(v: Dictionary) -> Array: # [kind, text, tier]: tier 0 = burn / shock (row 1) · tier 1 = every other status (row 2 up)
+	var out := []
+	if OS.get_environment("S286FAKESTAT") == "1": # stills
+		var ix := _order.find(int(v["uid"]))
+		if ix == 0: return [["stun", "1.5", 1]]
+		if ix == 1: return [["burn", "12", 0], ["shock", "8", 0]]
+		if ix == 2: return [["stun", "0.8", 1], ["burn", "4", 0], ["vuln", "15%", 1]]
+		if ix == 3: return [["burn", "100K", 0], ["shock", "100K", 0], ["stun", "9.9", 1], ["vuln", "999%", 1], ["burn", "999%", 1], ["shock", "999%", 1]]
+	var sl := _stun_left(v)
+	if sl > 0.0: out.append(["stun", "%.1f" % sl, 1])
+	if float(v.get("burn", 0.0)) > 0.0: out.append(["burn", R_num(float(v["burn"])), 0])
+	if float(v.get("shock", 0.0)) > 0.0: out.append(["shock", R_num(float(v["shock"])), 0])
+	var st: Variant = v.get("stat")
+	if st is Dictionary:
+		for tk in TAKEN_KEYS:
+			var val := float(st.get(tk[0], 0.0)) if st.get(tk[0]) is float or st.get(tk[0]) is int else 0.0
+			if val != 0.0: out.append([tk[1], R_num(val) + tk[2], 1])
+	return out
+
+static func short_num(x: float) -> String:
+	var ax := absf(x)
+	var sg := "-" if x < 0.0 else ""
+	if ax < 1000.0: return sg + R_raw(ax)
+	for u in [[1e9, "B"], [1e6, "M"], [1e3, "K"]]:
+		if ax >= float(u[0]):
+			var q := ax / float(u[0])
+			if q < 9.95:
+				var t := "%.1f" % (floorf(q * 10.0) / 10.0)
+				if t.ends_with(".0"): t = t.substr(0, t.length() - 2)
+				return sg + t + String(u[1])
+			return sg + str(int(floorf(q))) + String(u[1])
+	return sg + R_raw(ax)
+
+static func R_num(x: float) -> String:
+	return short_num(x)
+
+static func R_raw(x: float) -> String:
+	return str(int(x)) if absf(x - roundf(x)) < 0.001 else "%.1f" % x
+
+func _chip_w(kind: String, t: String) -> float:
+	return ISZ + 1.0 + TH.font("mono").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+
+func _chip(p: Vector2, kind: String, t: String, a: float, plate: bool) -> float: # returns the right end x
+	var mf: Font = TH.font("mono")
+	var fs := 8
+	var px := 1.5
+	var gw := ISZ - 1.0
+	var tw := mf.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var w := gw + 2.0 + tw
+	if plate:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color("#16202a", 0.80 * a)
+		sb.border_color = Color(ICON_COL[kind], 0.55 * a)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(2)
+		draw_style_box(sb, Rect2(p.x - 2.0, p.y - 1.5, w + 4.0, CH))
+	if _cv287 != null:
+		var ir := Rect2(p.x - 1.0, p.y - 0.5, ISZ, ISZ)
+		var o := icon_tex(kind + "_o")
+		var f := icon_tex(kind)
+		if o != null: _cv287.draw_texture_rect(o, ir, false, Color(OUT, OUT.a * a))
+		if f != null: _cv287.draw_texture_rect(f, ir, false, Color(ICON_COL[kind], a))
+		_cv287.draw_string_outline(mf, Vector2(p.x + gw + 2.0, p.y + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(OUT, OUT.a * a))
+		_cv287.draw_string(mf, Vector2(p.x + gw + 2.0, p.y + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(MUTE, a))
+		return p.x + w
+	_ic_q.append([Rect2(p.x - 1.0, p.y - 0.5, ISZ, ISZ), kind, ICON_COL[kind], a])
+	draw_string_outline(mf, Vector2(p.x + gw + 2.0, p.y + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(OUT, OUT.a * a))
+	draw_string(mf, Vector2(p.x + gw + 2.0, p.y + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(MUTE, a))
+	return p.x + w
+
+static func icon_tex(key: String) -> Texture2D:
+	if not _itex.has(key):
+		var img := Image.load_from_file(ICON_DIR + key + ".png")
+		if img == null or img.is_empty():
+			_itex[key] = null
+		else:
+			img.generate_mipmaps()
+			_itex[key] = ImageTexture.create_from_image(img)
+	return _itex[key]
+
+func _draw_icons() -> void:
+	for q in _ic_q:
+		if q[0] is String and (q[0] == "+" or q[0] == "-"):
+			var p: Vector2 = q[1]
+			var a0: float = q[2]
+			_ic_layer.draw_rect(Rect2(p.x - 3.0, p.y - 1.5, 5.0, 3.0), Color(OUT, 0.9 * a0))
+			_ic_layer.draw_rect(Rect2(p.x - 2.5, p.y - 0.5, 4.0, 1.0), Color(1, 1, 1, a0))
+			if q[0] == "+":
+				_ic_layer.draw_rect(Rect2(p.x - 2.0, p.y - 2.5, 3.0, 5.0), Color(OUT, 0.9 * a0))
+				_ic_layer.draw_rect(Rect2(p.x - 2.5, p.y - 0.5, 4.0, 1.0), Color(1, 1, 1, a0))
+				_ic_layer.draw_rect(Rect2(p.x - 1.0, p.y - 2.0, 1.0, 4.0), Color(1, 1, 1, a0))
+			continue
+		if q[0] is String and q[0] == "veil":
+			var vr: Rect2 = q[1]
+			if vr.size.y > 0.0: _ic_layer.draw_rect(vr, Color(0.06, 0.07, 0.08, 0.62 * float(q[2])))
+			continue
+		if q[0] is String and q[0] == "ring":
+			var cc: Vector2 = q[1]
+			var rr: float = q[2]
+			var f0: float = q[3]
+			_ic_layer.draw_arc(cc, rr, 0.0, TAU, 32, Color(OUT, 0.55 * float(q[4])), 1.5, true)
+			_ic_layer.draw_arc(cc, rr, -PI * 0.5, -PI * 0.5 + TAU * f0, 32, Color(1, 1, 1, 0.95 * float(q[4])), 1.5, true)
+			continue
+		var r: Rect2 = q[0]
+		var a: float = q[3]
+		var o := icon_tex(String(q[1]) + "_o")
+		var f := icon_tex(String(q[1]))
+		if o != null: _ic_layer.draw_texture_rect(o, r, false, Color(OUT, OUT.a * a))
+		if f != null: _ic_layer.draw_texture_rect(f, r, false, Color(q[2], a))
+	_draw_tip()
+
+func _draw_tip() -> void:   # r35l: hover (PC) or a tapped chip (touch, 2.5 s)
+	var txt := ""
+	var at := Rect2()
+	var m := get_local_mouse_position()
+	for i in range(_tips.size() - 1, -1, -1):
+		if (_tips[i][0] as Rect2).has_point(m):
+			txt = _tips[i][1]; at = _tips[i][0]; break
+	var hov := OS.get_environment("S286HOVER")   # stills: show the tooltip of card N's first effect chip
+	if txt == "" and hov != "" and _tips.size() > 0:
+		for t in _tips:
+			if String(t[1]).find(hov) >= 0: txt = t[1]; at = t[0]; break
+	if txt == "" and _pin_tip != "" and Time.get_ticks_msec() / 1000.0 < _pin_t:
+		txt = _pin_tip; at = _pin_r
+	if txt == "": return
+	var f: Font = TH.font("body")
+	var fs := 10
+	var tw := f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var box := Rect2(clampf(at.position.x, 4.0, size.x - tw - 14.0), at.position.y - 20.0, tw + 10.0, 16.0)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#16202a", 0.94)
+	sb.border_color = Color(1, 1, 1, 0.35)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(3)
+	_ic_layer.draw_style_box(sb, box)
+	_ic_layer.draw_string(f, box.position + Vector2(5.0, 12.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
+
+func _pix(o: Vector2, g: Array, col: Color, px: float, a: float) -> void:
+	for pass_i in 2:
+		for yy in g.size():
+			var row: String = g[yy]
+			for xx in row.length():
+				if row[xx] != "#": continue
+				if pass_i == 0:
+					draw_rect(Rect2(o.x + float(xx) * px - 0.5, o.y + float(yy) * px - 0.5, px + 1.0, px + 1.0), Color(OUT, OUT.a * a))
+				else:
+					draw_rect(Rect2(o.x + float(xx) * px, o.y + float(yy) * px, px, px), Color(col, a))
+
+func _txt(f: Font, p: Vector2, t: String, fs: int, col: Color, maxw: float) -> void:
+	var s := t
+	if maxw > 0.0:
+		while s.length() > 1 and f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw:
+			s = s.substr(0, s.length() - 1)
+		if s != t: s = s.substr(0, maxi(1, s.length() - 1)) + "…"
+	draw_string_outline(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 3, Color(OUT, OUT.a * col.a))
+	draw_string(f, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+func _cd_rem(v: Dictionary) -> float:
+	if not v.has("cdl"): return -1.0
+	return maxf(0.0, float(v["cdl"]) - maxf(0.0, float(view.clock) - float(v["cdlT"]))) / 1000.0
+
+func _cd_frac(v: Dictionary) -> float:
+	var rem := _cd_rem(v)
+	if rem < 0.0: return -1.0
+	var st: Variant = v.get("stat")
+	var cd := float(st.get("cd", 0.0)) / 1000.0 if st is Dictionary else 0.0
+	cd = maxf(cd, rem)
+	if cd <= 0.0: return 1.0
+	return clampf(1.0 - rem / cd, 0.0, 1.0)
+
+func _stun_left(v: Dictionary) -> float:
+	if float(v.get("stunL", 0.0)) <= 0.0: return 0.0
+	return maxf(0.0, float(v["stunL"]) - maxf(0.0, float(view.clock) - float(v.get("stunT", 0.0)))) / 1000.0
+
+const ICONS := {
+	"stun": ["..#.#..", ".#####.", "##.#.##", ".#####.", "..#.#.."],
+	"burn": ["...#...", "..##...", ".####..", "######.", ".####.."],
+	"shock": ["...##..", "..##...", ".####..", "...##..", "..##..."],
+	"atk": ["....##", "...##.", "#.##..", ".##...", "#.#..."],     # sword
+	"armor": ["######", "##..##", "##..##", ".#..#.", "..##.."],   # shield
+	"multi": ["#...#", ".#.#.", "..#..", ".#.#.", "#...#"],        # × (hits per attack)
+	"armhit": ["####.#.", "#..####", "#..#.#.", ".##....", "......."],  # shield + plus (armour per hit)
+	"heal": [".#.#.", "#####", "#####", ".###.", "..#.."],          # heart (a cross read as "+")
+	"cd": [".###.", "#.#.#", "#.###", "#...#", ".###."],            # clock
+	"h2a": [".#.#....#", "#####..#.", ".###.##..", "..#..#...", ".....#..."],  # heart -> sword
+	"vuln": ["##.###", "#..#.#", "#.#..#", ".#..#.", "..##.."],    # cracked shield
+}
+const ICON_COL := {"stun": Color("#e8eef2"), "burn": Color("#ef8a3c"), "shock": Color("#f2d64b"),
+	"atk": Color("#e0d2b4"), "armor": Color("#a9c3d3"), "multi": Color("#e0d2b4"), "armhit": Color("#a9c3d3"),
+	"heal": Color("#7fd18a"), "cd": Color("#9fc4ea"), "h2a": Color("#e88fa0"), "vuln": Color("#e07a7a")}
+
+# ---------- picking: tap a card, or tap a unit (either side) on the arena ----------
+func _input(ev: InputEvent) -> void:
+	if not is_visible_in_tree() or view == null: return
+	var mb := ev as InputEventMouseButton
+	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT: return
+	var p := get_global_transform_with_canvas().affine_inverse() * mb.position
+	for i in range(_tips.size() - 1, -1, -1):   # r35l: a chip / a \"+N\" card tap shows its detail
+		var tr: Rect2 = _tips[i][0]
+		if tr.has_point(p) and not _rects.values().has(tr):
+			_pin_tip = _tips[i][1]; _pin_r = tr; _pin_t = Time.get_ticks_msec() / 1000.0 + 2.5
+			get_viewport().set_input_as_handled()
+			return
+	for uid in _rects:
+		if (_rects[uid] as Rect2).has_point(p):
+			_pick(uid)
+			get_viewport().set_input_as_handled()
+			return
+	var hit := _unit_at(mb.position)
+	if hit >= 0:
+		_pick(hit)
+
+func _pick(uid: int) -> void:
+	picked = -1 if picked == uid else uid
+	if OS.get_environment("S286LOG") == "1": print("S286 pick ", picked)
+
+func _unit_at(screen_p: Vector2) -> int:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null: return -1
+	var canvas_p := get_viewport().get_canvas_transform().affine_inverse() * screen_p
+	var best := -1
+	var bestd := 1.0e9
+	for v in view.units.values():
+		if v.get("down") == true or float(v["hp"]) <= 0.0: continue
+		var uid := int(v["uid"])
+		var s := _spr(uid)
+		if s == null or not s.is_visible_in_tree(): continue
+		var aabb := s.get_aabb()
+		var rr := Rect2(cam.unproject_position(s.global_transform * aabb.get_endpoint(0)), Vector2.ZERO)
+		for i in 8:
+			rr = rr.expand(cam.unproject_position(s.global_transform * aabb.get_endpoint(i)))
+		if rr.grow(-rr.size.x * 0.15).has_point(canvas_p):
+			var d := canvas_p.distance_to(rr.get_center())
+			if d < bestd:
+				bestd = d; best = uid
+	return best
+
+# ---------- white outline on the picked unit's sprite: 4 white silhouettes 1 art pixel out, just behind it ----------
+func _silhouette(t: Texture2D) -> Texture2D:
+	if _sil.has(t): return _sil[t]
+	var img := t.get_image()
+	if img == null: return null
+	img = img.duplicate()
+	img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	for yy in img.get_height():
+		for xx in img.get_width():
+			img.set_pixel(xx, yy, Color(1, 1, 1, 1) if img.get_pixel(xx, yy).a > 0.5 else Color(1, 1, 1, 0))
+	var out := ImageTexture.create_from_image(img)
+	_sil[t] = out
+	return out
+
+func _clear_outline() -> void:
+	for o in _outl:
+		if is_instance_valid(o): o.queue_free()
+	_outl.clear()
+	_outl_src = null
+
+func _sync_outline() -> void:
+	var s := _spr(picked) if picked >= 0 else null
+	if s != null and view.units.has(picked) and (view.units[picked].get("down") == true or float(view.units[picked]["hp"]) <= 0.0):
+		s = null
+	if s == null:
+		if _outl_src != null: _clear_outline()
+		return
+	if s != _outl_src or (not _outl.is_empty() and _outl[0].get_meta("src") != s.texture):
+		_clear_outline()
+		var sil := _silhouette(s.texture)
+		if sil == null: return
+		_outl_src = s
+		for d in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
+			var o := Sprite3D.new()
+			o.texture = sil
+			o.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			o.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			o.shaded = false
+			o.double_sided = true
+			o.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			o.set_meta("d", d)
+			o.set_meta("src", s.texture)
+			s.add_child(o)
+			_outl.append(o)
+	for o in _outl:
+		var d: Vector2 = o.get_meta("d")
+		o.hframes = s.hframes; o.vframes = s.vframes; o.frame = s.frame
+		o.flip_h = s.flip_h; o.flip_v = s.flip_v
+		o.centered = s.centered; o.offset = s.offset
+		o.pixel_size = s.pixel_size
+		o.region_enabled = s.region_enabled; o.region_rect = s.region_rect
+		o.render_priority = s.render_priority - 1
+		o.position = Vector3(d.x * s.pixel_size, d.y * s.pixel_size, -0.004)
