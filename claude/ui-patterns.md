@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V1.7 · 23 Nov 2026 (set 290, owner A1: §9 usability + accessibility rules — Game Accessibility Guidelines basic tier, Pinelle CHI 2008, NN/g game heuristics; §5 step 6 walks §9) · V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -284,7 +284,7 @@ Why it happens: a model falls back to the most common pattern when nobody decide
 3. **Write the three decisions that are not defaults** for this sample (e.g. material = carved stone tabs; corners = 2-px cut; reroll = a physical dice object). No three decisions → not ready to draw.
 4. Draw / build.
 5. **Tell count** against §4 on the screenshot; list each tell found; ≥ 3 → fix before showing the owner, except anything the owner picked (agreed list / notes.md / docs / Relay) — that one is never changed on Claude's own, ask A1/A2 (set 211 A1).
-6. **Genre check** against §3 (board visible, tap sizes, tooltip place, fixed buttons).
+6. **Genre check** against §3 (board visible, tap sizes, tooltip place, fixed buttons) + §9 A2 contrast · A3 greyscale · A6 tap alternative · C3 confirm/undo (V1.7).
 7. Show the owner with one line: references used · three decisions · tells left and why.
 
 ## 6. Open points for the owner (not decided)
@@ -339,6 +339,39 @@ The owner describes a change ("ปุ่มนี้ดูจืด", "อยา
 4. Checks each idea against §3 DON'T, §4 tells and MVP1 scope before offering it; an idea that needs a system outside MVP1 is named as such, not offered as a pick.
 5. After the owner picks: the normal path (ui-preview sample, or ui-work build). New facts learned go into §1/§7 the same commit.
 
+## 9. Usability + accessibility rules (V1.7, set 290 — owner A1: general game-UX rule sets folded in, no outside skill installed)
+
+Three rule sets, cut to what fits ours (phone landscape · auto-battler · Thai text · many small icons · no voice). Evidence: [S-search] = seen in web-search excerpts 23 Nov 2026 (the three source sites were blocked by this session's network, pages not opened) · [K] = Claude's memory of the source. Lines already in §2/§3 or ui.md are only pointed to.
+
+**A. Game Accessibility Guidelines — basic tier, the parts that apply [S-search]**
+- A1. Readable default text size; text ≥ 10 px stays the floor (ui.md phone audit). Thai needs more than Latin: tone marks stack, so key numbers and names one step bigger than body.
+- A2. High contrast between text/icons and what is behind them: aim ≥ 4.5:1 for small text, ≥ 3:1 for big text and icons (WCAG figures). Text over the 3D scene always gets a plate or a 1-px dark outline (§4 "gradient text" fix).
+- A3. Never colour alone for anything that changes a decision (tier, tribe, owned, buff/debuff, ally/foe): add a shape, icon or number (§2 DO 6 · art-style §3). Check one screen in greyscale before showing the owner.
+- A4. Game speed can be changed (battle ×1/×2) and long or repeated content can be skipped (battle replay, intro, result count-up) — see also B5.
+- A5. Subtitle-style text (story lines, boss intro, if any): solid or semi-opaque plate, ≤ 40 characters per line [S-search].
+- A6. Controls: our input is taps/drags only, so remapping does not apply; the motor part becomes: no time-pressured precision drags, a tap alternative for every drag (tap unit → tap slot), targets ≥ 24 px (aim 44, §3 DON'T 2).
+
+**B. Pinelle, Wong, Stach — "Heuristic evaluation for games", CHI 2008 (10 heuristics from usability problems in reviews of 108 PC games [S-search]; names [K])**
+- B1. Consistent response to the player's actions — the same tap does the same thing on every screen.
+- B2. Settings for video, audio, difficulty and game speed.
+- B3. Predictable, reasonable behaviour of computer-controlled units — for us: the targeting rule must be readable from the battle (who hits whom); a surprise target = a UI/feedback bug even when the rule is right.
+- B4. Unobstructed view for the current action (§2 DO 1 · §3 DON'T 1, 3).
+- B5. Skip non-playable and often-repeated content.
+- B6. Intuitive input mappings (here: drag = move, tap = info, long-press never the only path).
+- B7. Controls easy to manage, sensitivity right (drag dead-zone, no accidental sell).
+- B8. Information on game status always available (§2 DO 25 status strip).
+- B9. Instructions, training and help (tap-for-rule, §2 DO 9; first-run hints only where a tester got stuck).
+- B10. Visuals easy to read and little micromanagement (§3 DON'T 6).
+
+**C. Nielsen's 10 usability heuristics applied to games (NN/g) — the ones that add something [S-search + K]**
+- C1. Visibility of system status: every state change is shown where the eye already is (HP bar on the unit, gold change at the gold number, a "+1" pop) — NN/g's example is the always-visible health meter.
+- C2. Recognition over recall: the player never has to remember something from another screen — show tribe progress, item effects and enemy traits on the screen where they matter (§2 DO 27).
+- C3. Error prevention + undo: cheap, reversible actions have no confirm; costly or irreversible ones (sell a 3★, end run) get one confirm or an undo for a few seconds — never both missing, never a double confirm (§3 DON'T 6).
+- C4. Contextual HUD: show an element only in the phase that uses it (e.g. shop hidden in battle) instead of permanent clutter — but the status strip stays (DO 25).
+- C5. Match the real world: icons and words the player already knows (sword = attack, shield = armour, flame = burn); new names only for things with no real-world match.
+
+**How the skill uses §9:** in §5 step 6 (genre check) also walk A2 (contrast), A3 (greyscale check), A6 (tap alternative) and C3 (confirm/undo) on the screenshot; list any miss with the tells.
+
 ## Sources (read 12 Nov 2026)
 - Riot, TFT Interface Update (level bar, button swap): https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/tft-interface-update/
 - Pocket Tactics, GDC 2020: three design lessons from TFT: https://www.pockettactics.com/teamfight-tactics-design
@@ -355,3 +388,4 @@ The owner describes a change ("ปุ่มนี้ดูจืด", "อยา
 - FF Resonance: Noisy Pixel review https://noisypixel.net/final-fantasy-resonance-review/ · Twisted Voxel review https://twistedvoxel.com/final-fantasy-resonance-review/ · UnGeek preview https://www.ungeek.ph/2026/09/final-fantasy-resonance-first-impressions-breaking-the-hd-2d-limits/ · Final Weapon and Absolute Geeks reviews (menu/battle-UI criticism — search summary only, pages did not load): https://finalweapon.net/2026/10/20/final-fantasy-resonance-review/ · https://www.absolutegeeks.com/games/gaming-reviews/final-fantasy-resonance-review-brilliant-battles-painfully-predictable-story/
 - AI-design tells: Impeccable "visible tells of AI design" https://924b8765.impeccable-2rv.pages.dev/slop · other catalogues (search summary): https://github.com/Laith0003/ux-skill/wiki/How-to-detect-AI-slop-in-your-design · https://www.saasui.design/blog/saas-ui-looks-ai-generated
 - Indie game UI basics (search summary): https://bugnet.io/blog/ui-design-basics-for-indie-developers · https://bootcamp.uxdesign.cc/7-obvious-beginner-mistakes-with-your-games-hud-from-a-ui-ux-art-director-d852e255184a
+- §9 (searched 23 Nov 2026, pages blocked by the session network — search excerpts only): https://gameaccessibilityguidelines.com/basic/ · https://gameaccessibilityguidelines.com/if-any-subtitles-captions-are-used-present-them-in-a-clear-easy-to-read-way/ · https://unity.com/blog/video-game-accessibility-basics · https://www.nngroup.com/articles/usability-heuristics-applied-video-games/ · https://dl.acm.org/doi/10.1145/1357054.1357282 (Pinelle et al. CHI 2008) · http://cc.oulu.fi/~mrajanen/paper19.pdf
