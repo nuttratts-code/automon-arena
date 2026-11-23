@@ -1,6 +1,6 @@
 {
- "rev": 240,
- "t": "2026-11-22T18:10:09.048Z",
+ "rev": 251,
+ "t": "2026-11-23T07:57:57.026Z",
  "batchDir": "D:\\GitHub\\automon-scratch\\still-batches",
  "batches": {
   "demon": {
@@ -92,6 +92,16 @@
    "form": 3,
    "pick": [
     "g02"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "demon_f3_m7": {
+   "id": "WN-7",
+   "form": 3,
+   "pick": [
+    "g15"
    ],
    "eye": true,
    "hidden": false,
@@ -265,6 +275,24 @@
    "form": 3,
    "pick": [
     "g08"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "fire_f3_m7": {
+   "id": "PL-7",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "fire_f3_m7b": {
+   "id": "PL-7",
+   "form": 3,
+   "pick": [
+    "g15"
    ],
    "eye": true,
    "hidden": false,
@@ -445,6 +473,16 @@
    "form": 3,
    "pick": [
     "g02"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "spirit_f3_m7": {
+   "id": "PT-7",
+   "form": 3,
+   "pick": [
+    "g07"
    ],
    "eye": true,
    "hidden": false,
@@ -664,6 +702,32 @@
    "hidden": false,
    "closed": false
   },
+  "steel_f3_m7": {
+   "id": "HL-7",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "steel_f3_m7b": {
+   "id": "HL-7",
+   "form": 3,
+   "pick": [],
+   "eye": true,
+   "hidden": true,
+   "closed": false
+  },
+  "steel_f3_m7c": {
+   "id": "HL-7",
+   "form": 3,
+   "pick": [
+    "g15"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
   "steel_hl3a": {
    "id": "HL-3",
    "form": 1,
@@ -815,7 +879,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "storm_f3_m6b": {
@@ -831,7 +895,7 @@
    "form": 3,
    "pick": [],
    "eye": true,
-   "hidden": false,
+   "hidden": true,
    "closed": false
   },
   "storm_f3_m6d": {
@@ -873,6 +937,16 @@
    "form": 3,
    "pick": [
     "g03"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "storm_f3_m7": {
+   "id": "SF-7",
+   "form": 3,
+   "pick": [
+    "g05"
    ],
    "eye": true,
    "hidden": false,
@@ -1061,6 +1135,16 @@
    "form": 3,
    "pick": [
     "g07"
+   ],
+   "eye": true,
+   "hidden": false,
+   "closed": false
+  },
+  "wind_f3_m7": {
+   "id": "WY-7",
+   "form": 3,
+   "pick": [
+    "g08"
    ],
    "eye": true,
    "hidden": false,

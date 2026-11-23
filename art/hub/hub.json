@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1829,
+ "rev": 1843,
  "settings": {
   "moves": [
    "idle",
@@ -1163,7 +1163,7 @@
      "t": "2026-11-21T14:59:48.807Z",
      "by": "owner",
      "note": "แก้พิกเซลบนเว็บ จาก 2026-11-21",
-     "star": true,
+     "star": false,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
     },
@@ -1184,6 +1184,45 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 0791"
      }
+    },
+    {
+     "id": "reb05d116",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-3/still_f3_2026-11-23_cf16929f.png",
+     "orig": "55d84064_g15_edit.png",
+     "t": "2026-11-23T07:33:37.544Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rfc7d41de",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-3/still_f1_2026-11-23_414eba35.png",
+     "orig": "204d4182_g24_edit_edit.png",
+     "t": "2026-11-23T07:35:58.669Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-21",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r75147243",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-3/still_f3_2026-11-23_d70b727a.png",
+     "orig": "55d84064_g15_edit_edit.png",
+     "t": "2026-11-23T07:37:15.200Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-23",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -1256,6 +1295,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "ra1aba616",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-23_a1aba616.png",
+     "orig": "52997499_g15.png",
+     "t": "2026-11-23T07:58:33.238Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 52997499 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_52997499)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_52997499",
+      "pick": "g15",
+      "styleSrc": "still_f1_2026-11-22_eeb29b39.png"
+     }
     }
    ],
    "notes": "",
@@ -1334,6 +1391,19 @@
       "pick": "g00",
       "styleSrc": "pmd-ref 0571"
      }
+    },
+    {
+     "id": "ra799eedb",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-23_64773093.png",
+     "orig": "98d3b147_g00_edit.png",
+     "t": "2026-11-23T07:58:33.459Z",
+     "by": "owner",
+     "note": "แก้พิกเซลบนเว็บ จาก 2026-11-22",
+     "star": true,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED"
     }
    ],
    "notes": "",
@@ -2744,6 +2814,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r2df3fe41",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-7/still_f3_2026-11-23_2df3fe41.png",
+     "orig": "0baad8e2_g15.png",
+     "t": "2026-11-23T07:58:32.808Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 0baad8e2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_0baad8e2)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_0baad8e2",
+      "pick": "g15",
+      "styleSrc": "still_f1_2026-11-22_89ae303a.png"
+     }
     }
    ],
    "notes": "",
@@ -4131,6 +4219,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r723d1f73",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-7/still_f3_2026-11-23_723d1f73.png",
+     "orig": "fa57185b_g05.png",
+     "t": "2026-11-23T07:58:57.550Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน fa57185b g05 (ตัวเต็ง · ประวัติ: batches/2026-11-23_fa57185b)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_fa57185b",
+      "pick": "g05",
+      "styleSrc": "still_f1_2026-11-22_2f00b86c.png"
+     }
     }
    ],
    "notes": "",
@@ -5413,6 +5519,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r827548f2",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-7/still_f3_2026-11-23_827548f2.png",
+     "orig": "ec064e1a_g08.png",
+     "t": "2026-11-23T07:58:33.682Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน ec064e1a g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_ec064e1a)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_ec064e1a",
+      "pick": "g08",
+      "styleSrc": "still_f1_2026-11-22_9ff31240.png"
+     }
     }
    ],
    "notes": "",
@@ -6757,6 +6881,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rb70f90b6",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-7/still_f3_2026-11-23_b70f90b6.png",
+     "orig": "08310e1e_g07.png",
+     "t": "2026-11-23T07:58:33.020Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 08310e1e g07 (ตัวเต็ง · ประวัติ: batches/2026-11-23_08310e1e)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_08310e1e",
+      "pick": "g07",
+      "styleSrc": "still_f1_2026-11-22_2fa4bfc3.png"
+     }
     }
    ],
    "notes": "",
@@ -8176,6 +8318,24 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r7ef84b87",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-7/still_f3_2026-11-23_7ef84b87.png",
+     "orig": "802178f2_g15.png",
+     "t": "2026-11-23T07:58:32.598Z",
+     "by": "claude",
+     "note": "ร่าง 3 · ชุดเจน 802178f2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_802178f2)",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "batch": "batches/2026-11-23_802178f2",
+      "pick": "g15",
+      "styleSrc": "still_f1_2026-11-22_e687f6e1.png"
+     }
     }
    ],
    "notes": "",
