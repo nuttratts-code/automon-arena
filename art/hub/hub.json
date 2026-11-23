@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1896,
+ "rev": 1897,
  "settings": {
   "moves": [
    "idle",
@@ -730,7 +730,7 @@
     "round": "rf5478caa"
    },
    "scale": {
-    "k": 4,
+    "k": 5,
     "size": [
      48,
      48
@@ -811,7 +811,34 @@
     "m": 6
    },
    "scale3": {
-    "k": 3.5,
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd837981b"
+   },
+   "shadow3": {
+    "feet": [
+     0.4776,
+     0.8839
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
     "size": [
      56,
      56
@@ -1134,7 +1161,7 @@
     "round": "r88330644"
    },
    "scale3": {
-    "k": 3,
+    "k": 4,
     "size": [
      56,
      56
@@ -1143,7 +1170,34 @@
    },
    "palette": [
     "#ff0000"
-   ]
+   ],
+   "shadow3": {
+    "feet": [
+     0.4554,
+     0.9911
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r74e412f9"
+   }
   },
   "HL-3": {
    "id": "HL-3",
@@ -1245,8 +1299,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5472,
+     0.7812
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfc7d41de"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfc7d41de"
+   },
+   "shadow3": {
+    "feet": [
+     0.5099,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r75147243"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r75147243"
+   }
   },
   "HL-4": {
    "id": "HL-4",
@@ -1363,8 +1486,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4034,
+     0.8854
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rc55213dc"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rc55213dc"
+   },
+   "shadow3": {
+    "feet": [
+     0.5203,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r5dfc4957"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r5dfc4957"
+   }
   },
   "HL-5": {
    "id": "HL-5",
@@ -1492,8 +1684,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4432,
+     0.8438
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r1527c05c"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r1527c05c"
+   },
+   "shadow3": {
+    "feet": [
+     0.5012,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r9dce119e"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r9dce119e"
+   }
   },
   "HL-6": {
    "id": "HL-6",
@@ -1621,8 +1882,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5822,
+     0.8229
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "ra83c0302"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "ra83c0302"
+   },
+   "shadow3": {
+    "feet": [
+     0.4914,
+     0.9554
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb8f78b95"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb8f78b95"
+   }
   },
   "HL-7": {
    "id": "HL-7",
@@ -1737,8 +2067,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4863,
+     0.8854
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf1499976"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf1499976"
+   },
+   "shadow3": {
+    "feet": [
+     0.4525,
+     0.9911
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd99a0157"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd99a0157"
+   }
   },
   "HL-8": {
    "id": "HL-8",
@@ -1853,8 +2252,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.3761,
+     0.8828
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "ra373ed5a"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "ra373ed5a"
+   },
+   "shadow3": {
+    "feet": [
+     0.3944,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd72a58fa"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd72a58fa"
+   }
   },
   "PL-1": {
    "id": "PL-1",
@@ -2604,6 +3072,41 @@
      ]
     ],
     "m": 6
+   },
+   "shadow3": {
+    "feet": [
+     0.4674,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "re708bd84"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "re708bd84"
    }
   },
   "PL-2": {
@@ -2685,8 +3188,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5059,
+     0.9062
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r537ae848"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r537ae848"
+   },
+   "shadow3": {
+    "feet": [
+     0.5424,
+     0.9554
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r3eacec79"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r3eacec79"
+   }
   },
   "PL-3": {
    "id": "PL-3",
@@ -2934,12 +3506,39 @@
     "round": "r368fc2cb"
    },
    "scale3": {
-    "k": 3,
+    "k": 4,
     "size": [
      56,
      56
     ],
     "round": "r0c712e7a"
+   },
+   "shadow3": {
+    "feet": [
+     0.5015,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r91b6ad95"
    }
   },
   "PL-4": {
@@ -3055,8 +3654,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5556,
+     0.8854
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r22cd84ae"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r22cd84ae"
+   },
+   "shadow3": {
+    "feet": [
+     0.4753,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2df3fe41"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2df3fe41"
+   }
   },
   "PL-5": {
    "id": "PL-5",
@@ -3184,8 +3852,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5667,
+     0.8021
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r9dae6371"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r9dae6371"
+   },
+   "shadow3": {
+    "feet": [
+     0.4815,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb00fe3d8"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb00fe3d8"
+   }
   },
   "PL-6": {
    "id": "PL-6",
@@ -3248,8 +3985,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5438,
+     0.9688
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rbc032ab7"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rbc032ab7"
+   },
+   "shadow3": {
+    "feet": [
+     0.4566,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r247bcc96"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r247bcc96"
+   }
   },
   "PL-7": {
    "id": "PL-7",
@@ -3312,8 +4118,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.6155,
+     0.8646
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfcec6c21"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfcec6c21"
+   },
+   "shadow3": {
+    "feet": [
+     0.6319,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r34a0300f"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r34a0300f"
+   }
   },
   "PL-8": {
    "id": "PL-8",
@@ -3376,8 +4251,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.507,
+     0.9453
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "re028dcb7"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "re028dcb7"
+   },
+   "shadow3": {
+    "feet": [
+     0.5251,
+     0.9911
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "ra0de83dd"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "ra0de83dd"
+   }
   },
   "SF-1": {
    "id": "SF-1",
@@ -4037,6 +4981,41 @@
      ]
     ],
     "m": 6
+   },
+   "shadow3": {
+    "feet": [
+     0.574,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r6ff9e868"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r6ff9e868"
    }
   },
   "SF-2": {
@@ -4100,8 +5079,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5253,
+     0.8229
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r98be21b0"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r98be21b0"
+   },
+   "shadow3": {
+    "feet": [
+     0.5323,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfed40205"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfed40205"
+   }
   },
   "SF-3": {
    "id": "SF-3",
@@ -4396,7 +5444,34 @@
     "round": "rcb78006b"
    },
    "scale3": {
-    "k": 3,
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd76bc3f4"
+   },
+   "shadow3": {
+    "feet": [
+     0.5372,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
     "size": [
      56,
      56
@@ -4478,8 +5553,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4628,
+     0.8438
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf030c8dc"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rf030c8dc"
+   },
+   "shadow3": {
+    "feet": [
+     0.4844,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r723d1f73"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r723d1f73"
+   }
   },
   "SF-5": {
    "id": "SF-5",
@@ -4607,8 +5751,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5104,
+     0.8229
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd64ca38d"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd64ca38d"
+   },
+   "shadow3": {
+    "feet": [
+     0.5221,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rc542c969"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rc542c969"
+   }
   },
   "SF-6": {
    "id": "SF-6",
@@ -4684,8 +5897,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.534,
+     0.7396
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "re22bf9b2"
+   },
+   "brief": {},
+   "scale": {
+    "k": 5,
+    "size": [
+     48,
+     48
+    ],
+    "round": "re22bf9b2"
+   },
+   "shadow3": {
+    "feet": [
+     0.5476,
+     0.8839
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2dcd1065"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2dcd1065"
+   }
   },
   "SF-7": {
    "id": "SF-7",
@@ -4748,8 +6030,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4965,
+     0.7604
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rdb369f08"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rdb369f08"
+   },
+   "shadow3": {
+    "feet": [
+     0.4782,
+     0.9732
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rdb558966"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rdb558966"
+   }
   },
   "SF-8": {
    "id": "SF-8",
@@ -4856,8 +6207,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5267,
+     0.8984
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "rcdecd91f"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "rcdecd91f"
+   },
+   "shadow3": {
+    "feet": [
+     0.5959,
+     0.9554
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rf5872b1f"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rf5872b1f"
+   }
   },
   "WY-1": {
    "id": "WY-1",
@@ -5403,6 +6823,41 @@
      ]
     ],
     "m": 6
+   },
+   "shadow3": {
+    "feet": [
+     0.5867,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r386a22e3"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r386a22e3"
    }
   },
   "WY-2": {
@@ -5637,7 +7092,34 @@
     "round": "r51526538"
    },
    "scale3": {
-    "k": 3,
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r9af7b079"
+   },
+   "shadow3": {
+    "feet": [
+     0.5058,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
     "size": [
      56,
      56
@@ -5732,8 +7214,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5189,
+     0.7812
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rac8d2049"
+   },
+   "brief": {},
+   "scale": {
+    "k": 5,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rac8d2049"
+   },
+   "shadow3": {
+    "feet": [
+     0.5355,
+     0.8839
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0959a555"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0959a555"
+   }
   },
   "WY-4": {
    "id": "WY-4",
@@ -5796,8 +7347,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4317,
+     0.8229
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r37a852d5"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r37a852d5"
+   },
+   "shadow3": {
+    "feet": [
+     0.2768,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r827548f2"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r827548f2"
+   }
   },
   "WY-5": {
    "id": "WY-5",
@@ -5860,8 +7480,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5055,
+     0.7396
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd44e9346"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rd44e9346"
+   },
+   "shadow3": {
+    "feet": [
+     0.4471,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r4be0db0e"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r4be0db0e"
+   }
   },
   "WY-6": {
    "id": "WY-6",
@@ -5950,8 +7639,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4942,
+     0.8021
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r62feeb74"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r62feeb74"
+   },
+   "shadow3": {
+    "feet": [
+     0.4943,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r1d94de8c"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r1d94de8c"
+   }
   },
   "WY-7": {
    "id": "WY-7",
@@ -6045,8 +7803,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.458,
+     0.9479
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r0e913864"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r0e913864"
+   },
+   "shadow3": {
+    "feet": [
+     0.4846,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd7f1b92d"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd7f1b92d"
+   }
   },
   "WY-8": {
    "id": "WY-8",
@@ -6124,8 +7951,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5756,
+     0.8984
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "r49756470"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "r49756470"
+   },
+   "shadow3": {
+    "feet": [
+     0.5589,
+     0.9732
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfef63e53"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfef63e53"
+   }
   },
   "PT-1": {
    "id": "PT-1",
@@ -6732,6 +8628,41 @@
      ]
     ],
     "m": 6
+   },
+   "shadow3": {
+    "feet": [
+     0.5871,
+     0.8839
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r97eae9b2"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r97eae9b2"
    }
   },
   "PT-2": {
@@ -7017,7 +8948,34 @@
     "round": "rca303027"
    },
    "scale3": {
-    "k": 3.5,
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rca969ea2"
+   },
+   "shadow3": {
+    "feet": [
+     0.4411,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
     "size": [
      56,
      56
@@ -7099,8 +9057,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.3889,
+     0.9688
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r5ac10bec"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r5ac10bec"
+   },
+   "shadow3": {
+    "feet": [
+     0.43,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd635c4b0"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rd635c4b0"
+   }
   },
   "PT-4": {
    "id": "PT-4",
@@ -7176,8 +9203,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.3142,
+     0.9479
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r2038864b"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r2038864b"
+   },
+   "shadow3": {
+    "feet": [
+     0.3938,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb70f90b6"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb70f90b6"
+   }
   },
   "PT-5": {
    "id": "PT-5",
@@ -7266,8 +9362,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.485,
+     0.9062
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r803157b7"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r803157b7"
+   },
+   "shadow3": {
+    "feet": [
+     0.5158,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rce352af7"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rce352af7"
+   }
   },
   "PT-6": {
    "id": "PT-6",
@@ -7330,8 +9495,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.3253,
+     0.8438
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfde74993"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rfde74993"
+   },
+   "shadow3": {
+    "feet": [
+     0.4136,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r1b2f018c"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r1b2f018c"
+   }
   },
   "PT-7": {
    "id": "PT-7",
@@ -7394,8 +9628,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5625,
+     0.7812
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rb133e4be"
+   },
+   "brief": {},
+   "scale": {
+    "k": 5,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rb133e4be"
+   },
+   "shadow3": {
+    "feet": [
+     0.6111,
+     0.8661
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r5361cb42"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r5361cb42"
+   }
   },
   "PT-8": {
    "id": "PT-8",
@@ -7458,8 +9761,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5797,
+     0.9922
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "r3091d390"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "r3091d390"
+   },
+   "shadow3": {
+    "feet": [
+     0.5147,
+     0.9554
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0558e732"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0558e732"
+   }
   },
   "WN-1": {
    "id": "WN-1",
@@ -8176,6 +10548,41 @@
      ]
     ],
     "m": 6
+   },
+   "shadow3": {
+    "feet": [
+     0.5049,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r77aa885f"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r77aa885f"
    }
   },
   "WN-2": {
@@ -8465,6 +10872,41 @@
      62
     ],
     "round": "rcb47a9e0"
+   },
+   "shadow3": {
+    "feet": [
+     0.5638,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb05a9852"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rb05a9852"
    }
   },
   "WN-3": {
@@ -8541,8 +10983,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.4337,
+     0.9062
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r00a7c775"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r00a7c775"
+   },
+   "shadow3": {
+    "feet": [
+     0.5464,
+     0.9375
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r47a1321c"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r47a1321c"
+   }
   },
   "WN-4": {
    "id": "WN-4",
@@ -8631,8 +11142,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5,
+     0.8438
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "rbcc107e4"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "rbcc107e4"
+   },
+   "shadow3": {
+    "feet": [
+     0.6194,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r7ef84b87"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r7ef84b87"
+   }
   },
   "WN-5": {
    "id": "WN-5",
@@ -8696,8 +11276,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5002,
+     0.9271
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r0b99a2e1"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r0b99a2e1"
+   },
+   "shadow3": {
+    "feet": [
+     0.4254,
+     0.9196
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2f57f987"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r2f57f987"
+   }
   },
   "WN-6": {
    "id": "WN-6",
@@ -8786,8 +11435,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.579,
+     0.9062
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r61d3ef9c"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r61d3ef9c"
+   },
+   "shadow3": {
+    "feet": [
+     0.5238,
+     0.9554
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfdf7573c"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "rfdf7573c"
+   }
   },
   "WN-7": {
    "id": "WN-7",
@@ -8863,8 +11581,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.441,
+     0.8646
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     48,
+     48
+    ],
+    "round": "r9b8f5639"
+   },
+   "brief": {},
+   "scale": {
+    "k": 4,
+    "size": [
+     48,
+     48
+    ],
+    "round": "r9b8f5639"
+   },
+   "shadow3": {
+    "feet": [
+     0.4456,
+     0.9732
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0b1531b3"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r0b1531b3"
+   }
   },
   "WN-8": {
    "id": "WN-8",
@@ -8971,8 +11758,77 @@
    ],
    "notes": "",
    "inGame": false,
-   "shadow": null,
-   "brief": {}
+   "shadow": {
+    "feet": [
+     0.5636,
+     0.9297
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     64,
+     64
+    ],
+    "round": "r49a0564a"
+   },
+   "brief": {},
+   "scale": {
+    "k": 3,
+    "size": [
+     64,
+     64
+    ],
+    "round": "r49a0564a"
+   },
+   "shadow3": {
+    "feet": [
+     0.5305,
+     0.9018
+    ],
+    "oval": {
+     "on": false,
+     "dx": 0,
+     "dy": 0,
+     "w": 0.8,
+     "h": 0.45,
+     "a": 1
+    },
+    "cast": {
+     "len": 1,
+     "str": 0.5,
+     "ox": 0,
+     "oy": 0,
+     "blur": 0.3,
+     "k": null
+    },
+    "size": [
+     56,
+     56
+    ],
+    "round": "r7a06b912"
+   },
+   "scale3": {
+    "k": 4,
+    "size": [
+     56,
+     56
+    ],
+    "round": "r7a06b912"
+   }
   }
  },
  "queue": [
