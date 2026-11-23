@@ -60,7 +60,7 @@
    "closed": false
   },
   "demon_f3_m4": {
-   "id": "WN-4",
+   "id": "WN-5",
    "form": 3,
    "pick": [
     "g06"
@@ -70,7 +70,7 @@
    "closed": false
   },
   "demon_f3_m5": {
-   "id": "WN-5",
+   "id": "WN-6",
    "form": 3,
    "pick": [
     "g04"
@@ -80,7 +80,7 @@
    "closed": false
   },
   "demon_f3_m6": {
-   "id": "WN-6",
+   "id": "WN-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -88,7 +88,7 @@
    "closed": false
   },
   "demon_f3_m6b": {
-   "id": "WN-6",
+   "id": "WN-8",
    "form": 3,
    "pick": [
     "g02"
@@ -98,7 +98,7 @@
    "closed": false
   },
   "demon_f3_m7": {
-   "id": "WN-7",
+   "id": "WN-4",
    "form": 3,
    "pick": [
     "g15"
@@ -108,7 +108,7 @@
    "closed": false
   },
   "demon_f3_m8": {
-   "id": "WN-8",
+   "id": "WN-7",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -116,7 +116,7 @@
    "closed": false
   },
   "demon_f3_m8b": {
-   "id": "WN-8",
+   "id": "WN-7",
    "form": 3,
    "pick": [
     "g08"
@@ -136,7 +136,7 @@
    "closed": false
   },
   "demon_wn4a": {
-   "id": "WN-4",
+   "id": "WN-5",
    "form": 1,
    "pick": [
     "g15"
@@ -146,7 +146,7 @@
    "closed": false
   },
   "demon_wn5a": {
-   "id": "WN-5",
+   "id": "WN-6",
    "form": 1,
    "pick": [
     "g17"
@@ -156,7 +156,7 @@
    "closed": false
   },
   "demon_wn6a": {
-   "id": "WN-6",
+   "id": "WN-8",
    "form": 1,
    "pick": [
     "g07",
@@ -167,7 +167,7 @@
    "closed": false
   },
   "demon_wn7a": {
-   "id": "WN-7",
+   "id": "WN-4",
    "form": 1,
    "pick": [
     "g07"
@@ -177,7 +177,7 @@
    "closed": false
   },
   "demon_wn8a": {
-   "id": "WN-8",
+   "id": "WN-7",
    "form": 1,
    "pick": [
     "g15"
@@ -215,7 +215,7 @@
    "closed": false
   },
   "fire_c": {
-   "id": "PL-2",
+   "id": "PL-3",
    "form": 1,
    "pick": [
     "g24"
@@ -233,7 +233,7 @@
    "closed": false
   },
   "fire_f3_m2": {
-   "id": "PL-2",
+   "id": "PL-3",
    "form": 3,
    "pick": [
     "g00"
@@ -243,7 +243,7 @@
    "closed": false
   },
   "fire_f3_m3": {
-   "id": "PL-3",
+   "id": "PL-2",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -251,7 +251,7 @@
    "closed": false
   },
   "fire_f3_m3b": {
-   "id": "PL-3",
+   "id": "PL-2",
    "form": 3,
    "pick": [
     "g05"
@@ -261,7 +261,7 @@
    "closed": false
   },
   "fire_f3_m4": {
-   "id": "PL-4",
+   "id": "PL-5",
    "form": 3,
    "pick": [
     "g06"
@@ -271,7 +271,7 @@
    "closed": false
   },
   "fire_f3_m5": {
-   "id": "PL-5",
+   "id": "PL-7",
    "form": 3,
    "pick": [
     "g07"
@@ -281,7 +281,7 @@
    "closed": false
   },
   "fire_f3_m6": {
-   "id": "PL-6",
+   "id": "PL-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -289,7 +289,7 @@
    "closed": false
   },
   "fire_f3_m6b": {
-   "id": "PL-6",
+   "id": "PL-8",
    "form": 3,
    "pick": [
     "g08"
@@ -299,7 +299,7 @@
    "closed": false
   },
   "fire_f3_m7": {
-   "id": "PL-7",
+   "id": "PL-4",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -307,7 +307,7 @@
    "closed": false
   },
   "fire_f3_m7b": {
-   "id": "PL-7",
+   "id": "PL-4",
    "form": 3,
    "pick": [
     "g15"
@@ -317,7 +317,7 @@
    "closed": false
   },
   "fire_f3_m8": {
-   "id": "PL-8",
+   "id": "PL-6",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -325,7 +325,7 @@
    "closed": false
   },
   "fire_f3_m8b": {
-   "id": "PL-8",
+   "id": "PL-6",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -333,7 +333,7 @@
    "closed": false
   },
   "fire_f3_m8c": {
-   "id": "PL-8",
+   "id": "PL-6",
    "form": 3,
    "pick": [
     "g04"
@@ -353,7 +353,7 @@
    "closed": false
   },
   "fire_pl3a": {
-   "id": "PL-3",
+   "id": "PL-2",
    "form": 1,
    "pick": [
     "g17"
@@ -363,7 +363,7 @@
    "closed": false
   },
   "fire_pl4a": {
-   "id": "PL-4",
+   "id": "PL-5",
    "form": 1,
    "pick": [],
    "eye": true,
@@ -371,7 +371,7 @@
    "closed": false
   },
   "fire_pl4b": {
-   "id": "PL-4",
+   "id": "PL-5",
    "form": 1,
    "pick": [
     "g20"
@@ -381,7 +381,7 @@
    "closed": false
   },
   "fire_pl5a": {
-   "id": "PL-5",
+   "id": "PL-7",
    "form": 1,
    "pick": [
     "g08"
@@ -391,7 +391,7 @@
    "closed": false
   },
   "fire_pl6a": {
-   "id": "PL-6",
+   "id": "PL-8",
    "form": 1,
    "pick": [
     "g00"
@@ -401,7 +401,7 @@
    "closed": false
   },
   "fire_pl7a": {
-   "id": "PL-7",
+   "id": "PL-4",
    "form": 1,
    "pick": [
     "g17"
@@ -411,7 +411,7 @@
    "closed": false
   },
   "fire_pl8a": {
-   "id": "PL-8",
+   "id": "PL-6",
    "form": 1,
    "pick": [
     "g10"
@@ -485,7 +485,7 @@
    "closed": false
   },
   "spirit_f3_m4": {
-   "id": "PT-4",
+   "id": "PT-5",
    "form": 3,
    "pick": [
     "g07"
@@ -495,7 +495,7 @@
    "closed": false
   },
   "spirit_f3_m5": {
-   "id": "PT-5",
+   "id": "PT-6",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -503,7 +503,7 @@
    "closed": false
   },
   "spirit_f3_m5b": {
-   "id": "PT-5",
+   "id": "PT-6",
    "form": 3,
    "pick": [
     "g15"
@@ -513,7 +513,7 @@
    "closed": false
   },
   "spirit_f3_m6": {
-   "id": "PT-6",
+   "id": "PT-8",
    "form": 3,
    "pick": [
     "g02"
@@ -523,7 +523,7 @@
    "closed": false
   },
   "spirit_f3_m7": {
-   "id": "PT-7",
+   "id": "PT-4",
    "form": 3,
    "pick": [
     "g07"
@@ -533,7 +533,7 @@
    "closed": false
   },
   "spirit_f3_m8": {
-   "id": "PT-8",
+   "id": "PT-7",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -541,7 +541,7 @@
    "closed": false
   },
   "spirit_f3_m8b": {
-   "id": "PT-8",
+   "id": "PT-7",
    "form": 3,
    "pick": [
     "g03"
@@ -569,7 +569,7 @@
    "closed": false
   },
   "spirit_pt4a": {
-   "id": "PT-4",
+   "id": "PT-5",
    "form": 1,
    "pick": [],
    "eye": true,
@@ -577,7 +577,7 @@
    "closed": false
   },
   "spirit_pt4b": {
-   "id": "PT-4",
+   "id": "PT-5",
    "form": 1,
    "pick": [
     "g17"
@@ -587,7 +587,7 @@
    "closed": false
   },
   "spirit_pt5a": {
-   "id": "PT-5",
+   "id": "PT-6",
    "form": 1,
    "pick": [
     "g13"
@@ -597,7 +597,7 @@
    "closed": false
   },
   "spirit_pt6a": {
-   "id": "PT-6",
+   "id": "PT-8",
    "form": 1,
    "pick": [
     "g14"
@@ -607,7 +607,7 @@
    "closed": false
   },
   "spirit_pt7a": {
-   "id": "PT-7",
+   "id": "PT-4",
    "form": 1,
    "pick": [
     "g24"
@@ -617,7 +617,7 @@
    "closed": false
   },
   "spirit_pt8a": {
-   "id": "PT-8",
+   "id": "PT-7",
    "form": 1,
    "pick": [
     "g24"
@@ -739,7 +739,7 @@
    "closed": false
   },
   "steel_f3_m6": {
-   "id": "HL-6",
+   "id": "HL-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -747,7 +747,7 @@
    "closed": false
   },
   "steel_f3_m6b": {
-   "id": "HL-6",
+   "id": "HL-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -755,7 +755,7 @@
    "closed": false
   },
   "steel_f3_m6c": {
-   "id": "HL-6",
+   "id": "HL-8",
    "form": 3,
    "pick": [
     "g03"
@@ -765,7 +765,7 @@
    "closed": false
   },
   "steel_f3_m7": {
-   "id": "HL-7",
+   "id": "HL-6",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -773,7 +773,7 @@
    "closed": false
   },
   "steel_f3_m7b": {
-   "id": "HL-7",
+   "id": "HL-6",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -781,7 +781,7 @@
    "closed": false
   },
   "steel_f3_m7c": {
-   "id": "HL-7",
+   "id": "HL-6",
    "form": 3,
    "pick": [
     "g15"
@@ -791,7 +791,7 @@
    "closed": false
   },
   "steel_f3_m8": {
-   "id": "HL-8",
+   "id": "HL-7",
    "form": 3,
    "pick": [
     "g08"
@@ -801,7 +801,7 @@
    "closed": false
   },
   "steel_f3_m8b": {
-   "id": "HL-8",
+   "id": "HL-7",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -839,7 +839,7 @@
    "closed": false
   },
   "steel_hl6a": {
-   "id": "HL-6",
+   "id": "HL-8",
    "form": 1,
    "pick": [
     "g15"
@@ -849,7 +849,7 @@
    "closed": false
   },
   "steel_hl7a": {
-   "id": "HL-7",
+   "id": "HL-6",
    "form": 1,
    "pick": [
     "g00"
@@ -859,7 +859,7 @@
    "closed": false
   },
   "steel_hl8a": {
-   "id": "HL-8",
+   "id": "HL-7",
    "form": 1,
    "pick": [
     "g08"
@@ -887,7 +887,7 @@
    "closed": false
   },
   "storm_c": {
-   "id": "SF-2",
+   "id": "SF-3",
    "form": 1,
    "pick": [
     "g24"
@@ -915,7 +915,7 @@
    "closed": false
   },
   "storm_f3_m2": {
-   "id": "SF-2",
+   "id": "SF-3",
    "form": 3,
    "pick": [
     "g11"
@@ -925,7 +925,7 @@
    "closed": false
   },
   "storm_f3_m3": {
-   "id": "SF-3",
+   "id": "SF-2",
    "form": 3,
    "pick": [
     "g06"
@@ -935,7 +935,7 @@
    "closed": false
   },
   "storm_f3_m4": {
-   "id": "SF-4",
+   "id": "SF-5",
    "form": 3,
    "pick": [
     "g14"
@@ -945,7 +945,7 @@
    "closed": false
   },
   "storm_f3_m5": {
-   "id": "SF-5",
+   "id": "SF-6",
    "form": 3,
    "pick": [
     "g02"
@@ -955,7 +955,7 @@
    "closed": false
   },
   "storm_f3_m6": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -963,7 +963,7 @@
    "closed": false
   },
   "storm_f3_m6b": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -971,7 +971,7 @@
    "closed": false
   },
   "storm_f3_m6c": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -979,7 +979,7 @@
    "closed": false
   },
   "storm_f3_m6d": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -987,7 +987,7 @@
    "closed": false
   },
   "storm_f3_m6e": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -995,7 +995,7 @@
    "closed": false
   },
   "storm_f3_m6f": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1003,7 +1003,7 @@
    "closed": false
   },
   "storm_f3_m6g": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [
     "g06"
@@ -1013,7 +1013,7 @@
    "closed": false
   },
   "storm_f3_m6h": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 3,
    "pick": [
     "g03"
@@ -1023,7 +1023,7 @@
    "closed": false
   },
   "storm_f3_m7": {
-   "id": "SF-7",
+   "id": "SF-4",
    "form": 3,
    "pick": [
     "g05"
@@ -1033,7 +1033,7 @@
    "closed": false
   },
   "storm_f3_m8": {
-   "id": "SF-8",
+   "id": "SF-7",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1041,7 +1041,7 @@
    "closed": false
   },
   "storm_f3_m8b": {
-   "id": "SF-8",
+   "id": "SF-7",
    "form": 3,
    "pick": [
     "g15"
@@ -1051,7 +1051,7 @@
    "closed": false
   },
   "storm_sf3a": {
-   "id": "SF-3",
+   "id": "SF-2",
    "form": 1,
    "pick": [
     "g15"
@@ -1061,7 +1061,7 @@
    "closed": false
   },
   "storm_sf4a": {
-   "id": "SF-4",
+   "id": "SF-5",
    "form": 1,
    "pick": [
     "g03"
@@ -1071,7 +1071,7 @@
    "closed": false
   },
   "storm_sf5a": {
-   "id": "SF-5",
+   "id": "SF-6",
    "form": 1,
    "pick": [
     "g08"
@@ -1081,7 +1081,7 @@
    "closed": false
   },
   "storm_sf6a": {
-   "id": "SF-6",
+   "id": "SF-8",
    "form": 1,
    "pick": [
     "g15"
@@ -1091,7 +1091,7 @@
    "closed": false
   },
   "storm_sf7a": {
-   "id": "SF-7",
+   "id": "SF-4",
    "form": 1,
    "pick": [
     "g13"
@@ -1101,7 +1101,7 @@
    "closed": false
   },
   "storm_sf8a": {
-   "id": "SF-8",
+   "id": "SF-7",
    "form": 1,
    "pick": [
     "g01"
@@ -1169,7 +1169,7 @@
    "closed": false
   },
   "wind_f3_m4": {
-   "id": "WY-4",
+   "id": "WY-5",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1177,7 +1177,7 @@
    "closed": false
   },
   "wind_f3_m4b": {
-   "id": "WY-4",
+   "id": "WY-5",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1185,7 +1185,7 @@
    "closed": false
   },
   "wind_f3_m4c": {
-   "id": "WY-4",
+   "id": "WY-5",
    "form": 3,
    "pick": [
     "g15"
@@ -1195,7 +1195,7 @@
    "closed": false
   },
   "wind_f3_m5": {
-   "id": "WY-5",
+   "id": "WY-6",
    "form": 3,
    "pick": [
     "g11"
@@ -1205,7 +1205,7 @@
    "closed": false
   },
   "wind_f3_m6": {
-   "id": "WY-6",
+   "id": "WY-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1213,7 +1213,7 @@
    "closed": false
   },
   "wind_f3_m6b": {
-   "id": "WY-6",
+   "id": "WY-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1221,7 +1221,7 @@
    "closed": false
   },
   "wind_f3_m6c": {
-   "id": "WY-6",
+   "id": "WY-8",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1229,7 +1229,7 @@
    "closed": false
   },
   "wind_f3_m6d": {
-   "id": "WY-6",
+   "id": "WY-8",
    "form": 3,
    "pick": [
     "g07"
@@ -1239,7 +1239,7 @@
    "closed": false
   },
   "wind_f3_m7": {
-   "id": "WY-7",
+   "id": "WY-4",
    "form": 3,
    "pick": [
     "g08"
@@ -1249,7 +1249,7 @@
    "closed": false
   },
   "wind_f3_m8": {
-   "id": "WY-8",
+   "id": "WY-7",
    "form": 3,
    "pick": [],
    "eye": true,
@@ -1257,7 +1257,7 @@
    "closed": false
   },
   "wind_f3_m8b": {
-   "id": "WY-8",
+   "id": "WY-7",
    "form": 3,
    "pick": [
     "g05"
@@ -1277,7 +1277,7 @@
    "closed": false
   },
   "wind_wy4a": {
-   "id": "WY-4",
+   "id": "WY-5",
    "form": 1,
    "pick": [
     "g20"
@@ -1287,7 +1287,7 @@
    "closed": false
   },
   "wind_wy5a": {
-   "id": "WY-5",
+   "id": "WY-6",
    "form": 1,
    "pick": [
     "g14"
@@ -1297,7 +1297,7 @@
    "closed": false
   },
   "wind_wy6a": {
-   "id": "WY-6",
+   "id": "WY-8",
    "form": 1,
    "pick": [
     "g10"
@@ -1307,7 +1307,7 @@
    "closed": false
   },
   "wind_wy7a": {
-   "id": "WY-7",
+   "id": "WY-4",
    "form": 1,
    "pick": [
     "g16"
@@ -1317,7 +1317,7 @@
    "closed": false
   },
   "wind_wy8a": {
-   "id": "WY-8",
+   "id": "WY-7",
    "form": 1,
    "pick": [
     "g00"
@@ -1327,7 +1327,7 @@
    "closed": false
   },
   "wind_wy8b": {
-   "id": "WY-8",
+   "id": "WY-7",
    "form": 1,
    "pick": [
     "g14"
