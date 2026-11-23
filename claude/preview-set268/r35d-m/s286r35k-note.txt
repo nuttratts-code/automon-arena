@@ -1,0 +1,1 @@
+r35k: FAKESTAT card 4 mock = realistic busiest set: atk 100K, armour 100K, x3, burn/hit 100K, atk +999%, shock +999% (one-line edit in _haves after r35j).
