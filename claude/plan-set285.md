@@ -13,17 +13,18 @@ Side effects known up front:
 - humanstats: ARUN1 codes from the live v132 game carry the old hash → counted as "old patch" (no misattribution).
 
 ## Steps (tick when done + pushed)
-1. [ ] C1: commit owner hub edits (hub.json, INDEX.csv, library HL-2/HL-4) to main as-is — after the owner closes the hub (port 5177).
-2. [ ] Rename pass in live text files: src/ (core, game, lab, tests, tools), godot/ (scripts, tests, data, tools), tools/asset-hub (+tests), .claude/skills, claude/ live docs (combat/tribe/shop-merge rules, build-plan, characters.csv, creature-animals, art-style, idle-picks.csv, workflow/*, workflow.md, pending, backlog, reviews.md), art/placeholder (tables.py, picks.txt, picker_template), art/library/INDEX.csv. Skip binary files and history files (A1).
-3. [ ] File/folder renames by ID (two-step): art/library/characters/<ID>/ + file names, art/library/pictures, art/placeholder/tiles, godot/tools/idle_preview.
-4. [ ] save.js B2: readSave accepts `data === OLD_DATA_HASH` (pre-rename hash) → remap IDs in P/B/stats, continue; history + play journals same. save.gd same (change both). Balance Room: DRAFT_KEY v9 → v10 with v9 draft remapped on load; local sim/bench/combo keys remapped on load.
-5. [ ] botdata.js hash → new dataHash; `node tools/exportdata.mjs` → godot/data/game.json + hash.
-6. [ ] Godot data: unit_shadows.json, labels.json, art.json (step 2 covers text) · golden rebuild (`node src/lab/golden.mjs`) + parity replay (skill port-parity).
-7. [ ] Thai docs version bump (+0.1, ID renumber) + handoff Doc versions line · history files get header note (A1).
-8. [ ] Ripple check (ripple.md map + grep of every changed ID) → ripple line.
-9. [ ] setup until pass → gate once → merge to main → CI green.
+1. [x] C1: commit owner hub edits (hub.json, INDEX.csv, library HL-2/HL-4) to main as-is — after the owner closes the hub (port 5177).
+2. [x] Rename pass in live text files: src/ (core, game, lab, tests, tools), godot/ (scripts, tests, data, tools), tools/asset-hub (+tests), .claude/skills, claude/ live docs (combat/tribe/shop-merge rules, build-plan, characters.csv, creature-animals, art-style, idle-picks.csv, workflow/*, workflow.md, pending, backlog, reviews.md), art/placeholder (tables.py, picks.txt, picker_template), art/library/INDEX.csv. Skip binary files and history files (A1).
+3. [x] File/folder renames by ID (two-step): art/library/characters/<ID>/ + file names, art/library/pictures, art/placeholder/tiles, godot/tools/idle_preview.
+4. [x] save.js B2: readSave accepts `data === OLD_DATA_HASH` (pre-rename hash) → remap IDs in P/B/stats, continue; history + play journals same. save.gd same (change both). Balance Room: DRAFT_KEY v9 → v10 with v9 draft remapped on load; local sim/bench/combo keys remapped on load.
+5. [x] botdata.js hash → new dataHash; `node tools/exportdata.mjs` → godot/data/game.json + hash.
+6. [x] Godot data: unit_shadows.json, labels.json, art.json (step 2 covers text) · golden rebuild (`node src/lab/golden.mjs`) + parity replay (skill port-parity). → Godot tests 60/61: the 1 fail = test_golden_stage_exact js_pow, same on unchanged main (PC Node 24 vs CI Node 22, known since set 215).
+7. [x] Thai docs version bump (+0.1, ID renumber) + handoff Doc versions line · history files get header note (A1).
+8. [x] Ripple check (ripple.md map + grep of every changed ID) → ripple line.
+9. [x] setup until pass → gate once → merge to main → CI green.
 10. [ ] Hub (owner hub closed): hub.json + stillpicks/latest.json + history.jsonl text pass, art/hub/files/<ID>/ folder renames, still-batches batch.json `item`.
 11. [ ] Balance Room db: config/main (rev+1, savedAt), results/latest, ui/main, simTeams, ideas text/char → remapped (pinned writes).
 12. [ ] Publish Balance Room (skill publish-pages) → Relay line → owner: cells to set back (none expected; local drafts converted).
 
 Security: no secrets touched; no new dependency; db content treated as data; secret grep before each commit.
+- Found while working: `\b` misses an ID followed by `_` (PL-2_icon…) → second pass for IDs followed by `_` (library names, hub orig/library paths, batch files). · tools/cfgdiff.mjs main guard never runs on Windows (pathname /D:/…) → ran it via a direct import.
