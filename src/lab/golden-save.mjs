@@ -23,7 +23,7 @@ import * as RL from '../core/runlog.js';
 import { simRun, botRounds, tribeList } from '../core/botteams.js';
 
 const copy = v => JSON.parse(JSON.stringify(v));
-const POOL = [null, -1, 0, 1, 2, 1.5, 1e9 + 1, 4294967296, 'x', '', 'PL-2', true, false, [], {}, [1], { a: 1 }, 100001];
+const POOL = [null, -1, 0, 1, 2, 1.5, 1e9 + 1, 4294967296, 'x', '', 'PL-3', true, false, [], {}, [1], { a: 1 }, 100001];
 let jsThrows = 0;
 
 // random broken copy: delete / replace / add one key somewhere inside (root included)
@@ -133,7 +133,7 @@ function rlMisc() {
   const names = ['', ' ', 'abc', '  a   b  ', 'ผู้เล่น\u200b หนึ่ง', '\u0000x\u001fy\u007f', '😀'.repeat(25), 'a'.repeat(30), '\u00a0x\u3000', '\ufeffname\u202e', 'e\u0301ab', 5, null, 'a\tb\nc', '\u2028z'];
   const refs = [null, { at: 'bench', i: 3 }, { at: 'board', row: 2, lane: 1 }, { at: 'shop', i: 1 }, { at: 'board', row: 0, lane: 0 }];
   const unrefs = ['-', 'B0', 'B12', 'B123', 'F00', 'F21', 'F30', 'F02', 'B', 'X1', 'B1\n', 'F10\n', ' B1', ''];
-  const gains = [null, [], [{ id: 'PL-2', key: 'hp', row: 0, lane: 1, amount: 2.5, side: 0 }], 'x'];
+  const gains = [null, [], [{ id: 'PL-3', key: 'hp', row: 0, lane: 1, amount: 2.5, side: 0 }], 'x'];
   const L = RL.newRunLog(4294967297, 'abcdef01', 1234.9, ' n ');
   const push = [['st', [], 0, 5, 1300], ['by', [1, 'B0'], 5, 2, 9999], ['nope', [], 1, 1, 1], ['toString', [], 1, 1, 1], ['en', [1, 0, []], 2, 2, 400]].map(([t, a, g0, g1, now]) => RL.rlPush(L, t, a, g0, g1, now));
   return { kind: 'rlmisc', names: names.map(s => [s, RL.rlName(s)]), refs: refs.map(x => [x, RL.rlRef(x)]), unrefs: unrefs.map(s => [s, RL.rlUnref(s) === undefined ? 'undefined' : RL.rlUnref(s)]),
@@ -162,7 +162,7 @@ function* checkLines(chars, rng, mruns, rlogs, hist) {
     if (b.ev.length && k < 6) b.ev[rng.int(b.ev.length)] = mutate(b.ev[rng.int(b.ev.length)], rng); else Object.assign(b, mutate({ ...b, ev: b.ev.slice(0, 3) }, rng));
     const o = out('rlcheck', b, x => RL.rlCheck(x)); if (o) yield o;
   }
-  for (const e of [[['st'], 0, 5, 5], ['toString', 0, 1, 1], ['tk', 0, 1, 1, 2, 'x'], ['tk', 0, 1, 1, 2, TRIBES[0]], ['pl', 0, 1, 1, 'U8', 'B1', 0], ['pl', 0, 1, 1, 'U8', 'F11', 1], ['en', 0, 1, 1, 1, 0, [['PL-2', 'hp', 0, 1, 1.7e308]]], ['by', 1.5, 1, 1, 0, 'B0'], ['sl', 0, 1, 1, '-'], ['of', 0, 1, 1, 'sc'], ['st', 0, -1e6, 1e7], ['st', 0, 1]])
+  for (const e of [[['st'], 0, 5, 5], ['toString', 0, 1, 1], ['tk', 0, 1, 1, 2, 'x'], ['tk', 0, 1, 1, 2, TRIBES[0]], ['pl', 0, 1, 1, 'U8', 'B1', 0], ['pl', 0, 1, 1, 'U8', 'F11', 1], ['en', 0, 1, 1, 1, 0, [['PL-3', 'hp', 0, 1, 1.7e308]]], ['by', 1.5, 1, 1, 0, 'B0'], ['sl', 0, 1, 1, '-'], ['of', 0, 1, 1, 'sc'], ['st', 0, -1e6, 1e7], ['st', 0, 1]])
     yield out('rlcheck', { v: 1, seed: 1, data: '0000000a', at: 0, cut: 0, ev: [e] }, x => RL.rlCheck(x));
   for (const t of ['abc', '😀😀', 'a\u200b', '']) yield out('rlcheck', { v: 1, seed: 1, data: '0000000a', at: 0, cut: 1, ev: [], nm: t }, x => RL.rlCheck(x));
 }
@@ -178,14 +178,14 @@ function jsonLine() {
 function* statsLines(rng) {
   const cases = [];
   for (let i = 0; i < 300; i++) {
-    const evs = [{ k: 'start', units: [1, 2, 3, 4, 5, 6].map(u => ({ uid: u, id: ['PL-2', 'SF-7', 'AQ-1'][u % 3], side: u <= 3 ? 0 : 1 })) }];
+    const evs = [{ k: 'start', units: [1, 2, 3, 4, 5, 6].map(u => ({ uid: u, id: ['PL-3', 'SF-4', 'AQ-1'][u % 3], side: u <= 3 ? 0 : 1 })) }];
     for (let k = 0; k < 6 + rng.int(20); k++) {
       const to = 4 + rng.int(3), t = rng.int(10);
       if (t < 4) { const amount = rng.pick([0.1, 0.2, 0.3, 1 / 3, 0.7, 1, 2.5]) * (1 + rng.int(3)); evs.push({ k: 'burn', to, from: rng.int(6) ? 1 + rng.int(6) : null, amount, total: amount + rng.int(4) * 0.1 }); }
       else if (t < 7) evs.push({ k: 'dmg', to, from: 1 + rng.int(6), amount: rng.pick([0.1, 0.3, 0.7, 1.9, 3, 0]) * (1 + rng.int(4)), why: rng.int(3) ? 'burn' : 'hit' });
       else if (t === 7) evs.push({ k: 'cleanse', to, what: rng.pick(['pct', 'all']) });
       else if (t === 8) evs.push({ k: 'down', who: to });
-      else evs.push({ k: 'summon', unit: { uid: 10 + k, id: 'PL-2', side: rng.int(2) } });
+      else evs.push({ k: 'summon', unit: { uid: 10 + k, id: 'PL-3', side: rng.int(2) } });
     }
     const res = { winner: rng.pick([0, 1, null]), timeMs: rng.int(90000) + 0.5, events: evs }, st = SV.newStats();
     cases.push({ res, st: SV.addMatchStats(SV.addMatchStats(st, res), res) });
@@ -197,7 +197,7 @@ function* statsLines(rng) {
     const v = D * (a1 / (a1 + a2));
     if (Math.floor(v) === Math.floor(v + 1e-9)) continue;
     found++;
-    const evs = [{ k: 'start', units: [{ uid: 1, id: 'PL-2', side: 0 }, { uid: 2, id: 'SF-7', side: 0 }, { uid: 9, id: 'AQ-1', side: 1 }] },
+    const evs = [{ k: 'start', units: [{ uid: 1, id: 'PL-3', side: 0 }, { uid: 2, id: 'SF-4', side: 0 }, { uid: 9, id: 'AQ-1', side: 1 }] },
       { k: 'burn', to: 9, from: 1, amount: a1, total: a1 }, { k: 'burn', to: 9, from: 2, amount: a2, total: a1 + a2 }, { k: 'dmg', to: 9, amount: D, why: 'burn' }];
     const res = { winner: 0, timeMs: 1000, events: evs };
     cases.push({ res, st: SV.addMatchStats(SV.addMatchStats(SV.newStats(), res), res) });

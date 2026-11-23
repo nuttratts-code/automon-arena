@@ -17,7 +17,7 @@ const W = await rank(base);
 const mean = Object.values(W).reduce((a, b) => a + b, 0) / base.length;
 const P = Object.fromEntries(base.map(c => [c.id, basePower(c).points]));
 // k: เพิ่ม HP และพลังโจมตี 10% (แต้มพื้นฐาน +10%) ทีละตัวในตัวอย่าง แล้วดูอัตราชนะที่เพิ่ม
-const sample = ['HL-1', 'PL-1', 'SF-1', 'WY-1', 'PT-1', 'WN-1', 'PL-8', 'SF-4'];
+const sample = ['HL-1', 'PL-1', 'SF-1', 'WY-1', 'PT-1', 'WN-1', 'PL-6', 'SF-5'];
 let ks = [];
 for (const id of sample) {
   const ch = structuredClone(base); const c = ch.find(x => x.id === id);

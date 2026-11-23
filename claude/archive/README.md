@@ -1,5 +1,7 @@
 # คลังเอกสารเก่า Automon Arena
 
+> Set 285 note: creature IDs in this file use the OLD numbering (before 23 Nov 2026). Old→new map: HL 7→6 8→7 6→8 · PL 3→2 2→3 7→4 4→5 8→6 5→7 6→8 · PT/WN/WY 7→4 4→5 5→6 8→7 6→8 · SF 3→2 2→3 7→4 4→5 5→6 8→7 6→8 (-1 unchanged; claude/plan-set285.md).
+
 V1.2 · 8 Nov 2026 (set 139: reviews → archive/reviews/, relays → archive/relay/, index = claude/reviews.md) · V1.1 · 30 ต.ค. 2026 (ย้ายจาก Project มาไว้ใน git) · เปิดเมื่อผู้ใช้ถาม "ทำไม" หรือต้องย้อนดูประวัติ/ผลวัดเก่าเท่านั้น · กฎที่ใช้อยู่ดูไฟล์กฎหลักใน claude/
 
 | ไฟล์ | เนื้อหา |

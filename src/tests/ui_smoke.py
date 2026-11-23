@@ -454,8 +454,8 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         chk(pg.is_visible('#pane-tribes') and pg.eval_on_selector_all('#tform .grid3:not([hidden])','e=>e.map(x=>x.dataset.tribe)')==[pg.evaluate('TRIBES[1]')],'tribe header opens that tribe bonus')
         # ชุด 32: ช่องโบนัสเผ่าใหม่ (ค่าเริ่ม 0)
         tf=pg.text_content('#tform'); chk(all(x in tf for x in ['HP สูงสุด +%','ศัตรูทุกตัวติดไฟ','ดาเมจไฟ +%','ศัตรูทุกตัวติดช็อต','ดาเมจช็อต +%','ดาเมจตีปกติ +%','ทั้งทีมปล่อยทันที']),'new tribe bonus fields')
-        pg.click('#step-pick'); pg.click('#tgrid .tg-chip[data-id="PL-4"]')
-        chk(pg.is_visible('#pane-chars') and pg.evaluate('current')=='PL-4' and pg.inner_text('#sbEdit')=='PL-4','chip opens editor')
+        pg.click('#step-pick'); pg.click('#tgrid .tg-chip[data-id="PL-5"]')
+        chk(pg.is_visible('#pane-chars') and pg.evaluate('current')=='PL-5' and pg.inner_text('#sbEdit')=='PL-5','chip opens editor')
         pg.click('#tab-sim'); pg.click('#step-result'); chk(pg.is_visible('#pane-analysis') and pg.is_hidden('#pane-sim'),'result step')
         # set 160: รันจริง combat table renders from fake data · filters hide rows · per-second toggle · source columns
         cb=pg.evaluate("""(()=>{const mk=(id,n)=>({id,name:'',tribe:'',rarity:'',n,ms:n*30000,out:300*n,src:{hit:200*n,burn:100*n},taken:150*n,abs:20*n,loss:120*n,heal:10*n,armor:5*n,kills:0.5*n,alive:n/2});
@@ -481,7 +481,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#step-edit'); pg.click('#tab-chars')
         chk(pg.is_visible('#saveBox') and pg.is_visible('#ideaBox') and pg.is_visible('#save') and not pg.evaluate("document.getElementById('catalog').open") and pg.locator('#ideaChar').count()==0,'save + ideas under char editor, catalog folded, no duplicate picker')
         pg.click('#tab-sim'); chk(pg.is_hidden('#saveBox'),'save box hidden in sim tab'); pg.click('#tab-chars')
-        pg.evaluate("setCurrent('PL-4')"); chk('PL-4' in pg.inner_text('#ideaFor'),'idea follows current')
+        pg.evaluate("setCurrent('PL-5')"); chk('PL-5' in pg.inner_text('#ideaFor'),'idea follows current')
         pg.check('#ideaGeneral'); chk(pg.evaluate('ideaPick.value()')=='' and 'ทั่วไป' in pg.inner_text('#ideaFor'),'idea general option'); pg.uncheck('#ideaGeneral')
         # ชุด 30.1: ปุ่มบันทึกกดได้ทุกหน้า · ไม่มีฐานข้อมูล (ไฟล์ในเครื่อง) = แจ้ง ไม่พัง
         pg.click('#step-result'); pg.click('#save'); chk(pg.is_visible('#saveMsg') and 'บันทึก' in pg.inner_text('#saveMsg'),'save from result step shows message')
@@ -489,10 +489,10 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#step-edit'); pg.click('#tab-chars')
         chk(pg.get_attribute('#f-hp-0','inputmode')=='numeric' and pg.get_attribute('#f-cdMs-0','inputmode')=='decimal' and pg.get_attribute('#simSeed','inputmode')=='numeric','numeric keypad modes')
         # ชุด 30.1: หน้าลองสู้ แตะตัวก่อนสู้ = แผงรายละเอียดแบบหน้าเกม (Lv1/2/3) + ตัวที่แก้เปลี่ยนตาม
-        pg.click('#tab-sim'); pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; simLast=null; renderSimTeams()")
+        pg.click('#tab-sim'); pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-2',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; simLast=null; renderSimTeams()")
         pg.click('#simArena [data-key="0:0:0"]')
         info=pg.inner_text('#simInfo')
-        chk(pg.evaluate('current')=='PL-3' and 'PL-3' in info and pg.eval_on_selector_all('#simInfo .lvtabs button','e=>e.length')==3 and pg.get_attribute('#simInfo .lvtabs [aria-pressed="true"]','data-lv')=='2','sim tap before battle shows info + sets current')
+        chk(pg.evaluate('current')=='PL-2' and 'PL-2' in info and pg.eval_on_selector_all('#simInfo .lvtabs button','e=>e.length')==3 and pg.get_attribute('#simInfo .lvtabs [aria-pressed="true"]','data-lv')=='2','sim tap before battle shows info + sets current')
         # ชุด 30.2: ม้านั่งอยู่เหนือสนาม · ปิดโบนัสเผ่าเป็นค่าเริ่ม · ทีมที่เซฟเลือกฝั่งตามตัวที่แตะ · ค่าที่แก้อยู่ล่างสุด (หลังไอเดีย/คลังสกิล)
         chk(pg.evaluate("!!(document.getElementById('simBench').compareDocumentPosition(document.querySelector('#simStageBox .stage')) & Node.DOCUMENT_POSITION_FOLLOWING)"),'bench above arena')
         chk(pg.is_checked('#simOffL') and pg.is_checked('#simOffR'),'tribe bonus off by default')
@@ -507,7 +507,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#tab-sim')
         pg.click('#simArena [data-key="1:0:0"]'); chk(pg.input_value('#presetSide')=='1' and pg.evaluate('current')=='WY-3','preset side follows right tap')
         pg.click('#simArena [data-key="0:0:0"]')
-        pg.click('#simInfo .lvtabs [data-lv="3"]'); hp3=pg.evaluate("String(chars.find(c=>c.id==='PL-3').hp[2])")
+        pg.click('#simInfo .lvtabs [data-lv="3"]'); hp3=pg.evaluate("String(chars.find(c=>c.id==='PL-2').hp[2])")
         chk(('HP '+hp3) in pg.inner_text('#simInfo .stats2'),'sim info level toggle')
         # set 79: stage tab reset button (two taps) · set 146: only the open tab · r2: back to the last saved values (stageSaved), page defaults when nothing saved / no db
         chk(pg.evaluate("""(async()=>{const wait=()=>new Promise(r=>setTimeout(r,50)); const b=document.getElementById('stgReset'); const nm=STAGE_RUNES[0].id;
@@ -522,7 +522,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         chk('(บอส)' in pg.evaluate("[...document.querySelectorAll('#simArena [data-key^=\"1:\"]')].map(u=>u.innerText).join()") and 'WY-3' not in pg.evaluate("[...document.querySelectorAll('#simArena .unit')].map(u=>u.textContent).join()"),'boss mode preview shows boss')
         pg.evaluate("simTeam=emptySim(); saveSim(); renderSimTeams()")
         chk(pg.evaluate("simTeam.flat(2).every(x=>!x)"),'empty team not refilled with sample team')
-        pg.evaluate("simFoeBoss=false; renderSimBoss(); simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; saveSim(); renderSimTeams()")
+        pg.evaluate("simFoeBoss=false; renderSimBoss(); simTeam=emptySim(); simTeam[0][0][0]={id:'PL-2',level:2}; simTeam[1][0][0]={id:'WY-3',level:1}; saveSim(); renderSimTeams()")
         # ชุด 30.1: ทีมที่เซฟ (ไม่มีฐานข้อมูล = เก็บในเครื่อง) · ใส่ฝั่งอื่นได้ · สูงสุด 10
         pg.evaluate("document.getElementById('presetBox').open=true; localStorage.removeItem('automon-balance-teams'); presets=[]; renderPresets()")
         pg.select_option('#presetSide','0'); pg.fill('#presetName','<b>ทีมลอง</b>'); pg.click('#presetSave')
@@ -531,7 +531,7 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         chk(pg.evaluate("JSON.stringify(simTeam[1])==JSON.stringify(simTeam[0])"),'preset loads into right side')
         for i in range(9): pg.click('#presetSave')
         chk(pg.eval_on_selector_all('#presetList li','e=>e.length')==10 and pg.is_disabled('#presetSave'),'preset max 10')
-        pg.evaluate("localStorage.setItem('automon-balance-teams','[{\"id\":\"x\",\"units\":[{\"row\":9,\"lane\":0,\"id\":\"PL-3\",\"level\":1}]},{\"id\":\"y\",\"name\":\"ok\",\"units\":[{\"row\":0,\"lane\":1,\"id\":\"PL-3\",\"level\":3}]}]'); presets=presetLocal(); renderPresets()")
+        pg.evaluate("localStorage.setItem('automon-balance-teams','[{\"id\":\"x\",\"units\":[{\"row\":9,\"lane\":0,\"id\":\"PL-2\",\"level\":1}]},{\"id\":\"y\",\"name\":\"ok\",\"units\":[{\"row\":0,\"lane\":1,\"id\":\"PL-2\",\"level\":3}]}]'); presets=presetLocal(); renderPresets()")
         chk(pg.eval_on_selector_all('#presetList li','e=>e.length')==1,'bad preset data dropped')
         pg.click('#presetList li >> nth=0 >> button.danger'); pg.click('#presetList li >> nth=0 >> button.danger')
         chk('ยังไม่มีทีม' in pg.inner_text('#presetList'),'preset delete with confirm')
@@ -729,19 +729,19 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.click('#simSkillsFold summary'); chk(pg.evaluate("document.getElementById('simSkillsFold').open"),'skill count unfolds')
         pg.click('#tab-sim')
         # ชุด 33: ฮิต = ครั้งที่ออกไปตี (ตีแบ่งนับ 1) · ดาเมจรวม = ดาเมจฮิต + ดาเมจอื่นๆ
-        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'SF-8',level:1}; simTeam[1][0][0]={id:'HL-6',level:1}; simTeam[1][0][1]={id:'HL-1',level:1}; simTeam[1][1][0]={id:'PT-1',level:1}; renderSimTeams()"); pg.click('#simRun')
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'SF-7',level:1}; simTeam[1][0][0]={id:'HL-8',level:1}; simTeam[1][0][1]={id:'HL-1',level:1}; simTeam[1][1][0]={id:'PT-1',level:1}; renderSimTeams()"); pg.click('#simRun')
         sm=pg.evaluate("""(()=>{const r=simLast.r, me=r.events[0].units.find(x=>x.side===0).uid; const want=r.events.filter(e=>e.k==='dmg'&&e.why==='hit'&&e.from===me&&!e.sub).length;
           const row=[...document.querySelectorAll('#simUnits tr')][0].children; const n=i=>+row[i].textContent; return [n(2), want, n(7), n(3)+n(6)];})()""")
         chk(sm[0]==sm[1] and abs(sm[2]-sm[3])<=1,'summary swings + total '+str(sm))
-        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'WY-5',level:3}; simTeam[1][0][0]={id:'HL-6',level:1}; renderSimTeams()"); pg.click('#simRun')
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'WY-6',level:3}; simTeam[1][0][0]={id:'HL-8',level:1}; renderSimTeams()"); pg.click('#simRun')
         mc=pg.evaluate("(()=>{const m=simLast.m; return [...simView.units.values()].map(v=>[m[v.id].multi[v.level-1], v.multiEl.hidden, v.multiEl.textContent]);})()")
         chk(all((x[0]>1 and not x[1] and x[2]=='×'+str(x[0])) or (x[0]==1 and x[1]) for x in mc) and any(x[0]>1 for x in mc),'multihit chip '+str(mc))
-        # เรียกตัวมาแทน (PL-5): จำลองแล้วมีตัวใหม่โผล่ในสนาม
-        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-5',level:1}; simTeam[1][0][0]={id:'HL-6',level:3}; renderSimTeams()")
+        # เรียกตัวมาแทน (PL-7): จำลองแล้วมีตัวใหม่โผล่ในสนาม
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-7',level:1}; simTeam[1][0][0]={id:'HL-8',level:3}; renderSimTeams()")
         pg.click('#simRun'); pg.click('#simSkip')
         chk('เรียก' in pg.text_content('#simLog'),'summon shown in log')
         # ชุด 67: บอสยืนหลายช่อง = ชื่อบอสขึ้นทุกช่องที่ยืน (การ์ด 1 ช่อง + ป้ายชื่อช่องที่เหลือ) · แตะป้าย = เลือกบอส
-        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-3',level:1}; renderSimTeams(); document.getElementById('simFoeBoss').click(); document.getElementById('simRun').click()")
+        pg.evaluate("simTeam=emptySim(); simTeam[0][0][0]={id:'PL-2',level:1}; renderSimTeams(); document.getElementById('simFoeBoss').click(); document.getElementById('simRun').click()")
         bc=pg.evaluate("(()=>{const v=[...simView.units.values()].find(x=>x.cells); return v ? [v.cells.length, document.querySelectorAll('#simArena .boss-tag').length, [...document.querySelectorAll('#simArena .boss-tag .uname')].every(t=>t.textContent===v.name)] : null;})()")
         chk(bc is not None and bc[0]>1 and bc[1]==bc[0]-1 and bc[2],'boss name on every cell '+str(bc))
         # ชุด 69: หลอดเลือดบอสหลายแถบ = สีต่างกันต่อแถบ + ข้อความ "แถบ k/n"
@@ -785,8 +785,8 @@ window.claude={use:n=>Promise.resolve(n==='db'?db:null)};})()"""
         pg.fill('#ruleFind',''); pg.click('#rchip-all'); pg.evaluate("document.getElementById('tab-sim').click()")
         # ชุด 35: แผงค้นหาลงสนาม (แตะ = ช่องว่างแรกของฝั่งที่เลือก · ลากได้ · ค้างหน้าค้นหา) · 💾 เก็บสถานะหน้า · ค่าเท่าเดิมไม่ขึ้นสีเหลือง
         pg.evaluate("simTeam=emptySim(); simTeam[1][0][0]={id:'HL-1',level:1}; saveSim(); renderSimTeams(); dock.side=0; renderDock()")
-        pg.fill('#dockQ','PL-3'); chk(pg.eval_on_selector_all('#dockList .dk-item','e=>e.length')==1,'dock search filters')
-        pg.click('#dockList .dk-item'); chk(pg.evaluate("simTeam[0].flat().some(u=>u&&u.id==='PL-3')") and pg.is_visible('#dockList .dk-item'),'dock tap adds + stays open')
+        pg.fill('#dockQ','PL-2'); chk(pg.eval_on_selector_all('#dockList .dk-item','e=>e.length')==1,'dock search filters')
+        pg.click('#dockList .dk-item'); chk(pg.evaluate("simTeam[0].flat().some(u=>u&&u.id==='PL-2')") and pg.is_visible('#dockList .dk-item'),'dock tap adds + stays open')
         pg.fill('#dockQ','')
         it=pg.locator('#dockList .dk-item >> nth=4'); it.evaluate("e=>{e.scrollIntoView({block:'start'}); scrollBy(0,-170)}"); bb=it.bounding_box(); cid=it.get_attribute('data-cid')  # ช่องเป้าต้องอยู่ในจอ (ลากจริงใกล้ขอบจอ = เลื่อนหน้าให้เอง)
         tb=pg.locator('#simArena [data-key="1:0:1"]').bounding_box()

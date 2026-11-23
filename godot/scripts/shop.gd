@@ -342,7 +342,7 @@ static func fire_shop_skill(st: Dictionary, u: Dictionary, ref: Variant, when: S
 		else:
 			msgs.append("%s: ไม่มีเพื่อนในตำแหน่งที่สกิลให้ผล" % name)
 
-# waiting charges (SF-7): the next bought unit of a matching tribe gets the perm stat at the owner's level now
+# waiting charges (SF-4): the next bought unit of a matching tribe gets the perm stat at the owner's level now
 # owner sold = charge gone · merged = the highest-level unit of the same id
 static func charge_owner(st: Dictionary, x: Dictionary) -> Variant:
 	var all := _us(all_units(st))

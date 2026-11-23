@@ -6,12 +6,12 @@ import { makeCharMap } from '../core/team.js';
 import { validateConfig } from '../core/validate.js';
 import { NEVER, mk, L3, skErr, dummy, u, fight, ev, uidOf, eq, ok } from './helpers.js';
 export const TESTS_SKILLS = [
-  ['เกราะแตก (แบบ HL-6) ทำดาเมจเท่าเกราะที่เสีย', () => {
+  ['เกราะแตก (แบบ HL-8) ทำดาเมจเท่าเกราะที่เสีย', () => {
     const T = dummy('T', { armor: L3(40), skills: [{ when: 'armorBreak', do: 'armorBreakDmg', to: 'allEnemies', v: L3(100) }] });
     const r = fight([T, mk('B', { atk: L3(50), hp: L3(1000) })], [u('T')], [u('B')]);
     eq(ev(r, 'dmg', e => e.why === 'armorBreak').map(e => e.amount), [40], 'ดาเมจเกราะแตก');
   }],
-  ['สะท้อนดาเมจเท่าเกราะที่เสีย (แบบ HL-6) ใส่ผู้ตี', () => {
+  ['สะท้อนดาเมจเท่าเกราะที่เสีย (แบบ HL-8) ใส่ผู้ตี', () => {
     const T = dummy('T', { armor: L3(40), skills: [{ when: 'hitTaken', do: 'armorBreakDmg', to: 'attacker', v: L3(150) }] });
     const r = fight([T, mk('B', { atk: L3(30), hp: L3(1000) })], [u('T')], [u('B')]);
     eq(ev(r, 'dmg', e => e.why === 'armorBreak').slice(0, 2).map(e => [e.t, e.amount]), [[1000, 45], [2000, 15]], 'สะท้อน (เกราะเสีย 30 แล้ว 10)');
@@ -56,7 +56,7 @@ export const TESTS_SKILLS = [
       eq([...new Set(ev(r, 'proc').map(e => e.what))], want, `เลเวล ${lv}`);
     }
   }],
-  ['ชุบเพื่อน (WN-4): ได้ตามจำนวนครั้ง HP 20% · lifesteal ฟื้นตามดาเมจฮิต', () => {
+  ['ชุบเพื่อน (WN-5): ได้ตามจำนวนครั้ง HP 20% · lifesteal ฟื้นตามดาเมจฮิต', () => {
     const W = dummy('W', { tribe: 'อสูร', skills: [{ when: 'allyDown', do: 'reviveAlly', to: 'self', v: [1, 2, 3] }] });
     const X = mk('X', { hp: L3(100), cdMs: NEVER, atk: L3(0) });
     const K = mk('K', { atk: L3(100), cdMs: 1000 });
@@ -71,7 +71,7 @@ export const TESTS_SKILLS = [
     eq(ev(r, 'heal', e => e.to === vu)[0].amount, 15, 'ฟื้น 50% ของ 30');
     ok(!validateConfig([mk('AA-1', { skills: [{ when: 'hit', do: 'lifesteal', to: 'self', v: L3(5) }] })]).ok, 'เผ่าเหล็กกล้าใช้ดูดเลือดไม่ได้');
   }],
-  ['ชุบเพื่อนที่ down อยู่ (WN-4): ติ๊ก sameTribe = ชุบเฉพาะเผ่าเดียวกับผู้ใช้ · ไม่ติ๊ก = ทุกเผ่า', () => {
+  ['ชุบเพื่อนที่ down อยู่ (WN-5): ติ๊ก sameTribe = ชุบเฉพาะเผ่าเดียวกับผู้ใช้ · ไม่ติ๊ก = ทุกเผ่า', () => {
     const glass = (id, tribe) => mk(id, { tribe, hp: L3(50), cdMs: NEVER, atk: L3(0) });
     const K = mk('K', { atk: L3(100), cdMs: L3(1000), hp: L3(100000) });
     for (const same of [true, false]) {
@@ -141,12 +141,12 @@ export const TESTS_SKILLS = [
     const r = fight([mk('A'), dummy('B')], [u('A', 0, 0, 1, { atk: 5 })], [u('B')]);
     eq(ev(r, 'dmg', e => e.why === 'hit')[0].amount, 15, 'ดาเมจ');
   }],
-  ['ลดคูลดาวน์ % ตอนเริ่มแมตช์ (แบบ PT-4)', () => {
+  ['ลดคูลดาวน์ % ตอนเริ่มแมตช์ (แบบ PT-5)', () => {
     const P = dummy('P', { tribe: 'ภูติ', skills: [{ when: 'matchStart', do: 'cdPct', to: 'frontBackAlly', v: L3(20) }] });
     const r = fight([P, mk('A', { atk: L3(1) }), dummy('B')], [u('A', 0, 0), u('P', 1, 0)], [u('B')]);
     eq(ev(r, 'set').slice(0, 2).map(e => e.t), [800, 1600], 'เวลาชุดของเพื่อนข้างหน้า');
   }],
-  ['กระจายฮิต (แบบ WY-6): คนละตัว เริ่มจาก HP ต่ำสุด', () => {
+  ['กระจายฮิต (แบบ WY-8): คนละตัว เริ่มจาก HP ต่ำสุด', () => {
     const W = mk('W', { multi: 3, atk: L3(1), skills: [{ when: 'set', do: 'spread', to: 'lowestHp', v: L3(1) }] });
     const r = fight([W, dummy('X', { hp: L3(70) }), dummy('Y', { hp: L3(50) }), dummy('Z', { hp: L3(60) })], [u('W')], [u('X', 0, 0), u('Y', 1, 0), u('Z', 0, 1)]);
     eq(ev(r, 'dmg', e => e.why === 'hit' && e.t === 1000).map(e => e.to), ['Y', 'Z', 'X'].map(id => uidOf(r, 1, id)), 'ลำดับเป้า');
@@ -156,7 +156,7 @@ export const TESTS_SKILLS = [
     const r = fight([D, dummy('K'), mk('E')], [u('D', 0, 0), u('K', 1, 0)], [u('E')]);
     eq(ev(r, 'armor', e => e.to === uidOf(r, 0, 'K')).map(e => e.amount), [40], 'เกราะของเพื่อน');
   }],
-  ['ศัตรู down: ย้ายไฟ (แบบ PL-6) และช็อต (แบบ SF-5)', () => {
+  ['ศัตรู down: ย้ายไฟ (แบบ PL-8) และช็อต (แบบ SF-6)', () => {
     const P = mk('P', { atk: L3(100), burn: L3(10), skills: [{ when: 'enemyDown', do: 'spreadBurn', to: 'allEnemies', v: L3(50) }] });
     const r = fight([P, mk('X', { hp: L3(150), cdMs: NEVER }), dummy('Y')], [u('P')], [u('X', 0, 0), u('Y', 1, 0)]);
     eq(ev(r, 'burn', e => e.to === uidOf(r, 1, 'Y') && e.t === 2000).map(e => e.amount), [9], 'ไฟที่ลามไป Y (ไฟบน X = 9 + 10 จากฮิตสุดท้าย = 19 → 50%)');
@@ -178,7 +178,7 @@ export const TESTS_SKILLS = [
     const r2 = fight([S1, mk('E', { atk: L3(1) })], [u('S')], [u('E')]);
     eq(ev(r2, 'set', e => e.who === uidOf(r2, 1, 'E'))[0].t, 1700, 'ชุดแรกของศัตรูหลังมึนงง');
   }],
-  ['ชุด 16: ตัวเอง down ตอนเริ่มแมตช์ (SF-5) · คูลดาวน์ช้าลง % ใส่ศัตรูหรือตัวเอง (WY-8)', () => {
+  ['ชุด 16: ตัวเอง down ตอนเริ่มแมตช์ (SF-6) · คูลดาวน์ช้าลง % ใส่ศัตรูหรือตัวเอง (WY-7)', () => {
     const K = mk('K', { atk: L3(0), cdMs: NEVER, skills: [{ when: 'matchStart', do: 'selfKo', to: 'self', v: L3(0) }, { when: 'matchStart', do: 'shock', to: 'allEnemies', v: L3(5) }] });
     const P = dummy('P', { skills: [{ when: 'allyDown', do: 'armor', to: 'self', v: L3(9) }] });
     const r = fight([K, P, dummy('E')], [u('K', 0, 0), u('P', 0, 1)], [u('E')]);

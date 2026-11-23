@@ -116,7 +116,7 @@ with sync_playwright() as p:
     check("POST without Origin refused", post({"rev": r0, "batches": {}}, origin=None) == 403)
     check("unknown batch refused", post({"rev": r0, "batches": {"zzz": {"id": "", "pick": []}}}) == 400)
     check("picture not in batch refused", post({"rev": r0, "batches": {"fire": {"id": "", "pick": ["g99"]}}}) == 400)
-    check("locked batch keeps its ID whatever is sent", post({"rev": r0, "batches": {**latest()["batches"], "fire_f3": {"id": "PL-2", "pick": []}}}) == 200 and latest()["batches"]["fire_f3"]["id"] == "PL-1")
+    check("locked batch keeps its ID whatever is sent", post({"rev": r0, "batches": {**latest()["batches"], "fire_f3": {"id": "PL-3", "pick": []}}}) == 200 and latest()["batches"]["fire_f3"]["id"] == "PL-1")
     r0 = latest()["rev"]
     check("bad id refused", post({"rev": r0, "batches": {"fire": {"id": "../x", "pick": []}}}) == 400)
     check("old rev refused (409)", post({"rev": r0 - 1, "batches": {}}) == 409)
