@@ -11,12 +11,13 @@ const STATUS = [
   ['claude', 'รอ Claude ทำเฟรม'], ['done', 'เฟรมเสร็จ'], ['ingame', 'อยู่ในเกมแล้ว'],
 ];
 const STATUS_TH = Object.fromEntries(STATUS);
-const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเงา', 'check+veo': 'ตรวจภาพ + เขียนพรอมต์วิดีโอ' };
+const TASK_TH = { 'frames+shadow': 'ตัดเฟรม + สร้างเงา', 'check+veo': 'ตรวจภาพ + เขียนพรอมต์วิดีโอ', eyecheck: 'ดูภาพพิกเซลด้วยตา' };
 const taskTh = (q) => TASK_TH[q.task] || 'งานอื่น';
 // what the owner does once Claude has finished, per task
 const NEXT_TH = { 'frames+shadow': 'ถึงตาคุณ: เปิดขั้น "เฟรม" ติดดาวถ้าโอเค แล้วเปิดขั้น "เงา" ปรับต่อ',
   'check+veo:pass': 'ถึงตาคุณ: เปิดแท็บ "พรอมต์" ส่วน "ภาพส่ง Veo" ดาวน์โหลดภาพ + คัดลอกพรอมต์วิดีโอ ไปเจนใน Veo แล้ววางวิดีโอในขั้น "วิดีโอ" ติดดาว แล้วกด "ตัดเฟรม + สร้างเงา"',
-  'check+veo:fail': 'ถึงตาคุณ: เปิดขั้น "พรอมต์" คัดลอกรุ่นที่ Claude แก้ไปเจนภาพใหม่ วางในขั้น "ภาพนิ่ง" แล้วส่งตรวจอีกครั้ง' };
+  'check+veo:fail': 'ถึงตาคุณ: เปิดขั้น "พรอมต์" คัดลอกรุ่นที่ Claude แก้ไปเจนภาพใหม่ วางในขั้น "ภาพนิ่ง" แล้วส่งตรวจอีกครั้ง',
+  eyecheck: 'ถึงตาคุณ: ดูจุดที่ Claude วงไว้ แก้เองด้วย "แก้พิกเซล" หรือเจนภาพใหม่' };
 const nextTh = (q) => NEXT_TH[q.task === 'check+veo' ? `${q.task}:${q.result || 'pass'}` : q.task] || '';
 const veoPrompt = (it, form) => it.prompts.filter((p) => p.kind === 'veo' && (p.form || 1) === form).pop();
 // owner flow (set 240): still → "ส่งให้ Claude ตรวจ" → Claude checks the rules → pass: cut (3) + Veo input (4) + Veo prompt · fail: reasons + fixed Gemini prompt
@@ -542,7 +543,8 @@ function renderItem(m, it) {
     h('summary', {}, h('b', {}, `${lastDone.by === 'auto' ? 'โปรแกรม' : 'Claude '}ทำเสร็จแล้ว: ${taskTh(lastDone)}${lastDone.result === 'fail' ? ' (ไม่ผ่าน)' : ''}`),
       nextTh(lastDone) ? h('span', { class: 'small next-inline' }, nextTh(lastDone)) : null, h('span', { class: 'sp' }), h('span', { class: 'small faint' }, 'กดดูรายละเอียด'),
       h('button', { class: 'ghost small-btn', onclick: (e) => { e.preventDefault(); lastDone.seen = true; save().then(render); } }, 'รับทราบ')),
-    h('div', { class: 'small', style: 'white-space:pre-wrap;padding-top:6px' }, lastDone.reply || '')));
+    h('div', { class: 'small', style: 'white-space:pre-wrap;padding-top:6px' }, lastDone.reply || ''),
+    lastDone.replyFile ? h('a', { href: fileUrl(lastDone.replyFile), target: '_blank', rel: 'noopener' }, h('img', { class: 'replyimg', src: fileUrl(lastDone.replyFile), alt: 'ภาพที่ Claude วงจุดไว้' })) : null));
   const steps = isChar ? STEPS.filter(([k]) => showOld || !OLD_STEPS.includes(k)) : STEPS.filter(([k]) => ['still', 'video', 'file'].includes(k));
   const labels = isChar ? (showOld ? null : { still: 'ภาพนิ่ง' }) : { still: 'ภาพ', video: 'วิดีโอ', file: 'ไฟล์ (.glb ฯลฯ)' };
   const subs = isChar && !showOld ? { still: 'คุณติดดาว · ไอคอน', frames: 'ท่ายืน PixelLab' } : {};
@@ -651,6 +653,11 @@ function renderSlot(m, it, slot) {
     if (ui.bg === 'arena') stage.style.backgroundImage = `url("${fileUrl(hub.settings.arenaBg || TEAM_BG)}")`; // no picked arena yet → the battle scene of the team tab
     left.append(viewbar, stage, actbar);
     viewer(stage, left, sel);
+    if (isImage(sel.file) && slot !== 'veoin') { // set 296: pixel check (D1 = on press only)
+      const on = pxOpen.has(sel.id);
+      actbar.prepend(h('button', { class: 'pxbtn' + (on ? ' on' : ''), 'aria-expanded': String(on), title: 'ตรวจสี ขอบดำ เงา เม็ดหลุด จุดโปร่ง' + (sel.slot === 'frames' ? ' เม็ดกระพริบ เท้าขยับ ทุกเฟรม' : ''), onclick: () => { if (on) pxOpen.delete(sel.id); else pxOpen.add(sel.id); render(); } }, on ? 'ซ่อนผลตรวจ' : 'ตรวจภาพ'));
+      if (on) left.append(pxPanel(it, sel, stage));
+    }
     if (ui.cmp.length === 2) left.append(h('div', { class: 'tools' }, h('button', { class: 'primary', onclick: () => compareDialog(it) }, 'เทียบ 2 รอบที่เลือก')));
     else left.append(h('p', { class: 'small faint' }, 'ติ๊ก "เทียบ" ที่ 2 รอบเพื่อดูคู่กันหรือเลื่อนแถบทับกัน'));
     if (pics && it.kind === 'character') left.append(iconBox(it));
@@ -817,7 +824,9 @@ function sheetPlayer(stage, left, r) {
     const g = c.getContext('2d'); g.imageSmoothingEnabled = r.meta.n < 32 ? false : true; g.drawImage(k, 0, 0, c.width, c.height);
     info.textContent = `เฟรม ${i + 1}/${n} · ${r.meta.fw}×${r.meta.fh} px${r.meta.pingpong ? ' · ไป-กลับ' : ''}`;
     cells.forEach((b, j) => b.classList.toggle('on', j === i));
+    stage._pxAfterDraw?.(i); // set 296: red marks follow the frame on screen
   }
+  stage._pxGo = go; stage._pxFrame = () => i;
   loadImg(r.file).then((im) => {
     img = im;
     if (n <= 64) cells = [...Array(n).keys()].map((j) => {
@@ -867,6 +876,123 @@ async function driftCheck(v, out) {
   out.append(h('span', { class: zoom < 0.04 ? 'ok' : 'bad' }, `ขนาดตัวเปลี่ยน ${(zoom * 100).toFixed(1)}% ${zoom < 0.04 ? '(ปกติ หายใจ)' : '(กล้องน่าจะซูม)'}`),
     h('span', { class: pan < 0.02 ? 'ok' : 'bad' }, `ตัวเลื่อนซ้ายขวา ${(pan * 100).toFixed(1)}% ${pan < 0.02 ? '' : '(กล้องน่าจะแพน)'}`),
     h('span', { class: feet < 0.015 ? 'ok' : 'warn' }, `เท้าขยับขึ้นลง ${(feet * 100).toFixed(1)}%`));
+}
+
+// ---------- pixel check (set 296, owner A1+A3 · B1 still + frames · C1 list + red marks · D1 on button · E1 Claude eye check) ----------
+const pxRes = new Map(); // round id → result (kept while the page is open)
+const PXL = { bad: 'ต้องแก้', warn: 'ควรดู', ok: 'ผ่าน' };
+function pxPixels(img, sx, sy, sw, sh, mirror) {
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  if (mirror) { g.translate(sw, 0); g.scale(-1, 1); }
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  return g.getImageData(0, 0, sw, sh).data;
+}
+async function pxRun(it, r) {
+  if (pxRes.has(r.id)) return pxRes.get(r.id);
+  const img = await loadImg(r.file), mirror = !!mirrorOf(r);
+  let res;
+  if (r.slot === 'frames' && r.meta) {
+    const n = r.meta.n || r.meta.cols * r.meta.rows, frames = [];
+    for (let i = 0; i < n; i++) { const [sx, sy, sw, sh] = sheetFrame(img, r.meta, i); frames.push({ d: pxPixels(img, sx, sy, sw, sh, mirror), W: sw, H: sh }); }
+    let still = null; const sp = usedPic(it, r.form || 1);
+    if (sp && isImage(sp.file)) try { const si = await loadImg(sp.file); const a = PXC.analyse(pxPixels(si, 0, 0, si.naturalWidth, si.naturalHeight, false), si.naturalWidth, si.naturalHeight); still = a.palette?.map((p) => p.hex); } catch { /* still missing */ }
+    res = PXC.analyseFrames(frames, still); res.frames = frames; res.pixel = res.per[0].pixel;
+  } else {
+    const d = pxPixels(img, 0, 0, img.naturalWidth, img.naturalHeight, mirror);
+    res = PXC.analyse(d, img.naturalWidth, img.naturalHeight); res.src = { d, W: img.naturalWidth, H: img.naturalHeight };
+  }
+  pxRes.set(r.id, res);
+  return res;
+}
+// red boxes over the picture on the stage; pts are in analysed pixels (already mirrored like the screen)
+function pxMarks(stage, res, pts) {
+  stage.querySelector('canvas.pxmark')?.remove();
+  if (!pts || !pts.length) return;
+  const tgt = [...stage.children].find((e) => (e.tagName === 'IMG' || e.tagName === 'CANVAS') && !e.classList.contains('pxmark'));
+  if (!tgt) return;
+  const w = tgt.offsetWidth, hh = tgt.offsetHeight, s = w / res.W;
+  const c = h('canvas', { class: 'pxmark', width: w, height: hh, 'aria-hidden': 'true' });
+  c.style.left = tgt.offsetLeft + 'px'; c.style.top = tgt.offsetTop + 'px';
+  const g = c.getContext('2d'); g.lineWidth = Math.max(2, Math.round(s / 5)); g.strokeStyle = '#ff2a2a';
+  g.fillStyle = 'rgba(255,42,42,.28)';
+  const pad = Math.max(1, s * 0.15);
+  for (const [x, y] of pts) { g.fillRect(x * s, y * s, s, s); g.strokeRect(x * s - pad, y * s - pad, s + pad * 2, s + pad * 2); }
+  stage.append(c);
+}
+function pxView(d, W, H, mode, z) { // small look-at views: grey value · solid silhouette · real size
+  const c = h('canvas', { width: W, height: H, class: 'px' }), g = c.getContext('2d'), o = g.createImageData(W, H);
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3]; let r = d[i], gg = d[i + 1], b = d[i + 2];
+    if (mode === 'grey') { const v = Math.round(PXC.lum(r, gg, b) * 255); r = gg = b = v; } else if (mode === 'sil') { r = gg = b = 16; }
+    o.data[i] = r; o.data[i + 1] = gg; o.data[i + 2] = b; o.data[i + 3] = mode === 'sil' && a ? 255 : a;
+  }
+  g.putImageData(o, 0, 0); c.style.width = W * z + 'px'; c.style.height = H * z + 'px';
+  return c;
+}
+const pxOpen = new Set(); // round ids whose check panel is open
+function pxPanel(it, r, stage) {
+  const box = h('section', { class: 'panel pxc', 'aria-label': 'ผลตรวจภาพ' }, h('p', { class: 'dim small' }, 'กำลังตรวจ…'));
+  pxRun(it, r).then((res) => {
+    box.replaceChildren();
+    const frames = r.slot === 'frames' && r.meta;
+    let cur = null; // key of the issue whose marks show
+    const issues = res.issues.slice().sort((a, b) => ({ bad: 0, warn: 1, ok: 2 }[a.lvl] - { bad: 0, warn: 1, ok: 2 }[b.lvl]));
+    const n = (l) => issues.filter((i) => i.lvl === l).length;
+    const waiting = openJobs(it.id).some((q) => q.task === 'eyecheck' && q.round === r.id);
+    box.append(h('div', { class: 'pxc-head' },
+      h('b', {}, frames ? `ตรวจท่ายืน ${r.meta.n} เฟรม` : 'ตรวจภาพ'),
+      h('span', { class: 'small' }, h('span', { class: 'bad' }, `${PXL.bad} ${n('bad')}`), ' · ', h('span', { class: 'warn' }, `${PXL.warn} ${n('warn')}`), ' · ', h('span', { class: 'ok' }, `${PXL.ok} ${n('ok')}`)),
+      h('span', { class: 'sp' }),
+      h('button', { class: 'primary', disabled: waiting, title: 'Claude ดูภาพนี้ด้วยตา ตอบเป็นภาษาไทยพร้อมภาพวงจุดที่ควรแก้ (ไม่แก้ภาพให้)', onclick: () => pxSend(it, r, res, stage) }, waiting ? 'ส่งแล้ว รอ Claude' : 'ส่งให้ Claude ดูด้วยตา'),
+      h('button', { class: 'ghost', onclick: () => { pxOpen.delete(r.id); render(); } }, 'ปิด')));
+    if (!res.pixel) { box.append(h('p', { class: 'warn small' }, res.issues[0].text)); return; }
+    const showMarks = (i) => {
+      stage._pxAfterDraw = null;
+      if (!i) return pxMarks(stage, res, null);
+      if (frames && i.frames) {
+        const fs = Object.keys(i.frames).map(Number);
+        stage._pxAfterDraw = (fi) => pxMarks(stage, res, i.frames[fi] || []);
+        if (fs.length && stage._pxGo) stage._pxGo(fs[0]); else stage._pxAfterDraw(stage._pxFrame ? stage._pxFrame() : 0);
+      } else pxMarks(stage, res, i.pts);
+    };
+    const row = (i) => {
+      const can = i.pts.length || (i.frames && Object.keys(i.frames).length);
+      const b = h(can ? 'button' : 'div', { class: 'pxi ' + i.lvl, ...(can ? { 'aria-pressed': 'false', title: 'กด = วงแดงจุดนี้บนภาพ กดอีกครั้ง = ซ่อน' } : {}) },
+        h('span', { class: 'lv' }, PXL[i.lvl]), h('span', { class: 'tx' }, i.text), can ? h('span', { class: 'mk' }, 'ดูจุด') : null);
+      if (can) b.onclick = () => {
+        cur = cur === i.key ? null : i.key;
+        box.querySelectorAll('.pxi[aria-pressed]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+        if (cur) b.setAttribute('aria-pressed', 'true');
+        showMarks(cur ? i : null);
+      };
+      return b;
+    };
+    const probs = issues.filter((i) => i.lvl !== 'ok'), oks = issues.filter((i) => i.lvl === 'ok');
+    box.append(h('div', { class: 'pxlist' }, ...(probs.length ? probs.map(row) : [h('p', { class: 'ok small' }, 'ไม่พบปัญหาที่ตรวจอัตโนมัติได้ (ยังควรดูด้วยตาเรื่องอ่านออกไหม)')])));
+    if (oks.length) box.append(h('details', { class: 'pxok' }, h('summary', { class: 'small dim' }, `ข้อที่ผ่าน (${oks.length})`), h('div', { class: 'pxlist' }, ...oks.map(row))));
+    // look-at views (frame 1 for a sheet)
+    const src = frames ? res.frames[0] : res.src;
+    if (src && res.k === 1) {
+      const z = Math.max(1, Math.min(3, Math.floor(120 / Math.max(src.W, src.H))));
+      const arena = h('div', { class: 'pxarena' }, pxView(src.d, src.W, src.H, 'rgb', 1), pxView(src.d, src.W, src.H, 'rgb', 2));
+      arena.style.backgroundImage = `url("${fileUrl(hub.settings.arenaBg || TEAM_BG)}")`;
+      box.append(h('div', { class: 'pxviews' },
+        h('figure', {}, pxView(src.d, src.W, src.H, 'grey', z), h('figcaption', {}, 'ขาวดำ (ดูความสว่าง)')),
+        h('figure', {}, pxView(src.d, src.W, src.H, 'sil', z), h('figcaption', {}, 'เงาดำ (ดูรูปทรง)')),
+        h('figure', {}, arena, h('figcaption', {}, 'ขนาดจริง ×1 ×2 บนฉาก'))));
+    }
+    if (res.palette?.length) box.append(h('div', { class: 'pxpal', 'aria-label': 'สีในภาพ' }, h('span', { class: 'small dim' }, `สีในภาพ (${res.palette.length})${frames ? ' เฟรม 1' : ''}`),
+      ...res.palette.map((p) => { const s = h('span', { class: 'sw' + (p.hex === res.outline ? ' ol' : ''), title: `${p.hex} · ${p.n} เม็ด${p.hex === res.outline ? ' · สีเส้นขอบ' : ''}` }); s.style.background = p.hex; return s; })));
+  }).catch(() => box.replaceChildren(h('p', { class: 'bad small' }, 'เปิดภาพไม่ได้ ตรวจไม่ได้')));
+  return box;
+}
+function pxSend(it, r, res, stage) {
+  const fi = r.slot === 'frames' && stage._pxFrame ? stage._pxFrame() : undefined;
+  const sum = res.issues.filter((i) => i.lvl !== 'ok').map((i) => `- ${PXL[i.lvl]}: ${i.text}`).join('\n') || '- ตรวจอัตโนมัติไม่พบปัญหา';
+  hub.queue.push({ id: uid('q'), item: it.id, task: 'eyecheck', round: r.id, frame: fi, step: ui.step, form: r.form || ui.form, t: new Date().toISOString(), state: 'open', reply: '',
+    text: `ดูภาพ${r.slot === 'frames' ? `ท่ายืน (เฟรม ${fi + 1} ที่หยุดดูอยู่ + ทุกเฟรม)` : 'นิ่ง'} ${fmtDate(r.t)} ด้วยตา: อ่านออกไหม สี ขอบดำ เงา\nผลตรวจอัตโนมัติ:\n${sum}` });
+  save().then(() => { toast('ส่งแล้ว พิมพ์ "ดูคิว" ในแชทให้ Claude ดู'); render(); });
 }
 
 function stillChecks(it, r) {

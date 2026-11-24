@@ -31,7 +31,7 @@ const EXT = {
   mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   glb: 'model/gltf-binary', pxo: 'application/octet-stream', txt: 'text/plain; charset=utf-8',
 };
-const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js' };
+const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js', '/check.js': 'check.js' };
 // still batch picker (owner A2, set 260): batches stay OUTSIDE the repo (style.png = outside sprite, security.md part 2);
 // picks are saved in the repo so Claude reads them (latest.json) + every change kept (history.jsonl).
 const STILL_BATCHES = process.env.STILL_BATCHES ? path.resolve(process.env.STILL_BATCHES) : path.resolve(HERE, '..', '..', '..', 'automon-scratch', 'still-batches');

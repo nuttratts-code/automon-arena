@@ -459,3 +459,29 @@ h3.rgroup { margin: 16px 0 6px; font-size: 15px; display: flex; align-items: bas
 .seg.boardform button { border-radius: 0; margin-left: -1px; min-height: 30px; padding: 3px 12px; font-size: 13px; }
 .seg.boardform button:first-child { border-radius: var(--r) 0 0 var(--r); }
 .seg.boardform button:last-child { border-radius: 0 var(--r) var(--r) 0; }
+
+/* set 296: pixel check panel — quiet list; the red marks on the picture are the one loud thing */
+.stage > canvas.pxmark { position: absolute; pointer-events: none; max-width: none; max-height: none; }
+.pxc { margin: 0 0 12px; display: grid; gap: 10px; }
+.pxc-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pxc .bad { color: var(--bad); } .pxc .warn { color: var(--warn); } .pxc .ok { color: var(--ok); }
+.pxlist { display: grid; gap: 4px; }
+.pxi { display: grid; grid-template-columns: 4.2em 1fr auto; gap: 10px; align-items: baseline; text-align: left; font-size: 14px; padding: 6px 10px; border-radius: var(--r); background: #1d2129; border: 1px solid transparent; border-left: 3px solid var(--line); color: var(--ink); min-height: 32px; }
+.pxi.bad { border-left-color: var(--bad); } .pxi.warn { border-left-color: var(--warn); } .pxi.ok { border-left-color: var(--ok); }
+.pxi .lv { font-size: 12px; font-weight: 600; }
+.pxi.bad .lv { color: var(--bad); } .pxi.warn .lv { color: var(--warn); } .pxi.ok .lv { color: var(--ok); }
+.pxi .mk { font-size: 12px; color: var(--dim); white-space: nowrap; }
+button.pxi:hover { border-color: var(--line); border-left-color: inherit; }
+button.pxi[aria-pressed="true"] { background: #3a2226; border-color: #ff2a2a; }
+button.pxi[aria-pressed="true"] .mk { color: #ff8a8a; }
+.pxok summary { cursor: pointer; margin-bottom: 4px; }
+.pxviews { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.pxviews figure { margin: 0; display: grid; gap: 4px; justify-items: start; }
+.pxviews figcaption { font-size: 12px; color: var(--dim); }
+.pxviews canvas.px { image-rendering: pixelated; background: #e9e6df; border-radius: 4px; }
+.pxarena { display: flex; gap: 10px; align-items: flex-end; padding: 8px 10px; border-radius: 4px; background-size: cover; background-position: center 70%; }
+.pxarena canvas.px { background: transparent; }
+.pxpal { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.pxpal .sw { width: 18px; height: 18px; border-radius: 3px; border: 1px solid #0006; }
+.pxpal .sw.ol { outline: 2px solid var(--ink); outline-offset: 1px; }
+.replyimg { display: block; max-width: 100%; max-height: 420px; image-rendering: pixelated; margin-top: 8px; border-radius: var(--r); border: 1px solid var(--line); }
