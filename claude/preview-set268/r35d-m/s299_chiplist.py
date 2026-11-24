@@ -47,6 +47,7 @@ def chip(size, col, cut, key=None, mode="now", pad=0.10, mk="", ms=0.40):
         im.alpha_composite(ic, ((S - ic.width) // 2, (S - ic.height) // 2))
     if mk:   # r35w12: smooth + / - like the symbols: white rounded bars, dark outline, top-right corner
         L = ms * S; t = L * 0.30; cx = S - L * 0.5 - S * 0.07; cy = L * 0.5 + S * 0.10; o = max(2, S * 0.045)   # r35w13: a bit lower / in from the edge
+        if mk == "-": cy -= L * 0.22   # r35w14: minus a bit higher (owner)
         bars = [(cx - L/2, cy - t/2, cx + L/2, cy + t/2)] + ([(cx - t/2, cy - L/2, cx + t/2, cy + L/2)] if mk == "+" else [])
         for b in bars: d.rounded_rectangle((b[0]-o, b[1]-o, b[2]+o, b[3]+o), radius=t/2+o, fill=EDGE + (240,))
         for b in bars: d.rounded_rectangle(b, radius=t/2, fill=(255, 255, 255, 255))
