@@ -27,7 +27,7 @@ Original creature auto-battler, *inspired by* Batomon Showdown but original: nev
 | Bug · failing test/gate/CI/page | skill `find-cause` (runbook) · HARD RULE 5 (rules) | anything fails or the user reports a bug |
 | Rule / design change | skill `rule-change` (runbook) · Decisions + Docs below (rules) | the user proposes or asks to change how the game works |
 | Measure (Claude measures) · bot teams | skill `measure-balance` (runbook; dormant since set 167) · claude/workflow/{measure,botteams}.md (rules) | only when the user orders a measurement |
-| Ideas · "best way / tips" (brainstorm skill DELETED set 220 — too many tokens) | answer in the chat: one research pass + 2–3 options with a recommendation (skill `rule-change` style); no expert-panel subagents | the user asks for a brainstorm, ideas or the best way on a topic |
+| Ideas · "best way / tips" (brainstorm skill DELETED set 220 — too many tokens) | answer in the chat: one research pass + 2–3 options with a recommendation (skill `rule-change` style); no expert-panel subagents · then ONE Gemini second opinion via `agy` (claude/workflow/gemini.md, set 293) | the user asks for a brainstorm, ideas or the best way on a topic |
 | Security (HARD RULE 9) · secrets · outside assets · shipped files · accounts | claude/workflow/security.md | any commit (secret grep), new dependency/asset, publish/release, new account, new plan file |
 | Ripple check (fix one spot → find linked spots) | claude/workflow/ripple.md (map) · HARD RULE 8 | any commit that changes behaviour, values, names, texts, formats or rules |
 | Disk cleanup (Temp scratch, old worktrees, git gc) | skill `scratch-cleanup` (runbook, set 238) | the owner says files grew / disk full / clear old work |
