@@ -8,7 +8,7 @@ BLUE, RED, EDGE, BG = (47, 109, 181), (184, 52, 58), (22, 32, 42), (30, 36, 30)
 REAL = 20          # chip size on the 1920 screen (9 base px x ~2.2)
 BIG = 84           # enlarged view
 SS = 8             # supersample for smooth edges
-CHIPS = [("stun", 0, ""), ("atk", 1, "+"), ("burn", 1, "+"), ("shock", 1, "+"), ("armor", 1, "+"), ("heal", 1, "+"), ("cd", 1, "+"), ("h2a", 1, "+"),
+CHIPS = [("stun", 0, ""), ("atk", 1, "+"), ("burn", 1, "+"), ("shock", 1, "+"), ("armor", 1, "+"), ("heal", 1, "+"), ("cd", 1, "+"),   # r35w13: h2a removed (no unit uses it)
          ("vuln", 0, "+"), ("burn", 0, "+"), ("shock", 0, "+"), ("armor", 0, "-"), ("cd", 0, "-")]
 try:
     F = ImageFont.truetype("C:/Windows/Fonts/tahomabd.ttf", 22); FS = ImageFont.truetype("C:/Windows/Fonts/tahoma.ttf", 17)
@@ -46,7 +46,7 @@ def chip(size, col, cut, key=None, mode="now", pad=0.10, mk="", ms=0.40):
         ic = ic.resize((max(1, int(ic.width * sc)), max(1, int(ic.height * sc))), Image.LANCZOS)
         im.alpha_composite(ic, ((S - ic.width) // 2, (S - ic.height) // 2))
     if mk:   # r35w12: smooth + / - like the symbols: white rounded bars, dark outline, top-right corner
-        L = ms * S; t = L * 0.30; cx = S - L * 0.5 - S * 0.02; cy = L * 0.5 + S * 0.02; o = max(2, S * 0.045)
+        L = ms * S; t = L * 0.30; cx = S - L * 0.5 - S * 0.07; cy = L * 0.5 + S * 0.10; o = max(2, S * 0.045)   # r35w13: a bit lower / in from the edge
         bars = [(cx - L/2, cy - t/2, cx + L/2, cy + t/2)] + ([(cx - t/2, cy - L/2, cx + t/2, cy + L/2)] if mk == "+" else [])
         for b in bars: d.rounded_rectangle((b[0]-o, b[1]-o, b[2]+o, b[3]+o), radius=t/2+o, fill=EDGE + (240,))
         for b in bars: d.rounded_rectangle(b, radius=t/2, fill=(255, 255, 255, 255))
