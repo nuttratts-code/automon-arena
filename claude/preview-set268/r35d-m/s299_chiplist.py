@@ -8,23 +8,25 @@ BLUE, RED, EDGE, BG = (47, 109, 181), (184, 52, 58), (22, 32, 42), (30, 36, 30)
 REAL = 20          # chip size on the 1920 screen (9 base px x ~2.2)
 BIG = 84           # enlarged view
 SS = 8             # supersample for smooth edges
-CHIPS = [("stun", 0), ("atk", 1), ("burn", 1), ("shock", 1), ("armor", 1), ("heal", 1), ("cd", 1), ("h2a", 1),
-         ("vuln", 0), ("burn", 0), ("shock", 0), ("armor", 0), ("cd", 0)]
+CHIPS = [("stun", 0, ""), ("atk", 1, "+"), ("burn", 1, "+"), ("shock", 1, "+"), ("armor", 1, "+"), ("heal", 1, "+"), ("cd", 1, "+"), ("h2a", 1, "+"),
+         ("vuln", 0, "+"), ("burn", 0, "+"), ("shock", 0, "+"), ("armor", 0, "-"), ("cd", 0, "-")]
 try:
     F = ImageFont.truetype("C:/Windows/Fonts/tahomabd.ttf", 22); FS = ImageFont.truetype("C:/Windows/Fonts/tahoma.ttf", 17)
 except Exception:
     F = FS = ImageFont.load_default()
 
+FLIP = {"atk"}   # r35w12: sword tip to the top-left
 def icon(key):   # outline + white fill, cropped to the drawn part
     o = Image.open(IC / f"{key}_o.png").convert("RGBA"); f = Image.open(IC / f"{key}.png").convert("RGBA")
     a = Image.new("RGBA", o.size, (0, 0, 0, 0))
     a.paste(Image.new("RGBA", o.size, EDGE + (230,)), (0, 0), o.split()[3])
     a.paste(Image.new("RGBA", o.size, (255, 255, 255, 250)), (0, 0), f.split()[3])
-    return a.crop(o.split()[3].getbbox())
+    a = a.crop(o.split()[3].getbbox())
+    return a.transpose(Image.FLIP_LEFT_RIGHT) if key in FLIP else a
 
-def area(im): return sum(1 for v in im.split()[3].getdata() if v > 60)
+def area(im): return sum(1 for v in im.split()[3].get_flattened_data() if v > 60)
 
-def chip(size, col, cut, key=None, mode="now", pad=0.10):
+def chip(size, col, cut, key=None, mode="now", pad=0.10, mk="", ms=0.40):
     S = size * SS
     im = Image.new("RGBA", (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     k = cut * S; w = max(1, SS)
@@ -43,19 +45,21 @@ def chip(size, col, cut, key=None, mode="now", pad=0.10):
             sc = min(inner / max(ic.size), (0.50 * inner * inner / area(ic)) ** 0.5)
         ic = ic.resize((max(1, int(ic.width * sc)), max(1, int(ic.height * sc))), Image.LANCZOS)
         im.alpha_composite(ic, ((S - ic.width) // 2, (S - ic.height) // 2))
+    if mk:   # r35w12: smooth + / - like the symbols: white rounded bars, dark outline, top-right corner
+        L = ms * S; t = L * 0.30; cx = S - L * 0.5 - S * 0.02; cy = L * 0.5 + S * 0.02; o = max(2, S * 0.045)
+        bars = [(cx - L/2, cy - t/2, cx + L/2, cy + t/2)] + ([(cx - t/2, cy - L/2, cx + t/2, cy + L/2)] if mk == "+" else [])
+        for b in bars: d.rounded_rectangle((b[0]-o, b[1]-o, b[2]+o, b[3]+o), radius=t/2+o, fill=EDGE + (240,))
+        for b in bars: d.rounded_rectangle(b, radius=t/2, fill=(255, 255, 255, 255))
     return im.resize((size, size), Image.LANCZOS)
 
 rows = []
 def row(title, items):   # items = list of chip images (big) ; real-size copies are drawn under each
     rows.append((title, items))
 
-# 1 backgrounds: cut size per row, empty + one icon, both colours
-for cut, name in [(0, "ไม่ตัดมุม (มุมมนเดิม)"), (0.08, "ตัดนิดเดียว 8%"), (0.14, "ตัดเล็ก 14%"), (0.20, "ตัดกลาง 20%"), (0.28, "ตัด 28% (รอบที่แล้ว)")]:
-    row("พื้นหลัง · " + name, [chip(BIG, BLUE, cut), chip(BIG, RED, cut), chip(BIG, BLUE, cut, "atk", "area"), chip(BIG, RED, cut, "vuln", "area")])
-# 2 icons: same chip (cut 14%), now vs equal box vs equal weight
-for mode, name in [("now", "รูปตอนนี้ (ขนาดไม่เท่ากัน)"), ("box", "ปรับ ก: ด้านยาวสุดเท่ากัน"), ("area", "ปรับ ข: เนื้อรูปเท่ากัน (แนะนำ)")]:
-    row("สัญลักษณ์ · " + name, [chip(BIG, BLUE if b else RED, 0.14, k, mode) for k, b in CHIPS])
-
+# r35w12: cut 15 % + equal ink (ข) + sword flipped; mark size rows
+row("ไม่มีเครื่องหมาย (ตัด 15% · ขนาดเท่ากัน · ดาบปลายบนซ้าย)", [chip(BIG, BLUE if b else RED, 0.15, k, "area") for k, b, m in CHIPS])
+for ms, name in [(0.32, "เล็ก"), (0.40, "กลาง"), (0.48, "ใหญ่")]:
+    row("เครื่องหมาย + / − มุมบนขวา · " + name, [chip(BIG, BLUE if b else RED, 0.15, k, "area", mk=m, ms=ms) for k, b, m in CHIPS])
 W = 40 + 13 * (BIG + 14) + 20
 H = 20 + sum(34 + BIG + 12 + REAL + 18 for _ in rows) + 40
 sheet = Image.new("RGB", (W, H), (24, 28, 34)); d = ImageDraw.Draw(sheet)
@@ -69,5 +73,5 @@ for title, items in rows:
         sm = im.resize((REAL, REAL), Image.LANCZOS)
         sheet.paste(sm, (x + (BIG - REAL) // 2, y + BIG + 10), sm)
     y += BIG + 12 + REAL + 18
-d.text((20, y), "รูปเล็กใต้แต่ละอัน = ขนาดจริงในเกม · เครื่องหมาย + / − ยังใช้แบบเดิม (ไว้ทำทีหลัง)", fill=(180, 190, 200), font=FS)
+d.text((20, y), "รูปเล็กใต้แต่ละอัน = ขนาดจริงในเกม · ฟ้า = บัฟ · แดง = ดีบัฟ · + = ค่าขึ้น · − = ค่าลง", fill=(180, 190, 200), font=FS)
 sheet.save(OUTP); print(sheet.size)
