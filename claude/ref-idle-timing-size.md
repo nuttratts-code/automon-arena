@@ -32,3 +32,27 @@ Limits: no species data in the clone → flyers / four-legged / two-legged canno
 
 - Steps are small: large is only ~1.3× medium in height, ~1.5× in width; size reads more from width/bulk than height.
 - ×5 = the scale the owner liked in the set 259 chibi look test.
+
+## 3. Battle motion timing (set 298, owner D1 — numbers for the r38 port, not applied yet)
+
+Same source, `AnimData.xml` of every species (all animations are listed there even though only Idle sheets were cloned; 60 fps ticks). Median (p25–p75), n ≈ 970 unless noted.
+
+| anim | frames | whole move ms | beats (ms from start) |
+|---|---|---|---|
+| Attack (melee) | 11 (10–14) | 400 (350–467) | rush 33 · hit 133 (117–183) · return 233 (200–267) |
+| Strike (n 149) | 11 | 433 | rush 50 · hit 150 · return 233 |
+| Shoot | 12 | 450 | release 67 (33–133) · return 217 |
+| Charge | 10 | 333 | hit 167 · return 300 |
+| Hurt | 2 | 167 | — |
+| Faint (n 206) | 4 | 567 | — |
+| Walk | 4 (4–6) | 600 | — |
+| Hop | 10 | 400 | land 367 |
+
+- Shape of a hit: a very short wind-up (~33 ms), the strike lands at ~1/3 of the move, a short hold at the target, then a slower way back. The target's hurt reaction (167 ms) starts on the hit beat.
+- Port use (owner D1): `_lunge` / stage lunge timing and the hurt flash take these beats when the battle scene is ported (r38). Sample GIFs: `claude/preview-set298/pmd/` (local).
+- Idle hold (owner C2, art-style V2.9): the first idle frame lasts 3× the frame ms, game-wide.
+
+## 4. Pixel checker calibration (set 298, owner A + B)
+
+tools/asset-hub/check.js run on frame 1 (side row) of 298 random reference idles vs our 64 starred stills: stray single pixels per 100 body px 4.0 (p90 7.3) vs ours 2.0 · L corners per 100 body px 0.7 (p75 1.3) vs 0.7 · one pure-black outline 99.7 % vs 69 % · edge warn/bad 9 % vs 44 % · colours 11 vs 11 · darkest body shade − outline luminance 0.22 (0.14–0.30) · hue shift between shades 10° (6–14) · hue families 2 (2–3).
+→ check.js now warns on strays only above 7.3 / 100 body px, on L corners above 1.3 / 100, and adds `olblack` when the outline is not pure #000000. Single pixels are texture, not a defect.
