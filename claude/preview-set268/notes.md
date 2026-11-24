@@ -257,3 +257,4 @@ Rebuild adds → s297r35u8-patch.py (after s297r35u7).
 Rebuild adds → s297r35u9-patch.py (after s297r35u8).
 87. (set 297 cont., round 35u10, pending owner OK) Owner after 35u9 O: "closer together, move everything to the right side". S297TOP=p = O (clock 15 | pause | ff, old icon size, top edge, faded 0.75) at the hud's RIGHT edge, tight: both buttons 54×54 (icon unchanged), group separation −14 (each button has ~10 px empty sides around its icon), clock plate margin right 12. Shots S297u10-p11/22/33.png. Not checked: phone 844×390.
 Rebuild adds → s297r35u10-patch.py (after s297r35u9).
+88. (set 297 cont.) Owner: "are the button and clock colours the same?" — yes: both fill #eef3f6, outline #16202a 0.85, faded 0.75 (measured fill clock ≈ 197,205,211 · icons ≈ 190,198,203); the clock reads greyer only because its strokes are thin (more outline per area). Offered thinner clock outline / bolder font → owner D3: keep P as is.
