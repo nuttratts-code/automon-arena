@@ -76,8 +76,6 @@ func _area299(R: Rect2, v: Dictionary, L2: float, ink: Color, mute: Color) -> vo
 	var y := R.position.y
 	var RT := R.end.x - 8.0
 	_pn_layer.draw_rect(Rect2(L2 - 5.0, y + 5.0, 1.0, R.size.y - 10.0), Color(1, 1, 1, 0.08))
-	var nlv := clampi(int(v.get("level", 1)), 1, 5)   # stars: top of the box
-	for i in nlv: _star299(Vector2(L2 + 3.5 + float(i) * 8.0, y + 8.0), 3.4)
 	var br := Rect2(R.end.x - 8.0 - 13.0, R.end.y - 4.0 - 13.0, 13.0, 13.0)   # page flip box, bottom-right
 	_pgbtn = br
 	var bp := _cutpts299(br, 2.0)
@@ -98,6 +96,8 @@ func _area299(R: Rect2, v: Dictionary, L2: float, ink: Color, mute: Color) -> vo
 			_dtxt(Vector2(gx, gy + 10.0), String(PN299_W.get(kd, kd)), 8, TAG_COL3.get(kd, INK))
 			_dnum(Vector2(0, gy + 10.0), String(sl[i][1]) if sl[i][2] else "-", 8, ink, gx + cw2)
 		_pn_layer.draw_rect(Rect2(L3 - 5.0, y + 18.0, 1.0, R.size.y - 26.0), Color(1, 1, 1, 0.08))
+		var nlv := clampi(int(v.get("level", 1)), 1, 5)   # owner: stars belong to the skill box (gone on page 2)
+		for i in nlv: _star299(Vector2(L3 + 3.5 + float(i) * 8.0, y + 8.0), 3.4)
 		var groups: Variant = TH.labels().get("skills", {}).get(str(v.get("id")))
 		var lv := maxi(1, int(v.get("level", 1)))
 		var lines := []
