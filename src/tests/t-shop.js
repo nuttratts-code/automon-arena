@@ -135,34 +135,34 @@ export const TESTS_SHOP = [
     const [f] = buildTeam([{ id: 'WY-1', level: 1, row: 0, lane: 0, perm: u.perm }], map, RULES);
     const c = map['WY-1'];
     eq([f.multi, f.burnHit, f.startArmor, f.cdMs], [c.multi[0] + 5, c.burn[0] + 15, 500, 0], 'ค่าในแมตช์');
-    const r = simulate([f], buildTeam([{ id: 'HL-6', level: 3, row: 0, lane: 0 }], map, RULES), { rules: { ...RULES, hardStopMs: 3000 }, log: true });
+    const r = simulate([f], buildTeam([{ id: 'HL-8', level: 3, row: 0, lane: 0 }], map, RULES), { rules: { ...RULES, hardStopMs: 3000 }, log: true });
     const sets = r.events.filter(e => e.k === 'set' && e.who === 0).map(e => e.t);
     ok(sets.length >= 2 && sets.slice(1).every((t, i) => t - sets[i] >= RULES.minCooldownMs), 'ชุดห่างกันไม่ต่ำกว่าคูลดาวน์ขั้นต่ำ ' + JSON.stringify(sets.slice(0, 5)));
   }],
-  ['สกิลร้านค้า: ขาย (ตัวทดสอบ WN-5) → เพื่อนบนบอร์ดได้พลังโจมตี · ตัวบนม้านั่งไม่ได้', () => {
-    // ชุด 19: ตรึงสกิลขายของตัวทดสอบไว้ที่ 1/2/4 ไม่ผูกกับค่าที่ผู้ใช้ปรับ (WN-5 ในเกมเปลี่ยนสกิลแล้ว)
-    const base = buildCharacterList(), w5 = base.find(c => c.id === 'WN-5');
-    const chars = [...base.filter(c => c.id !== 'WN-5'), { ...w5, skills: [{ when: 'sell', do: 'permAtk', to: 'allAllies', v: [1, 2, 4] }] }], st = newRun(chars, 6);
+  ['สกิลร้านค้า: ขาย (ตัวทดสอบ WN-6) → เพื่อนบนบอร์ดได้พลังโจมตี · ตัวบนม้านั่งไม่ได้', () => {
+    // ชุด 19: ตรึงสกิลขายของตัวทดสอบไว้ที่ 1/2/4 ไม่ผูกกับค่าที่ผู้ใช้ปรับ (WN-6 ในเกมเปลี่ยนสกิลแล้ว)
+    const base = buildCharacterList(), w5 = base.find(c => c.id === 'WN-6');
+    const chars = [...base.filter(c => c.id !== 'WN-6'), { ...w5, skills: [{ when: 'sell', do: 'permAtk', to: 'allAllies', v: [1, 2, 4] }] }], st = newRun(chars, 6);
     st.board[0][0] = { uid: 1, id: 'HL-1', level: 1, perm: {}, paid: 3 };
-    st.board[1][0] = { uid: 2, id: 'WN-5', level: 2, perm: {}, paid: 15 };
+    st.board[1][0] = { uid: 2, id: 'WN-6', level: 2, perm: {}, paid: 15 };
     st.bench[0] = { uid: 3, id: 'PT-1', level: 1, perm: {}, paid: 3 };
     sell(st, { at: 'board', row: 1, lane: 0 }, chars);
     eq([st.board[0][0].perm.atk, st.bench[0].perm.atk], [2, undefined], 'พลังโจมตีถาวร');
   }],
-  ['สกิลร้านค้า: รวมร่าง (ตัวทดสอบ) → เพื่อนหน้า/หลังเลนเดียวกันได้ช็อต · จบแมตช์ HL-4 · ชนะ PL-2', () => {
-    const base = buildCharacterList(), s2 = base.find(c => c.id === 'SF-2');
-    const p2 = base.find(c => c.id === 'PL-2'), h4 = base.find(c => c.id === 'HL-4'); // ตัวทดสอบตรึงสกิล PL-2 ไว้ที่ 1/3/6 และ HL-4 ไว้ที่ 20/40/80 ไม่ให้ผลตรวจเปลี่ยนตามค่าที่ผู้ใช้ปรับ (23 ต.ค.)
-    const chars = [...base.filter(c => !['SF-2', 'PL-2', 'HL-4'].includes(c.id)), { ...s2, skills: [{ when: 'merge', do: 'permShock', to: 'frontBackAlly', v: [1, 1, 2] }] }, { ...p2, skills: [{ when: 'matchWin', do: 'permBurn', to: 'allAllies', v: [1, 3, 6] }] }, { ...h4, skills: [{ when: 'matchEnd', do: 'permArmor', to: 'frontAlly', v: [20, 40, 80] }] }];
+  ['สกิลร้านค้า: รวมร่าง (ตัวทดสอบ) → เพื่อนหน้า/หลังเลนเดียวกันได้ช็อต · จบแมตช์ HL-4 · ชนะ PL-3', () => {
+    const base = buildCharacterList(), s2 = base.find(c => c.id === 'SF-3');
+    const p2 = base.find(c => c.id === 'PL-3'), h4 = base.find(c => c.id === 'HL-4'); // ตัวทดสอบตรึงสกิล PL-3 ไว้ที่ 1/3/6 และ HL-4 ไว้ที่ 20/40/80 ไม่ให้ผลตรวจเปลี่ยนตามค่าที่ผู้ใช้ปรับ (23 ต.ค.)
+    const chars = [...base.filter(c => !['SF-3', 'PL-3', 'HL-4'].includes(c.id)), { ...s2, skills: [{ when: 'merge', do: 'permShock', to: 'frontBackAlly', v: [1, 1, 2] }] }, { ...p2, skills: [{ when: 'matchWin', do: 'permBurn', to: 'allAllies', v: [1, 3, 6] }] }, { ...h4, skills: [{ when: 'matchEnd', do: 'permArmor', to: 'frontAlly', v: [20, 40, 80] }] }];
     const st = newRun(chars, 7);
     const U = (uid, id, level = 1) => ({ uid, id, level, perm: {}, paid: 3 });
-    st.board[0][0] = U(1, 'HL-1'); st.board[1][0] = U(2, 'SF-2'); st.board[2][0] = U(3, 'PT-1'); st.board[2][1] = U(4, 'PT-1');
-    st.bench[0] = U(5, 'SF-2'); st.bench[1] = U(6, 'SF-2');
+    st.board[0][0] = U(1, 'HL-1'); st.board[1][0] = U(2, 'SF-3'); st.board[2][0] = U(3, 'PT-1'); st.board[2][1] = U(4, 'PT-1');
+    st.bench[0] = U(5, 'SF-3'); st.bench[1] = U(6, 'SF-3');
     move(st, { at: 'bench', i: 0 }, { at: 'board', row: 1, lane: 0 }, chars);
     eq([st.board[0][0].perm.shock, st.board[2][0].perm.shock, st.board[2][1].perm.shock], [1, 1, undefined], 'ช็อตหลังรวมร่าง');
     st.board[2][0] = U(7, 'HL-4');
-    st.board[0][1] = U(8, 'PL-2');
+    st.board[0][1] = U(8, 'PL-3');
     endMatch(st, false, chars);
-    eq([st.board[1][0].perm.armor, st.board[0][0].perm.burn], [20, undefined], 'แพ้: HL-4 ทำงาน PL-2 ไม่ทำงาน');
+    eq([st.board[1][0].perm.armor, st.board[0][0].perm.burn], [20, undefined], 'แพ้: HL-4 ทำงาน PL-3 ไม่ทำงาน');
     endMatch(st, true, chars);
     eq([st.board[1][0].perm.armor, st.board[0][0].perm.burn, st.board[0][1].perm.burn], [40, 1, 1], 'ชนะ: ทั้งคู่ทำงาน');
   }],
@@ -202,7 +202,7 @@ export const TESTS_SHOP = [
     for (const bad of [-1, 99, 'a', null, 1.2]) { ok(!buy(st, bad, null, chars).ok, 'ซื้อต้องไม่ผ่าน'); ok(!toggleLock(st, bad).ok, 'ล็อกต้องไม่ผ่าน'); }
     eq(JSON.stringify(st), before, 'สถานะต้องไม่เปลี่ยน');
   }],
-  ['ประจุซื้อ (SF-7): ตัวเผ่าเดียวกันตัวถัดไปที่ซื้อได้ค่าถาวรตามเลเวลเจ้าของ · เก็บได้ทีละ 1 · ขายหมด = ประจุหาย · ช็อตถาวรไม่มีเพดาน', () => {
+  ['ประจุซื้อ (SF-4): ตัวเผ่าเดียวกันตัวถัดไปที่ซื้อได้ค่าถาวรตามเลเวลเจ้าของ · เก็บได้ทีละ 1 · ขายหมด = ประจุหาย · ช็อตถาวรไม่มีเพดาน', () => {
     const base = buildCharacterList(), t0 = base.find(c => c.tribe === 'สายฟ้า');
     const Q = { ...t0, id: 'QQ-1', skills: [{ when: 'buy', do: 'permShock', to: 'nextTribeBuy', v: [1, 2, 9] }] };
     const other = base.find(c => c.tribe === 'สายฟ้า' && c.id !== t0.id), stranger = base.find(c => c.tribe === 'เหล็กกล้า' && !c.extraTribes.includes('สายฟ้า'));

@@ -10,7 +10,7 @@ import { rlCheck, rlName } from './runlog.js';
 // Godot port (set 195 step 6f): godot/scripts/save.gd — a change here must be made there too (golden save.jsonl, lab/golden-save.mjs).
 // - เซฟ 1 ช่อง · เซฟตอนเริ่ม run และตอนกดสู้ (ผลแมตช์บันทึกทันที ก่อนเล่นภาพ) · ออกกลางรอบร้านค้า = กลับมาเริ่มรอบนั้นใหม่ (ร้านเดิม เพราะเลขสุ่มอยู่ในเซฟ)
 // - ค่าตัวละคร/กฎเปลี่ยน (dataHash ไม่ตรง) = ล้างเซฟแล้วแจ้ง (ผู้ใช้เลือก 5A)
-// - ตรวจทุกช่องตอนโหลด: ชนิด ช่วงค่า จำนวนเต็ม เวอร์ชัน · ตัวละครมีจริง · ค่าถาวรรู้จักและไม่เกินเพดาน · ประจุ SF-7 · ผิด = ไม่โหลด (ล้างแล้วแจ้ง)
+// - ตรวจทุกช่องตอนโหลด: ชนิด ช่วงค่า จำนวนเต็ม เวอร์ชัน · ตัวละครมีจริง · ค่าถาวรรู้จักและไม่เกินเพดาน · ประจุ SF-4 · ผิด = ไม่โหลด (ล้างแล้วแจ้ง)
 export const SAVE_VERSION = 3; // set 95: kept 3 (in dataHash → bumping would void bot teams) · run v5 old saves caught by P.v check · set 89: run state v3 (shop level follows the round · no streak / interest fields)
 export const SAVE_MAX_CHARS = 200000;   // เซฟยาวเกินนี้ = ผิดปกติ (ค่าเสนอ)
 export const HISTORY_MAX = 20;          // ประวัติ run เก็บล่าสุด 20 รายการ (ค่าเสนอ)
@@ -25,6 +25,13 @@ export function dataHash(chars, rules = RULES) {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
+// Set 285 (owner R1 + B2, 23 Nov): creature IDs renumbered by rarity (-8 = legendary). Saves / replays / run codes made before it carry the
+// old data hash → their IDs are renumbered on load and the hash becomes the same game values under the new IDs. Godot: save.gd (change both).
+export const RENUM_285 = { HL: { 7: 6, 8: 7, 6: 8 }, PL: { 3: 2, 2: 3, 7: 4, 4: 5, 8: 6, 5: 7, 6: 8 }, PT: { 7: 4, 4: 5, 5: 6, 8: 7, 6: 8 },
+  WN: { 7: 4, 4: 5, 5: 6, 8: 7, 6: 8 }, WY: { 7: 4, 4: 5, 5: 6, 8: 7, 6: 8 }, SF: { 3: 2, 2: 3, 7: 4, 4: 5, 5: 6, 8: 7, 6: 8 } };
+export const OLD_HASH_285 = '0e46cdec', NEW_HASH_285 = '43342b55';
+// one pass over the text: each old ID is mapped once (a swap never chains)
+export const renum285 = text => String(text).replace(/\b(HL|PL|PT|SF|WN|WY)-([1-8])\b/g, (m, t, n) => `${t}-${RENUM_285[t][n] ?? n}`);
 export const svObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 export const svIntIn = (x, lo, hi) => isInt(x) && x >= lo && x <= hi;
 export const svOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -79,7 +86,7 @@ export function validateRunState(st, cm, rules = RULES, opts = {}) {
   const uids = allUnits(st).map(x => x.u.uid);
   if (new Set(uids).size !== uids.length) errors.push('uid ซ้ำ');
   if (uids.some(x => x >= st.uid)) errors.push('uid เกินตัวนับ');
-  // ประจุรอใช้ (SF-7 ฯลฯ): ทีละ 1 อันต่อชนิดตัวละคร+สกิล (ตามกฎร้านค้า · ชุด 24 แก้บั๊ก: เดิมรับแค่ 1 อันทั้งทีม เซฟที่มี 2 ชนิดถูกล้าง)
+  // ประจุรอใช้ (SF-4 ฯลฯ): ทีละ 1 อันต่อชนิดตัวละคร+สกิล (ตามกฎร้านค้า · ชุด 24 แก้บั๊ก: เดิมรับแค่ 1 อันทั้งทีม เซฟที่มี 2 ชนิดถูกล้าง)
   // ยาวไม่เกินจำนวนช่องบอร์ด+ม้านั่ง · ไม่ซ้ำ · ID/ลำดับสกิลมีจริง · เจ้าของยังอยู่ในทีม
   const chKeys = Array.isArray(st.charges) ? st.charges.map(x => (svObj(x) ? `${x.id}#${x.si}` : '?')) : null;
   if (!chKeys || chKeys.length > rules.maxBoard + S.bench || new Set(chKeys).size !== chKeys.length) errors.push('ประจุผิด');
@@ -145,6 +152,7 @@ export function readSave(text, cm, rules, hash) {
   if (!svObj(o) || !svOnlyKeys(o, ['sv', 'data', 'P', 'B', 'stats', 'startedAt'])) return { status: 'bad', errors: ['เซฟผิดรูปแบบ'] };
   if (o.sv !== SAVE_VERSION) return { status: 'data', errors: ['เวอร์ชันเซฟไม่ตรง'] };
   if (svObj(o.P) && (o.P.v === 3 || o.P.v === 4)) return { status: 'data', errors: ['เซฟเวอร์ชันเก่า (ก่อนรูน set 94 / มีร้านรูน set 94)'] };
+  if (o.data === OLD_HASH_285) { o = JSON.parse(renum285(text)); o.data = NEW_HASH_285; } // set 285 B2: old numbering → new
   if (o.data !== hash) return { status: 'data', errors: ['ค่าตัวละคร/กฎเปลี่ยนแล้ว'] };
   for (const st of [o.P, o.B]) { svUpV9(st, cm, rules); svUpV10(st); }
   const a = validateRunState(o.P, cm, rules), b = validateRunState(o.B, cm, rules, { bot: true });
@@ -217,6 +225,7 @@ export function readReplays(text, cm, rules, hash, runSeed) {
   if (typeof text !== 'string' || text.length > SAVE_MAX_CHARS) return { status: 'bad', list: [] };
   let o; try { o = JSON.parse(text); } catch (e) { return { status: 'bad', list: [] }; }
   if (!svObj(o) || !svOnlyKeys(o, ['rv', 'data', 'run', 'list']) || !Array.isArray(o.list) || o.list.length > REPLAY_MAX) return { status: 'bad', list: [] };
+  if (o.data === OLD_HASH_285) { o = JSON.parse(renum285(text)); o.data = NEW_HASH_285; } // set 285 B2
   if (o.rv !== REPLAY_VERSION || o.data !== hash) return { status: 'data', list: [] };
   if (o.run !== runSeed) return { status: 'other', list: [] };
   return o.list.every(x => checkReplay(x, cm, rules)) ? { status: 'ok', list: o.list } : { status: 'bad', list: [] };
@@ -280,6 +289,14 @@ export function parseRunCode(text, cm, rules = RULES) {
   if (t.length > RUN_CODE_MAX) throw new Error('code too long');
   if (!t.startsWith(RUN_CODE_TAG + ' ')) throw new Error('not a run code (missing ' + RUN_CODE_TAG + ')');
   let o; try { o = JSON.parse(t.slice(RUN_CODE_TAG.length + 1)); } catch (e) { throw new Error('code is not valid (cut off while copying?)'); }
+  // set 285 B2: a code from the game before the renumber (every run/journal on the old hash) → IDs renumbered, hash = same values under new IDs
+  if (svObj(o) && Array.isArray(o.runs) && Array.isArray(o.logs || [])) {
+    const ds = [...o.runs, ...(o.logs || [])].map(x => svObj(x) ? x.data : null);
+    if (ds.length && ds.every(d => d === OLD_HASH_285)) {
+      o = JSON.parse(renum285(t.slice(RUN_CODE_TAG.length + 1)));
+      for (const x of [...o.runs, ...(o.logs || [])]) x.data = NEW_HASH_285;
+    }
+  }
   if (!svObj(o) || !svOnlyKeys(o, ['v', 'at', 'page', 'runs', 'h', 'logs', 'nm']) || (o.v !== 1 && o.v !== 2)) throw new Error('bad code body');
   if (svOwn(o, 'nm') && (typeof o.nm !== 'string' || !o.nm || rlName(o.nm) !== o.nm)) throw new Error('bad player name');
   const logs = o.v === 2 ? o.logs : [];

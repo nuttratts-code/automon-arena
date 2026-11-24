@@ -31,7 +31,7 @@ const EXT = {
   mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
   glb: 'model/gltf-binary', pxo: 'application/octet-stream', txt: 'text/plain; charset=utf-8',
 };
-const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js' };
+const PAGE = { '/': 'index.html', '/app.js': 'app.js', '/style.css': 'style.css', '/pick': 'pick.html', '/pick.js': 'pick.js', '/check.js': 'check.js' };
 // still batch picker (owner A2, set 260): batches stay OUTSIDE the repo (style.png = outside sprite, security.md part 2);
 // picks are saved in the repo so Claude reads them (latest.json) + every change kept (history.jsonl).
 const STILL_BATCHES = process.env.STILL_BATCHES ? path.resolve(process.env.STILL_BATCHES) : path.resolve(HERE, '..', '..', '..', 'automon-scratch', 'still-batches');
@@ -177,15 +177,17 @@ export function validateHub(h) {
     }
     if (it.thumb != null && (typeof it.thumb !== 'string' || !ID_RE.test(it.thumb))) err.push(`${id}: bad thumb`);
     if (it.name != null && (typeof it.name !== 'string' || [...it.name].length > NAME_MAX)) err.push(`${id}: name must be text, at most ${NAME_MAX} characters`);
-    const s = it.shadow;
-    if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: shadow.feet must be [x, y]`);
-    if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: shadow.frames must be {frame: {feet: [x, y], cast}}`);
+    for (const key of ['shadow', 'shadow3']) { // set 267 A1/C1: shadow3 = form 3, same shape
+      const s = it[key];
+      if (s && (!Array.isArray(s.feet) || s.feet.length !== 2)) err.push(`${id}: ${key}.feet must be [x, y]`);
+      if (s?.frames != null && (typeof s.frames !== 'object' || Array.isArray(s.frames) || Object.entries(s.frames).some(([k, v]) => !/^\d{1,3}$/.test(k) || !v || !Array.isArray(v.feet) || v.feet.length !== 2 || !v.feet.every(Number.isFinite)))) err.push(`${id}: ${key}.frames must be {frame: {feet: [x, y], cast}}`);
+    }
     const br = it.brief; // owner set 258
     if (br != null) {
       if (typeof br !== 'object' || Array.isArray(br)) err.push(`${id}: brief must be an object`);
       else {
-        for (const k of ['concept', 'idle']) { const b = br[k]; if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
-        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
+        for (const k of ['concept', 'idle', 'idle3']) { const b = br[k]; /* idle3 = form-3 idle brief (set 281) */ if (b != null && (typeof b !== 'object' || (b.th != null && (typeof b.th !== 'string' || b.th.length > 4000)) || (b.ok != null && typeof b.ok !== 'boolean'))) err.push(`${id}: brief.${k} must be {th: text, ok: true/false}`); }
+        if (br.used != null && (!Array.isArray(br.used) || br.used.some((u) => !u || !['concept', 'idle', 'idle3'].includes(u.kind) || typeof u.en !== 'string' || u.en.length > 4000))) err.push(`${id}: brief.used must be [{kind, en}]`);
       }
     }
     if (it.palette != null && (!Array.isArray(it.palette) || it.palette.length > 64 || it.palette.some((c) => typeof c !== 'string' || !/^#[0-9a-f]{6}$/.test(c)))) err.push(`${id}: palette must be up to 64 colours '#rrggbb'`); // owner set 262
@@ -194,16 +196,32 @@ export function validateHub(h) {
     const of = it.offset;
     if (of != null && (typeof of !== 'object' || !Number.isFinite(of.x) || !Number.isFinite(of.y))) err.push(`${id}: offset must be {x, y}`);
     if (it.rot != null && (!Number.isFinite(it.rot) || it.rot < -180 || it.rot > 180)) err.push(`${id}: rot must be a number -180..180`);
-    if (sc != null && (typeof sc !== 'object' || typeof sc.k !== 'number' || !Number.isFinite(sc.k) || sc.k <= 0 || sc.k > 8)) err.push(`${id}: scale.k must be a number 0..8`);
+    for (const [key, v] of [['scale', sc], ['scale3', it.scale3]]) if (v != null && (typeof v !== 'object' || typeof v.k !== 'number' || !Number.isFinite(v.k) || v.k <= 0 || v.k > 8)) err.push(`${id}: ${key}.k must be a number 0..8`);
   }
   const tm = h.settings?.team;
   if (tm != null && (typeof tm !== 'object' || !Array.isArray(tm.ids) || tm.ids.length !== 6 || tm.ids.some((x) => x !== '' && !ID_RE.test(x)))) err.push('settings.team.ids must be 6 ids');
+  if (tm?.forms != null && (!Array.isArray(tm.forms) || tm.forms.length !== 6 || tm.forms.some((f) => f !== 1 && f !== 3))) err.push('settings.team.forms must be 6 numbers, 1 or 3'); // set 267 B1
   return err;
 }
 
 // ---------- godot export (E1: feet + oval + cast; A1: one oval) ----------
 export function shadowExport(hub) {
-  const units = {}, scale = {}, names = {};
+  const units = {}, scale = {}, names = {}, units_f3 = {}, scale_f3 = {};
+  function unitOf(it, form) { // set 267 C1: one shadow per form (shadow = form 1, shadow3 = form 3)
+      const s = it[form === 3 ? 'shadow3' : 'shadow'], o = s.oval || {}, c = s.cast || {};
+      const castOf = (cc) => ({ len: num(cc.len, 0, 2, 1), str: num(cc.str, 0, 1, 0.5), ox: num(cc.ox, -1, 1, 0), oy: num(cc.oy, -1, 1, 0), blur: num(cc.blur, 0, 1, 0.3),
+        k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(cc.k?.[q]) ? [num(cc.k[q][0], -3, 3, 0), num(cc.k[q][1], -3, 3, 0)] : [0, 0]])) });
+      const perFrame = s.frames && typeof s.frames === 'object' ? Object.entries(s.frames).filter(([k, v]) => /^\d{1,3}$/.test(k) && Array.isArray(v?.feet)) : [];
+      return {
+        mirror: !!usedPicS(it, form)?.flip, // set 248: true = our side shows the picture mirrored, the way the hub still step shows it (enemy = the other way); feet stay file fractions, cast ox / k are in the shown view
+        ...(perFrame.length ? { frames: Object.fromEntries(perFrame.map(([k, v]) => [k, { feet: [num(v.feet[0], 0, 1, 0.5), num(v.feet[1], 0, 1, 1)], cast: castOf({ ...c, ...(v.cast || {}) }) }])) } : {}), // owner set 248 B: frame i of the idle sheet has its own shadow
+        feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
+        size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
+        oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game
+        cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0), blur: num(c.blur, 0, 1, 0.3),
+          k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(c.k?.[q]) ? [num(c.k[q][0], -3, 3, 0), num(c.k[q][1], -3, 3, 0)] : [0, 0]])) },
+      };
+  }
   for (const it of Object.values(hub.items)) {
     if (it.kind === 'character' && cleanName(it.name)) names[it.id] = cleanName(it.name); // owner set 248 round 4 (A1 + B1): Godot shows this name
     if (it.kind === 'character' && it.scale && typeof it.scale === 'object') { // set 246 team tab: screen px per picture px in the 1920x1061 battle view
@@ -217,20 +235,10 @@ export function shadowExport(hub) {
     if (EXPORT_FREE_POS && it.kind === 'character' && it.free === true && Number.isFinite(it.rot) && it.rot) { // unlocked creature turned (owner B1/C1 set 247): degrees clockwise on screen, around the feet
       (scale[it.id] ||= { k: 0, size: [0, 0] }).rot = Math.round(num(it.rot, -180, 180, 0));
     }
-    if (it.kind !== 'character' || !it.shadow) continue;
-    const s = it.shadow, o = s.oval || {}, c = s.cast || {};
-    const castOf = (cc) => ({ len: num(cc.len, 0, 2, 1), str: num(cc.str, 0, 1, 0.5), ox: num(cc.ox, -1, 1, 0), oy: num(cc.oy, -1, 1, 0), blur: num(cc.blur, 0, 1, 0.3),
-      k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(cc.k?.[q]) ? [num(cc.k[q][0], -3, 3, 0), num(cc.k[q][1], -3, 3, 0)] : [0, 0]])) });
-    const perFrame = s.frames && typeof s.frames === 'object' ? Object.entries(s.frames).filter(([k, v]) => /^\d{1,3}$/.test(k) && Array.isArray(v?.feet)) : [];
-    units[it.id] = {
-      mirror: !!usedPicS(it, 1)?.flip, // set 248: true = our side shows the picture mirrored, the way the hub still step shows it (enemy = the other way); feet stay file fractions, cast ox / k are in the shown view
-      ...(perFrame.length ? { frames: Object.fromEntries(perFrame.map(([k, v]) => [k, { feet: [num(v.feet[0], 0, 1, 0.5), num(v.feet[1], 0, 1, 1)], cast: castOf({ ...c, ...(v.cast || {}) }) }])) } : {}), // owner set 248 B: frame i of the idle sheet has its own shadow
-      feet: [num(s.feet?.[0], 0, 1, 0.5), num(s.feet?.[1], 0, 1, 1)],
-      size: Array.isArray(s.size) ? [Math.round(num(s.size[0], 1, 8192, 1)), Math.round(num(s.size[1], 1, 8192, 1))] : [0, 0],
-      oval: { dx: num(o.dx, -1, 1, 0), dy: num(o.dy, -1, 1, 0), w: num(o.w, 0.1, 2, 0.8), h: num(o.h, 0.05, 2, 0.45), a: 0 }, // under-feet oval always off (owner rule) = strength 0 in the game
-      cast: { len: num(c.len, 0, 2, 1), str: num(c.str, 0, 1, 0.5), ox: num(c.ox, -1, 1, 0), oy: num(c.oy, -1, 1, 0), blur: num(c.blur, 0, 1, 0.3),
-        k: Object.fromEntries(['tl', 'tr', 'bl', 'br'].map((q) => [q, Array.isArray(c.k?.[q]) ? [num(c.k[q][0], -3, 3, 0), num(c.k[q][1], -3, 3, 0)] : [0, 0]])) },
-    };
+    if (it.kind !== 'character') continue;
+    if (it.scale3 && typeof it.scale3 === 'object') { const sz = it.scale3.size; scale_f3[it.id] = { k: num(it.scale3.k, 0.05, 8, 1), size: Array.isArray(sz) ? [Math.round(num(sz[0], 1, 8192, 1)), Math.round(num(sz[1], 1, 8192, 1))] : [0, 0] }; } // set 267 B1: form-3 size
+    if (it.shadow) units[it.id] = unitOf(it, 1);
+    if (it.shadow3) units_f3[it.id] = unitOf(it, 3);
   }
   return {
     v: 1,
@@ -241,6 +249,9 @@ export function shadowExport(hub) {
     units,
     scale_note: 'set 246 asset-hub team tab: k = screen px per picture px when the battle view is 1061 px tall (Godot: pixel_size = k x world size of one screen px at the battle camera); size = the picture it was set on (apply only when the texture has the same size); k 0 = no size set (keep the default); creatures stand on their slot centre (feet = units[ID].feet, shared with the shadow) (set 262 D1: offset / rot no longer exported, every creature stands on its slot centre); old: offset = [x toward the foe, y down] screen px from the slot centre, only for unlocked creatures (negative y = floating); rot = degrees clockwise on screen around the feet, only for unlocked creatures (set 247). Not read by the game yet (r38 port).',
     scale,
+    f3_note: 'set 267: units_f3 / scale_f3 = the same values for form 3 (ร่าง 3) pictures, set in the hub shadow tab / team tab with ร่าง 3 picked; form 1 stays in units / scale.',
+    units_f3,
+    scale_f3,
     names_note: 'set 248 asset-hub still step: display name per creature; Godot uses it in place of the game.json name (screens + messages), the save data hash stays on the game.json names.',
     names,
   };

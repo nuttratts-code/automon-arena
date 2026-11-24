@@ -1,4 +1,6 @@
 # Boss tuning harness (set 78, 4 Nov) — scratch tools, not part of the build
+
+> Set 285 note: creature IDs in this folder use the OLD numbering (before 23 Nov 2026); map in claude/plan-set285.md. (cfg.json + teams.json too.)
 Setup: copy src/{core,tools,lab,game} to <scratch>/sim, `node tools/apply-config.mjs ../cfg.json` there (applies the Balance Room char edits saved 08:29Z), put teams.json next to sim/. Paths inside the scripts point to the scratchpad — edit `R` before use.
 - lv.mjs: team size/level at rounds 4–11 from simRun (real shop bot)
 - pw.mjs: team power vs a passive-ish boss (dmg in 30 s, survival)

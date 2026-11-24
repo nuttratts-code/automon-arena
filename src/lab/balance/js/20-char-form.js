@@ -31,7 +31,7 @@ function charPicker(host, initial, onPick, opts = {}) {
   const xBtn = el('button', '', 'ปิด ✕'); xBtn.type = 'button';
   const head = el('div', 'cp-head'); head.append(title, xBtn);
   const search = document.createElement('input');
-  search.type = 'search'; search.className = 'cp-search'; search.maxLength = 30; search.placeholder = 'ค้นหาชื่อหรือ ID เช่น ไฟ, PL-3'; search.setAttribute('aria-label', 'ค้นหาตัวละคร');
+  search.type = 'search'; search.className = 'cp-search'; search.maxLength = 30; search.placeholder = 'ค้นหาชื่อหรือ ID เช่น ไฟ, PL-2'; search.setAttribute('aria-label', 'ค้นหาตัวละคร');
   const tribeBar = el('div', 'cp-tribes'); tribeBar.setAttribute('role', 'group'); tribeBar.setAttribute('aria-label', 'กรองตามเผ่า');
   const tools = el('div', 'cp-tools'); tools.append(search, tribeBar);
   const list = el('div', 'cp-list'); list.setAttribute('role', 'listbox'); list.setAttribute('aria-labelledby', title.id);

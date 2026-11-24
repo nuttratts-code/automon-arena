@@ -47,7 +47,7 @@ V2.0 · 19 Nov 2026 (set 251: runerun3000 · econ55 · project-audit → archive
 | archive/reviews/review-2026-11-08-cfgdiff-rev39.md | cfgdiff AMCFG1 rev39 (29 cells) — resolved set 147 | decided |
 | archive/reviews/review-2026-11-08-cfgdiff-rev38.md | cfgdiff AMCFG1 rev38 (76 cells) — superseded by rev39 | decided |
 | archive/reviews/review-2026-11-08-runerun3000.md | Set 140 รันจริง 3000 runs — A–E applied sets 141–149 (boss k 60/50/45, new boss rules, win-streak foe); set 251 owner: closed; resisted-tribe leftover → backlog | decided |
-| archive/reviews/review-2026-11-08-econ55.md | Step 5.5 economy (set 136) — owner set 174: PL-2 · PT-3 · SF-7 · WY-3 keep; set 251 closed | decided |
+| archive/reviews/review-2026-11-08-econ55.md | Step 5.5 economy (set 136) — owner set 174: PL-3 · PT-3 · SF-4 · WY-3 keep; set 251 closed | decided |
 | archive/reviews/review-2026-11-08-workflow-audit.md | Set 152 workflow audit: unclear/conflicting rules (A–E) — A1 B1 C1 D1 applied | decided |
 | archive/reviews/review-2026-10-27.md | Review 27 Oct 2026 (Next 1) — report only, nothing changed | decided |
 | archive/reviews/review-2026-10-28-batch31.md | Batch 31 options: measured results as colours on the step-1 grid + tribe overview (28 Oct  | decided |
@@ -71,7 +71,7 @@ V2.0 · 19 Nov 2026 (set 251: runerun3000 · econ55 · project-audit → archive
 | archive/reviews/review-2026-11-05-set88.md | Set 88 review — shop rework measurements (5 Nov 2026) | decided |
 | archive/reviews/review-2026-11-05-set89-spec.md | Set 89 spec — shop simplification (user decided 5 Nov 2026, not started) | decided |
 | archive/reviews/review-2026-11-05-set91.md | Set 91 review — user's 5 Nov shop odds (imported) · 3rd boss (English, Claude-facing) | decided |
-| archive/reviews/review-2026-11-05-set93-hl7.md | Set 93 review — why HL-7 deals 20k–88k damage in one match (cause only, nothing changed) | decided |
+| archive/reviews/review-2026-11-05-set93-hl7.md | Set 93 review — why HL-6 deals 20k–88k damage in one match (cause only, nothing changed) | decided |
 | archive/reviews/review-2026-11-05-set94-2b.md | Set 94 — phase 2b run flow: decisions needed before coding (5 Nov 2026) | decided |
 | archive/reviews/review-2026-11-05-set95.md | Set 95 review — boss reward + boss win % with runes (5 Nov 2026) | decided |
 | archive/reviews/review-2026-11-05-set96-econ.md | Set 96 review — early-game gold too high (5 Nov) · docs only, nothing changed | decided |

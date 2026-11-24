@@ -28,6 +28,26 @@ const RUN_CODE_MAX := 900000
 const RUN_CODE_HIST := 3
 const RUN_CODE_RUNS := 2
 
+# Set 285 (owner R1 + B2): creature IDs renumbered by rarity — texts on the old data hash get their IDs renumbered on load (= save.js renum285).
+const RENUM_285 := {"HL": {"7": "6", "8": "7", "6": "8"}, "PL": {"3": "2", "2": "3", "7": "4", "4": "5", "8": "6", "5": "7", "6": "8"},
+	"PT": {"7": "4", "4": "5", "5": "6", "8": "7", "6": "8"}, "WN": {"7": "4", "4": "5", "5": "6", "8": "7", "6": "8"},
+	"WY": {"7": "4", "4": "5", "5": "6", "8": "7", "6": "8"}, "SF": {"3": "2", "2": "3", "7": "4", "4": "5", "5": "6", "8": "7", "6": "8"}}
+const OLD_HASH_285 := "0e46cdec"
+const NEW_HASH_285 := "43342b55"
+
+# one pass over the text: each old ID is mapped once (a swap never chains)
+static func renum285(text: String) -> String:
+	var re := RegEx.create_from_string("\\b(HL|PL|PT|SF|WN|WY)-([1-8])\\b")
+	var out := ""
+	var at := 0
+	for m in re.search_all(text):
+		var t := m.get_string(1)
+		var n := m.get_string(2)
+		out += text.substr(at, m.get_start() - at) + t + "-" + str(RENUM_285[t].get(n, n))
+		at = m.get_end()
+	return out + text.substr(at)
+
+
 static func _rules(rules: Dictionary) -> Dictionary:
 	return R.RULES() if rules.is_empty() else rules
 
@@ -264,7 +284,7 @@ static func validate_run_state(st: Variant, cm: Dictionary, rules: Dictionary = 
 		errors.append("uid ซ้ำ")
 	if over_counter:
 		errors.append("uid เกินตัวนับ")
-	# waiting charges (SF-7…): one per character id + skill · ≤ board + bench slots · no repeats · real id / skill · owner still in the team
+	# waiting charges (SF-4…): one per character id + skill · ≤ board + bench slots · no repeats · real id / skill · owner still in the team
 	var ch: Variant = st["charges"]
 	var ch_keys := {}
 	var ch_bad: bool = not (ch is Array)
@@ -438,6 +458,9 @@ static func read_save(text: Variant, cm: Dictionary, rules: Dictionary, hash: St
 		return {"status": "data", "errors": ["เวอร์ชันเซฟไม่ตรง"]}
 	if sv_obj(o.get("P")) and (R.js_seq(o["P"].get("v"), 3.0) or R.js_seq(o["P"].get("v"), 4.0)):
 		return {"status": "data", "errors": ["เซฟเวอร์ชันเก่า (ก่อนรูน set 94 / มีร้านรูน set 94)"]}
+	if R.js_seq(o.get("data"), OLD_HASH_285):  # set 285 B2: old numbering → new
+		o = js_parse(renum285(text))["v"]
+		o["data"] = NEW_HASH_285
 	if not R.js_seq(o.get("data"), hash):
 		return {"status": "data", "errors": ["ค่าตัวละคร/กฎเปลี่ยนแล้ว"]}
 	for k in ["P", "B"]:
@@ -560,6 +583,9 @@ static func read_replays(text: Variant, cm: Dictionary, rules: Dictionary, hash:
 	var o: Variant = p["v"]
 	if not sv_obj(o) or not sv_only_keys(o, ["rv", "data", "run", "list"]) or not (o.get("list") is Array) or o["list"].size() > REPLAY_MAX:
 		return {"status": "bad", "list": []}
+	if R.js_seq(o.get("data"), OLD_HASH_285):  # set 285 B2
+		o = js_parse(renum285(text))["v"]
+		o["data"] = NEW_HASH_285
 	if not R.js_seq(o.get("rv"), REPLAY_VERSION) or not R.js_seq(o.get("data"), hash):
 		return {"status": "data", "list": []}
 	if not R.js_seq(o.get("run"), run_seed):
@@ -662,6 +688,15 @@ static func parse_run_code(text: Variant, cm: Dictionary, rules: Dictionary = {}
 	if not p["ok"]:
 		return _err("code is not valid (cut off while copying?)")
 	var o: Variant = p["v"]
+	# set 285 B2: a code from before the renumber (every run/journal on the old hash) → IDs renumbered, hash = same values under new IDs
+	if sv_obj(o) and o.get("runs") is Array and (o.get("logs", []) is Array):
+		var ds: Array = []
+		for x in o["runs"] + o.get("logs", []):
+			ds.append(x.get("data") if sv_obj(x) else null)
+		if ds.size() > 0 and ds.all(func(d): return R.js_seq(d, OLD_HASH_285)):
+			o = js_parse(renum285(t.substr(RUN_CODE_TAG.length() + 1)))["v"]
+			for x in o["runs"] + o.get("logs", []):
+				x["data"] = NEW_HASH_285
 	if not sv_obj(o) or not sv_only_keys(o, ["v", "at", "page", "runs", "h", "logs", "nm"]) or not (R.js_seq(o.get("v"), 1.0) or R.js_seq(o.get("v"), 2.0)):
 		return _err("bad code body")
 	if o.has("nm") and (not (o["nm"] is String) or o["nm"] == "" or RL.rl_name(o["nm"]) != o["nm"]):

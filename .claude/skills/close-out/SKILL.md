@@ -1,6 +1,6 @@
 ---
 name: close-out
-description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด): after a code merge to main (docs-only commits do not count), when the owner says done/live, or after ~15 turns. Skill check, handoff update + push, Thai close-out message with the paste-prompt for the next chat.
+description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด): after a code merge to main (docs-only commits do not count), when the owner says done/live, or after ~15 turns / when the hook shows the chat ≥ 250k tokens. Skill check, handoff update + push, Thai close-out message with the paste-prompt for the next chat.
 ---
 # Close-out (HARD RULE 1, moved here from CLAUDE.md in set 150)
 
@@ -12,7 +12,7 @@ description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จ�
 
 **Before step 0 (user rule set 184 B1):** a merged code set that the user wants live is published FIRST (skill `publish-pages`), in this chat — publishing the set's own work is not new work; never hand it to the next chat. Ask about publishing in the set's first question round.
 
-Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
+Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns or ≥ 250k tokens mid-set (set 292; 250k since set 295 C2): first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
    - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step (with a plan file: its name + next step number; a finished plan moves to claude/archive/, set 163 C1). **Size: relay.md "Relay size" (≤ 400 chars, parked sets out):** status · branch + last sha · gate/publish · values · next step; round-by-round detail goes to the set's notes.md / plan file and the entry links it (on a sample branch as `<branch>:path`).
@@ -30,3 +30,4 @@ Run steps 1–3 in this order. Never start new work in the same chat afterwards.
    - MVP1 countdown (review W9, set 151): 1 line = days to the next build-plan.md target + step status (on time / behind → suggest cuts).
    - Recommended model + 1-line reason: Sonnet = routine · Opus = deep design or hard bugs · Haiku = trivial.
    - A ready-to-paste message for the new chat in a code block. It contains: "อ่าน claude/handoff.md", the set number to continue from, the WIP branch if any, and the next-task options (A1/A2…) — options go IN this message, never offered in the old chat. If the next chat must publish, the message says: git fetch, build from latest main, GATE: PASS on that commit, report the result in the Relay line.
+   - **One-click next chat (owner set 268 B1):** right after the Thai block, call `mcp__ccd_session__start_session` (initiation "own_initiative", context "fresh", in this project) with the paste-message as the brief and a short title ("Set NNN ต่อ: …"), so the owner starts the next chat with one click. Keep the code-block paste-message too (fallback when the card is missing). Never start it without the click; offer to archive this chat only after the owner agrees.

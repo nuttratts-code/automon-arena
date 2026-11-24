@@ -1,4 +1,6 @@
 # Rune names (8 Nov 2026) — DRAFT v2, NOT applied, waiting for the user
+
+> Set 285 note: creature IDs in this file use the OLD numbering (before 23 Nov 2026). Old→new map: HL 7→6 8→7 6→8 · PL 3→2 2→3 7→4 4→5 8→6 5→7 6→8 · PT/WN/WY 7→4 4→5 5→6 8→7 6→8 · SF 3→2 2→3 7→4 4→5 5→6 8→7 6→8 (-1 unchanged; claude/plan-set285.md).
 User 8 Nov: free names (not the system style); start from the names the user already changed in the Balance Room (pasted page list, not an AMCFG1 yet).
 Applying = rune data (HARD RULE 6): fresh AMCFG1 + cfgdiff first.
 

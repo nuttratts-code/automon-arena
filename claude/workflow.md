@@ -28,7 +28,7 @@ V1.29 · 8 Nov 2026 (set 152 audit: import set without measuring · archive is i
 
 ## Token saving
 - Rule docs: `grep -n '^##.* C-6' claude/combat-rules.md` and read only that section (IDs C-/T-/S-) · edit with scripts/Edit, never retype whole files · add new sections at the end, never renumber existing IDs.
-- Character values: `grep '^PL-3,' claude/characters.csv`, never print the whole file.
+- Character values: `grep '^PL-2,' claude/characters.csv`, never print the whole file.
 - Use bootstrap summaries for test/measure/ui_smoke; no raw output. Screenshots only when checking a visual problem.
 - Subagents use more tokens overall → propose only when the main chat would otherwise fill up (measure.md 11).
 - Long chat mid-set (~15 turns) → CLAUDE.md HARD RULE 1 (set 152 C1): finish the current step, push, Relay = WIP branch + next step, close-out.

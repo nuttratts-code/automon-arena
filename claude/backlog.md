@@ -4,7 +4,7 @@ V2.3 · 19 Nov 2026 · set 252 Repo hygiene row done (removed) · V2.2 · set 25
 
 ## Gameplay / pacing
 - Match length and run pacing (set 181: user decided to KEEP current values and the rule "long matches are not a problem" — overtime 180 s every round; reopen only if the user asks): goal is "the longer you play, the longer you survive", but measured runs keep getting shorter (longest at the start of a run) · reach sandstorm in 9–70% of rounds (target < 5%) · plan "halve HP + defence" was cancelled by the user on 24 Oct · no solution chosen yet
-- Values accumulating across runs / matches: measure with runlen/simRun · accumulating skills PL-2 PT-3 WY-3 HL-4 HL-5 WN-1 WN-2 SF-7 charge · permanent abilities have no cap · permanent % values stack additively
+- Values accumulating across runs / matches: measure with runlen/simRun · accumulating skills PL-3 PT-3 WY-3 HL-4 HL-5 WN-1 WN-2 SF-4 charge · permanent abilities have no cap · permanent % values stack additively
 
 ## Stage mode (demo) — user decisions 28 Oct, design in progress
 - Purpose: public demo; play data (plays collection) of real player teams feeds Ghost Battle (MVP2). Validate rows before use (validateBotTeams); tell players the game records teams.
@@ -21,7 +21,7 @@ V2.3 · 19 Nov 2026 · set 252 Repo hygiene row done (removed) · V2.2 · set 25
 - Open: rune design · boss HP/attack/rules/scaling (numbers = ask user) · how skills that target front/back row or trigger "enemy down" work vs a single boss · scoring/storm vs boss · effect on MVP1 target date (user: keep plan as is for now, 28 Oct)
 
 ## Economy
-- Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-5 PL-2 PT-4 SF-7 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test (both closed; set 189: web UI frozen, UI work moves to Godot)
+- Step 5.5 economy balance (prices, merge, permanent skills HL-4 WN-6 PL-3 PT-5 SF-4 · permanent shots uncapped · legends at level 1) using simulated runs → step 6 polish, mobile test (both closed; set 189: web UI frozen, UI work moves to Godot)
 
 ## Systems not designed yet
 - Items (MVP1 shop sells characters only) · Food removed by the user 29 Oct (runes replace it) · Partner removed by the user 28 Oct

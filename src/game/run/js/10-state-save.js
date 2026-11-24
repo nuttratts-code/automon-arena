@@ -17,6 +17,14 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* ไม่มีที่เก็บ */ } },
 };
+// set 285 (owner B2): creature IDs renumbered by rarity → once per device, every stored run text (save, history, journals, replays) is
+// rewritten to the new IDs and the old data hash to the same values under the new IDs (core/save.js renum285)
+if (!store.get('automon-renum-285')) {
+  for (const k of [SAVE_KEY, HIST_KEY, 'automon-run-log-v1', 'automon-run-log-prev-v1', 'automon-run-replays-v1', 'automon-run-replays-prev-v1']) {
+    const t = store.get(k); if (t) store.set(k, renum285(t).split('"' + OLD_HASH_285 + '"').join('"' + NEW_HASH_285 + '"'));
+  }
+  store.set('automon-renum-285', '1');
+}
 function saveRun(now = false) { if (!P.over) store.set(SAVE_KEY, makeSave(P, B, stats, startedAt, DATA_HASH)); saveLog(now); }
 // set 109 (user): run journal (core/runlog.js) · every action on P with gold before → after · saved with the run (same moments,
 // so a resumed run and its journal always match) · sent to the db (runlogs/<id> + parts) and added to the run code

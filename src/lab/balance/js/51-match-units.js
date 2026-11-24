@@ -98,7 +98,7 @@ function mxOutPane(uid, k) {
   return box;
 }
 
-// G1: label of the ownerless row depends on the source (execute without owner = SF-5 type selfKo skill)
+// G1: label of the ownerless row depends on the source (execute without owner = SF-6 type selfKo skill)
 const MX_NOOWNER = { storm: 'ไม่มีเจ้าของ (พายุทราย)', burn: 'ไม่มีเจ้าของ (ไฟที่ไม่มีผู้ทำ)', execute: 'ตัวเองล้ม (สกิล)' };
 // แท็บ 2: ดาเมจที่โดน · 1 แถวต่อ 1 ศัตรู (ไม่รวมกัน) · ลิงก์เดียวต่อแถว = เปิดบันทึกเฉพาะคู่ (ตัวนี้ × ศัตรูตัวนั้น)
 function mxInPane(uid, k) {

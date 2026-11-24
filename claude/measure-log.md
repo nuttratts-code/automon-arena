@@ -1,5 +1,7 @@
 # Measurement log per task set (Automon Arena)
 
+> Set 285 note: creature IDs in this file use the OLD numbering (before 23 Nov 2026). Old→new map: HL 7→6 8→7 6→8 · PL 3→2 2→3 7→4 4→5 8→6 5→7 6→8 · PT/WN/WY 7→4 4→5 5→6 8→7 6→8 · SF 3→2 2→3 7→4 4→5 5→6 8→7 6→8 (-1 unchanged; claude/plan-set285.md).
+
 V1.6 · 7 Nov 2026 (set 127 build G3 added) · holds detailed measurement results moved out of handoff.md to keep it short · open only to look up past numbers or compare · in-game values are in combat-rules.md (section "default values to test") and tribe-rules.md · older versions: git log
 
 ## Set 127 build · G3 (7 Nov 2026 · R2 sell −1 copy/merge + R1 floor + set 128 lock, new bot teams)
