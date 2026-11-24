@@ -12,6 +12,7 @@ Claude asks Google Gemini for a second opinion and merges it with its own ideas.
 - Run from an EMPTY folder in the scratchpad, never from the repo:
   `cd <scratchpad>/gemini-empty && agy -p "<question>" --model gemini-3.8-flash-high --mode plan --sandbox --output-format json --print-timeout 150s`
 - Model is ALWAYS given with `--model` (so Claude knows which model answered); `agy models` lists the choices. Default = `gemini-3.8-flash-high`; the owner may name another.
+- Gemini 4 Neon (owner wants it, 24 Nov; owner chose Flash for now): not in `agy models` on the owner's Google sign-in. agy 1.5.12 shows Neon with `GEMINI_API_KEY` (billed in AI Studio — owner OK first) or after re-sign-in with the AI Pro account. When it appears: make it the default here.
 - Read `response` from the JSON; tell the owner the model + `usage.total_tokens` in one line.
 - The question must stand alone: a short description of the game/screen/problem + the options Claude already has. Gemini cannot see the repo.
 
