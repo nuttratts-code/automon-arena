@@ -86,6 +86,14 @@ Owner picks: A scene on/off · B1 free slider + pixel snaps (1× 1.5× 2× 2.5×
 
 Security (HARD RULE 9): Node built-ins only · binds 127.0.0.1 · POSTs only from its own page origin · upload whitelist (png jpg webp gif mp4 webm mov glb pxo txt) ≤ 600 MB · ids `[A-Za-z0-9_-]` · file reads stay inside art/hub/files and art/library · page uses textContent + CSP self · Godot clamps every number it reads.
 
+## Batch edit of many stills by Claude (set 298 — done twice: clean-up, black outline)
+1. Source = each character's ★ still per form (`rounds` slot still, star, not archived), never an earlier Claude round. Palette unchanged unless the owner OKs a colour change; no resize.
+2. Script in `claude/preview-set<N>/` (local): edit pixels → run PXC (`check.js`, load it with `vm.runInNewContext(src + ';PXC')` — the repo is ESM, `require` fails) before/after → report.json (diff count, warnings before → after). Respect the set 298 calibration: single pixels are texture (PMD median 4 / 100 body px) — never "fix" them in bulk.
+3. Contact sheet before | after (apply the round's `flip`) → look at the biggest changes by eye (soft parts like smoke/fire edges suffer most).
+4. Upload each: `POST /api/upload?item=ID&slot=still&form=F&by=claude&nostar=1&name=<ID>_f<F>_claude_<what>.png` (Origin header `http://127.0.0.1:5177`; without `nostar=1` the upload steals the ★).
+5. Then one `GET /api/hub` → set `flip` (copied from the source round), `note` ("set N Claude … จากรอบ ★ <id> · …"), `meta {from, set}` on the new rounds → `POST /api/hub` (rev must match).
+6. Check no ★ moved, commit hub.json to main from the scratch main folder (uploads stay local).
+
 ## Testing on a test copy (set 248 A2; every suite must pass — never test on the owner's real hub)
 1. Make a test root `<T>` in the chat's scratchpad: `mkdir -p <T>/art/hub <T>/godot/data` · `cp art/hub/hub.json <T>/art/hub/` · `cp -ru art/hub/files/. <T>/art/hub/files/` (all picture files — a missing file disables team-tab buttons) · `cp -r art/library <T>/art/` (export files ★ rounds there) · copy godot/data/unit_shadows.json too.
 2. `.claude/launch.json` (in D:/GitHub) entry `asset-hub-test`: same server.mjs with env `HUB_PORT=5188`, `HUB_ROOT=<T>` → start it with preview_start (never Bash).
