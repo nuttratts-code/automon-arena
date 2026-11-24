@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1897,
+ "rev": 1962,
  "settings": {
   "moves": [
    "idle",
@@ -698,6 +698,42 @@
        2
       ]
      }
+    },
+    {
+     "id": "r5ddd7355",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-1/still_f1_2026-11-24_4766af52.png",
+     "orig": "HL-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.509Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ (HL-1 ร่าง 1 แก้มือ) จากรอบ ★ rc1a11a25 · แก้ 33 เม็ด · มุม L 8→8 · เม็ดเดี่ยว 11→2 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "rc1a11a25",
+      "set": 298
+     }
+    },
+    {
+     "id": "re62562c7",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-1/still_f3_2026-11-24_78a7fcdc.png",
+     "orig": "HL-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.540Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rd837981b · แก้ 54 เม็ด · มุม L 13→0 · เม็ดเดี่ยว 56→18 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "rd837981b",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -1066,6 +1102,42 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p1"
+    },
+    {
+     "id": "r5c339424",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-2/still_f3_2026-11-24_ad4dd775.png",
+     "orig": "HL-2_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.564Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r74e412f9 · แก้ 19 เม็ด · มุม L 14→1 · เม็ดเดี่ยว 12→7 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "r74e412f9",
+      "set": 298
+     }
+    },
+    {
+     "id": "r6edb480c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-2/still_f1_2026-11-24_c886f30e.png",
+     "orig": "HL-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.586Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r0431a9eb · แก้ 17 เม็ด · มุม L 8→0 · เม็ดเดี่ยว 21→12 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "r0431a9eb",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -1295,6 +1367,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r1676f197",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-3/still_f1_2026-11-24_c16fe24c.png",
+     "orig": "HL-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.608Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rfc7d41de · แก้ 12 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 10→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfc7d41de",
+      "set": 298
+     }
+    },
+    {
+     "id": "rc93f8521",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-3/still_f3_2026-11-24_c72346dd.png",
+     "orig": "HL-3_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.632Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r75147243 · แก้ 37 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 47→19 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r75147243",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -1482,6 +1588,41 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r9be3d075",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-4/still_f1_2026-11-24_f6b11370.png",
+     "orig": "HL-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.666Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rc55213dc · แก้ 19 เม็ด · มุม L 4→3 · เม็ดเดี่ยว 18→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "rc55213dc",
+      "set": 298
+     }
+    },
+    {
+     "id": "r3c1ee863",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-24_0dbf9f31.png",
+     "orig": "HL-4_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.694Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r5dfc4957 · แก้ 39 เม็ด · มุม L 4→0 · เม็ดเดี่ยว 36→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r5dfc4957",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -1680,6 +1821,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r93995106",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-5/still_f1_2026-11-24_dfb250fc.png",
+     "orig": "HL-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.721Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r1527c05c · แก้ 11 เม็ด · มุม L 3→0 · เม็ดเดี่ยว 19→10 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r1527c05c",
+      "set": 298
+     }
+    },
+    {
+     "id": "r3a94a80d",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-5/still_f3_2026-11-24_b75376cf.png",
+     "orig": "HL-5_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.745Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r9dce119e · แก้ 23 เม็ด · มุม L 12→0 · เม็ดเดี่ยว 34→23 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r9dce119e",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -1878,6 +2053,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r7b366721",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-24_f23c2a49.png",
+     "orig": "HL-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.769Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ ra83c0302 · แก้ 20 เม็ด · มุม L 6→1 · เม็ดเดี่ยว 21→8 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "ra83c0302",
+      "set": 298
+     }
+    },
+    {
+     "id": "r90517022",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-6/still_f3_2026-11-24_7b21cee5.png",
+     "orig": "HL-6_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.792Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rb8f78b95 · แก้ 31 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 43→23 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb8f78b95",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -2063,6 +2272,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r98bea8ca",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-7/still_f1_2026-11-24_54300c60.png",
+     "orig": "HL-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.811Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rf1499976 · แก้ 37 เม็ด · มุม L 2→2 · เม็ดเดี่ยว 42→7 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf1499976",
+      "set": 298
+     }
+    },
+    {
+     "id": "r110e1ab1",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-24_70bfcbda.png",
+     "orig": "HL-7_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.834Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rd99a0157 · แก้ 56 เม็ด · มุม L 15→5 · เม็ดเดี่ยว 70→29 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd99a0157",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -2248,6 +2491,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r275c4c82",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-8/still_f1_2026-11-24_76129df3.png",
+     "orig": "HL-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.855Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ ra373ed5a · แก้ 27 เม็ด · มุม L 13→1 · เม็ดเดี่ยว 39→25 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "ra373ed5a",
+      "set": 298
+     }
+    },
+    {
+     "id": "r86070b57",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-8/still_f3_2026-11-24_374be7f1.png",
+     "orig": "HL-8_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.877Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rd72a58fa · แก้ 31 เม็ด · มุม L 14→1 · เม็ดเดี่ยว 50→35 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd72a58fa",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -2957,6 +3234,42 @@
        2
       ]
      }
+    },
+    {
+     "id": "rff502797",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-24_4ef4c404.png",
+     "orig": "PL-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.904Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r14cd146c · แก้ 10 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 13→9 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r14cd146c",
+      "set": 298
+     }
+    },
+    {
+     "id": "r57dd872c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-1/still_f3_2026-11-24_4cddf63a.png",
+     "orig": "PL-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.928Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ re708bd84 · แก้ 8 เม็ด · มุม L 6→2 · เม็ดเดี่ยว 16→14 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "re708bd84",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -3183,6 +3496,23 @@
       "batch": "batches/2026-11-22_d98b6cf9",
       "pick": "g05",
       "styleSrc": "pmd-ref 0851"
+     }
+    },
+    {
+     "id": "r180e3735",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-24_74a6a5fb.png",
+     "orig": "PL-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.949Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r537ae848 · แก้ 10 เม็ด · มุม L 0→0 · เม็ดเดี่ยว 13→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r537ae848",
+      "set": 298
      }
     }
    ],
@@ -3423,6 +3753,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "r47c09a2f",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-3/still_f1_2026-11-24_5dcac9f6.png",
+     "orig": "PL-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:27.971Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r90ef2c86 · แก้ 4 เม็ด · มุม L 3→0 · เม็ดเดี่ยว 11→10 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r90ef2c86",
+      "set": 298
+     }
+    },
+    {
+     "id": "r7a00fd04",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-3/still_f3_2026-11-24_8b4d537e.png",
+     "orig": "PL-3_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:27.996Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r91b6ad95 · แก้ 25 เม็ด · มุม L 15→0 · เม็ดเดี่ยว 28→18 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r91b6ad95",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -3650,6 +4014,23 @@
       "pick": "g15",
       "styleSrc": "still_f1_2026-11-22_89ae303a.png"
      }
+    },
+    {
+     "id": "r8e78ac2a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-4/still_f1_2026-11-24_82f29dd7.png",
+     "orig": "PL-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.014Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r22cd84ae · แก้ 10 เม็ด · มุม L 8→0 · เม็ดเดี่ยว 8→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r22cd84ae",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -3848,6 +4229,23 @@
       "pick": "g06",
       "styleSrc": "pmd-ref 0988"
      }
+    },
+    {
+     "id": "r628448eb",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-5/still_f1_2026-11-24_67fbe08e.png",
+     "orig": "PL-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.044Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r9dae6371 · แก้ 8 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 7→5 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r9dae6371",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -3980,6 +4378,23 @@
       "batch": "batches/2026-11-23_548cd844",
       "pick": "g04",
       "styleSrc": "pmd-ref 0018"
+     }
+    },
+    {
+     "id": "rb40635a2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-6/still_f1_2026-11-24_a52ad14e.png",
+     "orig": "PL-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.063Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rbc032ab7 · แก้ 20 เม็ด · มุม L 17→1 · เม็ดเดี่ยว 12→8 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rbc032ab7",
+      "set": 298
      }
     }
    ],
@@ -4114,6 +4529,23 @@
       "pick": "g07",
       "styleSrc": "pmd-ref 0663"
      }
+    },
+    {
+     "id": "recc7d63a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-7/still_f1_2026-11-24_c5edc9ba.png",
+     "orig": "PL-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.080Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rfcec6c21 · แก้ 7 เม็ด · มุม L 4→0 · เม็ดเดี่ยว 11→8 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfcec6c21",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -4246,6 +4678,23 @@
       "batch": "batches/2026-11-23_d0c784a0",
       "pick": "g08",
       "styleSrc": "pmd-ref 0448"
+     }
+    },
+    {
+     "id": "r6e5c1b64",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-8/still_f1_2026-11-24_5c9231f2.png",
+     "orig": "PL-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.100Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ re028dcb7 · แก้ 14 เม็ด · มุม L 11→2 · เม็ดเดี่ยว 10→7 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "re028dcb7",
+      "set": 298
      }
     }
    ],
@@ -4867,6 +5316,43 @@
        2
       ]
      }
+    },
+    {
+     "id": "r479d9707",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-24_dc590fd1.png",
+     "orig": "SF-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.123Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r2f14ec0e · แก้ 3 เม็ด · มุม L 3→0 · เม็ดเดี่ยว 7→7 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "flip": true,
+     "meta": {
+      "from": "r2f14ec0e",
+      "set": 298
+     }
+    },
+    {
+     "id": "r4dc98691",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-1/still_f3_2026-11-24_8901e22a.png",
+     "orig": "SF-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.143Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r6ff9e868 · แก้ 24 เม็ด · มุม L 15→1 · เม็ดเดี่ยว 19→9 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r6ff9e868",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -5074,6 +5560,23 @@
       "batch": "batches/2026-11-22_dc6955bb",
       "pick": "g06",
       "styleSrc": "pmd-ref 0880"
+     }
+    },
+    {
+     "id": "r56566a61",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-2/still_f1_2026-11-24_d65f98e5.png",
+     "orig": "SF-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.163Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r98be21b0 · แก้ 17 เม็ด · มุม L 5→1 · เม็ดเดี่ยว 18→8 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r98be21b0",
+      "set": 298
      }
     }
    ],
@@ -5357,6 +5860,23 @@
       "pick": "g11",
       "styleSrc": "pmd-ref 0888"
      }
+    },
+    {
+     "id": "r588d9cb9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-3/still_f1_2026-11-24_ddc4801e.png",
+     "orig": "SF-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.183Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r33b3895d · แก้ 17 เม็ด · มุม L 11→0 · เม็ดเดี่ยว 25→19 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r33b3895d",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -5548,6 +6068,23 @@
       "batch": "batches/2026-11-23_fa57185b",
       "pick": "g05",
       "styleSrc": "still_f1_2026-11-22_2f00b86c.png"
+     }
+    },
+    {
+     "id": "r019e2cfc",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-4/still_f1_2026-11-24_9c7ba6ef.png",
+     "orig": "SF-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.204Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rf030c8dc · แก้ 7 เม็ด · มุม L 3→1 · เม็ดเดี่ยว 4→0 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf030c8dc",
+      "set": 298
      }
     }
    ],
@@ -5747,6 +6284,23 @@
       "pick": "g14",
       "styleSrc": "pmd-ref 1007"
      }
+    },
+    {
+     "id": "rd872563f",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-5/still_f1_2026-11-24_0dc45a12.png",
+     "orig": "SF-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.225Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rd64ca38d · แก้ 6 เม็ด · มุม L 3→0 · เม็ดเดี่ยว 7→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd64ca38d",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -5893,6 +6447,23 @@
       "pick": "g02",
       "styleSrc": "pmd-ref 0151"
      }
+    },
+    {
+     "id": "r98125f46",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-6/still_f1_2026-11-24_52739d9d.png",
+     "orig": "SF-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.245Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ re22bf9b2 · แก้ 2 เม็ด · มุม L 0→0 · เม็ดเดี่ยว 6→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "re22bf9b2",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -6025,6 +6596,23 @@
       "batch": "batches/2026-11-23_695f84cd",
       "pick": "g15",
       "styleSrc": "pmd-ref 0593"
+     }
+    },
+    {
+     "id": "re5ee2552",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-7/still_f1_2026-11-24_d5f99892.png",
+     "orig": "SF-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.267Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rdb369f08 · แก้ 6 เม็ด · มุม L 0→0 · เม็ดเดี่ยว 12→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rdb369f08",
+      "set": 298
      }
     }
    ],
@@ -6203,6 +6791,40 @@
      "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED"
+    },
+    {
+     "id": "rb36295fb",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-8/still_f1_2026-11-24_bd15e8d0.png",
+     "orig": "SF-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.285Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rcdecd91f · แก้ 27 เม็ด · มุม L 7→0 · เม็ดเดี่ยว 39→20 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rcdecd91f",
+      "set": 298
+     }
+    },
+    {
+     "id": "rcea0c351",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-8/still_f3_2026-11-24_0cb93226.png",
+     "orig": "SF-8_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.309Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rf5872b1f · แก้ 21 เม็ด · มุม L 9→1 · เม็ดเดี่ยว 33→21 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf5872b1f",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -6717,6 +7339,42 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "promptId": "p2"
+    },
+    {
+     "id": "r2f9a648a",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-1/still_f3_2026-11-24_c2006284.png",
+     "orig": "WY-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.331Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r386a22e3 · แก้ 15 เม็ด · มุม L 2→0 · เม็ดเดี่ยว 17→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r386a22e3",
+      "set": 298
+     }
+    },
+    {
+     "id": "r03132a0b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-24_07fd2a61.png",
+     "orig": "WY-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.352Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r57d3a9c4 · แก้ 24 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 22→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r57d3a9c4",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -7016,6 +7674,23 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 0373"
      }
+    },
+    {
+     "id": "rc2778ceb",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-2/still_f1_2026-11-24_d83ac6cd.png",
+     "orig": "WY-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.373Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rcf8cc19a · แก้ 21 เม็ด · มุม L 5→1 · เม็ดเดี่ยว 21→5 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rcf8cc19a",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -7210,6 +7885,23 @@
       "pick": "g15",
       "styleSrc": "pmd-ref 0889"
      }
+    },
+    {
+     "id": "r3bd78918",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-3/still_f1_2026-11-24_341eb55b.png",
+     "orig": "WY-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.391Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rac8d2049 · แก้ 7 เม็ด · มุม L 2→0 · เม็ดเดี่ยว 9→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rac8d2049",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -7343,6 +8035,23 @@
       "pick": "g08",
       "styleSrc": "still_f1_2026-11-22_9ff31240.png"
      }
+    },
+    {
+     "id": "r3f21aa31",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-4/still_f1_2026-11-24_cff399cf.png",
+     "orig": "WY-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.414Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r37a852d5 · แก้ 10 เม็ด · มุม L 8→0 · เม็ดเดี่ยว 3→1 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r37a852d5",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -7475,6 +8184,23 @@
       "batch": "batches/2026-11-22_5812d121",
       "pick": "g15",
       "styleSrc": "pmd-ref 0716"
+     }
+    },
+    {
+     "id": "r751e486b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-5/still_f1_2026-11-24_7eea12c2.png",
+     "orig": "WY-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.434Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rd44e9346 · แก้ 16 เม็ด · มุม L 9→0 · เม็ดเดี่ยว 7→2 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd44e9346",
+      "set": 298
      }
     }
    ],
@@ -7634,6 +8360,23 @@
       "batch": "batches/2026-11-22_a59aeb9d",
       "pick": "g11",
       "styleSrc": "pmd-ref 0305"
+     }
+    },
+    {
+     "id": "rf6d1d4c6",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-6/still_f1_2026-11-24_f61ca5eb.png",
+     "orig": "WY-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.454Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r62feeb74 · แก้ 11 เม็ด · มุม L 1→0 · เม็ดเดี่ยว 18→7 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r62feeb74",
+      "set": 298
      }
     }
    ],
@@ -7799,6 +8542,23 @@
       "pick": "g05",
       "styleSrc": "pmd-ref 0055"
      }
+    },
+    {
+     "id": "r96c03041",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-7/still_f1_2026-11-24_e762a9e0.png",
+     "orig": "WY-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.476Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r0e913864 · แก้ 17 เม็ด · มุม L 11→1 · เม็ดเดี่ยว 17→10 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r0e913864",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -7947,6 +8707,41 @@
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "flip": true
+    },
+    {
+     "id": "ra10b477d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-8/still_f1_2026-11-24_35a7e159.png",
+     "orig": "WY-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.495Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r49756470 · แก้ 45 เม็ด · มุม L 13→0 · เม็ดเดี่ยว 47→14 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r49756470",
+      "set": 298
+     }
+    },
+    {
+     "id": "rc203d2d5",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-8/still_f3_2026-11-24_283a8525.png",
+     "orig": "WY-8_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.514Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rfef63e53 · แก้ 39 เม็ด · มุม L 0→2 · เม็ดเดี่ยว 57→17 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "rfef63e53",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -8518,6 +9313,42 @@
        2
       ]
      }
+    },
+    {
+     "id": "ra331820c",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-1/still_f3_2026-11-24_d1695f40.png",
+     "orig": "PT-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.534Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r97eae9b2 · แก้ 14 เม็ด · มุม L 6→0 · เม็ดเดี่ยว 31→20 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r97eae9b2",
+      "set": 298
+     }
+    },
+    {
+     "id": "r30dfb397",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-24_581cde41.png",
+     "orig": "PT-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.555Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r34bffc70 · แก้ 10 เม็ด · มุม L 7→0 · เม็ดเดี่ยว 9→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r34bffc70",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -8862,6 +9693,23 @@
       "pick": "g09",
       "styleSrc": "pmd-ref 0812"
      }
+    },
+    {
+     "id": "re9e1bad0",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-2/still_f1_2026-11-24_9dda8f98.png",
+     "orig": "PT-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.574Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rde6ba454 · แก้ 8 เม็ด · มุม L 6→1 · เม็ดเดี่ยว 5→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rde6ba454",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -9053,6 +9901,23 @@
       "pick": "g02",
       "styleSrc": "pmd-ref 0699"
      }
+    },
+    {
+     "id": "rccee2122",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-3/still_f1_2026-11-24_b424534c.png",
+     "orig": "PT-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.590Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r5ac10bec · แก้ 20 เม็ด · มุม L 10→0 · เม็ดเดี่ยว 13→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r5ac10bec",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -9198,6 +10063,23 @@
       "batch": "batches/2026-11-23_08310e1e",
       "pick": "g07",
       "styleSrc": "still_f1_2026-11-22_2fa4bfc3.png"
+     }
+    },
+    {
+     "id": "r57114922",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-4/still_f1_2026-11-24_7ed52188.png",
+     "orig": "PT-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.609Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r2038864b · แก้ 12 เม็ด · มุม L 5→2 · เม็ดเดี่ยว 12→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r2038864b",
+      "set": 298
      }
     }
    ],
@@ -9358,6 +10240,23 @@
       "pick": "g07",
       "styleSrc": "pmd-ref 0249"
      }
+    },
+    {
+     "id": "r8d1724e2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-5/still_f1_2026-11-24_7d085e85.png",
+     "orig": "PT-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.629Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r803157b7 · แก้ 6 เม็ด · มุม L 4→0 · เม็ดเดี่ยว 5→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r803157b7",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -9490,6 +10389,23 @@
       "batch": "batches/2026-11-22_2d716dc2",
       "pick": "g15",
       "styleSrc": "pmd-ref 0412"
+     }
+    },
+    {
+     "id": "r05db4aea",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-6/still_f1_2026-11-24_61dcc0b3.png",
+     "orig": "PT-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.650Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rfde74993 · แก้ 7 เม็ด · มุม L 5→0 · เม็ดเดี่ยว 5→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfde74993",
+      "set": 298
      }
     }
    ],
@@ -9624,6 +10540,23 @@
       "pick": "g03",
       "styleSrc": "pmd-ref 0321"
      }
+    },
+    {
+     "id": "rcc7c7390",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-7/still_f1_2026-11-24_ea941337.png",
+     "orig": "PT-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.668Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rb133e4be · แก้ 1 เม็ด · มุม L 0→0 · เม็ดเดี่ยว 4→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb133e4be",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -9756,6 +10689,23 @@
       "batch": "batches/2026-11-23_236beb00",
       "pick": "g02",
       "styleSrc": "pmd-ref 0510"
+     }
+    },
+    {
+     "id": "r49730d37",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-8/still_f1_2026-11-24_dd685dd4.png",
+     "orig": "PT-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.688Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r3091d390 · แก้ 19 เม็ด · มุม L 7→1 · เม็ดเดี่ยว 16→4 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r3091d390",
+      "set": 298
      }
     }
    ],
@@ -10436,6 +11386,42 @@
        2
       ]
      }
+    },
+    {
+     "id": "r84194c8a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-24_04094c84.png",
+     "orig": "WN-1_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.706Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rf3dd6601 · แก้ 9 เม็ด · มุม L 3→0 · เม็ดเดี่ยว 12→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "rf3dd6601",
+      "set": 298
+     }
+    },
+    {
+     "id": "r96919849",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-1/still_f3_2026-11-24_a596f6e0.png",
+     "orig": "WN-1_f3_claude_clean.png",
+     "t": "2026-11-24T09:07:28.723Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r77aa885f · แก้ 26 เม็ด · มุม L 13→2 · เม็ดเดี่ยว 21→10 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "r77aa885f",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -10791,6 +11777,24 @@
       "pick": "g01",
       "styleSrc": "pmd-ref 0621"
      }
+    },
+    {
+     "id": "ra8c88138",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-2/still_f1_2026-11-24_6e6ad488.png",
+     "orig": "WN-2_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.745Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r313f22d6 · แก้ 26 เม็ด · มุม L 9→0 · เม็ดเดี่ยว 25→9 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "r313f22d6",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -10979,6 +11983,23 @@
       "pick": "g14",
       "styleSrc": "pmd-ref 0382"
      }
+    },
+    {
+     "id": "r0e607d5c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-3/still_f1_2026-11-24_12a88f65.png",
+     "orig": "WN-3_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.765Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r00a7c775 · แก้ 7 เม็ด · มุม L 4→0 · เม็ดเดี่ยว 14→11 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r00a7c775",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -11138,6 +12159,23 @@
       "pick": "g15",
       "styleSrc": "still_f1_2026-11-22_e687f6e1.png"
      }
+    },
+    {
+     "id": "r894c3ed8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-4/still_f1_2026-11-24_0c692ab0.png",
+     "orig": "WN-4_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.783Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ rbcc107e4 · แก้ 10 เม็ด · มุม L 1→1 · เม็ดเดี่ยว 14→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rbcc107e4",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -11271,6 +12309,24 @@
       "batch": "batches/2026-11-22_5572efb4",
       "pick": "g06",
       "styleSrc": "pmd-ref 0718"
+     }
+    },
+    {
+     "id": "r949b7699",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-24_9264d1cc.png",
+     "orig": "WN-5_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.801Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r0b99a2e1 · แก้ 14 เม็ด · มุม L 9→1 · เม็ดเดี่ยว 5→0 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "r0b99a2e1",
+      "set": 298
      }
     }
    ],
@@ -11431,6 +12487,23 @@
       "pick": "g04",
       "styleSrc": "pmd-ref 0587"
      }
+    },
+    {
+     "id": "rc96326a9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-24_fc8e344c.png",
+     "orig": "WN-6_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.823Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r61d3ef9c · แก้ 18 เม็ด · มุม L 12→1 · เม็ดเดี่ยว 11→3 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r61d3ef9c",
+      "set": 298
+     }
     }
    ],
    "notes": "",
@@ -11576,6 +12649,23 @@
       "batch": "batches/2026-11-23_6c86f982",
       "pick": "g08",
       "styleSrc": "pmd-ref 0168"
+     }
+    },
+    {
+     "id": "r6015c8ac",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-7/still_f1_2026-11-24_c658e256.png",
+     "orig": "WN-7_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.842Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r9b8f5639 · แก้ 14 เม็ด · มุม L 10→0 · เม็ดเดี่ยว 4→0 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r9b8f5639",
+      "set": 298
      }
     }
    ],
@@ -11753,6 +12843,23 @@
       "batch": "batches/2026-11-23_a463ab60",
       "pick": "g02",
       "styleSrc": "pmd-ref 0920"
+     }
+    },
+    {
+     "id": "r6792490b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-8/still_f1_2026-11-24_75b3780a.png",
+     "orig": "WN-8_f1_claude_clean.png",
+     "t": "2026-11-24T09:07:28.861Z",
+     "by": "claude",
+     "note": "set 298 Claude เก็บภาพ จากรอบ ★ r49a0564a · แก้ 10 เม็ด · มุม L 7→2 · เม็ดเดี่ยว 9→6 · สีเดิม",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r49a0564a",
+      "set": 298
      }
     }
    ],
