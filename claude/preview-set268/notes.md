@@ -247,3 +247,5 @@ Rebuild adds → s297r35u3-patch.py (after s297r35u2).
 Rebuild adds → s297r35u4-patch.py (after s297r35u3).
 82. (set 297 cont., round 35u5, pending owner OK) Owner picked G after 35u4: "compare it on the whole screen". S297TOP=k = G (icons 36, gap 14, white clock 18) + icons white #eef3f6 with the dark outline at full alpha (s268_icon.gd `white`; the grey 0.55 alpha was why modulate 1.7 did nothing) + the group centred on the SCREEN (G drifted right: it sat between expand spacers; k = top_level group placed on the hud rect centre — a plain child moved again after hud.resized). Shots: S297u5-GvsK.png · S297u5-top-crop.png · S297u5-k11/22/33.png (seed 11/22/33, PC 1920×1061). Not checked: phone 844×390.
 Rebuild adds → s297r35u5-patch.py (after s297r35u4).
+83. (set 297 cont., round 35u6, pending owner OK) Owner after 35u5 K: "it stands out too much — move it up a bit". S297TOP=l = K placed 4 px below the hud top (K sat in the vertical middle of the 86-px row; ~47 screen px higher at 1920×1061), sizes/colours unchanged. Shots: S297u6-KvsL.png · S297u6-l11/22/33.png. Not checked: phone 844×390.
+Rebuild adds → s297r35u6-patch.py (after s297r35u5).
