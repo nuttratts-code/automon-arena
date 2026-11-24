@@ -249,3 +249,5 @@ Rebuild adds → s297r35u4-patch.py (after s297r35u3).
 Rebuild adds → s297r35u5-patch.py (after s297r35u4).
 83. (set 297 cont., round 35u6, pending owner OK) Owner after 35u5 K: "it stands out too much — move it up a bit". S297TOP=l = K placed 4 px below the hud top (K sat in the vertical middle of the 86-px row; ~47 screen px higher at 1920×1061), sizes/colours unchanged. Shots: S297u6-KvsL.png · S297u6-l11/22/33.png. Not checked: phone 844×390.
 Rebuild adds → s297r35u6-patch.py (after s297r35u5).
+84. (set 297 cont., round 35u7, pending owner pick) Owner after 35u6 L: "still stands out a bit — tone it down". S297TOP=m = L with the whole group faded (group modulate alpha, env S297TONE, default 0.75): M1 = 0.75 · M2 = 0.60. Seen: the fade turns the white icons/clock grey-ish on the bright sky (outline fades too). Shots: S297u7-top-crop.png (L / M1 / M2) · S297u7-M1-11/22/33.png · S297u7-M2-11.png. Not checked: phone 844×390.
+Rebuild adds → s297r35u7-patch.py (after s297r35u6).
