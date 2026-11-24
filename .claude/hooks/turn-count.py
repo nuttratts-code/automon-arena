@@ -7,8 +7,12 @@ Now: count the owner's real messages in the transcript the hook names (it carrie
 history). Background notices (<task-notification>), skill bodies (isMeta), compact summaries
 and tool results are not owner turns.
 
-stdin = the UserPromptSubmit hook JSON. stdout = "<n>" or "bg <n>" (current prompt is a
-background notice; n = owner turns so far) or nothing on any error / missing transcript.
+Context size (set 292, owner: long chats burn tokens — every call re-sends the whole chat):
+also report the chat's size in k tokens = input + cache read + cache write of the LAST main-chat
+assistant call (sidechain/subagent calls skipped). 0 = unknown / new chat.
+
+stdin = the UserPromptSubmit hook JSON. stdout = "<n> <ctxk>" or "bg <n> <ctxk>" (current prompt
+is a background notice; n = owner turns so far) or nothing on any error / missing transcript.
 Never raises.
 """
 import json
@@ -53,12 +57,22 @@ def main():
     hook = json.loads(sys.stdin.buffer.read().decode("utf-8", "replace") or "{}")
     prompt = REMINDER.sub("", str(hook.get("prompt") or "")).strip()
     path = hook.get("transcript_path") or ""
-    turns, last = 0, None
+    turns, last, ctx = 0, None, 0
     if not path:
         return  # no transcript = no reliable count; the hook then says "unavailable"
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
             for line in f:
+                if '"assistant"' in line and '"usage"' in line:
+                    try:
+                        d = json.loads(line)
+                    except ValueError:
+                        continue
+                    u = (d.get("message") or {}).get("usage") or {}
+                    if d.get("type") == "assistant" and u and not d.get("isSidechain"):
+                        ctx = (u.get("input_tokens", 0) + u.get("cache_read_input_tokens", 0)
+                               + u.get("cache_creation_input_tokens", 0))
+                    continue
                 if '"user"' not in line:
                     continue
                 try:
@@ -70,12 +84,12 @@ def main():
     except FileNotFoundError:
         pass  # first prompt of a brand-new chat: transcript not written yet
     if is_background(prompt):
-        print("bg %d" % turns)
+        print("bg %d %d" % (turns, ctx // 1000))
         return
     # The current prompt may or may not be in the transcript yet when the hook runs.
     if not (last is not None and prompt and (last == prompt or last.endswith(prompt))):
         turns += 1
-    print(turns)
+    print("%d %d" % (turns, ctx // 1000))
 
 
 if __name__ == "__main__":

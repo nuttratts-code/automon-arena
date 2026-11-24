@@ -1,6 +1,6 @@
 ---
 name: close-out
-description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด): after a code merge to main (docs-only commits do not count), when the owner says done/live, or after ~15 turns. Skill check, handoff update + push, Thai close-out message with the paste-prompt for the next chat.
+description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จแล้ว / ขึ้นแล้ว / จบชุด): after a code merge to main (docs-only commits do not count), when the owner says done/live, or after ~15 turns / when the hook shows the chat ≥ 200k tokens. Skill check, handoff update + push, Thai close-out message with the paste-prompt for the next chat.
 ---
 # Close-out (HARD RULE 1, moved here from CLAUDE.md in set 150)
 
@@ -12,7 +12,7 @@ description: Close-out block (HARD RULE 1; ปิดงาน / เสร็จ�
 
 **Before step 0 (user rule set 184 B1):** a merged code set that the user wants live is published FIRST (skill `publish-pages`), in this chat — publishing the set's own work is not new work; never hand it to the next chat. Ask about publishing in the set's first question round.
 
-Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns mid-set: first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
+Run steps 1–3 in this order. Never start new work in the same chat afterwards. Triggered at ~15 turns or ≥ 200k tokens mid-set (set 292): first finish the current step and push, and write the WIP branch + exact next step in the Relay (set 152 C1).
 
 1. **Update claude/handoff.md**
    - Add the newest set to the Relay block: set number, date, branch → main, GATE result (tests x/x · ui_smoke x/x), publish (artifact + version or "no publish"), values changed or not, user todo, next step (with a plan file: its name + next step number; a finished plan moves to claude/archive/, set 163 C1). **Size: relay.md "Relay size" (≤ 400 chars, parked sets out):** status · branch + last sha · gate/publish · values · next step; round-by-round detail goes to the set's notes.md / plan file and the entry links it (on a sample branch as `<branch>:path`).
