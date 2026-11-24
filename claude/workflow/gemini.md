@@ -14,6 +14,7 @@ Claude asks Google Gemini for a second opinion and merges it with its own ideas.
 - Model is ALWAYS given with `--model` (so Claude knows which model answered); `agy models` lists the choices. Default = `gemini-3.8-flash-high`; the owner may name another.
 - Gemini 4 Neon (owner wants it, 24 Nov; owner chose Flash for now): not in `agy models` on the owner's Google sign-in. agy 1.5.12 shows Neon with `GEMINI_API_KEY` (billed in AI Studio — owner OK first) or after re-sign-in with the AI Pro account. When it appears: make it the default here.
 - Read `response` from the JSON; tell the owner the model + `usage.total_tokens` in one line.
+- Pictures cannot be sent (set 293): agy tries a shell tool to open an image file and headless plan mode denies it ("command permission"). Describe the screen in words and start the prompt with "Do not use any tools or files"; tell the owner Gemini judged from the description. Check its claims against the real shot (it read 11 px as screen pixels; at 854 base it is ~25 px on 1920).
 - The question must stand alone: a short description of the game/screen/problem + the options Claude already has. Gemini cannot see the repo.
 
 ## Safety (HARD RULE 9)
