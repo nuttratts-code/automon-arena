@@ -255,3 +255,5 @@ Rebuild adds → s297r35u7-patch.py (after s297r35u6).
 Rebuild adds → s297r35u8-patch.py (after s297r35u7).
 86. (set 297 cont., round 35u9, pending owner OK) Owner after 35u8 N: "move it to the left side, clock leftmost, make the clock smaller". S297TOP=o = N (old corner-button size 58×54 / 70×54, top edge, faded 0.75) placed at the hud's left edge, order clock | pause | ff, clock 15 (env S297CLK overrides; N1 was 18). Seen: gaps uneven (clock plate wider than its text, ff button wider than pause) — fix if kept. Shots S297u9-o11/22/33.png. Not checked: phone 844×390.
 Rebuild adds → s297r35u9-patch.py (after s297r35u8).
+87. (set 297 cont., round 35u10, pending owner OK) Owner after 35u9 O: "closer together, move everything to the right side". S297TOP=p = O (clock 15 | pause | ff, old icon size, top edge, faded 0.75) at the hud's RIGHT edge, tight: both buttons 54×54 (icon unchanged), group separation −14 (each button has ~10 px empty sides around its icon), clock plate margin right 12. Shots S297u10-p11/22/33.png. Not checked: phone 844×390.
+Rebuild adds → s297r35u10-patch.py (after s297r35u9).
