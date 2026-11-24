@@ -4,7 +4,7 @@
 # Counter (set 288): count the owner's messages in the transcript the hook names (turn-count.py).
 # The old per-session-id file (set 254) restarted at 1 whenever the app moved the chat to a new session id.
 # Background <task-notification> prompts are not owner turns. Read-only. Never fails the prompt.
-# Set 292 (owner A1): also print the chat size (k tokens of the last call); >= 200k = close-out due
+# Set 292 (owner A1): also print the chat size (k tokens of the last call); >= 300k = close-out due (set 293: owner raised 200k → 300k)
 # (measured 17-24 Nov: calls past 200k cost ~4.9M extra per chat vs ~2.6M for a new chat + close-out).
 cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 in=$(cat 2>/dev/null)
@@ -20,8 +20,8 @@ esac
 echo "- Reply in Thai: 3-line header (ทำแล้ว/พบ · ต้องตัดสินใจ · ไม่แน่ใจ). Conflict check vs docs before acting. Ask everything up front (A/B + AskUserQuestion)."
 echo "- Open the CLAUDE.md topic-table skill for this task BEFORE working (UI → ui-work · bug → find-cause · values → balance-import · code → merge-code)."
 echo "- HARD 3 gate before main · 5 cause before fix · 6 values need AMCFG1+cfgdiff · 8 ripple line · 9 security + secret grep."
-if [ "$k" -ge 200 ] 2>/dev/null; then
-  echo "⚠ HARD RULE 1: chat ${k}k tokens ≥ 200k (every call re-sends it) → finish the current step only, push, then run skill close-out and tell the owner in Thai to open a new chat. Do NOT start new work here."
+if [ "$k" -ge 300 ] 2>/dev/null; then
+  echo "⚠ HARD RULE 1: chat ${k}k tokens ≥ 300k (every call re-sends it) → finish the current step only, push, then run skill close-out and tell the owner in Thai to open a new chat. Do NOT start new work here."
 elif [ "$n" -ge 15 ] 2>/dev/null; then
   echo "⚠ HARD RULE 1: turn $n ≥ 15 → finish the current step only, push, then run skill close-out and tell the owner in Thai to open a new chat. Do NOT start new work here."
 elif [ "$n" -ge 12 ] 2>/dev/null; then
