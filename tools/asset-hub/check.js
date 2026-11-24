@@ -192,7 +192,8 @@ const PXC = (() => {
     const px = (f, x, y) => { const i = (y * W + x) * 4, d = frames[f].d; return d[i + 3] < 128 ? -1 : (d[i] << 16) | (d[i + 1] << 8) | d[i + 2]; };
     const n = frames.length, fl = {};
     let flN = 0;
-    if (n >= 3) for (let f = 0; f < n; f++) {
+    const raw = per[0].k === 1; // a ×N blow-up sheet: per-frame checks ran on shrunk pixels, frame-to-frame marks would not line up → skipped
+    if (n >= 3 && raw) for (let f = 0; f < n; f++) {
       const a = (f - 1 + n) % n, b = (f + 1) % n, pts = [];
       for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
         const v = px(f, x, y), pa = px(a, x, y);
@@ -211,7 +212,7 @@ const PXC = (() => {
     out.push(fmax - fmin > 0 ? { lvl: 'warn', key: 'feet', text: `เท้าขยับขึ้นลง ${fmax - fmin} px ระหว่างเฟรม (แถวล่างสุด ${feet.map((v) => v + 1).join(' ')}) ในเกมตัวจะลอย/จม`, pts: [], frames: {} }
       : { lvl: 'ok', key: 'feet', text: 'เท้าอยู่แถวเดียวกันทุกเฟรม', pts: [], frames: {} });
     // colours the ★ still does not have (art-style V2.7: idle palette comes from the still)
-    if (stillHex && stillHex.length) {
+    if (raw && stillHex && stillHex.length) {
       const allow = stillHex.map((x) => lab(parseInt(x.slice(1, 3), 16), parseInt(x.slice(3, 5), 16), parseInt(x.slice(5, 7), 16)));
       const newCol = new Map(), marks = {};
       per.forEach((p, fi) => p.palette && p.palette.forEach((c) => { if (!allow.some((a) => dE(a, lab(...c.c)) < 4)) newCol.set(c.hex, (newCol.get(c.hex) || 0) + c.n); }));
