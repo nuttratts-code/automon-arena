@@ -1,5 +1,5 @@
 # set 299 r35z: detail panel = left column fixed (name | tribe, HP + shield icon, cooldown) · middle + right merged into ONE box with stars on top,
-# page 1 = the unit's skill (game text), "+" at its bottom-right corner flips to page 2 = 6 values + burn / shock numbers + buff / debuff chips ("−" flips back)
+# page 1 = 6 values (middle) + skill (right); "+" bottom-right flips to page 2 = middle + right merged = burn / shock + buff / debuff chips ("−" flips back)
 # env S299PAGE=1 = start on page 2 (stills)
 import sys
 p = sys.argv[1] if len(sys.argv) > 1 else r"D:\GitHub\automon-scratch\g286\scripts\ui\s286_team.gd"
@@ -87,7 +87,17 @@ func _area299(R: Rect2, v: Dictionary, L2: float, ink: Color, mute: Color) -> vo
 	_pn_layer.draw_rect(Rect2(bc.x - 3.0, bc.y - 0.5, 6.0, 1.0), Color(1, 1, 1, 1))
 	if _pg299 == 0: _pn_layer.draw_rect(Rect2(bc.x - 0.5, bc.y - 3.0, 1.0, 6.0), Color(1, 1, 1, 1))   # "+" on the skill page, "−" on the stats page
 	var top := y + 14.0
-	if _pg299 == 0:   # page 1: the unit's skill(s), game text for its level
+	var cw2 := 58.0
+	var L3 := L2 + cw2 * 2.0 + 4.0 + 10.0
+	if _pg299 == 0:   # page 1: middle = the 6 values (3 rows x 2) · right = the unit's skill (game text for its level)
+		var sl := _slots(v)
+		for i in sl.size():
+			var gx := L2 + (0.0 if i % 2 == 0 else cw2 + 4.0)
+			var gy := top + float(i / 2) * 13.0
+			var kd := String(sl[i][0])
+			_dtxt(Vector2(gx, gy + 10.0), String(PN299_W.get(kd, kd)), 8, TAG_COL3.get(kd, INK))
+			_dnum(Vector2(0, gy + 10.0), String(sl[i][1]) if sl[i][2] else "-", 8, ink, gx + cw2)
+		_pn_layer.draw_rect(Rect2(L3 - 5.0, y + 18.0, 1.0, R.size.y - 26.0), Color(1, 1, 1, 0.08))
 		var groups: Variant = TH.labels().get("skills", {}).get(str(v.get("id")))
 		var lv := maxi(1, int(v.get("level", 1)))
 		var lines := []
@@ -96,42 +106,32 @@ func _area299(R: Rect2, v: Dictionary, L2: float, ink: Color, mute: Color) -> vo
 				var on: bool = g.get("lv") == null or (g["lv"] is Array and g["lv"].has(float(lv)))
 				if not on: continue
 				var txts: Array = g["text"]
-				for ln in _wrap299(String(txts[clampi(lv - 1, 0, txts.size() - 1)]), 8, RT - L2 - 16.0): lines.append(ln)
+				for ln in _wrap299(String(txts[clampi(lv - 1, 0, txts.size() - 1)]), 8, RT - L3 - 16.0): lines.append(ln)
 		if lines.is_empty():
-			_dtxt(Vector2(L2, top + 10.0), "ไม่มีสกิล", 9, mute)
+			_dtxt(Vector2(L3, top + 10.0), "ไม่มีสกิล", 9, mute)
 		for i in mini(lines.size(), 4):
 			var t: String = lines[i]
-			if i == 3 and lines.size() > 4: t = _fit_txt(t + "…", 8, RT - L2 - 16.0)
-			_dtxt(Vector2(L2, top + 10.0 + float(i) * 10.0), t, 8, ink)
+			if i == 3 and lines.size() > 4: t = _fit_txt(t + "…", 8, RT - L3 - 16.0)
+			_dtxt(Vector2(L3, top + 10.0 + float(i) * 10.0), t, 8, ink)
 		return
-	# page 2: 6 values (3 rows x 2) + status (burn / shock numbers, then buff / debuff chips)
-	var cw2 := 58.0
-	var sl := _slots(v)
-	for i in sl.size():
-		var gx := L2 + (0.0 if i % 2 == 0 else cw2 + 4.0)
-		var gy := top + float(i / 2) * 13.0
-		var kd := String(sl[i][0])
-		_dtxt(Vector2(gx, gy + 10.0), String(PN299_W.get(kd, kd)), 8, TAG_COL3.get(kd, INK))
-		_dnum(Vector2(0, gy + 10.0), String(sl[i][1]) if sl[i][2] else "-", 8, ink, gx + cw2)
-	var L3 := L2 + cw2 * 2.0 + 4.0 + 10.0
-	_pn_layer.draw_rect(Rect2(L3 - 5.0, y + 18.0, 1.0, R.size.y - 26.0), Color(1, 1, 1, 0.08))
-	var cw3 := (RT - L3 - 6.0) * 0.5
+	# page 2: middle + right merged = status (burn / shock numbers, then buff / debuff chips), 3 rows x 3 columns, column-major
+	var cw3 := (RT - L2 - 12.0) / 3.0
 	var items := []
 	for q in _row1(v):
 		if String(q[0]) == "armor": continue   # owner: only burn / shock come back, armour stays on the HP line
 		items.append(["n", String(q[0]), String(L4_NUM.get(q[0], q[0])), String(q[1]), true, ""])
 	for e in _effects(v): items.append(["e", String(e[1]), _short4(e), "", bool(e[2]), String(e[5])])
-	if items.is_empty(): _dtxt(Vector2(L3, top + 10.0), "ไม่มีสถานะ", 8, mute)
-	var cap := 5   # slot 6 = the flip box
+	if items.is_empty(): _dtxt(Vector2(L2, top + 10.0), "ไม่มีสถานะ", 8, mute)
+	var cap := 8   # slot 9 = the flip box
 	var shown := mini(items.size(), cap if items.size() <= cap else cap - 1)
 	for i in shown:
-		var gx := L3 + (0.0 if i / 3 == 0 else cw3 + 6.0)   # column-major
+		var gx := L2 + float(i / 3) * (cw3 + 6.0)
 		var gy := top + float(i % 3) * 13.0
 		var it: Array = items[i]
 		if it[0] == "n":   # burn / shock numbers are back: word in its kind hue + number
 			var kc: Color = TAG_COL3.get(_l4_col(String(it[1])), INK)
 			_dtxt(Vector2(gx, gy + 10.0), String(it[2]), 8, kc)
-			_dnum(Vector2(0, gy + 10.0), String(it[3]), 8, ink, gx + cw3)
+			_dnum(Vector2(0, gy + 10.0), String(it[3]), 8, ink, gx + cw3 - 10.0)
 			continue
 		var cr := Rect2(gx, gy, 11.0, 11.0)   # same chip as on the cards: cut 15 %, baked icon, small + / −
 		var cpp := _cutpts299(cr, 11.0 * 0.15)
@@ -146,7 +146,7 @@ func _area299(R: Rect2, v: Dictionary, L2: float, ink: Color, mute: Color) -> vo
 			if cmk != null: _pn_layer.draw_texture_rect(cmk, cr, false, Color(1, 1, 1, 1))
 		_dtxt(Vector2(gx + 14.0, gy + 10.0), _fit_txt(String(it[2]), 8, cw3 - 14.0), 8, ink)
 	if items.size() > cap:
-		_dtxt(Vector2(L3 + cw3 + 6.0, top + 10.0 + 13.0), "+%d อย่าง" % (items.size() - shown), 8, mute)
+		_dtxt(Vector2(L2 + 2.0 * (cw3 + 6.0), top + 10.0 + 13.0), "+%d อย่าง" % (items.size() - shown), 8, mute)
 
 '''
 rep('\nfunc _stone297(', new_fn + '\nfunc _stone297(')
