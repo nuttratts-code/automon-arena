@@ -6,11 +6,13 @@ extends Control
 
 const TEAM := preload("res://scripts/ui/s286_team.gd")
 const BAR_PARTS := []   # r36g: no hanging tab (info column lives in the top plate)
-const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock"]   # r36g: one top plate = info column + reroll + shop
+const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock", "Lock299"]   # r36h: + lock button right of the shop
 var mode := "bar"
 var tray: Control = null
 var btn: Button = null
 var _t := 0.0
+var stars := 0   # r36h mode "run": shop card of a kind you own → light runs round the edge; stars = level a buy would reach
+var _age := 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -18,6 +20,7 @@ func _ready() -> void:
 
 func _process(d: float) -> void:
 	queue_redraw()
+	_age += d
 	_t -= d
 	if _t > 0.0:
 		return
@@ -56,6 +59,9 @@ static func plate(ci: CanvasItem, r: Rect2, k: float, on: bool, a: float, edge: 
 	ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
 
 func _draw() -> void:
+	if mode == "run":
+		_draw_run()
+		return
 	if mode == "btn" and btn != null:
 		var on := btn.is_hovered() or btn.button_pressed
 		plate(self, Rect2(Vector2.ZERO, size), 9.0, true, 1.0, Color(Color("#e6dcc0"), 1.0 if on else 0.8), 2.0, 1.0 if on else 0.96)
@@ -80,3 +86,43 @@ func _union(names: Array) -> Rect2:
 		u = r if not have else u.merge(r)
 		have = true
 	return u
+
+func _draw_run() -> void:   # r36h (owner C1): two bright heads run round the cut-corner edge (1.6 s a lap) + stars top-right
+	var r := Rect2(Vector2.ZERO, size).grow(-1.0)
+	var p := TEAM._cutpts299(r, 6.0)
+	p.append(p[0])
+	var segs := []
+	var tot := 0.0
+	for i in p.size() - 1:
+		var l := p[i].distance_to(p[i + 1])
+		segs.append(l)
+		tot += l
+	if tot <= 0.0:
+		return
+	var gold := Color("#ffd977")
+	for head in 2:
+		var h := fmod(_age / 1.6 + head * 0.5, 1.0) * tot
+		var n := 18
+		for k in n:
+			var a := _at(p, segs, fposmod(h - k * tot * 0.012, tot))
+			var b := _at(p, segs, fposmod(h - (k + 1) * tot * 0.012, tot))
+			var al := 1.0 - float(k) / float(n)
+			draw_line(a, b, Color(gold, 0.28 * al), 7.0)   # soft glow
+			draw_line(a, b, Color(gold.lerp(Color.WHITE, al * 0.7), al), 2.5 + 1.5 * al)
+	for s in stars:
+		_star(Vector2(size.x - 9.0 - s * 13.0, 9.0), 6.5)
+
+func _at(p: PackedVector2Array, segs: Array, d: float) -> Vector2:
+	for i in segs.size():
+		if d <= segs[i]:
+			return p[i].lerp(p[i + 1], d / maxf(0.001, segs[i]))
+		d -= segs[i]
+	return p[p.size() - 1]
+
+func _star(c: Vector2, rad: float) -> void:
+	var pts := PackedVector2Array()
+	for i in 10:
+		var a := -PI / 2.0 + i * PI / 5.0
+		pts.append(c + Vector2(cos(a), sin(a)) * (rad if i % 2 == 0 else rad * 0.45))
+	draw_colored_polygon(pts, Color("#ffd24a"))
+	draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.05, 0.04, 0.02, 1.0), 1.2)
