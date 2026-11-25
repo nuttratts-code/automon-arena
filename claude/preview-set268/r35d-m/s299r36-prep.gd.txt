@@ -107,8 +107,8 @@ func _draw_run() -> void:   # r36h (owner C1): two bright heads run round the cu
 			var a := _at(p, segs, fposmod(h - k * tot * 0.012, tot))
 			var b := _at(p, segs, fposmod(h - (k + 1) * tot * 0.012, tot))
 			var al := 1.0 - float(k) / float(n)
-			draw_line(a, b, Color(gold, 0.28 * al), 7.0)   # soft glow
-			draw_line(a, b, Color(gold.lerp(Color.WHITE, al * 0.7), al), 2.5 + 1.5 * al)
+			draw_line(a, b, Color(gold, 0.18 * al), 3.0)   # soft glow (r36j thinner)
+			draw_line(a, b, Color(gold.lerp(Color.WHITE, al * 0.7), al), 1.0 + 0.6 * al)
 	for s in stars:
 		_star(Vector2(size.x - 9.0 - s * 13.0, 9.0), 6.5)
 
