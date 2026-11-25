@@ -213,4 +213,4 @@ static func col(ci: CanvasItem, w: float, h: float, on: bool, a: float, edge: Va
     ci.draw_polyline(PackedVector2Array([Vector2(w, 0), Vector2(w, h - k), Vector2(w - k, h)]), ec, ew)
 
 static func _inset() -> float:   # r36m (owner picks): gap between the shop cards and the top plate's line, top + bottom (0 = shared line)
-    return float(OS.get_environment("S299INSET")) if OS.get_environment("S299INSET") != "" else 0.0
+    return float(OS.get_environment("S299INSET")) if OS.get_environment("S299INSET") != "" else 2.0   # r36n: owner pick ข 2
