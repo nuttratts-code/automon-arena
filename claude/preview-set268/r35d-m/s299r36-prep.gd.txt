@@ -5,7 +5,7 @@
 extends Control
 
 const TEAM := preload("res://scripts/ui/s286_team.gd")
-const BAR_PARTS := ["HudTitle", "ChipHearts", "ChipGold", "HudButtons"]
+const BAR_PARTS := ["HudTitle", "ChipHearts", "ChipGold"]   # r36e: round tab (lives in Top since r36e)
 const BACK_PARTS := ["Reroll", "Dock", "Fight"]   # r36b: shop row at the bottom → one back plate
 var mode := "bar"
 var tray: Control = null
@@ -65,17 +65,9 @@ func _draw() -> void:
 	var ub := _union(BACK_PARTS)
 	if ub.size.x > 0.0:
 		plate(self, ub.grow_individual(8, 8, 8, 6), 8.0, false, 0.9)
-	var u := Rect2()
-	var have := false
-	for nm in BAR_PARTS:
-		var c := tray.get_node_or_null(nm) as Control
-		if c == null or not c.is_visible_in_tree():
-			continue
-		var r := Rect2(c.global_position - global_position, c.size)
-		u = r if not have else u.merge(r)
-		have = true
-	if have:
-		plate(self, u.grow_individual(14, 6, 14, 6), 7.0, false, 1.0)
+	var u := _union(BAR_PARTS)
+	if u.size.x > 0.0:
+		plate(self, u.grow_individual(14, 4, 14, 4), 7.0, false, 1.0)
 
 func _union(names: Array) -> Rect2:
 	var u := Rect2()
