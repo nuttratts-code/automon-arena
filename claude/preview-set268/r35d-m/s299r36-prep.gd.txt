@@ -76,9 +76,9 @@ func _draw() -> void:
 	var lk := _union(["Lock299"])
 	if ub.size.x > 0.0 and lk.size.x > 0.0:   # r36k: the lock tab grows out of the plate's bottom-right
 		var lb := tray.get_node_or_null("Lock299") as Button
-		tabplate(self, ub.grow_individual(8, -1.5, 8, -1.5), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())   # r36l: plate hugs the cards top + bottom
+		tabplate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())   # r36l: plate hugs the cards top + bottom
 	elif ub.size.x > 0.0:
-		plate(self, ub.grow_individual(8, -1.5, 8, -1.5), 8.0, false, 0.9)   # r36l
+		plate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), 8.0, false, 0.9)   # r36l
 	var u := _union(BAR_PARTS)
 	if u.size.x > 0.0:
 		plate(self, u.grow_individual(14, 4, 14, 4), 7.0, false, 1.0)
@@ -211,3 +211,6 @@ static func col(ci: CanvasItem, w: float, h: float, on: bool, a: float, edge: Va
     var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
     ci.draw_polyline(PackedVector2Array([Vector2(0, h), Vector2(0, k), Vector2(k, 0)]), ec, ew)
     ci.draw_polyline(PackedVector2Array([Vector2(w, 0), Vector2(w, h - k), Vector2(w - k, h)]), ec, ew)
+
+static func _inset() -> float:   # r36m (owner picks): gap between the shop cards and the top plate's line, top + bottom (0 = shared line)
+    return float(OS.get_environment("S299INSET")) if OS.get_environment("S299INSET") != "" else 0.0
