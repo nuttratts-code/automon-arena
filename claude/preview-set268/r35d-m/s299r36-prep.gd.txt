@@ -1,0 +1,74 @@
+# SAMPLE set 299 round 36 (owner B1): the team-setup (prep) screen in the battle-screen look —
+# P6 navy plate (lit from the top, dark outer line, cream edge), cut top-left + bottom-right corners, C3 clear text.
+# mode "bar" = one plate behind the bottom HUD row (title · hearts · gold · buttons) + C3 text pass over the whole layout
+# mode "btn" = the Fight button drawn as a picked-colour plate (its own styleboxes emptied)
+extends Control
+
+const TEAM := preload("res://scripts/ui/s286_team.gd")
+const BAR_PARTS := ["HudTitle", "ChipHearts", "ChipGold", "HudButtons"]
+var mode := "bar"
+var tray: Control = null
+var btn: Button = null
+var _t := 0.0
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+func _process(d: float) -> void:
+	queue_redraw()
+	_t -= d
+	if _t > 0.0:
+		return
+	_t = 0.3
+	if mode == "btn" and btn != null:
+		for s in ["normal", "hover", "pressed", "disabled", "focus"]:
+			if not (btn.get_theme_stylebox(s) is StyleBoxEmpty):
+				btn.add_theme_stylebox_override(s, StyleBoxEmpty.new())
+	elif mode == "bar" and tray != null and tray.get_parent() != null:
+		_c3(tray.get_parent())
+
+static func _c3(n: Node) -> void:   # C3 = the battle screen's clear text: brighter colour + opaque near-black outline
+	if n is Label and not n.has_meta("c3_299"):
+		var l := n as Label
+		l.set_meta("c3_299", true)
+		l.add_theme_color_override("font_color", TEAM._vc299(l.get_theme_color("font_color")))
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.04, 1.0))
+		l.add_theme_constant_override("outline_size", maxi(4, l.get_theme_constant("outline_size")))
+	for ch in n.get_children():
+		_c3(ch)
+
+static func plate(ci: CanvasItem, r: Rect2, k: float, on: bool, a: float, edge: Variant = null, ew := 1.0, fa := -1.0) -> void:
+	var p := TEAM._cutpts299(r, k)
+	var pl := TEAM._pl299()
+	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+	if fa >= 0.0:
+		fill.a = fa
+	var cols := PackedColorArray()
+	for q in p:
+		var t := clampf((q.y - r.position.y) / maxf(1.0, r.size.y), 0.0, 1.0)
+		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
+	ci.draw_polygon(p, cols)
+	var po := TEAM._cutpts299(r.grow(1.0), k + 1.0)
+	ci.draw_polyline(po + PackedVector2Array([po[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
+	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+	ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
+
+func _draw() -> void:
+	if mode == "btn" and btn != null:
+		var on := btn.is_hovered() or btn.button_pressed
+		plate(self, Rect2(Vector2.ZERO, size), 9.0, true, 1.0, Color(Color("#e6dcc0"), 1.0 if on else 0.8), 2.0, 1.0 if on else 0.96)
+		return
+	if tray == null:
+		return
+	var u := Rect2()
+	var have := false
+	for nm in BAR_PARTS:
+		var c := tray.get_node_or_null(nm) as Control
+		if c == null or not c.is_visible_in_tree():
+			continue
+		var r := Rect2(c.global_position - global_position, c.size)
+		u = r if not have else u.merge(r)
+		have = true
+	if have:
+		plate(self, u.grow_individual(14, 6, 14, 6), 7.0, false, 1.0)
