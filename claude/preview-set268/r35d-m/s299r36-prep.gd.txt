@@ -5,8 +5,8 @@
 extends Control
 
 const TEAM := preload("res://scripts/ui/s286_team.gd")
-const BAR_PARTS := ["HudTitle", "ChipHearts", "ChipGold"]   # r36e: round tab (lives in Top since r36e)
-const BACK_PARTS := ["Reroll", "Dock"]   # r36f: shop row back at the top (Top) → one back plate behind reroll + shop
+const BAR_PARTS := []   # r36g: no hanging tab (info column lives in the top plate)
+const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock"]   # r36g: one top plate = info column + reroll + shop
 var mode := "bar"
 var tray: Control = null
 var btn: Button = null
