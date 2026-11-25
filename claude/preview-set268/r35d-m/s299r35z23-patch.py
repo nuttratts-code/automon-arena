@@ -1,5 +1,5 @@
 # set 299 round 35z23 (sample, after s299r35z22): speed button ▶ in our cut-corner shape, to match the pause bars (owner A4)
-#   env S299FF (default 1, 0 = old texture): own triangle polygons, same height / white fill / dark rim 1.5 px as the pause bars
+#   env S299FF (default 0 = old texture, owner kept it; 1–3 = variants): own triangle polygons, same height / white fill / dark rim 1.5 px as the pause bars
 #     1 = top-left corner cut · 2 = top-left cut + tip cut flat · 3 = top-left + bottom-left cut (left side cut like the bars)
 #   2x = 1 triangle, 4x = 2, 8x = 3 (same rule as before), overlapping like the old ff texture
 import sys, pathlib
@@ -8,8 +8,8 @@ pi = g / "scripts/ui/s268_icon.gd"; s = pi.read_text(encoding="utf-8")
 old = '\tfor i in keys.size():\n\t\tvar r := Rect2(x0 + step * float(i), y0, s, s)\n\t\tvar o := TEAM.icon_tex(String(keys[i]) + "_o")\n'
 assert s.count(old) == 1
 new = '''\tvar ff299 := OS.get_environment("S299FF")
-\tif kind == "ff" and ff299 != "0":   # s299 r35z23: cut-corner speed triangles
-\t\tvar v := 1 if ff299 == "" else int(ff299)
+\tif kind == "ff" and ff299 in ["1", "2", "3"]:   # s299 r35z23: cut-corner speed triangles
+\t\tvar v := int(ff299)
 \t\tvar n := {1: 1, 2: 1, 4: 2, 8: 3, 16: 4}.get(speed, 1) as int
 \t\tvar th := roundf(s * 0.64)
 \t\tvar fw := roundf(s * 0.52)
