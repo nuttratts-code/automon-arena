@@ -76,9 +76,9 @@ func _draw() -> void:
 	var lk := _union(["Lock299"])
 	if ub.size.x > 0.0 and lk.size.x > 0.0:   # r36k: the lock tab grows out of the plate's bottom-right
 		var lb := tray.get_node_or_null("Lock299") as Button
-		tabplate(self, ub.grow_individual(8, 8, 8, 6), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())
+		tabplate(self, ub.grow_individual(8, -1.5, 8, -1.5), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())   # r36l: plate hugs the cards top + bottom
 	elif ub.size.x > 0.0:
-		plate(self, ub.grow_individual(8, 8, 8, 6), 8.0, false, 0.9)
+		plate(self, ub.grow_individual(8, -1.5, 8, -1.5), 8.0, false, 0.9)   # r36l
 	var u := _union(BAR_PARTS)
 	if u.size.x > 0.0:
 		plate(self, u.grow_individual(14, 4, 14, 4), 7.0, false, 1.0)
@@ -196,3 +196,18 @@ static func strip(ci: CanvasItem, w: float, h: float, i: int, n: int, on: bool, 
         ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
     else:   # open on the right: the next card's left side is the shared line
         ci.draw_polyline(PackedVector2Array([Vector2(w, h), Vector2(0, h), Vector2(0, a0), Vector2(a0, 0), Vector2(w, 0)]), ec, ew)
+
+# r36l (owner): shop card top + bottom edges = the top plate's own edges — the card draws only its sides and cut corners,
+# the plate's line is the card's top/bottom line (no doubled line)
+static func col(ci: CanvasItem, w: float, h: float, on: bool, a: float, edge: Variant, ew: float) -> void:
+    var pl := TEAM._pl299()
+    var k := 6.0
+    var p := _pts(Rect2(0, 0, w, h), k, k)
+    var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+    _fill299(ci, p, 0.0, h, fill)
+    var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
+    ci.draw_line(Vector2(-1, k), Vector2(-1, h), dk, 1.0)
+    ci.draw_line(Vector2(w + 1, 0), Vector2(w + 1, h - k), dk, 1.0)
+    var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+    ci.draw_polyline(PackedVector2Array([Vector2(0, h), Vector2(0, k), Vector2(k, 0)]), ec, ew)
+    ci.draw_polyline(PackedVector2Array([Vector2(w, 0), Vector2(w, h - k), Vector2(w - k, h)]), ec, ew)
