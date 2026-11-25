@@ -6,13 +6,15 @@ extends Control
 
 const TEAM := preload("res://scripts/ui/s286_team.gd")
 const BAR_PARTS := []   # r36g: no hanging tab (info column lives in the top plate)
-const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock", "Lock299"]   # r36h: + lock button right of the shop
+const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock"]   # r36k: lock = a tab grown out of the plate (drawn apart)
 var mode := "bar"
 var tray: Control = null
 var btn: Button = null
 var _t := 0.0
 var stars := 0   # r36h mode "run": shop card of a kind you own → light runs round the edge; stars = level a buy would reach
 var _age := 0.0
+var kl := 6.0   # r36k mode "run": cut top-left (first shop card only)
+var kr := 6.0   # r36k: cut bottom-right (last shop card only)
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -25,7 +27,7 @@ func _process(d: float) -> void:
 	if _t > 0.0:
 		return
 	_t = 0.3
-	if mode == "btn" and btn != null:
+	if (mode == "btn" or mode == "tab") and btn != null:   # r36k "tab" = lock button drawn by the top plate
 		for s in ["normal", "hover", "pressed", "disabled", "focus"]:
 			if not (btn.get_theme_stylebox(s) is StyleBoxEmpty):
 				btn.add_theme_stylebox_override(s, StyleBoxEmpty.new())
@@ -62,6 +64,8 @@ func _draw() -> void:
 	if mode == "run":
 		_draw_run()
 		return
+	if mode == "tab":
+		return
 	if mode == "btn" and btn != null:
 		var on := btn.is_hovered() or btn.button_pressed
 		plate(self, Rect2(Vector2.ZERO, size), 9.0, true, 1.0, Color(Color("#e6dcc0"), 1.0 if on else 0.8), 2.0, 1.0 if on else 0.96)
@@ -69,7 +73,11 @@ func _draw() -> void:
 	if tray == null:
 		return
 	var ub := _union(BACK_PARTS)
-	if ub.size.x > 0.0:
+	var lk := _union(["Lock299"])
+	if ub.size.x > 0.0 and lk.size.x > 0.0:   # r36k: the lock tab grows out of the plate's bottom-right
+		var lb := tray.get_node_or_null("Lock299") as Button
+		tabplate(self, ub.grow_individual(8, 8, 8, 6), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())
+	elif ub.size.x > 0.0:
 		plate(self, ub.grow_individual(8, 8, 8, 6), 8.0, false, 0.9)
 	var u := _union(BAR_PARTS)
 	if u.size.x > 0.0:
@@ -89,7 +97,7 @@ func _union(names: Array) -> Rect2:
 
 func _draw_run() -> void:   # r36h (owner C1): two bright heads run round the cut-corner edge (1.6 s a lap) + stars top-right
 	var r := Rect2(Vector2.ZERO, size).grow(-1.0)
-	var p := TEAM._cutpts299(r, 6.0)
+	var p := _pts(r, kl, kr)   # r36k: flush cards = only the outer corners are cut
 	p.append(p[0])
 	var segs := []
 	var tot := 0.0
@@ -126,3 +134,65 @@ func _star(c: Vector2, rad: float) -> void:
 		pts.append(c + Vector2(cos(a), sin(a)) * (rad if i % 2 == 0 else rad * 0.45))
 	draw_colored_polygon(pts, Color("#ffd24a"))
 	draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.05, 0.04, 0.02, 1.0), 1.2)
+
+static func _pts(r: Rect2, a: float, b: float) -> PackedVector2Array:   # r36k: cut top-left a, bottom-right b (0 = square corner)
+    var q := [Vector2(r.position.x + a, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y - b),
+        Vector2(r.end.x - b, r.end.y), Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + a)]
+    var out := PackedVector2Array()
+    for v in q:
+        if out.is_empty() or not out[out.size() - 1].is_equal_approx(v):
+            out.append(v)
+    if out.size() > 1 and out[0].is_equal_approx(out[out.size() - 1]):
+        out.remove_at(out.size() - 1)
+    return out
+
+static func _fill299(ci: CanvasItem, p: PackedVector2Array, y0: float, h: float, fill: Color) -> void:
+    var cols := PackedColorArray()
+    for q in p:
+        var t := clampf((q.y - y0) / maxf(1.0, h), 0.0, 1.0)
+        cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
+    ci.draw_polygon(p, cols)
+
+# r36k (owner): the lock button = a small tab grown out of the top plate under its right end — one outline, a soft inner fillet
+static func tabplate(ci: CanvasItem, r: Rect2, t: Rect2, k: float, a: float, hot: bool) -> void:
+    var pl := TEAM._pl299()
+    var fill := Color(pl[0], pl[2] * a)
+    var tb := t.end.y
+    var tx := t.position.x
+    var c := 5.0
+    var p := PackedVector2Array([Vector2(r.position.x + k, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, tb - k * 0.75),
+        Vector2(r.end.x - k * 0.75, tb), Vector2(tx, tb), Vector2(tx, r.end.y + c), Vector2(tx - c, r.end.y),
+        Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + k)])
+    _fill299(ci, p, r.position.y, tb - r.position.y, fill)
+    var po := Geometry2D.offset_polygon(p, 1.0, Geometry2D.JOIN_MITER)
+    if po.size() > 0:
+        var o: PackedVector2Array = po[0]
+        ci.draw_polyline(o + PackedVector2Array([o[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
+    ci.draw_polyline(p + PackedVector2Array([p[0]]), Color(pl[4], pl[5] * a), 1.0)
+    if hot:   # hover: the tab's own edge brightens
+        var tp := PackedVector2Array([Vector2(tx - c, r.end.y), Vector2(tx, r.end.y + c), Vector2(tx, tb), Vector2(r.end.x - k * 0.75, tb), Vector2(r.end.x, tb - k * 0.75), Vector2(r.end.x, r.end.y)])
+        ci.draw_polyline(tp, Color("#e6dcc0"), 1.5)
+
+# r36k (owner): shop cards flush — one shared divider line between cards (each card draws its left side, only the last its right),
+# cut corners only on the strip's outer ends (first card top-left, last card bottom-right)
+static func strip(ci: CanvasItem, w: float, h: float, i: int, n: int, on: bool, a: float, edge: Variant, ew: float) -> void:
+    var pl := TEAM._pl299()
+    var k := 6.0
+    var a0 := k if i == 0 else 0.0
+    var b0 := k if i == n - 1 else 0.0
+    var r := Rect2(0, 0, w, h)
+    var p := _pts(r, a0, b0)
+    var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+    _fill299(ci, p, 0.0, h, fill)
+    var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
+    ci.draw_line(Vector2(a0, -1), Vector2(w, -1), dk, 1.0)
+    ci.draw_line(Vector2(0, h + 1), Vector2(w - b0, h + 1), dk, 1.0)
+    if i == 0:
+        ci.draw_polyline(PackedVector2Array([Vector2(a0, -1), Vector2(-1, a0), Vector2(-1, h + 1)]), dk, 1.0)
+    if i == n - 1:
+        ci.draw_polyline(PackedVector2Array([Vector2(w + 1, -1), Vector2(w + 1, h - b0), Vector2(w - b0, h + 1)]), dk, 1.0)
+    var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+    if i == n - 1:
+        ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
+    else:   # open on the right: the next card's left side is the shared line
+        ci.draw_polyline(PackedVector2Array([Vector2(w, h), Vector2(0, h), Vector2(0, a0), Vector2(a0, 0), Vector2(w, 0)]), ec, ew)
