@@ -1,0 +1,102 @@
+--- bak286_s299_prep.gd.s299r38c	2026-11-26 14:18:08.533886900 +0700
++++ scripts/ui/s299_prep.gd	2026-11-26 14:24:21.360720000 +0700
+@@ -828,7 +828,9 @@
+ 	if OS.get_environment("S299IN") != "2":
+ 		draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 3.5 + c35), Vector2(3.5 + c35, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
+ 	var c05 := _c38(0.5)
+-	if oc < 4.0 or OS.get_environment("S299IN") in ["1", "2"]:   # r38b: no dark line on the cut corner itself
++	if OS.get_environment("S299EDGE") in ["1", "2", "3"]:   # r38d: flat edge versions = no dark shade line on the frame
++		pass
++	elif oc < 4.0 or OS.get_environment("S299IN") in ["1", "2"]:   # r38b: no dark line on the cut corner itself
+ 		draw_line(Vector2(w - 0.5, 0.5), Vector2(w - 0.5, hh - oc), Color(0, 0, 0, 0.6), 1.0)
+ 		draw_line(Vector2(w - oc, hh - 0.5), Vector2(0.5, hh - 0.5), Color(0, 0, 0, 0.6), 1.0)
+ 	else:
+@@ -882,20 +884,30 @@
+ 	var hold := get_parent() as Control
+ 	if hold == null or hold.get_parent() == null:
+ 		return
++	var pc := _plate38(hold)
+ 	if _k38 == null:
+ 		_k38 = Control.new()
+ 		_k38.mouse_filter = Control.MOUSE_FILTER_IGNORE
+-		hold.get_parent().add_child(_k38)
++		pc.add_child(_k38)
+ 		_k38.draw.connect(_draw_wedge38)
+-	_k38.position = hold.position
++	_k38.position = hold.global_position - pc.global_position
+ 	_k38.size = hold.size
+ 	_k38.queue_redraw()
+ 
++static func _plate38(hold: Control) -> Control:   # r38d: the node that draws the cut-corner plate (slot_cell, has _pz299)
++	var n: Node = hold.get_parent()
++	while n != null:
++		if n is Control and n.get_script() != null and str(n.get_script().resource_path).ends_with("slot_cell.gd"):
++			return n as Control
++		n = n.get_parent()
++	print("S38 no slot_cell above hold")
++	return hold.get_parent() as Control
++
+ func _draw_wedge38() -> void:
+ 	var hold := get_parent() as Control
+-	var cell := hold.get_parent() as Control
++	var cell := _plate38(hold)
+ 	var st := _stops2(get_meta("cols", []), get_meta("rc", Color(0.5, 0.5, 0.5)), get_meta("pw", 22.0))
+-	var hp := hold.position
++	var hp := hold.global_position - cell.global_position
+ 	var cs := cell.size
+ 	var k1 := 6.0 + (float(OS.get_environment("S299K1")) if OS.get_environment("S299K1") != "" else (0.0 if OS.get_environment("S299WC") == "frame" else 1.0))
+ 	var w := size.x
+@@ -908,6 +920,53 @@
+ 	var ex := cs.x - hp.x   # cell right edge in hold coords
+ 	var ey := cs.y - hp.y
+ 	var br := PackedVector2Array([Vector2(w, h - oc), Vector2(w - oc, h), Vector2(ex - k1, ey), Vector2(ex, ey - k1)])
++	var ev := OS.get_environment("S299EDGE")   # r38d (owner: "make several versions"): 1 flat band · 2 band 2 px + cream all round · 3 colour to the edge
++	if ev in ["1", "2", "3"]:
++		var ei := float(OS.get_environment("S299EI")) if OS.get_environment("S299EI") != "" else 2.0
++		var ocell := Rect2(-hp, cs).grow(-ei)
++		var outer := _pts(ocell, 6.0 - 0.586 * ei, 6.0 - 0.586 * ei)
++		var inner := _pts(Rect2(Vector2.ZERO, size), oc, oc)
++		if ev == "2":   # band = 2 px on every side: where the gap is wider, the frame colour fills the rest
++			var rgt := cs.x - hp.x - w
++			var bot := cs.y - hp.y - h
++			var bl := minf(hp.x, ei + 2.0)
++			var bt := minf(hp.y, ei + 2.0)
++			var br2 := minf(rgt, ei + 2.0)
++			var bb := minf(bot, ei + 2.0)
++			var brect := Rect2(Vector2(bl, bt) - hp, cs - Vector2(bl + br2, bt + bb))
++			var cin := 6.0 - 0.586 * ((bl + bt) * 0.5)
++			var fin := _pts(brect, cin, cin)
++			for k2 in fin.size():
++				var a0: Vector2 = fin[k2]
++				var a1: Vector2 = fin[(k2 + 1) % fin.size()]
++				var b0: Vector2 = inner[k2]
++				var b1: Vector2 = inner[(k2 + 1) % inner.size()]
++				var q := PackedVector2Array([a0, a1, b1, b0])
++				var qc := PackedColorArray()
++				for v in q:
++					qc.append(_cs(st, clampf(v.x, 0.0, w), clampf(v.y, 0.0, h)))
++				_k38.draw_polygon(q, qc)
++			inner = fin
++		for i in outer.size():
++			var a0: Vector2 = outer[i]
++			var a1: Vector2 = outer[(i + 1) % outer.size()]
++			var b0: Vector2 = inner[i]
++			var b1: Vector2 = inner[(i + 1) % inner.size()]
++			var m := maxi(1, int(a0.distance_to(a1) / 2.0))
++			for j in m:
++				var u0 := float(j) / m
++				var u1 := float(j + 1) / m
++				var q := PackedVector2Array([a0.lerp(a1, u0), a0.lerp(a1, u1), b0.lerp(b1, u1), b0.lerp(b1, u0)])
++				var qc := PackedColorArray()
++				for v in q:
++					var t := clampf((v.y + hp.y) / cs.y, 0.0, 1.0)
++					qc.append(_cs(st, clampf(v.x, 0.0, w), clampf(v.y, 0.0, h)) if ev == "3" else Color8(62, 78, 94).lerp(Color8(36, 50, 64), t))
++				_k38.draw_polygon(q, qc)
++		if ev in ["2", "3"]:   # cream line on the right + bottom too (the plate draws it top + left only)
++			var r1 := Rect2(-hp, cs).grow(-1.0)
++			var c1 := 6.0 - 0.586
++			_k38.draw_polyline(PackedVector2Array([Vector2(r1.end.x, r1.position.y), Vector2(r1.end.x, r1.end.y - c1), Vector2(r1.end.x - c1, r1.end.y), Vector2(r1.position.x, r1.end.y)]), Color(0.69, 0.68, 0.62), 2.0)
++		return
+ 	if OS.get_environment("S299WC") != "frame":   # r38c (owner E1): frame keeps its size; the wedge takes the side band's blue-grey (no black)
+ 		_k38.draw_polygon(tl, PackedColorArray([Color8(60, 76, 92)]))
+ 		_k38.draw_polygon(br, PackedColorArray([Color8(32, 46, 60)]))
