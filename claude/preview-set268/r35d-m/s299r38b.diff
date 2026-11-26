@@ -1,0 +1,175 @@
+--- bak286_s299_prep.gd.s299r38a	2026-11-26 13:42:53.778553000 +0700
++++ scripts/ui/s299_prep.gd	2026-11-26 13:59:30.834596100 +0700
+@@ -24,6 +24,8 @@
+ 	queue_redraw()
+ 	if mode == "foot" and OS.get_environment("S299GLOW") == "1":   # r38a
+ 		_glow38(d)
++	if mode == "foot" and OS.get_environment("S299IN") in ["1", "2"] and OS.get_environment("S299CARD") == "1":   # r38b D1
++		_wedge38()
+ 	_age += d
+ 	_t -= d
+ 	if _t > 0.0:
+@@ -474,6 +476,16 @@
+ 	var sh := Color(0, 0, 0, 0.6)
+ 	var z := Color(0, 0, 0, 0)
+ 	var d := 14.0
++	if OS.get_environment("S299IN") in ["1", "2"]:   # r38b (owner A3): no double shade where the top + side bands meet (black wedge at the corners)
++		draw_polygon(PackedVector2Array([Vector2(d, 0), Vector2(w - d, 0), Vector2(w - d, d), Vector2(d, d)]), PackedColorArray([sh, sh, z, z]))
++		draw_polygon(PackedVector2Array([Vector2(0, d), Vector2(d, d), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
++		draw_polygon(PackedVector2Array([Vector2(w - d, d), Vector2(w, d), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
++		for c in [[Vector2(0, 0), 1.0], [Vector2(w, 0), -1.0]]:
++			var o: Vector2 = c[0]
++			var sx: float = c[1]
++			draw_polygon(PackedVector2Array([o, o + Vector2(sx * d, 0), o + Vector2(sx * d, d)]), PackedColorArray([sh, sh, z]))
++			draw_polygon(PackedVector2Array([o, o + Vector2(0, d), o + Vector2(sx * d, d)]), PackedColorArray([sh, sh, z]))
++		return
+ 	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, d), Vector2(0, d)]), PackedColorArray([sh, sh, z, z]))
+ 	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
+ 	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
+@@ -713,7 +725,14 @@
+ 	return c.lightened(0.12 * (1.0 - t)) if t < 0.5 else c.darkened(0.28 * (t - 0.5) * 2.0)
+ 
+ func _cs(st: Array, x: float, y: float) -> Color:
+-	return _metal(_boost(_col_lin(st, x)), y)
++	var c := _metal(_boost(_col_lin(st, x)), y)
++	var lit := OS.get_environment("S299LIT")   # r38b (owner B1): frame + strip brighter, e.g. 0.15 = +15 %
++	if lit != "":
++		var v := c.v * (1.0 + float(lit))
++		c = Color.from_hsv(c.h, c.s, minf(1.0, v), c.a)
++		if v > 1.0:
++			c = c.lightened(minf(0.5, v - 1.0))
++	return c
+ 
+ func _card_shine(cols: Array, rc: Color, pw: float, h: float, card: bool, mode: int) -> void:   # r36w
+ 	var st := _stops2(cols, rc, pw)
+@@ -788,7 +807,8 @@
+ 	var w := size.x
+ 	var hh := size.y
+ 	var r0 := Rect2(Vector2.ZERO, size)
+-	var po := _pts(r0, _c38(0.0), _c38(0.0))
++	var oc := float(OS.get_environment("S299OC")) if OS.get_environment("S299OC") != "" else _c38(0.0)   # r38b test switch (smaller cut = square-ish corner, clipped by hold299 — not used)
++	var po := _pts(r0, oc, oc)
+ 	var pin := _pts(r0.grow(-3.0), _c38(3.0), _c38(3.0))
+ 	for i in po.size():
+ 		var a0: Vector2 = po[i]
+@@ -805,11 +825,17 @@
+ 				qc.append(_cs(st, v.x, v.y))
+ 			draw_polygon(q, qc)
+ 	var c35 := _c38(3.5)
+-	draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 3.5 + c35), Vector2(3.5 + c35, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
++	if OS.get_environment("S299IN") != "2":
++		draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 3.5 + c35), Vector2(3.5 + c35, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
+ 	var c05 := _c38(0.5)
+-	draw_polyline(PackedVector2Array([Vector2(w - 0.5, 0.5), Vector2(w - 0.5, hh - 0.5 - c05), Vector2(w - 0.5 - c05, hh - 0.5), Vector2(0.5, hh - 0.5)]), Color(0, 0, 0, 0.6), 1.0)
+-	var c5 := _c38(5.0)
+-	draw_polyline(PackedVector2Array([Vector2(5, y0 - 1), Vector2(5, 5 + c5), Vector2(5 + c5, 5), Vector2(w - 5, 5), Vector2(w - 5, y0 - 1)]), Color(0, 0, 0, 0.55), 1.0)
++	if oc < 4.0 or OS.get_environment("S299IN") in ["1", "2"]:   # r38b: no dark line on the cut corner itself
++		draw_line(Vector2(w - 0.5, 0.5), Vector2(w - 0.5, hh - oc), Color(0, 0, 0, 0.6), 1.0)
++		draw_line(Vector2(w - oc, hh - 0.5), Vector2(0.5, hh - 0.5), Color(0, 0, 0, 0.6), 1.0)
++	else:
++		draw_polyline(PackedVector2Array([Vector2(w - 0.5, 0.5), Vector2(w - 0.5, hh - 0.5 - c05), Vector2(w - 0.5 - c05, hh - 0.5), Vector2(0.5, hh - 0.5)]), Color(0, 0, 0, 0.6), 1.0)
++	var e5 := 3.5 if OS.get_environment("S299IN") == "2" else 5.0   # r38b variant 2: dark line right against the colour (no gap)
++	var c5 := _c38(e5)
++	draw_polyline(PackedVector2Array([Vector2(e5, y0 - 1), Vector2(e5, e5 + c5), Vector2(e5 + c5, e5), Vector2(w - e5, e5), Vector2(w - e5, y0 - 1)]), Color(0, 0, 0, 0.55), 1.0)
+ 	if mode >= 3:
+ 		for c in [Vector2(w - 7, 3), Vector2(4, hh - 6)]:
+ 			_glint(c, 4.5)
+@@ -824,17 +850,20 @@
+ uniform vec3 tl = vec3(1.0);
+ uniform vec3 tr = vec3(1.0);
+ uniform float peak = 0.55;
++uniform float bwf = 0.18;
++uniform float soft = 4.0;
++uniform float oc = 5.0;
+ void fragment() {
+ 	vec2 p = UV * sz;
+ 	float w = sz.x; float h = sz.y;
+-	float dout = min(min(min(p.x, p.y), min(w - p.x, h - p.y)), min(p.x + p.y - 5.0, (w - p.x) + (h - p.y) - 5.0) * 0.7071);
++	float dout = min(min(min(p.x, p.y), min(w - p.x, h - p.y)), min(p.x + p.y - oc, (w - p.x) + (h - p.y) - oc) * 0.7071);
+ 	float din = min(min(min(p.x - 3.0, p.y - 3.0), min(w - 3.0 - p.x, y0 - 0.5 - p.y)), (p.x + p.y - 9.24) * 0.7071);
+ 	float m = clamp(dout + 0.5, 0.0, 1.0) * clamp(0.5 - din, 0.0, 1.0);
+ 	float k = 0.577;
+-	float bw = w * 0.18;
++	float bw = w * bwf;
+ 	float c = mix(-bw, w + h * k + bw, prog);
+ 	float d = (p.x + p.y * k - c) / bw;
+-	float a = peak * exp(-4.0 * d * d) * step(0.0, prog);
++	float a = peak * exp(-soft * d * d) * step(0.0, prog);
+ 	vec3 tint = mix(tl, tr, clamp(p.x / w, 0.0, 1.0));
+ 	COLOR = vec4(mix(vec3(1.0), tint, 0.35), a * m);
+ }
+@@ -843,6 +872,48 @@
+ var _gw38 := -1.0
+ var _gt38 := -1.0
+ 
++# r38b (owner D1): the dark wedge between the coloured frame and the plate's cream line at the 2 cut corners lies OUTSIDE
++# hold299 (clip box, inset 3/2 px in the cell), so the frame cannot paint it. A sibling Control on the cell (no clip)
++# fills just that wedge in the frame's colour: outer side = just inside the plate's cream line (cell cut 6 + S299K1),
++# inner side = the frame's own outer diagonal (hold cut 5).
++var _k38: Control = null
++
++func _wedge38() -> void:
++	var hold := get_parent() as Control
++	if hold == null or hold.get_parent() == null:
++		return
++	if _k38 == null:
++		_k38 = Control.new()
++		_k38.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		hold.get_parent().add_child(_k38)
++		_k38.draw.connect(_draw_wedge38)
++	_k38.position = hold.position
++	_k38.size = hold.size
++	_k38.queue_redraw()
++
++func _draw_wedge38() -> void:
++	var hold := get_parent() as Control
++	var cell := hold.get_parent() as Control
++	var st := _stops2(get_meta("cols", []), get_meta("rc", Color(0.5, 0.5, 0.5)), get_meta("pw", 22.0))
++	var hp := hold.position
++	var cs := cell.size
++	var k1 := 6.0 + (float(OS.get_environment("S299K1")) if OS.get_environment("S299K1") != "" else 0.0)
++	var w := size.x
++	var h := size.y
++	var oc := _c38(0.0)
++	# top-left (hold coords): frame diagonal (oc,0)-(0,oc); cream-side diagonal x+y = k1 in cell coords
++	var tl := PackedVector2Array([Vector2(oc, 0), Vector2(0, oc), Vector2(-hp.x, k1 - hp.y), Vector2(k1 - hp.x, -hp.y)])
++	# tl[2] = cell point (0, k1) · tl[3] = cell point (k1, 0)
++	# bottom-right: frame diagonal (w, h-oc)-(w-oc, h); cream-side x+y = cs.x + cs.y - k1 in cell coords
++	var ex := cs.x - hp.x   # cell right edge in hold coords
++	var ey := cs.y - hp.y
++	var br := PackedVector2Array([Vector2(w, h - oc), Vector2(w - oc, h), Vector2(ex - k1, ey), Vector2(ex, ey - k1)])
++	for q in [tl, br]:
++		var qc := PackedColorArray()
++		for v in q:
++			qc.append(_cs(st, clampf(v.x, 0.0, w), clampf(v.y, 0.0, h)))
++		_k38.draw_polygon(q, qc)
++
+ func _glow38(d: float) -> void:
+ 	if OS.get_environment("S299SEQDT") != "":
+ 		d = float(OS.get_environment("S299SEQDT"))
+@@ -862,16 +933,23 @@
+ 		mt.set_shader_parameter("tl", _boost(_col_lin(st, 0.0)))
+ 		mt.set_shader_parameter("tr", _boost(_col_lin(st, size.x)))
+ 	var m: ShaderMaterial = _g38.material
++	if OS.get_environment("S299OC") != "":
++		m.set_shader_parameter("oc", float(OS.get_environment("S299OC")))
++	var sw := 1.1
++	if OS.get_environment("S299GLOWV") == "2":   # r38b (owner C1): wider + softer band, slower sweep
++		sw = 1.6
++		m.set_shader_parameter("bwf", 0.30)
++		m.set_shader_parameter("soft", 2.6)
+ 	m.set_shader_parameter("sz", size)
+ 	m.set_shader_parameter("y0", size.y - float(get_meta("fh", 21.0)))
+ 	if _gt38 >= 0.0:
+ 		_gt38 += d
+-		if _gt38 >= 1.1:
++		if _gt38 >= sw:
+ 			_gt38 = -1.0
+ 			_gw38 = randf_range(2.5, 7.0)
+ 			m.set_shader_parameter("prog", -1.0)
+ 		else:
+-			m.set_shader_parameter("prog", 0.5 - 0.5 * cos(PI * _gt38 / 1.1))
++			m.set_shader_parameter("prog", 0.5 - 0.5 * cos(PI * _gt38 / sw))
+ 		return
+ 	_gw38 -= d
+ 	if _gw38 <= 0.0:
