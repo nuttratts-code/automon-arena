@@ -1,0 +1,1667 @@
+--- bak286_s299_prep.gd.s299r36w	2026-11-26 12:47:56.201519300 +0700
++++ scripts/ui/s299_prep.gd	2026-11-26 13:32:49.310968000 +0700
+@@ -1,780 +1,884 @@
+-# SAMPLE set 299 round 36 (owner B1): the team-setup (prep) screen in the battle-screen look —
+-# P6 navy plate (lit from the top, dark outer line, cream edge), cut top-left + bottom-right corners, C3 clear text.
+-# mode "bar" = one plate behind the bottom HUD row (title · hearts · gold · buttons) + C3 text pass over the whole layout
+-# mode "btn" = the Fight button drawn as a picked-colour plate (its own styleboxes emptied)
+-extends Control
+-
+-const TEAM := preload("res://scripts/ui/s286_team.gd")
+-const BAR_PARTS := []   # r36g: no hanging tab (info column lives in the top plate)
+-const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock"]   # r36k: lock = a tab grown out of the plate (drawn apart)
+-var mode := "bar"
+-var tray: Control = null
+-var btn: Button = null
+-var _t := 0.0
+-var stars := 0   # r36h mode "run": shop card of a kind you own → light runs round the edge; stars = level a buy would reach
+-var _age := 0.0
+-var kl := 6.0   # r36k mode "run": cut top-left (first shop card only)
+-var kr := 6.0   # r36k: cut bottom-right (last shop card only)
+-
+-func _ready() -> void:
+-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+-
+-func _process(d: float) -> void:
+-	queue_redraw()
+-	_age += d
+-	_t -= d
+-	if _t > 0.0:
+-		return
+-	_t = 0.3
+-	if (mode == "btn" or mode == "tab") and btn != null:   # r36k "tab" = lock button drawn by the top plate
+-		for s in ["normal", "hover", "pressed", "disabled", "focus"]:
+-			if not (btn.get_theme_stylebox(s) is StyleBoxEmpty):
+-				btn.add_theme_stylebox_override(s, StyleBoxEmpty.new())
+-	elif mode == "bar" and tray != null and tray.get_parent() != null:
+-		_c3(tray.get_parent())
+-
+-static func _c3(n: Node) -> void:   # C3 = the battle screen's clear text: brighter colour + opaque near-black outline
+-	if n is Label and not n.has_meta("c3_299"):
+-		var l := n as Label
+-		l.set_meta("c3_299", true)
+-		l.add_theme_color_override("font_color", TEAM._vc299(l.get_theme_color("font_color")))
+-		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.04, 1.0))
+-		l.add_theme_constant_override("outline_size", maxi(4, l.get_theme_constant("outline_size")))
+-	for ch in n.get_children():
+-		_c3(ch)
+-
+-static func plate(ci: CanvasItem, r: Rect2, k: float, on: bool, a: float, edge: Variant = null, ew := 1.0, fa := -1.0) -> void:
+-	var p := TEAM._cutpts299(r, k)
+-	var pl := TEAM._pl299()
+-	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+-	if fa >= 0.0:
+-		fill.a = fa
+-	var cols := PackedColorArray()
+-	for q in p:
+-		var t := clampf((q.y - r.position.y) / maxf(1.0, r.size.y), 0.0, 1.0)
+-		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
+-	var m := _mat()
+-	var role := "card" if k == 6.0 else ("bench" if k == 5.0 else ("fight" if k == 9.0 else "plate"))
+-	if m >= 2 and role == "card":   # recessed well: darker than the plate it sits in
+-		fill = Color(fill.darkened(0.30), maxf(fill.a, 0.92 * a))
+-	if (m >= 3 or (m >= 1 and _add(4))) and role == "bench":   # r36p A4 · socket: dark, nearly solid, sunk in
+-		fill = Color(Color("#0b121a"), 0.82)
+-	if (m >= 3 or (m >= 1 and _add(2))) and role == "fight":   # r36p A2 · the one warm block on the screen
+-		fill = Color(Color("#8a4518") if not on else Color("#a3561f"), 1.0)
+-	cols = PackedColorArray()
+-	for q in p:
+-		var t := clampf((q.y - r.position.y) / maxf(1.0, r.size.y), 0.0, 1.0)
+-		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
+-	ci.draw_polygon(p, cols)
+-	var po := TEAM._cutpts299(r.grow(1.0), k + 1.0)
+-	ci.draw_polyline(po + PackedVector2Array([po[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
+-	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+-	if m == 0 or (edge != null and role != "fight"):   # state edges (owned / picked / drop) keep their own line
+-		ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
+-		if m == 0:
+-			return
+-	var sunk := (m >= 2 and role == "card") or ((m >= 3 or _add(4)) and role == "bench")
+-	bevel(ci, p, a, sunk, role == "fight" and (m >= 3 or _add(2)))
+-
+-func _draw() -> void:
+-	if mode == "run":
+-		_draw_run()
+-		return
+-	if mode == "tab":
+-		return
+-	if mode == "foot":   # r36q: name + price strip in shades (tribes left, rarity right)
+-		_draw_foot()
+-		return
+-	if mode == "odds":   # r36p A3: lit plate behind the odds row + Lv
+-		var u := Rect2()
+-		var have := false
+-		for c in get_parent().find_children("*", "Control", true, false):
+-			var cc := c as Control
+-			if cc == self or not cc.is_visible_in_tree() or cc.size.x <= 0.0 or cc.size.y <= 0.0:
+-				continue
+-			var cr := Rect2(cc.global_position - global_position, cc.size)
+-			u = cr if not have else u.merge(cr)
+-			have = true
+-		if have:
+-			plate(self, u.grow_individual(8, 3, 8, 3), 7.0, false, 0.9)
+-		return
+-	if mode == "btn" and btn != null:
+-		var on := btn.is_hovered() or btn.button_pressed
+-		plate(self, Rect2(Vector2.ZERO, size), 9.0, true, 1.0, Color(Color("#e6dcc0"), 1.0 if on else 0.8), 2.0, 1.0 if on else 0.96)
+-		return
+-	if tray == null:
+-		return
+-	var ub := _union(BACK_PARTS)
+-	var lk := _union(["Lock299"])
+-	if ub.size.x > 0.0 and lk.size.x > 0.0:   # r36k: the lock tab grows out of the plate's bottom-right
+-		var lb := tray.get_node_or_null("Lock299") as Button
+-		tabplate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())   # r36l: plate hugs the cards top + bottom
+-	elif ub.size.x > 0.0:
+-		plate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), 8.0, false, 0.9)   # r36l
+-	var u := _union(BAR_PARTS)
+-	if u.size.x > 0.0:
+-		plate(self, u.grow_individual(14, 4, 14, 4), 7.0, false, 1.0)
+-
+-func _union(names: Array) -> Rect2:
+-	var u := Rect2()
+-	var have := false
+-	for nm in names:
+-		var c := tray.get_node_or_null(nm) as Control
+-		if c == null or not c.is_visible_in_tree():
+-			continue
+-		var r := Rect2(c.global_position - global_position, c.size)
+-		u = r if not have else u.merge(r)
+-		have = true
+-	return u
+-
+-func _draw_run() -> void:   # r36h (owner C1): two bright heads run round the cut-corner edge (1.6 s a lap) + stars top-right
+-	var r := Rect2(Vector2.ZERO, size).grow(-1.0)
+-	var p := _pts(r, kl, kr)   # r36k: flush cards = only the outer corners are cut
+-	p.append(p[0])
+-	var segs := []
+-	var tot := 0.0
+-	for i in p.size() - 1:
+-		var l := p[i].distance_to(p[i + 1])
+-		segs.append(l)
+-		tot += l
+-	if tot <= 0.0:
+-		return
+-	var gold := Color("#ffd977")
+-	for head in 2:
+-		var h := fmod(_age / 1.6 + head * 0.5, 1.0) * tot
+-		var n := 18
+-		for k in n:
+-			var a := _at(p, segs, fposmod(h - k * tot * 0.012, tot))
+-			var b := _at(p, segs, fposmod(h - (k + 1) * tot * 0.012, tot))
+-			var al := 1.0 - float(k) / float(n)
+-			draw_line(a, b, Color(gold, 0.18 * al), 3.0)   # soft glow (r36j thinner)
+-			draw_line(a, b, Color(gold.lerp(Color.WHITE, al * 0.7), al), 1.0 + 0.6 * al)
+-	for s in stars:
+-		_star(Vector2(size.x - 9.0 - s * 13.0, 9.0), 6.5)
+-
+-func _at(p: PackedVector2Array, segs: Array, d: float) -> Vector2:
+-	for i in segs.size():
+-		if d <= segs[i]:
+-			return p[i].lerp(p[i + 1], d / maxf(0.001, segs[i]))
+-		d -= segs[i]
+-	return p[p.size() - 1]
+-
+-func _star(c: Vector2, rad: float) -> void:
+-	var pts := PackedVector2Array()
+-	for i in 10:
+-		var a := -PI / 2.0 + i * PI / 5.0
+-		pts.append(c + Vector2(cos(a), sin(a)) * (rad if i % 2 == 0 else rad * 0.45))
+-	draw_colored_polygon(pts, Color("#ffd24a"))
+-	draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.05, 0.04, 0.02, 1.0), 1.2)
+-
+-static func _pts(r: Rect2, a: float, b: float) -> PackedVector2Array:   # r36k: cut top-left a, bottom-right b (0 = square corner)
+-	var q := [Vector2(r.position.x + a, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y - b),
+-		Vector2(r.end.x - b, r.end.y), Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + a)]
+-	var out := PackedVector2Array()
+-	for v in q:
+-		if out.is_empty() or not out[out.size() - 1].is_equal_approx(v):
+-			out.append(v)
+-	if out.size() > 1 and out[0].is_equal_approx(out[out.size() - 1]):
+-		out.remove_at(out.size() - 1)
+-	return out
+-
+-static func _fill299(ci: CanvasItem, p: PackedVector2Array, y0: float, h: float, fill: Color) -> void:
+-	var cols := PackedColorArray()
+-	for q in p:
+-		var t := clampf((q.y - y0) / maxf(1.0, h), 0.0, 1.0)
+-		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
+-	ci.draw_polygon(p, cols)
+-
+-# r36k (owner): the lock button = a small tab grown out of the top plate under its right end — one outline, a soft inner fillet
+-static func tabplate(ci: CanvasItem, r: Rect2, t: Rect2, k: float, a: float, hot: bool) -> void:
+-	var pl := TEAM._pl299()
+-	var fill := Color(pl[0], pl[2] * a)
+-	var tb := t.end.y
+-	var tx := t.position.x
+-	var c := 5.0
+-	var p := PackedVector2Array([Vector2(r.position.x + k, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, tb - k * 0.75),
+-		Vector2(r.end.x - k * 0.75, tb), Vector2(tx, tb), Vector2(tx, r.end.y + c), Vector2(tx - c, r.end.y),
+-		Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + k)])
+-	if _mat() >= 2:   # solid, darker plate (value step under the cards)
+-		fill = Color(fill.darkened(0.10), 0.96)
+-		scrim(ci, r)
+-	_fill299(ci, p, r.position.y, tb - r.position.y, fill)
+-	var po := Geometry2D.offset_polygon(p, 1.0, Geometry2D.JOIN_MITER)
+-	if po.size() > 0:
+-		var o: PackedVector2Array = po[0]
+-		ci.draw_polyline(o + PackedVector2Array([o[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
+-	if _mat() == 0:
+-		ci.draw_polyline(p + PackedVector2Array([p[0]]), Color(pl[4], pl[5] * a), 1.0)
+-	else:
+-		bevel(ci, p, a, false, false)
+-	if hot:   # hover: the tab's own edge brightens
+-		var tp := PackedVector2Array([Vector2(tx - c, r.end.y), Vector2(tx, r.end.y + c), Vector2(tx, tb), Vector2(r.end.x - k * 0.75, tb), Vector2(r.end.x, tb - k * 0.75), Vector2(r.end.x, r.end.y)])
+-		ci.draw_polyline(tp, Color("#e6dcc0"), 1.5)
+-
+-# r36k (owner): shop cards flush — one shared divider line between cards (each card draws its left side, only the last its right),
+-# cut corners only on the strip's outer ends (first card top-left, last card bottom-right)
+-static func strip(ci: CanvasItem, w: float, h: float, i: int, n: int, on: bool, a: float, edge: Variant, ew: float) -> void:
+-	var pl := TEAM._pl299()
+-	var k := 6.0
+-	var a0 := k if i == 0 else 0.0
+-	var b0 := k if i == n - 1 else 0.0
+-	var r := Rect2(0, 0, w, h)
+-	var p := _pts(r, a0, b0)
+-	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+-	_fill299(ci, p, 0.0, h, fill)
+-	var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
+-	ci.draw_line(Vector2(a0, -1), Vector2(w, -1), dk, 1.0)
+-	ci.draw_line(Vector2(0, h + 1), Vector2(w - b0, h + 1), dk, 1.0)
+-	if i == 0:
+-		ci.draw_polyline(PackedVector2Array([Vector2(a0, -1), Vector2(-1, a0), Vector2(-1, h + 1)]), dk, 1.0)
+-	if i == n - 1:
+-		ci.draw_polyline(PackedVector2Array([Vector2(w + 1, -1), Vector2(w + 1, h - b0), Vector2(w - b0, h + 1)]), dk, 1.0)
+-	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+-	if i == n - 1:
+-		ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
+-	else:   # open on the right: the next card's left side is the shared line
+-		ci.draw_polyline(PackedVector2Array([Vector2(w, h), Vector2(0, h), Vector2(0, a0), Vector2(a0, 0), Vector2(w, 0)]), ec, ew)
+-
+-# r36l (owner): shop card top + bottom edges = the top plate's own edges — the card draws only its sides and cut corners,
+-# the plate's line is the card's top/bottom line (no doubled line)
+-static func col(ci: CanvasItem, w: float, h: float, on: bool, a: float, edge: Variant, ew: float) -> void:
+-	var pl := TEAM._pl299()
+-	var k := 6.0
+-	var p := _pts(Rect2(0, 0, w, h), k, k)
+-	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
+-	_fill299(ci, p, 0.0, h, fill)
+-	var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
+-	ci.draw_line(Vector2(-1, k), Vector2(-1, h), dk, 1.0)
+-	ci.draw_line(Vector2(w + 1, 0), Vector2(w + 1, h - k), dk, 1.0)
+-	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
+-	ci.draw_polyline(PackedVector2Array([Vector2(0, h), Vector2(0, k), Vector2(k, 0)]), ec, ew)
+-	ci.draw_polyline(PackedVector2Array([Vector2(w, 0), Vector2(w, h - k), Vector2(w - k, h)]), ec, ew)
+-
+-static func _inset() -> float:   # r36m (owner picks): gap between the shop cards and the top plate's line, top + bottom (0 = shared line)
+-	return float(OS.get_environment("S299INSET")) if OS.get_environment("S299INSET") != "" else 2.0   # r36n: owner pick ข 2
+-
+-static func _mat() -> int:   # r36o (owner picks): material variant, see s299r36o-patch.py header
+-	return int(OS.get_environment("S299MAT")) if OS.get_environment("S299MAT") != "" else 0
+-
+-# r36o: lit frame — light from the top-left like the sprites. Raised: light top/left edges, dark bottom/right.
+-# Sunk (well / socket): the reverse + a shadow band inside the top edge. Then a thin inner line for depth.
+-static func bevel(ci: CanvasItem, p: PackedVector2Array, a: float, sunk: bool, warm: bool) -> void:
+-	var m := _mat()
+-	var hi := Color("#f2e2b8") if m >= 4 else Color("#e6dcc0")
+-	if warm:
+-		hi = Color("#ffd9a0")
+-	var ha := (0.85 if m >= 4 else 0.62) * a
+-	var lo := Color(0.02, 0.03, 0.04, 0.9 * a)
+-	var w_hi := 2.0 if m >= 4 else 1.0
+-	var n := p.size()
+-	var cx := 0.0
+-	for q in p:
+-		cx += q.x
+-	for i in n:
+-		var p0 := p[i]
+-		var p1 := p[(i + 1) % n]
+-		var d := (p1 - p0).normalized()
+-		var nrm := Vector2(d.y, -d.x)   # outward for this clockwise outline
+-		var lit := nrm.y < -0.3 or nrm.x < -0.3
+-		if sunk:
+-			lit = not lit
+-		if lit:
+-			ci.draw_line(p0, p1, Color(hi, ha * (0.55 if sunk else 1.0)), w_hi)
+-		else:
+-			ci.draw_line(p0, p1, lo, 1.0)
+-	var ins := Geometry2D.offset_polygon(p, -2.0 if m < 4 else -3.0, Geometry2D.JOIN_MITER)
+-	if ins.size() > 0:
+-		var o: PackedVector2Array = ins[0]
+-		ci.draw_polyline(o + PackedVector2Array([o[0]]), Color(0, 0, 0, (0.30 if m < 4 else 0.42) * a), 1.0)
+-	if sunk:   # shadow band under the top edge
+-		var y0 := p[0].y
+-		var x0 := 1e9
+-		var x1 := -1e9
+-		for q in p:
+-			x0 = minf(x0, q.x)
+-			x1 = maxf(x1, q.x)
+-		var bh := 7.0 if m >= 4 else 5.0
+-		ci.draw_polygon(PackedVector2Array([Vector2(x0 + 6, y0 + 1), Vector2(x1 - 1, y0 + 1), Vector2(x1 - 1, y0 + bh), Vector2(x0 + 1, y0 + bh)]),
+-			PackedColorArray([Color(0, 0, 0, 0.45 * a), Color(0, 0, 0, 0.45 * a), Color(0, 0, 0, 0), Color(0, 0, 0, 0)]))
+-
+-# r36o: soft scrim — darken the 3D scene under the top band and under the bottom row (drawn by the top plate, under every HUD part)
+-static func scrim(ci: CanvasItem, r: Rect2) -> void:
+-	var vr := ci.get_viewport_rect()
+-	var org := -(ci as Control).global_position if ci is Control else Vector2.ZERO
+-	var x0 := org.x
+-	var x1 := org.x + vr.size.x
+-	var top := org.y
+-	var yb := r.end.y + 46.0
+-	var c0 := Color(0, 0, 0, 0.55)
+-	var c1 := Color(0, 0, 0, 0.0)
+-	ci.draw_polygon(PackedVector2Array([Vector2(x0, top), Vector2(x1, top), Vector2(x1, yb), Vector2(x0, yb)]), PackedColorArray([c0, c0, c1, c1]))
+-	var bot := org.y + vr.size.y
+-	var yt := bot - 150.0
+-	ci.draw_polygon(PackedVector2Array([Vector2(x0, yt), Vector2(x1, yt), Vector2(x1, bot), Vector2(x0, bot)]), PackedColorArray([c1, c1, c0, c0]))
+-
+-static func _add(i: int) -> bool:   # r36p (owner picks): add-on list on top of the material, e.g. S299ADD=1,3
+-	return str(i) in OS.get_environment("S299ADD").split(",")
+-
+-static var demo_i := 0   # r36q demo counter (S299FOOTDEMO)
+-
+-func _draw_foot() -> void:   # r36q
+-	var cols: Array = get_meta("cols", [])
+-	var rc: Color = get_meta("rc", Color(0.5, 0.5, 0.5))
+-	var pw: float = get_meta("pw", 22.0)
+-	var fv := int(OS.get_environment("S299FOOT"))
+-	var w := size.x
+-	var h: float = get_meta("fh", 21.0)
+-	if fv == 2 and OS.get_environment("S299FOOTV") != "1":   # r36s: smooth strip, frame after the strip
+-		var card := OS.get_environment("S299CARD") == "1"
+-		var one := OS.get_environment("S299ONE")
+-		if one == "":
+-			one = "5"   # r36w default (r36v = 4)
+-		if one == "5":   # r36w: crisp shiny card
+-			if card:
+-				_recess()
+-			_card_shine(cols, rc, pw, h, card, maxi(1, int(OS.get_environment("S299SHINE"))))
+-			return
+-		if one == "4":   # r36v: strip = frame colour, one piece
+-			if card:
+-				_recess()
+-			_strip_one(cols, rc, pw, h, card)
+-			return
+-		if one != "0":   # r36t: frame + strip one piece
+-			if card:
+-				if one == "2":
+-					_recess_col(cols, rc, pw)
+-				else:
+-					_recess()
+-			draw_set_transform(Vector2(0, size.y - h))
+-			_foot2b(cols, rc, pw, w, h)
+-			draw_set_transform(Vector2.ZERO)
+-			if card:
+-				if one == "3":
+-					_frame_dark(cols, rc, pw, h)
+-				else:
+-					_frame_one(cols, rc, pw, h)
+-			return
+-		if card:
+-			_recess()
+-		draw_set_transform(Vector2(0, size.y - h))
+-		_foot2b(cols, rc, pw, w, h)
+-		draw_set_transform(Vector2.ZERO)
+-		if card:
+-			_frame2(cols, rc, pw)
+-		return
+-	if OS.get_environment("S299CARD") == "1":   # r36r: recess + coloured frame (whole card, before the strip)
+-		_card_deco(cols, rc, pw)
+-	draw_set_transform(Vector2(0, size.y - h))   # _ready forces full rect: draw the strip at the bottom
+-	if fv == 2:   # r36r: one smooth blend
+-		_foot2(cols, rc, pw, w, h)
+-		draw_set_transform(Vector2.ZERO)
+-		return
+-	var sl := 5.0
+-	var lw := w - pw
+-	var bands := []
+-	for i in cols.size():
+-		bands.append([lw * i / cols.size(), lw * (i + 1) / cols.size(), cols[i]])
+-	bands.append([lw, w, rc])
+-	var nb := bands.size()
+-	var k := 5.0   # the card's bottom-right cut
+-	for i in nb:
+-		var x0: float = bands[i][0]
+-		var x1: float = bands[i][1]
+-		var c: Color = (bands[i][2] as Color).darkened(0.42)
+-		c.a = 0.94
+-		var x0t := x0 + (sl * 0.5 if i > 0 else 0.0)
+-		var x0b := x0 - (sl * 0.5 if i > 0 else 0.0)
+-		var x1t := x1 + (sl * 0.5 if i < nb - 1 else 0.0)
+-		var x1b := x1 - (sl * 0.5 if i < nb - 1 else 0.0)
+-		var p := PackedVector2Array([Vector2(x0t, 0), Vector2(x1t, 0)])
+-		if i == nb - 1:
+-			p.append_array([Vector2(w, h - k), Vector2(w - k, h)])
+-		else:
+-			p.append(Vector2(x1b, h))
+-		p.append(Vector2(x0b, h))
+-		var top := c.lightened(0.12)
+-		var bot := c.darkened(0.12)
+-		var cc := PackedColorArray()
+-		for q in p:
+-			cc.append(top.lerp(bot, q.y / maxf(1.0, h)))
+-		draw_polygon(p, cc)
+-	if fv == 2:   # soft: blend each boundary over 12 px
+-		for i in nb - 1:
+-			var xb: float = bands[i][1]
+-			var ca: Color = (bands[i][2] as Color).darkened(0.42)
+-			var cb: Color = (bands[i + 1][2] as Color).darkened(0.42)
+-			ca.a = 0.94
+-			cb.a = 0.94
+-			draw_polygon(PackedVector2Array([Vector2(xb - 6, 0), Vector2(xb + 6, 0), Vector2(xb + 6, h), Vector2(xb - 6, h)]),
+-				PackedColorArray([ca, cb, cb, ca]))
+-	if fv == 3:   # dark divider + light top line
+-		for i in nb - 1:
+-			var xb: float = bands[i][1]
+-			draw_line(Vector2(xb + sl * 0.5, 0), Vector2(xb - sl * 0.5, h), Color(0.02, 0.03, 0.04, 0.9), 1.5)
+-		draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(1, 1, 1, 0.35), 1.0)
+-	else:
+-		draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(0, 0, 0, 0.6), 1.0)
+-
+-func _stops(cols: Array, rc: Color, pw: float, w: float) -> Array:   # r36r: [x, colour] at each shade's centre
+-	var lw := w - pw
+-	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
+-	for i in cols.size():
+-		st.append([lw * (i + 0.5) / cols.size(), cols[i]])
+-	st.append([lw + pw * 0.5, rc])
+-	st.append([w, rc])
+-	return st
+-
+-func _col_at(st: Array, x: float) -> Color:
+-	for i in st.size() - 1:
+-		var a: Array = st[i]
+-		var b: Array = st[i + 1]
+-		if x <= float(b[0]):
+-			var t := clampf((x - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0)
+-			t = t * t * (3.0 - 2.0 * t)   # smoothstep: no hard seam
+-			return (a[1] as Color).lerp(b[1] as Color, t)
+-	return st[st.size() - 1][1]
+-
+-func _foot2(cols: Array, rc: Color, pw: float, w: float, h: float) -> void:   # r36r: smooth blend strip
+-	var st := _stops(cols, rc, pw, w)
+-	var k := 5.0
+-	var n := 24
+-	for i in n:
+-		var x0 := w * i / n
+-		var x1 := w * (i + 1) / n
+-		var c0 := _col_at(st, x0).darkened(0.42)
+-		var c1 := _col_at(st, x1).darkened(0.42)
+-		c0.a = 0.94
+-		c1.a = 0.94
+-		var p := PackedVector2Array([Vector2(x0, 0), Vector2(x1, 0)])
+-		var cc := PackedColorArray([c0, c1])
+-		if x1 > w - k:   # the card's bottom-right cut
+-			var yb := h - (x1 - (w - k))
+-			p.append_array([Vector2(x1, yb)])
+-			cc.append(c1)
+-			if x0 > w - k:
+-				p.append(Vector2(x0, h - (x0 - (w - k))))
+-				cc.append(c0)
+-			else:
+-				p.append_array([Vector2(w - k, h), Vector2(x0, h)])
+-				cc.append_array([_col_at(st, w - k).darkened(0.42), c0])
+-		else:
+-			p.append_array([Vector2(x1, h), Vector2(x0, h)])
+-			cc.append_array([c1, c0])
+-		draw_polygon(p, cc)
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h * 0.5), Vector2(0, h * 0.5)]),
+-		PackedColorArray([Color(1, 1, 1, 0.10), Color(1, 1, 1, 0.10), Color(1, 1, 1, 0), Color(1, 1, 1, 0)]))
+-	draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(0, 0, 0, 0.55), 1.0)
+-
+-func _card_deco(cols: Array, rc: Color, pw: float) -> void:   # r36r: creature sits deeper + frame in the card's colours
+-	var w := size.x
+-	var h := size.y
+-	var sh := Color(0, 0, 0, 0.6)
+-	var z := Color(0, 0, 0, 0)
+-	var d := 14.0
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, d), Vector2(0, d)]), PackedColorArray([sh, sh, z, z]))
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
+-	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
+-	var st := _stops(cols, rc, pw, w)
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
+-	p.append(p[0])
+-	var cv := PackedColorArray()
+-	for q in p:
+-		var c := _col_at(st, q.x).lightened(0.10)
+-		c.a = 0.95
+-		cv.append(c)
+-	draw_polyline_colors(p, cv, 2.0)
+-	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.0), 4.0, 4.0)
+-	pi.append(pi[0])
+-	draw_polyline(pi, Color(0, 0, 0, 0.55), 1.0)
+-
+-func _col_lin(st: Array, x: float) -> Color:   # r36s: blend in linear light (no grey middle)
+-	for i in st.size() - 1:
+-		var a: Array = st[i]
+-		var b: Array = st[i + 1]
+-		if x <= float(b[0]):
+-			var t := clampf((x - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0)
+-			t = t * t * (3.0 - 2.0 * t)
+-			return (a[1] as Color).srgb_to_linear().lerp((b[1] as Color).srgb_to_linear(), t).linear_to_srgb()
+-	return st[st.size() - 1][1]
+-
+-func _foot2b(cols: Array, rc: Color, pw: float, w: float, h: float) -> void:   # r36s
+-	var lw := w - pw
+-	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]   # wide stops: tribe 1 fills the left, rarity the price end
+-	if cols.size() > 1:
+-		for i in cols.size():
+-			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
+-	else:
+-		st.append([lw * 0.35, st[0][1]])
+-	st.append([w - pw * 0.4, rc])
+-	st.append([w, rc])
+-	var f := 10.0   # fade up into the art
+-	var k := 5.0    # bottom-right cut
+-	var ys := [-f, -f * 0.6, -f * 0.25, 0.0, h]
+-	var al := [0.0, 0.22, 0.6, 0.92, 0.94]
+-	var n := 64
+-	for i in n:
+-		var x0 := w * i / n
+-		var x1 := w * (i + 1) / n
+-		var b0 := h - maxf(0.0, x0 - (w - k))
+-		var b1 := h - maxf(0.0, x1 - (w - k))
+-		var c0 := _col_lin(st, x0)
+-		var c1 := _col_lin(st, x1)
+-		for r in ys.size() - 1:
+-			var ya: float = ys[r]
+-			var yb: float = ys[r + 1]
+-			var yb0 := minf(yb, b0)
+-			var yb1 := minf(yb, b1)
+-			var ca0 := _shade(c0, ya, h, al[r])
+-			var ca1 := _shade(c1, ya, h, al[r])
+-			var cb0 := _shade(c0, yb0, h, al[r + 1])
+-			var cb1 := _shade(c1, yb1, h, al[r + 1])
+-			draw_polygon(PackedVector2Array([Vector2(x0, ya), Vector2(x1, ya), Vector2(x1, yb1), Vector2(x0, yb0)]),
+-				PackedColorArray([ca0, ca1, cb1, cb0]))
+-
+-func _shade(c: Color, y: float, h: float, a: float) -> Color:   # r36s: lit top -> darker bottom inside the strip
+-	var t := clampf(y / h, 0.0, 1.0)
+-	var o := c.darkened(lerpf(0.32, 0.52, t))
+-	o.a = a
+-	return o
+-
+-func _recess() -> void:   # r36s: r36r inner shadow only
+-	var w := size.x
+-	var h := size.y
+-	var sh := Color(0, 0, 0, 0.6)
+-	var z := Color(0, 0, 0, 0)
+-	var d := 14.0
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, d), Vector2(0, d)]), PackedColorArray([sh, sh, z, z]))
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
+-	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
+-
+-func _frame2(cols: Array, rc: Color, pw: float) -> void:   # r36s: frame after the strip, colour every 2 px
+-	var lw := size.x - pw
+-	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
+-	if cols.size() > 1:
+-		for i in cols.size():
+-			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
+-	else:
+-		st.append([lw * 0.35, st[0][1]])
+-	st.append([size.x - pw * 0.4, rc])
+-	st.append([size.x, rc])
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
+-	p.append(p[0])
+-	var q := PackedVector2Array()
+-	for i in p.size() - 1:
+-		var a: Vector2 = p[i]
+-		var b: Vector2 = p[i + 1]
+-		var m := maxi(1, int(a.distance_to(b) / 2.0))
+-		for j in m:
+-			q.append(a.lerp(b, float(j) / m))
+-	q.append(p[p.size() - 1])
+-	var cv := PackedColorArray()
+-	for v in q:
+-		var c := _col_lin(st, v.x).lightened(0.10)
+-		c.a = 0.95
+-		cv.append(c)
+-	draw_polyline_colors(q, cv, 2.0)
+-	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.0), 4.0, 4.0)
+-	pi.append(pi[0])
+-	draw_polyline(pi, Color(0, 0, 0, 0.35), 1.0)
+-
+-func _stops2(cols: Array, rc: Color, pw: float) -> Array:   # r36t: same stops as _foot2b
+-	var lw := size.x - pw
+-	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
+-	if cols.size() > 1:
+-		for i in cols.size():
+-			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
+-	else:
+-		st.append([lw * 0.35, st[0][1]])
+-	st.append([size.x - pw * 0.4, rc])
+-	st.append([size.x, rc])
+-	return st
+-
+-func _frame_one(cols: Array, rc: Color, pw: float, h: float) -> void:   # r36t: frame in the strip's own shade
+-	var st := _stops2(cols, rc, pw)
+-	var y0 := size.y - h
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
+-	p.append(p[0])
+-	var q := PackedVector2Array()
+-	for i in p.size() - 1:
+-		var a: Vector2 = p[i]
+-		var b: Vector2 = p[i + 1]
+-		var m := maxi(1, int(a.distance_to(b) / 2.0))
+-		for j in m:
+-			q.append(a.lerp(b, float(j) / m))
+-	q.append(p[p.size() - 1])
+-	var cv := PackedColorArray()
+-	for v in q:
+-		var c := _shade(_col_lin(st, v.x), v.y - y0, h, 0.94)
+-		cv.append(c)
+-	draw_polyline_colors(q, cv, 3.0)
+-
+-func _recess_col(cols: Array, rc: Color, pw: float) -> void:   # r36t S299ONE=2: inner shadow in the card's colours
+-	var st := _stops2(cols, rc, pw)
+-	var w := size.x
+-	var h := size.y
+-	var d := 14.0
+-	var n := 32
+-	for i in n:
+-		var x0 := w * i / n
+-		var x1 := w * (i + 1) / n
+-		var c0 := _col_lin(st, x0).darkened(0.45)
+-		var c1 := _col_lin(st, x1).darkened(0.45)
+-		c0.a = 0.7
+-		c1.a = 0.7
+-		var z0 := Color(c0, 0.0)
+-		var z1 := Color(c1, 0.0)
+-		draw_polygon(PackedVector2Array([Vector2(x0, 0), Vector2(x1, 0), Vector2(x1, d), Vector2(x0, d)]), PackedColorArray([c0, c1, z1, z0]))
+-	var cl := _col_lin(st, 0.0).darkened(0.45)
+-	var cr := _col_lin(st, w).darkened(0.45)
+-	cl.a = 0.7
+-	cr.a = 0.7
+-	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([cl, Color(cl, 0.0), Color(cl, 0.0), cl]))
+-	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([Color(cr, 0.0), cr, cr, Color(cr, 0.0)]))
+-
+-func _frame_dark(cols: Array, rc: Color, pw: float, h: float) -> void:   # r36u: darker frame + black inner line
+-	var st := _stops2(cols, rc, pw)
+-	var y0 := size.y - h
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
+-	p.append(p[0])
+-	var q := PackedVector2Array()
+-	for i in p.size() - 1:
+-		var a: Vector2 = p[i]
+-		var b: Vector2 = p[i + 1]
+-		var m := maxi(1, int(a.distance_to(b) / 2.0))
+-		for j in m:
+-			q.append(a.lerp(b, float(j) / m))
+-	q.append(p[p.size() - 1])
+-	var cv := PackedColorArray()
+-	for v in q:
+-		var c := _shade(_col_lin(st, v.x), v.y - y0, h, 1.0).darkened(0.35)
+-		cv.append(c)
+-	draw_polyline_colors(q, cv, 3.0)
+-	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.75), 4.0, 4.0)
+-	pi.append(pi[0])
+-	draw_polyline(pi, Color(0, 0, 0, 0.9), 1.5)
+-
+-func _fcol(st: Array, x: float, a: float) -> Color:   # r36v: the frame colour (r36s frame)
+-	var c := _col_lin(st, x).lightened(0.10)
+-	c.a = a
+-	return c
+-
+-func _strip_one(cols: Array, rc: Color, pw: float, h: float, card: bool) -> void:   # r36v
+-	var st := _stops2(cols, rc, pw)
+-	var w := size.x
+-	var y0 := size.y - h
+-	var f := 10.0
+-	var k := 5.0
+-	var ys := [-f, -f * 0.6, -f * 0.25, 0.0, h]
+-	var al := [0.0, 0.22, 0.6, 0.95, 0.95]
+-	var n := 64
+-	for i in n:
+-		var x0 := w * i / n
+-		var x1 := w * (i + 1) / n
+-		var b0 := h - maxf(0.0, x0 - (w - k))
+-		var b1 := h - maxf(0.0, x1 - (w - k))
+-		for r in ys.size() - 1:
+-			var ya: float = ys[r]
+-			var yb: float = ys[r + 1]
+-			draw_polygon(PackedVector2Array([Vector2(x0, y0 + ya), Vector2(x1, y0 + ya), Vector2(x1, y0 + minf(yb, b1)), Vector2(x0, y0 + minf(yb, b0))]),
+-				PackedColorArray([_fcol(st, x0, al[r]), _fcol(st, x1, al[r]), _fcol(st, x1, al[r + 1]), _fcol(st, x0, al[r + 1])]))
+-	if not card:
+-		return
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
+-	p.append(p[0])
+-	var q := PackedVector2Array()
+-	for i in p.size() - 1:
+-		var a: Vector2 = p[i]
+-		var b: Vector2 = p[i + 1]
+-		var m := maxi(1, int(a.distance_to(b) / 2.0))
+-		for j in m:
+-			q.append(a.lerp(b, float(j) / m))
+-	q.append(p[p.size() - 1])
+-	var cv := PackedColorArray()
+-	for v in q:
+-		cv.append(_fcol(st, v.x, 0.95))
+-	draw_polyline_colors(q, cv, 2.0)
+-	# dark inner line: top + sides only, fading out before the strip
+-	var e := 3.0
+-	var yf := y0 - f
+-	var line := PackedVector2Array([Vector2(e, yf), Vector2(e, yf - f), Vector2(e, e + 4.0), Vector2(e + 4.0, e),
+-		Vector2(w - e, e), Vector2(w - e, yf - f), Vector2(w - e, yf)])
+-	var dk := Color(0, 0, 0, 0.55)
+-	var lc := PackedColorArray([Color(0, 0, 0, 0), dk, dk, dk, dk, dk, Color(0, 0, 0, 0)])
+-	draw_polyline_colors(line, lc, 1.0)
+-
+-func _boost(c: Color) -> Color:   # r36w: richer colour
+-	return Color.from_hsv(c.h, minf(1.0, c.s * 1.25), minf(1.0, c.v * 1.1), 1.0)
+-
+-func _metal(c: Color, y: float) -> Color:   # r36w: one ramp over the whole card height
+-	var t := clampf(y / size.y, 0.0, 1.0)
+-	return c.lightened(0.12 * (1.0 - t)) if t < 0.5 else c.darkened(0.28 * (t - 0.5) * 2.0)
+-
+-func _cs(st: Array, x: float, y: float) -> Color:
+-	return _metal(_boost(_col_lin(st, x)), y)
+-
+-func _card_shine(cols: Array, rc: Color, pw: float, h: float, card: bool, mode: int) -> void:   # r36w
+-	var st := _stops2(cols, rc, pw)
+-	var w := size.x
+-	var y0 := size.y - h
+-	var k := 5.0
+-	var n := 64
+-	var rows := 6
+-	for i in n:   # strip: opaque, hard top edge
+-		var x0 := w * i / n
+-		var x1 := w * (i + 1) / n
+-		var b0 := size.y - maxf(0.0, x0 - (w - k))
+-		var b1 := size.y - maxf(0.0, x1 - (w - k))
+-		for r in rows:
+-			var ya := y0 + h * r / rows
+-			var yb := y0 + h * (r + 1) / rows
+-			draw_polygon(PackedVector2Array([Vector2(x0, ya), Vector2(x1, ya), Vector2(x1, minf(yb, b1)), Vector2(x0, minf(yb, b0))]),
+-				PackedColorArray([_cs(st, x0, ya), _cs(st, x1, ya), _cs(st, x1, minf(yb, b1)), _cs(st, x0, minf(yb, b0))]))
+-	var bev := PackedVector2Array()
+-	var bc := PackedColorArray()
+-	for i in 33:   # light bevel line on the strip's top edge
+-		var x := 3.0 + (w - 6.0) * i / 32.0
+-		bev.append(Vector2(x, y0 + 0.5))
+-		var c := _cs(st, x, y0).lightened(0.45)
+-		c.a = 0.9
+-		bc.append(c)
+-	draw_polyline_colors(bev, bc, 1.0)
+-	draw_line(Vector2(3, y0 - 0.5), Vector2(w - 3, y0 - 0.5), Color(0, 0, 0, 0.5), 1.0)
+-	if mode >= 2:   # foil sheen: two hard diagonal streaks on the strip
+-		for sp in [[0.30, 7.0, 0.22], [0.30 + 0.06, 2.5, 0.38]]:
+-			var x := w * float(sp[0])
+-			var wd: float = sp[1]
+-			var sl := h * 0.6
+-			draw_polygon(PackedVector2Array([Vector2(x + sl, y0 + 1), Vector2(x + sl + wd, y0 + 1), Vector2(x + wd, size.y - 1), Vector2(x, size.y - 1)]),
+-				PackedColorArray([Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2])]))
+-	if not card:
+-		return
+-	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
+-	p.append(p[0])
+-	var q := PackedVector2Array()
+-	for i in p.size() - 1:
+-		var a: Vector2 = p[i]
+-		var b: Vector2 = p[i + 1]
+-		var m := maxi(1, int(a.distance_to(b) / 2.0))
+-		for j in m:
+-			q.append(a.lerp(b, float(j) / m))
+-	q.append(p[p.size() - 1])
+-	var cv := PackedColorArray()
+-	for v in q:
+-		cv.append(_cs(st, v.x, v.y))
+-	draw_polyline_colors(q, cv, 3.0)
+-	# bevel: light inner edge top/left, dark outer edge bottom/right
+-	draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 8.0), Vector2(8.0, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
+-	var o := _pts(Rect2(Vector2.ZERO, size).grow(-0.5), 5.0, 5.0)
+-	draw_polyline(PackedVector2Array([Vector2(w - 0.5, 0.5), Vector2(w - 0.5, size.y - 5.5), Vector2(w - 5.5, size.y - 0.5), Vector2(0.5, size.y - 0.5)]), Color(0, 0, 0, 0.6), 1.0)
+-	var pi := PackedVector2Array([Vector2(5, y0 - 1), Vector2(5, 9.5), Vector2(9.5, 5), Vector2(w - 5, 5), Vector2(w - 5, y0 - 1)])
+-	draw_polyline(pi, Color(0, 0, 0, 0.55), 1.0)
+-	if mode >= 3:   # sparkles
+-		for c in [Vector2(w - 7, 3), Vector2(4, size.y - 6)]:
+-			_glint(c, 4.5)
+-
+-func _glint(c: Vector2, r: float) -> void:   # r36w: 4-point star
+-	var t := r * 0.22
+-	draw_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(t, -t), c + Vector2(r, 0), c + Vector2(t, t),
+-		c + Vector2(0, r), c + Vector2(-t, t), c + Vector2(-r, 0), c + Vector2(-t, -t)]), PackedColorArray([Color(1, 1, 1, 0.95)]))
+-	draw_circle(c, r * 0.35, Color(1, 1, 1, 0.5))
++# SAMPLE set 299 round 36 (owner B1): the team-setup (prep) screen in the battle-screen look —
++# P6 navy plate (lit from the top, dark outer line, cream edge), cut top-left + bottom-right corners, C3 clear text.
++# mode "bar" = one plate behind the bottom HUD row (title · hearts · gold · buttons) + C3 text pass over the whole layout
++# mode "btn" = the Fight button drawn as a picked-colour plate (its own styleboxes emptied)
++extends Control
++
++const TEAM := preload("res://scripts/ui/s286_team.gd")
++const BAR_PARTS := []   # r36g: no hanging tab (info column lives in the top plate)
++const BACK_PARTS := ["HudTitle", "ChipGold", "ChipHearts", "Reroll", "Dock"]   # r36k: lock = a tab grown out of the plate (drawn apart)
++var mode := "bar"
++var tray: Control = null
++var btn: Button = null
++var _t := 0.0
++var stars := 0   # r36h mode "run": shop card of a kind you own → light runs round the edge; stars = level a buy would reach
++var _age := 0.0
++var kl := 6.0   # r36k mode "run": cut top-left (first shop card only)
++var kr := 6.0   # r36k: cut bottom-right (last shop card only)
++
++func _ready() -> void:
++	mouse_filter = Control.MOUSE_FILTER_IGNORE
++	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++
++func _process(d: float) -> void:
++	queue_redraw()
++	if mode == "foot" and OS.get_environment("S299GLOW") == "1":   # r38a
++		_glow38(d)
++	_age += d
++	_t -= d
++	if _t > 0.0:
++		return
++	_t = 0.3
++	if (mode == "btn" or mode == "tab") and btn != null:   # r36k "tab" = lock button drawn by the top plate
++		for s in ["normal", "hover", "pressed", "disabled", "focus"]:
++			if not (btn.get_theme_stylebox(s) is StyleBoxEmpty):
++				btn.add_theme_stylebox_override(s, StyleBoxEmpty.new())
++	elif mode == "bar" and tray != null and tray.get_parent() != null:
++		_c3(tray.get_parent())
++
++static func _c3(n: Node) -> void:   # C3 = the battle screen's clear text: brighter colour + opaque near-black outline
++	if n is Label and not n.has_meta("c3_299"):
++		var l := n as Label
++		l.set_meta("c3_299", true)
++		l.add_theme_color_override("font_color", TEAM._vc299(l.get_theme_color("font_color")))
++		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.04, 1.0))
++		l.add_theme_constant_override("outline_size", maxi(4, l.get_theme_constant("outline_size")))
++	for ch in n.get_children():
++		_c3(ch)
++
++static func plate(ci: CanvasItem, r: Rect2, k: float, on: bool, a: float, edge: Variant = null, ew := 1.0, fa := -1.0) -> void:
++	var p := TEAM._cutpts299(r, k)
++	var pl := TEAM._pl299()
++	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
++	if fa >= 0.0:
++		fill.a = fa
++	var cols := PackedColorArray()
++	for q in p:
++		var t := clampf((q.y - r.position.y) / maxf(1.0, r.size.y), 0.0, 1.0)
++		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
++	var m := _mat()
++	var role := "card" if k == 6.0 else ("bench" if k == 5.0 else ("fight" if k == 9.0 else "plate"))
++	if m >= 2 and role == "card":   # recessed well: darker than the plate it sits in
++		fill = Color(fill.darkened(0.30), maxf(fill.a, 0.92 * a))
++	if (m >= 3 or (m >= 1 and _add(4))) and role == "bench":   # r36p A4 · socket: dark, nearly solid, sunk in
++		fill = Color(Color("#0b121a"), 0.82)
++	if (m >= 3 or (m >= 1 and _add(2))) and role == "fight":   # r36p A2 · the one warm block on the screen
++		fill = Color(Color("#8a4518") if not on else Color("#a3561f"), 1.0)
++	cols = PackedColorArray()
++	for q in p:
++		var t := clampf((q.y - r.position.y) / maxf(1.0, r.size.y), 0.0, 1.0)
++		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
++	ci.draw_polygon(p, cols)
++	var po := TEAM._cutpts299(r.grow(1.0), k + 1.0)
++	ci.draw_polyline(po + PackedVector2Array([po[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
++	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
++	if m == 0 or (edge != null and role != "fight"):   # state edges (owned / picked / drop) keep their own line
++		ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
++		if m == 0:
++			return
++	var sunk := (m >= 2 and role == "card") or ((m >= 3 or _add(4)) and role == "bench")
++	bevel(ci, p, a, sunk, role == "fight" and (m >= 3 or _add(2)))
++
++func _draw() -> void:
++	if mode == "run":
++		_draw_run()
++		return
++	if mode == "tab":
++		return
++	if mode == "foot":   # r36q: name + price strip in shades (tribes left, rarity right)
++		_draw_foot()
++		return
++	if mode == "odds":   # r36p A3: lit plate behind the odds row + Lv
++		var u := Rect2()
++		var have := false
++		for c in get_parent().find_children("*", "Control", true, false):
++			var cc := c as Control
++			if cc == self or not cc.is_visible_in_tree() or cc.size.x <= 0.0 or cc.size.y <= 0.0:
++				continue
++			var cr := Rect2(cc.global_position - global_position, cc.size)
++			u = cr if not have else u.merge(cr)
++			have = true
++		if have:
++			plate(self, u.grow_individual(8, 3, 8, 3), 7.0, false, 0.9)
++		return
++	if mode == "btn" and btn != null:
++		var on := btn.is_hovered() or btn.button_pressed
++		plate(self, Rect2(Vector2.ZERO, size), 9.0, true, 1.0, Color(Color("#e6dcc0"), 1.0 if on else 0.8), 2.0, 1.0 if on else 0.96)
++		return
++	if tray == null:
++		return
++	var ub := _union(BACK_PARTS)
++	var lk := _union(["Lock299"])
++	if ub.size.x > 0.0 and lk.size.x > 0.0:   # r36k: the lock tab grows out of the plate's bottom-right
++		var lb := tray.get_node_or_null("Lock299") as Button
++		tabplate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), lk.grow(2.0), 8.0, 0.9, lb != null and lb.is_hovered())   # r36l: plate hugs the cards top + bottom
++	elif ub.size.x > 0.0:
++		plate(self, ub.grow_individual(8, _inset() - 1.5, 8, _inset() - 1.5), 8.0, false, 0.9)   # r36l
++	var u := _union(BAR_PARTS)
++	if u.size.x > 0.0:
++		plate(self, u.grow_individual(14, 4, 14, 4), 7.0, false, 1.0)
++
++func _union(names: Array) -> Rect2:
++	var u := Rect2()
++	var have := false
++	for nm in names:
++		var c := tray.get_node_or_null(nm) as Control
++		if c == null or not c.is_visible_in_tree():
++			continue
++		var r := Rect2(c.global_position - global_position, c.size)
++		u = r if not have else u.merge(r)
++		have = true
++	return u
++
++func _draw_run() -> void:   # r36h (owner C1): two bright heads run round the cut-corner edge (1.6 s a lap) + stars top-right
++	var r := Rect2(Vector2.ZERO, size).grow(-1.0)
++	var p := _pts(r, kl, kr)   # r36k: flush cards = only the outer corners are cut
++	p.append(p[0])
++	var segs := []
++	var tot := 0.0
++	for i in p.size() - 1:
++		var l := p[i].distance_to(p[i + 1])
++		segs.append(l)
++		tot += l
++	if tot <= 0.0:
++		return
++	var gold := Color("#ffd977")
++	for head in 2:
++		var h := fmod(_age / 1.6 + head * 0.5, 1.0) * tot
++		var n := 18
++		for k in n:
++			var a := _at(p, segs, fposmod(h - k * tot * 0.012, tot))
++			var b := _at(p, segs, fposmod(h - (k + 1) * tot * 0.012, tot))
++			var al := 1.0 - float(k) / float(n)
++			draw_line(a, b, Color(gold, 0.18 * al), 3.0)   # soft glow (r36j thinner)
++			draw_line(a, b, Color(gold.lerp(Color.WHITE, al * 0.7), al), 1.0 + 0.6 * al)
++	for s in stars:
++		_star(Vector2(size.x - 9.0 - s * 13.0, 9.0), 6.5)
++
++func _at(p: PackedVector2Array, segs: Array, d: float) -> Vector2:
++	for i in segs.size():
++		if d <= segs[i]:
++			return p[i].lerp(p[i + 1], d / maxf(0.001, segs[i]))
++		d -= segs[i]
++	return p[p.size() - 1]
++
++func _star(c: Vector2, rad: float) -> void:
++	var pts := PackedVector2Array()
++	for i in 10:
++		var a := -PI / 2.0 + i * PI / 5.0
++		pts.append(c + Vector2(cos(a), sin(a)) * (rad if i % 2 == 0 else rad * 0.45))
++	draw_colored_polygon(pts, Color("#ffd24a"))
++	draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.05, 0.04, 0.02, 1.0), 1.2)
++
++static func _pts(r: Rect2, a: float, b: float) -> PackedVector2Array:   # r36k: cut top-left a, bottom-right b (0 = square corner)
++	var q := [Vector2(r.position.x + a, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y - b),
++		Vector2(r.end.x - b, r.end.y), Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + a)]
++	var out := PackedVector2Array()
++	for v in q:
++		if out.is_empty() or not out[out.size() - 1].is_equal_approx(v):
++			out.append(v)
++	if out.size() > 1 and out[0].is_equal_approx(out[out.size() - 1]):
++		out.remove_at(out.size() - 1)
++	return out
++
++static func _fill299(ci: CanvasItem, p: PackedVector2Array, y0: float, h: float, fill: Color) -> void:
++	var cols := PackedColorArray()
++	for q in p:
++		var t := clampf((q.y - y0) / maxf(1.0, h), 0.0, 1.0)
++		cols.append(Color(fill.lightened(0.16 * (1.0 - t)).darkened(0.18 * t), fill.a))
++	ci.draw_polygon(p, cols)
++
++# r36k (owner): the lock button = a small tab grown out of the top plate under its right end — one outline, a soft inner fillet
++static func tabplate(ci: CanvasItem, r: Rect2, t: Rect2, k: float, a: float, hot: bool) -> void:
++	var pl := TEAM._pl299()
++	var fill := Color(pl[0], pl[2] * a)
++	var tb := t.end.y
++	var tx := t.position.x
++	var c := 5.0
++	var p := PackedVector2Array([Vector2(r.position.x + k, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, tb - k * 0.75),
++		Vector2(r.end.x - k * 0.75, tb), Vector2(tx, tb), Vector2(tx, r.end.y + c), Vector2(tx - c, r.end.y),
++		Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + k)])
++	if _mat() >= 2:   # solid, darker plate (value step under the cards)
++		fill = Color(fill.darkened(0.10), 0.96)
++		scrim(ci, r)
++	_fill299(ci, p, r.position.y, tb - r.position.y, fill)
++	var po := Geometry2D.offset_polygon(p, 1.0, Geometry2D.JOIN_MITER)
++	if po.size() > 0:
++		var o: PackedVector2Array = po[0]
++		ci.draw_polyline(o + PackedVector2Array([o[0]]), Color(0.05, 0.05, 0.06, 0.85 * a), 1.0)
++	if _mat() == 0:
++		ci.draw_polyline(p + PackedVector2Array([p[0]]), Color(pl[4], pl[5] * a), 1.0)
++	else:
++		bevel(ci, p, a, false, false)
++	if hot:   # hover: the tab's own edge brightens
++		var tp := PackedVector2Array([Vector2(tx - c, r.end.y), Vector2(tx, r.end.y + c), Vector2(tx, tb), Vector2(r.end.x - k * 0.75, tb), Vector2(r.end.x, tb - k * 0.75), Vector2(r.end.x, r.end.y)])
++		ci.draw_polyline(tp, Color("#e6dcc0"), 1.5)
++
++# r36k (owner): shop cards flush — one shared divider line between cards (each card draws its left side, only the last its right),
++# cut corners only on the strip's outer ends (first card top-left, last card bottom-right)
++static func strip(ci: CanvasItem, w: float, h: float, i: int, n: int, on: bool, a: float, edge: Variant, ew: float) -> void:
++	var pl := TEAM._pl299()
++	var k := 6.0
++	var a0 := k if i == 0 else 0.0
++	var b0 := k if i == n - 1 else 0.0
++	var r := Rect2(0, 0, w, h)
++	var p := _pts(r, a0, b0)
++	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
++	_fill299(ci, p, 0.0, h, fill)
++	var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
++	ci.draw_line(Vector2(a0, -1), Vector2(w, -1), dk, 1.0)
++	ci.draw_line(Vector2(0, h + 1), Vector2(w - b0, h + 1), dk, 1.0)
++	if i == 0:
++		ci.draw_polyline(PackedVector2Array([Vector2(a0, -1), Vector2(-1, a0), Vector2(-1, h + 1)]), dk, 1.0)
++	if i == n - 1:
++		ci.draw_polyline(PackedVector2Array([Vector2(w + 1, -1), Vector2(w + 1, h - b0), Vector2(w - b0, h + 1)]), dk, 1.0)
++	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
++	if i == n - 1:
++		ci.draw_polyline(p + PackedVector2Array([p[0]]), ec, ew)
++	else:   # open on the right: the next card's left side is the shared line
++		ci.draw_polyline(PackedVector2Array([Vector2(w, h), Vector2(0, h), Vector2(0, a0), Vector2(a0, 0), Vector2(w, 0)]), ec, ew)
++
++# r36l (owner): shop card top + bottom edges = the top plate's own edges — the card draws only its sides and cut corners,
++# the plate's line is the card's top/bottom line (no doubled line)
++static func col(ci: CanvasItem, w: float, h: float, on: bool, a: float, edge: Variant, ew: float) -> void:
++	var pl := TEAM._pl299()
++	var k := 6.0
++	var p := _pts(Rect2(0, 0, w, h), k, k)
++	var fill: Color = Color(pl[1], pl[3] * a) if on else Color(pl[0], pl[2] * a)
++	_fill299(ci, p, 0.0, h, fill)
++	var dk := Color(0.05, 0.05, 0.06, 0.85 * a)
++	ci.draw_line(Vector2(-1, k), Vector2(-1, h), dk, 1.0)
++	ci.draw_line(Vector2(w + 1, 0), Vector2(w + 1, h - k), dk, 1.0)
++	var ec: Color = Color(pl[4], (pl[5] + 0.38 if on else pl[5]) * a) if edge == null else edge
++	ci.draw_polyline(PackedVector2Array([Vector2(0, h), Vector2(0, k), Vector2(k, 0)]), ec, ew)
++	ci.draw_polyline(PackedVector2Array([Vector2(w, 0), Vector2(w, h - k), Vector2(w - k, h)]), ec, ew)
++
++static func _inset() -> float:   # r36m (owner picks): gap between the shop cards and the top plate's line, top + bottom (0 = shared line)
++	return float(OS.get_environment("S299INSET")) if OS.get_environment("S299INSET") != "" else 2.0   # r36n: owner pick ข 2
++
++static func _mat() -> int:   # r36o (owner picks): material variant, see s299r36o-patch.py header
++	return int(OS.get_environment("S299MAT")) if OS.get_environment("S299MAT") != "" else 0
++
++# r36o: lit frame — light from the top-left like the sprites. Raised: light top/left edges, dark bottom/right.
++# Sunk (well / socket): the reverse + a shadow band inside the top edge. Then a thin inner line for depth.
++static func bevel(ci: CanvasItem, p: PackedVector2Array, a: float, sunk: bool, warm: bool) -> void:
++	var m := _mat()
++	var hi := Color("#f2e2b8") if m >= 4 else Color("#e6dcc0")
++	if warm:
++		hi = Color("#ffd9a0")
++	var ha := (0.85 if m >= 4 else 0.62) * a
++	var lo := Color(0.02, 0.03, 0.04, 0.9 * a)
++	var w_hi := 2.0 if m >= 4 else 1.0
++	var n := p.size()
++	var cx := 0.0
++	for q in p:
++		cx += q.x
++	for i in n:
++		var p0 := p[i]
++		var p1 := p[(i + 1) % n]
++		var d := (p1 - p0).normalized()
++		var nrm := Vector2(d.y, -d.x)   # outward for this clockwise outline
++		var lit := nrm.y < -0.3 or nrm.x < -0.3
++		if sunk:
++			lit = not lit
++		if lit:
++			ci.draw_line(p0, p1, Color(hi, ha * (0.55 if sunk else 1.0)), w_hi)
++		else:
++			ci.draw_line(p0, p1, lo, 1.0)
++	var ins := Geometry2D.offset_polygon(p, -2.0 if m < 4 else -3.0, Geometry2D.JOIN_MITER)
++	if ins.size() > 0:
++		var o: PackedVector2Array = ins[0]
++		ci.draw_polyline(o + PackedVector2Array([o[0]]), Color(0, 0, 0, (0.30 if m < 4 else 0.42) * a), 1.0)
++	if sunk:   # shadow band under the top edge
++		var y0 := p[0].y
++		var x0 := 1e9
++		var x1 := -1e9
++		for q in p:
++			x0 = minf(x0, q.x)
++			x1 = maxf(x1, q.x)
++		var bh := 7.0 if m >= 4 else 5.0
++		ci.draw_polygon(PackedVector2Array([Vector2(x0 + 6, y0 + 1), Vector2(x1 - 1, y0 + 1), Vector2(x1 - 1, y0 + bh), Vector2(x0 + 1, y0 + bh)]),
++			PackedColorArray([Color(0, 0, 0, 0.45 * a), Color(0, 0, 0, 0.45 * a), Color(0, 0, 0, 0), Color(0, 0, 0, 0)]))
++
++# r36o: soft scrim — darken the 3D scene under the top band and under the bottom row (drawn by the top plate, under every HUD part)
++static func scrim(ci: CanvasItem, r: Rect2) -> void:
++	var vr := ci.get_viewport_rect()
++	var org := -(ci as Control).global_position if ci is Control else Vector2.ZERO
++	var x0 := org.x
++	var x1 := org.x + vr.size.x
++	var top := org.y
++	var yb := r.end.y + 46.0
++	var c0 := Color(0, 0, 0, 0.55)
++	var c1 := Color(0, 0, 0, 0.0)
++	ci.draw_polygon(PackedVector2Array([Vector2(x0, top), Vector2(x1, top), Vector2(x1, yb), Vector2(x0, yb)]), PackedColorArray([c0, c0, c1, c1]))
++	var bot := org.y + vr.size.y
++	var yt := bot - 150.0
++	ci.draw_polygon(PackedVector2Array([Vector2(x0, yt), Vector2(x1, yt), Vector2(x1, bot), Vector2(x0, bot)]), PackedColorArray([c1, c1, c0, c0]))
++
++static func _add(i: int) -> bool:   # r36p (owner picks): add-on list on top of the material, e.g. S299ADD=1,3
++	return str(i) in OS.get_environment("S299ADD").split(",")
++
++static var demo_i := 0   # r36q demo counter (S299FOOTDEMO)
++
++func _draw_foot() -> void:   # r36q
++	var cols: Array = get_meta("cols", [])
++	var rc: Color = get_meta("rc", Color(0.5, 0.5, 0.5))
++	var pw: float = get_meta("pw", 22.0)
++	var fv := int(OS.get_environment("S299FOOT"))
++	var w := size.x
++	var h: float = get_meta("fh", 21.0)
++	if fv == 2 and OS.get_environment("S299FOOTV") != "1":   # r36s: smooth strip, frame after the strip
++		var card := OS.get_environment("S299CARD") == "1"
++		var one := OS.get_environment("S299ONE")
++		if one == "":
++			one = "5"   # r36w default (r36v = 4)
++		if one == "5":   # r36w: crisp shiny card
++			if card:
++				_recess()
++			_card_shine(cols, rc, pw, h, card, maxi(1, int(OS.get_environment("S299SHINE"))))
++			return
++		if one == "4":   # r36v: strip = frame colour, one piece
++			if card:
++				_recess()
++			_strip_one(cols, rc, pw, h, card)
++			return
++		if one != "0":   # r36t: frame + strip one piece
++			if card:
++				if one == "2":
++					_recess_col(cols, rc, pw)
++				else:
++					_recess()
++			draw_set_transform(Vector2(0, size.y - h))
++			_foot2b(cols, rc, pw, w, h)
++			draw_set_transform(Vector2.ZERO)
++			if card:
++				if one == "3":
++					_frame_dark(cols, rc, pw, h)
++				else:
++					_frame_one(cols, rc, pw, h)
++			return
++		if card:
++			_recess()
++		draw_set_transform(Vector2(0, size.y - h))
++		_foot2b(cols, rc, pw, w, h)
++		draw_set_transform(Vector2.ZERO)
++		if card:
++			_frame2(cols, rc, pw)
++		return
++	if OS.get_environment("S299CARD") == "1":   # r36r: recess + coloured frame (whole card, before the strip)
++		_card_deco(cols, rc, pw)
++	draw_set_transform(Vector2(0, size.y - h))   # _ready forces full rect: draw the strip at the bottom
++	if fv == 2:   # r36r: one smooth blend
++		_foot2(cols, rc, pw, w, h)
++		draw_set_transform(Vector2.ZERO)
++		return
++	var sl := 5.0
++	var lw := w - pw
++	var bands := []
++	for i in cols.size():
++		bands.append([lw * i / cols.size(), lw * (i + 1) / cols.size(), cols[i]])
++	bands.append([lw, w, rc])
++	var nb := bands.size()
++	var k := 5.0   # the card's bottom-right cut
++	for i in nb:
++		var x0: float = bands[i][0]
++		var x1: float = bands[i][1]
++		var c: Color = (bands[i][2] as Color).darkened(0.42)
++		c.a = 0.94
++		var x0t := x0 + (sl * 0.5 if i > 0 else 0.0)
++		var x0b := x0 - (sl * 0.5 if i > 0 else 0.0)
++		var x1t := x1 + (sl * 0.5 if i < nb - 1 else 0.0)
++		var x1b := x1 - (sl * 0.5 if i < nb - 1 else 0.0)
++		var p := PackedVector2Array([Vector2(x0t, 0), Vector2(x1t, 0)])
++		if i == nb - 1:
++			p.append_array([Vector2(w, h - k), Vector2(w - k, h)])
++		else:
++			p.append(Vector2(x1b, h))
++		p.append(Vector2(x0b, h))
++		var top := c.lightened(0.12)
++		var bot := c.darkened(0.12)
++		var cc := PackedColorArray()
++		for q in p:
++			cc.append(top.lerp(bot, q.y / maxf(1.0, h)))
++		draw_polygon(p, cc)
++	if fv == 2:   # soft: blend each boundary over 12 px
++		for i in nb - 1:
++			var xb: float = bands[i][1]
++			var ca: Color = (bands[i][2] as Color).darkened(0.42)
++			var cb: Color = (bands[i + 1][2] as Color).darkened(0.42)
++			ca.a = 0.94
++			cb.a = 0.94
++			draw_polygon(PackedVector2Array([Vector2(xb - 6, 0), Vector2(xb + 6, 0), Vector2(xb + 6, h), Vector2(xb - 6, h)]),
++				PackedColorArray([ca, cb, cb, ca]))
++	if fv == 3:   # dark divider + light top line
++		for i in nb - 1:
++			var xb: float = bands[i][1]
++			draw_line(Vector2(xb + sl * 0.5, 0), Vector2(xb - sl * 0.5, h), Color(0.02, 0.03, 0.04, 0.9), 1.5)
++		draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(1, 1, 1, 0.35), 1.0)
++	else:
++		draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(0, 0, 0, 0.6), 1.0)
++
++func _stops(cols: Array, rc: Color, pw: float, w: float) -> Array:   # r36r: [x, colour] at each shade's centre
++	var lw := w - pw
++	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
++	for i in cols.size():
++		st.append([lw * (i + 0.5) / cols.size(), cols[i]])
++	st.append([lw + pw * 0.5, rc])
++	st.append([w, rc])
++	return st
++
++func _col_at(st: Array, x: float) -> Color:
++	for i in st.size() - 1:
++		var a: Array = st[i]
++		var b: Array = st[i + 1]
++		if x <= float(b[0]):
++			var t := clampf((x - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0)
++			t = t * t * (3.0 - 2.0 * t)   # smoothstep: no hard seam
++			return (a[1] as Color).lerp(b[1] as Color, t)
++	return st[st.size() - 1][1]
++
++func _foot2(cols: Array, rc: Color, pw: float, w: float, h: float) -> void:   # r36r: smooth blend strip
++	var st := _stops(cols, rc, pw, w)
++	var k := 5.0
++	var n := 24
++	for i in n:
++		var x0 := w * i / n
++		var x1 := w * (i + 1) / n
++		var c0 := _col_at(st, x0).darkened(0.42)
++		var c1 := _col_at(st, x1).darkened(0.42)
++		c0.a = 0.94
++		c1.a = 0.94
++		var p := PackedVector2Array([Vector2(x0, 0), Vector2(x1, 0)])
++		var cc := PackedColorArray([c0, c1])
++		if x1 > w - k:   # the card's bottom-right cut
++			var yb := h - (x1 - (w - k))
++			p.append_array([Vector2(x1, yb)])
++			cc.append(c1)
++			if x0 > w - k:
++				p.append(Vector2(x0, h - (x0 - (w - k))))
++				cc.append(c0)
++			else:
++				p.append_array([Vector2(w - k, h), Vector2(x0, h)])
++				cc.append_array([_col_at(st, w - k).darkened(0.42), c0])
++		else:
++			p.append_array([Vector2(x1, h), Vector2(x0, h)])
++			cc.append_array([c1, c0])
++		draw_polygon(p, cc)
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, h * 0.5), Vector2(0, h * 0.5)]),
++		PackedColorArray([Color(1, 1, 1, 0.10), Color(1, 1, 1, 0.10), Color(1, 1, 1, 0), Color(1, 1, 1, 0)]))
++	draw_line(Vector2(0, 0.5), Vector2(w, 0.5), Color(0, 0, 0, 0.55), 1.0)
++
++func _card_deco(cols: Array, rc: Color, pw: float) -> void:   # r36r: creature sits deeper + frame in the card's colours
++	var w := size.x
++	var h := size.y
++	var sh := Color(0, 0, 0, 0.6)
++	var z := Color(0, 0, 0, 0)
++	var d := 14.0
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, d), Vector2(0, d)]), PackedColorArray([sh, sh, z, z]))
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
++	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
++	var st := _stops(cols, rc, pw, w)
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
++	p.append(p[0])
++	var cv := PackedColorArray()
++	for q in p:
++		var c := _col_at(st, q.x).lightened(0.10)
++		c.a = 0.95
++		cv.append(c)
++	draw_polyline_colors(p, cv, 2.0)
++	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.0), 4.0, 4.0)
++	pi.append(pi[0])
++	draw_polyline(pi, Color(0, 0, 0, 0.55), 1.0)
++
++func _col_lin(st: Array, x: float) -> Color:   # r36s: blend in linear light (no grey middle)
++	for i in st.size() - 1:
++		var a: Array = st[i]
++		var b: Array = st[i + 1]
++		if x <= float(b[0]):
++			var t := clampf((x - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0)
++			t = t * t * (3.0 - 2.0 * t)
++			return (a[1] as Color).srgb_to_linear().lerp((b[1] as Color).srgb_to_linear(), t).linear_to_srgb()
++	return st[st.size() - 1][1]
++
++func _foot2b(cols: Array, rc: Color, pw: float, w: float, h: float) -> void:   # r36s
++	var lw := w - pw
++	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]   # wide stops: tribe 1 fills the left, rarity the price end
++	if cols.size() > 1:
++		for i in cols.size():
++			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
++	else:
++		st.append([lw * 0.35, st[0][1]])
++	st.append([w - pw * 0.4, rc])
++	st.append([w, rc])
++	var f := 10.0   # fade up into the art
++	var k := 5.0    # bottom-right cut
++	var ys := [-f, -f * 0.6, -f * 0.25, 0.0, h]
++	var al := [0.0, 0.22, 0.6, 0.92, 0.94]
++	var n := 64
++	for i in n:
++		var x0 := w * i / n
++		var x1 := w * (i + 1) / n
++		var b0 := h - maxf(0.0, x0 - (w - k))
++		var b1 := h - maxf(0.0, x1 - (w - k))
++		var c0 := _col_lin(st, x0)
++		var c1 := _col_lin(st, x1)
++		for r in ys.size() - 1:
++			var ya: float = ys[r]
++			var yb: float = ys[r + 1]
++			var yb0 := minf(yb, b0)
++			var yb1 := minf(yb, b1)
++			var ca0 := _shade(c0, ya, h, al[r])
++			var ca1 := _shade(c1, ya, h, al[r])
++			var cb0 := _shade(c0, yb0, h, al[r + 1])
++			var cb1 := _shade(c1, yb1, h, al[r + 1])
++			draw_polygon(PackedVector2Array([Vector2(x0, ya), Vector2(x1, ya), Vector2(x1, yb1), Vector2(x0, yb0)]),
++				PackedColorArray([ca0, ca1, cb1, cb0]))
++
++func _shade(c: Color, y: float, h: float, a: float) -> Color:   # r36s: lit top -> darker bottom inside the strip
++	var t := clampf(y / h, 0.0, 1.0)
++	var o := c.darkened(lerpf(0.32, 0.52, t))
++	o.a = a
++	return o
++
++func _recess() -> void:   # r36s: r36r inner shadow only
++	var w := size.x
++	var h := size.y
++	var sh := Color(0, 0, 0, 0.6)
++	var z := Color(0, 0, 0, 0)
++	var d := 14.0
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(w, 0), Vector2(w, d), Vector2(0, d)]), PackedColorArray([sh, sh, z, z]))
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([sh, z, z, sh]))
++	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([z, sh, sh, z]))
++
++func _frame2(cols: Array, rc: Color, pw: float) -> void:   # r36s: frame after the strip, colour every 2 px
++	var lw := size.x - pw
++	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
++	if cols.size() > 1:
++		for i in cols.size():
++			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
++	else:
++		st.append([lw * 0.35, st[0][1]])
++	st.append([size.x - pw * 0.4, rc])
++	st.append([size.x, rc])
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
++	p.append(p[0])
++	var q := PackedVector2Array()
++	for i in p.size() - 1:
++		var a: Vector2 = p[i]
++		var b: Vector2 = p[i + 1]
++		var m := maxi(1, int(a.distance_to(b) / 2.0))
++		for j in m:
++			q.append(a.lerp(b, float(j) / m))
++	q.append(p[p.size() - 1])
++	var cv := PackedColorArray()
++	for v in q:
++		var c := _col_lin(st, v.x).lightened(0.10)
++		c.a = 0.95
++		cv.append(c)
++	draw_polyline_colors(q, cv, 2.0)
++	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.0), 4.0, 4.0)
++	pi.append(pi[0])
++	draw_polyline(pi, Color(0, 0, 0, 0.35), 1.0)
++
++func _stops2(cols: Array, rc: Color, pw: float) -> Array:   # r36t: same stops as _foot2b
++	var lw := size.x - pw
++	var st := [[0.0, cols[0] if cols.size() > 0 else rc]]
++	if cols.size() > 1:
++		for i in cols.size():
++			st.append([lw * (0.15 + 0.7 * i / (cols.size() - 1)), cols[i]])
++	else:
++		st.append([lw * 0.35, st[0][1]])
++	st.append([size.x - pw * 0.4, rc])
++	st.append([size.x, rc])
++	return st
++
++func _frame_one(cols: Array, rc: Color, pw: float, h: float) -> void:   # r36t: frame in the strip's own shade
++	var st := _stops2(cols, rc, pw)
++	var y0 := size.y - h
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
++	p.append(p[0])
++	var q := PackedVector2Array()
++	for i in p.size() - 1:
++		var a: Vector2 = p[i]
++		var b: Vector2 = p[i + 1]
++		var m := maxi(1, int(a.distance_to(b) / 2.0))
++		for j in m:
++			q.append(a.lerp(b, float(j) / m))
++	q.append(p[p.size() - 1])
++	var cv := PackedColorArray()
++	for v in q:
++		var c := _shade(_col_lin(st, v.x), v.y - y0, h, 0.94)
++		cv.append(c)
++	draw_polyline_colors(q, cv, 3.0)
++
++func _recess_col(cols: Array, rc: Color, pw: float) -> void:   # r36t S299ONE=2: inner shadow in the card's colours
++	var st := _stops2(cols, rc, pw)
++	var w := size.x
++	var h := size.y
++	var d := 14.0
++	var n := 32
++	for i in n:
++		var x0 := w * i / n
++		var x1 := w * (i + 1) / n
++		var c0 := _col_lin(st, x0).darkened(0.45)
++		var c1 := _col_lin(st, x1).darkened(0.45)
++		c0.a = 0.7
++		c1.a = 0.7
++		var z0 := Color(c0, 0.0)
++		var z1 := Color(c1, 0.0)
++		draw_polygon(PackedVector2Array([Vector2(x0, 0), Vector2(x1, 0), Vector2(x1, d), Vector2(x0, d)]), PackedColorArray([c0, c1, z1, z0]))
++	var cl := _col_lin(st, 0.0).darkened(0.45)
++	var cr := _col_lin(st, w).darkened(0.45)
++	cl.a = 0.7
++	cr.a = 0.7
++	draw_polygon(PackedVector2Array([Vector2(0, 0), Vector2(d, 0), Vector2(d, h), Vector2(0, h)]), PackedColorArray([cl, Color(cl, 0.0), Color(cl, 0.0), cl]))
++	draw_polygon(PackedVector2Array([Vector2(w - d, 0), Vector2(w, 0), Vector2(w, h), Vector2(w - d, h)]), PackedColorArray([Color(cr, 0.0), cr, cr, Color(cr, 0.0)]))
++
++func _frame_dark(cols: Array, rc: Color, pw: float, h: float) -> void:   # r36u: darker frame + black inner line
++	var st := _stops2(cols, rc, pw)
++	var y0 := size.y - h
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
++	p.append(p[0])
++	var q := PackedVector2Array()
++	for i in p.size() - 1:
++		var a: Vector2 = p[i]
++		var b: Vector2 = p[i + 1]
++		var m := maxi(1, int(a.distance_to(b) / 2.0))
++		for j in m:
++			q.append(a.lerp(b, float(j) / m))
++	q.append(p[p.size() - 1])
++	var cv := PackedColorArray()
++	for v in q:
++		var c := _shade(_col_lin(st, v.x), v.y - y0, h, 1.0).darkened(0.35)
++		cv.append(c)
++	draw_polyline_colors(q, cv, 3.0)
++	var pi := _pts(Rect2(Vector2.ZERO, size).grow(-3.75), 4.0, 4.0)
++	pi.append(pi[0])
++	draw_polyline(pi, Color(0, 0, 0, 0.9), 1.5)
++
++func _fcol(st: Array, x: float, a: float) -> Color:   # r36v: the frame colour (r36s frame)
++	var c := _col_lin(st, x).lightened(0.10)
++	c.a = a
++	return c
++
++func _strip_one(cols: Array, rc: Color, pw: float, h: float, card: bool) -> void:   # r36v
++	var st := _stops2(cols, rc, pw)
++	var w := size.x
++	var y0 := size.y - h
++	var f := 10.0
++	var k := 5.0
++	var ys := [-f, -f * 0.6, -f * 0.25, 0.0, h]
++	var al := [0.0, 0.22, 0.6, 0.95, 0.95]
++	var n := 64
++	for i in n:
++		var x0 := w * i / n
++		var x1 := w * (i + 1) / n
++		var b0 := h - maxf(0.0, x0 - (w - k))
++		var b1 := h - maxf(0.0, x1 - (w - k))
++		for r in ys.size() - 1:
++			var ya: float = ys[r]
++			var yb: float = ys[r + 1]
++			draw_polygon(PackedVector2Array([Vector2(x0, y0 + ya), Vector2(x1, y0 + ya), Vector2(x1, y0 + minf(yb, b1)), Vector2(x0, y0 + minf(yb, b0))]),
++				PackedColorArray([_fcol(st, x0, al[r]), _fcol(st, x1, al[r]), _fcol(st, x1, al[r + 1]), _fcol(st, x0, al[r + 1])]))
++	if not card:
++		return
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.0), 5.0, 5.0)
++	p.append(p[0])
++	var q := PackedVector2Array()
++	for i in p.size() - 1:
++		var a: Vector2 = p[i]
++		var b: Vector2 = p[i + 1]
++		var m := maxi(1, int(a.distance_to(b) / 2.0))
++		for j in m:
++			q.append(a.lerp(b, float(j) / m))
++	q.append(p[p.size() - 1])
++	var cv := PackedColorArray()
++	for v in q:
++		cv.append(_fcol(st, v.x, 0.95))
++	draw_polyline_colors(q, cv, 2.0)
++	# dark inner line: top + sides only, fading out before the strip
++	var e := 3.0
++	var yf := y0 - f
++	var line := PackedVector2Array([Vector2(e, yf), Vector2(e, yf - f), Vector2(e, e + 4.0), Vector2(e + 4.0, e),
++		Vector2(w - e, e), Vector2(w - e, yf - f), Vector2(w - e, yf)])
++	var dk := Color(0, 0, 0, 0.55)
++	var lc := PackedColorArray([Color(0, 0, 0, 0), dk, dk, dk, dk, dk, Color(0, 0, 0, 0)])
++	draw_polyline_colors(line, lc, 1.0)
++
++func _boost(c: Color) -> Color:   # r36w: richer colour
++	return Color.from_hsv(c.h, minf(1.0, c.s * 1.25), minf(1.0, c.v * 1.1), 1.0)
++
++func _metal(c: Color, y: float) -> Color:   # r36w: one ramp over the whole card height
++	var t := clampf(y / size.y, 0.0, 1.0)
++	return c.lightened(0.12 * (1.0 - t)) if t < 0.5 else c.darkened(0.28 * (t - 0.5) * 2.0)
++
++func _cs(st: Array, x: float, y: float) -> Color:
++	return _metal(_boost(_col_lin(st, x)), y)
++
++func _card_shine(cols: Array, rc: Color, pw: float, h: float, card: bool, mode: int) -> void:   # r36w
++	var st := _stops2(cols, rc, pw)
++	var w := size.x
++	var y0 := size.y - h
++	var k := 5.0
++	var n := 64
++	var rows := 6
++	for i in n:   # strip: opaque, hard top edge
++		var x0 := w * i / n
++		var x1 := w * (i + 1) / n
++		var b0 := size.y - maxf(0.0, x0 - (w - k))
++		var b1 := size.y - maxf(0.0, x1 - (w - k))
++		for r in rows:
++			var ya := y0 + h * r / rows
++			var yb := y0 + h * (r + 1) / rows
++			draw_polygon(PackedVector2Array([Vector2(x0, ya), Vector2(x1, ya), Vector2(x1, minf(yb, b1)), Vector2(x0, minf(yb, b0))]),
++				PackedColorArray([_cs(st, x0, ya), _cs(st, x1, ya), _cs(st, x1, minf(yb, b1)), _cs(st, x0, minf(yb, b0))]))
++	var bev := PackedVector2Array()
++	var bc := PackedColorArray()
++	for i in 33:   # light bevel line on the strip's top edge
++		var x := 3.0 + (w - 6.0) * i / 32.0
++		bev.append(Vector2(x, y0 + 0.5))
++		var c := _cs(st, x, y0).lightened(0.45)
++		c.a = 0.9
++		bc.append(c)
++	draw_polyline_colors(bev, bc, 1.0)
++	draw_line(Vector2(3, y0 - 0.5), Vector2(w - 3, y0 - 0.5), Color(0, 0, 0, 0.5), 1.0)
++	if mode >= 2:   # foil sheen: two hard diagonal streaks on the strip
++		for sp in [[0.30, 7.0, 0.22], [0.30 + 0.06, 2.5, 0.38]]:
++			var x := w * float(sp[0])
++			var wd: float = sp[1]
++			var sl := h * 0.6
++			draw_polygon(PackedVector2Array([Vector2(x + sl, y0 + 1), Vector2(x + sl + wd, y0 + 1), Vector2(x + wd, size.y - 1), Vector2(x, size.y - 1)]),
++				PackedColorArray([Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2]), Color(1, 1, 1, sp[2])]))
++	if not card:
++		return
++	if OS.get_environment("S299CORN") != "0":   # r38a (owner): tidy inner corners top-left + bottom-right
++		_ring38(st, y0, mode)
++		return
++	var p := _pts(Rect2(Vector2.ZERO, size).grow(-1.5), 5.0, 5.0)
++	p.append(p[0])
++	var q := PackedVector2Array()
++	for i in p.size() - 1:
++		var a: Vector2 = p[i]
++		var b: Vector2 = p[i + 1]
++		var m := maxi(1, int(a.distance_to(b) / 2.0))
++		for j in m:
++			q.append(a.lerp(b, float(j) / m))
++	q.append(p[p.size() - 1])
++	var cv := PackedColorArray()
++	for v in q:
++		cv.append(_cs(st, v.x, v.y))
++	draw_polyline_colors(q, cv, 3.0)
++	# bevel: light inner edge top/left, dark outer edge bottom/right
++	draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 8.0), Vector2(8.0, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
++	var o := _pts(Rect2(Vector2.ZERO, size).grow(-0.5), 5.0, 5.0)
++	draw_polyline(PackedVector2Array([Vector2(w - 0.5, 0.5), Vector2(w - 0.5, size.y - 5.5), Vector2(w - 5.5, size.y - 0.5), Vector2(0.5, size.y - 0.5)]), Color(0, 0, 0, 0.6), 1.0)
++	var pi := PackedVector2Array([Vector2(5, y0 - 1), Vector2(5, 9.5), Vector2(9.5, 5), Vector2(w - 5, 5), Vector2(w - 5, y0 - 1)])
++	draw_polyline(pi, Color(0, 0, 0, 0.55), 1.0)
++	if mode >= 3:   # sparkles
++		for c in [Vector2(w - 7, 3), Vector2(4, size.y - 6)]:
++			_glint(c, 4.5)
++
++# r38a (owner, set 299): the r36w frame was a 3 px polyline (cut 5 at inset 1.5) + lines with their own cuts, so the gap
++# on the diagonals differed from the sides (black wedge inside top-left, notch at the bottom-right). Now every line at
++# inset i uses cut c(i) = 5 - 0.586 i (= same perpendicular distance as the sides) and the frame is a filled ring.
++static func _c38(i: float) -> float:
++	return 5.0 - (2.0 - sqrt(2.0)) * i
++
++func _ring38(st: Array, y0: float, mode: int) -> void:
++	var w := size.x
++	var hh := size.y
++	var r0 := Rect2(Vector2.ZERO, size)
++	var po := _pts(r0, _c38(0.0), _c38(0.0))
++	var pin := _pts(r0.grow(-3.0), _c38(3.0), _c38(3.0))
++	for i in po.size():
++		var a0: Vector2 = po[i]
++		var a1: Vector2 = po[(i + 1) % po.size()]
++		var b0: Vector2 = pin[i]
++		var b1: Vector2 = pin[(i + 1) % pin.size()]
++		var m := maxi(1, int(a0.distance_to(a1) / 2.0))
++		for j in m:
++			var u0 := float(j) / m
++			var u1 := float(j + 1) / m
++			var q := PackedVector2Array([a0.lerp(a1, u0), a0.lerp(a1, u1), b0.lerp(b1, u1), b0.lerp(b1, u0)])
++			var qc := PackedColorArray()
++			for v in q:
++				qc.append(_cs(st, v.x, v.y))
++			draw_polygon(q, qc)
++	var c35 := _c38(3.5)
++	draw_polyline(PackedVector2Array([Vector2(3.5, y0), Vector2(3.5, 3.5 + c35), Vector2(3.5 + c35, 3.5), Vector2(w - 3.5, 3.5)]), Color(1, 1, 1, 0.35), 1.0)
++	var c05 := _c38(0.5)
++	draw_polyline(PackedVector2Array([Vector2(w - 0.5, 0.5), Vector2(w - 0.5, hh - 0.5 - c05), Vector2(w - 0.5 - c05, hh - 0.5), Vector2(0.5, hh - 0.5)]), Color(0, 0, 0, 0.6), 1.0)
++	var c5 := _c38(5.0)
++	draw_polyline(PackedVector2Array([Vector2(5, y0 - 1), Vector2(5, 5 + c5), Vector2(5 + c5, 5), Vector2(w - 5, 5), Vector2(w - 5, y0 - 1)]), Color(0, 0, 0, 0.55), 1.0)
++	if mode >= 3:
++		for c in [Vector2(w - 7, 3), Vector2(4, hh - 6)]:
++			_glint(c, 4.5)
++
++# r38a (owner, set 299): soft light band (v1) runs over the coloured frame + name strip only (never the creature box),
++# each card on its own random timer. S299GLOW=1 on. Real Godot shader (not a mock).
++const GLOW38 := """
++shader_type canvas_item;
++uniform vec2 sz = vec2(100.0, 96.0);
++uniform float y0 = 75.0;
++uniform float prog = -1.0;
++uniform vec3 tl = vec3(1.0);
++uniform vec3 tr = vec3(1.0);
++uniform float peak = 0.55;
++void fragment() {
++	vec2 p = UV * sz;
++	float w = sz.x; float h = sz.y;
++	float dout = min(min(min(p.x, p.y), min(w - p.x, h - p.y)), min(p.x + p.y - 5.0, (w - p.x) + (h - p.y) - 5.0) * 0.7071);
++	float din = min(min(min(p.x - 3.0, p.y - 3.0), min(w - 3.0 - p.x, y0 - 0.5 - p.y)), (p.x + p.y - 9.24) * 0.7071);
++	float m = clamp(dout + 0.5, 0.0, 1.0) * clamp(0.5 - din, 0.0, 1.0);
++	float k = 0.577;
++	float bw = w * 0.18;
++	float c = mix(-bw, w + h * k + bw, prog);
++	float d = (p.x + p.y * k - c) / bw;
++	float a = peak * exp(-4.0 * d * d) * step(0.0, prog);
++	vec3 tint = mix(tl, tr, clamp(p.x / w, 0.0, 1.0));
++	COLOR = vec4(mix(vec3(1.0), tint, 0.35), a * m);
++}
++"""
++var _g38: ColorRect = null
++var _gw38 := -1.0
++var _gt38 := -1.0
++
++func _glow38(d: float) -> void:
++	if OS.get_environment("S299SEQDT") != "":
++		d = float(OS.get_environment("S299SEQDT"))
++	if _g38 == null:
++		var sh := Shader.new()
++		sh.code = GLOW38
++		var mt := ShaderMaterial.new()
++		mt.shader = sh
++		_g38 = ColorRect.new()
++		_g38.material = mt
++		_g38.mouse_filter = Control.MOUSE_FILTER_IGNORE
++		_g38.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
++		add_child(_g38)
++		_gw38 = randf_range(0.3, 4.0)
++		var cols: Array = get_meta("cols", [])
++		var st := _stops2(cols, get_meta("rc", Color(0.5, 0.5, 0.5)), get_meta("pw", 22.0))
++		mt.set_shader_parameter("tl", _boost(_col_lin(st, 0.0)))
++		mt.set_shader_parameter("tr", _boost(_col_lin(st, size.x)))
++	var m: ShaderMaterial = _g38.material
++	m.set_shader_parameter("sz", size)
++	m.set_shader_parameter("y0", size.y - float(get_meta("fh", 21.0)))
++	if _gt38 >= 0.0:
++		_gt38 += d
++		if _gt38 >= 1.1:
++			_gt38 = -1.0
++			_gw38 = randf_range(2.5, 7.0)
++			m.set_shader_parameter("prog", -1.0)
++		else:
++			m.set_shader_parameter("prog", 0.5 - 0.5 * cos(PI * _gt38 / 1.1))
++		return
++	_gw38 -= d
++	if _gw38 <= 0.0:
++		_gt38 = 0.0
++
++func _glint(c: Vector2, r: float) -> void:   # r36w: 4-point star
++	var t := r * 0.22
++	draw_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(t, -t), c + Vector2(r, 0), c + Vector2(t, t),
++		c + Vector2(0, r), c + Vector2(-t, t), c + Vector2(-r, 0), c + Vector2(-t, -t)]), PackedColorArray([Color(1, 1, 1, 0.95)]))
++	draw_circle(c, r * 0.35, Color(1, 1, 1, 0.5))
