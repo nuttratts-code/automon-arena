@@ -7,6 +7,9 @@ V1.0 · 8 Nov 2026 (set 139: moved out of CLAUDE.md, content unchanged — user 
 - "Why / how should" questions = short answer, change nothing until told.
 - Characters as ID+name, e.g. PL-2 (name). Rules: C- combat · T- tribe · S- shop.
 
+## Ask before deciding (owner rule set 299, 26 Nov)
+- Every owner order, not only the first of a set: write what you understood + each unsure point (which version/picture, which spot, keep/remove, clash with an earlier decision, mock vs real), ask with buttons BEFORE editing or running. Never guess an unsure point. Full rule: CLAUDE.md Decisions "Ask before deciding"; the prompt hook prints it every message.
+
 ## Choice labels (user rule 8 Nov, set 136)
 - When the user must pick, label each question/topic with a capital letter A, B, C… and its options A1, A2, A3… (B1, B2…), so the user can answer e.g. "A2 B1". Never use other ad-hoc labels (F1, Q1, ก/ข) for choices. Review files under claude/ follow the same labels.
 

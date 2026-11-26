@@ -18,6 +18,7 @@ case "$r" in
   *) n=$r; echo "=== rules check (hook, set 292) · owner turn $n of this chat · chat ${k}k tokens ===" ;;
 esac
 echo "- Reply in Thai: 3-line header (ทำแล้ว/พบ · ต้องตัดสินใจ · ไม่แน่ใจ). Conflict check vs docs before acting. Ask everything up front (A/B + AskUserQuestion)."
+echo "- EVERY owner order (each message, not only set start; owner rule set 299, 26 Nov): first write what you understood + EVERY unsure point (which version/picture, which spot/corner, keep or remove, clash with an earlier decision, method mock vs real) → ask with AskUserQuestion BEFORE any edit or run. Never pick an unsure point yourself; 100 % clear = go."
 echo "- Open the CLAUDE.md topic-table skill for this task BEFORE working (UI → ui-work · bug → find-cause · values → balance-import · code → merge-code)."
 echo "- HARD 3 gate before main · 5 cause before fix · 6 values need AMCFG1+cfgdiff · 8 ripple line · 9 security + secret grep."
 if [ "$k" -ge 250 ] 2>/dev/null; then
