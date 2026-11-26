@@ -1,0 +1,22 @@
+--- bak286_s299_prep.gd.s299r38b	2026-11-26 14:05:15.237829000 +0700
++++ scripts/ui/s299_prep.gd	2026-11-26 14:06:53.127213400 +0700
+@@ -897,7 +897,7 @@
+ 	var st := _stops2(get_meta("cols", []), get_meta("rc", Color(0.5, 0.5, 0.5)), get_meta("pw", 22.0))
+ 	var hp := hold.position
+ 	var cs := cell.size
+-	var k1 := 6.0 + (float(OS.get_environment("S299K1")) if OS.get_environment("S299K1") != "" else 0.0)
++	var k1 := 6.0 + (float(OS.get_environment("S299K1")) if OS.get_environment("S299K1") != "" else (0.0 if OS.get_environment("S299WC") == "frame" else 1.0))
+ 	var w := size.x
+ 	var h := size.y
+ 	var oc := _c38(0.0)
+@@ -908,6 +908,10 @@
+ 	var ex := cs.x - hp.x   # cell right edge in hold coords
+ 	var ey := cs.y - hp.y
+ 	var br := PackedVector2Array([Vector2(w, h - oc), Vector2(w - oc, h), Vector2(ex - k1, ey), Vector2(ex, ey - k1)])
++	if OS.get_environment("S299WC") != "frame":   # r38c (owner E1): frame keeps its size; the wedge takes the side band's blue-grey (no black)
++		_k38.draw_polygon(tl, PackedColorArray([Color8(60, 76, 92)]))
++		_k38.draw_polygon(br, PackedColorArray([Color8(32, 46, 60)]))
++		return
+ 	for q in [tl, br]:
+ 		var qc := PackedColorArray()
+ 		for v in q:
