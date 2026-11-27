@@ -74,3 +74,11 @@ patch("prep.gd", [
   '\t\t\t\t\tvar hb2 := hh2 as HBoxContainer\n'
   '\t\t\t\t\tif hb2 != null: hb2.add_theme_constant_override("separation", 1)\n'),
 ])
+
+# set 307 odds tag d (owner): thinner, little space between text and edge: y 99..111, plate grow bottom 1, corner scale 0.16 -> 0.10
+patch("prep.gd", [
+ ("top, 0.5, -388, -196, 99.0 + PZS._inset(), 114.0 + PZS._inset())", "top, 0.5, -388, -196, 99.0 + PZS._inset(), 111.0 + PZS._inset())"),
+])
+patch("s299_prep.gd", [
+ ('ou.grow_individual(4, 8, 4, 3), 80.0, 0.16,', 'ou.grow_individual(3, 8, 3, 1), 80.0, 0.10,'),
+])
