@@ -114,3 +114,10 @@ Findings: ① the fixed load (~98k tokens, CLAUDE.md is only ~7k of it) is paid 
 - Y1: check which connectors/plugins load every chat (Figma, Blender, Pixelwright, Playwright, Godot MCP, Chrome, computer-use, docs, firecrawl/design plugins) and turn off the ones a normal Automon chat never uses (owner turns them on when needed) + Claude batches checks into fewer, bigger commands.
 - Y2: only the batching habit (no connector change).
 - Y3: nothing.
+
+### Y result (set 306, 27 Nov)
+- Measured: first call of 6 recent chats = 96–98k tokens fixed (≈46k shared system part + ≈50k project part); this chat 96.3k.
+- Use in 126 transcripts / 14 days: Chrome 3 chats · frontend-design 5 · design plugin 2 (ui-work 4f critique) · Figma 1 · computer-use 1 · Playwright plugin 1 call · Godot MCP 1 call · Pixelwright, Blender, Claude Docs, firecrawl, scheduled-tasks 0.
+- Estimate: unused connectors/plugins ≈ 10k of the 96k (tool names + server instructions + skill list) → ~3–5 % per chat; cutting calls 56 → ~40 saves ~15–20 % (each call re-reads fixed load + chat).
+- Owner Y1 + Z1: CLAUDE.md Token saving "Fewer model calls" bullet (instructions V6.6); owner turns off Pixelwright, Blender extension, Claude Docs, firecrawl, Playwright plugin (account/app level — Claude cannot toggle them); design plugin kept because ui-work 4f uses it (Claude's list had it by mistake); local `.mcp.json` GODOT_MCP_PROJECT_PATH pointed at the old OneDrive folder → D:/GitHub/automon-arena/godot.
+- Check next weekly review: first-call fixed load (target < 90k) and calls per chat.
