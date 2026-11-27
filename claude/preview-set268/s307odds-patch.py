@@ -82,3 +82,11 @@ patch("prep.gd", [
 patch("s299_prep.gd", [
  ('ou.grow_individual(4, 8, 4, 3), 80.0, 0.16,', 'ou.grow_individual(3, 8, 3, 1), 80.0, 0.10,'),
 ])
+
+# set 307 odds tag e (owner picture of a thin strip: text nearly touching the edges): text up 1, plate bottom = 2 above the label box
+patch("prep.gd", [
+ ("top, 0.5, -388, -196, 99.0 + PZS._inset(), 111.0 + PZS._inset())", "top, 0.5, -388, -196, 95.0 + PZS._inset(), 107.0 + PZS._inset())"),
+])
+patch("s299_prep.gd", [
+ ('ou.grow_individual(3, 8, 3, 1), 80.0, 0.10,', 'ou.grow_individual(3, 8, 3, -2.5), 80.0, 0.08,'),
+])
