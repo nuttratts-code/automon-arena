@@ -13,14 +13,23 @@ old = "\t\tv._badge(ci, Vector2(r.position.x + 11, r.position.y + 1 + bh * 0.5),
 if old not in s:   # already patched (set 307 b) -> only add the white highlight layer once
     if "medallion_spec" not in s:
         k = s.index("\t\tvar gl: Texture2D = BADGE50.glyph(str(ts[0]))\n"); s = s[:k] + SPEC + s[k:]
-    open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge ok (spec)"); sys.exit(0)
-new = ("\t\tvar bc := Vector2(r.position.x + 11, r.position.y + 1 + bh * 0.5)   # set 307: painted medallion + owner glyph\n"
-       "\t\tvar md := 15.0\n"
-       "\t\tci.draw_texture_rect(_tex(\"medallion\"), Rect2(bc - Vector2(md, md) * 0.5, Vector2(md, md)), false, Color(tc.r, tc.g, tc.b, fa))\n"
-       "\t\tvar gl: Texture2D = BADGE50.glyph(str(ts[0]))\n"
-       "\t\tif gl != null:\n"
-       "\t\t\tvar gs := md * 0.56\n"
-       "\t\t\tci.draw_texture_rect(gl, Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(1, 1, 1, fa))\n")
-s = s.replace(old, new)
-open(p, "w", encoding="utf-8", newline="").write(s)
-print("s307badge ok")
+    open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge ok (spec)")
+else:
+    new = ("\t\tvar bc := Vector2(r.position.x + 11, r.position.y + 1 + bh * 0.5)   # set 307: painted medallion + owner glyph\n"
+           "\t\tvar md := 15.0\n"
+           "\t\tci.draw_texture_rect(_tex(\"medallion\"), Rect2(bc - Vector2(md, md) * 0.5, Vector2(md, md)), false, Color(tc.r, tc.g, tc.b, fa))\n"
+           "\t\tvar gl: Texture2D = BADGE50.glyph(str(ts[0]))\n"
+           "\t\tif gl != null:\n"
+           "\t\t\tvar gs := md * 0.56\n"
+           "\t\t\tci.draw_texture_rect(gl, Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(1, 1, 1, fa))\n")
+    s = s.replace(old, new)
+    open(p, "w", encoding="utf-8", newline="").write(s)
+    print("s307badge ok")
+
+# set 307 e (owner fire target): owner grey orb (S307e-orb.py -> S307-orb.png + spec), glyph 57 % and cream.
+# Runs on a fresh or an already patched r43.gd.
+s = open(p, encoding="utf-8", newline="").read()
+s = s.replace("\t\t\tvar gs := md * 0.56\n", "\t\t\tvar gs := md * 0.57\n")
+s = s.replace("Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(1, 1, 1, fa))",
+              "Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(0.98, 0.965, 0.945, fa))")
+open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge e ok")
