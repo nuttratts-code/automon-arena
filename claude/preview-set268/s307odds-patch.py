@@ -90,3 +90,18 @@ patch("prep.gd", [
 patch("s299_prep.gd", [
  ('ou.grow_individual(3, 8, 3, 1), 80.0, 0.10,', 'ou.grow_individual(3, 8, 3, -2.5), 80.0, 0.08,'),
 ])
+
+# set 307 odds tag g (owner pick A from S307f-odds-levels: text 20 screen px = 9 units for Lv + odds, gap text-to-edge 5 screen px)
+patch("prep.gd", [
+ ('lvl.add_theme_font_size_override("font_size", 11)   # set 307 b · c\n', 'lvl.add_theme_font_size_override("font_size", 9)   # set 307 b · c · g\n'),
+ ('if ql != null: ql.add_theme_font_size_override("font_size", 10)\n', 'if ql != null: ql.add_theme_font_size_override("font_size", 9)   # set 307 g\n'),
+ ('\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 11)\n', '\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 9)   # set 307 g\n'),
+])
+# g: measured on S307odds9 (PC 1920): plate edge ends y 250, text 269..282 (cap 14 px), tag gold line 303 -> text up 6 units (13 px),
+#    tag bottom up so its gold line sits 5 px under the text (grow bottom -2.5 -> -9.3)
+patch("prep.gd", [
+ ("top, 0.5, -388, -196, 95.0 + PZS._inset(), 107.0 + PZS._inset())", "top, 0.5, -388, -196, 89.0 + PZS._inset(), 101.0 + PZS._inset())"),
+])
+patch("s299_prep.gd", [
+ ('ou.grow_individual(3, 8, 3, -2.5), 80.0, 0.08,', 'ou.grow_individual(3, 8, 3, -9.3), 80.0, 0.08,'),
+])
