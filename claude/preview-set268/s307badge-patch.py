@@ -3,7 +3,7 @@
 # Usage: python s307badge-patch.py <g286> (after s307card)
 import sys, os, shutil
 here = os.path.dirname(os.path.abspath(__file__)); g = sys.argv[1]
-shutil.copy(os.path.join(here, "S307-medallion.png"), os.path.join(g, "ui_r48", "medallion.png"))
+shutil.copy(os.path.join(here, "S307-orb.png"), os.path.join(g, "ui_r48", "medallion.png"))
 p = os.path.join(g, "scripts", "ui", "r43.gd")
 s = open(p, encoding="utf-8", newline="").read()
 if not os.path.exists(p + ".s307badge"): shutil.copy(p, p + ".s307badge")
