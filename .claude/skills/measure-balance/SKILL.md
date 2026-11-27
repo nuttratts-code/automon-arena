@@ -1,6 +1,6 @@
 ---
 name: measure-balance
-description: Claude measures balance (วัดบาลานซ์ / วัดค่า / botgen / runlen / ความยาวแมตช์ / วัดบอส): permission first, 12,000/24,000 matches seed 4242, outlier + abnormal checks, measure-log entry. Only when the owner orders it or a skill-mechanic change hits characters in use; owner measures in the Balance Room → balance-import.
+description: Claude measures balance (วัดบาลานซ์ / วัดค่า / botgen / runlen / ความยาวแมตช์ / วัดบอส): permission first, 12,000/24,000 matches seed 4242, outlier + abnormal checks, measure-log entry. Only on the owner's order or a skill-mechanic change hitting used characters; owner measures in the Balance Room → balance-import.
 ---
 # Measure balance (set 158 — skill from measure.md + botteams.md)
 

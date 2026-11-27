@@ -1,4 +1,4 @@
-# Weekly review — 20–27 Nov 2026 (set 304) · waiting for the owner
+# Weekly review — 20–27 Nov 2026 (set 304) · DECIDED 27 Nov: A1 · B1 · C1 · D1 · E1 · F1 · G1 · X1 (dates 4 / 14 / 21 Dec) — applied set 304
 
 Rounds 1–3 in one file. Numbers = estimates from `git log` on origin/main (commit subjects / bytes, not real time or tokens). Claude cannot read old chats: "not shown" ≠ "did not happen".
 
@@ -31,7 +31,7 @@ Open decisions > 7 days: arena r38/v47 OK + zoom D1 (sets 238/239, 10 days) · h
 ## Part 1 — what went wrong this week
 
 ### A. Owner rules saved only in Claude's memory (repeat of last week's B)
-Where: memory folder on this PC (not in the repo). Five owner rules exist nowhere in the repo, so the 2nd account, a cloud chat or a fresh PC never sees them:
+Where: memory folder on this PC (not in the repo). **Correction while applying:** rule 4 was already in CLAUDE.md "Ask before deciding — every order" (set 299, 048244a) → 4 rules, not 5. Five owner rules exist nowhere in the repo, so the 2nd account, a cloud chat or a fresh PC never sees them:
 1. no "ทำจริง?" question at the end of a sample round (set 299, "ต้องแก้อีกเยอะ") → belongs in ui-preview step 6/7;
 2. show full-colour shots, never the `*-low.png` palette files → ui-preview;
 3. small parts (chips/icons/marks) → PIL list sheet, not in-game shots → ui-preview;
@@ -66,6 +66,7 @@ CLAUDE.md changed 3× since 19 Nov: ui-patterns row (§9 V1.8) · Ideas row (+ G
 - E2: regenerate the whole 25 KB file.
 
 ### F. Skill size (loaded every chat / every use)
+**Correction while applying:** the description lengths below were counted in bytes (Thai = 3 bytes); in characters only char-idle was over 400 (407; others 302–334). F1 still applied: all 7 trimmed (now 275–346 chars).
 Descriptions > 400 chars (set 219 A1): char-idle 555 · ui-patterns 476 · weekly-review 450 · art-look 424 · ui-preview 422 · asset-3d 404 · measure-balance 402 (all descriptions = 8.4 KB every chat). Bodies > 8 KB (set 220 E1): char-idle 18 KB · weekly-review 16 KB · art-look 15 KB · asset-3d 10 KB · ui-work 9.3 KB · ui-preview 9 KB.
 - **F1 (rec):** trim the 7 descriptions to ≤ 400 now (wording only, keep trigger words); move reference text of char-idle + weekly-review into `claude/workflow/<skill>-ref.md` (headings + pointers stay).
 - F2: descriptions only.

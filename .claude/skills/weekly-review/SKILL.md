@@ -1,6 +1,6 @@
 ---
 name: weekly-review
-description: Weekly review / workflow audit (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม / สกิลไหนไม่ถูกใช้ / ใช้โทเคนเปลือง): the week's corrections and waste, rule compliance, skill + doc usage and overlaps, token cost vs result → claude/review-…md → A/B per change → edit only after the owner picks.
+description: Weekly review / workflow audit (รีวิวสัปดาห์ / รีวิวโฟล / ตรวจกฎ / กฎถูกข้ามไหม / สกิลไหนไม่ถูกใช้ / ใช้โทเคนเปลือง): week's corrections + waste, rule compliance, skill/doc usage, token cost → claude/review-…md → A/B per change → edit only after the owner picks.
 ---
 # Weekly review (D1 + workflow audit)
 
@@ -98,10 +98,5 @@ Claude cannot see token counts → rank by file bytes + counts, label them estim
 - **Big skill bodies (> 8 KB):** reference text (sources, lessons, trade-offs) → `claude/workflow/<skill>-ref.md`, heading + pointer stays so section numbers still work (set 220 E1).
 - Owner's standing answers (do not re-propose): look loops are rare → leave (B, set 220) · CLAUDE.md pointers were tried and got skipped → keep full rules in CLAUDE.md (C, set 220).
 
-## 9. Monthly rule test in a fresh chat (set 250 R2, owner; "the best test of a CLAUDE.md is whether behaviour changes")
-Once a month (first weekly review of the month), after the rounds:
-1. Pick 3 rules changed in the last month (from this month's review files).
-2. For each, write one short task prompt that should trigger it (e.g. "แก้ค่าพลัง PL-3" → HARD RULE 6 cfgdiff first; a code fix → merge-code gate; an art pick → ask before art-style.md).
-3. The owner opens a NEW chat in D:\GitHub\automon-arena, pastes the prompt, and stops it after Claude's first reply (no edits needed) — or Claude runs it as a subagent only if the owner OKs that (subagent rule).
-4. Pass = the first reply names / starts the rule's step. Fail → the rule's trigger is unclear → report item next week (move it into the skill description or a hook).
-Cost: ~3 short chats a month; skip the month if no rule changed.
+## 9. Monthly rule test in a fresh chat (set 250 R2)
+First weekly review of each month only, after the rounds → steps in `claude/workflow/weekly-review-ref.md` §9 (moved set 304 F1).

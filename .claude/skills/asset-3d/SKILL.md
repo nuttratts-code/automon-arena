@@ -1,6 +1,6 @@
 ---
 name: asset-3d
-description: 3D props (โมเดล 3D / .glb / Hunyuan3D / Tripo / เจนรูป Gemini ไปทำ 3D / ลดโพลี / bake / จัดฉากเอง) — owner's picture → AI 3D site → Blender prep → viewer compare → placed in the Godot arena. Use when the owner drops a .glb or asks to make, reduce, compare or place a 3D model. Not sprites, screens or lighting (art-look).
+description: 3D props (โมเดล 3D / .glb / Hunyuan3D / Tripo / เจนรูป Gemini ไปทำ 3D / ลดโพลี / bake / จัดฉากเอง): owner's picture → AI 3D site → Blender prep → viewer compare → placed in the Godot arena. Use when the owner drops a .glb or asks to make, reduce, compare or place a model. Not sprites, screens or light (art-look).
 ---
 # 3D props: Gemini picture → AI 3D → Blender prep → Godot arena (set 217 R4, 13 Nov 2026)
 

@@ -1,5 +1,7 @@
 # Boss kit draft v1 — set 168 (C-17.6 · user picks A3 B2 C2 D1 E1 F1 G1 H1) — APPROVED by user (I1, 9 Nov)
 
+Status (claude/reviews.md row): decided — kept in claude/ (linked from src/core/stage.js) · status line added set 304 G1.
+
 Every number here is a proposal (ค่าเสนอ); final values come from the calibrator + HARD RULE 6 per-cell picks. Kit = signature (new mechanic) → phase 2 adds punish → phase 3 adds twist (rules stack, C-17.6). Max 1 stun/silence/freeze per boss. Weak/resist multipliers = global default + per-boss override + cap (E1); they are not counted as kit rules.
 
 Tribe roles (T-2/T-3): เหล็กกล้า armor/tank · เพลิงเผา burn · สายฟ้า shock · วายุ multi-hit, small hits · ภูติ support/heal · อสูร big hits.

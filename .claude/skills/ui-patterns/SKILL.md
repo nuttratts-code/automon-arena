@@ -1,6 +1,6 @@
 ---
 name: ui-patterns
-description: Design check against the pattern library (ดูเหมือน AI ทำ / ให้ดูมืออาชีพ / อ้างอิงเกมอื่น / ขอไอเดีย UI / เกมอื่นทำยังไง / หน้าผลจบ / ตรวจดีไซน์): named references + three non-default decisions before a build, then count AI-made tells on the screenshot. Godot game screens only, inside ui-preview and ui-work.
+description: Design check against the pattern library (ดูเหมือน AI ทำ / ให้ดูมืออาชีพ / อ้างอิงเกมอื่น / ขอไอเดีย UI / เกมอื่นทำยังไง / หน้าผลจบ / ตรวจดีไซน์): references + three non-default decisions before a build, then count AI-made tells on the shot. Godot screens only, inside ui-preview / ui-work.
 ---
 # UI patterns check (set 210 — user order: research similar games so designs stop looking AI-made)
 

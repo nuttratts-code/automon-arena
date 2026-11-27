@@ -1,6 +1,6 @@
 ---
 name: art-look
-description: Battle-scene look in the Godot port (ฉากสู้ / ภาพ HD-2D / แสง เงา เบลอ / เอฟเฟกต์สกิล / sprite ในฉาก / ปรับลาน / ตัวอย่างฉาก) — pixel sprites in a lit 3D set: arena, camera, light, fog, post effects, VFX, look samples. Not screens/menus (ui-work/ui-preview), props (asset-3d), values (balance-import).
+description: Battle-scene look in the Godot port (ฉากสู้ / ภาพ HD-2D / แสง เงา เบลอ / เอฟเฟกต์สกิล / sprite ในฉาก / ปรับลาน / ตัวอย่างฉาก): pixel sprites in a lit 3D set — arena, camera, light, fog, post, VFX, look samples. Not screens (ui-work/ui-preview), props (asset-3d), values (balance-import).
 ---
 # Art look (set 201 — research 11 Nov 2026; owner picks A1 · B1 · C1 · D2)
 
