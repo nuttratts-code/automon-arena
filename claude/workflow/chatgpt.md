@@ -20,6 +20,8 @@ Claude asks OpenAI ChatGPT (owner's ChatGPT Plus) through **Codex CLI**, same ro
 - Files land in `~/.codex/generated_images/<session id>/exec-*.png` (1672x941 for 16:9); copy them to `claude/preview-set<NN>/S<NN>-gpt-*.png` before showing the owner. 3 mocks ≈ 14k tokens, ~2 min.
 - What came back: polished screen mocks, but GPT invents its own creatures + names and mirrors our team as the rival; the 3 "styles" kept one layout. Use them for layout/style ideas only — real samples still use hub characters (Decisions: Characters come from the Hub). Ask for "different LAYOUTS" explicitly when layout is the point.
 
+- **Brief first (set 301 round 3):** a short concept + our UI rules (ui-patterns §10 + §4 tells, Fight pale blue, cut corners) in a prompt file (`codex exec ... - < brief.txt`) made GPT keep our motif and colours; without it GPT drifted to its own styles. Edit the REAL shot ("change only the UI layer") to judge fit with the scene; GPT warns its paintover shifts creature pixels slightly.
+
 ## Safety (HARD RULE 9)
 - Send only the question + the shots it needs: no keys, tokens, private links, owner personal data, whole docs or code. Anything sent goes to OpenAI.
 - Never `--dangerously-bypass-approvals-and-sandbox`, never `-s workspace-write` / `danger-full-access`, never `--full-auto`, never run in the repo or with `--add-dir`.
