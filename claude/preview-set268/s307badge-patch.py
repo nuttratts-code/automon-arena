@@ -40,3 +40,17 @@ s = open(p, encoding="utf-8", newline="").read()
 s = s.replace("Vector2(md, md)), false, Color(tc.r, tc.g, tc.b, fa))\n",
               "Vector2(md, md)), false, Color.from_hsv(tc.h, 0.87, 0.93, fa))   # set 307 f: vivid badge\n")
 open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge f ok")
+
+# set 307 g (owner G1 + "steel = grey"): badge colour = the painted card body hue (median of ui_r48/card_body_<tribe>.png), s .87 v .93;
+# steel = grey (s .10 v .78) instead of the card's faint blue. Fallback (no painted body) = f.
+s = open(p, encoding="utf-8", newline="").read()
+OLDF = "Vector2(md, md)), false, Color.from_hsv(tc.h, 0.87, 0.93, fa))   # set 307 f: vivid badge\n"
+NEWG = "Vector2(md, md)), false, _badge_col307(tk, tc, fa))   # set 307 g: card body hue (owner G1)\n"
+if OLDF in s:
+    s = s.replace(OLDF, NEWG)
+    s += ("\n\n# set 307 g (owner G1): tribe badge = card body hue (median of the painted card_body_<tribe>), steel = grey\n"
+          "static func _badge_col307(tk: String, tc: Color, fa: float) -> Color:\n"
+          "\tvar H := {\"fire\": 0.014, \"bolt\": 0.124, \"wind\": 0.486, \"spirit\": 0.729, \"fiend\": 0.912}\n"
+          "\tif tk == \"steel\": return Color.from_hsv(0.59, 0.10, 0.78, fa)\n"
+          "\treturn Color.from_hsv(float(H.get(tk, tc.h)), 0.87, 0.93, fa)\n")
+open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge g ok")
