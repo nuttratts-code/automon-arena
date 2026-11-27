@@ -97,3 +97,20 @@ Standing owner answer B (set 220) said "look loops are rare → leave". **This w
 
 ## Monthly rule test (§9)
 Not this week — first weekly review of December.
+
+## Added after the decision — this chat's token use (owner B1, explain-usage on the transcript)
+Effective units (cache read ×0.1 · cache write ×2 · output ×5) for this chat, 56 model calls, ≈ 1.7 M total:
+| Group | ≈ units | share |
+|---|---|---|
+| Fixed instructions re-read every call (system prompt + app tool lists + skill/plugin list + CLAUDE.md + memory ≈ 98k tokens before any work) | 630k | 36 % |
+| Re-reading the growing chat (thinking carried along, cache rewrites — cannot be split further) | 530k | 31 % |
+| Claude's own writing (thinking, replies, edit scripts) | 300k | 17 % |
+| Shell commands + results (git log / grep) | 145k | 8 % |
+| File reads / writes (char-idle 18 KB read, review file, scripts) | 60k | 4 % |
+| Skills loaded (chat-start, weekly-review) | 45k | 3 % |
+| Questions, task list, wrap-up | 20k | 1 % |
+Findings: ① the fixed load (~98k tokens, CLAUDE.md is only ~7k of it) is paid again on every model call → the number of calls is the main lever: 56 calls × ~10k = ~550k. Many small greps = many calls. ② The chat was already ~194k at the owner's 2nd message, so a weekly review cannot fit rounds 1–3 + apply + more in one chat.
+### Y. (new, for the next chat) cut the per-call fixed load
+- Y1: check which connectors/plugins load every chat (Figma, Blender, Pixelwright, Playwright, Godot MCP, Chrome, computer-use, docs, firecrawl/design plugins) and turn off the ones a normal Automon chat never uses (owner turns them on when needed) + Claude batches checks into fewer, bigger commands.
+- Y2: only the batching habit (no connector change).
+- Y3: nothing.
