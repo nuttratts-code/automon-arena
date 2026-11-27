@@ -63,3 +63,14 @@ patch("prep.gd", [
  ('\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 14)\n', '\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 11)\n'),
  ('\t\t\t\todds_row.add_theme_constant_override("separation", 7)\n', '\t\t\t\todds_row.add_theme_constant_override("separation", 5)\n'),
 ])
+
+# set 307 odds tag c (owner): narrower, must not reach the creatures -> inside the button column: x -388..-196, y 99..114, Lv 11, odds 10, gaps 3/1
+patch("prep.gd", [
+ ("'top, 0.5, -388, -128, 99.0 + PZS._inset(), 117.0 + PZS._inset())".strip("'"), "top, 0.5, -388, -196, 99.0 + PZS._inset(), 114.0 + PZS._inset())"),
+ ('lvl.add_theme_font_size_override("font_size", 12)   # set 307 b\n', 'lvl.add_theme_font_size_override("font_size", 11)   # set 307 b · c\n'),
+ ('if ql != null: ql.add_theme_font_size_override("font_size", 11)\n', 'if ql != null: ql.add_theme_font_size_override("font_size", 10)\n'),
+ ('\t\t\t\todds_row.add_theme_constant_override("separation", 5)\n', '\t\t\t\todds_row.add_theme_constant_override("separation", 3)\n'
+  '\t\t\t\tfor hh2 in odds_row.get_children():   # set 307 c: dot-to-number gap 1\n'
+  '\t\t\t\t\tvar hb2 := hh2 as HBoxContainer\n'
+  '\t\t\t\t\tif hb2 != null: hb2.add_theme_constant_override("separation", 1)\n'),
+])
