@@ -1,6 +1,6 @@
 # UI pattern library — what similar games do, what to copy as an idea, what to avoid
 
-V2.0 · 26 Nov 2026 (set 299 side-task, owner: "study TFT UX/UI in detail — why it looks smoother than ours": TFT craft lines [S: TFT UI designer portfolio] in §1 + DO 33–40 polish techniques; Gemini second opinion merged) · V1.9 · 24 Nov 2026 (set 299, owner: two-opposite-cut-corner box = main shape for every design, §6 motif line) · V1.8 · 24 Nov 2026 (docs side-task beside set 293, owner A1: §9 sources opened — A7–A12 added: flash limit, 15 mm phone targets, looks-tappable, stationary targets, settings remembered, text/UI size option) · V1.7 · 23 Nov 2026 (set 290, owner A1: §9 usability + accessibility rules — Game Accessibility Guidelines basic tier, Pinelle CHI 2008, NN/g game heuristics; §5 step 6 walks §9) · V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
+V2.1 · 27 Nov 2026 (set 300 side-task, owner A1: §10 craft rules — light/value, colour, shape, Thai type, motion, readability over 3D; Gemini second opinion; GitHub game-UI skills looked at, none installed) · V2.0 · 26 Nov 2026 (set 299 side-task, owner: "study TFT UX/UI in detail — why it looks smoother than ours": TFT craft lines [S: TFT UI designer portfolio] in §1 + DO 33–40 polish techniques; Gemini second opinion merged) · V1.9 · 24 Nov 2026 (set 299, owner: two-opposite-cut-corner box = main shape for every design, §6 motif line) · V1.8 · 24 Nov 2026 (docs side-task beside set 293, owner A1: §9 sources opened — A7–A12 added: flash limit, 15 mm phone targets, looks-tappable, stationary targets, settings remembered, text/UI size option) · V1.7 · 23 Nov 2026 (set 290, owner A1: §9 usability + accessibility rules — Game Accessibility Guidelines basic tier, Pinelle CHI 2008, NN/g game heuristics; §5 step 6 walks §9) · V1.6 · 12 Nov 2026 (owner order: study both Octopath versions — §1d, console original + mobile COTC, 9 screens; O1–O6) · V1.5 · 12 Nov 2026 (owner order "study 4–5 games like ours": §1c — Dota Underlords mobile · FF Resonance · Triangle Strategy · Balatro · Marvel Snap, ~20 screens seen on Game UI Database; DO 25–32; hub H9–H10) · V1.4 · 12 Nov 2026 (owner order: one UI knowledge hub — §0 where to look up other games' screens + how, §7 hub/home screen + result screen patterns, §8 idea mode; skill step "owner says an idea → find 2–3 real-game ideas") · V1.3 · 12 Nov 2026 (set 212: §6 glass / motif / temperature closed by the owner's set 208 picks, built in Godot) · V1.2 · 12 Nov 2026 (set 211: tell fix never changes what the owner picked) · V1.1 · 12 Nov 2026 (set 210: §1b screens actually seen — 3 owner screenshots + 6 found by Claude; DO 19–24 added) · V1.0 · 12 Nov 2026 (set 210, user order: research the UX/UI of games close to ours, focus Final Fantasy Resonance · Auto Chess · TFT, so designs stop looking AI-made and look professional). Runbook: skill `ui-patterns`. Open this file before any design sample (ui-preview) or UI build (ui-work) for the Godot game.
 
 **Legal line (CLAUDE.md scope):** this file records layout ideas and principles only. Never copy another game's names, art, icons, frames, fonts, texts or exact screen. A pattern used by 3+ games (shop row at the bottom, cost colours, star ranks) is a genre convention and is safe as an idea; a look owned by one game is not.
 
@@ -389,6 +389,53 @@ Three rule sets, cut to what fits ours (phone landscape · auto-battler · Thai 
 
 **How the skill uses §9:** in §5 step 6 (genre check) also walk A2 (contrast), A3 (greyscale check), A6 + A8 (tap alternative, target size), A7 (flash rate), A10 (still targets) and C3 (confirm/undo) on the screenshot; list any miss with the tells.
 
+## 10. Craft rules — light, colour, shape, type, motion, Thai text (V2.1, set 300 side-task, owner A1, 27 Nov 2026)
+
+Owner order: "how do pro game UIs handle light, colour and shape — find detail, or helper skills on GitHub". Claude research pass + Gemini second opinion (gemini-3.8-flash-high, judged from a text description, no screenshot). Lines already in §2 are only pointed to. Evidence: [S] page read · [S-search] search excerpt · [G] Gemini idea, not checked in our build yet · [K] Claude's knowledge. **GitHub skills checked (set 300): none installed** — set 290 A1 + HARD RULE 9 ②; their useful ideas are folded in here instead (list at the end of this section).
+
+**Light + value**
+- L1. **Greyscale first** [S-search]: convert the shot to grey before judging colour; main action + numbers must still lead. Same check as §9 A3, but run it FIRST, not last.
+- L2. Bevel = §2 DO 33. **Chamfer corner rule** [G]: on a 45° cut the diagonal pixels take a mid tone (between the light and the dark edge), so the cut does not turn into a muddy stair-step.
+- L3. Value tiers (refines §2 DO 34) [G]: **text + glyphs are the brightest thing on screen (90–100 %)** · main button plate 65–75 % · panels 20–30 % · scene highlights capped (exposure ceiling) so sunlit floor never out-shines the UI. Not "button plate brightest" — that kills light text on it.
+- L4. Scrim = §2 DO 35. In prep/shop add a 15–20 % darkening behind the shop/bench drawer, because 0.94 panels still let bright floor speculars through [G].
+
+**Colour**
+- C1. **60-30-10** [S-search]: ~60 % panel colour (tone.json slate) · ~30 % secondary · ~10 % accent, and the accent only on things that are tappable or change a decision.
+- C2. **Indexed palette** [S: Beastieball]: one colour table in tone.json; every UI part refers to a slot name, never a raw hex. Global tweaks + theme swaps in one place.
+- C3. **UI less saturated than the scene** [S-search]: saturation is kept for creatures, VFX and rewards; a UI as loud as the scene turns to mud.
+
+**Shape**
+- S1. Motif = §6 (two opposite cut corners). **Cut size by role, even numbers only** [G]: 4 px panels/cards · 2 px chips/badges. No 3 px (odd steps break at integer scale).
+- S2. **Main button = a game object** (with §2 DO 39): 2–3 px thickness under the plate; on press the plate sinks AND its label/icon move down the same 2 px, the bottom thickness flattens [G].
+- S3. **9-slice frames** [S-search + G]: NinePatchRect margins = cut size + line width (e.g. 5 px for 4 + 1); centre and edges set to Tile, not Stretch; ornate edges as separate pieces, never stretched.
+- S4. **Icon silhouette test** [K]: fill each icon solid black at its real size; still recognisable = pass.
+
+**Type (Thai + numbers)**
+- T1. **Thai stacks four levels** (below-vowel · consonant · above-vowel · tone mark) [G + K]: line spacing ≥ 25–30 % of the font size top and bottom; no vertical clipping on labels; test with "ที่ น้ำ ปู่ ญี่ปุ่น".
+- T2. **Thai line breaks** [G + K]: Thai has no spaces — Godot's Advanced TextServer with the ICU break data must be on (check the export includes it), or lines break mid-word.
+- T3. **Fixed-width digits** [K] for gold, HP, prices and timers, so numbers do not jitter while they change.
+
+**Motion + feedback**
+- M1. Motion language = §2 DO 40. **Frame-rate-safe smoothing** [G]: not "move 30 % per frame" (speed changes on 60/90/120 Hz, never reaches the target, keeps redrawing = battery). Use a Tween 0.15–0.22 s ease-out, or `lerp` with `1 - exp(-k * delta)` and snap when < 0.5 px.
+- M2. **Still UI rests** [K]: idle screens do not move, except ONE element the player should notice (e.g. Fight when ready).
+- M3. **One transition for the whole game** [K] (e.g. plates slide in along the cut-corner diagonal).
+- M4. **Gold ticker** [G]: gold counts down over ~150 ms + a small "-2" floats up from the button that spent it.
+- M5. **Damage numbers** [K]: 1 px dark outline, pop then fade; type shown by shape/icon, not by colour alone (§9 A3).
+- M6. **Press vs release sound** [G]: soft low tap on press (with the sink), crisp click on release inside the button; dragged out = cancel, no click.
+
+**Readability over the 3D scene (Godot)**
+- R1. **UI on its own layer** [G]: 3D arena in a SubViewport (or 3D post effects kept off the UI layer); UI on a CanvasLayer with Nearest filtering, so DoF/bloom/fog never blur pixel text. Check what the current Godot build does before changing it.
+- R2. **Safe area** [G]: root margin from `DisplayServer.get_display_safe_area()` so notches/punch-holes never cover corner buttons; habit buttons stay in the thumb zones (bottom corners), passive meters top centre.
+- R3. **HUD budget** [S: openai game-ui-frontend]: persistent HUD ≤ 20–25 % of the screen; centre + lower-middle belong to the fight; everything else contextual.
+- R4. **Squint test** [K]: squint at the shot — the first thing seen must be the board or the main action.
+
+**Shop states + input**
+- I1. **Card states** [G]: normal · can't afford (creature desaturated, price red, still tappable for info) · locked (a small drawn latch on the frame, not only a tint) — fits §2 DO 22.
+- I2. **Drag onto the 3D board** [G]: ray from the finger to the ground plane, highlight the target tile on the floor, the dragged creature floats with a shadow.
+- I3. **Tap = info stays** (§9 B6). Gemini proposed "short tap = buy, hold = info"; **not taken (27 Nov, owner A1 on Claude's note)** — tap-to-buy causes mis-buys and makes hold the only info path.
+
+**GitHub skills looked at (27 Nov 2026, not installed):** openai/plugins `game-ui-frontend` (useful: HUD budget, playfield protection, reduced motion; web-only otherwise) · omer-metin `game-ui-design` (generic persona text) · Donchitos `ux-design` (studio workflow, runs a bash helper on every call — risk).
+
 ## Sources (read 12 Nov 2026)
 - Zachary Roberson, Teamfight Tactics UI Design (portfolio, read 26 Nov 2026): https://zacharyrobes.com/teamfight-tactics-ui-design
 - Dave Felton, TFT Visual Design Lead (bio): https://getfelt.cargo.site/
@@ -408,3 +455,4 @@ Three rule sets, cut to what fits ours (phone landscape · auto-battler · Thai 
 - AI-design tells: Impeccable "visible tells of AI design" https://924b8765.impeccable-2rv.pages.dev/slop · other catalogues (search summary): https://github.com/Laith0003/ux-skill/wiki/How-to-detect-AI-slop-in-your-design · https://www.saasui.design/blog/saas-ui-looks-ai-generated
 - Indie game UI basics (search summary): https://bugnet.io/blog/ui-design-basics-for-indie-developers · https://bootcamp.uxdesign.cc/7-obvious-beginner-mistakes-with-your-games-hud-from-a-ui-ux-art-director-d852e255184a
 - §9 (searched 23 Nov 2026; pages opened 24 Nov 2026 except the Pinelle PDF = 404): https://gameaccessibilityguidelines.com/full-list/ · https://gameaccessibilityguidelines.com/basic/ · https://gameaccessibilityguidelines.com/if-any-subtitles-captions-are-used-present-them-in-a-clear-easy-to-read-way/ · https://unity.com/blog/video-game-accessibility-basics · https://www.nngroup.com/articles/usability-heuristics-applied-video-games/ · https://dl.acm.org/doi/10.1145/1357054.1357282 (Pinelle et al. CHI 2008) · http://cc.oulu.fi/~mrajanen/paper19.pdf
+- §10 (27 Nov 2026): https://gamedeveloper.com/art/deep-dive-developing-a-clear-and-consistent-visual-language-in-the-ui-of-beastieball · https://create.roblox.com/docs/production/game-design/ui-ux-design · https://respawn.outlookindia.com/gaming/gaming-guides/ui-and-ux-in-games-building-menus-huds-and-feedback-systems · https://itch.io/blog/478705/a-short-recommendation-color-palettes-and-the-60-30-10-rule · https://code.tutsplus.com/enhance-your-pixel-art-with-a-stylized-beveled-pixel-effect--cms-19833t · https://tessl.io/registry/skills/github/openai/plugins/game-ui-frontend · https://skills.sh/omer-metin/skills-for-antigravity/game-ui-design · https://skills.sh/donchitos/claude-code-game-studios/ux-design
