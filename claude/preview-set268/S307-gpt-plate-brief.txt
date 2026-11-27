@@ -1,0 +1,12 @@
+Do not run any commands or read files.
+This is my own original game (creature auto-battler). Use your image generation tool to make 2 separate images.
+
+Draw ONE empty UI panel piece: the shop plate at the top of a game screen, front view, crisp painted game-UI style matching the attached reference (dark navy panel, gold trim).
+- Wide horizontal panel, aspect about 5.3 : 1 (like the reference), EMPTY inside: no text, no numbers, no icons, no cards, no buttons, no divider lines.
+- Shape = our motif: a chamfered rectangle with ONLY the top-left corner and the bottom-right corner cut at 45 degrees; the other two corners square.
+- A small raised tab on the top edge near the left for a level label (empty, same chamfer motif: its top-left + bottom-right cut), joined to the panel as one piece, with the gold trim running around it.
+- On the right part of the top edge, a slightly raised step (the panel's top edge steps up for the right ~35 %), as in the reference, gold trim following it.
+- Trim: double gold trim like the reference: a thin bright gold outer line, a dark groove, then a thin gold inner line; a faint bevel. Inside: dark navy (#121a26 to #1b2533) with a very subtle vertical gradient, almost flat, so it can be stretched as a 9-slice.
+- No drop shadow, no glow outside the piece, no background scene.
+- Flat solid magenta #FF00FF background around the piece.
+Reference images: the target screen's top shop plate (full width, and the left part enlarged). Copy only its look (colours, trim, bevel), not its corners: use our corner rule above.
