@@ -21,6 +21,11 @@ with sync_playwright() as p:
     check("semi pixel found", r.get("semi") == "bad:1", r.get("semi"))
     check("floating speck found", r.get("speck") == "bad:1", r.get("speck"))
     check("near-duplicate colour found", (r.get("near") or "").startswith("warn:"), r.get("near"))
+    # set 298: near-black outline = olblack warn · pure black = no olblack · idle first-frame hold ×3
+    ob = pg.evaluate("""(()=>{const W=10,H=10;const mk=(oc)=>{const d=new Uint8ClampedArray(W*H*4);for(let y=1;y<9;y++)for(let x=1;x<9;x++){const i=(y*W+x)*4,e=x==1||x==8||y==1||y==8,c=e?oc:[200,60,40];d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255}return PXC.analyse(d,W,H).issues.map(i=>i.key)};return [mk([16,20,24]).includes('olblack'),mk([0,0,0]).includes('olblack')]})()""")
+    check("near-black outline flagged (olblack)", ob == [True, False], ob)
+    hold = pg.evaluate("[0,250,300,500,599,600].map(t=>seqAt([0,1,2,3],100,t)).join(',') + '|' + holdMs(150,0) + ',' + holdMs(150,2)")
+    check("idle hold: first frame ×3 (seqAt / holdMs)", hold == "0,0,1,3,3,0|450,150", hold)
     check("big painted picture = not pixel", pg.evaluate("(()=>{const W=300,H=300,d=new Uint8ClampedArray(W*H*4);for(let i=0;i<d.length;i+=4){d[i]=i%251;d[i+3]=255}return PXC.analyse(d,W,H).pixel})()") is False)
     check("×4 blow-up shrinks to native", pg.evaluate("(()=>{const W=320,H=320,d=new Uint8ClampedArray(W*H*4);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4,v=((x>>2)+(y>>2))%2;d[i]=v*255;d[i+3]=255}const o=PXC.analyse(d,W,H);return o.pixel&&o.W===80&&o.k===4})()"))
     # still: PL-3

@@ -1,4 +1,6 @@
 # Step 6 mobile check — game page (10 Nov 2026, set 175) · audit only, no code changed
+
+Status (claude/reviews.md row): parked → Godot (web UI frozen set 189 C1) · status line added set 304 G1.
 Built from main (after set 174). Sizes 1366×768 · 844×390 · 740×330 · 667×375 · 390×844 (ui.md "Phone audit"). Screens: name · prep r1 · prep late (r14, Lv2–3, legends, bench 3, locked shop card) · menu/rune/tribe/diff/shop-level popups · shop unit card · battle · result · match details · run end. Script: ui-work 4b snippet (scratch, not committed).
 Pass everywhere: no page scroll · no JS errors · run end OK. Not reached: rune offer (none at r1 in this flow) · resume after reload.
 

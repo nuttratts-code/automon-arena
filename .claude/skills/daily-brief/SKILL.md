@@ -13,13 +13,14 @@ description: Daily brief (สรุปประจำวัน / วันนี
 - `claude/reviews.md`: rows marked `open` (skip parked / ideas / Godot) with their age from the file date (the hook already prints those > 7 days).
 - WIP branches named in the Relay: `git log -1 --format='%h %cr' origin/<branch>` (how old the last step is).
 - CI: only if main got a code commit since the last Relay note of a green run → skill `ci-check`.
+- Plan dates (set 304 X1): plan-godot-migration steps 8–9 "Dates" → per date: days left + done or not (shop screen code merged on main? r38 port merged? itch.io URL in handoff Links?).
 - Dates: weeks left to MVP1.5 (31 Dec 2026) · from 10 Dec: the set 250 T2 itch.io warning (handoff Pending) · Friday → "รีวิวสัปดาห์วันนี้" · first chat of a month → weekly-review §9 monthly rule test.
 
 ## 2. Show (Thai, after the 3-line header; ≤ 5 lines per group, oldest first, each line = what · where · age)
 - 🟥 **รอคุณตัดสินใจ** — open reviews, open decisions, sample rounds waiting for the owner's OK.
 - 🟧 **คุณต้องทำเอง** — user-side todo (play/paste, uploads, account settings; repo Private NOT listed — reminded only near finish / at uploads, owner set 253).
 - 🟦 **Claude ทำต่อได้** — WIP branches + their next step, งานรอรวม (say "3 queued → do now" when it is).
-- ⏰ **กำหนดเวลา** — weeks left, warnings, today's review reminders.
+- ⏰ **กำหนดเวลา** — "วันนี้ vs แผน" first (each set 304 date: days left · ✅/⬜), then weeks left, warnings, today's review reminders.
 Empty group → leave it out. No list of finished work.
 
 ## 3. Then

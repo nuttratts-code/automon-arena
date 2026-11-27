@@ -349,6 +349,13 @@ function frameSeq(meta) {
   const n = meta?.n || (meta?.cols || 1) * (meta?.rows || 1), a = [...Array(n).keys()];
   return meta?.pingpong && n > 2 ? a.concat(a.slice(1, -1).reverse()) : a;
 }
+// set 298 (owner C2, PMD reference: 59 % of idles hold the rest pose): the first frame of every idle loop stays IDLE_HOLD× as long, game-wide
+const IDLE_HOLD = 3;
+function holdMs(ms, step) { return step === 0 ? ms * IDLE_HOLD : ms; }
+function seqAt(seq, ms, t) { // frame index at time t (ms) with the first-frame hold
+  const x = t % (ms * (seq.length + IDLE_HOLD - 1));
+  return x < ms * IDLE_HOLD ? seq[0] : seq[1 + Math.floor((x - ms * IDLE_HOLD) / ms)] ?? seq[0];
+}
 function sheetFrame(img, meta, i) {
   const n = meta.n || meta.cols * meta.rows, k = i % n;
   return [(k % meta.cols) * meta.fw, Math.floor(k / meta.cols) * meta.fh, meta.fw, meta.fh];
@@ -811,7 +818,7 @@ function sheetPlayer(stage, left, r) {
   left.append(h('div', { class: 'tools' }, h('button', { onclick: () => { playing = !playing; } }, 'เล่น/หยุด'),
     h('button', { onclick: () => go(i - 1) }, '◀ เฟรม'),
     h('button', { onclick: () => go(i + 1) }, 'เฟรม ▶'),
-    h('label', { class: 'small' }, 'มิลลิวินาที/เฟรม ', msIn), ppB, pxB, info));
+    h('label', { class: 'small', title: 'เฟรมแรกของทุกรอบค้างนานกว่า ' + IDLE_HOLD + ' เท่า (กฎทั้งเกม set 298)' }, 'มิลลิวินาที/เฟรม ', msIn, h('span', { class: 'faint' }, ' · เฟรมแรก ×' + IDLE_HOLD)), ppB, pxB, info));
   let img = null, cells = [];
   const strip = h('div', { class: 'fstrip' });
   if (n <= 64) left.append(h('div', { class: 'fstrip-wrap' }, h('div', { class: 'row' }, h('b', {}, `ทุกเฟรม (${n})`), h('span', { class: 'small dim' }, 'คลิกเฟรม = หยุดที่เฟรมนั้น แล้วกด "แก้พิกเซลเฟรมนี้" ได้')), strip));
@@ -836,7 +843,7 @@ function sheetPlayer(stage, left, r) {
     strip.replaceChildren(...cells); draw();
   }).catch(() => info.textContent = 'เปิดไฟล์ไม่ได้');
   let last = 0;
-  const tick = (t) => { if (!c.isConnected) return; if (playing && img && t - last >= (r.meta.ms || 190)) { last = t; step = (step + 1) % seq.length; i = seq[step]; draw(); } requestAnimationFrame(tick); };
+  const tick = (t) => { if (!c.isConnected) return; if (playing && img && t - last >= holdMs(r.meta.ms || 190, step)) { last = t; step = (step + 1) % seq.length; i = seq[step]; draw(); } requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
 }
 
@@ -1341,7 +1348,7 @@ function renderShadow(m, it) {
     sync(); draw();
     let last = 0; const ms = src.meta?.ms || 190;
     const seqS = src.slot === 'frames' ? frameSeq({ ...src.meta, n: frames.length }) : [0]; let stS = 0; // owner set 257 D1: ไป-กลับ
-    const tick = (t) => { if (!cv.isConnected) return; if (playing && editK == null && frames.length > 1 && t - last >= ms) { last = t; stS = (stS + 1) % seqS.length; fi = seqS[stS] ?? 0; draw(); stripMark(); } requestAnimationFrame(tick); };
+    const tick = (t) => { if (!cv.isConnected) return; if (playing && editK == null && frames.length > 1 && t - last >= holdMs(ms, stS)) { last = t; stS = (stS + 1) % seqS.length; fi = seqS[stS] ?? 0; draw(); stripMark(); } requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
     await frameStrip(img);
   })().catch(() => left.append(h('p', { class: 'bad' }, 'เปิดภาพไม่ได้')));
@@ -1906,7 +1913,7 @@ async function pixelEditor(it, r, opt = {}) {
   function bigTick() { // owner set 262: play every frame (edits included) on the big canvas; drawing is off while it plays
     if (bigK < 0) return;
     const seq = frameSeq(r.meta); bigK = seq[bigStep % seq.length]; bigStep++;
-    paint(); syncUi(); bigT = setTimeout(bigTick, Math.max(30, r.meta.ms || 150));
+    paint(); syncUi(); bigT = setTimeout(bigTick, holdMs(Math.max(30, r.meta.ms || 150), (bigStep - 1) % seq.length));
   }
   function bigPlay() {
     if (!fr) return;
@@ -2295,14 +2302,14 @@ async function pixelEditor(it, r, opt = {}) {
     h('span', { class: 'small dim' }, 'จุดส้ม = เฟรมที่แก้แล้ว · บันทึกครั้งเดียวได้ทุกเฟรม')) : null;
   const playCv = h('canvas', { class: 'pxed-play' + (mirrorOf(r) ? ' flipx' : ''), 'aria-label': 'เล่นทุกเฟรม' });
   const playB = h('button', { onclick: () => { playOn = !playOn; syncUi(); if (playOn) tick(); } }, '⏸ หยุด');
-  const playBox = fr ? h('div', { class: 'pxed-playbox' }, h('div', { class: 'lbl' }, `เล่นทุกเฟรม (${r.meta.ms || 150} ms)`), playCv, h('div', { class: 'row' }, playB)) : null;
+  const playBox = fr ? h('div', { class: 'pxed-playbox' }, h('div', { class: 'lbl' }, `เล่นทุกเฟรม (${r.meta.ms || 150} ms · เฟรมแรก ×${IDLE_HOLD})`), playCv, h('div', { class: 'row' }, playB)) : null;
   function tick() {
     if (!fr || playT < 0) return; clearTimeout(playT);
     const seq = frameSeq(r.meta), k = seq[playStep % seq.length], im = frameImg(k), pz = Math.max(1, Math.floor(Math.min(180 / W, 180 / H)));
     playCv.width = W * pz; playCv.height = H * pz;
     const t = document.createElement('canvas'); t.width = W; t.height = H; t.getContext('2d').putImageData(im, 0, 0);
     const g = playCv.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, playCv.width, playCv.height); g.drawImage(t, 0, 0, W * pz, H * pz);
-    if (playOn) { playStep++; playT = setTimeout(tick, Math.max(30, r.meta.ms || 150)); }
+    if (playOn) { playStep++; playT = setTimeout(tick, holdMs(Math.max(30, r.meta.ms || 150), (playStep - 1) % seq.length)); }
   }
   const zoomBtns = h('span', { class: 'seg' }, h('button', { 'aria-label': 'ซูมออก', onclick: () => zoomTo(z - 1) }, '−'), h('button', { 'aria-label': 'ซูมเข้า', onclick: () => zoomTo(z + 1) }, '+'));
   $('dlgBody').replaceChildren(
@@ -2790,7 +2797,7 @@ function renderTeam(m) {
     if (!cv.isConnected) { clearInterval(teamAnim); teamAnim = 0; return; }
     if (!playing || drag) return;
     const now = performance.now(); let ch = false;
-    for (const s of new Set(sprs)) { if (!s?.cells) continue; const i = s.seq[Math.floor(now / s.ms) % s.seq.length]; if (i !== s.fi) { s.fi = i; s.c = s.cells[i]; ch = true; } }
+    for (const s of new Set(sprs)) { if (!s?.cells) continue; const i = seqAt(s.seq, s.ms, now); if (i !== s.fi) { s.fi = i; s.c = s.cells[i]; ch = true; } }
     if (ch) draw();
   }
   m.append(h('div', { class: 'row' }, h('h2', {}, 'จัดทีม · ปรับขนาด'), h('span', { class: 'sp' }),

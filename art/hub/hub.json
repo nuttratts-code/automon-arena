@@ -1,6 +1,6 @@
 {
  "v": 1,
- "rev": 1962,
+ "rev": 2064,
  "settings": {
   "moves": [
    "idle",
@@ -1623,6 +1623,43 @@
       "from": "r5dfc4957",
       "set": 298
      }
+    },
+    {
+     "id": "r53a83507",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-4/still_f1_2026-11-24_32af3991.png",
+     "orig": "HL-4_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.586Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rc55213dc · เปลี่ยน 147 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "rc55213dc",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r90eb5f5d",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-4/still_f3_2026-11-24_78818c10.png",
+     "orig": "HL-4_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.606Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r5dfc4957 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r5dfc4957",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -2087,6 +2124,42 @@
       "from": "rb8f78b95",
       "set": 298
      }
+    },
+    {
+     "id": "rd17db5b8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-6/still_f1_2026-11-24_4431639f.png",
+     "orig": "HL-6_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.626Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ ra83c0302 · เปลี่ยน 212 เม็ดเป็น #000000 · เตือนก่อน near:warn,olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "ra83c0302",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r238c40ee",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-6/still_f3_2026-11-24_1b9606c6.png",
+     "orig": "HL-6_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.646Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rb8f78b95 · เปลี่ยน 253 เม็ดเป็น #000000 · เตือนก่อน near:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb8f78b95",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -2306,6 +2379,42 @@
       "from": "rd99a0157",
       "set": 298
      }
+    },
+    {
+     "id": "rb2f3cc6d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-7/still_f1_2026-11-24_bc0efabf.png",
+     "orig": "HL-7_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.664Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rf1499976 · เปลี่ยน 187 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง edge:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf1499976",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rc5e32bb5",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-7/still_f3_2026-11-24_0154df37.png",
+     "orig": "HL-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.682Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rd99a0157 · เปลี่ยน 620 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง edge:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd99a0157",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -2524,6 +2633,42 @@
      "meta": {
       "from": "rd72a58fa",
       "set": 298
+     }
+    },
+    {
+     "id": "r03204fb8",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/HL-8/still_f1_2026-11-24_2a5fb39f.png",
+     "orig": "HL-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.699Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ ra373ed5a · เปลี่ยน 506 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "ra373ed5a",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "re947504d",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/HL-8/still_f3_2026-11-24_f8415801.png",
+     "orig": "HL-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.716Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rd72a58fa · เปลี่ยน 714 เม็ดเป็น #000000 · เตือนก่อน near:warn,olblack:warn → หลัง near:warn,edge:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd72a58fa",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -3270,6 +3415,44 @@
       "from": "re708bd84",
       "set": 298
      }
+    },
+    {
+     "id": "r2024e7e4",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-1/still_f1_2026-11-24_52bde023.png",
+     "orig": "PL-1_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.735Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r14cd146c · เปลี่ยน 4 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r14cd146c",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rf92528a6",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-1/still_f3_2026-11-24_5db141d5.png",
+     "orig": "PL-1_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.753Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ re708bd84 · เปลี่ยน 2 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "re708bd84",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -3489,14 +3672,15 @@
      "t": "2026-11-22T14:51:40.120Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน d98b6cf9 g05 (ตัวเต็ง · ประวัติ: batches/2026-11-22_d98b6cf9)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_d98b6cf9",
       "pick": "g05",
       "styleSrc": "pmd-ref 0851"
-     }
+     },
+     "library": "lib/characters/PL-2/PL-2_still_f3_2026-11-22_3eacec79.png"
     },
     {
      "id": "r180e3735",
@@ -3513,6 +3697,42 @@
      "meta": {
       "from": "r537ae848",
       "set": 298
+     }
+    },
+    {
+     "id": "r64fa8550",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-2/still_f1_2026-11-24_f3cd0a49.png",
+     "orig": "PL-2_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.770Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r537ae848 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r537ae848",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rdad4ab7e",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-2/still_f3_2026-11-24_6cd0fd33.png",
+     "orig": "PL-2_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.788Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r3eacec79 · เปลี่ยน 22 เม็ดเป็น #000000 · เตือนก่อน edge:bad,speck:bad → หลัง speck:bad",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r3eacec79",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -3787,6 +4007,24 @@
       "from": "r91b6ad95",
       "set": 298
      }
+    },
+    {
+     "id": "rbac83f61",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-3/still_f1_2026-11-24_4bbbe483.png",
+     "orig": "PL-3_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.806Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r90ef2c86 · เปลี่ยน 17 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r90ef2c86",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -4006,14 +4244,15 @@
      "t": "2026-11-23T07:58:32.808Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 0baad8e2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_0baad8e2)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_0baad8e2",
       "pick": "g15",
       "styleSrc": "still_f1_2026-11-22_89ae303a.png"
-     }
+     },
+     "library": "lib/characters/PL-4/PL-4_still_f3_2026-11-23_2df3fe41.png"
     },
     {
      "id": "r8e78ac2a",
@@ -4030,6 +4269,42 @@
      "meta": {
       "from": "r22cd84ae",
       "set": 298
+     }
+    },
+    {
+     "id": "r95ac9aff",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-4/still_f1_2026-11-24_15a9c18d.png",
+     "orig": "PL-4_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.823Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r22cd84ae · เปลี่ยน 2 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r22cd84ae",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rc884c5d4",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-4/still_f3_2026-11-24_590649d2.png",
+     "orig": "PL-4_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.842Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r2df3fe41 · เปลี่ยน 212 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn,light:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r2df3fe41",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -4221,14 +4496,15 @@
      "t": "2026-11-22T15:25:35.278Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน e652e068 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_e652e068)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_e652e068",
       "pick": "g06",
       "styleSrc": "pmd-ref 0988"
-     }
+     },
+     "library": "lib/characters/PL-5/PL-5_still_f3_2026-11-22_b00fe3d8.png"
     },
     {
      "id": "r628448eb",
@@ -4245,6 +4521,42 @@
      "meta": {
       "from": "r9dae6371",
       "set": 298
+     }
+    },
+    {
+     "id": "rac8f3bd1",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-5/still_f1_2026-11-24_f02365c3.png",
+     "orig": "PL-5_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.860Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r9dae6371 · เปลี่ยน 191 เม็ดเป็น #000000 · เตือนก่อน edge:bad,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r9dae6371",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rd5cf3cd5",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-5/still_f3_2026-11-24_dfb4e11d.png",
+     "orig": "PL-5_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.878Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rb00fe3d8 · เปลี่ยน 449 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb00fe3d8",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -4371,14 +4683,15 @@
      "t": "2026-11-23T09:00:52.249Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 548cd844 g04 (ตัวเต็ง · ประวัติ: batches/2026-11-23_548cd844)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_548cd844",
       "pick": "g04",
       "styleSrc": "pmd-ref 0018"
-     }
+     },
+     "library": "lib/characters/PL-6/PL-6_still_f3_2026-11-23_247bcc96.png"
     },
     {
      "id": "rb40635a2",
@@ -4395,6 +4708,42 @@
      "meta": {
       "from": "rbc032ab7",
       "set": 298
+     }
+    },
+    {
+     "id": "rcd8fc660",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-6/still_f1_2026-11-24_a1ee4e29.png",
+     "orig": "PL-6_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.897Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rbc032ab7 · เปลี่ยน 314 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn,olblack:warn,corner:warn,speck:bad → หลัง corner:warn,speck:bad",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rbc032ab7",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rd7c6351e",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-6/still_f3_2026-11-24_9aebf1a4.png",
+     "orig": "PL-6_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.916Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r247bcc96 · เปลี่ยน 334 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn,speck:bad → หลัง near:warn,corner:warn,speck:bad",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r247bcc96",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -4521,14 +4870,15 @@
      "t": "2026-11-22T16:19:10.935Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน a4687b6a g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_a4687b6a)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_a4687b6a",
       "pick": "g07",
       "styleSrc": "pmd-ref 0663"
-     }
+     },
+     "library": "lib/characters/PL-7/PL-7_still_f3_2026-11-22_34a0300f.png"
     },
     {
      "id": "recc7d63a",
@@ -4545,6 +4895,24 @@
      "meta": {
       "from": "rfcec6c21",
       "set": 298
+     }
+    },
+    {
+     "id": "r42ea6067",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-7/still_f3_2026-11-24_56393f35.png",
+     "orig": "PL-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.936Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r34a0300f · เปลี่ยน 277 เม็ดเป็น #000000 · เตือนก่อน edge:bad,olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r34a0300f",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -4671,14 +5039,15 @@
      "t": "2026-11-22T17:43:54.472Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน d0c784a0 g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_d0c784a0)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_d0c784a0",
       "pick": "g08",
       "styleSrc": "pmd-ref 0448"
-     }
+     },
+     "library": "lib/characters/PL-8/PL-8_still_f3_2026-11-22_a0de83dd.png"
     },
     {
      "id": "r6e5c1b64",
@@ -4695,6 +5064,42 @@
      "meta": {
       "from": "re028dcb7",
       "set": 298
+     }
+    },
+    {
+     "id": "r14bf875a",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PL-8/still_f1_2026-11-24_82b99f8e.png",
+     "orig": "PL-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.955Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ re028dcb7 · เปลี่ยน 39 เม็ดเป็น #000000 · เตือนก่อน - → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "re028dcb7",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r30e9ec08",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PL-8/still_f3_2026-11-24_88b20042.png",
+     "orig": "PL-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.974Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ ra0de83dd · เปลี่ยน 106 เม็ดเป็น #000000 · เตือนก่อน edge:warn,light:warn → หลัง light:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "ra0de83dd",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -5353,6 +5758,45 @@
       "from": "r6ff9e868",
       "set": 298
      }
+    },
+    {
+     "id": "r010a0ebf",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-1/still_f1_2026-11-24_152715e9.png",
+     "orig": "SF-1_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:57.991Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r2f14ec0e · เปลี่ยน 23 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "flip": true,
+     "meta": {
+      "from": "r2f14ec0e",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rd002bd89",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-1/still_f3_2026-11-24_7a0e8ed3.png",
+     "orig": "SF-1_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.008Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r6ff9e868 · เปลี่ยน 3 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r6ff9e868",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -5553,14 +5997,15 @@
      "t": "2026-11-22T14:40:11.823Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน dc6955bb g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_dc6955bb)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_dc6955bb",
       "pick": "g06",
       "styleSrc": "pmd-ref 0880"
-     }
+     },
+     "library": "lib/characters/SF-2/SF-2_still_f3_2026-11-22_fed40205.png"
     },
     {
      "id": "r56566a61",
@@ -5577,6 +6022,24 @@
      "meta": {
       "from": "r98be21b0",
       "set": 298
+     }
+    },
+    {
+     "id": "r82e39dd4",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-2/still_f3_2026-11-24_1ad873ec.png",
+     "orig": "SF-2_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.024Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rfed40205 · เปลี่ยน 14 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfed40205",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -5852,14 +6315,15 @@
      "t": "2026-11-22T14:18:27.827Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 32a6699a g11 (ตัวเต็ง · ประวัติ: batches/2026-11-22_32a6699a)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_32a6699a",
       "pick": "g11",
       "styleSrc": "pmd-ref 0888"
-     }
+     },
+     "library": "lib/characters/SF-3/SF-3_still_f3_2026-11-22_d76bc3f4.png"
     },
     {
      "id": "r588d9cb9",
@@ -6061,14 +6525,15 @@
      "t": "2026-11-23T07:58:57.550Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน fa57185b g05 (ตัวเต็ง · ประวัติ: batches/2026-11-23_fa57185b)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_fa57185b",
       "pick": "g05",
       "styleSrc": "still_f1_2026-11-22_2f00b86c.png"
-     }
+     },
+     "library": "lib/characters/SF-4/SF-4_still_f3_2026-11-23_723d1f73.png"
     },
     {
      "id": "r019e2cfc",
@@ -6085,6 +6550,42 @@
      "meta": {
       "from": "rf030c8dc",
       "set": 298
+     }
+    },
+    {
+     "id": "rece9840c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-4/still_f1_2026-11-24_2d16a358.png",
+     "orig": "SF-4_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.043Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rf030c8dc · เปลี่ยน 169 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf030c8dc",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r9be1e438",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-4/still_f3_2026-11-24_f4a8f58d.png",
+     "orig": "SF-4_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.062Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r723d1f73 · เปลี่ยน 276 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r723d1f73",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -6276,14 +6777,15 @@
      "t": "2026-11-22T15:25:35.508Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 1b218d84 g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_1b218d84)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_1b218d84",
       "pick": "g14",
       "styleSrc": "pmd-ref 1007"
-     }
+     },
+     "library": "lib/characters/SF-5/SF-5_still_f3_2026-11-22_c542c969.png"
     },
     {
      "id": "rd872563f",
@@ -6300,6 +6802,24 @@
      "meta": {
       "from": "rd64ca38d",
       "set": 298
+     }
+    },
+    {
+     "id": "r89a230e2",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-5/still_f3_2026-11-24_bf2f0ac8.png",
+     "orig": "SF-5_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.078Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rc542c969 · เปลี่ยน 464 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn,corner:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rc542c969",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -6439,14 +6959,15 @@
      "t": "2026-11-22T16:19:11.152Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน e1c54665 g02 (ตัวเต็ง · ประวัติ: batches/2026-11-22_e1c54665)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_e1c54665",
       "pick": "g02",
       "styleSrc": "pmd-ref 0151"
-     }
+     },
+     "library": "lib/characters/SF-6/SF-6_still_f3_2026-11-22_2dcd1065.png"
     },
     {
      "id": "r98125f46",
@@ -6463,6 +6984,42 @@
      "meta": {
       "from": "re22bf9b2",
       "set": 298
+     }
+    },
+    {
+     "id": "r41548918",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-6/still_f1_2026-11-24_7d5a73cf.png",
+     "orig": "SF-6_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.098Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ re22bf9b2 · เปลี่ยน 78 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง corner:warn,value:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "re22bf9b2",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r9e696055",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-6/still_f3_2026-11-24_07d0edd8.png",
+     "orig": "SF-6_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.115Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r2dcd1065 · เปลี่ยน 45 เม็ดเป็น #000000 · เตือนก่อน edge:bad,speck:bad,light:warn → หลัง speck:bad,light:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r2dcd1065",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -6589,14 +7146,15 @@
      "t": "2026-11-23T09:00:52.907Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 695f84cd g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_695f84cd)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_695f84cd",
       "pick": "g15",
       "styleSrc": "pmd-ref 0593"
-     }
+     },
+     "library": "lib/characters/SF-7/SF-7_still_f3_2026-11-23_db558966.png"
     },
     {
      "id": "re5ee2552",
@@ -6613,6 +7171,42 @@
      "meta": {
       "from": "rdb369f08",
       "set": 298
+     }
+    },
+    {
+     "id": "rb389a178",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-7/still_f1_2026-11-24_23f897c5.png",
+     "orig": "SF-7_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.132Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rdb369f08 · เปลี่ยน 110 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rdb369f08",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r8073f200",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-7/still_f3_2026-11-24_31ebca1b.png",
+     "orig": "SF-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.151Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rdb558966 · เปลี่ยน 372 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rdb558966",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -6824,6 +7418,42 @@
      "meta": {
       "from": "rf5872b1f",
       "set": 298
+     }
+    },
+    {
+     "id": "r821de5e5",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/SF-8/still_f1_2026-11-24_ef090314.png",
+     "orig": "SF-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.168Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rcdecd91f · เปลี่ยน 94 เม็ดเป็น #000000 · เตือนก่อน - → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rcdecd91f",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r3609a7f2",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/SF-8/still_f3_2026-11-24_2b572870.png",
+     "orig": "SF-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.185Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rf5872b1f · เปลี่ยน 74 เม็ดเป็น #000000 · เตือนก่อน - → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rf5872b1f",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -7375,6 +8005,25 @@
       "from": "r57d3a9c4",
       "set": 298
      }
+    },
+    {
+     "id": "rb5b0c43c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-1/still_f1_2026-11-24_deaed5af.png",
+     "orig": "WY-1_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.202Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r57d3a9c4 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r57d3a9c4",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -7666,14 +8315,15 @@
      "t": "2026-11-22T14:18:28.057Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน dd3a8dbc g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_dd3a8dbc)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_dd3a8dbc",
       "pick": "g15",
       "styleSrc": "pmd-ref 0373"
-     }
+     },
+     "library": "lib/characters/WY-2/WY-2_still_f3_2026-11-22_9af7b079.png"
     },
     {
      "id": "rc2778ceb",
@@ -7877,14 +8527,15 @@
      "t": "2026-11-22T14:40:12.039Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 5114470f g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5114470f)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_5114470f",
       "pick": "g15",
       "styleSrc": "pmd-ref 0889"
-     }
+     },
+     "library": "lib/characters/WY-3/WY-3_still_f3_2026-11-22_0959a555.png"
     },
     {
      "id": "r3bd78918",
@@ -7901,6 +8552,42 @@
      "meta": {
       "from": "rac8d2049",
       "set": 298
+     }
+    },
+    {
+     "id": "rb271a453",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-3/still_f1_2026-11-24_224de6a3.png",
+     "orig": "WY-3_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.219Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rac8d2049 · เปลี่ยน 5 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rac8d2049",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r4719e0e7",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-3/still_f3_2026-11-24_ccac459b.png",
+     "orig": "WY-3_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.234Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r0959a555 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r0959a555",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -8027,14 +8714,15 @@
      "t": "2026-11-23T07:58:33.682Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน ec064e1a g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_ec064e1a)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_ec064e1a",
       "pick": "g08",
       "styleSrc": "still_f1_2026-11-22_9ff31240.png"
-     }
+     },
+     "library": "lib/characters/WY-4/WY-4_still_f3_2026-11-23_827548f2.png"
     },
     {
      "id": "r3f21aa31",
@@ -8177,14 +8865,15 @@
      "t": "2026-11-22T15:32:53.015Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 5812d121 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5812d121)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_5812d121",
       "pick": "g15",
       "styleSrc": "pmd-ref 0716"
-     }
+     },
+     "library": "lib/characters/WY-5/WY-5_still_f3_2026-11-22_4be0db0e.png"
     },
     {
      "id": "r751e486b",
@@ -8353,14 +9042,15 @@
      "t": "2026-11-22T16:19:11.383Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน a59aeb9d g11 (ตัวเต็ง · ประวัติ: batches/2026-11-22_a59aeb9d)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_a59aeb9d",
       "pick": "g11",
       "styleSrc": "pmd-ref 0305"
-     }
+     },
+     "library": "lib/characters/WY-6/WY-6_still_f3_2026-11-22_1d94de8c.png"
     },
     {
      "id": "rf6d1d4c6",
@@ -8534,14 +9224,15 @@
      "t": "2026-11-23T09:00:53.132Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 449f387c g05 (ตัวเต็ง · ประวัติ: batches/2026-11-23_449f387c)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_449f387c",
       "pick": "g05",
       "styleSrc": "pmd-ref 0055"
-     }
+     },
+     "library": "lib/characters/WY-7/WY-7_still_f3_2026-11-23_d7f1b92d.png"
     },
     {
      "id": "r96c03041",
@@ -8558,6 +9249,24 @@
      "meta": {
       "from": "r0e913864",
       "set": 298
+     }
+    },
+    {
+     "id": "r51ca7ee4",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-7/still_f3_2026-11-24_7def4244.png",
+     "orig": "WY-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.252Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rd7f1b92d · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd7f1b92d",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -8741,6 +9450,43 @@
      "meta": {
       "from": "rfef63e53",
       "set": 298
+     }
+    },
+    {
+     "id": "rfde0420b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WY-8/still_f1_2026-11-24_de0789df.png",
+     "orig": "WY-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.272Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r49756470 · เปลี่ยน 2 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r49756470",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r61e8aab1",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WY-8/still_f3_2026-11-24_08db7523.png",
+     "orig": "WY-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.289Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rfef63e53 · เปลี่ยน 226 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "rfef63e53",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -9349,6 +10095,44 @@
       "from": "r34bffc70",
       "set": 298
      }
+    },
+    {
+     "id": "ree274b11",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-1/still_f3_2026-11-24_27f92b42.png",
+     "orig": "PT-1_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.306Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r97eae9b2 · เปลี่ยน 7 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r97eae9b2",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r8ac33776",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-1/still_f1_2026-11-24_8481d3db.png",
+     "orig": "PT-1_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.326Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r34bffc70 · เปลี่ยน 24 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p2",
+     "meta": {
+      "from": "r34bffc70",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -9685,14 +10469,15 @@
      "t": "2026-11-22T14:18:28.284Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 99b3a777 g09 (ตัวเต็ง · ประวัติ: batches/2026-11-22_99b3a777)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_99b3a777",
       "pick": "g09",
       "styleSrc": "pmd-ref 0812"
-     }
+     },
+     "library": "lib/characters/PT-2/PT-2_still_f3_2026-11-22_ca969ea2.png"
     },
     {
      "id": "re9e1bad0",
@@ -9709,6 +10494,24 @@
      "meta": {
       "from": "rde6ba454",
       "set": 298
+     }
+    },
+    {
+     "id": "r6a94ff29",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-2/still_f3_2026-11-24_d87ffba0.png",
+     "orig": "PT-2_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.344Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rca969ea2 · เปลี่ยน 2 เม็ดเป็น #000000 · เตือนก่อน edge:warn,corner:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rca969ea2",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -9893,14 +10696,15 @@
      "t": "2026-11-22T14:40:11.605Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน aa2b178d g02 (ตัวเต็ง · ประวัติ: batches/2026-11-22_aa2b178d)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_aa2b178d",
       "pick": "g02",
       "styleSrc": "pmd-ref 0699"
-     }
+     },
+     "library": "lib/characters/PT-3/PT-3_still_f3_2026-11-22_d635c4b0.png"
     },
     {
      "id": "rccee2122",
@@ -9917,6 +10721,42 @@
      "meta": {
       "from": "r5ac10bec",
       "set": 298
+     }
+    },
+    {
+     "id": "rb4cbdb27",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-3/still_f1_2026-11-24_72ac4b4c.png",
+     "orig": "PT-3_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.361Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r5ac10bec · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน edge:warn,corner:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r5ac10bec",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "re5d2ddf1",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-3/still_f3_2026-11-24_df542146.png",
+     "orig": "PT-3_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.379Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rd635c4b0 · เปลี่ยน 107 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rd635c4b0",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -10056,14 +10896,15 @@
      "t": "2026-11-23T07:58:33.020Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 08310e1e g07 (ตัวเต็ง · ประวัติ: batches/2026-11-23_08310e1e)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_08310e1e",
       "pick": "g07",
       "styleSrc": "still_f1_2026-11-22_2fa4bfc3.png"
-     }
+     },
+     "library": "lib/characters/PT-4/PT-4_still_f3_2026-11-23_b70f90b6.png"
     },
     {
      "id": "r57114922",
@@ -10080,6 +10921,24 @@
      "meta": {
       "from": "r2038864b",
       "set": 298
+     }
+    },
+    {
+     "id": "r3c9dc244",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-4/still_f3_2026-11-24_11dfce7f.png",
+     "orig": "PT-4_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.399Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rb70f90b6 · เปลี่ยน 273 เม็ดเป็น #000000 · เตือนก่อน edge:bad,olblack:warn → หลัง edge:warn,corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb70f90b6",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -10232,14 +11091,15 @@
      "t": "2026-11-22T15:25:35.738Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 3de4617a g07 (ตัวเต็ง · ประวัติ: batches/2026-11-22_3de4617a)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_3de4617a",
       "pick": "g07",
       "styleSrc": "pmd-ref 0249"
-     }
+     },
+     "library": "lib/characters/PT-5/PT-5_still_f3_2026-11-22_ce352af7.png"
     },
     {
      "id": "r8d1724e2",
@@ -10256,6 +11116,42 @@
      "meta": {
       "from": "r803157b7",
       "set": 298
+     }
+    },
+    {
+     "id": "r5969d528",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-5/still_f1_2026-11-24_f0f9afed.png",
+     "orig": "PT-5_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.416Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r803157b7 · เปลี่ยน 21 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r803157b7",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rcc575b2f",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-5/still_f3_2026-11-24_1f8168fe.png",
+     "orig": "PT-5_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.433Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rce352af7 · เปลี่ยน 63 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rce352af7",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -10382,14 +11278,15 @@
      "t": "2026-11-22T16:19:11.617Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 2d716dc2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-22_2d716dc2)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_2d716dc2",
       "pick": "g15",
       "styleSrc": "pmd-ref 0412"
-     }
+     },
+     "library": "lib/characters/PT-6/PT-6_still_f3_2026-11-22_1b2f018c.png"
     },
     {
      "id": "r05db4aea",
@@ -10406,6 +11303,42 @@
      "meta": {
       "from": "rfde74993",
       "set": 298
+     }
+    },
+    {
+     "id": "rc7d4eecf",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-6/still_f1_2026-11-24_ac0f6de6.png",
+     "orig": "PT-6_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.452Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rfde74993 · เปลี่ยน 137 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfde74993",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "rde1aa8a3",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-6/still_f3_2026-11-24_d3b7c920.png",
+     "orig": "PT-6_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.470Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r1b2f018c · เปลี่ยน 107 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn,olblack:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r1b2f018c",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -10532,14 +11465,15 @@
      "t": "2026-11-23T09:00:52.468Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน a92e4343 g03 (ตัวเต็ง · ประวัติ: batches/2026-11-23_a92e4343)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_a92e4343",
       "pick": "g03",
       "styleSrc": "pmd-ref 0321"
-     }
+     },
+     "library": "lib/characters/PT-7/PT-7_still_f3_2026-11-23_5361cb42.png"
     },
     {
      "id": "rcc7c7390",
@@ -10556,6 +11490,42 @@
      "meta": {
       "from": "rb133e4be",
       "set": 298
+     }
+    },
+    {
+     "id": "r8d1e3ad9",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-7/still_f1_2026-11-24_0970debe.png",
+     "orig": "PT-7_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.488Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rb133e4be · เปลี่ยน 73 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง edge:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb133e4be",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r13942075",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-7/still_f3_2026-11-24_36cab5be.png",
+     "orig": "PT-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.508Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r5361cb42 · เปลี่ยน 166 เม็ดเป็น #000000 · เตือนก่อน edge:bad,olblack:warn,speck:bad → หลัง edge:warn,speck:bad",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r5361cb42",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -10682,14 +11652,15 @@
      "t": "2026-11-22T17:43:54.704Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 236beb00 g02 (ตัวเต็ง · ประวัติ: batches/2026-11-23_236beb00)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_236beb00",
       "pick": "g02",
       "styleSrc": "pmd-ref 0510"
-     }
+     },
+     "library": "lib/characters/PT-8/PT-8_still_f3_2026-11-22_0558e732.png"
     },
     {
      "id": "r49730d37",
@@ -10706,6 +11677,42 @@
      "meta": {
       "from": "r3091d390",
       "set": 298
+     }
+    },
+    {
+     "id": "r9cb086f3",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/PT-8/still_f1_2026-11-24_f8d38c61.png",
+     "orig": "PT-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.526Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r3091d390 · เปลี่ยน 15 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r3091d390",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r8fde37f8",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/PT-8/still_f3_2026-11-24_8d5200b9.png",
+     "orig": "PT-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.543Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r0558e732 · เปลี่ยน 237 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn → หลัง near:warn,edge:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r0558e732",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -11422,6 +12429,44 @@
       "from": "r77aa885f",
       "set": 298
      }
+    },
+    {
+     "id": "rcaf5e79e",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-1/still_f1_2026-11-24_c2480e0c.png",
+     "orig": "WN-1_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.563Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rf3dd6601 · เปลี่ยน 9 เม็ดเป็น #000000 · เตือนก่อน edge:bad → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "rf3dd6601",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r4b497770",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-1/still_f3_2026-11-24_5b7b2672.png",
+     "orig": "WN-1_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.581Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r77aa885f · เปลี่ยน 12 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "promptId": "p1",
+     "meta": {
+      "from": "r77aa885f",
+      "set": 298,
+      "kind": "blackline"
+     }
     }
    ],
    "notes": "",
@@ -11769,14 +12814,15 @@
      "t": "2026-11-22T14:18:28.489Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 0cc7b1d7 g01 (ตัวเต็ง · ประวัติ: batches/2026-11-22_0cc7b1d7)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_0cc7b1d7",
       "pick": "g01",
       "styleSrc": "pmd-ref 0621"
-     }
+     },
+     "library": "lib/characters/WN-2/WN-2_still_f3_2026-11-22_b05a9852.png"
     },
     {
      "id": "ra8c88138",
@@ -11794,6 +12840,24 @@
      "meta": {
       "from": "r313f22d6",
       "set": 298
+     }
+    },
+    {
+     "id": "rae863172",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-2/still_f3_2026-11-24_dc92982a.png",
+     "orig": "WN-2_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.597Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rb05a9852 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน edge:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rb05a9852",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -11975,14 +13039,15 @@
      "t": "2026-11-22T14:51:40.337Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 36a1595e g14 (ตัวเต็ง · ประวัติ: batches/2026-11-22_36a1595e)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_36a1595e",
       "pick": "g14",
       "styleSrc": "pmd-ref 0382"
-     }
+     },
+     "library": "lib/characters/WN-3/WN-3_still_f3_2026-11-22_47a1321c.png"
     },
     {
      "id": "r0e607d5c",
@@ -11999,6 +13064,42 @@
      "meta": {
       "from": "r00a7c775",
       "set": 298
+     }
+    },
+    {
+     "id": "rf3d7f53c",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-3/still_f1_2026-11-24_7ac4ec43.png",
+     "orig": "WN-3_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.615Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r00a7c775 · เปลี่ยน 23 เม็ดเป็น #000000 · เตือนก่อน - → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r00a7c775",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r5975c0ef",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-3/still_f3_2026-11-24_58400717.png",
+     "orig": "WN-3_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.633Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r47a1321c · เปลี่ยน 108 เม็ดเป็น #000000 · เตือนก่อน near:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r47a1321c",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -12151,14 +13252,15 @@
      "t": "2026-11-23T07:58:32.598Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 802178f2 g15 (ตัวเต็ง · ประวัติ: batches/2026-11-23_802178f2)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_802178f2",
       "pick": "g15",
       "styleSrc": "still_f1_2026-11-22_e687f6e1.png"
-     }
+     },
+     "library": "lib/characters/WN-4/WN-4_still_f3_2026-11-23_7ef84b87.png"
     },
     {
      "id": "r894c3ed8",
@@ -12175,6 +13277,42 @@
      "meta": {
       "from": "rbcc107e4",
       "set": 298
+     }
+    },
+    {
+     "id": "r95438a3d",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-4/still_f1_2026-11-24_4b8d7c29.png",
+     "orig": "WN-4_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.651Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rbcc107e4 · เปลี่ยน 104 เม็ดเป็น #000000 · เตือนก่อน olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rbcc107e4",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "ra3451809",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-4/still_f3_2026-11-24_3f4323d3.png",
+     "orig": "WN-4_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.669Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r7ef84b87 · เปลี่ยน 452 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง -",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r7ef84b87",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -12302,14 +13440,15 @@
      "t": "2026-11-22T15:25:35.968Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 5572efb4 g06 (ตัวเต็ง · ประวัติ: batches/2026-11-22_5572efb4)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_5572efb4",
       "pick": "g06",
       "styleSrc": "pmd-ref 0718"
-     }
+     },
+     "library": "lib/characters/WN-5/WN-5_still_f3_2026-11-22_2f57f987.png"
     },
     {
      "id": "r949b7699",
@@ -12327,6 +13466,43 @@
      "meta": {
       "from": "r0b99a2e1",
       "set": 298
+     }
+    },
+    {
+     "id": "rd740d51b",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-5/still_f1_2026-11-24_425ec542.png",
+     "orig": "WN-5_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.687Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r0b99a2e1 · เปลี่ยน 239 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "flip": true,
+     "meta": {
+      "from": "r0b99a2e1",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r4ae7f72b",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-5/still_f3_2026-11-24_e3e8ea2e.png",
+     "orig": "WN-5_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.704Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r2f57f987 · เปลี่ยน 1 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r2f57f987",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -12479,14 +13655,15 @@
      "t": "2026-11-22T16:19:11.845Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 41700c11 g04 (ตัวเต็ง · ประวัติ: batches/2026-11-22_41700c11)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-22_41700c11",
       "pick": "g04",
       "styleSrc": "pmd-ref 0587"
-     }
+     },
+     "library": "lib/characters/WN-6/WN-6_still_f3_2026-11-22_fdf7573c.png"
     },
     {
      "id": "rc96326a9",
@@ -12503,6 +13680,42 @@
      "meta": {
       "from": "r61d3ef9c",
       "set": 298
+     }
+    },
+    {
+     "id": "r3d13ccbc",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-6/still_f1_2026-11-24_95cd8109.png",
+     "orig": "WN-6_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.723Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r61d3ef9c · เปลี่ยน 18 เม็ดเป็น #000000 · เตือนก่อน corner:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r61d3ef9c",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r9808bfd7",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-6/still_f3_2026-11-24_571ed84c.png",
+     "orig": "WN-6_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.740Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ rfdf7573c · เปลี่ยน 152 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "rfdf7573c",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -12642,14 +13855,15 @@
      "t": "2026-11-23T09:00:52.002Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน 6c86f982 g08 (ตัวเต็ง · ประวัติ: batches/2026-11-23_6c86f982)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_6c86f982",
       "pick": "g08",
       "styleSrc": "pmd-ref 0168"
-     }
+     },
+     "library": "lib/characters/WN-7/WN-7_still_f3_2026-11-23_0b1531b3.png"
     },
     {
      "id": "r6015c8ac",
@@ -12666,6 +13880,42 @@
      "meta": {
       "from": "r9b8f5639",
       "set": 298
+     }
+    },
+    {
+     "id": "r204dc0ea",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-7/still_f1_2026-11-24_3ca35413.png",
+     "orig": "WN-7_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.758Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r9b8f5639 · เปลี่ยน 178 เม็ดเป็น #000000 · เตือนก่อน near:warn,olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r9b8f5639",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "r41430584",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-7/still_f3_2026-11-24_c31a2305.png",
+     "orig": "WN-7_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.777Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r0b1531b3 · เปลี่ยน 535 เม็ดเป็น #000000 · เตือนก่อน near:warn,edge:bad,olblack:warn,corner:warn → หลัง near:warn,edge:warn,corner:warn,value:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r0b1531b3",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],
@@ -12836,14 +14086,15 @@
      "t": "2026-11-22T17:43:54.913Z",
      "by": "claude",
      "note": "ร่าง 3 · ชุดเจน a463ab60 g02 (ตัวเต็ง · ประวัติ: batches/2026-11-23_a463ab60)",
-     "star": false,
+     "star": true,
      "archived": false,
      "licence": "AI placeholder - UNVERIFIED",
      "meta": {
       "batch": "batches/2026-11-23_a463ab60",
       "pick": "g02",
       "styleSrc": "pmd-ref 0920"
-     }
+     },
+     "library": "lib/characters/WN-8/WN-8_still_f3_2026-11-22_7a06b912.png"
     },
     {
      "id": "r6792490b",
@@ -12860,6 +14111,42 @@
      "meta": {
       "from": "r49a0564a",
       "set": 298
+     }
+    },
+    {
+     "id": "r9e4410b2",
+     "slot": "still",
+     "form": 1,
+     "file": "hub/WN-8/still_f1_2026-11-24_f59ad1cc.png",
+     "orig": "WN-8_f1_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.793Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r49a0564a · เปลี่ยน 312 เม็ดเป็น #000000 · เตือนก่อน edge:warn,olblack:warn → หลัง corner:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r49a0564a",
+      "set": 298,
+      "kind": "blackline"
+     }
+    },
+    {
+     "id": "re2846b41",
+     "slot": "still",
+     "form": 3,
+     "file": "hub/WN-8/still_f3_2026-11-24_bcdc381d.png",
+     "orig": "WN-8_f3_claude_blackline.png",
+     "t": "2026-11-24T09:34:58.810Z",
+     "by": "claude",
+     "note": "set 298 Claude ขอบดำสนิท (แบบ PMD) จากรอบ ★ r7a06b912 · เปลี่ยน 341 เม็ดเป็น #000000 · เตือนก่อน near:warn,olblack:warn → หลัง near:warn",
+     "star": false,
+     "archived": false,
+     "licence": "AI placeholder - UNVERIFIED",
+     "meta": {
+      "from": "r7a06b912",
+      "set": 298,
+      "kind": "blackline"
      }
     }
    ],

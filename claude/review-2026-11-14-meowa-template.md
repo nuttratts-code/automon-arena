@@ -1,5 +1,7 @@
 # Review 2026-11-14 — HD2D-template-meowa vs the set 217 arena (ideas only)
 
+Status (claude/reviews.md row): open (ideas only) · status line added set 304 G1.
+
 Source: github.com/Meowa-AI/HD2D-template-meowa (Godot 4.6, last commit 29 Jul 2026, 13 stars), shallow clone in scratchpad, read: scripts/HD2D.gd, HD2DEnvironment.gd, HD2DStage.gd, WebCompatibility.gd, CloudShadows.gd, AnimatedBillboard.gd, shaders/windblown.gdshader, grass_blade.gdshader, project.godot.
 
 **HARD RULE 9 part 2:** the repo has NO licence file, so all rights are reserved. Copy nothing (code, shaders, numbers, assets); write our own versions from the ideas. The project also imitates Octopath ("Orsterra"), and its comments claim "exact Cassette Beasts values", so don't reuse its numbers either. Owner picked A1 (read + compare, no code) in set 221.

@@ -4,6 +4,7 @@ V2.0 · 19 Nov 2026 (set 251: runerun3000 · econ55 · project-audit → archive
 
 | File | Topic | Status |
 | --- | --- | --- |
+| archive/reviews/review-2026-11-27-weekly.md | Set 304 weekly review 20–27 Nov: step 8 still not moved (34 days left), rework 3 %, landed 7 % · A memory-only owner rules · B .import ignore · C rule docs edited mid-loop · D Relay trim · E instructions.md · F skill sizes · G hygiene · X dated plan to 31 Dec | decided set 304: A1 B1 C1 D1 E1 F1 G1 X1 (4 / 14 / 21 Dec) — applied · set 306 Y1 Z1 (fewer calls rule, unused connectors off) |
 | archive/reviews/review-2026-11-19-weekly-p0.md | Set 250 weekly part 0 (first run): MVP1.5 plan vs 31 Dec, rework 8 %, landed 11 %, 4 repeats from last week → X1 hook warnings · T2 itch.io waits for 3D | decided |
 | archive/reviews/review-2026-11-19-weekly-r23.md | Set 250 weekly review rounds 2+3 G–L (Relay trim · decided reviews archived · ui-work kept full for local tools · char-idle/art-look bodies → *-ref.md · Relay entry ≤ 400 chars) | decided |
 | archive/reviews/review-2026-11-19-weekly.md | Set 249 weekly review A–F (D:\GitHub sessions skipped rules → parent CLAUDE.md note · art direction: ask before art-style edit · HARD RULE 3 follow-ups need own gate · char-idle description · instructions V6.3 · hygiene) — applied | decided |

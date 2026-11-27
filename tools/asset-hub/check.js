@@ -98,6 +98,8 @@ const PXC = (() => {
     issues.push(!olDark ? ['warn', 'edge', `เส้นขอบหลักเป็นสี ${ol.hex} ไม่ใช่สีเข้ม ตัวอาจกลืนกับฉาก`, []]
       : light.length > Math.max(3, edgeN * 0.06) ? ['bad', 'edge', `ขอบขาด / ขอบสว่าง ${light.length} เม็ด (จาก ${edgeN}) เส้นขอบเข้มไม่ต่อกัน`, light]
         : light.length ? ['warn', 'edge', `ขอบสว่างบางจุด ${light.length} เม็ด ดูว่าตั้งใจไหม`, light] : ['ok', 'edge', `เส้นขอบเข้ม ${ol.hex} ต่อกันดี`, []]);
+    // set 298 (owner B): 99.7 % of the PMD reference use ONE pure black outline; a near-black outline reads as a second dark colour
+    if (olDark && ol.hex !== '#000000') issues.push(['warn', 'olblack', `เส้นขอบเป็น ${ol.hex} ไม่ใช่ดำสนิท #000000 (งานต้นแบบเกือบทั้งหมดใช้ดำสนิท)`, []]);
 
     // L-corners: an outline pixel with two perpendicular outline neighbours whose diagonal is open → extra corner pixel (not pixel-perfect)
     const isOl = (x, y) => solid(x, y) && key(x, y) === olK;
@@ -110,7 +112,8 @@ const PXC = (() => {
       // outer corner (both other sides open) with the inside diagonal filled = the corner pixel can go, the line stays joined
       if (!A(x - ax, y - ay) && !A(x - bx, y - by) && solid(x + ax + bx, y + ay + by)) lc.push([x, y]);
     }
-    issues.push(lc.length > 10 ? ['warn', 'corner', `มุมขอบเป็นตัว L ${lc.length} จุด เส้นดูหนาเป็นหยัก ลบเม็ดมุมได้`, lc] : ['ok', 'corner', lc.length ? `มุมตัว L ${lc.length} จุด (น้อย รับได้)` : 'ไม่มีมุมขอบตัว L', lc]);
+    // set 298 (owner A): calibrated on 298 PMD reference idles — warn above their p75 (1.3 L corners per 100 body px)
+    issues.push(lc.length > Math.max(3, body * 0.013) ? ['warn', 'corner', `มุมขอบเป็นตัว L ${lc.length} จุด เส้นดูหนาเป็นหยัก ลบเม็ดมุมได้`, lc] : ['ok', 'corner', lc.length ? `มุมตัว L ${lc.length} จุด (น้อย รับได้)` : 'ไม่มีมุมขอบตัว L', lc]);
 
     // orphans: a solid pixel unlike all 8 neighbours. Floating specks (no solid neighbour) are bad.
     const orph = [], speck = [];
@@ -126,8 +129,9 @@ const PXC = (() => {
       else if (!same && sol >= 6 && me !== olK && Math.abs(p.L - sL / sol) > 0.2) orph.push([x, y]);
     }
     if (speck.length) issues.push(['bad', 'speck', `เม็ดลอยหลุดจากตัว ${speck.length} เม็ด (ไม่ติดกับอะไรเลย)`, speck]);
-    issues.push(orph.length > Math.max(14, body * 0.025) ? ['warn', 'orphan', `เม็ดเดี่ยวแปลกปลอม ${orph.length} เม็ด ภาพดูเป็นจุดๆ (ตา/ประกายตั้งใจได้)`, orph]
-      : ['ok', 'orphan', orph.length ? `เม็ดเดี่ยว ${orph.length} เม็ด (น้อย ปกติเป็นตา/ประกาย)` : 'ไม่มีเม็ดเดี่ยวแปลกปลอม', orph]);
+    // set 298 (owner A): single pixels are normal texture in the PMD reference (median 4, p90 7.3 per 100 body px) → warn only above p90
+    issues.push(orph.length > Math.max(14, body * 0.073) ? ['warn', 'orphan', `เม็ดเดี่ยวแปลกปลอม ${orph.length} เม็ด ภาพดูเป็นจุดๆ (ตา/ประกายตั้งใจได้)`, orph]
+      : ['ok', 'orphan', orph.length ? `เม็ดเดี่ยว ${orph.length} เม็ด (ปกติ เป็นลายผิว/ตา/ประกาย)` : 'ไม่มีเม็ดเดี่ยวแปลกปลอม', orph]);
 
     // readability: lightness spread of the body (outline excluded) — a flat grey view = hard to read
     const Ls = []; for (const p of pal) if (p.k !== olK) for (let i = 0; i < Math.min(p.n, 400); i++) Ls.push(p.L);

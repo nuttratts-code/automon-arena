@@ -1,5 +1,7 @@
 # Boss win % by team tribe — set 167 (9 Nov 2026)
 
+Status (claude/reviews.md row): decided — kept in claude/ (input of the boss brainstorm, linked) · status line added set 304 G1.
+
 After AMCFG1 rev 52 import (9 chars) + botgen 2400 4. Current game boss values (set 150b), no value changed. 600 runs, runerun flow (lab/analyze.js runPlayStats, keepTeams, runeWhatIf off); every team that reached boss k fights every boss. Team tribe = ≥ 4 units of one tribe (tribe4), else ผสม. Cell = player win % (teams). k3 samples are small (≤ 27 per tribe) — read as rough.
 
 | boss | k | weak | resist | เพลิงเผา | สายฟ้า | วายุ | ภูติ | เหล็กกล้า | อสูร | ผสม | ทั้งหมด |
