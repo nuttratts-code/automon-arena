@@ -33,3 +33,10 @@ s = s.replace("\t\t\tvar gs := md * 0.56\n", "\t\t\tvar gs := md * 0.57\n")
 s = s.replace("Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(1, 1, 1, fa))",
               "Rect2(bc - Vector2(gs, gs) * 0.5, Vector2(gs, gs)), false, Color(0.98, 0.965, 0.945, fa))")
 open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge e ok")
+
+# set 307 f: owner "why flat?" -> cause: tc is the muted card colour (r39l S299CSAT/CVAL), multiply turns the shadow brown-grey.
+# Badge only: vivid tribe colour = the owner fire target's mid red (238,69,31) -> s 0.87, v 0.93. Cards stay muted (r39l).
+s = open(p, encoding="utf-8", newline="").read()
+s = s.replace("Vector2(md, md)), false, Color(tc.r, tc.g, tc.b, fa))\n",
+              "Vector2(md, md)), false, Color.from_hsv(tc.h, 0.87, 0.93, fa))   # set 307 f: vivid badge\n")
+open(p, "w", encoding="utf-8", newline="").write(s); print("s307badge f ok")
