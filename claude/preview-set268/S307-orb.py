@@ -15,7 +15,7 @@ lam = np.clip(x * L[0] + y * L[1] + z * L[2], 0, 1)
 H = L + np.array([0, 0, 1.0]); H /= np.linalg.norm(H)
 spec = np.clip(x * H[0] + y * H[1] + z * H[2], 0, 1) ** 90
 rim = np.clip((x * 0.6 + y * 0.7), 0, 1) * (1 - z) ** 2       # bounce light bottom-right edge
-v = 0.18 + 0.95 * lam ** 0.9 + 0.40 * rim
+v = 0.40 + 0.80 * lam ** 0.9 + 0.40 * rim   # set 307 d: lower half lighter (owner)
 v = np.clip(v, 0, 1)
 col = v * 245.0
 col = np.clip(col, 0, 255)
