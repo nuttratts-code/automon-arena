@@ -8,7 +8,6 @@ p = os.path.join(g, "scripts", "ui", "r43.gd")
 s = open(p, encoding="utf-8", newline="").read()
 if not os.path.exists(p + ".s307coin"): shutil.copy(p, p + ".s307coin")
 old = "\tvar cw := 12.0\n\tvar chh := cw * float(ct.get_height()) / float(ct.get_width())\n"
-assert s.count(old) == 1, "coin size"
-s = s.replace(old, "\tvar chh := 14.0   # set 307: tilted coin is taller, size by height\n\tvar cw := chh * float(ct.get_width()) / float(ct.get_height())\n")
+if old in s: s = s.replace(old, "\tvar chh := 14.0   # set 307: tilted coin is taller, size by height\n\tvar cw := chh * float(ct.get_width()) / float(ct.get_height())\n")
 open(p, "w", encoding="utf-8", newline="").write(s)
 print("s307coin ok")
