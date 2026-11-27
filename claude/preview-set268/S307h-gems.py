@@ -28,7 +28,7 @@ def lin(S, a, b):   # diagonal gradient top-left a -> bottom-right b
     t = (np.add.outer(np.arange(S), np.arange(S)) / (2 * S - 2))[..., None]
     return Image.fromarray((np.array(a) * (1 - t) + np.array(b) * t).astype(np.uint8), "RGB")
 
-def gem(size, col, style, k=16):
+def gem(size, col, style, k=16, outsz=None):   # outsz: final px (texture for Godot = 4x of the game size, same proportions)
     S = size * k; c = 0.32 * S; px = k   # 1 game pixel = k
     col = hx(col); im = Image.new("RGBA", (S, S), (0, 0, 0, 0))
     im.paste(INK + (255,), (0, 0), mask(S, hexp(S, c, 0)))   # 1 px dark outline all round
@@ -73,7 +73,7 @@ def gem(size, col, style, k=16):
         from PIL import ImageChops
         im.paste((255, 255, 255, 255), (0, 0), ImageChops.multiply(hl, inside))
         im.paste(tuple(int(v) for v in shade(col, 0.85)) + (255,), (0, 0), ImageChops.multiply(bo, inside))
-    out = im.resize((size, size), Image.LANCZOS)
+    out = im.resize((outsz or size, outsz or size), Image.LANCZOS)
     if "pixel" in style:   # crisp: hard alpha, 6-ish colours
         a = out.getchannel("A").point(lambda v: 255 if v > 110 else 0)
         out = out.convert("RGB").quantize(8, method=Image.Quantize.MEDIANCUT).convert("RGBA"); out.putalpha(a)
@@ -113,3 +113,8 @@ for key, style, name in VAR:
     out.paste(ingame(style).resize((cw, ch), Image.LANCZOS), (40 + 5 * (BIG + 14) + 30, y + 36 + (BIG - ch) // 2))
     y += rowh
 out.save("S307h-gems.png"); print(out.size)
+if __name__ == "__main__" and len(__import__("sys").argv) > 1:   # set 307 i: export owner pick F2 (facet-bezel) for g286: python S307h-gems.py <g286>
+    import os
+    for tok, colr in zip(["mute", "r-unc", "r-rare", "r-epic", "r-legend"], RAR):
+        gem(24, colr, "facet-bezel", k=64, outsz=96).save(os.path.join(__import__("sys").argv[1], "ui_r48", "gem_%s.png" % tok))
+    print("gems exported")
