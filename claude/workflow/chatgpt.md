@@ -15,6 +15,11 @@ Claude asks OpenAI ChatGPT (owner's ChatGPT Plus) through **Codex CLI**, same ro
 - Copy shots from a branch with `git show <branch>:<path> > <scratchpad>/shot.png`; never give Codex a repo path.
 - The question must stand alone: short game/screen description + Claude's options. Say "original creature auto-battler"; never name the inspiration game.
 
+## Pictures from GPT (set 301 test, 27 Nov)
+- Codex has `image_generation` (stable, on). Ask in the prompt "Use your image generation tool … N separate images"; works with `-s read-only`.
+- Files land in `~/.codex/generated_images/<session id>/exec-*.png` (1672x941 for 16:9); copy them to `claude/preview-set<NN>/S<NN>-gpt-*.png` before showing the owner. 3 mocks ≈ 14k tokens, ~2 min.
+- What came back: polished screen mocks, but GPT invents its own creatures + names and mirrors our team as the rival; the 3 "styles" kept one layout. Use them for layout/style ideas only — real samples still use hub characters (Decisions: Characters come from the Hub). Ask for "different LAYOUTS" explicitly when layout is the point.
+
 ## Safety (HARD RULE 9)
 - Send only the question + the shots it needs: no keys, tokens, private links, owner personal data, whole docs or code. Anything sent goes to OpenAI.
 - Never `--dangerously-bypass-approvals-and-sandbox`, never `-s workspace-write` / `danger-full-access`, never `--full-auto`, never run in the repo or with `--add-dir`.
