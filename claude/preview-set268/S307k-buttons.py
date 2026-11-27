@@ -23,14 +23,20 @@ def button(w, h, fill):
     m = m.point(lambda v: 255 if v == 128 else 0).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8))
     f = Image.open(fill).convert("RGBA").resize((w, h), Image.LANCZOS)
     b.paste(f, (0, 0), m)
-    # set 307 k2 (owner: the sheen is a CRISP band, as the target): sharp-edged diagonal parallelogram, leaning right at the top
-    band = Image.new("L", (w, h), 0)
-    x0 = w * 0.45
-    ImageDraw.Draw(band).polygon([(x0, 0), (x0 + w * 0.22, 0), (x0 + w * 0.10, h), (x0 - w * 0.12, h)], fill=int(255 * SHEEN_A))
-    b.paste(SHEEN_C, (0, 0), ImageChops.multiply(band, m))
+    # set 307 k3 (owner: k2 band was flat = a sticker; target = ONE crisp edge, the other side fades smoothly): light ramps from 0
+    # (soft, left) to SHEEN_A at the crisp right edge, which leans right at the top; tiny noise = no 8-bit banding steps
+    import numpy as np
+    yy, xx = np.mgrid[0:h, 0:w].astype(float)
+    edge = w * (0.55 + 0.12 * (1 - yy / (h - 1)))
+    u = edge - xx; W = w * 0.35
+    al = np.where((u >= 0) & (u <= W), SHEEN_A * np.clip(1 - u / W, 0, 1) ** 1.5, 0.0)
+    al = al * (np.asarray(m) / 255.0)
+    arr = np.asarray(b).astype(float)
+    arr[..., :3] = arr[..., :3] * (1 - al[..., None]) + np.array(SHEEN_C) * al[..., None] + np.random.default_rng(7).uniform(-0.5, 0.5, (h, w, 1))
+    b = Image.fromarray(np.clip(arr + 0.5, 0, 255).astype(np.uint8), "RGBA")
     return b
 g = sys.argv[1] if len(sys.argv) > 1 else None
-SHEEN_A = 0.13
+SHEEN_A = 0.20
 for nm, fl, (w, h) in [("lock", "S307k-gpt-fill-1.png", (808, 160)), ("reroll", "S307k-gpt-fill-2.png", (808, 208))]:
     SHEEN_C = (181, 154, 101) if nm == "lock" else (117, 166, 189)   # r47 sheen colours (warm lock, cool reroll)
     im = button(w, h, fl); im.save("S307k-btn_%s.png" % nm)
