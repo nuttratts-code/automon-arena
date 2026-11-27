@@ -1,0 +1,208 @@
+# SAMPLE set 302 round 43 (owner target S301-owner-target.webp): r39p layout, dark-navy panels with a gold trim and cut corners,
+# tribe-gradient cards (name + coin + price on top, HP/ATK pills on the left), Lv tab top-left, bench sockets with "+",
+# Fight exactly as the picture (dark blue, glowing cyan inner edge, gold trim, crossed swords). Switch S302R43=1 (needs S299VAR>0).
+extends RefCounted
+
+const TH := preload("res://scripts/ui/theme.gd")
+static var _on := -1
+static func on() -> bool:
+	if _on < 0: _on = 1 if OS.get_environment("S302R43") == "1" else 0
+	return _on == 1
+
+static func V() -> GDScript:
+	return load("res://scripts/ui/var299.gd")
+
+const NAVY := "#122036"
+const NAVY2 := "#0b1526"
+const GOLD := "#c9a45c"
+const GOLD_D := "#6e5630"
+const RIM := "#04070c"
+const K := 9.0
+
+static func _cut(r: Rect2, k: float) -> PackedVector2Array:   # motif: top-left + bottom-right cut
+	return PackedVector2Array([Vector2(r.position.x + k, r.position.y), Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y - k),
+		Vector2(r.end.x - k, r.end.y), Vector2(r.position.x, r.end.y), Vector2(r.position.x, r.position.y + k)])
+
+static func _cut4(r: Rect2, k: float) -> PackedVector2Array:   # Fight: all four corners cut (as the picture)
+	var a := r.position
+	var b := r.end
+	return PackedVector2Array([Vector2(a.x + k, a.y), Vector2(b.x - k, a.y), Vector2(b.x, a.y + k), Vector2(b.x, b.y - k),
+		Vector2(b.x - k, b.y), Vector2(a.x + k, b.y), Vector2(a.x, b.y - k), Vector2(a.x, a.y + k)])
+
+static func _ring(ci: CanvasItem, p: PackedVector2Array, c: Color, w: float) -> void:
+	var q := p.duplicate()
+	q.append(p[0])
+	ci.draw_polyline(q, c, w, true)
+
+static func _grad(ci: CanvasItem, p: PackedVector2Array, top: Color, bot: Color, r: Rect2) -> void:
+	var cs := PackedColorArray()
+	for v in p:
+		cs.append(top.lerp(bot, clampf((v.y - r.position.y) / maxf(r.size.y, 1.0), 0.0, 1.0)))
+	ci.draw_polygon(p, cs)
+
+# dark-navy panel, dark rim, gold trim, faint inner gold rule
+static func panel(ci: CanvasItem, r: Rect2, k: float, a: float) -> void:
+	_grad(ci, _cut(r, k), Color(Color("#172840"), 0.95 * a), Color(Color(NAVY2), 0.95 * a), r)
+	_ring(ci, _cut(r.grow(1.0), k + 0.4), Color(Color(RIM), 0.9 * a), 2.0)
+	_ring(ci, _cut(r.grow(-1.0), k - 0.4), Color(Color(GOLD), a), 1.5)
+	_ring(ci, _cut(r.grow(-4.0), maxf(k - 1.6, 1.0)), Color(Color(GOLD), 0.22 * a), 1.0)
+
+static func plate(ci: CanvasItem, r: Rect2, _k: float, a: float) -> void:
+	panel(ci, r, K + 2.0, a)
+
+static func button(ci: CanvasItem, r: Rect2, nm: String, hv: bool) -> void:
+	if nm == "Fight":
+		fight(ci, r, hv)
+		return
+	var p := _cut(r, 6.0)
+	_grad(ci, p, Color("#22324c").lightened(0.06 if hv else 0.0), Color("#131e30"), r)
+	# one soft diagonal sheen (the picture's lighter band across the button)
+	var x0 := r.position.x + r.size.x * 0.45
+	var sh := PackedVector2Array([Vector2(x0, r.position.y + 1), Vector2(x0 + r.size.x * 0.22, r.position.y + 1),
+		Vector2(x0 + r.size.x * 0.10, r.end.y - 1), Vector2(x0 - r.size.x * 0.12, r.end.y - 1)])
+	ci.draw_polygon(sh, PackedColorArray([Color(1, 1, 1, 0.05)]))
+	_ring(ci, _cut(r.grow(1.0), 6.4), Color(Color(RIM), 0.9), 1.5)
+	_ring(ci, _cut(r.grow(-0.5), 5.8), Color("#5d6d86") if not hv else Color(GOLD), 1.0)
+
+static func fight(ci: CanvasItem, r: Rect2, hv: bool) -> void:
+	var k := 14.0
+	ci.draw_polygon(_cut4(r.grow(1.5), k + 0.6), PackedColorArray([Color(Color(RIM), 0.95)]))
+	_grad(ci, _cut4(r, k), Color("#a88444"), Color("#6e5630"), r)   # gold frame
+	_ring(ci, _cut4(r.grow(-0.5), k - 0.2), Color("#f0d48e"), 1.0)
+	var inr := r.grow(-4.0)
+	ci.draw_polygon(_cut4(inr.grow(1.0), k - 1.0), PackedColorArray([Color(Color(RIM), 1.0)]))
+	_grad(ci, _cut4(inr, k - 1.6), Color("#13456a").lightened(0.08 if hv else 0.0), Color("#0a2238"), inr)
+	# glowing cyan inner edge: bright line + soft fall-off inward
+	for i in 6:
+		var g := inr.grow(-1.0 - i * 1.6)
+		_ring(ci, _cut4(g, maxf(k - 2.0 - i * 0.7, 2.0)), Color(Color("#6fe0ff"), (0.95 if i == 0 else 0.30 - i * 0.05) * (1.0 if hv else 0.85)), 1.5 if i == 0 else 1.6)
+	# crossed swords, left of the label
+	var c := Vector2(inr.position.x + inr.size.x * 0.27, inr.position.y + inr.size.y * 0.5)
+	var s := inr.size.y * 0.30
+	for d: Vector2 in [Vector2(1, 1), Vector2(-1, 1)]:
+		var a := c - d * s
+		var b := c + d * s
+		ci.draw_line(a, b, Color(Color(RIM), 0.8), 5.0, true)
+		ci.draw_line(a, b, Color("#e9f6ff"), 3.0, true)
+		ci.draw_line(a + d * 1.0, a + d * s * 0.9, Color(1, 1, 1, 0.9), 1.0, true)   # blade light edge
+		var gn := Vector2(-d.y, d.x).normalized() * s * 0.30
+		var gp := b - d * s * 0.32
+		ci.draw_line(gp - gn, gp + gn, Color("#e9c46a"), 3.0, true)   # guard
+		ci.draw_line(gp, b + d * 2.0, Color("#8a5a2a"), 3.0, true)   # grip
+
+static func button_text(b: Button) -> void:
+	var c := Color("#f6fbff")
+	for k in ["font_color", "font_hover_color", "font_pressed_color"]: b.add_theme_color_override(k, c)
+	b.add_theme_constant_override("outline_size", 0)
+	b.add_theme_color_override("font_shadow_color", Color(0, 0.05, 0.12, 0.9))
+	b.add_theme_constant_override("shadow_offset_x", 0)
+	b.add_theme_constant_override("shadow_offset_y", 2)
+	for n in b.find_children("*", "Label", true, false):
+		var l := n as Label
+		l.add_theme_color_override("font_color", c)
+		l.add_theme_constant_override("outline_size", 0)
+		l.add_theme_color_override("font_shadow_color", Color(0, 0.05, 0.12, 0.9))
+		l.add_theme_constant_override("shadow_offset_x", 0)
+		l.add_theme_constant_override("shadow_offset_y", 2)
+	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var e := StyleBoxEmpty.new()
+		e.content_margin_left = 44   # make room for the swords
+		b.add_theme_stylebox_override(st, e)
+
+static func text(l: Label) -> void:
+	l.add_theme_constant_override("outline_size", 0)
+	l.add_theme_constant_override("shadow_outline_size", 0)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0.02, 0.06, 0.85))
+	l.add_theme_constant_override("shadow_offset_x", 0)
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	var c := l.get_theme_color("font_color")
+	if c.s < 0.2 and c.v > 0.6: l.add_theme_color_override("font_color", Color("#f4f1ea"))
+
+static func slot(ci: Control, filled: bool, shop: bool, line: Variant) -> void:
+	var r := Rect2(Vector2.ZERO, ci.size).grow(-1.0)
+	if shop:
+		return
+	var p := _cut(r, 6.0)
+	_grad(ci, p, Color(Color("#0e1828"), 0.93), Color(Color("#0a111d"), 0.93), r)
+	_ring(ci, _cut(r.grow(1.0), 6.4), Color(Color(RIM), 0.9), 1.5)
+	_ring(ci, _cut(r.grow(-0.5), 5.8), Color("#6a5a3e") if line == null or not filled else line, 1.0)
+	for i in 3:   # sunk: inner shadow under the top lip
+		ci.draw_line(Vector2(r.position.x + 7, r.position.y + 2 + i), Vector2(r.end.x - 2, r.position.y + 2 + i), Color(0, 0, 0, 0.28 - i * 0.08), 1.0)
+	if not filled:
+		var c := r.get_center()
+		var s := roundf(minf(r.size.x, r.size.y) * 0.13)
+		var pc := Color("#8d96a3")
+		ci.draw_rect(Rect2(c.x - s, c.y - 1, s * 2, 2), pc)
+		ci.draw_rect(Rect2(c.x - 1, c.y - s, 2, s * 2), pc)
+
+static func card(cell: Control, c: Dictionary, ts: Array, cant: bool, owned: bool) -> void:
+	var v := V()
+	var dc := OS.get_environment("S299CANT")
+	if dc != "" and cell.get_index() == int(dc): cant = true
+	cell.modulate = Color.WHITE
+	var rc := Color(0.55, 0.55, 0.55)
+	var cols := []
+	var ft := cell.find_child("Foot299", true, false)
+	if ft != null:
+		rc = ft.get_meta("rc", rc)
+		cols = ft.get_meta("cols", [])
+	if cols.is_empty():
+		for t in ts: cols.append(TH.c(str((TH.TRIBE_SHAPE.get(t, ["square", "mute"]) as Array)[1])))
+	for ch in cell.get_children():
+		if ch is CanvasItem: (ch as CanvasItem).visible = false
+	var tex := TH.hub_pic299(str(c.get("id")))
+	var vc := Control.new()
+	vc.name = "Var299"
+	vc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vc.clip_contents = true
+	vc.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var hp: float = v._lv(c, "hp")
+	var atk: float = v._lv(c, "atk")
+	vc.draw.connect(func() -> void: _card(vc, tex, str(c["name"]), int(float(c["price"])), cols, ts, hp, atk, cant, owned))
+	cell.add_child(vc)
+
+static func _pill(ci: CanvasItem, f: Font, r: Rect2, s: String, fill: Color) -> void:
+	ci.draw_rect(r.grow(1.0), Color(Color(RIM), 0.85))
+	_grad(ci, PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]), fill.lightened(0.18), fill.darkened(0.25), r)
+	ci.draw_line(r.position + Vector2(1, 0.5), Vector2(r.end.x - 1, r.position.y + 0.5), Color(1, 1, 1, 0.25), 1.0)
+	var fs := 9
+	var tw := f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	ci.draw_string(f, Vector2(roundf(r.get_center().x - tw * 0.5), r.end.y - 2.5), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color("#f6f3ea"))
+
+static func _card(ci: Control, tex: Texture2D, nm: String, price: int, cols: Array, ts: Array, hp: float, atk: float, cant: bool, owned: bool) -> void:
+	var v := V()
+	var w := ci.size.x
+	var h := ci.size.y
+	var r := Rect2(Vector2.ZERO, ci.size).grow(-1.5)
+	var fb: Font = TH.font("body_b")
+	var fd: Font = v._numfont(TH.font("display"))
+	var tc: Color = cols[0] if cols.size() > 0 else Color(0.5, 0.5, 0.5)
+	var fa := 0.45 if cant else 1.0
+	var k := 6.0
+	# tribe gradient: deep tribe colour at the edges, lit tribe colour behind the creature
+	var base := Color.from_hsv(tc.h, clampf(tc.s * 0.85, 0.0, 0.75), 0.42)
+	_grad(ci, _cut(r, k), base.darkened(0.35), base.darkened(0.55), r)
+	var gc := Vector2(w * 0.60, h * 0.62)
+	for i in 14:
+		ci.draw_circle(gc, h * (0.62 - i * 0.04), Color(Color.from_hsv(tc.h, clampf(tc.s * 0.7, 0.0, 0.7), 0.78), 0.05), true, -1.0, true)
+	var bh := 18.0
+	v._pic(ci, tex, Rect2(w * 0.24, bh + 3, w * 0.74, h - bh - 6))
+	# name strip on top (dark, tribe icon left, coin + price right)
+	ci.draw_rect(Rect2(r.position.x + 1, r.position.y + 1, r.size.x - 2, bh), Color(0.03, 0.05, 0.09, 0.82))
+	ci.draw_line(Vector2(r.position.x + 1, r.position.y + bh + 1), Vector2(r.end.x - 1, r.position.y + bh + 1), Color(Color(GOLD), 0.55 * fa), 1.0)
+	if ts.size() > 0:
+		v._badge(ci, Vector2(r.position.x + 11, r.position.y + 1 + bh * 0.5), 12.0, str(ts[0]), tc, 2)
+	v._txt(ci, fb, Vector2(r.position.x + 21, r.position.y + bh - 4), nm, 10, Color("#f4f1ea"), 0, Color.BLACK, false)
+	var ps: String = v._num(price)
+	var pw := fd.get_string_size(ps, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+	v._txt(ci, fd, Vector2(r.end.x - 5 - pw, r.position.y + bh - 3), ps, 12, Color("#ff6a5a") if cant else Color("#fff3c8"), 0, Color.BLACK)
+	v._coin(ci, Vector2(r.end.x - 6 - pw - 12, r.position.y + 1 + (bh - 10.5) * 0.5), 1.5)
+	# HP / ATK pills down the left side
+	var py := r.position.y + bh + 6
+	_pill(ci, fb, Rect2(r.position.x + 5, py, 23, 11), v._num(hp), Color("#3f8a46"))
+	_pill(ci, fb, Rect2(r.position.x + 5, py + 15, 23, 11), v._num(atk), Color("#a3363a"))
+	# frame: dark rim + gold line
+	_ring(ci, _cut(r.grow(0.5), k + 0.2), Color(Color(RIM), 0.9), 1.5)
+	_ring(ci, _cut(r.grow(-0.8), k - 0.3), Color(Color(GOLD), 0.95 * fa), 1.2)
+	if owned: ci.draw_rect(Rect2(w - 9, h - 9, 4, 4), Color("#f2c14e"))
