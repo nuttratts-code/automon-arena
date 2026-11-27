@@ -1,0 +1,35 @@
+Hex values are visual estimates from the screenshots. Use them as replacement values at 1920 px wide. Gradients run top → bottom. Shadow notation is colour / opacity / (x, y) offset / blur radius, with dimensions in px.
+
+1. Top shop plate. Fill #182C36 → #0B1318. Inner top highlight 1 px #3D5054 at 55%, inner bottom shadow #05080A / 65% / (0, −3) / 6. Drop #000000 / 60% / (0, 5) / 10. Keep the fill dark and lightly blue-green. Ours is too bright across the centre and under the odds.
+
+2. Gold plate frames. Outside → inside: 2 px #181610, 3 px gold #B19358 → #7B6238, 1 px #D5BA80 on top and upper-left bevels, then 2 px #342A1D. Inner lower-edge shadow #08090A / 55% / (0, −2) / 3. Drop shared with the host plate. Ours uses a brighter, more orange gold with too much continuous edge contrast.
+
+3. Lv tab. Fill #20282C → #11181B. Border 2 px #17150F, 2 px #A88E59, 1 px upper bevel #CCB17B. Inner top highlight 1 px #46504A at 45%. Drop #000000 / 55% / (0, 3) / 5. Keep the fill close to neutral charcoal. Ours reads as a flat navy cutout.
+
+4. Lock and reroll. Lock fill #252829 → #10191D. Reroll fill #26343C → #101C24. Both get 2 px #131513, 2 px #9A8255 and a 1 px top bevel #C0AA7A. Inner bottom shadow #000000 / 50% / (0, −2) / 4. Drop #000000 / 55% / (0, 3) / 5. Diagonal sheen #B59A65 at 10% for lock and #75A6BD at 10% for reroll. Lock icon #F0D08A → #B28A47. Reroll icon #C2F4FF with #2BC7FF at 35%, 14 px glow. Ours has bright blue diagonal bands and a white reroll icon with no local cyan glow.
+
+5. Shop cards. Each row gives body gradient, radial glow behind the creature, name strip gradient and lower strip rule. Centre each glow at roughly 55% across and 85% down the body, with an elliptical falloff to transparent at 55% of card width.
+
+   - Pangofan: #143038 → #20534D. Glow #60DFC7 at 48%. Strip #17282B → #0E191D. Rule #4C8A82. Ours is too bright and green across the entire body.
+   - Firasheep: #342329 → #614036. Glow #FF9B58 at 60%. Strip #2A2221 → #181618. Rule #875946. Ours has too much orange near the top and sides.
+   - Bhameleon, third slot: #29233D → #49375E. Glow #AC78E9 at 55%. Strip #272231 → #17151D. Rule #74608D. Ours is burgundy where the target is violet.
+   - Fhock: #302C20 → #554723. Glow #E7BF52 at 50%. Strip #2B281D → #181812. Rule #897742. Ours has a broad mustard fill that flattens the lighting.
+   - Bhameleon, fifth slot: #35202F → #5B2D45. Glow #EF789F at 52%. Strip #2D2029 → #1A151C. Rule #8A526B. Ours is too uniformly red and shares too much of its palette with the third slot.
+
+   Shared card treatment. Border 2 px #101112, 2 px #A88F5D and 1 px upper bevel #C9B17C. Strip rule 1 px. Inner side and top shadow #000000 / 35% / (0, 2) / 8. Card drop #000000 / 65% / (0, 3) / 6. Price coin #FFE191 → #B6771D with a 1 px #654514 rim. Price numeral #FFF5DC with a 1 px #17100A outline. HP pill #447B57 → #203B2B, border 1 px #7EAD86. ATK pill #A95156 → #622B31, border 1 px #C77A7D. Firasheep’s third pill #986137 → #60391E, border 1 px #C38D56. All pills get 5 px corner radii, a 1 px inner top highlight #FFFFFF at 15%, and drop #000000 / 55% / (0, 2) / 3. Ours has boxy, overbright pills and a thick coloured inset around the card bodies.
+
+6. Bottom-left info panel. Fill #142A33 → #0C171D, with a soft right-side wash #224352 at 30%. Border 2 px #19170F, 3 px #A68B55 → #77613A, 1 px top bevel #D0B47A. Divider 2 px #978052, fading to transparent at the right. Inner bottom shadow #000000 / 42% / (0, −3) / 7. Drop #000000 / 65% / (0, 5) / 10. Watermark #A68E52 at 30%. Ours has heavier edge outlines and a hard-ended divider.
+
+7. Bench. Tray fill #242824 → #151A19 at 65–75% opacity, with a 2 px #665C45 rim and a 1 px #A1926E top bevel. Tray drop #000000 / 45% / (0, 4) / 8. Socket fill #253034 → #171F21. Each socket gets 2 px #171813, 2 px #9B8860 → #716144, 1 px upper bevel #C5AD7C, and an inner shadow #000000 / 45% / (0, 2) / 4. Socket drop #000000 / 55% / (0, 3) / 5. Plus sign #9B9788. Ours has a heavy opaque outer frame, doubled inset lines and cool grey plus signs.
+
+8. Fight button. Fill #153D4E → #0C2B39, with a diffuse centre wash #167497 at 22%. Outside → inside: 3 px #16150F, 4 px #D4B575 → #8E6E3C, 2 px #172A30, 1 px cyan bevel #3D9BB6 at 65%. Inner edge shadow #040C11 / 60% / (0, 0) / 8. Add short top and bottom centre highlights #8AEAFF with #29CFFF at 50% and 10 px blur. Drop #000000 / 72% / (0, 5) / 10. Ours floods the whole face and perimeter with bright turquoise. The target concentrates cyan into two short highlights.
+
+9. Text. White #F5F4ED, gold numbers #FFD47B, hearts number #F49CA9. Odds left to right #F3F6F4, #88EC99, #85CEFF, #E2A1F4, #FFD16D. Use a 2 px #090D10 outline for large text and odds, 1 px on card text, plus drop #000000 / 65% / (0, 2) / 2. Keep the gold and pink numerals warm and the odds pastels clean. Ours uses softer, greyer white on the small UI text and stronger yellow on large gold numerals.
+
+Top 5 by visual impact
+
+1. Darken the Fight face and concentrate cyan at the top and bottom centre.
+2. Darken the shop plate and shift its fill toward blue-green charcoal.
+3. Confine card lighting to local glows and restore the third card’s violet palette.
+4. Replace bright orange frame lines with muted gold bevels and darker lower edges.
+5. Reduce the bench tray’s opacity and frame weight so the six sockets read individually.
