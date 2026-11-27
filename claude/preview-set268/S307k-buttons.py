@@ -37,7 +37,7 @@ def button(w, h, fill):
     return b
 g = sys.argv[1] if len(sys.argv) > 1 else None
 SHEEN_A = 0.20
-for nm, fl, (w, h) in [("lock", "S307k-gpt-fill-1.png", (808, 160)), ("reroll", "S307k-gpt-fill-2.png", (808, 208))]:
+for nm, fl, (w, h) in [("lock", "S307k-gpt-fill-1.png", (808, 138)), ("reroll", "S307k-gpt-fill-2.png", (808, 182))]:   # set 307 l A1: game rects 202x34.5 / 202x45.5 x4
     SHEEN_C = (181, 154, 101) if nm == "lock" else (117, 166, 189)   # r47 sheen colours (warm lock, cool reroll)
     im = button(w, h, fl); im.save("S307k-btn_%s.png" % nm)
     if g: im.save(os.path.join(g, "ui_r48", "btn_%s.png" % nm))
