@@ -41,6 +41,9 @@ Default screen shows only the current flow: still batch → /pick → hub + ★ 
 - Name + skills (owner set 248 round 4, A1 + B1): the still step opens with a box: name field (`items[ID].name`, ≤ 24 characters, "คืนชื่อเดิม" = back to the game.json name) + tribe / rarity + the creature's skill texts Lv1–3, read-only from the repo's `godot/data/game.json` + `labels.json` (`GET /api/game`). Export writes `names {ID: name}` into unit_shadows.json; Godot `characters.gd hub_names()` / `with_names()` swaps them in on the game screen only (`ui/app.gd`; meta `no_hub_names` = tests). Logic tests, golden replays, the web game and the Thai rule docs keep the game.json names; the save data hash stays on them, so renaming keeps saves valid. To rename for real everywhere = change src/core/characters.js (rule-change).
 - Every write (save, upload, star, export) shows a big green "✓ บันทึกแล้ว" at the bottom centre for 1.5 s; a failed write stays red until closed (owner D1, set 247).
 
+## Tablet copy (set 305)
+The 96 ★ stills can be edited away from the PC in a private Artifact; page, data shape and the Monday pull-back steps: `tools/asset-hub/tablet/README.md`.
+
 ## Pixel check (owner set 296: A1 auto check + A3 Claude's eyes · B1 still + frames · C1 list + red marks · D1 on press · E1 Claude answers, does not edit)
 - Button "ตรวจภาพ" in the action row under any picture of the ภาพนิ่ง step (still or cut) and under a frames sheet. Nothing runs until it is pressed; nothing is saved (results live in `pxRes` while the page is open).
 - Thresholds (set 298, owner A + B, calibrated on 298 PMD reference idles — claude/ref-idle-timing-size.md §4): stray single pixels warn only above 7.3 per 100 body px (texture is normal) · L corners above 1.3 per 100 body px · `olblack` warns when the outline is not pure #000000.
