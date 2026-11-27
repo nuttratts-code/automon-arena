@@ -3,9 +3,11 @@
 # Book / skull HUD row moves below the hanging tag. Usage: python s307odds-patch.py <g286> (after s307plate)
 import sys, os, shutil
 g = sys.argv[1]
-def patch(rel, pairs, tag="s307odds"):
-    p = os.path.join(g, "scripts", "ui", rel); s = open(p, encoding="utf-8", newline="").read()
+SEEN = set()
+def patch(rel, pairs, tag="s307odds"):   # first touch of a file in this run starts from its backup (= reruns are clean)
+    p = os.path.join(g, "scripts", "ui", rel)
     if not os.path.exists(p + "." + tag): shutil.copy(p, p + "." + tag)
+    s = open(p + "." + tag if rel not in SEEN else p, encoding="utf-8", newline="").read(); SEEN.add(rel)
     for old, new in pairs:
         if new in s: continue
         assert old in s, (rel, old[:70]); s = s.replace(old, new, 1)
@@ -32,7 +34,7 @@ patch("prep.gd", [
   '\t\t\t\tgdv.mouse_filter = Control.MOUSE_FILTER_IGNORE\n'
   '\t\t\t\todds_row.add_child(gdv)\n'
   '\t\t\t\todds_row.move_child(gdv, 1)\n'
-  '\t\t\t\todds_row.add_theme_constant_override("separation", 9)\n'
+  '\t\t\t\todds_row.add_theme_constant_override("separation", 7)\n'
   '\t\t\t\todds_row.alignment = BoxContainer.ALIGNMENT_CENTER\n'
   '\t\t\t\todds_row.offset_left = 0\n\t\t\t\todds_row.offset_right = 0\n'),
 ])
@@ -46,4 +48,18 @@ patch("s299_prep.gd", [
   '\t\t\t\tvar R43S: GDScript = load("res://scripts/ui/r43.gd")\n'
   '\t\t\t\tR43S._nine(self, R43S._tex("plate"), ou.grow_individual(4, 8, 4, 3), 80.0, 0.16, Color(1, 1, 1, 0.97))\n'
   '\t\tif ub.size.x > 0.0:\n'),
+])
+
+# set 307 odds tag b (owner): smaller + moved to the left (under the lock / reroll column): x -388..-160, y 99..117, Lv 12, odds 11
+patch("prep.gd", [
+ ('top, 0.5, 103, 381, 99.0 + PZS._inset(), 120.0 + PZS._inset())   # set 307',
+  'top, 0.5, -388, -128, 99.0 + PZS._inset(), 117.0 + PZS._inset())   # set 307 b: left, smaller'),
+ ('\t\t\t\tlvl.add_theme_font_size_override("font_size", 14)\n',
+  '\t\t\t\tlvl.add_theme_font_size_override("font_size", 12)   # set 307 b\n'
+  '\t\t\t\tfor hh in odds_row.get_children():   # set 307 b: smaller odds text\n'
+  '\t\t\t\t\tfor q in hh.get_children():\n'
+  '\t\t\t\t\t\tvar ql := q as Label\n'
+  '\t\t\t\t\t\tif ql != null: ql.add_theme_font_size_override("font_size", 11)\n'),
+ ('\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 14)\n', '\t\t\t\tgdv.custom_minimum_size = Vector2(1.5, 11)\n'),
+ ('\t\t\t\todds_row.add_theme_constant_override("separation", 7)\n', '\t\t\t\todds_row.add_theme_constant_override("separation", 5)\n'),
 ])
