@@ -11,7 +11,7 @@
 # Same frame-only build as round r (S307r-pillframe.py). Usage: python S307s-pillframe.py <g286> [S]
 import sys, os
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 g = sys.argv[1]; S = float(sys.argv[2]) if len(sys.argv) > 2 else 0.7
 UI = os.path.join(g, "ui_r48")
 W, H, M = 208, 104, 40
@@ -20,14 +20,14 @@ TOKS = {"gold": "card_frame.png", "mute": "card_frame_mute.png", "r-unc": "card_
 
 def metal_mask(gold):   # metal = saturated gold pixels of the ORIGINAL frame (tinted frames are pixel-aligned copies)
     a = np.asarray(gold).astype(int)
-    return (a[..., 3] > 128) & ((a[..., :3].max(-1) - a[..., :3].min(-1)) > 40)
+    return (a[..., 3] > 128) & (a[..., :3].max(-1) >= 70)   # set 307 u2: any non-dark pixel (round r used saturation > 40, which missed the white highlights on the TL diagonal -> the strip clear cut into it = the step)
 
 GOLD = Image.open(os.path.join(UI, "card_frame.png")).convert("RGBA")
 MET = metal_mask(GOLD)
 
 def frame_only(im):
     a = np.asarray(im).copy(); w = a.shape[1]
-    for y in range(18, 70):   # name strip: clear between the left metal run and the right metal run
+    for y in range(17, 70):   # set 307 u2: from row 17 (the strip's top dark row left a line) · name strip: clear between the left metal run and the right metal run
         row = MET[y]; x0 = 0
         while x0 < w and not row[x0]: x0 += 1
         while x0 < w and row[x0]: x0 += 1
@@ -51,10 +51,10 @@ def nine(im, w, h, m, s):
     return out
 
 def inside(fr):   # everything not reachable from the canvas edge through transparent pixels
-    al = fr.getchannel("A").point(lambda v: 255 if v > 60 else 0)
+    al = fr.getchannel("A").point(lambda v: 255 if v > 20 else 0)   # set 307 u2: 60 -> 20, fill leaked 1 px past the BR outline
     m = Image.new("L", fr.size, 0); m.paste(al)
-    ImageDraw.floodfill(m, (0, 0), 128); ImageDraw.floodfill(m, (W - 1, H - 1), 128)
-    ImageDraw.floodfill(m, (W - 1, 0), 128); ImageDraw.floodfill(m, (0, H - 1), 128)
+    for sd in ((0, 0), (W - 1, H - 1), (W - 1, 0), (0, H - 1)):   # set 307 u2: seed only on transparent corners (a seed on the
+        if m.getpixel(sd) == 0: ImageDraw.floodfill(m, sd, 128)   # square TR / BL frame corner marked the whole frame as outside)
     return m.point(lambda v: 0 if v == 128 else 255)
 
 frames = {t: nine(frame_only(Image.open(os.path.join(UI, f)).convert("RGBA")), W, H, M, S) for t, f in TOKS.items()}
@@ -70,7 +70,8 @@ def square(p, T=50, T2=44):
     return Image.fromarray(a, "RGBA")
 for t, fr in frames.items():
     ins = inside(fr); fa = np.asarray(fr.getchannel("A")); im_ = np.asarray(ins) > 0
-    yy, xx = np.nonzero(im_ & (fa < 30)); box = (xx.min(), yy.min(), xx.max() + 1, yy.max() + 1)
+    cm = Image.fromarray(((fa > 20) * 255).astype(np.uint8), "L").copy(); ImageDraw.floodfill(cm, (W // 2, H // 2), 128)   # set 307 u2: inner box = the
+    yy, xx = np.nonzero(np.asarray(cm) == 128); box = (xx.min(), yy.min(), xx.max() + 1, yy.max() + 1)   # hole reached from the centre
     if t == "gold": print("inner box", box)
     for k in ("hp", "atk", "multi", "burn", "shock", "armor", "heal"):
         p = square(Image.open(os.path.join(UI, "pill_%s.png" % k)).convert("RGBA")); p = p.crop((4, 4, p.width - 4, p.height - 4))   # set 307 u: drop the pill's own dark outline (showed as a black line under the frame)
@@ -82,7 +83,9 @@ for t, fr in frames.items():
             a = np.asarray(q); mean = a[a[..., 3] > 250][:, :3].mean(0) * 0.35
             fill = Image.new("RGBA", (W, H), tuple(int(v) for v in mean) + (255,))
             fill.alpha_composite(q.resize((box[2] - box[0] + 2, box[3] - box[1] + 2), Image.LANCZOS), (box[0] - 1, box[1] - 1))
-            fill.putalpha(ins)
-            out = Image.new("RGBA", (W, H), (0, 0, 0, 0)); out.alpha_composite(fill); out.alpha_composite(fr)
+            near = ins.point(lambda v: 255 - v).filter(ImageFilter.MaxFilter(5))   # set 307 u2: 2 px band next to the OUTSIDE only
+            fill.putalpha(ImageChops.subtract(ins, near))   # no fill pixel peeks past the frame's outline at the cuts; inner edge untouched
+            rim = Image.new("RGBA", (W, H), (3, 8, 12, 255)); rim.putalpha(ImageChops.multiply(ins, near))   # set 307 u2: that band = dark outline colour (closes the 1-2 px gaps in the frame's own outline at the BR cut)
+            out = Image.new("RGBA", (W, H), (0, 0, 0, 0)); out.alpha_composite(rim); out.alpha_composite(fill); out.alpha_composite(fr)
             out.save(os.path.join(UI, "pill_fr_%s_%s%s.png" % (k, t, suf)))
 print("pill_fr t ok, scale", S)
