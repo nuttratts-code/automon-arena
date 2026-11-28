@@ -205,7 +205,7 @@ Information
 10. Cut content before shrinking it (Hearthstone's 7 minions).
 
 Feel
-11. Material, not flat boxes: the UI should look like it is made of something from the game's world (wood, stone, metal, cloth, paper) with one consistent light direction — the same top-left light as the sprites (art-style §5).
+11. Material, not flat boxes: the UI should look like it is made of something from the game's world (wood, stone, metal, cloth, paper) with one consistent light direction — the same top light as the sprites (art-style §2, set 309 F1).
 12. Every tap answers within ~100 ms with a small physical move (press-in, snap, slide); big juice only on rare events (star-up, legend, boss kill). Feedback after structure is stable, not before.
 13. Motion uses ease-out; springs only for things that would bounce in the real world (a dropped unit, a coin).
 14. Warnings by one small animated element (pulse, colour shift), not a text banner (FF Resonance minimap ring).
