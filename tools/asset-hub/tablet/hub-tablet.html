@@ -519,7 +519,7 @@ function renderSide() {
         S.dl ? h('button', { onclick: gptExport }, '⬇ โหลดรูป') : null,
         h('button', { onclick: () => $('gptIn').click() }, '⬆ นำรูปเข้า'),
         h('input', { type: 'file', id: 'gptIn', accept: 'image/png,image/jpeg,image/webp', hidden: true, onchange: (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) gptImport(f); } })),
-      h('div', { class: 'dim', style: 'font-size:13px' }, S.dl ? 'โหลดรูปไปวางใน ChatGPT (บอกให้คงท่า/ขนาด และใช้พื้นหลังม่วงแดง #FF00FF หรือโปร่งใส) → ได้รูปกลับมาแล้วกด นำรูปเข้า: ย่อกลับขนาดเดิม + ใช้สีของรูปเดิม แล้วแก้ต่อ/บันทึกได้' : 'นำรูปจาก ChatGPT เข้า (พื้นหลังม่วงแดงหรือโปร่งใสดีที่สุด): ย่อกลับขนาดเดิม + ใช้สีของรูปเดิม (ปุ่มโหลดรูปใช้ไม่ได้ในหน้านี้)')),
+      h('div', { class: 'dim', style: 'font-size:13px' }, S.dl ? 'โหลดรูปไปวางใน ChatGPT (ใช้พรอมต์ที่ Claude ให้ไว้) → ได้รูปกลับมาแล้วกด นำรูปเข้า: ย่อกลับขนาดเดิม + ใช้สีของรูปเดิม แล้วแก้ต่อ/บันทึกได้' : 'นำรูปจาก ChatGPT เข้า (พื้นหลังม่วงแดงหรือโปร่งใสดีที่สุด): ย่อกลับขนาดเดิม + ใช้สีของรูปเดิม (ปุ่มโหลดรูปใช้ไม่ได้ในหน้านี้)')),
     h('section', null, h('h3', null, 'มุมมอง'),
       h('div', { class: 'row' },
         h('button', { onclick: () => { const s = $('stage'); zoomAt(E.z - 1 || 1, s.clientWidth / 2, s.clientHeight / 2); }, 'aria-label': 'ย่อ' }, '−'),
@@ -553,6 +553,7 @@ async function gptExport() {
   const k = Math.max(1, Math.floor(1024 / Math.max(E.w, E.h)));
   const c = document.createElement('canvas'); c.width = E.w * k; c.height = E.h * k;
   const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  x.fillStyle = '#ff00ff'; x.fillRect(0, 0, c.width, c.height); // solid magenta: a transparent PNG shows black in most apps and hides the outline (owner A1)
   if (E.p.flip) { x.translate(c.width, 0); x.scale(-1, 1); } // as shown on screen; import mirrors back
   x.drawImage(E.pix, 0, 0, c.width, c.height);
   try {
@@ -597,36 +598,51 @@ async function gptImport(file) {
       if (xx > 0) st.push(k - 1); if (xx < W - 1) st.push(k + 1); if (k >= W) st.push(k - W); if (k < W * (H - 1)) st.push(k + W);
     }
   }
+  for (let i = 0; i < d.length; i += 4) if (d[i] > 190 && d[i + 2] > 190 && d[i + 1] < 90) d[i + 3] = 0; // magenta key anywhere (gaps between legs)
   const fb = bbox(d, W, H);
   if (!fb) { toast('ไม่เจอตัวละครในรูป (พื้นหลังกลืนหมด)', false); return; }
   const ob = bbox(E.base, E.w, E.h) || { x: 0, y: 0, w: E.w, h: E.h };
   const s2 = Math.min(ob.w / fb.w, ob.h / fb.h);
   const tw = Math.max(1, Math.round(fb.w * s2)), th = Math.max(1, Math.round(fb.h * s2));
   const tx = Math.round(ob.x + (ob.w - tw) / 2), ty = ob.y + ob.h - th; // same spot, feet on the same line
-  // palette = colours of the picture before + hub + own colours
+  // colours (owner C1, set 308): old picture + hub + own colours win when close; clearly new shades from GPT stay; total <= 32
   const pal = new Map();
   for (let i = 0; i < E.base.length; i += 4) if (E.base[i + 3] > 0) pal.set(rgbHex(E.base[i], E.base[i + 1], E.base[i + 2]), 1);
   for (const c2 of hubAndOwn()) pal.set(c2, 1);
   const P = [...pal.keys()].map(hexRgb);
-  if (!P.length) { toast('รูปเดิมไม่มีสีให้เทียบ', false); return; }
-  const memo = new Map();
-  const snap = (r, g, b) => { const k = r << 16 | g << 8 | b; let v = memo.get(k); if (v != null) return v; let best = 0, bd = 1e9;
-    for (let j = 0; j < P.length; j++) { const dr = r - P[j][0], dg = g - P[j][1], db = b - P[j][2]; const dd = 2 * dr * dr + 4 * dg * dg + 3 * db * db; if (dd < bd) { bd = dd; best = j; } }
-    memo.set(k, best); return best; };
-  const out = new Uint8ClampedArray(E.w * E.h * 4);
-  const votes = new Int32Array(P.length);
+  const dist = (a, b) => Math.sqrt(2 * (a[0] - b[0]) ** 2 + 4 * (a[1] - b[1]) ** 2 + 3 * (a[2] - b[2]) ** 2) / 3;
+  const nearest = (col, list) => { let bi = -1, bd = 1e9; for (let j = 0; j < list.length; j++) { const dd = dist(col, list[j]); if (dd < bd) { bd = dd; bi = j; } } return [bi, bd]; };
+  const cells = []; // [X, Y, rgb]
   for (let py = 0; py < th; py++) for (let px = 0; px < tw; px++) {
     const X = tx + px, Y = ty + py; if (X < 0 || Y < 0 || X >= E.w || Y >= E.h) continue;
     const sx0 = Math.floor(fb.x + px * fb.w / tw), sx1 = Math.max(sx0 + 1, Math.floor(fb.x + (px + 1) * fb.w / tw));
     const sy0 = Math.floor(fb.y + py * fb.h / th), sy1 = Math.max(sy0 + 1, Math.floor(fb.y + (py + 1) * fb.h / th));
-    votes.fill(0); let op = 0, tot = 0;
-    for (let yy = sy0; yy < sy1; yy++) for (let xx = sx0; xx < sx1; xx++) { const i = (yy * W + xx) * 4; tot++; if (d[i + 3] === 0) continue; op++; votes[snap(d[i], d[i + 1], d[i + 2])]++; }
+    const bk = new Map(); let op = 0, tot = 0;
+    for (let yy = sy0; yy < sy1; yy++) for (let xx = sx0; xx < sx1; xx++) {
+      const i = (yy * W + xx) * 4; tot++; if (d[i + 3] === 0) continue; op++;
+      const k = (d[i] >> 4) << 8 | (d[i + 1] >> 4) << 4 | (d[i + 2] >> 4); const v = bk.get(k) || [0, 0, 0, 0];
+      v[0]++; v[1] += d[i]; v[2] += d[i + 1]; v[3] += d[i + 2]; bk.set(k, v);
+    }
     if (op * 2 <= tot) continue;
-    let best = 0; for (let j = 1; j < P.length; j++) if (votes[j] > votes[best]) best = j;
-    const o = (Y * E.w + X) * 4; out[o] = P[best][0]; out[o + 1] = P[best][1]; out[o + 2] = P[best][2]; out[o + 3] = 255;
+    let top = null; for (const v of bk.values()) if (!top || v[0] > top[0]) top = v;
+    cells.push([X, Y, [Math.round(top[1] / top[0]), Math.round(top[2] / top[0]), Math.round(top[3] / top[0])]]);
   }
+  const NEAR = 14, MERGE = 12, MAXC = 32;
+  const fresh = new Map(); // new shades by count
+  for (const cl of cells) { const [, bd] = nearest(cl[2], P); if (bd > NEAR) { const k = cl[2].join(','); fresh.set(k, (fresh.get(k) || 0) + 1); } }
+  const keep = P.slice(), used = new Set();
+  for (const [k] of [...fresh].sort((a, b) => b[1] - a[1])) {
+    const col = k.split(',').map(Number); const [, bd] = nearest(col, keep);
+    if (bd > MERGE && keep.length < Math.max(MAXC, P.length)) keep.push(col);
+  }
+  const out = new Uint8ClampedArray(E.w * E.h * 4);
+  for (const [X, Y, col] of cells) {
+    const [bi] = nearest(col, keep); const q = keep[bi]; used.add(bi);
+    const o = (Y * E.w + X) * 4; out[o] = q[0]; out[o + 1] = q[1]; out[o + 2] = q[2]; out[o + 3] = 255;
+  }
+  const nNew = [...used].filter((j) => j >= P.length).length;
   pushUndo(); E.data = out; changed();
-  toast('นำรูปเข้าแล้ว · ยังไม่บันทึก (ย้อนได้ · กดค้างดูก่อนแก้)');
+  toast('นำรูปเข้าแล้ว' + (nNew ? ` · สีใหม่ ${nNew} สี` : '') + ' · ยังไม่บันทึก (ย้อนได้ · กดค้างดูก่อนแก้)');
 }
 function switchVer(asset) {
   if (asset === E.asset && !E.dirty) return;
