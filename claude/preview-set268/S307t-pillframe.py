@@ -3,6 +3,7 @@
 # pixels inside x+y < T (TL, T=50 = cut + outline + light band) / u+v < 44 (BR) copy the nearest pixel along the row (upper
 # half of the triangle -> top edge bands continue) or the column (lower half -> side bands continue), then the frame's inner
 # shape clips it. Writes pill_fr_<k>_<tok>.png only (sat x1.45). Usage: python S307t-pillframe.py <g286> [S]
+# set 307 u: after square(), 4 px of the pill's dark outline cropped off on every side so its light edge meets the frame.
 # --- round s header kept below ---
 # set 307 s (owner after r): "the frame covers the pill's white light · more vivid · number fitted to the pill".
 # Picks A1 = the WHOLE p4 pill (light edge, cut corners) shrunk into the frame's inner box, gaps behind it = pill colour x0.35 ·
@@ -72,7 +73,7 @@ for t, fr in frames.items():
     yy, xx = np.nonzero(im_ & (fa < 30)); box = (xx.min(), yy.min(), xx.max() + 1, yy.max() + 1)
     if t == "gold": print("inner box", box)
     for k in ("hp", "atk", "multi", "burn", "shock", "armor", "heal"):
-        p = square(Image.open(os.path.join(UI, "pill_%s.png" % k)).convert("RGBA"))
+        p = square(Image.open(os.path.join(UI, "pill_%s.png" % k)).convert("RGBA")); p = p.crop((4, 4, p.width - 4, p.height - 4))   # set 307 u: drop the pill's own dark outline (showed as a black line under the frame)
         for suf, sat in SAT.items():
             q = p
             if sat != 1.0:
