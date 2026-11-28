@@ -36,6 +36,7 @@ def frame_only(im):
         while x1 > 0 and row[x1]: x1 -= 1
         if x1 > x0: a[y, x0:x1 + 1] = 0
     for y in range(70, 82): a[y] = a[200]   # divider rows -> a plain side-bar row
+    a[0:18, 170:321] = a[0:18, 150:151]   # set 307 u3: card's white top-centre flare (src x ~190-300) -> plain top edge (owner: clashed on the small pills)
     for y in range(10, 18):   # dark specks inside the top-left cut (hidden by the strip on the card)
         for x in range(0, 60):
             if not MET[y, x] and a[y, x, 3] > 0 and a[y, x, :3].max() < 80 and MET[y, :x].any(): a[y, x] = 0
